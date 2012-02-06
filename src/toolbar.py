@@ -10,7 +10,7 @@ import os
 import sys
 
 try:
-    from PyQt4 import QtGui, QtCore, Qt
+    from PyQt4 import QtGui, QtCore
 except:
     sys.exit(__name__, "ERROR: PyQt4 not found")
 
@@ -25,7 +25,6 @@ class MainToolbar(QtGui.QDockWidget):
     def __init__(self, parent, width, height):
         super(MainToolbar, self).__init__()
         
-#        self.parent = parent
         self.mainWindow = parent
         
         self.setWindowTitle("Main Toolbar")

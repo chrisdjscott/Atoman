@@ -9,7 +9,7 @@ last edited: February 2012
 import sys
 
 try:
-    from PyQt4 import QtGui, QtCore, Qt
+    from PyQt4 import QtGui, QtCore
 except:
     sys.exit(__name__, "ERROR: PyQt4 not found")
 
