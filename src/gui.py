@@ -161,6 +161,20 @@ class MainWindow(QtGui.QMainWindow):
         print "NEW FILE TYPE", fileType
         self.fileType = fileType
     
+    def setCurrentRefFile(self, filename):
+        """
+        Set the current ref file in the main toolbar
+        
+        """
+        self.mainToolbar.currentRefLabel.setText("Reference: " + filename)
+    
+    def setCurrentInputFile(self, filename):
+        """
+        Set the current input file in the main toolbar
+        
+        """
+        self.mainToolbar.currentInputLabel.setText("Input: " + filename)
+    
     def openFileDialog(self, state):
         """
         Open file dialog
@@ -223,6 +237,10 @@ class MainWindow(QtGui.QMainWindow):
             print "WARNING: unknown file type: ", self.fileType
             return
         
+        if state == "ref":
+            self.setCurrentRefFile(filename)
+        else:
+            self.setCurrentInputFile(filename)
         
         
         

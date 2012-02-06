@@ -139,10 +139,36 @@ class LBOMDTab(QtGui.QWidget):
         self.connect(self.openRefDialogButton, QtCore.SIGNAL('clicked()'), lambda who="ref": self.openFileDialog(who))
         row.addWidget(self.openRefDialogButton)
         
-        
         LBOMDTabLayout.addWidget(self.refBox)
         
-    
+        # add read input box
+        self.inputBox = GenericForm(self.inputTab, self.toolbarWidth, "Load input file")
+        self.inputBox.show()
+        
+        # file name line
+        row = self.inputBox.newRow()
+        label = QtGui.QLabel("File name")
+        row.addWidget(label)
+        
+        self.LBOMDInputLabel = QtGui.QLineEdit("track0000.xyz")
+        self.LBOMDInputLabel.setFixedWidth(150)
+        row.addWidget(self.LBOMDInputLabel)
+        
+        self.loadInputButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-jump.svg")), '')
+        self.loadInputButton.setStatusTip("Load input")
+        self.connect(self.loadInputButton, QtCore.SIGNAL('clicked()'), lambda who="input": self.openFile(who))
+        row.addWidget(self.loadInputButton)
+        
+        # open dialog
+        row = self.inputBox.newRow()
+        self.openInputDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open input")
+        self.openInputDialogButton.setStatusTip("Open input")
+        self.openInputDialogButton.setCheckable(0)
+        self.connect(self.openInputDialogButton, QtCore.SIGNAL('clicked()'), lambda who="input": self.openFileDialog(who))
+        row.addWidget(self.openInputDialogButton)
+        
+        LBOMDTabLayout.addWidget(self.inputBox)
+            
     def openFile(self, who):
         """
         Open the specified file
@@ -247,9 +273,9 @@ class MainToolbar(QtGui.QDockWidget):
         rowLayout = QtGui.QHBoxLayout(row)
         rowLayout.setContentsMargins(0,0,0,0)
         rowLayout.setAlignment(QtCore.Qt.AlignTop)
-        self.currentRefLabel = QtGui.QLabel("Input: " + str(self.mainWindow.inputFile))
-        self.currentRefLabel.setWordWrap(1)
-        rowLayout.addWidget(self.currentRefLabel)
+        self.currentInputLabel = QtGui.QLabel("Input: " + str(self.mainWindow.inputFile))
+        self.currentInputLabel.setWordWrap(1)
+        rowLayout.addWidget(self.currentInputLabel)
         groupLayout.addWidget(row)
         
         group.setLayout(groupLayout)
