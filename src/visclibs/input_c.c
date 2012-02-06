@@ -164,7 +164,7 @@ void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, 
 /*******************************************************************************
  * Read LBOMD lattice file
  *******************************************************************************/
-void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos, int verboseLevel )
+void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos )
 {
     FILE *INFILE;
     int i, j, NAtoms;
@@ -173,14 +173,16 @@ void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, i
     char* specieList;
     double xpos, ypos, zpos, chargetemp;
     int NSpecies, comp, specieMatch;
-        
+    
+    
+    printf("CLIB: reading lattice %s\n", file);
+    
     /* open file */
     INFILE = fopen( file, "r" );
     
     /* read header */
     fscanf( INFILE, "%d", &NAtoms );
-    if (verboseLevel >= 2)
-        printf("  %d atoms\n", NAtoms);
+    printf("  %d atoms\n", NAtoms);
     fscanf(INFILE, "%lf%lf%lf", &xdim, &ydim, &zdim);
     
     /* allocate specieList */
@@ -246,8 +248,7 @@ void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, i
             
             specieCount_c[0] = 1;
             
-            if (verboseLevel >= 2)
-                printf("  found 1st specie: %s\n", &specieList[3*NSpecies]);
+            printf("  found 1st specie: %s\n", &specieList[3*NSpecies]);
             NSpecies++;
         }
         else
@@ -278,8 +279,7 @@ void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, i
                 
                 specieCount_c[NSpecies] = 1;
                 
-                if (verboseLevel >= 2)
-                    printf("  found new specie: %s\n", &specieList[3*NSpecies]);
+                printf("  found new specie: %s\n", &specieList[3*NSpecies]);
                 NSpecies++;
             }
         }
@@ -293,8 +293,7 @@ void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, i
         
     free(specieList);
     
-    if (verboseLevel >= 2)
-        printf("END CLIB\n");
+    printf("END CLIB\n");
 }
 
 

@@ -44,14 +44,14 @@ import_array();
 
 /* define functions here */
 %{
-extern void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos, int verboseLevel );
+extern void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos );
 
 extern void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double zdim, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge );
 
 extern void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim3, double* KE, int dim4, double* PE, int dim5, double* force, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos );
 %}
 
-extern void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos, int verboseLevel );
+extern void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos );
 
 extern void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double zdim, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge );
 

@@ -213,9 +213,12 @@ class MainWindow(QtGui.QMainWindow):
             if state == "ref":
                 inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state)
             else:
-                pass
+                inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state)
         elif self.fileType == "DAT":
-            pass
+            if state == "ref":
+                inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state)
+            else:
+                inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state)
         else:
             print "WARNING: unknown file type: ", self.fileType
             return

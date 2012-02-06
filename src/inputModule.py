@@ -48,12 +48,52 @@ def readFile(filename, tmpLocation, lattice, fileType, state):
         elif state == "input":
             readLBOMDInput(filename, tmpLocation, lattice, fileType, state)
             
-            
+    elif fileType == "DAT":
+        
+        readLattice(filename, tmpLocation, lattice, fileType, state)
         
         
     
     cleanUnzipped(loc)
+
+
+################################################################################
+def readLattice(filename, tmpLocation, lattice, fileType, state):
     
+    f = open(filename)
+            
+    line = f.readline().strip()
+    NAtoms = int(line)
+    
+    line = f.readline().strip()
+    array = line.split()
+    lattice.setDims(array)
+    
+    f.close()
+    
+    lattice.reset(NAtoms)
+    
+    # need temporary specie list and counter arrays
+    maxNumSpecies = 20
+    dt = np.dtype((str, 2))
+    specieListTemp = np.empty( maxNumSpecies+1, dt ) 
+    specieCountTemp = np.empty( maxNumSpecies+1, np.int32 )
+    
+    # call c lib
+    input_c.readLatticeLBOMD( filename, lattice.sym, lattice.pos, lattice.charge, specieListTemp, specieCountTemp, lattice.maxPos, lattice.minPos )
+    
+    # build specie list and counter in lattice object
+    print  __name__, "Building specie list"
+    for i in range(maxNumSpecies):
+        if specieListTemp[i] == 'XX':
+            break
+        else:
+            lattice.specieList.append( specieListTemp[i] )
+            lattice.specieCount.append( specieCountTemp[i] )
+            print "  new specie: " + specieListTemp[i] + " (" + atoms.atomName(specieListTemp[i]) + ")"
+            print "   ", str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms"
+
+
 
 ################################################################################
 def readLBOMDInput(filename, tmpLocation, lattice, fileType, state):
@@ -66,6 +106,7 @@ def readLBOMDInput(filename, tmpLocation, lattice, fileType, state):
     line = f.readline().strip()
     simTime = float(line)
     
+    f.close()
     
 
 
