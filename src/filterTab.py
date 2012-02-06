@@ -24,7 +24,19 @@ except:
     sys.exit(__name__, "ERROR: genericForm not found")
 
 
-
+################################################################################
+class FilterList(QtGui.QWidget):
+    def __init__(self, parent, mainToolbar, mainWindow, tab, width, height=120):
+        super(FilterList, self).__init__()
+        
+        self.filterTab = parent
+        self.mainToolbar = mainToolbar
+        self.mainWindow = mainWindow
+        self.tab = tab
+        self.tabWidth = width
+        self.tabHieght = height
+        
+        
 
 
 ################################################################################
@@ -48,7 +60,7 @@ class FilterTab(QtGui.QWidget):
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setSpacing(0)
         
-        # buttons for new/trash filter list
+        #----- buttons for new/trash filter list
         runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('user-trash.svg')),'Apply lists')
         runAll.setStatusTip("Run all filter lists")
         self.connect(runAll, QtCore.SIGNAL('clicked()'), self.runAllFilterLists)
@@ -64,6 +76,8 @@ class FilterTab(QtGui.QWidget):
         rowLayout.addWidget(runAll)
         
         filterTabLayout.addWidget(row)
+        
+        #----- add tab bar for filter lists
         
         
         

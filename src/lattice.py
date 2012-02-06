@@ -27,7 +27,7 @@ class Lattice:
         
         self.cellDims = np.zeros(3, np.float64)
         
-        self.visible = []
+        self.visibleAtoms = []
         self.visibleType = []
         
         self.visibleSpecieList = []
@@ -51,7 +51,7 @@ class Lattice:
         
         """
         self.NAtoms = NAtoms
-        self.NVisible = 0
+        self.NVisible = NAtoms
         
         dt = np.dtype((str, 2))
         self.sym = np.empty(NAtoms, dt)
@@ -59,7 +59,7 @@ class Lattice:
         self.KE = np.empty(NAtoms, np.float64)
         self.PE = np.empty(NAtoms, np.float64)
         self.charge = np.empty(NAtoms, np.float64)
-        self.visible = np.zeros(NAtoms, dtype=np.int32)
+        self.visible = np.arange(NAtoms, dtype=np.int32)
         self.visibleType = np.zeros(NAtoms, np.int32)
         
         self.specieList = []
