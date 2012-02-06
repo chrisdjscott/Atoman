@@ -27,7 +27,8 @@ class Lattice:
         
         self.cellDims = np.zeros(3, np.float64)
         
-        self.visibleAtoms = []
+        self.visible = []
+        self.visibleType = []
         
         self.visibleSpecieList = []
         self.visibleSpecieCount = []
@@ -45,13 +46,10 @@ class Lattice:
         self.charge = []
     
     def reset(self, NAtoms):
+        """
+        Reinitialise arrays and counters
         
-#        if self.NAtoms != 0:
-#            del self.pos
-#            del self.KE
-#            del self.PE
-#            del self.charge
-        
+        """
         self.NAtoms = NAtoms
         self.NVisible = 0
         
@@ -61,7 +59,8 @@ class Lattice:
         self.KE = np.empty(NAtoms, np.float64)
         self.PE = np.empty(NAtoms, np.float64)
         self.charge = np.empty(NAtoms, np.float64)
-        self.visibleAtoms = []
+        self.visible = np.zeros(NAtoms, dtype=np.int32)
+        self.visibleType = np.zeros(NAtoms, np.int32)
         
         self.specieList = []
         self.specieCount = []
