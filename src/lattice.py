@@ -23,6 +23,8 @@ class Lattice:
         self.NAtoms = 0
         self.NVisible = 0
         
+        self.simTime = 0.0
+        
         self.cellDims = np.zeros(3, np.float64)
         
         self.visibleAtoms = []
@@ -33,6 +35,10 @@ class Lattice:
         self.specieList = []
         self.specieCount = []
         
+        self.minPos = np.empty(3, np.float64)
+        self.maxPos = np.empty(3, np.float64)
+        
+        self.sym = []
         self.pos = []
         self.KE = []
         self.PE = []
@@ -47,10 +53,21 @@ class Lattice:
 #            del self.charge
         
         self.NAtoms = NAtoms
+        self.NVisible = 0
+        dt = np.dtype((str, 2))
+        self.sym = np.empty(NAtoms, dt)
         self.pos = np.empty(3 * NAtoms, np.float64)
         self.KE = np.empty(NAtoms, np.float64)
         self.PE = np.empty(NAtoms, np.float64)
         self.charge = np.empty(NAtoms, np.float64)
+        self.specieList = []
+        self.specieCount = []
+        self.visibleSpecieList = []
+        self.visibleSpecieCount = []
+        self.minPos = np.empty(3, np.float64)
+        self.maxPos = np.empty(3, np.float64)
+        self.cellDims = np.zeros(3, np.float64)
+        self.simTime = 0.0
     
     def setDims(self, dimsarray):
         

@@ -11,11 +11,22 @@ import sys
 import shutil
 
 try:
+    import numpy as np
+except:
+    sys.exit(__name__ +": ERROR: numpy not found")
+
+try:
     import utilities
 except:
-    sys.exit(__name__, "ERROR: utilities not found")
-
-
+    sys.exit(__name__+ ": ERROR: utilities not found")
+try:
+    from visclibs import input_c
+except:
+    sys.exit(__name__ +": ERROR: c_input not found")
+try:
+    import atoms
+except:
+    sys.exit(__name__ +": ERROR: c_input not found")
 
 
 
@@ -33,7 +44,9 @@ def readFile(filename, tmpLocation, lattice, fileType, state):
         
         if state == "ref":
             readLBOMDRef(filename, tmpLocation, lattice, fileType, state) 
-            
+        
+        elif state == "input":
+            readLBOMDInput(filename, tmpLocation, lattice, fileType, state)
             
             
         
@@ -41,7 +54,21 @@ def readFile(filename, tmpLocation, lattice, fileType, state):
     
     cleanUnzipped(loc)
     
+
+################################################################################
+def readLBOMDInput(filename, tmpLocation, lattice, fileType, state):
     
+    f = open(filename)
+            
+    line = f.readline().strip()
+    NAtoms = int(line)
+    
+    line = f.readline().strip()
+    simTime = float(line)
+    
+    
+
+
 ################################################################################
 def readLBOMDRef(filename, tmpLocation, lattice, fileType, state):
     
@@ -54,9 +81,31 @@ def readLBOMDRef(filename, tmpLocation, lattice, fileType, state):
     array = line.split()
     lattice.setDims(array)
     
+    f.close()
+    
     lattice.reset(NAtoms)
     
-
+    # temporary specie list and counter arrays
+    maxNumSpecies = 20 ## if there are more than 20 species these must be changed
+    dt = np.dtype((str, 2))
+    specieListTemp = np.empty( maxNumSpecies+1, dt ) 
+    specieCountTemp = np.empty( maxNumSpecies+1, np.int32 )
+    
+    tmpForceArray = np.empty(3, np.float64)
+    
+    # call c lib
+    input_c.readRef( filename, lattice.sym, lattice.pos, lattice.charge, lattice.KE, lattice.PE, tmpForceArray, specieListTemp, specieCountTemp, lattice.maxPos, lattice.minPos )
+        
+    # build specie list and counter in lattice object
+    print "  Building specie list in python"
+    for i in range(maxNumSpecies):
+        if specieListTemp[i] == 'XX':
+            break
+        else:
+            lattice.specieList.append( specieListTemp[i] )
+            lattice.specieCount.append( specieCountTemp[i] )
+            print "    found new specie: " + specieListTemp[i] + " (" + atoms.atomName(specieListTemp[i]) + ")"
+            print "      " + str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms"
 
 
 

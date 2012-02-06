@@ -27,19 +27,19 @@ try:
     import utilities
     from utilities import iconPath
 except:
-    sys.exit(__name__, "ERROR: utilities not found")
+    sys.exit(__name__+ ": ERROR: utilities not found")
 try:
     import toolbar as toolbarModule
 except:
-    sys.exit(__name__, "ERROR: toolbar not found")
+    sys.exit(__name__+ ": ERROR: toolbar not found")
 try:
     import lattice
 except:
-    sys.exit(__name__, "ERROR: lattice not found")
+    sys.exit(__name__+ ": ERROR: lattice not found")
 try:
     import inputModule
 except:
-    sys.exit(__name__, "ERROR: inputModule not found")
+    sys.exit(__name__+ ": ERROR: inputModule not found")
 
 
 
@@ -179,7 +179,11 @@ class MainWindow(QtGui.QMainWindow):
         filename = fdiag.getOpenFileName(self, "Open file", os.getcwd(), filesString)
         filename = str(filename)
         
+        print "FILENAME", filename
+        
         (nwd, filename) = os.path.split(filename)        
+        
+        print "DIR", nwd, filename
         
         # change to new working directory
         os.chdir(nwd)
