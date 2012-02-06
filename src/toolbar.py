@@ -43,7 +43,7 @@ class latticeTab(QtGui.QWidget):
         latticeTabLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # add read lattice box
-        self.latticeBox = GenericForm(self.inputTab, self.toolbarWidth, "Load lattice file")
+        self.latticeBox = GenericForm(self.inputTab, self.toolbarWidth, "Load reference file")
         self.latticeBox.show()
         
         # file name line
@@ -68,9 +68,35 @@ class latticeTab(QtGui.QWidget):
         self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), lambda who="ref": self.openFileDialog(who))
         row.addWidget(self.openLatticeDialogButton)
         
-        
         latticeTabLayout.addWidget(self.latticeBox)
         
+        # add read input box
+        self.inputBox = GenericForm(self.inputTab, self.toolbarWidth, "Load input file")
+        self.inputBox.show()
+        
+        # file name line
+        row = self.inputBox.newRow()
+        label = QtGui.QLabel("File name")
+        row.addWidget(label)
+        
+        self.inputLatticeLabel = QtGui.QLineEdit("lattice.dat")
+        self.inputLatticeLabel.setFixedWidth(150)
+        row.addWidget(self.inputLatticeLabel)
+        
+        self.loadLatticeInputButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-jump.svg")), '')
+        self.loadLatticeInputButton.setStatusTip("Load input")
+        self.connect(self.loadLatticeInputButton, QtCore.SIGNAL('clicked()'), lambda who="input": self.openFile(who))
+        row.addWidget(self.loadLatticeInputButton)
+        
+        # open dialog
+        row = self.inputBox.newRow()
+        self.openLatticeInputDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open reference")
+        self.openLatticeInputDialogButton.setStatusTip("Open input")
+        self.openLatticeInputDialogButton.setCheckable(0)
+        self.connect(self.openLatticeInputDialogButton, QtCore.SIGNAL('clicked()'), lambda who="input": self.openFileDialog(who))
+        row.addWidget(self.openLatticeInputDialogButton)
+        
+        latticeTabLayout.addWidget(self.inputBox)
     
     def openFile(self, who):
         """
@@ -181,8 +207,6 @@ class LBOMDTab(QtGui.QWidget):
         
         self.mainWindow.openFile(str(filename), who)
         
-        
-    
     def openFileDialog(self, who):
         """
         Open the file dialog

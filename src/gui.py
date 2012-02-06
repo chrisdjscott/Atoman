@@ -64,6 +64,8 @@ class MainWindow(QtGui.QMainWindow):
         self.refFile = ""
         self.inputFile = ""
         self.fileType = ""
+        self.refLoaded = 0
+        self.inputLoaded = 0
         
         # window size and location
         self.renderWindowWidth = 750 #650
@@ -118,7 +120,7 @@ class MainWindow(QtGui.QMainWindow):
         # create temporary directory for working in
         self.tmpDirectory = utilities.createTmpDirectory()
         
-        self.statusBar.showMessage('Ready')
+        self.setStatus('Ready')
         
         self.show()
     
@@ -175,6 +177,9 @@ class MainWindow(QtGui.QMainWindow):
         """
         self.mainToolbar.currentInputLabel.setText("Input: " + filename)
     
+    def setStatus(self, string):
+        self.statusBar.showMessage(string)
+    
     def openFileDialog(self, state):
         """
         Open file dialog
@@ -193,11 +198,7 @@ class MainWindow(QtGui.QMainWindow):
         filename = fdiag.getOpenFileName(self, "Open file", os.getcwd(), filesString)
         filename = str(filename)
         
-        print "FILENAME", filename
-        
         (nwd, filename) = os.path.split(filename)        
-        
-        print "DIR", nwd, filename
         
         # change to new working directory
         os.chdir(nwd)
@@ -217,8 +218,11 @@ class MainWindow(QtGui.QMainWindow):
         elif filename[-4:] == ".bz2":
             filename = filename[:-4]
         
-        print "FILE", filename
-        print "STATE", state
+        if state == "input" and not self.refLoaded:
+            print "WARNING: must load reference before input"
+            return
+        
+        self.setStatus("Reading " + filename)
         
         # need to handle different states differently depending on fileType.
         # eg LBOMD input does not have sym, may have charge, etc
@@ -239,9 +243,12 @@ class MainWindow(QtGui.QMainWindow):
         
         if state == "ref":
             self.setCurrentRefFile(filename)
+            self.refLoaded = 1
         else:
             self.setCurrentInputFile(filename)
+            self.inputLoaded = 1
         
+        self.setStatus("Ready")
         
         
         
