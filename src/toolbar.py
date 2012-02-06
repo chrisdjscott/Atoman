@@ -105,7 +105,10 @@ class latticeTab(QtGui.QWidget):
         """
         self.mainWindow.setFileType("DAT")
         
-        filename = self.latticeLabel.text()
+        if who == "ref":
+            filename = self.latticeLabel.text()
+        else:
+            filename = self.inputLatticeLabel.text()
         
         self.mainWindow.openFile(str(filename), who)
         
@@ -204,6 +207,8 @@ class LBOMDTab(QtGui.QWidget):
         
         if who == "ref":
             filename = self.LBOMDRefLabel.text()
+        else:
+            filename = self.LBOMDInputLabel.text()
         
         self.mainWindow.openFile(str(filename), who)
         

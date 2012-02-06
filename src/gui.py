@@ -160,7 +160,6 @@ class MainWindow(QtGui.QMainWindow):
         Set the file type.
         
         """
-        print "NEW FILE TYPE", fileType
         self.fileType = fileType
     
     def setCurrentRefFile(self, filename):
@@ -192,7 +191,7 @@ class MainWindow(QtGui.QMainWindow):
         elif self.fileType == "DAT":
             filesString = "Lattice files (*.dat *.dat.bz2 *.dat.gz)"
         else:
-            print "WARNING: unknown file type: ", self.fileType
+            print "ERROR: unknown file type: ", self.fileType
             return
         
         filename = fdiag.getOpenFileName(self, "Open file", os.getcwd(), filesString)
@@ -219,7 +218,7 @@ class MainWindow(QtGui.QMainWindow):
             filename = filename[:-4]
         
         if state == "input" and not self.refLoaded:
-            print "WARNING: must load reference before input"
+            print "ERROR: must load reference before input"
             return
         
         self.setStatus("Reading " + filename)
@@ -229,16 +228,19 @@ class MainWindow(QtGui.QMainWindow):
         #    DAT input will have both
         if self.fileType == "LBOMD":
             if state == "ref":
-                inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state)
+                status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state)
             else:
-                inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state)
+                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state)
         elif self.fileType == "DAT":
             if state == "ref":
-                inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state)
+                status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state)
             else:
-                inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state)
+                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state)
         else:
             print "WARNING: unknown file type: ", self.fileType
+            return
+        
+        if status:
             return
         
         if state == "ref":

@@ -35,6 +35,10 @@ def readFile(filename, tmpLocation, lattice, fileType, state):
     
     # read file
     loc = checkForZipped(filename, tmpLocation)
+    if loc == -1:
+        print "ERROR: could not find file", filename
+        return -1
+    
     filename = os.path.join(loc, filename)
     
     print "READING", filename, fileType, state
@@ -55,6 +59,8 @@ def readFile(filename, tmpLocation, lattice, fileType, state):
         
     
     cleanUnzipped(loc)
+    
+    return 0
 
 
 ################################################################################
@@ -159,15 +165,12 @@ def checkForZipped(filename, tmpLocation):
         fileLocation = '.'
     else:
         if os.path.exists(filename + '.bz2'):
-            print 'INFO: bzip exists'
             command = "bzcat -k %s.bz2 > " % (filename)
             zippedFile = file+'.bz2'
         elif os.path.exists(filename + '.gz'):
-            print 'INFO: gzip exists'
             command = "zcat %s.gz > " % (filename)
             zippedFile = filename+'.gz'
         else:
-            print "WARNING: cannot find file:", filename
             return -1
             
         fileLocation = tmpLocation
