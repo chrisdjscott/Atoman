@@ -18,6 +18,155 @@ try:
     from utilities import iconPath
 except:
     sys.exit(__name__, "ERROR: utilities not found")
+try:
+    from genericForm import GenericForm
+except:
+    sys.exit(__name__, "ERROR: genericForm not found")
+
+
+
+
+################################################################################
+class latticeTab(QtGui.QWidget):
+    def __init__(self, parent, mainToolbar, mainWindow, width):
+        super(latticeTab, self).__init__()
+        
+        self.inputTab = parent
+        self.mainToolbar = mainToolbar
+        self.mainWindow = mainWindow
+        self.toolbarWidth = width
+        
+        # layout
+        latticeTabLayout = QtGui.QVBoxLayout(self)
+        latticeTabLayout.setSpacing(0)
+        latticeTabLayout.setContentsMargins(0, 0, 0, 0)
+        latticeTabLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        # add read lattice box
+        self.latticeBox = GenericForm(self.inputTab, self.toolbarWidth, "Load lattice file")
+        self.latticeBox.show()
+        
+        # file name line
+        row = self.latticeBox.newRow()
+        label = QtGui.QLabel("File name")
+        row.addWidget(label)
+        
+        self.latticeLabel = QtGui.QLineEdit("lattice.dat")
+        self.latticeLabel.setFixedWidth(150)
+        row.addWidget(self.latticeLabel)
+        
+        self.loadLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-jump.svg")), '')
+        self.loadLatticeButton.setStatusTip("Load reference")
+        self.connect(self.loadLatticeButton, QtCore.SIGNAL('clicked()'), lambda who="ref": self.openFile(who))
+        row.addWidget(self.loadLatticeButton)
+        
+        # open dialog
+        row = self.latticeBox.newRow()
+        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open reference")
+        self.openLatticeDialogButton.setStatusTip("Open reference")
+        self.openLatticeDialogButton.setCheckable(0)
+        self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), lambda who="ref": self.openFileDialog(who))
+        row.addWidget(self.openLatticeDialogButton)
+        
+        
+        latticeTabLayout.addWidget(self.latticeBox)
+        
+    
+    def openFile(self, who):
+        """
+        Open the specified file
+        
+        """
+        self.mainWindow.setFileType("DAT")
+        
+        filename = self.latticeLabel.text()
+        
+        self.mainWindow.openFile(str(filename), who)
+        
+        
+    
+    def openFileDialog(self, who):
+        """
+        Open the file dialog
+        
+        """
+        # first set the file type
+        self.mainWindow.setFileType("DAT")
+        
+        # then open the dialog
+        self.mainWindow.openFileDialog(who)
+
+
+################################################################################
+class LBOMDTab(QtGui.QWidget):
+    def __init__(self, parent, mainToolbar, mainWindow, width):
+        super(LBOMDTab, self).__init__()
+        
+        self.inputTab = parent
+        self.mainToolbar = mainToolbar
+        self.mainWindow = mainWindow
+        self.toolbarWidth = width
+        
+        # layout
+        LBOMDTabLayout = QtGui.QVBoxLayout(self)
+        LBOMDTabLayout.setSpacing(0)
+        LBOMDTabLayout.setContentsMargins(0, 0, 0, 0)
+        LBOMDTabLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        # add read reference box
+        self.refBox = GenericForm(self.inputTab, self.toolbarWidth, "Load reference file")
+        self.refBox.show()
+        
+        # file name line
+        row = self.refBox.newRow()
+        label = QtGui.QLabel("File name")
+        row.addWidget(label)
+        
+        self.LBOMDRefLabel = QtGui.QLineEdit("animation-reference.xyz")
+        self.LBOMDRefLabel.setFixedWidth(150)
+        row.addWidget(self.LBOMDRefLabel)
+        
+        self.loadRefButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-jump.svg")), '')
+        self.loadRefButton.setStatusTip("Load reference")
+        self.connect(self.loadRefButton, QtCore.SIGNAL('clicked()'), lambda who="ref": self.openFile(who))
+        row.addWidget(self.loadRefButton)
+        
+        # open dialog
+        row = self.refBox.newRow()
+        self.openRefDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open reference")
+        self.openRefDialogButton.setStatusTip("Open reference")
+        self.openRefDialogButton.setCheckable(0)
+        self.connect(self.openRefDialogButton, QtCore.SIGNAL('clicked()'), lambda who="ref": self.openFileDialog(who))
+        row.addWidget(self.openRefDialogButton)
+        
+        
+        LBOMDTabLayout.addWidget(self.refBox)
+        
+    
+    def openFile(self, who):
+        """
+        Open the specified file
+        
+        """
+        self.mainWindow.setFileType("LBOMD")
+        
+        if who == "ref":
+            filename = self.LBOMDRefLabel.text()
+        
+        self.mainWindow.openFile(str(filename), who)
+        
+        
+    
+    def openFileDialog(self, who):
+        """
+        Open the file dialog
+        
+        """
+        # first set the file type
+        self.mainWindow.setFileType("LBOMD")
+        
+        # then open the dialog
+        self.mainWindow.openFileDialog(who)
 
 
 ################################################################################
@@ -27,6 +176,7 @@ class InputTab(QtGui.QWidget):
         
         self.mainToolbar = parent
         self.mainWindow = mainWindow
+        self.toolbarWidth = width
         
         # layout
         inputTabLayout = QtGui.QVBoxLayout(self)
@@ -34,17 +184,18 @@ class InputTab(QtGui.QWidget):
         row = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row)
         rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setSpacing(0)
         rowLayout.setAlignment(QtCore.Qt.AlignTop)
         
         self.tabBar = QtGui.QTabWidget(row)
         
         # add LBOMD page
-        self.LBOMDTab = QtGui.QWidget(self)
+        self.LBOMDTab = LBOMDTab(self, self.mainToolbar, self.mainWindow, self.toolbarWidth)
         self.tabBar.addTab(self.LBOMDTab, "LBOMD")
         
-        # add generic page
-        self.genericTab = QtGui.QWidget(self)
-        self.tabBar.addTab(self.genericTab, "Generic")
+        # add DAT page
+        self.latticeTab = latticeTab(self, self.mainToolbar, self.mainWindow, self.toolbarWidth)
+        self.tabBar.addTab(self.latticeTab, "DAT")
         
         rowLayout.addWidget(self.tabBar)
         
@@ -72,8 +223,8 @@ class MainToolbar(QtGui.QDockWidget):
         # create container for widgets
         self.container = QtGui.QWidget(self)
         containerLayout = QtGui.QVBoxLayout(self.container)
-#        containerLayout.setSpacing(0)
-#        containerLayout.setContentsMargins(0,0,0,0)
+        containerLayout.setSpacing(0)
+        containerLayout.setContentsMargins(0,0,0,0)
         containerLayout.setAlignment(QtCore.Qt.AlignTop)
                 
         # create info widget

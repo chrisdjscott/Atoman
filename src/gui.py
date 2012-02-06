@@ -32,8 +32,14 @@ try:
     import toolbar as toolbarModule
 except:
     sys.exit(__name__, "ERROR: toolbar not found")
-
-
+try:
+    import lattice
+except:
+    sys.exit(__name__, "ERROR: lattice not found")
+try:
+    import inputModule
+except:
+    sys.exit(__name__, "ERROR: inputModule not found")
 
 
 
@@ -57,6 +63,7 @@ class MainWindow(QtGui.QMainWindow):
         # defaults
         self.refFile = ""
         self.inputFile = ""
+        self.fileType = ""
         
         # window size and location
         self.renderWindowWidth = 750 #650
@@ -82,6 +89,12 @@ class MainWindow(QtGui.QMainWindow):
         toolbar = self.addToolBar("Exit")
         toolbar.addAction(exitAction)
         
+        # add cwd to status bar
+        self.currentDirectoryLabel = QtGui.QLabel(os.getcwd())
+        self.statusBar = QtGui.QStatusBar()
+        self.statusBar.addPermanentWidget(self.currentDirectoryLabel)
+        self.setStatusBar(self.statusBar)
+        
         # initialise the VTK container
         self.VTKContainer = QtGui.QWidget(self)
         VTKlayout = QtGui.QVBoxLayout(self.VTKContainer)
@@ -98,10 +111,14 @@ class MainWindow(QtGui.QMainWindow):
         
         self.setCentralWidget(self.VTKContainer)
         
+        # initiate lattice objects for storing reference and input states
+        self.inputState = lattice.Lattice()
+        self.refState = lattice.Lattice()
+        
         # create temporary directory for working in
         self.tmpDirectory = utilities.createTmpDirectory()
         
-        self.statusBar().showMessage('Ready')
+        self.statusBar.showMessage('Ready')
         
         self.show()
     
@@ -135,4 +152,71 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         shutil.rmtree(self.tmpDirectory)
+    
+    def setFileType(self, fileType):
+        """
+        Set the file type.
+        
+        """
+        print "NEW FILE TYPE", fileType
+        self.fileType = fileType
+    
+    def openFileDialog(self, state):
+        """
+        Open file dialog
+        
+        """
+        fdiag = QtGui.QFileDialog()
+        
+        if self.fileType == "LBOMD":
+            filesString = "LBOMD files (*.xyz *.xyz.bz2 *.xyz.gz)"
+        elif self.fileType == "DAT":
+            filesString = "Lattice files (*.dat *.dat.bz2 *.dat.gz)"
+        else:
+            print "WARNING: unknown file type: ", self.fileType
+            return
+        
+        filename = fdiag.getOpenFileName(self, "Open file", os.getcwd(), filesString)
+        filename = str(filename)
+        
+        (nwd, filename) = os.path.split(filename)        
+        
+        # change to new working directory
+        os.chdir(nwd)
+        self.currentDirectoryLabel.setText(os.getcwd())
+        
+        # open file
+        self.openFile(filename, state)
+        
+    def openFile(self, filename, state):
+        """
+        Open file
+        
+        """
+        # remove zip extensions
+        if filename[-3:] == ".gz":
+            filename = filename[:-3]
+        elif filename[-4:] == ".bz2":
+            filename = filename[:-4]
+        
+        print "FILE", filename
+        print "STATE", state
+        
+        # need to handle different states differently depending on fileType.
+        # eg LBOMD input does not have sym, may have charge, etc
+        #    DAT input will have both
+        if self.fileType == "LBOMD":
+            if state == "ref":
+                inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state)
+            else:
+                pass
+        elif self.fileType == "DAT":
+            pass
+        else:
+            print "WARNING: unknown file type: ", self.fileType
+            return
+        
+        
+        
+        
         
