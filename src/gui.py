@@ -14,6 +14,14 @@ try:
     from PyQt4 import QtGui, QtCore
 except:
     sys.exit(__name__, "ERROR: PyQt4 not found")
+try:
+    from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+except:
+    sys.exit(__name__, "ERROR: QVTKRenderWindowInteractor not found")
+try:
+    import vtk
+except:
+    sys.exit(__name__, "ERROR: vtk not found")
 
 try:
     import utilities
@@ -46,6 +54,10 @@ class MainWindow(QtGui.QMainWindow):
         Initialise the interface.
         
         """
+        # defaults
+        self.refFile = ""
+        self.inputFile = ""
+        
         # window size and location
         self.renderWindowWidth = 750 #650
         self.renderWindowHeight = 715 #650
@@ -70,7 +82,21 @@ class MainWindow(QtGui.QMainWindow):
         toolbar = self.addToolBar("Exit")
         toolbar.addAction(exitAction)
         
+        # initialise the VTK container
+        self.VTKContainer = QtGui.QWidget(self)
+        VTKlayout = QtGui.QVBoxLayout(self.VTKContainer)
+        self.VTKWidget = QVTKRenderWindowInteractor(self.VTKContainer)
+        VTKlayout.addWidget(self.VTKWidget)
+        VTKlayout.setContentsMargins(0,0,0,0)
         
+        self.VTKWidget.Initialize()
+        self.VTKWidget.Start()
+        
+        self.VTKRen = vtk.vtkRenderer()
+        self.VTKRen.SetBackground(1,1,1)
+        self.VTKWidget.GetRenderWindow().AddRenderer(self.VTKRen)
+        
+        self.setCentralWidget(self.VTKContainer)
         
         # create temporary directory for working in
         self.tmpDirectory = utilities.createTmpDirectory()

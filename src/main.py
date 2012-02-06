@@ -14,8 +14,10 @@ try:
 except:
     sys.exit(__name__, "ERROR: PyQt4 not found")
 
-import gui
-
+try:
+    import gui
+except:
+    sys.exit(__name__, "ERROR: gui not found")
 
 
 
