@@ -14,6 +14,18 @@ try:
 except:
     sys.exit(__name__, "ERROR: PyQt4 not found")
 
+try:
+    from utilities import iconPath
+except:
+    sys.exit(__name__, "ERROR: utilities not found")
+try:
+    import toolbar as toolbarModule
+except:
+    sys.exit(__name__, "ERROR: toolbar not found")
+
+
+
+
 
 
 
@@ -34,17 +46,21 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         # window size and location
-        self.renderWindowWidth = 650
-        self.renderWindowHeight = 650
-        self.mainToolBarWidth = 315
-        self.mainToolBarHeight = 420
-        self.resize(self.renderWindowWidth+self.mainToolBarWidth, self.renderWindowHeight)
+        self.renderWindowWidth = 715 #650
+        self.renderWindowHeight = 715 #650
+        self.mainToolbarWidth = 345 #315
+        self.mainToolbarHeight = 460 #420
+        self.resize(self.renderWindowWidth+self.mainToolbarWidth, self.renderWindowHeight)
         self.centre()
         
         self.setWindowTitle("CDJSVis")
         
+        # add the main tool bar
+        self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
+        
         # add actions
-        exitAction = QtGui.QAction(QtGui.QIcon(os.path.join("icons", "exit.png")), "Exit", self)
+        exitAction = QtGui.QAction(QtGui.QIcon(iconPath("system-log-out.svg")), "Exit", self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.close)
@@ -52,6 +68,8 @@ class MainWindow(QtGui.QMainWindow):
         # add toolbar
         toolbar = self.addToolBar("Exit")
         toolbar.addAction(exitAction)
+        
+        
         
         
         self.statusBar().showMessage('Ready')
