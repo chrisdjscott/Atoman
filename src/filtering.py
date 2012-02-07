@@ -12,16 +12,16 @@ import sys
 try:
     from PyQt4 import QtGui, QtCore
 except:
-    sys.exit(__name__, "ERROR: PyQt4 not found")
+    print __name__+ ": ERROR: could not import PyQt4"
 
 try:
     from utilities import iconPath
 except:
-    sys.exit(__name__, "ERROR: utilities not found")
+    print __name__+ ": ERROR: could not import utilities"
 try:
     from genericForm import GenericForm
 except:
-    sys.exit(__name__, "ERROR: genericForm not found")
+    print __name__+ ": ERROR: could not import genericForm"
 
 
 

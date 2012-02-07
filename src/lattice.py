@@ -13,7 +13,7 @@ import sys
 try:
     import numpy as np
 except:
-    sys.exit(__name__+": ERROR: could not import numpy")
+    print __name__+": ERROR: could not import numpy"
 
 
 

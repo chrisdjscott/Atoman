@@ -12,12 +12,12 @@ import sys
 try:
     from PyQt4 import QtGui
 except:
-    sys.exit(__name__, "ERROR: PyQt4 not found")
+    print __name__+ ": ERROR: could not import PyQt4"
 
 try:
     import gui
 except:
-    sys.exit(__name__, "ERROR: gui not found")
+    print __name__+ ": ERROR: could not import gui"
 
 
 

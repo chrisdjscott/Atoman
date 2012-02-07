@@ -12,28 +12,28 @@ import sys
 try:
     from PyQt4 import QtGui, QtCore
 except:
-    sys.exit(__name__+ ": ERROR: could not import PyQt4")
+    print __name__+ ": ERROR: could not import PyQt4"
 
 try:
     from utilities import iconPath
 except:
-    sys.exit(__name__+ ": ERROR: could not import utilities")
+    print __name__+ ": ERROR: could not import utilities"
 try:
     from genericForm import GenericForm
 except:
-    sys.exit(__name__+ ": ERROR: could not import genericForm")
+    print __name__+ ": ERROR: could not import genericForm"
 try:
     from inputTab import InputTab
 except:
-    sys.exit(__name__+ ": ERROR: could not import inputTab")
+    print __name__+ ": ERROR: could not import inputTab"
 try:
     from filterTab import FilterTab
 except:
-    sys.exit(__name__+ ": ERROR: could not import inputTab")
+    print __name__+ ": ERROR: could not import inputTab"
 try:
     import resources
 except:
-    sys.exit(__name__+ ": ERROR: could not import resources")
+    print __name__+ ": ERROR: could not import resources"
 
 
 

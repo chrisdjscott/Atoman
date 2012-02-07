@@ -11,7 +11,7 @@ import sys
 try:
     from PyQt4 import QtGui, QtCore
 except:
-    sys.exit(__name__, "ERROR: PyQt4 not found")
+    sys.exit(__name__+ ": ERROR: could not import PyQt4")
 
 
 ################################################################################

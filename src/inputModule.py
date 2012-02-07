@@ -13,20 +13,20 @@ import shutil
 try:
     import numpy as np
 except:
-    sys.exit(__name__ +": ERROR: numpy not found")
+    print __name__ +": ERROR: numpy not found"
 
 try:
     import utilities
 except:
-    sys.exit(__name__+ ": ERROR: utilities not found")
+    print __name__+ ": ERROR: utilities not found"
 try:
     from visclibs import input_c
 except:
-    sys.exit(__name__ +": ERROR: c_input not found")
+    print __name__ +": ERROR: input_c not found"
 try:
     import atoms
 except:
-    sys.exit(__name__ +": ERROR: c_input not found")
+    print __name__ +": ERROR: atoms not found"
 
 
 

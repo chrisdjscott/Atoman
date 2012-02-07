@@ -13,37 +13,37 @@ import shutil
 try:
     from PyQt4 import QtGui, QtCore
 except:
-    sys.exit(__name__, "ERROR: PyQt4 not found")
+    print __name__+ ": ERROR: could not import PyQt4"
 try:
     from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 except:
-    sys.exit(__name__, "ERROR: QVTKRenderWindowInteractor not found")
+    print __name__+ ": ERROR: could not import QVTKRenderWindowInteractor"
 try:
     import vtk
 except:
-    sys.exit(__name__, "ERROR: vtk not found")
+    print __name__+ ": ERROR: could not import vtk"
 
 try:
     import utilities
     from utilities import iconPath
 except:
-    sys.exit(__name__+ ": ERROR: utilities not found")
+    print __name__+ ": ERROR: utilities not found"
 try:
     import toolbar as toolbarModule
 except:
-    sys.exit(__name__+ ": ERROR: toolbar not found")
+    print __name__+ ": ERROR: toolbar not found"
 try:
     import lattice
 except:
-    sys.exit(__name__+ ": ERROR: lattice not found")
+    print __name__+ ": ERROR: lattice not found"
 try:
     import inputModule
 except:
-    sys.exit(__name__+ ": ERROR: inputModule not found")
+    print __name__+ ": ERROR: inputModule not found"
 try:
     import resources
 except:
-    sys.exit(__name__+ ": ERROR: could not import resources")
+    print __name__+ ": ERROR: could not import resources"
 
 
 
