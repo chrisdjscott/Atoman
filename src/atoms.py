@@ -13,6 +13,11 @@
 import sys
 import os
 
+try:
+    from utilities import resourcePath
+except:
+    print __name__ + ": ERROR: cannot import utilities"
+
 
 
 # atomic number
@@ -82,21 +87,15 @@ def RGB(sym):
 def initialise():
     global atomicNumberDict, atomicMassDict, atomNameDict, covalentRadiusDict, RGBDict
     
-    path = os.path.dirname(__file__)
-    if len(path):
-        file = os.path.join(path, 'Atoms.IN')
-    else:
-        file = 'Atoms.IN'
+    filename = resourcePath("data/atoms.IN")
     
-    if os.path.exists( file ):
+    if os.path.exists( filename ):
         try:
-            f = open( file, "r" )
+            f = open( filename, "r" )
         except:
-            sys.exit('error: could not open atoms file: ' + file)
+            sys.exit('error: could not open atoms file: ' + filename)
     else:
-        sys.exit('error: could not find atoms file: ' + file)
-        # could search path / pythonpath too?
-    
+        sys.exit('error: could not find atoms file: ' + filename)    
     
     # read into dictionaries
     atomicNumberDict = {}

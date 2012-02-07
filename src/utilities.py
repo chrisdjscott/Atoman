@@ -13,6 +13,16 @@ import string
 
 
 ################################################################################
+def resourcePath(relative):
+    """
+    Find path to given resource regardless of when running from within
+    PyInstaller bundle or from command line.
+    
+    """
+    return os.path.join(os.environ.get("_MEIPASS2", sys.path[0]), relative)
+
+
+################################################################################
 def iconPath(icon):
     """
     Return full path to given icon.
