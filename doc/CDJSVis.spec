@@ -1,13 +1,13 @@
 # -*- mode: python -*-
-a = Analysis([os.path.join(HOMEPATH,'support/_mountzlib.py'), os.path.join(CONFIGDIR,'support/useUnicode.py'), '/Users/macdjs/git/CDJSVis/src/main.py'],
+a = Analysis([os.path.join(HOMEPATH,'support/_mountzlib.py'), os.path.join(CONFIGDIR,'support/useUnicode.py'), '/Users/macdjs/git/CDJSVis/src/CDJSVis.py'],
              pathex=['/Users/macdjs/svn/PyInstaller'],
              hookspath=None)
-pyz = PYZ(a.pure)
 a.datas += [('data/atoms.IN','/Users/macdjs/git/CDJSVis/src/data/atoms.IN', 'DATA')]
+pyz = PYZ(a.pure)
 exe = EXE(pyz,
           a.scripts,
           exclude_binaries=1,
-          name=os.path.join('build/pyi.darwin/main', 'main'),
+          name=os.path.join('build/pyi.darwin/CDJSVis', 'CDJSVis'),
           debug=False,
           strip=None,
           upx=True,
@@ -18,6 +18,7 @@ coll = COLLECT( exe,
                a.datas,
                strip=None,
                upx=True,
-               name=os.path.join('dist', 'main'))
+               name=os.path.join('dist', 'CDJSVis'))
 app = BUNDLE(coll,
-             name=os.path.join('dist', 'main.app'))
+             name=os.path.join('dist', 'CDJSVis.app'),
+             version="0.0.1")
