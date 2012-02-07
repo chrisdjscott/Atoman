@@ -31,9 +31,9 @@ except:
 
 
 ################################################################################
-class latticeTab(QtGui.QWidget):
+class LatticeTab(QtGui.QWidget):
     def __init__(self, parent, mainToolbar, mainWindow, width):
-        super(latticeTab, self).__init__()
+        super(LatticeTab, self).__init__()
         
         self.inputTab = parent
         self.mainToolbar = mainToolbar
@@ -253,7 +253,7 @@ class InputTab(QtGui.QWidget):
         self.tabBar.addTab(self.LBOMDTab, "LBOMD")
         
         # add DAT page
-        self.latticeTab = latticeTab(self, self.mainToolbar, self.mainWindow, self.toolbarWidth)
+        self.latticeTab = LatticeTab(self, self.mainToolbar, self.mainWindow, self.toolbarWidth)
         self.tabBar.addTab(self.latticeTab, "DAT")
         
         rowLayout.addWidget(self.tabBar)

@@ -62,36 +62,22 @@ class MainToolbar(QtGui.QDockWidget):
         containerLayout.setSpacing(0)
         containerLayout.setContentsMargins(0,0,0,0)
         containerLayout.setAlignment(QtCore.Qt.AlignTop)
-                
-        # create info widget
-        group = QtGui.QGroupBox("Current file")
-        groupLayout = QtGui.QVBoxLayout()
-        groupLayout.setSpacing(0)
-        groupLayout.setContentsMargins(0,0,0,0)
-        groupLayout.setAlignment(QtCore.Qt.AlignTop)
         
-        row = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setContentsMargins(0,0,0,0)
-        rowLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        # display current file info
+        self.currentFileBox = GenericForm(self, self.toolbarWidth, "Current file")
+        self.currentFileBox.show()
+        
+        row = self.currentFileBox.newRow()
         self.currentRefLabel = QtGui.QLabel("Reference: " + str(self.mainWindow.refFile))
-        self.currentRefLabel.setWordWrap(1)
-        rowLayout.addWidget(self.currentRefLabel)
-        groupLayout.addWidget(row)
+        row.addWidget(self.currentRefLabel)
         
-        row = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setContentsMargins(0,0,0,0)
-        rowLayout.setAlignment(QtCore.Qt.AlignTop)
+        row = self.currentFileBox.newRow()
         self.currentInputLabel = QtGui.QLabel("Input: " + str(self.mainWindow.inputFile))
-        self.currentInputLabel.setWordWrap(1)
-        rowLayout.addWidget(self.currentInputLabel)
-        groupLayout.addWidget(row)
+        row.addWidget(self.currentInputLabel)
         
-        group.setLayout(groupLayout)
-        
-        containerLayout.addWidget(group)
-        
+        containerLayout.addWidget(self.currentFileBox)
+                
         # create the tab bar
         row = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row)
