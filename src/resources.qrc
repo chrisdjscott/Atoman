@@ -1,0 +1,52 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+	<file>icons/4xAA-icon.svg</file>
+	<file>icons/AVASiconB.png</file>
+	<file>icons/system-log-out.svg</file>
+	<file>icons/document-open.svg</file>
+	<file>icons/folder.svg</file>
+	<file>icons/imageviewer-icon.svg</file>
+	<file>icons/applications-system.svg</file>
+	<file>icons/preferences-desktop-screensaver.svg</file>
+	<file>icons/axis_icon2.svg</file>
+	<file>icons/cell_icon.svg</file>
+	<file>icons/video-display.svg</file>
+	<file>icons/list-add.svg</file>
+	<file>icons/list-remove.svg</file>
+	<file>icons/go-up.svg</file>
+	<file>icons/go-down.svg</file>
+	<file>icons/edit-clear.svg</file>
+	<file>icons/view-refresh.svg</file>
+	<file>icons/go-jump.svg</file>
+	<file>icons/load-and-refresh-allB.svg</file>
+	<file>icons/image-x-generic.svg</file>
+	<file>icons/pov-icon.svg</file>
+	<file>icons/vtk-icon.svg</file>
+	<file>icons/loadandsave-icon.svg</file>
+	<file>icons/video-x-generic.svg</file>
+	<file>icons/user-trash.svg</file>
+	<file>icons/tab-new.svg</file>
+	<file>icons/view-refresh-all.svg</file>
+	<file>icons/user-trash.svg</file>	
+	<file>icons/drift_icon.svg</file>	
+	<file>icons/hide_icon.svg</file>
+	<file>icons/show_icon.svg</file>
+	<file>icons/scalarbar_icon.svg</file>	
+	<file>icons/clear_lists_icon.svg</file>	
+	<file>icons/use_ref_icon.svg</file>
+	<file>icons/use_ref_icon_new.svg</file>		
+	<file>icons/mod_atoms_icon.svg</file>
+	<file>icons/mod_atoms_icon_big.svg</file>
+	<file>icons/document-save.svg</file>
+	<file>icons/view-refresh-all-jump.svg</file>
+	<file>icons/applications-accessories.svg</file>
+	<file>icons/apply-red-arrow-icon.svg</file>
+	<file>icons/apply-all-red-arrow-icon.svg</file>
+	<file>icons/go-up-blue.svg</file>
+	<file>icons/go-down-blue.svg</file>
+	<file>icons/apply-green-arrow-icon.svg</file>
+	<file>icons/apply-all-green-arrow-icon.svg</file>
+	<file>icons/user-trash-red.svg</file>
+	<file>icons/edit-delete.svg</file>
+</qresource>
+</RCC>

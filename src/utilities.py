@@ -18,7 +18,7 @@ def iconPath(icon):
     Return full path to given icon.
     
     """
-    return os.path.join(sys.path[0], "icons", icon)
+    return os.path.join(":/icons", icon)
 
 
 ################################################################################
@@ -36,17 +36,17 @@ def createTmpDirectory():
     Create temporary directory
     
     """
-    name = "CDJSVis" + idGenerator(size=8)
+    name = "CDJSVis-" + idGenerator(size=8)
     try:
         tmpDir = os.path.join("/tmp", name)
         while os.path.exists(tmpDir):
-            name = "CDJSVis" + idGenerator(size=8)
+            name = "CDJSVis-" + idGenerator(size=8)
             tmpDir = os.path.join("/tmp", name)
         os.mkdir(tmpDir)
     except:
         tmpDir = os.path.join(os.getcwd(), name)
         while os.path.exists(tmpDir):
-            name = "CDJSVis" + idGenerator(size=8)
+            name = "CDJSVis-" + idGenerator(size=8)
             tmpDir = os.path.join(os.getcwd(), name)
     
     return tmpDir

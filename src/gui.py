@@ -40,7 +40,10 @@ try:
     import inputModule
 except:
     sys.exit(__name__+ ": ERROR: inputModule not found")
-
+try:
+    import resources
+except:
+    sys.exit(__name__+ ": ERROR: could not import resources")
 
 
 
@@ -196,6 +199,9 @@ class MainWindow(QtGui.QMainWindow):
         
         filename = fdiag.getOpenFileName(self, "Open file", os.getcwd(), filesString)
         filename = str(filename)
+        
+        if not len(filename):
+            return
         
         (nwd, filename) = os.path.split(filename)        
         

@@ -22,7 +22,11 @@ try:
     from genericForm import GenericForm
 except:
     sys.exit(__name__, "ERROR: genericForm not found")
-
+try:
+    import resources
+except:
+    sys.exit(__name__+ ": ERROR: could not import resources")
+    
 
 ################################################################################
 class FilterList(QtGui.QWidget):

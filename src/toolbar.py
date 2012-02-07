@@ -30,7 +30,10 @@ try:
     from filterTab import FilterTab
 except:
     sys.exit(__name__+ ": ERROR: could not import inputTab")
-
+try:
+    import resources
+except:
+    sys.exit(__name__+ ": ERROR: could not import resources")
 
 
 
