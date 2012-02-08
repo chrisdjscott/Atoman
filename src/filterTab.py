@@ -40,7 +40,77 @@ class FilterList(QtGui.QWidget):
         self.tabWidth = width
         self.tabHieght = height
         
+        self.visible = 1
         
+        # layout
+        self.filterListLayout = QtGui.QVBoxLayout(self)
+        
+        # add the top set of buttons
+        
+        # visibility of filter list
+        self.visibleButton = QtGui.QPushButton(QtGui.QIcon(iconPath("eye-ava.svg")), "")
+        self.visibleButton.setFixedWidth(35)
+        self.visibleButton.setStatusTip("Visible")
+        self.visibleButton.setCheckable(1)
+        self.visibleButton.setChecked(0)
+        self.connect(self.visibleButton, QtCore.SIGNAL('clicked()'), self.visibilityChanged)
+        
+        # trash the list
+        trashButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-delete.svg")), "")
+        trashButton.setStatusTip("Delete filter list")
+        trashButton.setFixedWidth(35)
+        self.connect(trashButton, QtCore.SIGNAL('clicked()'), self.filterTab.removeFilterList)
+        
+        # show scalar bar
+        #TODO: need to think about this - how to know which filter the scalar bar refers to etc
+        self.scalarBarButton = QtGui.QPushButton(QtGui.QIcon(iconPath("preferences-desktop-locale.svg")), "")
+        self.scalarBarButton.setFixedWidth(35)
+        self.scalarBarButton.setStatusTip("Show scalar bar")
+        self.scalarBarButton.setCheckable(1)
+        self.scalarBarButton.setChecked(0)
+        
+        # set up the row of buttons
+        row1 = QtGui.QWidget()
+        rowLayout = QtGui.QHBoxLayout(row1)
+        rowLayout.setAlignment(QtCore.Qt.AlignLeft)
+        rowLayout.addWidget(self.visibleButton)
+        rowLayout.addWidget(trashButton)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        
+        row2 = QtGui.QWidget()
+        rowLayout = QtGui.QHBoxLayout(row2)
+        rowLayout.setAlignment(QtCore.Qt.AlignRight)
+        rowLayout.addWidget(self.scalarBarButton)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        
+        row3 = QtGui.QWidget()
+        rowLayout = QtGui.QHBoxLayout(row3)
+        rowLayout.addWidget(row1)
+        rowLayout.addWidget(row2)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        
+        self.filterListLayout.addWidget(row3)
+        
+        
+        
+        
+        
+        
+        
+    def visibilityChanged(self):
+        """
+        Update visibility of filter list
+        
+        """
+        if self.visibleButton.isChecked():
+            self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.svg")))
+            self.visible = 0
+        else:
+            self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))
+            self.visible = 1
 
 
 ################################################################################
@@ -51,6 +121,9 @@ class FilterTab(QtGui.QWidget):
         self.mainToolbar = parent
         self.mainWindow = mainWindow
         self.toolbarWidth = width
+        
+        self.filterListCount = 1
+        self.filterLists = []
         
         # layout
         filterTabLayout = QtGui.QVBoxLayout(self)
@@ -82,11 +155,23 @@ class FilterTab(QtGui.QWidget):
         filterTabLayout.addWidget(row)
         
         #----- add tab bar for filter lists
+        self.filterTabBar = QtGui.QTabWidget(self)
+        self.filterTabBar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.connect(self.filterTabBar, QtCore.SIGNAL('currentChanged(int)'), self.filterTabBarChanged)
+        filterTabLayout.addWidget(self.filterTabBar)
         
+        # widget to hold filter list
+        self.filterListWidget = QtGui.QWidget()
+        self.filterListLayout = QtGui.QVBoxLayout(self.filterListWidget)
+        self.filterListLayout.setContentsMargins(0, 0, 0, 0)
         
+        # add list
+        list1 = FilterList(self, self.mainToolbar, self.mainWindow, self.filterListCount, self.toolbarWidth)
+        self.filterListLayout.addWidget(list1)
+        self.filterLists.append(list1)
         
-        
-        
+        # add to tab bar
+        self.filterTabBar.addTab(self.filterListWidget, str(self.filterListCount))
         
     def runAllFilterLists(self):
         pass
@@ -97,8 +182,12 @@ class FilterTab(QtGui.QWidget):
     def clearAllFilterLists(self):
         pass
 
-
-
+    def filterTabBarChanged(self, val):
+        # guess need to handle addition and removal of tabs here
+        pass
+    
+    def removeFilterList(self):
+        pass
 
 
 

@@ -49,5 +49,10 @@
 	<file>icons/apply-all-green-arrow-icon.svg</file>
 	<file>icons/user-trash-red.svg</file>
 	<file>icons/edit-delete.svg</file>
+	<file>icons/eye-ava.svg</file>
+    <file>icons/eye-close-ava.svg</file>
+    <file>icons/edit-delete.svg</file>
+    <file>icons/system-search.svg</file>
+    <file>icons/preferences-desktop-locale.svg</file>
 </qresource>
 </RCC>
