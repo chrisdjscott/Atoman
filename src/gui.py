@@ -180,7 +180,18 @@ class MainWindow(QtGui.QMainWindow):
         self.mainToolbar.currentInputLabel.setText("Input: " + filename)
     
     def setStatus(self, string):
+        """
+        Set temporary status in status bar
+        
+        """
         self.statusBar.showMessage(string)
+    
+    def updateCWD(self):
+        """
+        Updates the CWD label in the status bar.
+        
+        """
+        self.currentDirectoryLabel.setText(os.getcwd())
     
     def openFileDialog(self, state):
         """
@@ -207,7 +218,7 @@ class MainWindow(QtGui.QMainWindow):
         
         # change to new working directory
         os.chdir(nwd)
-        self.currentDirectoryLabel.setText(os.getcwd())
+        self.updateCWD()
         
         # open file
         self.openFile(filename, state)
@@ -226,6 +237,8 @@ class MainWindow(QtGui.QMainWindow):
         if state == "input" and not self.refLoaded:
             print "ERROR: must load reference before input"
             return
+        
+        #TODO: split path to check in directory of file already
         
         self.setStatus("Reading " + filename)
         

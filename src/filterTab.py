@@ -66,7 +66,7 @@ class FilterTab(QtGui.QWidget):
         
         #----- buttons for new/trash filter list
         runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('user-trash.svg')),'Apply lists')
-        runAll.setStatusTip("Run all filter lists")
+        runAll.setStatusTip("Apply all filter lists")
         self.connect(runAll, QtCore.SIGNAL('clicked()'), self.runAllFilterLists)
         add = QtGui.QPushButton(QtGui.QIcon(iconPath('tab-new.svg')),'New list')
         add.setStatusTip("New filter list")
