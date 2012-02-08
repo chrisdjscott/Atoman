@@ -95,7 +95,7 @@ def readLattice(filename, tmpLocation, lattice, fileType, state, log):
         else:
             lattice.specieList.append( specieListTemp[i] )
             lattice.specieCount.append( specieCountTemp[i] )
-            log("  new specie: "+specieListTemp[i] +" (" + atoms.atomName(specieListTemp[i]) + ")", 2, 2)
+            log("new specie: "+specieListTemp[i] +" (" + atoms.atomName(specieListTemp[i]) + ")", 2, 2)
             log(str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms", 2, 3)
 
 
@@ -150,7 +150,7 @@ def readLBOMDRef(filename, tmpLocation, lattice, fileType, state, log):
         else:
             lattice.specieList.append( specieListTemp[i] )
             lattice.specieCount.append( specieCountTemp[i] )
-            log("  new specie: "+specieListTemp[i] +" (" + atoms.atomName(specieListTemp[i]) + ")", 2, 2)
+            log("new specie: "+specieListTemp[i] +" (" + atoms.atomName(specieListTemp[i]) + ")", 2, 2)
             log(str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms", 2, 3)
 
 

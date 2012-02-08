@@ -91,7 +91,7 @@ class MainToolbar(QtGui.QDockWidget):
         self.tabBar.addTab(self.inputTab, "Input")
         
         self.filterPage = FilterTab(self, self.mainWindow, self.toolbarWidth)
-        self.tabBar.addTab(self.filterPage, "Filter")
+        self.tabBar.addTab(self.filterPage, "View")
         
         self.outputPage = QtGui.QWidget(self)
         self.tabBar.addTab(self.outputPage, "Output")

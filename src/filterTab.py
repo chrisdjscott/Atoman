@@ -10,7 +10,7 @@ import os
 import sys
 
 try:
-    from PyQt4 import QtGui, QtCore
+    from PyQt4 import QtGui, QtCore, Qt
 except:
     print __name__+ "ERROR: could not import PyQt4"
 
@@ -29,8 +29,27 @@ except:
     
 
 ################################################################################
+class List(QtGui.QListWidget):
+    def __init__(self, parent):
+        super(List, self).__init__()
+        
+        self.parent = parent
+        
+        self.setDragDropMode(self.InternalMove)
+        self.installEventFilter(self)
+
+    def eventFilter(self, sender, event):
+        if event.type() == Qt.QEvent.ChildRemoved:
+            self.on_order_changed()
+        return False
+
+    def on_order_changed(self):
+        pass
+
+
+################################################################################
 class FilterList(QtGui.QWidget):
-    def __init__(self, parent, mainToolbar, mainWindow, tab, width, height=120):
+    def __init__(self, parent, mainToolbar, mainWindow, tab, width, height=150):
         super(FilterList, self).__init__()
         
         self.filterTab = parent
@@ -38,7 +57,7 @@ class FilterList(QtGui.QWidget):
         self.mainWindow = mainWindow
         self.tab = tab
         self.tabWidth = width
-        self.tabHieght = height
+        self.tabHeight = height
         
         self.visible = 1
         
@@ -94,12 +113,95 @@ class FilterList(QtGui.QWidget):
         
         self.filterListLayout.addWidget(row3)
         
+        # Now add the list widget
+        self.listItems = List(self)
+        self.listItems.setFixedHeight(self.tabHeight)
+        
+        self.filterListLayout.addWidget(self.listItems)
+        
+        # add more buttons
+        addFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
+        addFilter.setStatusTip("Add new filter")
+        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.addFilter)
+        
+        removeFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
+        removeFilter.setStatusTip("Remove filter")
+        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.removeFilter)
+        
+        moveUp = QtGui.QPushButton(QtGui.QIcon(iconPath("go-up.svg")), "")
+        moveUp.setStatusTip("Move up")
+        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.moveFilterUpInList)
+        
+        moveDown = QtGui.QPushButton(QtGui.QIcon(iconPath("go-down.svg")), "")
+        moveDown.setStatusTip("Move down")
+        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.moveFilterDownInList)
+        
+        clearList = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-clear.svg")), "")
+        clearList.setStatusTip("Clear current filter list")
+        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.clearList)
+        
+        applyList = QtGui.QPushButton(QtGui.QIcon(iconPath("view-refresh.svg")), "")
+        applyList.setStatusTip("Apply current filter list")
+        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.applyList)
+        
+        buttonWidget = QtGui.QWidget()
+        buttonLayout = QtGui.QHBoxLayout(buttonWidget)
+        buttonLayout.setSpacing(0)
+        buttonLayout.setContentsMargins(0, 0, 0, 0)
+        buttonLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        buttonLayout.addWidget(addFilter)
+        buttonLayout.addWidget(removeFilter)
+        buttonLayout.addWidget(moveUp)
+        buttonLayout.addWidget(moveDown)
+        buttonLayout.addWidget(clearList)
+        buttonLayout.addWidget(applyList)
+        
+        self.filterListLayout.addWidget(buttonWidget)
         
         
+    def applyList(self):
+        """
+        Move filter down in list
         
+        """
+        pass
+    
+    def clearList(self):
+        """
+        Move filter down in list
         
+        """
+        pass
+    
+    def moveFilterDownInList(self):
+        """
+        Move filter down in list
         
+        """
+        pass
+    
+    def moveFilterUpInList(self):
+        """
+        Move filter up in list
         
+        """
+        pass
+    
+    def addFilter(self):
+        """
+        Add new filter
+        
+        """
+        pass
+    
+    def removeFilter(self):
+        """
+        Remove new filter
+        
+        """
+        pass
+    
     def visibilityChanged(self):
         """
         Update visibility of filter list
@@ -138,7 +240,7 @@ class FilterTab(QtGui.QWidget):
         rowLayout.setSpacing(0)
         
         #----- buttons for new/trash filter list
-        runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('user-trash.svg')),'Apply lists')
+        runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('view-refresh-all.svg')),'Apply lists')
         runAll.setStatusTip("Apply all filter lists")
         self.connect(runAll, QtCore.SIGNAL('clicked()'), self.runAllFilterLists)
         add = QtGui.QPushButton(QtGui.QIcon(iconPath('tab-new.svg')),'New list')

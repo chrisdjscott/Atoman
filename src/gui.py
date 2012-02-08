@@ -129,7 +129,7 @@ class MainWindow(QtGui.QMainWindow):
         VTKlayout.addWidget(self.VTKWidget)
         VTKlayout.setContentsMargins(0,0,0,0)
         
-        self.VTKWidget.Initialize()
+#        self.VTKWidget.Initialize()
         self.VTKWidget.Start()
         
         self.VTKRen = vtk.vtkRenderer()
@@ -168,8 +168,7 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         if self.consoleOpen:
-            print "HERE"
-            self.console.hide()
+            self.console.closeEvent(1)
             self.console.show()
         else:
             self.console.show()
@@ -345,7 +344,7 @@ class ConsoleWindow(QtGui.QDialog):
 #        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Console")
-        self.resize(500,220)
+        self.resize(500,300)
         
         consoleLayout = QtGui.QVBoxLayout(self)
         consoleLayout.setAlignment(QtCore.Qt.AlignTop)
@@ -361,14 +360,14 @@ class ConsoleWindow(QtGui.QDialog):
         self.write("OCH")
     
         #TODO: add clear button and close button.
-        consoleLayout.addStretch()
+#        consoleLayout.addStretch()
         
         self.clearButton = QtGui.QPushButton("Clear")
-        self.clearButton.setDefault(0)
+        self.clearButton.setAutoDefault(0)
         self.connect(self.clearButton, QtCore.SIGNAL('clicked()'), self.clearText)
         
         self.closeButton = QtGui.QPushButton("Close")
-        self.closeButton.setDefault(1)
+        self.closeButton.setAutoDefault(1)
         self.connect(self.closeButton, QtCore.SIGNAL('clicked()'), self.close)
         
         buttonWidget = QtGui.QWidget()

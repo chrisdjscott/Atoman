@@ -28,6 +28,9 @@ class Renderer:
         
         self.mainWindow = mainWindow
         
+        # setup stuff
+        self.camera = vtk.vtkCamera()
+        
         
     
     
