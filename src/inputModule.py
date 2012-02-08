@@ -31,29 +31,29 @@ except:
 
 
 ################################################################################
-def readFile(filename, tmpLocation, lattice, fileType, state):
+def readFile(filename, tmpLocation, lattice, fileType, state, log):
     
     # read file
     loc = checkForZipped(filename, tmpLocation)
     if loc == -1:
         return -1
     
-    filename = os.path.join(loc, filename)
+    log("Reading file %s (%s, %s)" % (filename, fileType, state))
     
-    print "READING", filename, fileType, state
+    filename = os.path.join(loc, filename)
     
     # first read the header
     if fileType == "LBOMD":
         
         if state == "ref":
-            readLBOMDRef(filename, tmpLocation, lattice, fileType, state) 
+            readLBOMDRef(filename, tmpLocation, lattice, fileType, state, log) 
         
         elif state == "input":
-            readLBOMDInput(filename, tmpLocation, lattice, fileType, state)
+            readLBOMDInput(filename, tmpLocation, lattice, fileType, state, log)
             
     elif fileType == "DAT":
         
-        readLattice(filename, tmpLocation, lattice, fileType, state)
+        readLattice(filename, tmpLocation, lattice, fileType, state, log)
         
         
     
@@ -63,7 +63,7 @@ def readFile(filename, tmpLocation, lattice, fileType, state):
 
 
 ################################################################################
-def readLattice(filename, tmpLocation, lattice, fileType, state):
+def readLattice(filename, tmpLocation, lattice, fileType, state, log):
     
     f = open(filename)
             
@@ -88,20 +88,20 @@ def readLattice(filename, tmpLocation, lattice, fileType, state):
     input_c.readLatticeLBOMD( filename, lattice.sym, lattice.pos, lattice.charge, specieListTemp, specieCountTemp, lattice.maxPos, lattice.minPos )
     
     # build specie list and counter in lattice object
-    print  __name__, "Building specie list"
+    log("Building specie list", 2, 1)
     for i in range(maxNumSpecies):
         if specieListTemp[i] == 'XX':
             break
         else:
             lattice.specieList.append( specieListTemp[i] )
             lattice.specieCount.append( specieCountTemp[i] )
-            print "  new specie: " + specieListTemp[i] + " (" + atoms.atomName(specieListTemp[i]) + ")"
-            print "   ", str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms"
+            log("  new specie: "+specieListTemp[i] +" (" + atoms.atomName(specieListTemp[i]) + ")", 2, 2)
+            log(str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms", 2, 3)
 
 
 
 ################################################################################
-def readLBOMDInput(filename, tmpLocation, lattice, fileType, state):
+def readLBOMDInput(filename, tmpLocation, lattice, fileType, state, log):
     
     f = open(filename)
             
@@ -116,7 +116,7 @@ def readLBOMDInput(filename, tmpLocation, lattice, fileType, state):
 
 
 ################################################################################
-def readLBOMDRef(filename, tmpLocation, lattice, fileType, state):
+def readLBOMDRef(filename, tmpLocation, lattice, fileType, state, log):
     
     f = open(filename)
             
@@ -143,15 +143,15 @@ def readLBOMDRef(filename, tmpLocation, lattice, fileType, state):
     input_c.readRef( filename, lattice.sym, lattice.pos, lattice.charge, lattice.KE, lattice.PE, tmpForceArray, specieListTemp, specieCountTemp, lattice.maxPos, lattice.minPos )
         
     # build specie list and counter in lattice object
-    print "  Building specie list in python"
+    log("Building specie list", 2, 1)
     for i in range(maxNumSpecies):
         if specieListTemp[i] == 'XX':
             break
         else:
             lattice.specieList.append( specieListTemp[i] )
             lattice.specieCount.append( specieCountTemp[i] )
-            print "    found new specie: " + specieListTemp[i] + " (" + atoms.atomName(specieListTemp[i]) + ")"
-            print "      " + str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms"
+            log("  new specie: "+specieListTemp[i] +" (" + atoms.atomName(specieListTemp[i]) + ")", 2, 2)
+            log(str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms", 2, 3)
 
 
 

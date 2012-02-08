@@ -70,6 +70,8 @@ class MainWindow(QtGui.QMainWindow):
         self.fileType = ""
         self.refLoaded = 0
         self.inputLoaded = 0
+        self.consoleOpen = 0
+        self.verboseLevel = 3
         
         # window size and location
         self.renderWindowWidth = 750 #650
@@ -96,6 +98,15 @@ class MainWindow(QtGui.QMainWindow):
         exitToolbar.addAction(exitAction)
         exitToolbar.addSeparator()
                 
+        # button to show console window
+        openConsoleAction = QtGui.QAction(QtGui.QIcon(iconPath("utilities-terminal.svg")), "Console", self)
+        openConsoleAction.setStatusTip("Show console window")
+        openConsoleAction.triggered.connect(self.showConsole)
+        
+        utilToolbar = self.addToolBar("Utilities")
+        utilToolbar.addAction(openConsoleAction)
+        utilToolbar.addSeparator()
+        
         # add about action
         aboutAction = QtGui.QAction(QtGui.QIcon(iconPath("help-browser.svg")), "About", self)
         aboutAction.setStatusTip("About this application")
@@ -129,7 +140,10 @@ class MainWindow(QtGui.QMainWindow):
         
         # initiate lattice objects for storing reference and input states
         self.inputState = lattice.Lattice()
-        self.refState = lattice.Lattice()
+        self.refState = lattice.Lattice()        
+        
+        # console window for logging output to
+        self.console = ConsoleWindow(self)
         
         # create temporary directory for working in
         self.tmpDirectory = utilities.createTmpDirectory()
@@ -147,6 +161,19 @@ class MainWindow(QtGui.QMainWindow):
         cp = QtGui.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
+    
+    def showConsole(self):
+        """
+        Open the console window
+        
+        """
+        if self.consoleOpen:
+            print "HERE"
+            self.console.hide()
+            self.console.show()
+        else:
+            self.console.show()
+            self.consoleOpen = 1
     
     def closeEvent(self, event):
         """
@@ -168,6 +195,7 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         shutil.rmtree(self.tmpDirectory)
+        self.console.accept()
     
     def setFileType(self, fileType):
         """
@@ -228,6 +256,7 @@ class MainWindow(QtGui.QMainWindow):
         (nwd, filename) = os.path.split(filename)        
         
         # change to new working directory
+        self.console.write("Changing to dir "+nwd)
         os.chdir(nwd)
         self.updateCWD()
         
@@ -258,14 +287,14 @@ class MainWindow(QtGui.QMainWindow):
         #    DAT input will have both
         if self.fileType == "LBOMD":
             if state == "ref":
-                status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state)
+                status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
             else:
-                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state)
+                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write)
         elif self.fileType == "DAT":
             if state == "ref":
-                status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state)
+                status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
             else:
-                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state)
+                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write)
         else:
             self.displayError("openFile: Unrecognised file type: "+self.fileType)
             return
@@ -304,3 +333,77 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         QtGui.QMessageBox.about(self, "About me", self.applicationString)
+
+
+################################################################################
+class ConsoleWindow(QtGui.QDialog):
+    def __init__(self, mainWindow):
+        super(ConsoleWindow, self).__init__()
+        
+        self.parent = mainWindow
+        self.setModal(0)
+#        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.setWindowTitle("Console")
+        self.resize(500,220)
+        
+        consoleLayout = QtGui.QVBoxLayout(self)
+        consoleLayout.setAlignment(QtCore.Qt.AlignTop)
+        consoleLayout.setContentsMargins(0, 0, 0, 0)
+        consoleLayout.setSpacing(0)
+        
+        self.textWidget = QtGui.QTextEdit()
+        self.textWidget.setReadOnly(1)
+        
+        consoleLayout.addWidget(self.textWidget)
+        
+        self.write("Hello there.")
+        self.write("OCH")
+    
+        #TODO: add clear button and close button.
+        consoleLayout.addStretch()
+        
+        self.clearButton = QtGui.QPushButton("Clear")
+        self.clearButton.setDefault(0)
+        self.connect(self.clearButton, QtCore.SIGNAL('clicked()'), self.clearText)
+        
+        self.closeButton = QtGui.QPushButton("Close")
+        self.closeButton.setDefault(1)
+        self.connect(self.closeButton, QtCore.SIGNAL('clicked()'), self.close)
+        
+        buttonWidget = QtGui.QWidget()
+        buttonLayout = QtGui.QHBoxLayout(buttonWidget)
+        buttonLayout.addWidget(self.clearButton)
+        buttonLayout.addStretch()
+        buttonLayout.addWidget(self.closeButton)
+        
+        consoleLayout.addWidget(buttonWidget)
+        
+        
+    def clearText(self):
+        """
+        Clear all text.
+        
+        """
+        self.textWidget.clear()
+    
+    def write(self, string, level=0, indent=0):
+        """
+        Write to the console window
+        
+        """
+        #TODO: change colour depending on level
+        if level < self.parent.verboseLevel:
+            ind = ""
+            for i in xrange(indent):
+                ind += "  "
+            self.textWidget.append("%s %s%s" % (">", ind, string))
+        
+    def closeEvent(self, event):
+        self.hide()
+        self.parent.consoleOpen = 0
+        
+        
+        
+        
+        
