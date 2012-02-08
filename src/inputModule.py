@@ -36,7 +36,6 @@ def readFile(filename, tmpLocation, lattice, fileType, state):
     # read file
     loc = checkForZipped(filename, tmpLocation)
     if loc == -1:
-        print "ERROR: could not find file", filename
         return -1
     
     filename = os.path.join(loc, filename)

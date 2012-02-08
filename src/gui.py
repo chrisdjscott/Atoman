@@ -64,6 +64,7 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         # defaults
+        self.applicationString = "Information about this application"
         self.refFile = ""
         self.inputFile = ""
         self.fileType = ""
@@ -84,15 +85,25 @@ class MainWindow(QtGui.QMainWindow):
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
         
-        # add actions
+        # add exit action
         exitAction = QtGui.QAction(QtGui.QIcon(iconPath("system-log-out.svg")), "Exit", self)
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.close)
         
-        # add toolbar
-        toolbar = self.addToolBar("Exit")
-        toolbar.addAction(exitAction)
+        # add exit toolbar
+        exitToolbar = self.addToolBar("Exit")
+        exitToolbar.addAction(exitAction)
+        exitToolbar.addSeparator()
+                
+        # add about action
+        aboutAction = QtGui.QAction(QtGui.QIcon(iconPath("help-browser.svg")), "About", self)
+        aboutAction.setStatusTip("About this application")
+        aboutAction.triggered.connect(self.aboutMe)
+        
+        # add help toolbar
+        helpToolbar = self.addToolBar("Help")
+        helpToolbar.addAction(aboutAction)
         
         # add cwd to status bar
         self.currentDirectoryLabel = QtGui.QLabel(os.getcwd())
@@ -205,7 +216,7 @@ class MainWindow(QtGui.QMainWindow):
         elif self.fileType == "DAT":
             filesString = "Lattice files (*.dat *.dat.bz2 *.dat.gz)"
         else:
-            print "ERROR: unknown file type: ", self.fileType
+            self.displayError("openFileDialog: Unrecognised file type: "+self.fileType)
             return
         
         filename = fdiag.getOpenFileName(self, "Open file", os.getcwd(), filesString)
@@ -235,7 +246,7 @@ class MainWindow(QtGui.QMainWindow):
             filename = filename[:-4]
         
         if state == "input" and not self.refLoaded:
-            print "ERROR: must load reference before input"
+            self.displayWarning("Must load reference before input")
             return
         
         #TODO: split path to check in directory of file already
@@ -256,10 +267,12 @@ class MainWindow(QtGui.QMainWindow):
             else:
                 status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state)
         else:
-            print "WARNING: unknown file type: ", self.fileType
+            self.displayError("openFile: Unrecognised file type: "+self.fileType)
             return
         
         if status:
+            if status == -1:
+                self.displayWarning("Could not find file: "+filename)
             return
         
         if state == "ref":
@@ -271,5 +284,23 @@ class MainWindow(QtGui.QMainWindow):
         
         self.setStatus("Ready")
         
+    def displayWarning(self, message):
+        """
+        Display warning message.
         
+        """
+        QtGui.QMessageBox.warning(self, "Warning", message)
+    
+    def displayError(self, message):
+        """
+        Display error message
         
+        """
+        QtGui.QMessageBox.critical(self, "Error", "A critical error has occurred.\n"+message)
+    
+    def aboutMe(self):
+        """
+        Display about message.
+        
+        """
+        QtGui.QMessageBox.about(self, "About me", self.applicationString)

@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
+    <file>icons/help-browser.svg</file>
 	<file>icons/4xAA-icon.svg</file>
 	<file>icons/AVASiconB.png</file>
 	<file>icons/system-log-out.svg</file>
