@@ -12,7 +12,7 @@ import sys
 try:
     from PyQt4 import QtGui, QtCore
 except:
-    print __name__+ " ERROR: Pcould not import yQt4"
+    print __name__+ " ERROR: Pcould not import PyQt4"
 
 try:
     from utilities import iconPath
@@ -31,9 +31,9 @@ except:
 
 
 ################################################################################
-class LatticeTab(QtGui.QWidget):
+class LatticePage(QtGui.QWidget):
     def __init__(self, parent, mainToolbar, mainWindow, width):
-        super(LatticeTab, self).__init__(parent)
+        super(LatticePage, self).__init__(parent)
         
         self.inputTab = parent
         self.mainToolbar = mainToolbar
@@ -47,7 +47,7 @@ class LatticeTab(QtGui.QWidget):
         latticeTabLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # add read lattice box
-        self.latticeBox = GenericForm(self.inputTab, self.toolbarWidth, "Load reference file")
+        self.latticeBox = GenericForm(self.inputTab, self.toolbarWidth, "Load reference lattice")
         self.latticeBox.show()
         
         # file name line
@@ -75,7 +75,7 @@ class LatticeTab(QtGui.QWidget):
         latticeTabLayout.addWidget(self.latticeBox)
         
         # add read input box
-        self.inputBox = GenericForm(self.inputTab, self.toolbarWidth, "Load input file")
+        self.inputBox = GenericForm(self.inputTab, self.toolbarWidth, "Load input lattice")
         self.inputBox.show()
         
         # file name line
@@ -131,9 +131,9 @@ class LatticeTab(QtGui.QWidget):
 
 
 ################################################################################
-class LBOMDTab(QtGui.QWidget):
+class LBOMDPage(QtGui.QWidget):
     def __init__(self, parent, mainToolbar, mainWindow, width):
-        super(LBOMDTab, self).__init__(parent)
+        super(LBOMDPage, self).__init__(parent)
         
         self.inputTab = parent
         self.mainToolbar = mainToolbar
@@ -147,7 +147,7 @@ class LBOMDTab(QtGui.QWidget):
         LBOMDTabLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # add read reference box
-        self.refBox = GenericForm(self.inputTab, self.toolbarWidth, "Load reference file")
+        self.refBox = GenericForm(self.inputTab, self.toolbarWidth, "Load animation reference")
         self.refBox.show()
         
         # file name line
@@ -175,7 +175,7 @@ class LBOMDTab(QtGui.QWidget):
         LBOMDTabLayout.addWidget(self.refBox)
         
         # add read input box
-        self.inputBox = GenericForm(self.inputTab, self.toolbarWidth, "Load input file")
+        self.inputBox = GenericForm(self.inputTab, self.toolbarWidth, "Load input xyz")
         self.inputBox.show()
         
         # file name line
@@ -240,22 +240,43 @@ class InputTab(QtGui.QWidget):
         # layout
         inputTabLayout = QtGui.QVBoxLayout(self)
         
-        row = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setContentsMargins(0, 0, 0, 0)
-        rowLayout.setSpacing(0)
-        rowLayout.setAlignment(QtCore.Qt.AlignTop)
+        selector = GenericForm(self, self.toolbarWidth, "File type")
+        selector.show()
+        row = selector.newRow()
+        self.fileTypeComboBox = QtGui.QComboBox()
+        self.fileTypeComboBox.addItem("LBOMD XYZ")
+        self.fileTypeComboBox.addItem("LBOMD LATTICE")
+        self.connect(self.fileTypeComboBox, QtCore.SIGNAL("currentIndexChanged(QString)"), self.setWidgetStack)
+        row.addWidget(self.fileTypeComboBox)
+        inputTabLayout.addWidget(selector)
         
-        self.tabBar = QtGui.QTabWidget(row)
+        # stacked widget
+        self.stackedWidget = QtGui.QStackedWidget(self)
         
-        # add LBOMD page
-        self.LBOMDTab = LBOMDTab(self, self.mainToolbar, self.mainWindow, self.toolbarWidth)
-        self.tabBar.addTab(self.LBOMDTab, "LBOMD")
+        self.LBOMDPage = LBOMDPage(self, self.mainToolbar, self.mainWindow, self.toolbarWidth)
+        self.stackedWidget.addWidget(self.LBOMDPage)
         
-        # add DAT page
-        self.latticeTab = LatticeTab(self, self.mainToolbar, self.mainWindow, self.toolbarWidth)
-        self.tabBar.addTab(self.latticeTab, "DAT")
+        self.latticePage = LatticePage(self, self.mainToolbar, self.mainWindow, self.toolbarWidth)
+        self.stackedWidget.addWidget(self.latticePage)
         
-        rowLayout.addWidget(self.tabBar)
+        inputTabLayout.addWidget(self.stackedWidget)
         
-        inputTabLayout.addWidget(row)
+    
+    def setWidgetStack(self, text):
+        """
+        Set which stacked widget is displayed
+        
+        """
+        if text == "LBOMD XYZ":
+            self.stackedWidget.setCurrentIndex(0)
+        
+        elif text == "LBOMD LATTICE":
+            self.stackedWidget.setCurrentIndex(1)
+        
+        #TODO: when the stacked widget is changed I should change file type here,
+        #      and warn that current data will be reset
+        
+        
+        
+        
+        

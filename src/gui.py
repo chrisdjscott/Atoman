@@ -370,8 +370,6 @@ class MainWindow(QtGui.QMainWindow):
                                 <p>Python %s - Qt %s - PyQt %s on %s""" % (
                                 __version__, platform.python_version(), Qt.QT_VERSION_STR, Qt.PYQT_VERSION_STR,
                                 platform.system()))
-    
-     
 
     @staticmethod
     def updateInstances(qobj):
