@@ -31,7 +31,7 @@ except:
 ################################################################################
 class List(QtGui.QListWidget):
     def __init__(self, parent):
-        super(List, self).__init__()
+        super(List, self).__init__(parent)
         
         self.parent = parent
         
@@ -50,7 +50,7 @@ class List(QtGui.QListWidget):
 ################################################################################
 class FilterList(QtGui.QWidget):
     def __init__(self, parent, mainToolbar, mainWindow, tab, width, height=150):
-        super(FilterList, self).__init__()
+        super(FilterList, self).__init__(parent)
         
         self.filterTab = parent
         self.mainToolbar = mainToolbar
@@ -218,7 +218,7 @@ class FilterList(QtGui.QWidget):
 ################################################################################
 class FilterTab(QtGui.QWidget):
     def __init__(self, parent, mainWindow, width):
-        super(FilterTab, self).__init__()
+        super(FilterTab, self).__init__(parent)
         
         self.mainToolbar = parent
         self.mainWindow = mainWindow

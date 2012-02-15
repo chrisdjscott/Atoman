@@ -33,7 +33,7 @@ except:
 ################################################################################
 class LatticeTab(QtGui.QWidget):
     def __init__(self, parent, mainToolbar, mainWindow, width):
-        super(LatticeTab, self).__init__()
+        super(LatticeTab, self).__init__(parent)
         
         self.inputTab = parent
         self.mainToolbar = mainToolbar
@@ -133,7 +133,7 @@ class LatticeTab(QtGui.QWidget):
 ################################################################################
 class LBOMDTab(QtGui.QWidget):
     def __init__(self, parent, mainToolbar, mainWindow, width):
-        super(LBOMDTab, self).__init__()
+        super(LBOMDTab, self).__init__(parent)
         
         self.inputTab = parent
         self.mainToolbar = mainToolbar
@@ -231,7 +231,7 @@ class LBOMDTab(QtGui.QWidget):
 ################################################################################
 class InputTab(QtGui.QWidget):
     def __init__(self, parent, mainWindow, width):
-        super(InputTab, self).__init__()
+        super(InputTab, self).__init__(parent)
         
         self.mainToolbar = parent
         self.mainWindow = mainWindow

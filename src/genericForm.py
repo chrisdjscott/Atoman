@@ -17,7 +17,7 @@ except:
 ################################################################################
 class GenericForm(QtGui.QWidget):
     def __init__(self, parent,width,title):
-        super(GenericForm, self).__init__()
+        super(GenericForm, self).__init__(parent)
         
         self.width = width
         self.parent = parent

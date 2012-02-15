@@ -41,7 +41,7 @@ except:
 ################################################################################
 class MainToolbar(QtGui.QDockWidget):
     def __init__(self, parent, width, height):
-        super(MainToolbar, self).__init__()
+        super(MainToolbar, self).__init__(parent)
         
         self.mainWindow = parent
         

@@ -336,10 +336,10 @@ class MainWindow(QtGui.QMainWindow):
 
 ################################################################################
 class ConsoleWindow(QtGui.QDialog):
-    def __init__(self, mainWindow):
-        super(ConsoleWindow, self).__init__()
+    def __init__(self, parent=None):
+        super(ConsoleWindow, self).__init__(parent)
         
-        self.parent = mainWindow
+        self.parent = parent
         self.setModal(0)
 #        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
@@ -366,7 +366,7 @@ class ConsoleWindow(QtGui.QDialog):
         self.clearButton.setAutoDefault(0)
         self.connect(self.clearButton, QtCore.SIGNAL('clicked()'), self.clearText)
         
-        self.closeButton = QtGui.QPushButton("Close")
+        self.closeButton = QtGui.QPushButton("Hide")
         self.closeButton.setAutoDefault(1)
         self.connect(self.closeButton, QtCore.SIGNAL('clicked()'), self.close)
         
