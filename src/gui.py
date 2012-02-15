@@ -11,7 +11,7 @@ import sys
 import shutil
 
 try:
-    from PyQt4 import QtGui, QtCore
+    from PyQt4 import QtGui, QtCore, Qt
 except:
     print __name__+ ": ERROR: could not import PyQt4"
 try:
@@ -53,8 +53,16 @@ class MainWindow(QtGui.QMainWindow):
     The main window.
     
     """
-    def __init__(self):
-        super(MainWindow, self).__init__()
+    
+    Instances = set()
+    
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent)
+        
+        # multiple instances
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        MainWindow.Instances.add(self)
+        
         
         self.initUI()
     
@@ -93,10 +101,17 @@ class MainWindow(QtGui.QMainWindow):
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.close)
         
-        # add exit toolbar
-        exitToolbar = self.addToolBar("Exit")
-        exitToolbar.addAction(exitAction)
-        exitToolbar.addSeparator()
+        # add new window action
+        newWindowAction = QtGui.QAction(QtGui.QIcon(iconPath("document-new.svg")), "New", self)
+        newWindowAction.setShortcut('Ctrl+N')
+        newWindowAction.setStatusTip('New window')
+        newWindowAction.triggered.connect(self.openNewWindow)
+        
+        # add file toolbar
+        fileToolbar = self.addToolBar("File")
+        fileToolbar.addAction(exitAction)
+        fileToolbar.addAction(newWindowAction)
+        fileToolbar.addSeparator()
                 
         # button to show console window
         openConsoleAction = QtGui.QAction(QtGui.QIcon(iconPath("utilities-terminal.svg")), "Console", self)
@@ -138,6 +153,9 @@ class MainWindow(QtGui.QMainWindow):
         
         self.setCentralWidget(self.VTKContainer)
         
+        # connect window destroyed to updateInstances
+        self.connect(self, QtCore.SIGNAL("destroyed(QObject*)"), MainWindow.updateInstances)
+        
         # initiate lattice objects for storing reference and input states
         self.inputState = lattice.Lattice()
         self.refState = lattice.Lattice()        
@@ -151,6 +169,15 @@ class MainWindow(QtGui.QMainWindow):
         self.setStatus('Ready')
         
         self.show()
+    
+    
+    
+    def openNewWindow(self):
+        """
+        Open a new instance of the main window
+        
+        """
+        MainWindow().show()
     
     def centre(self):
         """
@@ -332,7 +359,29 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         QtGui.QMessageBox.about(self, "About me", self.applicationString)
+    
+     
 
+    @staticmethod
+    def updateInstances(qobj):
+        """
+        Make sure only alive windows appear in the set
+        
+        """
+        MainWindow.Instances = set([window for window in MainWindow.Instances if isAlive(window)])   
+
+
+def isAlive(qobj):
+    """
+    Check a window is alive
+    
+    """
+    import sip
+    try:
+        sip.unwrapinstance(qobj)
+    except RuntimeError:
+        return False
+    return True   
 
 ################################################################################
 class ConsoleWindow(QtGui.QDialog):
@@ -402,7 +451,7 @@ class ConsoleWindow(QtGui.QDialog):
         self.hide()
         self.parent.consoleOpen = 0
         
-        
-        
-        
-        
+    
+    
+
+

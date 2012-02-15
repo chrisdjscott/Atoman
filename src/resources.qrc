@@ -55,5 +55,6 @@
     <file>icons/system-search.svg</file>
     <file>icons/preferences-desktop-locale.svg</file>
     <file>icons/utilities-terminal.svg</file>
+    <file>icons/document-new.svg</file>
 </qresource>
 </RCC>
