@@ -116,7 +116,7 @@ class MainWindow(QtGui.QMainWindow):
         fileToolbar.addSeparator()
                 
         # button to show console window
-        openConsoleAction = QtGui.QAction(QtGui.QIcon(iconPath("utilities-terminal.svg")), "Console", self)
+        openConsoleAction = QtGui.QAction(QtGui.QIcon(iconPath("console-icon.png")), "Console", self)
         openConsoleAction.setStatusTip("Show console window")
         openConsoleAction.triggered.connect(self.showConsole)
         
@@ -363,7 +363,7 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         QtGui.QMessageBox.about(self, "About CDJSVis", 
-                                """<b>CDJSVis</b> v %s
+                                """<b>CDJSVis</b> v%s
                                 <p>Copyright &copy; 2012 Chris Scott</p>
                                 <p>This application can be used to visualise atomistic 
                                 simulations.</p>
@@ -402,6 +402,7 @@ class ConsoleWindow(QtGui.QDialog):
 #        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Console")
+        self.setWindowIcon(QtGui.QIcon(iconPath("console-icon.png")))
         self.resize(500,300)
         
         consoleLayout = QtGui.QVBoxLayout(self)

@@ -57,5 +57,6 @@
     <file>icons/utilities-terminal.svg</file>
     <file>icons/document-new.svg</file>
     <file>icons/applications.ico</file>
+    <file>icons/console-icon.png</file>
 </qresource>
 </RCC>
