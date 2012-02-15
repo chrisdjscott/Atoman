@@ -18,7 +18,10 @@ try:
     import gui
 except:
     print __name__+ ": ERROR: could not import gui"
-
+try:
+    from utilities import iconPath
+except:
+    print __name__+ ": ERROR: utilities not found"
 
 
 ################################################################################
@@ -26,6 +29,7 @@ def main():
     app = QtGui.QApplication(sys.argv)
     
     mw = gui.MainWindow()
+    mw.setWindowIcon(QtGui.QIcon(iconPath("applications.ico")))
     
     sys.exit(app.exec_())
 

@@ -9,6 +9,7 @@ last edited: February 2012
 import os
 import sys
 import shutil
+import platform
 
 try:
     from PyQt4 import QtGui, QtCore, Qt
@@ -46,6 +47,8 @@ except:
     print __name__+ ": ERROR: could not import resources"
 
 
+__version__ = "0.0.1"
+
 
 ################################################################################
 class MainWindow(QtGui.QMainWindow):
@@ -72,7 +75,6 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         # defaults
-        self.applicationString = "Information about this application"
         self.refFile = ""
         self.inputFile = ""
         self.fileType = ""
@@ -177,7 +179,9 @@ class MainWindow(QtGui.QMainWindow):
         Open a new instance of the main window
         
         """
-        MainWindow().show()
+        mw = MainWindow()
+        mw.setWindowIcon(QtGui.QIcon(iconPath("applications.ico")))
+        mw.show()
     
     def centre(self):
         """
@@ -358,7 +362,14 @@ class MainWindow(QtGui.QMainWindow):
         Display about message.
         
         """
-        QtGui.QMessageBox.about(self, "About me", self.applicationString)
+        QtGui.QMessageBox.about(self, "About CDJSVis", 
+                                """<b>CDJSVis</b> v %s
+                                <p>Copyright &copy; 2012 Chris Scott</p>
+                                <p>This application can be used to visualise atomistic 
+                                simulations.</p>
+                                <p>Python %s - Qt %s - PyQt %s on %s""" % (
+                                __version__, platform.python_version(), Qt.QT_VERSION_STR, Qt.PYQT_VERSION_STR,
+                                platform.system()))
     
      
 
