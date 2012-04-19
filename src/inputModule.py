@@ -10,23 +10,11 @@ import os
 import sys
 import shutil
 
-try:
-    import numpy as np
-except:
-    print __name__ +": ERROR: numpy not found"
+import numpy as np
 
-try:
-    import utilities
-except:
-    print __name__+ ": ERROR: utilities not found"
-try:
-    from visclibs import input_c
-except:
-    print __name__ +": ERROR: input_c not found"
-try:
-    import atoms
-except:
-    print __name__ +": ERROR: atoms not found"
+import utilities
+from visclibs import input_c
+import atoms
 
 
 

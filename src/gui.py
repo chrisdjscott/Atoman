@@ -11,40 +11,16 @@ import sys
 import shutil
 import platform
 
-try:
-    from PyQt4 import QtGui, QtCore, Qt
-except:
-    print __name__+ ": ERROR: could not import PyQt4"
-try:
-    from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-except:
-    print __name__+ ": ERROR: could not import QVTKRenderWindowInteractor"
-try:
-    import vtk
-except:
-    print __name__+ ": ERROR: could not import vtk"
+from PyQt4 import QtGui, QtCore, Qt
+from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+import vtk
 
-try:
-    import utilities
-    from utilities import iconPath
-except:
-    print __name__+ ": ERROR: utilities not found"
-try:
-    import toolbar as toolbarModule
-except:
-    print __name__+ ": ERROR: toolbar not found"
-try:
-    import lattice
-except:
-    print __name__+ ": ERROR: lattice not found"
-try:
-    import inputModule
-except:
-    print __name__+ ": ERROR: inputModule not found"
-try:
-    import resources
-except:
-    print __name__+ ": ERROR: could not import resources"
+import utilities
+from utilities import iconPath
+import toolbar as toolbarModule
+import lattice
+import inputModule
+import resources
 
 
 __version__ = "0.0.1"
@@ -367,9 +343,9 @@ class MainWindow(QtGui.QMainWindow):
                                 <p>Copyright &copy; 2012 Chris Scott</p>
                                 <p>This application can be used to visualise atomistic 
                                 simulations.</p>
-                                <p>Python %s - Qt %s - PyQt %s on %s""" % (
+                                <p>Python %s - Qt %s - PyQt %s  - VTK %s on %s""" % (
                                 __version__, platform.python_version(), Qt.QT_VERSION_STR, Qt.PYQT_VERSION_STR,
-                                platform.system()))
+                                vtk.vtkVersion.GetVTKVersion(), platform.system()))
 
     @staticmethod
     def updateInstances(qobj):
