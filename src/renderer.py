@@ -9,14 +9,7 @@ last edited: February 2012
 import os
 import sys
 
-#try:
-#    from PyQt4 import QtGui, QtCore
-#except:
-#    print __name__+ ": ERROR: could not import PyQt4"
-try:
-    import vtk
-except:
-    print __name__+ ": ERROR: could not import vtk"
+import vtk
 
 
 

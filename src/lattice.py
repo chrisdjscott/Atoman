@@ -10,10 +10,7 @@ last edited: February 2012
 import os
 import sys
 
-try:
-    import numpy as np
-except:
-    print __name__+": ERROR: could not import numpy"
+import numpy as np
 
 
 

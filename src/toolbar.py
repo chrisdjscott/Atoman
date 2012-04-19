@@ -9,31 +9,13 @@ last edited: February 2012
 import os
 import sys
 
-try:
-    from PyQt4 import QtGui, QtCore
-except:
-    print __name__+ ": ERROR: could not import PyQt4"
+from PyQt4 import QtGui, QtCore
 
-try:
-    from utilities import iconPath
-except:
-    print __name__+ ": ERROR: could not import utilities"
-try:
-    from genericForm import GenericForm
-except:
-    print __name__+ ": ERROR: could not import genericForm"
-try:
-    from inputTab import InputTab
-except:
-    print __name__+ ": ERROR: could not import inputTab"
-try:
-    from filterTab import FilterTab
-except:
-    print __name__+ ": ERROR: could not import inputTab"
-try:
-    import resources
-except:
-    print __name__+ ": ERROR: could not import resources"
+from utilities import iconPath
+from genericForm import GenericForm
+from inputTab import InputTab
+from filterTab import FilterTab
+import resources
 
 
 
@@ -91,7 +73,7 @@ class MainToolbar(QtGui.QDockWidget):
         self.tabBar.addTab(self.inputTab, "Input")
         
         self.filterPage = FilterTab(self, self.mainWindow, self.toolbarWidth)
-        self.tabBar.addTab(self.filterPage, "View")
+        self.tabBar.addTab(self.filterPage, "Filter")
         
         self.outputPage = QtGui.QWidget(self)
         self.tabBar.addTab(self.outputPage, "Output")

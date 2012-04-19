@@ -13,10 +13,7 @@
 import sys
 import os
 
-try:
-    from utilities import resourcePath
-except:
-    print __name__ + ": ERROR: cannot import utilities"
+from utilities import resourcePath
 
 
 

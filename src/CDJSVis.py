@@ -9,19 +9,10 @@ last edited: February 2012
 
 import sys
 
-try:
-    from PyQt4 import QtGui
-except:
-    print __name__+ ": ERROR: could not import PyQt4"
+from PyQt4 import QtGui
 
-try:
-    import gui
-except:
-    print __name__+ ": ERROR: could not import gui"
-try:
-    from utilities import iconPath
-except:
-    print __name__+ ": ERROR: utilities not found"
+import gui
+from utilities import iconPath
 
 
 ################################################################################

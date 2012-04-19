@@ -9,23 +9,11 @@ last edited: February 2012
 import os
 import sys
 
-try:
-    from PyQt4 import QtGui, QtCore, Qt
-except:
-    print __name__+ "ERROR: could not import PyQt4"
+from PyQt4 import QtGui, QtCore, Qt
 
-try:
-    from utilities import iconPath
-except:
-    print __name__+ "ERROR: could not import utilities"
-try:
-    from genericForm import GenericForm
-except:
-    print __name__+ "ERROR: could not import genericForm"
-try:
-    import resources
-except:
-    print __name__+ ": ERROR: could not import resources"
+from utilities import iconPath
+from genericForm import GenericForm
+import resources
     
 
 ################################################################################
