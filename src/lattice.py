@@ -64,10 +64,10 @@ class Lattice:
         self.visibleSpecieList = []
         self.visibleSpecieCount = []
         
-        self.minPos = np.empty(3, np.float64)
-        self.maxPos = np.empty(3, np.float64)
-        
-        self.cellDims = np.zeros(3, np.float64)
+#         self.minPos = np.empty(3, np.float64)
+#         self.maxPos = np.empty(3, np.float64)
+#         
+#         self.cellDims = np.zeros(3, np.float64)
         
         self.simTime = 0.0
     

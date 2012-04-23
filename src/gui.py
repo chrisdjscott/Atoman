@@ -21,6 +21,7 @@ import toolbar as toolbarModule
 import lattice
 import inputModule
 import resources
+import renderer
 
 
 __version__ = "0.0.1"
@@ -129,7 +130,11 @@ class MainWindow(QtGui.QMainWindow):
         self.VTKRen.SetBackground(1,1,1)
         self.VTKWidget.GetRenderWindow().AddRenderer(self.VTKRen)
         
+        self.VTKWidget._Iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+        
         self.setCentralWidget(self.VTKContainer)
+                
+        self.renderer = renderer.Renderer(self)
         
         # connect window destroyed to updateInstances
         self.connect(self, QtCore.SIGNAL("destroyed(QObject*)"), MainWindow.updateInstances)
@@ -313,6 +318,8 @@ class MainWindow(QtGui.QMainWindow):
         if state == "ref":
             self.setCurrentRefFile(filename)
             self.refLoaded = 1
+            
+            self.renderer.postRefRender()
         else:
             self.setCurrentInputFile(filename)
             self.inputLoaded = 1

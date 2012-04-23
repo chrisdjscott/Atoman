@@ -16,7 +16,7 @@ ifeq (Darwin, $(shell uname -s))
 	CC = gcc
     
     # which python version are we using (includes are different)
-    ifeq (2.7.2, $(shell python -V 2>&1 | awk '{ gsub(/Python /,""); print }'))
+    ifeq (2.7.3, $(shell python -V 2>&1 | awk '{ gsub(/Python /,""); print }'))
         INCLUDES = -I/opt/local/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7 -I/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/numpy/core/include
     endif
     ifeq (2.6.6, $(shell python -V 2>&1 | awk '{ gsub(/Python /,""); print }'))

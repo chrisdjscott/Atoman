@@ -26,12 +26,12 @@ void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, 
     double ketemp, petemp, chargetemp;
     int NSpecies, comp, specieMatch;
     
-    printf("CLIB: reading ref file %s\n", file);
+//     printf("CLIB: reading ref file %s\n", file);
     
     INFILE = fopen( file, "r" );
     
     fscanf( INFILE, "%d", &NAtoms );
-    printf("  %d atoms\n", NAtoms);
+//     printf("  %d atoms\n", NAtoms);
     
     fscanf(INFILE, "%lf%lf%lf", &xdim, &ydim, &zdim);
     
@@ -107,7 +107,7 @@ void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, 
             
             specieCount_c[0] = 1;
             
-            printf("  found 1st specie: %s\n", &specieList[3*NSpecies]);
+//             printf("  found 1st specie: %s\n", &specieList[3*NSpecies]);
             NSpecies++;
         }
         else
@@ -138,7 +138,7 @@ void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, 
                 
                 specieCount_c[NSpecies] = 1;
                 
-                printf("  found new specie: %s\n", &specieList[3*NSpecies]);
+//                 printf("  found new specie: %s\n", &specieList[3*NSpecies]);
                 NSpecies++;
             }
         }
@@ -153,11 +153,11 @@ void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, 
     free(symtemp);
     free(specieList);
     
-    printf("  x range is %f -> %f\n", minPos[0], maxPos[0]);
-    printf("  y range is %f -> %f\n", minPos[1], maxPos[1]);
-    printf("  z range is %f -> %f\n", minPos[2], maxPos[2]);
+//     printf("  x range is %f -> %f\n", minPos[0], maxPos[0]);
+//     printf("  y range is %f -> %f\n", minPos[1], maxPos[1]);
+//     printf("  z range is %f -> %f\n", minPos[2], maxPos[2]);
     
-    printf("END CLIB\n");
+//     printf("END CLIB\n");
 }
 
 
@@ -175,14 +175,14 @@ void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, i
     int NSpecies, comp, specieMatch;
     
     
-    printf("CLIB: reading lattice %s\n", file);
+//     printf("CLIB: reading lattice %s\n", file);
     
     /* open file */
     INFILE = fopen( file, "r" );
     
     /* read header */
     fscanf( INFILE, "%d", &NAtoms );
-    printf("  %d atoms\n", NAtoms);
+//     printf("  %d atoms\n", NAtoms);
     fscanf(INFILE, "%lf%lf%lf", &xdim, &ydim, &zdim);
     
     /* allocate specieList */
@@ -248,7 +248,7 @@ void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, i
             
             specieCount_c[0] = 1;
             
-            printf("  found 1st specie: %s\n", &specieList[3*NSpecies]);
+//             printf("  found 1st specie: %s\n", &specieList[3*NSpecies]);
             NSpecies++;
         }
         else
@@ -279,7 +279,7 @@ void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, i
                 
                 specieCount_c[NSpecies] = 1;
                 
-                printf("  found new specie: %s\n", &specieList[3*NSpecies]);
+//                 printf("  found new specie: %s\n", &specieList[3*NSpecies]);
                 NSpecies++;
             }
         }
@@ -293,7 +293,7 @@ void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, i
         
     free(specieList);
     
-    printf("END CLIB\n");
+//     printf("END CLIB\n");
 }
 
 
