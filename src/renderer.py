@@ -13,7 +13,7 @@ import vtk
 
 
 ################################################################################
-class LatticeFrame:
+class CellOutline:
     def __init__(self, ren):
         
         self.ren = ren
@@ -68,10 +68,10 @@ class Renderer:
         self.camera = self.ren.GetActiveCamera()
         
         # lattice frame
-        self.latticeFrame = LatticeFrame(self.ren)
+        self.latticeFrame = CellOutline(self.ren)
         
         # set up actors for everything else (by filter list?)
-        
+        self.atomsActorsList = []
         
         
         
@@ -156,3 +156,37 @@ class Renderer:
         
         """
         pass
+    
+    def removeAllActors(self):
+        """
+        Remove all actors
+        
+        """
+        for i in xrange(len(self.atomsActorsList)):
+            actor = self.atomsActorsList.pop()
+            self.ren.RemoveActor(actor)
+    
+    def render(self):
+        """
+        Render.
+        
+        """
+        print "RENDERING"
+        self.removeAllActors()
+        
+        filterLists = self.mainWindow.mainToolbar.filterPage.filterLists
+        count = 0
+        for filterList in filterLists:
+            print "RENDERING LIST", count
+            count += 1
+            
+            inputVis = filterList.filterer.visibleAtomsInput
+            inputTyp = filterList.filterer.visibleTypeInput
+            
+            refVis = filterList.filterer.visibleAtomsRef
+            refTyp = filterList.filterer.visibleTypeRef
+            
+            
+            
+
+

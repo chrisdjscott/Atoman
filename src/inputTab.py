@@ -2,8 +2,8 @@
 """
 The input tab for the main toolbar
 
-author: Chris Scott
-last edited: February 2012
+@author: Chris Scott
+
 """
 
 import os
@@ -236,7 +236,19 @@ class InputTab(QtGui.QWidget):
         self.fileTypeComboBox.addItem("LBOMD LATTICE")
         self.connect(self.fileTypeComboBox, QtCore.SIGNAL("currentIndexChanged(QString)"), self.setWidgetStack)
         row.addWidget(self.fileTypeComboBox)
+        
+        # clear reference button
+        self.clearRefButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-delete.svg")), "Clear reference")
+        self.clearRefButton.setStatusTip("Clear current reference file")
+        self.clearRefButton.setCheckable(0)
+        self.clearRefButton.setChecked(1)
+        
+        row = selector.newRow()
+        row.addWidget(self.clearRefButton)
+        
         inputTabLayout.addWidget(selector)
+        
+#        self.connect(trashButton, QtCore.SIGNAL('clicked()'), self.filterTab.removeFilterList)
         
         # stacked widget
         self.stackedWidget = QtGui.QStackedWidget(self)
