@@ -71,19 +71,37 @@ def readLattice(filename, tmpLocation, lattice, fileType, state, log):
     specieCountTemp = np.empty( maxNumSpecies+1, np.int32 )
     
     # call c lib
-    input_c.readLatticeLBOMD( filename, lattice.sym, lattice.pos, lattice.charge, specieListTemp, specieCountTemp, lattice.maxPos, lattice.minPos )
+    input_c.readLatticeLBOMD( filename, lattice.specie, lattice.pos, lattice.charge, specieListTemp, specieCountTemp, lattice.maxPos, lattice.minPos )
     
     # build specie list and counter in lattice object
     log("Building specie list", 2, 1)
+    NSpecies = 0
     for i in range(maxNumSpecies):
         if specieListTemp[i] == 'XX':
             break
         else:
-            lattice.specieList.append( specieListTemp[i] )
-            lattice.specieCount.append( specieCountTemp[i] )
-            log("new specie: "+specieListTemp[i] +" (" + atoms.atomName(specieListTemp[i]) + ")", 2, 2)
-            log(str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms", 2, 3)
-
+            NSpecies += 1
+            
+    # allocate specieList/Counter arrays
+    dt = np.dtype((str, 2))
+    lattice.specieList = np.empty(NSpecies, dt)
+    lattice.specieCount = np.empty(NSpecies, np.int32)
+    lattice.specieMass = np.empty(NSpecies, np.float64)
+    lattice.specieCovalentRadius = np.empty(NSpecies, np.float64)
+    lattice.specieRGB = np.empty((NSpecies, 3), np.float64)
+    for i in xrange(NSpecies):
+        lattice.specieList[i] = specieListTemp[i]
+        lattice.specieCount[i] = specieCountTemp[i]
+        
+        lattice.specieMass[i] = atoms.atomicMass(lattice.specieList[i])
+        lattice.specieCovalentRadius[i] = atoms.covalentRadius(lattice.specieList[i])
+        rgbtemp = atoms.RGB(lattice.specieList[i])
+        lattice.specieRGB[i][0] = rgbtemp[0]
+        lattice.specieRGB[i][1] = rgbtemp[1]
+        lattice.specieRGB[i][2] = rgbtemp[2]
+        
+        log("new specie: " + specieListTemp[i] + " (" + atoms.atomName(specieListTemp[i]) + ")", 2, 2)
+        log(str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms", 2, 3)
 
 
 ################################################################################

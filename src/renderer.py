@@ -61,6 +61,7 @@ class Renderer:
         self.ren = self.mainWindow.VTKRen
         self.renWinInteract = self.mainWindow.VTKWidget
         
+        # is the interactor initialised
         self.init = 0
         
         # setup stuff
@@ -69,7 +70,7 @@ class Renderer:
         # lattice frame
         self.latticeFrame = LatticeFrame(self.ren)
         
-        # set up actors for everything else
+        # set up actors for everything else (by filter list?)
         
         
         
@@ -115,7 +116,7 @@ class Renderer:
             campos[0] = -3.0 * dims[1]
         else:
             campos[0] = -3.0 * dims[2]
-        campos[1] = 1.3 * dims[1]
+        campos[1] = 0.5 * dims[1]
         campos[2] = 0.5 * dims[2]
         
         focpnt = [0]*3
