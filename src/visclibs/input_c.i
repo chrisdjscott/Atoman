@@ -27,32 +27,33 @@ import_array();
 
 /* define numpy arrays here */
 /* 1d arrays of doubles */
-%apply (int DIM1, double* INPLACE_ARRAY1) {(int dim1, double* pos),
-        (int dim2, double* charge),
-        (int dim3, double* KE),
-        (int dim4, double* PE),
-        (int dim5, double* force),
-        (int dim15, double* maxPos),
-        (int dim16, double* minPos)}
+%apply (int DIM1, double* INPLACE_ARRAY1) {(int posDim, double* pos),
+        (int chargeDim, double* charge),
+        (int KEDim, double* KE),
+        (int PEDim, double* PE),
+        (int forceDim, double* force),
+        (int maxPosDim, double* maxPos),
+        (int minPosDim, double* minPos)}
 
 /* 1d arrays of chars */
 %apply (int DIM1, char* INPLACE_ARRAY1) {(int dim6, char* sym),
-        (int dim7, char* specieList_c)}
+        (int speclistDim, char* specieList_c)}
 
 /* 1d arrays of ints */
-%apply (int DIM1, int* INPLACE_ARRAY1) {(int dim8, int* specieCount_c)}
+%apply (int DIM1, int* INPLACE_ARRAY1) {(int specCountDim, int* specieCount_c),
+                                        (int specieDim, int* specie)}
 
 /* define functions here */
 %{
-extern void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos );
+extern void readLatticeLBOMD( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, int speclistDim, char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, double* maxPos, int minPosDim, double* minPos );
 
-extern void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double zdim, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge );
+extern void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, char* specieList_c, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge );
 
-extern void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim3, double* KE, int dim4, double* PE, int dim5, double* force, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos );
+extern void readRef( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, int KEDim, double* KE, int PEDim, double* PE, int forceDim, double* force, int speclistDim, char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, double* maxPos, int minPosDim, double* minPos );
 %}
 
-extern void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos );
+extern void readLatticeLBOMD( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, int speclistDim, char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, double* maxPos, int minPosDim, double* minPos );
 
-extern void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double zdim, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge );
+extern void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, char* specieList_c, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge );
 
-extern void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim3, double* KE, int dim4, double* PE, int dim5, double* force, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos );
+extern void readRef( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, int KEDim, double* KE, int PEDim, double* PE, int forceDim, double* force, int speclistDim, char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, double* maxPos, int minPosDim, double* minPos );

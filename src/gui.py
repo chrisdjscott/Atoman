@@ -2,8 +2,7 @@
 """
 GUI classes
 
-author: Chris Scott
-last edited: February 2012
+@author: Chris Scott
 """
 
 import os
@@ -316,16 +315,24 @@ class MainWindow(QtGui.QMainWindow):
             return
         
         if state == "ref":
-            self.setCurrentRefFile(filename)
-            self.refLoaded = 1
-            
+            self.postRef(filename)
             self.renderer.postRefRender()
+            
         else:
             self.setCurrentInputFile(filename)
             self.inputLoaded = 1
         
         self.setStatus("Ready")
         
+    def postRef(self, filename):
+        """
+        Do stuff after the ref has been loaded.
+        
+        """
+        self.setCurrentRefFile(filename)
+        self.refLoaded = 1
+#        self.mainToolbar.inputTab.clearRefButton.setCheckable(1)
+    
     def displayWarning(self, message):
         """
         Display warning message.

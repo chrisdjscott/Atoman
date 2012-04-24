@@ -14,6 +14,7 @@ from PyQt4 import QtGui, QtCore, Qt
 from utilities import iconPath
 from genericForm import GenericForm
 import resources
+import filtering
     
 
 ################################################################################
@@ -48,6 +49,9 @@ class FilterList(QtGui.QWidget):
         self.tabHeight = height
         
         self.visible = 1
+        
+        # the filterer (does the filtering)
+        self.filterer = filtering.Filter(self)
         
         # layout
         self.filterListLayout = QtGui.QVBoxLayout(self)
@@ -105,6 +109,8 @@ class FilterList(QtGui.QWidget):
         self.listItems = List(self)
         self.listItems.setFixedHeight(self.tabHeight)
         
+        self.connect(self.listItems, QtCore.SIGNAL('itemClicked(QListWidgetItem*)'), self.getFilterInfo)
+        
         self.filterListLayout.addWidget(self.listItems)
         
         # add more buttons
@@ -148,6 +154,31 @@ class FilterList(QtGui.QWidget):
         self.filterListLayout.addWidget(buttonWidget)
         
         
+        # add other option like colour by height etc
+        self.extraOptionsList = QtGui.QListWidget(self)
+        self.connect(self.extraOptionsList, QtCore.SIGNAL('itemClicked(QListWidgetItem*)'), self.openOptionsWindow)
+        self.extraOptionsList.setFixedHeight(100)
+        self.extraOptionsList.addItem("Colouring: ...")
+        self.extraOptionsList.addItem("Screen info: ...")
+        
+        self.filterListLayout.addWidget(self.extraOptionsList)
+        
+        
+        
+    def getFilterInfo(self):
+        """
+        Get info about filter
+        
+        """
+        print "NOT IMPLEMENTED YET"
+    
+    def openOptionsWindow(self):
+        """
+        Open additional options window
+        
+        """
+        print "NOT IMPLEMENTED YET"
+    
     def applyList(self):
         """
         Move filter down in list
@@ -264,7 +295,16 @@ class FilterTab(QtGui.QWidget):
         self.filterTabBar.addTab(self.filterListWidget, str(self.filterListCount))
         
     def runAllFilterLists(self):
-        pass
+        """
+        Run all the filter lists.
+        
+        """
+        print "RUNNING ALL FILTER LISTS"
+        for filterList in self.filterLists:
+            filterList.filterer.runFilter()
+        
+        self.mainWindow.renderer.render()
+        
 
     def addFilterList(self):
         pass

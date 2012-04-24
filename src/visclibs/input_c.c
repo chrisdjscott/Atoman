@@ -10,15 +10,45 @@
 #include <math.h>
 
 
+int specieIndex(char*, int, char*);
+
+
+/*******************************************************************************
+ * Update specie list and counter
+ *******************************************************************************/
+int specieIndex(char* sym, int NSpecies, char* specieList)
+{
+    int index, j, comp;
+    
+    
+    index = NSpecies;
+    for (j=0; j<NSpecies; j++)
+    {
+        comp = strcmp( &specieList[3*j], &sym[0] );
+        if (comp == 0)
+        {
+            index = j;
+            
+            break;
+        }
+    }
+    
+    return index;
+}
+
+
 /*******************************************************************************
 ** read animation-reference file
 *******************************************************************************/
-void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim3, double* KE, int dim4, double* PE, int dim5, double* force, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos )
+void readRef( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, 
+              int KEDim, double* KE, int PEDim, double* PE, int forceDim, double* force, int speclistDim, 
+              char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, double* maxPos, int minPosDim, 
+              double* minPos )
 {
-    int i, j, NAtoms;
+    int i, j, NAtoms, specInd;
     FILE *INFILE;
     double xdim, ydim, zdim;
-    char* symtemp;
+    char symtemp[3];
     char* specieList;
     double xpos, ypos, zpos;
     double xforce, yforce, zforce;
@@ -35,7 +65,6 @@ void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, 
     
     fscanf(INFILE, "%lf%lf%lf", &xdim, &ydim, &zdim);
     
-    symtemp = malloc(3 * sizeof(char));
     specieList = malloc( 3 * sizeof(char) );
     
     minPos[0] = 1000000;
@@ -52,10 +81,6 @@ void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, 
         /* index for storage is (id-1) */
         index = id - 1;
         
-        /* store atom info */
-        sym[2*index] = symtemp[0];
-        sym[2*index+1] = symtemp[1];
-        
         pos[3*index] = xpos;
         pos[3*index+1] = ypos;
         pos[3*index+2] = zpos;
@@ -69,6 +94,31 @@ void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, 
         
         charge[index] = chargetemp;
         
+        /* find specie index */
+        specInd = specieIndex(symtemp, NSpecies, specieList);
+        
+        specie[i] = specInd;
+        
+        if (specInd == NSpecies)
+        {
+            /* new specie */
+            specieList = realloc( specieList, 3 * (NSpecies+1) * sizeof(char) );
+            
+            specieList[3*specInd] = symtemp[0];
+            specieList[3*specInd+1] = symtemp[1];
+            specieList[3*specInd+2] = symtemp[2];
+            
+            specieList_c[2*specInd] = symtemp[0];
+            specieList_c[2*specInd+1] = symtemp[1];
+            
+            printf("  found new specie: %d - %s\n", specInd, &specieList[3*NSpecies]);
+            
+            NSpecies++;
+        }
+        
+        /* update specie counter */
+        specieCount_c[specInd]++;
+                
         /* max and min positions */
         if ( xpos > maxPos[0] )
         {
@@ -94,54 +144,6 @@ void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, 
         {
             minPos[2] = zpos;
         }
-        
-        /* update specie list if required */
-        if ( NSpecies == 0 )
-        {
-            specieList[0] = symtemp[0];
-            specieList[1] = symtemp[1];
-            specieList[2] = symtemp[2];
-            
-            specieList_c[0] = symtemp[0];
-            specieList_c[1] = symtemp[1];
-            
-            specieCount_c[0] = 1;
-            
-//             printf("  found 1st specie: %s\n", &specieList[3*NSpecies]);
-            NSpecies++;
-        }
-        else
-        {
-            specieMatch = 0;
-            for (j=0; j<NSpecies; j++)
-            {
-                comp = strcmp( &specieList[3*j], &symtemp[0] );
-                if (comp == 0)
-                {
-                    specieMatch++;
-                    
-                    specieCount_c[j]++;
-                    
-                    break;
-                }
-            }
-            if ( specieMatch == 0 )
-            {
-                /* new specie */
-                specieList = realloc( specieList, 3 * (NSpecies+1) * sizeof(char) );
-                specieList[3*NSpecies] = symtemp[0];
-                specieList[3*NSpecies+1] = symtemp[1];
-                specieList[3*NSpecies+2] = symtemp[2];
-                
-                specieList_c[2*NSpecies] = symtemp[0];
-                specieList_c[2*NSpecies+1] = symtemp[1];
-                
-                specieCount_c[NSpecies] = 1;
-                
-//                 printf("  found new specie: %s\n", &specieList[3*NSpecies]);
-                NSpecies++;
-            }
-        }
     }
     
     fclose(INFILE);
@@ -150,7 +152,6 @@ void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, 
     specieList_c[2*NSpecies] = 'X';
     specieList_c[2*NSpecies+1] = 'X';
     
-    free(symtemp);
     free(specieList);
     
 //     printf("  x range is %f -> %f\n", minPos[0], maxPos[0]);
@@ -164,10 +165,12 @@ void readRef( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, 
 /*******************************************************************************
  * Read LBOMD lattice file
  *******************************************************************************/
-void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge, int dim7, char* specieList_c, int dim8, int* specieCount_c, int dim15, double* maxPos, int dim16, double* minPos )
+void readLatticeLBOMD( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, 
+                       int speclistDim, char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, 
+                       double* maxPos, int minPosDim, double* minPos )
 {
     FILE *INFILE;
-    int i, j, NAtoms;
+    int i, j, NAtoms, specInd;
     double xdim, ydim, zdim;
     char symtemp[3];
     char* specieList;
@@ -199,17 +202,39 @@ void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, i
     for (i=0; i<NAtoms; i++)
     {
         fscanf(INFILE, "%s%lf%lf%lf%lf", symtemp, &xpos, &ypos, &zpos, &chargetemp);
-                
-        /* store atom info */
-        sym[2*i] = symtemp[0];
-        sym[2*i+1] = symtemp[1];
         
+        /* store position and charge */
         pos[3*i] = xpos;
         pos[3*i+1] = ypos;
         pos[3*i+2] = zpos;
         
         charge[i] = chargetemp;
         
+        /* find specie index */
+        specInd = specieIndex(symtemp, NSpecies, specieList);
+        
+        specie[i] = specInd;
+        
+        if (specInd == NSpecies)
+        {
+            /* new specie */
+            specieList = realloc( specieList, 3 * (NSpecies+1) * sizeof(char) );
+            
+            specieList[3*specInd] = symtemp[0];
+            specieList[3*specInd+1] = symtemp[1];
+            specieList[3*specInd+2] = symtemp[2];
+            
+            specieList_c[2*specInd] = symtemp[0];
+            specieList_c[2*specInd+1] = symtemp[1];
+            
+            printf("  found new specie: %d - %s\n", specInd, &specieList[3*NSpecies]);
+            
+            NSpecies++;
+        }
+        
+        /* update specie counter */
+        specieCount_c[specInd]++;
+                
         /* max and min positions */
         if ( xpos > maxPos[0] )
         {
@@ -235,54 +260,6 @@ void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, i
         {
             minPos[2] = zpos;
         }
-        
-        /* update specie list if required */
-        if ( NSpecies == 0 )
-        {
-            specieList[0] = symtemp[0];
-            specieList[1] = symtemp[1];
-            specieList[2] = symtemp[2];
-            
-            specieList_c[0] = symtemp[0];
-            specieList_c[1] = symtemp[1];
-            
-            specieCount_c[0] = 1;
-            
-//             printf("  found 1st specie: %s\n", &specieList[3*NSpecies]);
-            NSpecies++;
-        }
-        else
-        {
-            specieMatch = 0;
-            for (j=0; j<NSpecies; j++)
-            {
-                comp = strcmp( &specieList[3*j], &symtemp[0] );
-                if (comp == 0)
-                {
-                    specieMatch++;
-                    
-                    specieCount_c[j]++;
-                    
-                    break;
-                }
-            }
-            if ( specieMatch == 0 )
-            {
-                /* new specie */
-                specieList = realloc( specieList, 3 * (NSpecies+1) * sizeof(char) );
-                specieList[3*NSpecies] = symtemp[0];
-                specieList[3*NSpecies+1] = symtemp[1];
-                specieList[3*NSpecies+2] = symtemp[2];
-                
-                specieList_c[2*NSpecies] = symtemp[0];
-                specieList_c[2*NSpecies+1] = symtemp[1];
-                
-                specieCount_c[NSpecies] = 1;
-                
-//                 printf("  found new specie: %s\n", &specieList[3*NSpecies]);
-                NSpecies++;
-            }
-        }
     }
     
     fclose(INFILE);
@@ -300,7 +277,9 @@ void readLatticeLBOMD( char* file, int dim6, char* sym, int dim1, double* pos, i
 /*******************************************************************************
 ** write LBOMD lattice file
 *******************************************************************************/
-void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double zdim, int dim6, char* sym, int dim1, double* pos, int dim2, double* charge )
+void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, 
+                        char* specieList_c, int specieDim, int* specie, int posDim, double* pos, int chargeDim, 
+                        double* charge )
 {
     int i;
     FILE *OUTFILE;
@@ -316,8 +295,8 @@ void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double
     
     for ( i=0; i<NAtoms; i++ )
     {
-        symtemp[0] = sym[2*i];
-        symtemp[1] = sym[2*i+1];
+        symtemp[0] = specieList_c[2*specie[i]];
+        symtemp[1] = specieList_c[2*specie[i]+1];
         symtemp[2] = '\0';
         
         fprintf( OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*i], pos[3*i+1], pos[3*i+2], charge[i] );

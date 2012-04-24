@@ -13,7 +13,7 @@ import vtk
 
 
 ################################################################################
-class LatticeFrame:
+class CellOutline:
     def __init__(self, ren):
         
         self.ren = ren
@@ -61,16 +61,17 @@ class Renderer:
         self.ren = self.mainWindow.VTKRen
         self.renWinInteract = self.mainWindow.VTKWidget
         
+        # is the interactor initialised
         self.init = 0
         
         # setup stuff
         self.camera = self.ren.GetActiveCamera()
         
         # lattice frame
-        self.latticeFrame = LatticeFrame(self.ren)
+        self.latticeFrame = CellOutline(self.ren)
         
-        # set up actors for everything else
-        
+        # set up actors for everything else (by filter list?)
+        self.atomsActorsList = []
         
         
         
@@ -115,7 +116,7 @@ class Renderer:
             campos[0] = -3.0 * dims[1]
         else:
             campos[0] = -3.0 * dims[2]
-        campos[1] = 1.3 * dims[1]
+        campos[1] = 0.5 * dims[1]
         campos[2] = 0.5 * dims[2]
         
         focpnt = [0]*3
@@ -155,3 +156,37 @@ class Renderer:
         
         """
         pass
+    
+    def removeAllActors(self):
+        """
+        Remove all actors
+        
+        """
+        for i in xrange(len(self.atomsActorsList)):
+            actor = self.atomsActorsList.pop()
+            self.ren.RemoveActor(actor)
+    
+    def render(self):
+        """
+        Render.
+        
+        """
+        print "RENDERING"
+        self.removeAllActors()
+        
+        filterLists = self.mainWindow.mainToolbar.filterPage.filterLists
+        count = 0
+        for filterList in filterLists:
+            print "RENDERING LIST", count
+            count += 1
+            
+            inputVis = filterList.filterer.visibleAtomsInput
+            inputTyp = filterList.filterer.visibleTypeInput
+            
+            refVis = filterList.filterer.visibleAtomsRef
+            refTyp = filterList.filterer.visibleTypeRef
+            
+            
+            
+
+
