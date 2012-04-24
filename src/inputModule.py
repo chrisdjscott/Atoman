@@ -42,8 +42,6 @@ def readFile(filename, tmpLocation, lattice, fileType, state, log):
     elif fileType == "DAT":
         
         readLattice(filename, tmpLocation, lattice, fileType, state, log)
-        
-        
     
     cleanUnzipped(loc)
     
