@@ -2,8 +2,8 @@
 """
 The filter tab for the main toolbar
 
-author: Chris Scott
-last edited: February 2012
+@author: Chris Scott
+
 """
 
 import os

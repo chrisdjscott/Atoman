@@ -2,8 +2,8 @@
 """
 The filter tab for the main toolbar
 
-author: Chris Scott
-last edited: February 2012
+@author: Chris Scott
+
 """
 
 import os
@@ -32,16 +32,21 @@ class Filter:
         
         self.filterList = []
         
-        self.visibleAtomsInput = []
-        self.visibleTypeInput = []
-        self.visibleAtomsRef = []
-        self.visibleTypeRef = []
+        self.actorList = []
         
     def addFilter(self, name, index=None):
         """
         Add given filter to the list.
         
         """
+        pass
+    
+    def removeFilter(self, index):
+        """
+        Remove filter from list.
+        
+        """
+        # remove actors too?
         pass
     
     def runFilter(self):
@@ -53,14 +58,7 @@ class Filter:
         NAtomsInput = self.parent.mainWindow.inputState.NAtoms
         print "RUN FILTER NATOMSINPUT", NAtomsInput
         
-        self.visibleAtomsInput = np.arange(NAtomsInput, dtype=np.int32)
-        self.visibleTypeInput = np.zeros(NAtomsInput, dtype=np.int32)
-        
         NAtomsRef = self.parent.mainWindow.refState.NAtoms
-        if NAtomsInput == 0:
-            self.visibleAtomsRef = np.arange(NAtomsRef, dtype=np.int32)
-            self.visibleTypeRef = np.zeros(NAtomsRef, dtype=np.int32)
-        
         print "RUN FILTER NATOMSREF", NAtomsRef
         
         # run filters

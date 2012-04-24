@@ -2,8 +2,8 @@
 """
 Module for rendering
 
-author: Chris Scott
-last edited: February 2012
+@author: Chris Scott
+
 """
 
 import os
@@ -69,11 +69,6 @@ class Renderer:
         
         # lattice frame
         self.latticeFrame = CellOutline(self.ren)
-        
-        # set up actors for everything else (by filter list?)
-        self.atomsActorsList = []
-        
-        
         
         
     def reinit(self):
@@ -162,8 +157,21 @@ class Renderer:
         Remove all actors
         
         """
-        for i in xrange(len(self.atomsActorsList)):
-            actor = self.atomsActorsList.pop()
+        pass
+    
+    def removeActor(self, actor):
+        """
+        Remove actor
+        
+        """
+        self.ren.RemoveActor(actor)
+        
+    def removeActorList(self, actorList):
+        """
+        Remove list of actors
+        
+        """
+        for actor in actorList:
             self.ren.RemoveActor(actor)
     
     def render(self):
@@ -180,11 +188,7 @@ class Renderer:
             print "RENDERING LIST", count
             count += 1
             
-            inputVis = filterList.filterer.visibleAtomsInput
-            inputTyp = filterList.filterer.visibleTypeInput
             
-            refVis = filterList.filterer.visibleAtomsRef
-            refTyp = filterList.filterer.visibleTypeRef
             
             
             
