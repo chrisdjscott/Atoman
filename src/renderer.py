@@ -157,8 +157,11 @@ class Renderer:
         Remove all actors
         
         """
-        pass
-    
+        filterLists = self.getFilterLists()
+        
+        for filterList in filterLists:
+            filterList.filterer.removeActors()
+
     def removeActor(self, actor):
         """
         Remove actor
@@ -171,8 +174,14 @@ class Renderer:
         Remove list of actors
         
         """
-        for actor in actorList:
-            self.ren.RemoveActor(actor)
+        pass
+    
+    def getFilterLists(self):
+        """
+        Return filter lists
+        
+        """
+        return self.mainWindow.mainToolbar.filterPage.filterLists
     
     def render(self):
         """
@@ -180,11 +189,31 @@ class Renderer:
         
         """
         print "RENDERING"
-        self.removeAllActors()
+#        self.removeAllActors()
         
-        filterLists = self.mainWindow.mainToolbar.filterPage.filterLists
-        count = 0
-        for filterList in filterLists:
-            print "RENDERING LIST", count
-            count += 1
+#        filterLists = self.getFilterLists()
+#        count = 0
+#        for filterList in filterLists:
+#            print "RENDERING LIST", count
+#            count += 1
+#            
+#            filterList.addActors()
             
+
+################################################################################
+def getActorsForFilteredSystem(visibleAtoms, mainWindow):
+    """
+    Make the actors for the filtered system
+    
+    """
+    actorsList = []
+    
+    
+    
+    
+    
+    
+    
+    
+    return actorsList
+

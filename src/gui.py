@@ -128,6 +128,7 @@ class MainWindow(QtGui.QMainWindow):
         self.VTKRen = vtk.vtkRenderer()
         self.VTKRen.SetBackground(1,1,1)
         self.VTKWidget.GetRenderWindow().AddRenderer(self.VTKRen)
+        self.renWinInteract = self.VTKWidget
         
         self.VTKWidget._Iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
         

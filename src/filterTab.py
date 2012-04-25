@@ -179,6 +179,8 @@ class FilterList(QtGui.QWidget):
         self.tabWidth = width
         self.tabHeight = height
         
+        self.defectFilter = 0
+        
         # all available filters
         self.allFilters = ["Specie", "Displacement", "Crop"]
         
@@ -493,10 +495,7 @@ class FilterTab(QtGui.QWidget):
         """
         print "RUNNING ALL FILTER LISTS"
         for filterList in self.filterLists:
-            filterList.filterer.runFilters()
-        
-#        self.mainWindow.renderer.render()
-        
+            filterList.filterer.runFilters()        
 
     def addFilterList(self):
         pass

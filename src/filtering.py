@@ -16,6 +16,7 @@ import vtk
 from utilities import iconPath
 from genericForm import GenericForm
 from visclibs import filtering_c
+import renderer
 
 
 ################################################################################
@@ -44,35 +45,57 @@ class Filterer:
         self.parent = parent
         self.mainWindow = self.parent.mainWindow
         
-        self.filterList = []
-        self.actorList = []
-        
-    def addFilter(self, name, index=None):
-        """
-        Add given filter to the list.
-        
-        """
-        pass
+        self.actorsCollection = vtk.vtkActorCollection()
     
-    def removeFilter(self, index):
+    def removeActors(self):
         """
-        Remove filter from list.
+        Remove all actors
         
         """
-        # remove actors too?
-        pass
+        self.actorsCollection.InitTraversal()
+        actor = self.actorsCollection.GetNextItem()
+        while actor is not None:
+            try:
+                self.mainWindow.VTKRen.RemoveActor(actor)
+            except:
+                pass
+            
+            actor = self.actorsCollection.GetNextItem()
+        
+        self.mainWindow.renWinInteract.ReInitialize()
+    
+    def addActors(self):
+        """
+        Add all actors
+        
+        """
+        self.actorsCollection.InitTraversal()
+        actor = self.actorsCollection.GetNextItem()
+        while actor is not None:
+            try:
+                self.mainWindow.VTKRen.AddActor(actor)
+            except:
+                pass
+            
+            actor = self.actorsCollection.GetNextItem()
+        
+        self.mainWindow.renWinInteract.ReInitialize()
     
     def runFilters(self):
         """
         Run the filters.
         
         """
+        self.removeActors()
+        
+        self.actorsCollection = vtk.vtkActorCollection()
+        
         # first set up visible atoms arrays
         NAtoms = self.parent.mainWindow.inputState.NAtoms
         print "RUN FILTER NATOMS", NAtoms
         
         visibleAtoms = np.arange(NAtoms, dtype=np.int32)
-                
+        
         # run filters
         currentFilters = self.parent.currentFilters
         currentSettings = self.parent.currentSettings
@@ -83,10 +106,21 @@ class Filterer:
             if filterName == "Specie":
                 self.filterSpecie(visibleAtoms, filterSettings)
         
-        # render 
-#        self.renderFilteredSystem(visibleObjects)
+        # render
+        actors = []
+        if self.parent.defectFilter:
+            print "NOT ADDED DEFECT RENDERING YET"
+        
+        else:
+            actors = renderer.getActorsForFilteredSystem(visibleAtoms, self.mainWindow)
+        
+        for actor in actors:
+            self.actorsCollection.AddItem(actor)
+        
+        if self.parent.visible:
+            self.addActors()
     
-    def renderFilteredSystem(self, visibleObjects):
+    def getActorsForFilteredSystem(self, visibleAtoms):
         """
         Render systems after applying filters.
         
@@ -113,28 +147,6 @@ class Filterer:
         
         print "NVISIBLE", NVisible
 
-
-################################################################################
-class SpecieFilter:
-    def __init__(self):
-        
-        self.name = "SPECIE FILTER"
-        
-        self.visibleSpecies = []
-    
-    def addVisibleSpecie(self, specie):
-        
-        if specie not in self.visibleSpecies:
-            self.visibleSpecies.append(specie)
-    
-    def remmoeVisibleSpecie(self, specie):
-        
-        if specie in self.visibleSpecies:
-            index = self.visibleSpecies.index(specie)
-            self.visibleSpecies.pop(index)
-    
-    def runFilter(self, mainWindow, visibleObjects):
-        pass
 
 
 
