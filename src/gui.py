@@ -315,16 +315,17 @@ class MainWindow(QtGui.QMainWindow):
             return
         
         if state == "ref":
-            self.postRef(filename)
+            self.postRefLoaded(filename)
             self.renderer.postRefRender()
             
         else:
             self.setCurrentInputFile(filename)
             self.inputLoaded = 1
+            self.postInputLoaded()
         
         self.setStatus("Ready")
         
-    def postRef(self, filename):
+    def postRefLoaded(self, filename):
         """
         Do stuff after the ref has been loaded.
         
@@ -332,6 +333,14 @@ class MainWindow(QtGui.QMainWindow):
         self.setCurrentRefFile(filename)
         self.refLoaded = 1
 #        self.mainToolbar.inputTab.clearRefButton.setCheckable(1)
+    
+    def postInputLoaded(self):
+        """
+        Do stuff after the input has been loaded
+        
+        """
+        self.mainToolbar.tabBar.setTabEnabled(1, True)
+        self.mainToolbar.tabBar.setTabEnabled(2, True)
     
     def displayWarning(self, message):
         """

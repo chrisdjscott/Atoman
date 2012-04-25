@@ -14,8 +14,9 @@ from PyQt4 import QtGui, QtCore, Qt
 from utilities import iconPath
 from genericForm import GenericForm
 import resources
-import filtering
-    
+import filtering        
+        
+        
 
 ################################################################################
 class List(QtGui.QListWidget):
@@ -48,10 +49,19 @@ class FilterList(QtGui.QWidget):
         self.tabWidth = width
         self.tabHeight = height
         
+        # all available filters
+        self.allFilters = ["Specie", "Displacement", "Crop"]
+        
+        # current selected filters
+        self.currentFilters = []
+        
+        # settings (windows) for current filters
+        self.currentSettings = []
+        
         self.visible = 1
         
         # the filterer (does the filtering)
-        self.filterer = filtering.Filter(self)
+        self.filterer = filtering.Filterer(self)
         
         # layout
         self.filterListLayout = QtGui.QVBoxLayout(self)
@@ -109,7 +119,7 @@ class FilterList(QtGui.QWidget):
         self.listItems = List(self)
         self.listItems.setFixedHeight(self.tabHeight)
         
-        self.connect(self.listItems, QtCore.SIGNAL('itemClicked(QListWidgetItem*)'), self.getFilterInfo)
+        self.connect(self.listItems, QtCore.SIGNAL('itemDoubleClicked(QListWidgetItem*)'), self.openFilterInfo)
         
         self.filterListLayout.addWidget(self.listItems)
         
@@ -120,23 +130,23 @@ class FilterList(QtGui.QWidget):
         
         removeFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
         removeFilter.setStatusTip("Remove filter")
-        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.removeFilter)
+        self.connect(removeFilter, QtCore.SIGNAL('clicked()'), self.removeFilter)
         
         moveUp = QtGui.QPushButton(QtGui.QIcon(iconPath("go-up.svg")), "")
         moveUp.setStatusTip("Move up")
-        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.moveFilterUpInList)
+        self.connect(moveUp, QtCore.SIGNAL('clicked()'), self.moveFilterUpInList)
         
         moveDown = QtGui.QPushButton(QtGui.QIcon(iconPath("go-down.svg")), "")
         moveDown.setStatusTip("Move down")
-        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.moveFilterDownInList)
+        self.connect(moveDown, QtCore.SIGNAL('clicked()'), self.moveFilterDownInList)
         
         clearList = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-clear.svg")), "")
         clearList.setStatusTip("Clear current filter list")
-        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.clearList)
+        self.connect(clearList, QtCore.SIGNAL('clicked()'), self.clearList)
         
         applyList = QtGui.QPushButton(QtGui.QIcon(iconPath("view-refresh.svg")), "")
         applyList.setStatusTip("Apply current filter list")
-        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.applyList)
+        self.connect(applyList, QtCore.SIGNAL('clicked()'), self.applyList)
         
         buttonWidget = QtGui.QWidget()
         buttonLayout = QtGui.QHBoxLayout(buttonWidget)
@@ -165,12 +175,12 @@ class FilterList(QtGui.QWidget):
         
         
         
-    def getFilterInfo(self):
+    def openFilterInfo(self):
         """
         Get info about filter
         
         """
-        print "NOT IMPLEMENTED YET"
+        print "OPEN FILTER SETTING WINDOW"
     
     def openOptionsWindow(self):
         """
@@ -184,6 +194,15 @@ class FilterList(QtGui.QWidget):
         Move filter down in list
         
         """
+        # remove actors
+        
+        # apply filters
+        
+        # add actors
+        
+        # leave other lists the same!
+        
+        
         pass
     
     def clearList(self):
@@ -191,14 +210,20 @@ class FilterList(QtGui.QWidget):
         Move filter down in list
         
         """
-        pass
+        self.listItems.clear()
+        
+        while len(self.currentFilters):
+            self.currentFilters.pop()
+        
+        while len(self.currentSettings):
+            self.currentSettings.pop()
     
     def moveFilterDownInList(self):
         """
         Move filter down in list
         
         """
-        pass
+        print "MOVE UP"
     
     def moveFilterUpInList(self):
         """
@@ -212,14 +237,34 @@ class FilterList(QtGui.QWidget):
         Add new filter
         
         """
-        pass
+        # first determine what filter is to be added
+        filter, ok = QtGui.QInputDialog.getItem(self, "Add filter", "Select filter:", self.allFilters, editable=False)
+        
+        if ok:
+            print "SELECTED FILTER", filter
+            
+            if filter not in self.currentFilters:
+                self.currentFilters.append(str(filter))
+                self.listItems.addItem(filter)
+                
+                # select the newly added filter
+                self.listItems.item(len(self.listItems)-1).setSelected(1)
+                
+                # create option form? like console window (but blocking?)? and open it
+                
     
     def removeFilter(self):
         """
         Remove new filter
         
         """
-        pass
+        # find which one is selected
+        row = self.listItems.currentRow()
+        item = self.listItems.currentItem()
+        
+        # remove it from lists
+        self.listItems.takeItem(row)
+        self.currentFilters.pop(row)
     
     def visibilityChanged(self):
         """

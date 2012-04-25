@@ -31,7 +31,7 @@ class VisibleObjects:
 
 
 ################################################################################
-class Filter:
+class Filterer:
     """
     Filter class.
     

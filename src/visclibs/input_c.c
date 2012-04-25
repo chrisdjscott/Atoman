@@ -227,7 +227,7 @@ void readLatticeLBOMD( char* file, int specieDim, int* specie, int posDim, doubl
             specieList_c[2*specInd] = symtemp[0];
             specieList_c[2*specInd+1] = symtemp[1];
             
-            printf("  found new specie: %d - %s\n", specInd, &specieList[3*NSpecies]);
+//            printf("  found new specie: %d - %s\n", specInd, &specieList[3*NSpecies]);
             
             NSpecies++;
         }
