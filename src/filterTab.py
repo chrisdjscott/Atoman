@@ -14,9 +14,139 @@ from PyQt4 import QtGui, QtCore, Qt
 from utilities import iconPath
 from genericForm import GenericForm
 import resources
-import filtering        
+import filtering
+import genericForm
         
+
+################################################################################
+class GenericSettingsDialog(QtGui.QDialog):
+    def __init__(self, title):
+        QtGui.QDockWidget.__init__(self)
         
+        self.setModal(0)
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.setWindowTitle(title)
+        self.setWindowIcon(QtGui.QIcon(iconPath("preferences-system.svg")))
+#        self.resize(500,300)
+        
+        dialogLayout = QtGui.QVBoxLayout()
+        dialogLayout.setAlignment(QtCore.Qt.AlignTop)
+#        dialogLayout.setContentsMargins(0, 0, 0, 0)
+#        dialogLayout.setSpacing(0)
+        
+        self.contentLayout = QtGui.QVBoxLayout()
+        self.contentLayout.setAlignment(QtCore.Qt.AlignTop)
+        self.contentLayout.setContentsMargins(0, 0, 0, 0)
+        self.contentLayout.setSpacing(0)
+        
+        contentWidget = QtGui.QWidget(self)
+        contentWidget.setLayout(self.contentLayout)
+        
+        dialogLayout.addWidget(contentWidget)
+        self.setLayout(dialogLayout)
+        
+        # buttons
+        closeButton = QtGui.QPushButton("Hide")
+        closeButton.setAutoDefault(1)
+        self.connect(closeButton, QtCore.SIGNAL('clicked()'), self.close)
+        
+        buttonWidget = QtGui.QWidget()
+        buttonLayout = QtGui.QHBoxLayout(buttonWidget)
+        buttonLayout.addStretch()
+        buttonLayout.addWidget(closeButton)
+        
+        dialogLayout.addWidget(buttonWidget)
+    
+    def newRow(self, align=None):
+        
+        row = genericForm.FormRow(align=align)
+        self.contentLayout.addWidget(row)
+        
+        return row
+    
+    def removeRow(self,row):
+        self.contentLayout.removeWidget(row)  
+    
+    def closeEvent(self, event):
+        self.hide()
+    
+    def refresh(self):
+        pass
+
+
+################################################################################
+class SpecieSettingsDialog(GenericSettingsDialog):
+    def __init__(self, mainWindow, title, parent=None):
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        
+        GenericSettingsDialog.__init__(self, title)
+        
+        self.filterType = "Specie"
+        
+        self.specieList = []
+        self.specieBoxes = {}
+        self.specieRows = {}
+        self.visibleSpecieList = []
+                
+        self.refresh()
+        
+    def refresh(self):
+        """
+        Refresh the specie list
+        
+        """
+        inputSpecieList = self.mainWindow.inputState.specieList
+        
+        newSpecieList = []
+        for spec in inputSpecieList:
+            newSpecieList.append(spec)
+        
+        # compare
+        if not len(self.specieList):
+            self.specieList = newSpecieList
+            
+            for spec in self.specieList:
+                self.addSpecieCheck(spec)
+            
+            self.changedSpecie(0)
+        
+        for spec in self.specieList:
+            if spec not in newSpecieList:
+                print "NEED TO REMOVE SPEC", spec
+        
+        for spec in newSpecieList:
+            if spec not in self.specieList:
+                print "NEED TO ADD SPEC", spec
+        
+        print "REFRESHED SPEC LIST", self.specieList
+
+    def addSpecieCheck(self, specie):
+        """
+        Add check box for the given specie
+        
+        """
+        self.specieBoxes[specie] = QtGui.QCheckBox(str(specie))
+        
+        self.connect(self.specieBoxes[specie], QtCore.SIGNAL('stateChanged(int)'), self.changedSpecie)
+        
+        row = self.newRow()
+        row.addWidget(self.specieBoxes[specie])
+        
+        self.specieRows[specie] = row
+        
+    def changedSpecie(self, val):
+        """
+        Changed visibility of a specie.
+        
+        """
+        self.visibleSpecieList = []
+        for specie in self.specieList:
+            if self.specieBoxes[specie].isChecked():
+                self.visibleSpecieList.append(specie)
+        print "VIS SPEC LIST", self.visibleSpecieList
 
 ################################################################################
 class List(QtGui.QListWidget):
@@ -119,7 +249,7 @@ class FilterList(QtGui.QWidget):
         self.listItems = List(self)
         self.listItems.setFixedHeight(self.tabHeight)
         
-        self.connect(self.listItems, QtCore.SIGNAL('itemDoubleClicked(QListWidgetItem*)'), self.openFilterInfo)
+        self.connect(self.listItems, QtCore.SIGNAL('itemDoubleClicked(QListWidgetItem*)'), self.openFilterSettings)
         
         self.filterListLayout.addWidget(self.listItems)
         
@@ -175,12 +305,14 @@ class FilterList(QtGui.QWidget):
         
         
         
-    def openFilterInfo(self):
+    def openFilterSettings(self):
         """
-        Get info about filter
+        Open filter settings window
         
         """
-        print "OPEN FILTER SETTING WINDOW"
+        row = self.listItems.currentRow()
+        self.currentSettings[row].hide()
+        self.currentSettings[row].show()
     
     def openOptionsWindow(self):
         """
@@ -238,19 +370,22 @@ class FilterList(QtGui.QWidget):
         
         """
         # first determine what filter is to be added
-        filter, ok = QtGui.QInputDialog.getItem(self, "Add filter", "Select filter:", self.allFilters, editable=False)
+        filterName, ok = QtGui.QInputDialog.getItem(self, "Add filter", "Select filter:", self.allFilters, editable=False)
         
         if ok:
-            print "SELECTED FILTER", filter
+            print "SELECTED FILTER", filterName
             
-            if filter not in self.currentFilters:
-                self.currentFilters.append(str(filter))
-                self.listItems.addItem(filter)
+            if filterName not in self.currentFilters:
+                self.currentFilters.append(str(filterName))
+                self.listItems.addItem(filterName)
                 
                 # select the newly added filter
                 self.listItems.item(len(self.listItems)-1).setSelected(1)
                 
                 # create option form? like console window (but blocking?)? and open it
+                form = self.createSettingsForm(filterName)
+                form.show()
+                self.currentSettings.append(form)
                 
     
     def removeFilter(self):
@@ -265,6 +400,18 @@ class FilterList(QtGui.QWidget):
         # remove it from lists
         self.listItems.takeItem(row)
         self.currentFilters.pop(row)
+        self.currentSettings.pop(row)
+    
+    def createSettingsForm(self, filterName):
+        """
+        Create a settings form for the filter.
+        
+        """
+        form = None
+        if filterName == "Specie":
+            form = SpecieSettingsDialog(self.mainWindow, "Specie filter settings", parent=self)
+        
+        return form
     
     def visibilityChanged(self):
         """
@@ -346,9 +493,9 @@ class FilterTab(QtGui.QWidget):
         """
         print "RUNNING ALL FILTER LISTS"
         for filterList in self.filterLists:
-            filterList.filterer.runFilter()
+            filterList.filterer.runFilters()
         
-        self.mainWindow.renderer.render()
+#        self.mainWindow.renderer.render()
         
 
     def addFilterList(self):
@@ -363,6 +510,15 @@ class FilterTab(QtGui.QWidget):
     
     def removeFilterList(self):
         pass
+    
+    def refreshAllFilters(self):
+        """
+        Refresh filter settings
+        
+        """
+        for filterList in self.filterLists:
+            for filterSettings in filterList.currentSettings:
+                filterSettings.refresh()
 
 
 

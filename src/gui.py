@@ -341,6 +341,9 @@ class MainWindow(QtGui.QMainWindow):
         """
         self.mainToolbar.tabBar.setTabEnabled(1, True)
         self.mainToolbar.tabBar.setTabEnabled(2, True)
+        
+        # refresh filters eg specie filter
+        self.mainToolbar.filterPage.refreshAllFilters()
     
     def displayWarning(self, message):
         """

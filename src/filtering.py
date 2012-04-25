@@ -15,6 +15,7 @@ import vtk
 
 from utilities import iconPath
 from genericForm import GenericForm
+from visclibs import filtering_c
 
 
 ################################################################################
@@ -44,7 +45,6 @@ class Filterer:
         self.mainWindow = self.parent.mainWindow
         
         self.filterList = []
-        
         self.actorList = []
         
     def addFilter(self, name, index=None):
@@ -62,55 +62,56 @@ class Filterer:
         # remove actors too?
         pass
     
-    def runFilter(self):
+    def runFilters(self):
         """
         Run the filters.
         
         """
         # first set up visible atoms arrays
-        NAtomsInput = self.parent.mainWindow.inputState.NAtoms
-        print "RUN FILTER NATOMSINPUT", NAtomsInput
+        NAtoms = self.parent.mainWindow.inputState.NAtoms
+        print "RUN FILTER NATOMS", NAtoms
         
-        NAtomsRef = self.parent.mainWindow.refState.NAtoms
-        print "RUN FILTER NATOMSREF", NAtomsRef
-        
-        if NAtomsInput == 0:
-            visibleAtoms = np.arange(NAtomsRef, dtype=np.int32)
-            visibleObjects = VisibleObjects(visibleAtoms, useRefPos=1)
-        
-        else:
-            visibleAtoms = np.arange(NAtomsRef, dtype=np.int32)
-            visibleObjects = VisibleObjects(visibleAtoms)
-        
+        visibleAtoms = np.arange(NAtoms, dtype=np.int32)
+                
         # run filters
-        for filter in self.filterList:
-            filter.runFilter(self.mainWindow, visibleObjects)
+        currentFilters = self.parent.currentFilters
+        currentSettings = self.parent.currentSettings
+        for i in xrange(len(currentFilters)):
+            filterName = currentFilters[i]
+            filterSettings = currentSettings[i]
+            
+            if filterName == "Specie":
+                self.filterSpecie(visibleAtoms, filterSettings)
         
         # render 
-        self.renderFilteredSystem(visibleObjects)
+#        self.renderFilteredSystem(visibleObjects)
     
     def renderFilteredSystem(self, visibleObjects):
         """
         Render systems after applying filters.
         
         """
-        visibleDict = visibleObjects.visibleDict
-        for key in visibleDict.keys():
+        pass
             
-            indexes = visibleDict[key]
-            
-            print "RENDERING", key
-            
-            if visibleObjects.useRefPos:
-                lattice = self.mainWindow.refState
-            
-            else:
-                lattice = self.mainWindow.inputState
-            
-            actor = renderering.makeActor
+    def filterSpecie(self, visibleAtoms, settings):
+        """
+        Filter by specie
         
-
-
+        """
+        print "RUNNING SPECIE FILTER"
+        visSpecArray = np.empty(len(settings.visibleSpecieList), np.int32)
+        
+        count = 0
+        for i in xrange(len(self.mainWindow.inputState.specieList)):
+            if self.mainWindow.inputState.specieList[i] in settings.visibleSpecieList:
+                visSpecArray[count] = i
+                count += 1
+        
+        NVisible = filtering_c.specieFilter(visibleAtoms, visSpecArray, self.mainWindow.inputState.specie)
+        
+        visibleAtoms.resize(NVisible, refcheck=False)
+        
+        print "NVISIBLE", NVisible
 
 
 ################################################################################
