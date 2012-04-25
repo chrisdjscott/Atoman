@@ -3,6 +3,7 @@
 GUI classes
 
 @author: Chris Scott
+
 """
 
 import os
@@ -318,10 +319,9 @@ class MainWindow(QtGui.QMainWindow):
             self.postRefLoaded(filename)
             self.renderer.postRefRender()
             
-        else:
-            self.setCurrentInputFile(filename)
-            self.inputLoaded = 1
-            self.postInputLoaded()
+            self.inputState.clone(self.refState)
+        
+        self.postInputLoaded(filename)
         
         self.setStatus("Ready")
         
@@ -334,11 +334,14 @@ class MainWindow(QtGui.QMainWindow):
         self.refLoaded = 1
 #        self.mainToolbar.inputTab.clearRefButton.setCheckable(1)
     
-    def postInputLoaded(self):
+    def postInputLoaded(self, filename):
         """
         Do stuff after the input has been loaded
         
         """
+        self.setCurrentInputFile(filename)
+        self.inputLoaded = 1
+        
         self.mainToolbar.tabBar.setTabEnabled(1, True)
         self.mainToolbar.tabBar.setTabEnabled(2, True)
         

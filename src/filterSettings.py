@@ -253,6 +253,7 @@ class CropSettingsDialog(GenericSettingsDialog):
         row = self.newRow()
         
         self.setToLatticeButton = QtGui.QPushButton('Set to lattice')
+        self.setToLatticeButton.setAutoDefault(0)
         self.setToLatticeButton.setStatusTip('Set crop to lattice dimensions')
         self.connect(self.setToLatticeButton, QtCore.SIGNAL('clicked()'), self.setCropToLattice)
         row = self.newRow(align='Center')
@@ -325,3 +326,15 @@ class CropSettingsDialog(GenericSettingsDialog):
         self.yEnabled = 0
         self.zEnabled = 0
         self.refresh()
+
+
+################################################################################
+class PointDefectsSettingsDialog(GenericSettingsDialog):
+    def __init__(self, mainWindow, title, parent=None):
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        
+        GenericSettingsDialog.__init__(self, title)
+        
+        self.filterType = "Point defects"

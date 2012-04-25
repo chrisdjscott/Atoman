@@ -3,15 +3,15 @@
 """
 Initialise application
 
-author: Chris Scott
-last edited: February 2012
+@author: Chris Scott
+
 """
 
 import sys
 
 from PyQt4 import QtGui
 
-import gui
+import mainWindow
 from utilities import iconPath
 
 
@@ -19,7 +19,7 @@ from utilities import iconPath
 def main():
     app = QtGui.QApplication(sys.argv)
     
-    mw = gui.MainWindow()
+    mw = mainWindow.MainWindow()
     mw.setWindowIcon(QtGui.QIcon(iconPath("applications.ico")))
     
     sys.exit(app.exec_())

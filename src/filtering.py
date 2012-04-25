@@ -112,7 +112,7 @@ class Filterer:
         
         # render
         actors = []
-        if self.parent.defectFilter:
+        if self.parent.defectFilterSelected:
             print "NOT ADDED DEFECT RENDERING YET"
         
         else:

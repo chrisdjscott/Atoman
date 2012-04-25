@@ -50,10 +50,10 @@ class FilterList(QtGui.QWidget):
         self.tabWidth = width
         self.tabHeight = height
         
-        self.defectFilter = 0
+        self.defectFilterSelected = 0
         
         # all available filters
-        self.allFilters = ["Specie", "Displacement", "Crop"]
+        self.allFilters = ["Specie", "Point defects", "Crop"]
         self.allFilters.sort()
         
         # current selected filters
@@ -218,6 +218,8 @@ class FilterList(QtGui.QWidget):
         
         while len(self.currentSettings):
             self.currentSettings.pop()
+        
+        self.defectFilterSelected = 0
     
     def moveFilterDownInList(self):
         """
@@ -233,6 +235,14 @@ class FilterList(QtGui.QWidget):
         """
         pass
     
+    def warnDefectFilter(self):
+        """
+        Warn user that defect filter cannot 
+        be used with any other filter
+        
+        """
+        QtGui.QMessageBox.warning(self, "Warning", "The point defects filter cannot be used in conjunction with any other filter!")
+    
     def addFilter(self):
         """
         Add new filter
@@ -244,17 +254,27 @@ class FilterList(QtGui.QWidget):
         if ok:
             print "SELECTED FILTER", filterName
             
-            if filterName not in self.currentFilters:
-                self.currentFilters.append(str(filterName))
-                self.listItems.addItem(filterName)
-                
-                # select the newly added filter
-                self.listItems.item(len(self.listItems)-1).setSelected(1)
-                
-                # create option form? like console window (but blocking?)? and open it
-                form = self.createSettingsForm(filterName)
-                form.show()
-                self.currentSettings.append(form)
+            if self.defectFilterSelected:
+                self.warnDefectFilter()
+            
+            elif len(self.currentFilters) and str(filterName) == "Point defects":
+                self.warnDefectFilter()
+            
+            else:
+                if filterName not in self.currentFilters:
+                    self.currentFilters.append(str(filterName))
+                    self.listItems.addItem(filterName)
+                    
+                    # select the newly added filter
+#                    self.listItems.item(len(self.listItems)-1).setSelected(1)
+                    
+                    # create option form? like console window (but blocking?)? and open it
+                    form = self.createSettingsForm(filterName)
+                    form.show()
+                    self.currentSettings.append(form)
+                    
+                    if str(filterName) == "Point defects":
+                        self.defectFilterSelected = 1
                 
     
     def removeFilter(self):
@@ -265,10 +285,16 @@ class FilterList(QtGui.QWidget):
         # find which one is selected
         row = self.listItems.currentRow()
         
+        if not len(self.listItems) or row < 0:
+            return
+                
         # remove it from lists
         self.listItems.takeItem(row)
-        self.currentFilters.pop(row)
+        filterName = self.currentFilters.pop(row)
         self.currentSettings.pop(row)
+        
+        if filterName == "Point defects":
+            self.defectFilterSelected = 0
     
     def createSettingsForm(self, filterName):
         """
@@ -281,6 +307,9 @@ class FilterList(QtGui.QWidget):
         
         elif filterName == "Crop":
             form = filterSettings.CropSettingsDialog(self.mainWindow, "Crop filter settings", parent=self)
+        
+        elif filterName == "Point defects":
+            form = filterSettings.PointDefectsSettingsDialog(self.mainWindow, "Point defects filter settings", parent=self)
         
         return form
     

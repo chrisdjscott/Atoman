@@ -18,17 +18,10 @@ class Lattice:
     def __init__(self):
         
         self.NAtoms = 0
-        self.NVisible = 0
         
         self.simTime = 0.0
         
         self.cellDims = np.empty(3, np.float64)
-        
-#        self.visibleAtoms = []
-#        self.visibleType = []
-#        
-#        self.visibleSpecieList = []
-#        self.visibleSpecieCount = []
         
         self.specieList = []
         self.specieCount = []
@@ -51,20 +44,18 @@ class Lattice:
         
         """
         self.NAtoms = NAtoms
-        self.NVisible = NAtoms
         
         self.specie = np.empty(NAtoms, np.int32)
         self.pos = np.empty(3 * NAtoms, np.float64)
         self.KE = np.empty(NAtoms, np.float64)
         self.PE = np.empty(NAtoms, np.float64)
         self.charge = np.empty(NAtoms, np.float64)
-#        self.visible = np.arange(NAtoms, dtype=np.int32)
-#        self.visibleType = np.zeros(NAtoms, np.int32)
         
         self.specieList = []
         self.specieCount = []
-#        self.visibleSpecieList = []
-#        self.visibleSpecieCount = []
+        self.specieMass = []
+        self.specieCovalentRadius = []
+        self.specieRGB = []
         
 #         self.minPos = np.empty(3, np.float64)
 #         self.maxPos = np.empty(3, np.float64)
@@ -79,5 +70,50 @@ class Lattice:
         self.cellDims[1] = float(dimsarray[1])
         self.cellDims[2] = float(dimsarray[2])
     
-    
+    def clone(self, lattice):
+        """
+        Copy given lattice into this instance
+        
+        """
+        if lattice.NAtoms != self.NAtoms:
+            self.reset(lattice.NAtoms)
+        
+        NAtoms = lattice.NAtoms
+        
+        self.simTime = lattice.simTime
+        
+        # copy dims
+        self.cellDims[0] = lattice.cellDims[0]
+        self.cellDims[1] = lattice.cellDims[1]
+        self.cellDims[2] = lattice.cellDims[2]
+        
+        # specie stuff
+        NSpecies = len(lattice.specieList)
+        dt = np.dtype((str, 2))
+        self.specieList = np.empty(NSpecies, dtype=dt)
+        self.specieCount = np.zeros(NSpecies, np.int32)
+        self.specieMass = np.empty(NSpecies, np.float64)
+        self.specieCovalentRadius = np.empty(NSpecies, np.float64)
+        self.specieRGB = np.empty((NSpecies, 3), np.float64)
+        for i in xrange(NSpecies):
+            self.specieList[i] = lattice.specieList[i]
+            self.specieCount[i] = lattice.specieCount[i]
+            self.specieMass[i] = lattice.specieMass[i]
+            self.specieCovalentRadius[i] = lattice.specieCovalentRadius[i]
+            for j in xrange(3):
+                self.specieRGB[i][j] = lattice.specieRGB[i][j]
+        
+        # atom data
+        self.specie = np.empty(NAtoms, np.int32)
+        self.pos = np.empty(3 * NAtoms, np.float64)
+        self.KE = np.empty(NAtoms, np.float64)
+        self.PE = np.empty(NAtoms, np.float64)
+        self.charge = np.empty(NAtoms, np.float64)
+        for i in xrange(NAtoms):
+            self.specie[i] = lattice.specie[i]
+            self.KE[i] = lattice.KE[i]
+            self.PE[i] = lattice.PE[i]
+            self.charge[i] = lattice.charge[i]
+            for j in xrange(3):
+                self.pos[3*i+j] = lattice.pos[3*i+j]
 
