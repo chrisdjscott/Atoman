@@ -13,6 +13,38 @@ import vtk
 
 
 ################################################################################
+def setRes(num):
+    #res = 15.84 * (0.99999**natoms)
+    #if(LowResVar.get()=="LowResOff"):
+    if(num==0):
+        res = 100
+    else:
+        #if(ResVar.get()=="LowResOn"):
+        #    
+        #    res = -1.0361*math.log(num,e) + 14.051
+        #    #res = round(res,0)
+        #    #res = 176*(num**-0.36)
+        #    res = int(res)
+        #    
+        #elif(ResVar.get()=="HighResOn"):
+        #    
+        #    res = -2.91*math.log(num,e) + 35
+        #    res = round(res,0)
+        #    res = 370*(num**-0.36)
+        #    res = int(res)
+        #    
+        #else:
+        
+        res = -2.91*math.log(num,2.7) + 35
+        res = round(res,0)
+        res = 170*(num**-0.36)
+        res = int(res)    
+    
+    print "RES = ",res,num    
+    return res
+
+
+################################################################################
 class CellOutline:
     def __init__(self, ren):
         
@@ -189,16 +221,34 @@ class Renderer:
         
         """
         print "RENDERING"
-#        self.removeAllActors()
+        self.removeAllActors()
         
-#        filterLists = self.getFilterLists()
-#        count = 0
-#        for filterList in filterLists:
-#            print "RENDERING LIST", count
-#            count += 1
-#            
-#            filterList.addActors()
+        filterLists = self.getFilterLists()
+        count = 0
+        for filterList in filterLists:
+            print "RENDERING LIST", count
+            count += 1
             
+            filterList.addActors()
+
+
+################################################################################
+def setupLUT(specieList, specieRGB):
+    """
+    Setup the colour look up table
+    
+    """
+    NSpecies = len(specieList)
+    
+    lut = vtk.vtkLookupTable()
+    lut.SetNumberOfColors(NSpecies)
+    lut.SetNumberOfTableValues(NSpecies)
+    lut.SetTableRange(0, NSpecies - 1)
+    lut.SetRange(0, NSpecies - 1)
+    
+    for i in xrange(NSpecies):
+        lut.SetTableValue(i, specieRGB[i][0], specieRGB[i][1], specieRGB[i][2], 1.0)
+        
 
 ################################################################################
 def getActorsForFilteredSystem(visibleAtoms, mainWindow):
@@ -208,6 +258,10 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow):
     """
     actorsList = []
     
+    # resolution
+    res = setRes(len(visibleAtoms))
+    
+    # render the atoms
     
     
     
