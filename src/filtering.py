@@ -106,6 +106,9 @@ class Filterer:
             
             if filterName == "Specie":
                 self.filterSpecie(visibleAtoms, filterSettings)
+            
+            elif filterName == "Crop":
+                self.cropFilter(visibleAtoms, filterSettings)
         
         # render
         actors = []
@@ -113,7 +116,7 @@ class Filterer:
             print "NOT ADDED DEFECT RENDERING YET"
         
         else:
-            renderer.getActorsForFilteredSystem(visibleAtoms, self.mainWindow, self.actorsCollection)
+            rendering.getActorsForFilteredSystem(visibleAtoms, self.mainWindow, self.actorsCollection)
                 
         if self.parent.visible:
             self.addActors()
@@ -145,9 +148,22 @@ class Filterer:
         
         print "NVISIBLE", NVisible
 
-
-
-
+    def cropFilter(self, visibleAtoms, settings):
+        """
+        Crop lattice
+        
+        """
+        lattice = self.mainWindow.inputState
+        
+        print "X", settings.xEnabled, settings.xmin, settings.xmax
+        print "Y", settings.yEnabled, settings.ymin, settings.ymax
+        print "Z", settings.zEnabled, settings.zmin, settings.zmax
+        
+        NVisible = filtering_c.cropFilter(visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
+                                          settings.ymax, settings.zmin, settings.zmax, settings.xEnabled, 
+                                          settings.yEnabled, settings.zEnabled)
+        
+        visibleAtoms.resize(NVisible, refcheck=False)
 
 
 

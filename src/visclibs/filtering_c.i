@@ -40,7 +40,11 @@ import_array();
 
 /* define functions here */
 %{
-    extern int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie);
+extern int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie);
+    
+extern int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, int xEnabled, int yEnabled, int zEnabled);
 %}
 
 extern int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie);
+
+extern int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, int xEnabled, int yEnabled, int zEnabled);

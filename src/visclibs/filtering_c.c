@@ -42,3 +42,49 @@ int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec
     
     return NVisible;
 }
+
+
+/*******************************************************************************
+ ** Crop filter
+ *******************************************************************************/
+int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, double xmin, double xmax,
+               double ymin, double ymax, double zmin, double zmax, int xEnabled, int yEnabled, int zEnabled)
+{
+    int i, index, NVisible;
+    
+    
+    NVisible = 0;
+    for (i=0; i<NVisibleIn; i++)
+    {
+        index = visibleAtoms[i];
+        
+        if (xEnabled == 1)
+        {
+            if (pos[3*index] < xmin || pos[3*index] > xmax)
+            {
+                continue;
+            }
+        }
+        
+        if (yEnabled == 1)
+        {
+            if (pos[3*index+1] < ymin || pos[3*index+1] > ymax)
+            {
+                continue;
+            }
+        }
+        
+        if (zEnabled == 1)
+        {
+            if (pos[3*index+2] < zmin || pos[3*index+2] > zmax)
+            {
+                continue;
+            }
+        }
+        
+        visibleAtoms[NVisible] = index;
+        NVisible++;
+    }
+    
+    return NVisible;
+}

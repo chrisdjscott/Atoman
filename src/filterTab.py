@@ -54,6 +54,7 @@ class FilterList(QtGui.QWidget):
         
         # all available filters
         self.allFilters = ["Specie", "Displacement", "Crop"]
+        self.allFilters.sort()
         
         # current selected filters
         self.currentFilters = []
@@ -119,7 +120,8 @@ class FilterList(QtGui.QWidget):
         self.filterListLayout.addWidget(row3)
         
         # Now add the list widget
-        self.listItems = List(self)
+#        self.listItems = List(self)
+        self.listItems = QtGui.QListWidget(self)
         self.listItems.setFixedHeight(self.tabHeight)
         
         self.connect(self.listItems, QtCore.SIGNAL('itemDoubleClicked(QListWidgetItem*)'), self.openFilterSettings)
@@ -166,7 +168,6 @@ class FilterList(QtGui.QWidget):
         
         self.filterListLayout.addWidget(buttonWidget)
         
-        
         # add other option like colour by height etc
         self.extraOptionsList = QtGui.QListWidget(self)
         self.connect(self.extraOptionsList, QtCore.SIGNAL('itemClicked(QListWidgetItem*)'), self.openOptionsWindow)
@@ -200,16 +201,11 @@ class FilterList(QtGui.QWidget):
         
         """
         # remove actors
+        self.filterer.removeActors()
         
         # apply filters
-        
-        # add actors
-        
-        # leave other lists the same!
-        
-        
-        pass
-    
+        self.filterer.runFilters()
+            
     def clearList(self):
         """
         Move filter down in list
@@ -268,7 +264,6 @@ class FilterList(QtGui.QWidget):
         """
         # find which one is selected
         row = self.listItems.currentRow()
-        item = self.listItems.currentItem()
         
         # remove it from lists
         self.listItems.takeItem(row)
@@ -284,6 +279,9 @@ class FilterList(QtGui.QWidget):
         if filterName == "Specie":
             form = filterSettings.SpecieSettingsDialog(self.mainWindow, "Specie filter settings", parent=self)
         
+        elif filterName == "Crop":
+            form = filterSettings.CropSettingsDialog(self.mainWindow, "Crop filter settings", parent=self)
+        
         return form
     
     def visibilityChanged(self):
@@ -294,9 +292,11 @@ class FilterList(QtGui.QWidget):
         if self.visibleButton.isChecked():
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.svg")))
             self.visible = 0
+            self.filterer.removeActors()
         else:
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))
             self.visible = 1
+            self.filterer.addActors()
 
 
 ################################################################################

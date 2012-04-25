@@ -133,7 +133,7 @@ class MainWindow(QtGui.QMainWindow):
         
         self.setCentralWidget(self.VTKContainer)
                 
-        self.renderer = renderer.Renderer(self)
+        self.renderer = rendering.Renderer(self)
         
         # connect window destroyed to updateInstances
         self.connect(self, QtCore.SIGNAL("destroyed(QObject*)"), MainWindow.updateInstances)
