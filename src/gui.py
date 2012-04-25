@@ -20,7 +20,7 @@ import toolbar as toolbarModule
 import lattice
 import inputModule
 import resources
-import renderer
+import rendering
 
 
 __version__ = "0.0.1"

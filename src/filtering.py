@@ -16,7 +16,7 @@ import vtk
 from utilities import iconPath
 from genericForm import GenericForm
 from visclibs import filtering_c
-import renderer
+import rendering
 
 
 ################################################################################
