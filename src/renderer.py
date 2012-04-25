@@ -8,6 +8,7 @@ Module for rendering
 
 import os
 import sys
+import math
 
 import vtk
 
@@ -248,26 +249,72 @@ def setupLUT(specieList, specieRGB):
     
     for i in xrange(NSpecies):
         lut.SetTableValue(i, specieRGB[i][0], specieRGB[i][1], specieRGB[i][2], 1.0)
-        
+    
+    return lut
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow):
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection):
     """
     Make the actors for the filtered system
     
     """
-    actorsList = []
+    NVisible = len(visibleAtoms)
     
     # resolution
-    res = setRes(len(visibleAtoms))
+    res = setRes(NVisible)
     
-    # render the atoms
+    lattice = mainWindow.inputState
     
+    # make LUT
+    lut = setupLUT(lattice.specieList, lattice.specieRGB)
     
+    NSpecies = len(lattice.specieList)
     
-    
-    
-    
-    
-    return actorsList
-
+    atomPointsList = []
+    atomScalarsList = []
+    for i in xrange(NSpecies):
+        atomPointsList.append(vtk.vtkPoints())
+        atomScalarsList.append(vtk.vtkFloatArray())
+        
+    # loop over atoms, setting points
+    pos = lattice.pos
+    spec = lattice.specie
+    for i in xrange(NVisible):
+        index = visibleAtoms[i]
+        specInd = spec[index]
+        
+        atomPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
+        atomScalarsList[specInd].InsertNextValue(specInd)
+        
+    # now loop over species, making actors
+    for i in xrange(NSpecies):
+        
+        print "SPEC", lattice.specieList[i]
+        
+        atomsPolyData = vtk.vtkPolyData()
+        atomsPolyData.SetPoints(atomPointsList[i])
+        atomsPolyData.GetPointData().SetScalars(atomScalarsList[i])
+        
+        print "RAD", lattice.specieCovalentRadius[i]
+        
+        atomsGlyphSource = vtk.vtkSphereSource()
+        atomsGlyphSource.SetRadius(lattice.specieCovalentRadius[i])
+        atomsGlyphSource.SetPhiResolution(res)
+        atomsGlyphSource.SetThetaResolution(res)
+        
+        atomsGlyph = vtk.vtkGlyph3D()
+        atomsGlyph.SetSource(atomsGlyphSource.GetOutput())
+        atomsGlyph.SetInput(atomsPolyData)
+        atomsGlyph.SetScaleFactor(1.0)
+        atomsGlyph.SetScaleModeToDataScalingOff()
+        
+        atomsMapper = vtk.vtkPolyDataMapper()
+        atomsMapper.SetInput(atomsGlyph.GetOutput())
+        atomsMapper.SetLookupTable(lut)
+        atomsMapper.SetScalarRange(0, NSpecies - 1)
+        
+        atomsActor = vtk.vtkActor()
+        atomsActor.SetMapper(atomsMapper)
+        
+        actorsCollection.AddItem(atomsActor)
+        

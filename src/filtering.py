@@ -62,7 +62,7 @@ class Filterer:
             
             actor = self.actorsCollection.GetNextItem()
         
-        self.mainWindow.renWinInteract.ReInitialize()
+        self.mainWindow.VTKWidget.ReInitialize()
     
     def addActors(self):
         """
@@ -73,13 +73,14 @@ class Filterer:
         actor = self.actorsCollection.GetNextItem()
         while actor is not None:
             try:
+                print "ADDING ACTOR"
                 self.mainWindow.VTKRen.AddActor(actor)
             except:
                 pass
             
             actor = self.actorsCollection.GetNextItem()
         
-        self.mainWindow.renWinInteract.ReInitialize()
+        self.mainWindow.VTKWidget.ReInitialize()
     
     def runFilters(self):
         """
@@ -112,11 +113,8 @@ class Filterer:
             print "NOT ADDED DEFECT RENDERING YET"
         
         else:
-            actors = renderer.getActorsForFilteredSystem(visibleAtoms, self.mainWindow)
-        
-        for actor in actors:
-            self.actorsCollection.AddItem(actor)
-        
+            renderer.getActorsForFilteredSystem(visibleAtoms, self.mainWindow, self.actorsCollection)
+                
         if self.parent.visible:
             self.addActors()
     

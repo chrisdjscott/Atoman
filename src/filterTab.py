@@ -53,7 +53,8 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         buttonWidget = QtGui.QWidget()
         buttonLayout = QtGui.QHBoxLayout(buttonWidget)
-        buttonLayout.addStretch()
+        buttonLayout.setAlignment(QtCore.Qt.AlignCenter)
+#        buttonLayout.addStretch()
         buttonLayout.addWidget(closeButton)
         
         dialogLayout.addWidget(buttonWidget)
