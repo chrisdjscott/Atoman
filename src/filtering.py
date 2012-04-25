@@ -11,10 +11,23 @@ import sys
 
 from PyQt4 import QtGui, QtCore
 import numpy as np
+import vtk
 
 from utilities import iconPath
 from genericForm import GenericForm
 
+
+################################################################################
+class VisibleObjects:
+    def __init__(self, visibleAtoms, useRefPos=0):
+        
+        self.useRefPos = useRefPos
+        
+        self.visibleDict = {}
+        
+        self.visibleDict["ATOMS"] = visibleAtoms
+    
+        
 
 
 ################################################################################
@@ -61,11 +74,40 @@ class Filter:
         NAtomsRef = self.parent.mainWindow.refState.NAtoms
         print "RUN FILTER NATOMSREF", NAtomsRef
         
+        if NAtomsInput == 0:
+            visibleAtoms = np.arange(NAtomsRef, dtype=np.int32)
+            visibleObjects = VisibleObjects(visibleAtoms, useRefPos=1)
+        
+        else:
+            visibleAtoms = np.arange(NAtomsRef, dtype=np.int32)
+            visibleObjects = VisibleObjects(visibleAtoms)
+        
         # run filters
         for filter in self.filterList:
-            filter.runFilter()
+            filter.runFilter(self.mainWindow, visibleObjects)
         
+        # render 
+        self.renderFilteredSystem(visibleObjects)
+    
+    def renderFilteredSystem(self, visibleObjects):
+        """
+        Render systems after applying filters.
         
+        """
+        visibleDict = visibleObjects.visibleDict
+        for key in visibleDict.keys():
+            
+            indexes = visibleDict[key]
+            
+            print "RENDERING", key
+            
+            if visibleObjects.useRefPos:
+                lattice = self.mainWindow.refState
+            
+            else:
+                lattice = self.mainWindow.inputState
+            
+            actor = renderering.makeActor
         
 
 
@@ -90,7 +132,7 @@ class SpecieFilter:
             index = self.visibleSpecies.index(specie)
             self.visibleSpecies.pop(index)
     
-    def runFilter(self, mainWindow):
+    def runFilter(self, mainWindow, visibleObjects):
         pass
 
 

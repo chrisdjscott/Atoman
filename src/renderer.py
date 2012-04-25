@@ -188,9 +188,3 @@ class Renderer:
             print "RENDERING LIST", count
             count += 1
             
-            
-            
-            
-            
-
-
