@@ -27,6 +27,8 @@ class FilterTab(QtGui.QWidget):
         self.mainWindow = mainWindow
         self.toolbarWidth = width
         
+        self.log = self.mainWindow.console.write
+        
         self.filterListCount = 1
         self.filterLists = []
         
@@ -83,9 +85,13 @@ class FilterTab(QtGui.QWidget):
         Run all the filter lists.
         
         """
-        print "RUNNING ALL FILTER LISTS"
+        self.log("Running all filter lists")
+        count = 0
         for filterList in self.filterLists:
-            filterList.filterer.runFilters()        
+            self.log("Running filter list %d" % (count,), 0, 1)
+            filterList.filterer.runFilters()
+            
+            count += 1
 
     def addFilterList(self):
         pass
@@ -105,6 +111,7 @@ class FilterTab(QtGui.QWidget):
         Refresh filter settings
         
         """
+        self.log("Refreshing filters", 3)
         for filterList in self.filterLists:
             for filterSettings in filterList.currentSettings:
                 filterSettings.refresh()

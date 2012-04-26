@@ -94,6 +94,8 @@ class Renderer:
         self.ren = self.mainWindow.VTKRen
         self.renWinInteract = self.mainWindow.VTKWidget
         
+        self.log = self.mainWindow.console.write
+        
         # is the interactor initialised
         self.init = 0
         
@@ -317,4 +319,11 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection):
         atomsActor.SetMapper(atomsMapper)
         
         actorsCollection.AddItem(atomsActor)
-        
+
+
+################################################################################
+def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, mainWindow, actorsCollection):
+    
+    print "NEED TO IMPLEMENT DEFECT RENDERING"
+
+

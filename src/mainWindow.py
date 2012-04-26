@@ -75,6 +75,9 @@ class MainWindow(QtGui.QMainWindow):
         
         self.setWindowTitle("CDJSVis")
         
+        # console window for logging output to
+        self.console = ConsoleWindow(self)
+        
         # add the main tool bar
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
@@ -147,9 +150,6 @@ class MainWindow(QtGui.QMainWindow):
         # initiate lattice objects for storing reference and input states
         self.inputState = lattice.Lattice()
         self.refState = lattice.Lattice()        
-        
-        # console window for logging output to
-        self.console = ConsoleWindow(self)
         
         # create temporary directory for working in
         self.tmpDirectory = utilities.createTmpDirectory()

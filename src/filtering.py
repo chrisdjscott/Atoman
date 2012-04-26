@@ -5,7 +5,6 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
-
 import os
 import sys
 
@@ -21,19 +20,6 @@ import rendering
 
 
 ################################################################################
-class VisibleObjects:
-    def __init__(self, visibleAtoms, useRefPos=0):
-        
-        self.useRefPos = useRefPos
-        
-        self.visibleDict = {}
-        
-        self.visibleDict["ATOMS"] = visibleAtoms
-    
-        
-
-
-################################################################################
 class Filterer:
     """
     Filter class.
@@ -45,6 +31,8 @@ class Filterer:
         
         self.parent = parent
         self.mainWindow = self.parent.mainWindow
+        
+        self.log = self.mainWindow.console.write
         
         self.actorsCollection = vtk.vtkActorCollection()
     
@@ -105,6 +93,8 @@ class Filterer:
             filterName = currentFilters[i]
             filterSettings = currentSettings[i]
             
+            self.log("Running filter: %s" % (filterName,), 0, 2)
+            
             if filterName == "Specie":
                 self.filterSpecie(visibleAtoms, filterSettings)
             
@@ -112,11 +102,11 @@ class Filterer:
                 self.cropFilter(visibleAtoms, filterSettings)
             
             elif filterName == "Point defects":
-                self.pointDefectFilter(filterSettings)
+                interstitials, vacancies, antisites, onAntisites = self.pointDefectFilter(filterSettings)
         
         # render
         if self.parent.defectFilterSelected:
-            print "NOT ADDED DEFECT RENDERING YET"
+            rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection)
         
         else:
             rendering.getActorsForFilteredSystem(visibleAtoms, self.mainWindow, self.actorsCollection)
@@ -136,7 +126,6 @@ class Filterer:
         Filter by specie
         
         """
-        print "RUNNING SPECIE FILTER"
         if settings.allSpeciesSelected:
             visSpecArray = np.arange(len(self.mainWindow.inputState.specieList), dtype=np.int32)
         
@@ -151,8 +140,6 @@ class Filterer:
         NVisible = filtering_c.specieFilter(visibleAtoms, visSpecArray, self.mainWindow.inputState.specie)
         
         visibleAtoms.resize(NVisible, refcheck=False)
-        
-        print "NVISIBLE", NVisible
 
     def cropFilter(self, visibleAtoms, settings):
         """
@@ -160,10 +147,6 @@ class Filterer:
         
         """
         lattice = self.mainWindow.inputState
-        
-        print "X", settings.xEnabled, settings.xmin, settings.xmax
-        print "Y", settings.yEnabled, settings.ymin, settings.ymax
-        print "Z", settings.zEnabled, settings.zmin, settings.zmax
         
         NVisible = filtering_c.cropFilter(visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
                                           settings.ymax, settings.zmin, settings.zmax, settings.xEnabled, 
@@ -236,8 +219,22 @@ class Filterer:
                                        int(self.mainWindow.PBC[1]), int(self.mainWindow.PBC[2]), settings.vacancyRadius, refLattice.minPos[0], 
                                        refLattice.minPos[1], refLattice.minPos[2], refLattice.maxPos[0], refLattice.maxPos[1], refLattice.maxPos[2])
         
+        # summarise
+        NDef = NDefectsByType[0]
+        NVac = NDefectsByType[1]
+        NInt = NDefectsByType[2]
+        NAnt = NDefectsByType[3]
+        vacancies.resize(NVac)
+        interstitials.resize(NInt)
+        antisites.resize(NAnt)
+        onAntisites.resize(NAnt)
         
-
+        self.log("Found %d defects" % (NDef,), 0, 3)
+        self.log("%d vacancies" % (NVac,), 0, 4)
+        self.log("%d interstitials" % (NInt,), 0, 4)
+        self.log("%d antisites" % (NAnt,), 0, 4)
+        
+        return (interstitials, vacancies, antisites, onAntisites)
 
 
 
