@@ -300,7 +300,7 @@ class MainWindow(QtGui.QMainWindow):
             if state == "ref":
                 status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
             else:
-                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write)
+                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write, self.refState)
         elif self.fileType == "DAT":
             if state == "ref":
                 status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
@@ -313,6 +313,13 @@ class MainWindow(QtGui.QMainWindow):
         if status:
             if status == -1:
                 self.displayWarning("Could not find file: "+filename)
+            
+            elif status == -2:
+                self.displayWarning("LBOMD XYZ input NAtoms does not match reference!")
+            
+            elif status == -3:
+                self.displayWarning("Unrecognised format for LBOMD XYZ input file!")
+            
             return
         
         if state == "ref":

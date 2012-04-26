@@ -111,7 +111,7 @@ void readRef( char* file, int specieDim, int* specie, int posDim, double* pos, i
             specieList_c[2*specInd] = symtemp[0];
             specieList_c[2*specInd+1] = symtemp[1];
             
-            printf("  found new specie: %d - %s\n", specInd, &specieList[3*NSpecies]);
+//            printf("  found new specie: %d - %s\n", specInd, &specieList[3*NSpecies]);
             
             NSpecies++;
         }
@@ -159,6 +159,80 @@ void readRef( char* file, int specieDim, int* specie, int posDim, double* pos, i
 //     printf("  z range is %f -> %f\n", minPos[2], maxPos[2]);
     
 //     printf("END CLIB\n");
+}
+
+
+/*******************************************************************************
+** read xyz input file
+*******************************************************************************/
+void readLBOMDXYZ( char* file, int posDim, double* pos, int chargeDim, double* charge, 
+                   int KEDim, double* KE, int PEDim, double* PE, int forceDim, double* force, 
+                   int maxPosDim, double* maxPos, int minPosDim, double* minPos, int xyzformat )
+{
+    FILE *INFILE;
+    int i, index, id, NAtoms;
+    double simTime, xpos, ypos, zpos;
+    double chargetmp, KEtmp, PEtmp;
+    double xfor, yfor, zfor;
+    
+    
+    /* open file */
+    INFILE = fopen(file, "r");
+    
+    /* read header */
+    fscanf(INFILE, "%d", &NAtoms);
+    fscanf(INFILE, "%lf", &simTime);
+        
+    /* read atoms */
+    minPos[0] = 1000000;
+    minPos[1] = 1000000;
+    minPos[2] = 1000000;
+    maxPos[0] = -1000000;
+    maxPos[1] = -1000000;
+    maxPos[2] = -1000000;
+    for (i=0; i<NAtoms; i++)
+    {
+        if (xyzformat == 0)
+        {
+            fscanf(INFILE, "%d%lf%lf%lf%lf%lf", &id, &xpos, &ypos, &zpos, &KEtmp, &PEtmp);
+        }
+        
+        index = id - 1;
+        
+        /* store data */
+        pos[3*index] = xpos;
+        pos[3*index+1] = ypos;
+        pos[3*index+2] = zpos;
+        
+        KE[index] = KEtmp;
+        PE[index] = PEtmp;
+        
+        /* max and min positions */
+        if ( xpos > maxPos[0] )
+        {
+            maxPos[0] = xpos;
+        }
+        if ( ypos > maxPos[1] )
+        {
+            maxPos[1] = ypos;
+        }
+        if ( zpos > maxPos[2] )
+        {
+            maxPos[2] = zpos;
+        }
+        if ( xpos < minPos[0] )
+        {
+            minPos[0] = xpos;
+        }
+        if ( ypos < minPos[1] )
+        {
+            minPos[1] = ypos;
+        }
+        if ( zpos < minPos[2] )
+        {
+            minPos[2] = zpos;
+        }
+    }
 }
 
 
