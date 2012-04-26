@@ -32,33 +32,31 @@ def readFile(filename, tmpLocation, lattice, fileType, state, log, refLattice=No
         
     """
     # read file
-    loc = checkForZipped(filename, tmpLocation)
-    if loc == -1:
+    filepath, zipFlag = checkForZipped(filename, tmpLocation)
+    if zipFlag == -1:
         return -1
     
     log("Reading file %s (%s, %s)" % (filename, fileType, state))
-    
-    filename = os.path.join(loc, filename)
     
     # first read the header
     status = 0
     if fileType == "LBOMD":
         
         if state == "ref":
-            status = readLBOMDRef(filename, tmpLocation, lattice, fileType, state, log) 
+            status = readLBOMDRef(filepath, tmpLocation, lattice, fileType, state, log) 
         
         elif state == "input":
             if refLattice is None:
                 print "MUST PASS REF LATTICE WHEN READING LBOMD XYZ INPUT"
                 sys.exit(35)
             
-            status = readLBOMDInput(filename, tmpLocation, lattice, fileType, state, log, refLattice)
+            status = readLBOMDInput(filepath, tmpLocation, lattice, fileType, state, log, refLattice)
             
     elif fileType == "DAT":
         
-        status = readLattice(filename, tmpLocation, lattice, fileType, state, log)
+        status = readLattice(filepath, tmpLocation, lattice, fileType, state, log)
     
-    cleanUnzipped(loc)
+    cleanUnzipped(filepath, zipFlag)
     
     return status
 
@@ -240,30 +238,35 @@ def checkForZipped(filename, tmpLocation):
     
     if os.path.exists(filename):
         fileLocation = '.'
+        zipFlag = 0
+    
     else:
         if os.path.exists(filename + '.bz2'):
             command = "bzcat -k %s.bz2 > " % (filename)
-            zippedFile = file+'.bz2'
+        
         elif os.path.exists(filename + '.gz'):
             command = "zcat %s.gz > " % (filename)
-            zippedFile = filename+'.gz'
+        
         else:
-            return -1
+            return (None, -1)
             
         fileLocation = tmpLocation
         command = command + os.path.join(fileLocation, filename)
         os.system(command)
-                
-    return fileLocation
+        zipFlag = 1
+        
+    filepath = os.path.join(fileLocation, filename)
+    if not os.path.exists(filepath):
+        return (None, -1)
+        
+    return (filepath, zipFlag)
 
 
 
 ################################################################################
-def cleanUnzipped(fileLocation):
+def cleanUnzipped(filepath, zipFlag):
     
-    if fileLocation == '.':
-        pass
-    else:
-        shutil.rmtree(fileLocation)
+    if zipFlag:
+        os.unlink(filepath)
 
 

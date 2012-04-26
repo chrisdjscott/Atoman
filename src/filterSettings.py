@@ -72,6 +72,12 @@ class GenericSettingsDialog(QtGui.QDialog):
         self.hide()
     
     def refresh(self):
+        """
+        Called whenever a new input is loaded.
+        
+        Should be overridden if required.
+        
+        """
         pass
 
 
@@ -391,7 +397,11 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         # settings
         self.vacancyRadius = 1.3
+        self.specieList = []
         self.visibleSpecieList = []
+        self.specieRows = {}
+        self.specieBoxes = {}
+        self.allSpecieSelected = True
         self.showInterstitials = 1
         self.showAntisites = 1
         self.showVacancies = 1
@@ -440,6 +450,16 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row = self.newRow()
         row.addWidget(label)
         
+        self.allSpeciesBox = QtGui.QCheckBox("All")
+        self.allSpeciesBox.setChecked(1)
+        self.connect(self.allSpeciesBox, QtCore.SIGNAL('stateChanged(int)'), self.allSpeciesBoxChanged)
+        row = self.newRow()
+        row.addWidget(self.allSpeciesBox)
+        
+#        self.newRow()
+        
+        self.refresh()
+        
         
     def vacRadChanged(self, val):
         """
@@ -477,3 +497,75 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
             self.showAntisites = 1
         else:
             self.showAntisites = 0
+    
+    def allSpeciesBoxChanged(self, val):
+        """
+        
+        
+        """
+        if self.allSpeciesBox.isChecked():
+            self.allSpeciesSelected = True
+            
+            for specie in self.specieList:
+                self.specieBoxes[specie].setChecked(1)
+            
+        else:
+            self.allSpeciesSelected = False
+        
+#        self.changedSpecie(0)
+        
+    def refresh(self):
+        """
+        Refresh the specie list
+        
+        """
+        inputSpecieList = self.mainWindow.inputState.specieList
+        
+        newSpecieList = []
+        for spec in inputSpecieList:
+            newSpecieList.append(spec)
+        
+        # compare
+        if not len(self.specieList):
+            self.specieList = newSpecieList
+            
+            for spec in self.specieList:
+                self.addSpecieCheck(spec)
+                self.specieBoxes[spec].setChecked(1)
+                        
+        for spec in newSpecieList:
+            if spec not in self.specieList:                
+                self.specieList.append(spec)
+                self.addSpecieCheck(spec)
+                if self.allSpeciesSelected:
+                    self.specieBoxes[spec].setChecked(1)
+        
+        self.changedSpecie(0)
+
+    def addSpecieCheck(self, specie):
+        """
+        Add check box for the given specie
+        
+        """
+        self.specieBoxes[specie] = QtGui.QCheckBox(str(specie))
+        
+        self.connect(self.specieBoxes[specie], QtCore.SIGNAL('stateChanged(int)'), self.changedSpecie)
+        
+        row = self.newRow()
+        row.addWidget(self.specieBoxes[specie])
+        
+        self.specieRows[specie] = row
+        
+    def changedSpecie(self, val):
+        """
+        Changed visibility of a specie.
+        
+        """
+        self.visibleSpecieList = []
+        for specie in self.specieList:
+            if self.specieBoxes[specie].isChecked():
+                self.visibleSpecieList.append(specie)
+        
+        if len(self.visibleSpecieList) != len(self.specieList):
+            self.allSpeciesBox.setChecked(0)
+            self.allSpeciesSelected = False
