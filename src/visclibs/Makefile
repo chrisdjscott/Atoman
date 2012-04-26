@@ -51,9 +51,9 @@ SWIG := swig -python
 SHOBJECTS = *.o=.so
 OBJECTS = ${COBJECTS:.c=.o}
 COBJECTS = *.c
-SWIGSOURCE = input_c.i filtering_c.i
+SWIGSOURCE = input_c.i filtering_c.i defects_c.i
 
-all : _input_c.so _filtering_c.so
+all : _input_c.so _filtering_c.so _defects_c.so
 
 # create object file
 _input_c.so : input_c_wrap.o input_c.o
@@ -62,12 +62,24 @@ _input_c.so : input_c_wrap.o input_c.o
 _filtering_c.so : filtering_c_wrap.o filtering_c.o
 	$(CC) $(CCLINKFLAGS) filtering_c_wrap.o filtering_c.o -o _filtering_c.so
 
+_defects_c.so : defects_c_wrap.o defects_c.o boxes.o utilities.o
+	$(CC) $(CCLINKFLAGS) defects_c.o defects_c_wrap.o boxes.o utilities.o -o _defects_c.so
+
 # compile module
 input_c.o : input_c.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) input_c.c 
 
 filtering_c.o : filtering_c.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) filtering_c.c 
+
+defects_c.o : defects_c.c
+	$(CC) $(CCFLAGS) $(INCLUDES) defects_c.c 
+
+boxes.o : boxes.c
+	$(CC) $(CCFLAGS) $(INCLUDES) boxes.c 
+
+utilities.o : utilities.c
+	$(CC) $(CCFLAGS) $(INCLUDES) utilities.c 
 
 # generate and compile swig wrapper
 input_c_wrap.o : input_c.i 
@@ -77,7 +89,11 @@ input_c_wrap.o : input_c.i
 filtering_c_wrap.o : filtering_c.i 
 	$(SWIG) filtering_c.i
 	$(CC) $(CCFLAGS) $(INCLUDES) filtering_c_wrap.c 
-	
+
+defects_c_wrap.o : defects_c.i
+	$(SWIG) defects_c.i
+	$(CC) $(CCFLAGS) $(INCLUDES) defects_c_wrap.c 
+
 # clean
 clean:
 	rm  -f *.o *.so *_wrap.c *.pyc $(SWIGSOURCE:.i=.py)

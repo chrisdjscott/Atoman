@@ -1,0 +1,65 @@
+
+/*******************************************************************************
+ ** Copyright Chris Scott 2012
+ ** Utility functions
+ *******************************************************************************/
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+#include "utilities.h"
+
+
+/*******************************************************************************
+ ** returns specie index of given specie in the specie list
+ *******************************************************************************/
+int getSpecieIndex( int NSpecies, char* specie, char* specieList )
+{
+    int i, comp, specieIndex;
+    
+    for ( i=0; i<NSpecies; i++ )
+    {
+        comp = strcmp( &specie[0], &specieList[3*i] );
+        if ( comp == 0 )
+        {
+            specieIndex = i;
+            break;
+        }
+    }
+    
+    return specieIndex;
+}
+
+
+/*******************************************************************************
+ ** return atomic separation squared
+ *******************************************************************************/
+double atomicSeparation2( double ax, double ay, double az, double bx, double by, double bz, double xdim, double ydim, double zdim, int pbcx, int pbcy, int pbcz )
+{
+    double rx, ry, rz, r2;
+    
+    /* calculate separation */
+    rx = ax - bx;
+    ry = ay - by;
+    rz = az - bz;
+    
+    /* handle PBCs here if required */
+    if ( pbcx == 1 )
+    {
+        rx = rx - round( rx / xdim ) * xdim;
+    }
+    if ( pbcy == 1 )
+    {
+        ry = ry - round( ry / ydim ) * ydim;
+    }
+    if ( pbcz == 1 )
+    {
+        rz = rz - round( rz / zdim ) * zdim;
+    }
+    
+    /* separation squared */
+    r2 = rx * rx + ry * ry + rz * rz;
+    
+    return r2;
+}

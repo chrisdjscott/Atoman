@@ -18,8 +18,8 @@ import genericForm
 
 ################################################################################
 class GenericSettingsDialog(QtGui.QDialog):
-    def __init__(self, title):
-        QtGui.QDockWidget.__init__(self)
+    def __init__(self, title, parent):
+        QtGui.QDockWidget.__init__(self, parent=parent)
         
         self.setModal(0)
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
@@ -88,7 +88,7 @@ class SpecieSettingsDialog(GenericSettingsDialog):
         self.parent = parent
         self.mainWindow = mainWindow
         
-        GenericSettingsDialog.__init__(self, title)
+        GenericSettingsDialog.__init__(self, title, parent)
         
         self.filterType = "Specie"
         
@@ -141,27 +141,13 @@ class SpecieSettingsDialog(GenericSettingsDialog):
             
             for spec in self.specieList:
                 self.addSpecieCheck(spec)
+            
+            for spec in self.specieList:
                 self.specieBoxes[spec].setChecked(1)
-        
-        for spec in self.specieList:
-            if spec not in newSpecieList:
-                print "NEED TO REMOVE SPEC", spec
+            
+            self.allSpeciesBox.setChecked(1)
+            self.allSpeciesSelected = True
                 
-                # remove from specie list
-#                index = self.specieList.index(spec)
-#                self.specieList.pop(index)
-#                
-#                # remove from visible specie list
-#                if spec in self.visibleSpecieList:
-#                    index = self.visibleSpecieList.index(spec)
-#                    self.visibleSpecieList.pop(index)
-#                
-#                # remove row
-#                self.specieRows[spec].removeWidget(self.specieBoxes[spec])
-#                self.removeRow(self.specieRows[spec])
-#                del self.specieRows[spec]
-#                del self.specieBoxes[spec]
-        
         for spec in newSpecieList:
             if spec not in self.specieList:
                 print "NEED TO ADD SPEC", spec
@@ -188,7 +174,7 @@ class SpecieSettingsDialog(GenericSettingsDialog):
         row.addWidget(self.specieBoxes[specie])
         
         self.specieRows[specie] = row
-        
+    
     def changedSpecie(self, val):
         """
         Changed visibility of a specie.
@@ -213,7 +199,7 @@ class CropSettingsDialog(GenericSettingsDialog):
         self.parent = parent
         self.mainWindow = mainWindow
         
-        GenericSettingsDialog.__init__(self, title)
+        GenericSettingsDialog.__init__(self, title, parent)
         
         self.filterType = "Crop"
         
@@ -391,7 +377,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.parent = parent
         self.mainWindow = mainWindow
         
-        GenericSettingsDialog.__init__(self, title)
+        GenericSettingsDialog.__init__(self, title, parent)
         
         self.filterType = "Point defects"
         
@@ -401,7 +387,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.visibleSpecieList = []
         self.specieRows = {}
         self.specieBoxes = {}
-        self.allSpecieSelected = True
+        self.allSpeciesSelected = True
         self.showInterstitials = 1
         self.showAntisites = 1
         self.showVacancies = 1
@@ -519,10 +505,11 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         Refresh the specie list
         
         """
+        refSpecieList = self.mainWindow.refState.specieList
         inputSpecieList = self.mainWindow.inputState.specieList
         
         newSpecieList = []
-        for spec in inputSpecieList:
+        for spec in refSpecieList:
             newSpecieList.append(spec)
         
         # compare
@@ -531,8 +518,14 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
             
             for spec in self.specieList:
                 self.addSpecieCheck(spec)
+            
+            for spec in self.specieList:
                 self.specieBoxes[spec].setChecked(1)
-                        
+        
+        newSpecieList = []
+        for spec in inputSpecieList:
+            newSpecieList.append(spec)
+        
         for spec in newSpecieList:
             if spec not in self.specieList:                
                 self.specieList.append(spec)

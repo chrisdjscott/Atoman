@@ -14,6 +14,7 @@ import platform
 from PyQt4 import QtGui, QtCore, Qt
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
+import numpy as np
 
 import utilities
 from utilities import iconPath
@@ -59,6 +60,10 @@ class MainWindow(QtGui.QMainWindow):
         self.inputLoaded = 0
         self.consoleOpen = 0
         self.verboseLevel = 3
+        self.PBC = np.zeros(3, np.int32)
+        self.PBC[0] = 1
+        self.PBC[1] = 1
+        self.PBC[2] = 1
         
         # window size and location
         self.renderWindowWidth = 750 #650

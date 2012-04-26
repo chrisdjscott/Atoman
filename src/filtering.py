@@ -16,6 +16,7 @@ import vtk
 from utilities import iconPath
 from genericForm import GenericForm
 from visclibs import filtering_c
+from visclibs import defects_c
 import rendering
 
 
@@ -93,9 +94,9 @@ class Filterer:
         
         # first set up visible atoms arrays
         NAtoms = self.parent.mainWindow.inputState.NAtoms
-        print "RUN FILTER NATOMS", NAtoms
         
-        visibleAtoms = np.arange(NAtoms, dtype=np.int32)
+        if not self.parent.defectFilterSelected:
+            visibleAtoms = np.arange(NAtoms, dtype=np.int32)
         
         # run filters
         currentFilters = self.parent.currentFilters
@@ -109,9 +110,11 @@ class Filterer:
             
             elif filterName == "Crop":
                 self.cropFilter(visibleAtoms, filterSettings)
+            
+            elif filterName == "Point defects":
+                self.pointDefectFilter(filterSettings)
         
         # render
-        actors = []
         if self.parent.defectFilterSelected:
             print "NOT ADDED DEFECT RENDERING YET"
         
@@ -167,7 +170,73 @@ class Filterer:
                                           settings.yEnabled, settings.zEnabled)
         
         visibleAtoms.resize(NVisible, refcheck=False)
-
+    
+    def pointDefectFilter(self, settings):
+        """
+        Point defects filter
+        
+        """
+        inputLattice = self.mainWindow.inputState
+        refLattice = self.mainWindow.refState
+        
+        # set up arrays
+        if settings.showInterstitials:
+            interstitials = np.empty(inputLattice.NAtoms, np.int32)
+        else:
+            interstitials = np.empty(0, np.int32)
+        if settings.showVacancies:
+            vacancies = np.empty(refLattice.NAtoms, np.int32)
+        else:
+            vacancies = np.empty(0, np.int32)
+        if settings.showAntisites:
+            antisites = np.empty(refLattice.NAtoms, np.int32)
+            onAntisites = np.empty(refLattice.NAtoms, np.int32)
+        else:
+            antisites = np.empty(0, np.int32)
+            onAntisites = np.empty(0, np.int32)
+        
+        # set up excluded specie arrays
+        if settings.allSpeciesSelected:
+            exclSpecsInput = np.zeros(0, np.int32)
+            exclSpecsRef = np.zeros(0, np.int32)
+        
+        else:
+            exclSpecs = []
+            for i in xrange(len(inputLattice.specieList)):
+                spec = inputLattice.specieList[i]
+                if spec not in settings.visibleSpecieList:
+                    exclSpecs.append(i)
+            exclSpecsInput = np.empty(len(exclSpecs), np.int32)
+            for i in xrange(len(exclSpecs)):
+                exclSpecsInput[i] = exclSpecs[i]
+            
+            exclSpecs = []
+            for i in xrange(len(refLattice.specieList)):
+                spec = refLattice.specieList[i]
+                if spec not in settings.visibleSpecieList:
+                    exclSpecs.append(i)
+            exclSpecsRef = np.empty(len(exclSpecs), np.int32)
+            for i in xrange(len(exclSpecs)):
+                exclSpecsRef[i] = exclSpecs[i]
+        
+        print "EXCLUDE SPECS INPUT"
+        print inputLattice.specieList
+        print exclSpecsInput
+        print "EXCLUDE SPECS REF"
+        print refLattice.specieList
+        print exclSpecsRef
+        
+        NDefectsByType = np.zeros(4, np.int32)
+        
+        # call C library
+        status = defects_c.findDefects(settings.showVacancies, settings.showInterstitials, settings.showAntisites, NDefectsByType, vacancies, 
+                                       interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
+                                       inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
+                                       refLattice.pos, refLattice.cellDims[0], refLattice.cellDims[1], refLattice.cellDims[2], int(self.mainWindow.PBC[0]),
+                                       int(self.mainWindow.PBC[1]), int(self.mainWindow.PBC[2]), settings.vacancyRadius, refLattice.minPos[0], 
+                                       refLattice.minPos[1], refLattice.minPos[2], refLattice.maxPos[0], refLattice.maxPos[1], refLattice.maxPos[2])
+        
+        
 
 
 
