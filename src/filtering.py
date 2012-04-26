@@ -62,7 +62,6 @@ class Filterer:
         actor = self.actorsCollection.GetNextItem()
         while actor is not None:
             try:
-                print "ADDING ACTOR"
                 self.mainWindow.VTKRen.AddActor(actor)
             except:
                 pass

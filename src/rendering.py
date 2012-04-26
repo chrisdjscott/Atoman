@@ -291,13 +291,9 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection):
     # now loop over species, making actors
     for i in xrange(NSpecies):
         
-        print "SPEC", lattice.specieList[i]
-        
         atomsPolyData = vtk.vtkPolyData()
         atomsPolyData.SetPoints(atomPointsList[i])
         atomsPolyData.GetPointData().SetScalars(atomScalarsList[i])
-        
-        print "RAD", lattice.specieCovalentRadius[i]
         
         atomsGlyphSource = vtk.vtkSphereSource()
         atomsGlyphSource.SetRadius(lattice.specieCovalentRadius[i])
@@ -324,6 +320,229 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection):
 ################################################################################
 def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, mainWindow, actorsCollection):
     
-    print "NEED TO IMPLEMENT DEFECT RENDERING"
-
-
+    NInt = len(interstitials)
+    NVac = len(vacancies)
+    NAnt = len(antisites)
+    NDef = NInt + NVac + NAnt
+    
+    # resolution
+    res = setRes(NDef)
+    
+    inputLattice = mainWindow.inputState
+    refLattice = mainWindow.refState
+    
+    #----------------------------------------#
+    # interstitials first
+    #----------------------------------------#
+    NSpecies = len(inputLattice.specieList)
+    intPointsList = []
+    intScalarsList = []
+    for i in xrange(NSpecies):
+        intPointsList.append(vtk.vtkPoints())
+        intScalarsList.append(vtk.vtkFloatArray())
+    
+    # make LUT
+    lut = setupLUT(inputLattice.specieList, inputLattice.specieRGB)
+    
+    # loop over interstitials, settings points
+    pos = inputLattice.pos
+    spec = inputLattice.specie
+    for i in xrange(NInt):
+        index = interstitials[i]
+        specInd = spec[index]
+        
+        intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
+        intScalarsList[specInd].InsertNextValue(specInd)
+    
+    # now loop over species making actors
+    for i in xrange(NSpecies):
+        
+        intsPolyData = vtk.vtkPolyData()
+        intsPolyData.SetPoints(intPointsList[i])
+        intsPolyData.GetPointData().SetScalars(intScalarsList[i])
+        
+        intsGlyphSource = vtk.vtkSphereSource()
+        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i])
+        intsGlyphSource.SetPhiResolution(res)
+        intsGlyphSource.SetThetaResolution(res)
+        
+        intsGlyph = vtk.vtkGlyph3D()
+        intsGlyph.SetSource(intsGlyphSource.GetOutput())
+        intsGlyph.SetInput(intsPolyData)
+        intsGlyph.SetScaleFactor(1.0)
+        intsGlyph.SetScaleModeToDataScalingOff()
+        
+        intsMapper = vtk.vtkPolyDataMapper()
+        intsMapper.SetInput(intsGlyph.GetOutput())
+        intsMapper.SetLookupTable(lut)
+        intsMapper.SetScalarRange(0, NSpecies - 1)
+        
+        intsActor = vtk.vtkActor()
+        intsActor.SetMapper(intsMapper)
+        
+        actorsCollection.AddItem(intsActor)
+        
+    #----------------------------------------#
+    # antisites occupying atom
+    #----------------------------------------#
+    NSpecies = len(inputLattice.specieList)
+    intPointsList = []
+    intScalarsList = []
+    for i in xrange(NSpecies):
+        intPointsList.append(vtk.vtkPoints())
+        intScalarsList.append(vtk.vtkFloatArray())
+    
+    # make LUT
+    lut = setupLUT(refLattice.specieList, refLattice.specieRGB)
+    
+    # loop over interstitials, settings points
+    pos = refLattice.pos
+    spec = inputLattice.specie
+    for i in xrange(NAnt):
+        index = onAntisites[i]
+        specInd = spec[index]
+        intScalarsList[specInd].InsertNextValue(specInd)
+        
+        index = antisites[i]
+        intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
+    
+    # now loop over species making actors
+    for i in xrange(NSpecies):
+        
+        intsPolyData = vtk.vtkPolyData()
+        intsPolyData.SetPoints(intPointsList[i])
+        intsPolyData.GetPointData().SetScalars(intScalarsList[i])
+        
+        intsGlyphSource = vtk.vtkSphereSource()
+        intsGlyphSource.SetRadius(refLattice.specieCovalentRadius[i])
+        intsGlyphSource.SetPhiResolution(res)
+        intsGlyphSource.SetThetaResolution(res)
+        
+        intsGlyph = vtk.vtkGlyph3D()
+        intsGlyph.SetSource(intsGlyphSource.GetOutput())
+        intsGlyph.SetInput(intsPolyData)
+        intsGlyph.SetScaleFactor(1.0)
+        intsGlyph.SetScaleModeToDataScalingOff()
+        
+        intsMapper = vtk.vtkPolyDataMapper()
+        intsMapper.SetInput(intsGlyph.GetOutput())
+        intsMapper.SetLookupTable(lut)
+        intsMapper.SetScalarRange(0, NSpecies - 1)
+        
+        intsActor = vtk.vtkActor()
+        intsActor.SetMapper(intsMapper)
+        
+        actorsCollection.AddItem(intsActor)
+    
+    #----------------------------------------#
+    # vacancies
+    #----------------------------------------#
+    NSpecies = len(refLattice.specieList)
+    intPointsList = []
+    intScalarsList = []
+    for i in xrange(NSpecies):
+        intPointsList.append(vtk.vtkPoints())
+        intScalarsList.append(vtk.vtkFloatArray())
+    
+    # make LUT
+    lut = setupLUT(refLattice.specieList, refLattice.specieRGB)
+    
+    # loop over interstitials, settings points
+    pos = refLattice.pos
+    spec = refLattice.specie
+    for i in xrange(NVac):
+        index = vacancies[i]
+        specInd = spec[index]
+        
+        intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
+        intScalarsList[specInd].InsertNextValue(specInd)
+    
+    # now loop over species making actors
+    for i in xrange(NSpecies):
+        
+        vacsPolyData = vtk.vtkPolyData()
+        vacsPolyData.SetPoints(intPointsList[i])
+        vacsPolyData.GetPointData().SetScalars(intScalarsList[i])
+        
+        vacsGlyphSource = vtk.vtkCubeSource()
+        vacsGlyphSource.SetXLength(1.5 * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetYLength(1.5 * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetZLength(1.5 * refLattice.specieCovalentRadius[i])
+        
+        vacsGlyph = vtk.vtkGlyph3D()
+        vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
+        vacsGlyph.SetInput(vacsPolyData)
+        vacsGlyph.SetScaleFactor(1.0)
+        vacsGlyph.SetScaleModeToDataScalingOff()
+        
+        vacsMapper = vtk.vtkPolyDataMapper()
+        vacsMapper.SetInput(vacsGlyph.GetOutput())
+        vacsMapper.SetLookupTable(lut)
+        vacsMapper.SetScalarRange(0, NSpecies - 1)
+        
+        vacsActor = vtk.vtkActor()
+        vacsActor.SetMapper(vacsMapper)
+        vacsActor.GetProperty().SetSpecular(0.4)
+        vacsActor.GetProperty().SetSpecularPower(10)
+        vacsActor.GetProperty().SetOpacity(1.0)
+        
+        actorsCollection.AddItem(vacsActor)
+    
+    #----------------------------------------#
+    # antisites
+    #----------------------------------------#
+    NSpecies = len(refLattice.specieList)
+    intPointsList = []
+    intScalarsList = []
+    for i in xrange(NSpecies):
+        intPointsList.append(vtk.vtkPoints())
+        intScalarsList.append(vtk.vtkFloatArray())
+    
+    # make LUT
+    lut = setupLUT(refLattice.specieList, refLattice.specieRGB)
+    
+    # loop over interstitials, settings points
+    pos = refLattice.pos
+    spec = refLattice.specie
+    for i in xrange(NAnt):
+        index = antisites[i]
+        specInd = spec[index]
+        
+        intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
+        intScalarsList[specInd].InsertNextValue(specInd)
+    
+    # now loop over species making actors
+    for i in xrange(NSpecies):
+        
+        vacsPolyData = vtk.vtkPolyData()
+        vacsPolyData.SetPoints(intPointsList[i])
+        vacsPolyData.GetPointData().SetScalars(intScalarsList[i])
+        
+        cubeGlyphSource = vtk.vtkCubeSource()
+        cubeGlyphSource.SetXLength(2.0 * refLattice.specieCovalentRadius[i])
+        cubeGlyphSource.SetYLength(2.0 * refLattice.specieCovalentRadius[i])
+        cubeGlyphSource.SetZLength(2.0 * refLattice.specieCovalentRadius[i])
+        edges = vtk.vtkExtractEdges()
+        edges.SetInputConnection(cubeGlyphSource.GetOutputPort())
+        vacsGlyphSource = vtk.vtkTubeFilter()
+        vacsGlyphSource.SetInputConnection(edges.GetOutputPort())
+        vacsGlyphSource.SetRadius(0.1)
+        vacsGlyphSource.SetNumberOfSides(5)
+        vacsGlyphSource.UseDefaultNormalOn()
+        vacsGlyphSource.SetDefaultNormal(.577, .577, .577)
+        
+        vacsGlyph = vtk.vtkGlyph3D()
+        vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
+        vacsGlyph.SetInput(vacsPolyData)
+        vacsGlyph.SetScaleFactor(1.0)
+        vacsGlyph.SetScaleModeToDataScalingOff()
+        
+        vacsMapper = vtk.vtkPolyDataMapper()
+        vacsMapper.SetInput(vacsGlyph.GetOutput())
+        vacsMapper.SetLookupTable(lut)
+        vacsMapper.SetScalarRange(0, NSpecies - 1)
+        
+        vacsActor = vtk.vtkActor()
+        vacsActor.SetMapper(vacsMapper)
+        
+        actorsCollection.AddItem(vacsActor)
