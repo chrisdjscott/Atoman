@@ -1,6 +1,6 @@
 
 """
-GUI classes
+The main window class
 
 @author: Chris Scott
 
@@ -347,6 +347,18 @@ class MainWindow(QtGui.QMainWindow):
         
         # refresh filters eg specie filter
         self.mainToolbar.filterPage.refreshAllFilters()
+    
+    def clearReference(self):
+        """
+        Clear the current reference file
+        
+        """
+        self.refLoaded = 0
+        self.inputLoaded = 0
+        self.setCurrentRefFile("")
+        self.setCurrentInputFile("")
+        self.mainToolbar.tabBar.setTabEnabled(1, False)
+        self.mainToolbar.tabBar.setTabEnabled(2, False)
     
     def displayWarning(self, message):
         """

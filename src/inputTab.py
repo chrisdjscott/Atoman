@@ -225,6 +225,8 @@ class InputTab(QtGui.QWidget):
         self.mainWindow = mainWindow
         self.toolbarWidth = width
         
+        self.fileTypeCurrentIndex = None
+        
         # layout
         inputTabLayout = QtGui.QVBoxLayout(self)
         
@@ -242,6 +244,7 @@ class InputTab(QtGui.QWidget):
         self.clearRefButton.setStatusTip("Clear current reference file")
         self.clearRefButton.setCheckable(0)
         self.clearRefButton.setChecked(1)
+        self.connect(self.clearRefButton, QtCore.SIGNAL('clicked()'), self.mainWindow.clearReference)
         
         row = selector.newRow()
         row.addWidget(self.clearRefButton)
@@ -260,23 +263,51 @@ class InputTab(QtGui.QWidget):
         self.stackedWidget.addWidget(self.latticePage)
         
         inputTabLayout.addWidget(self.stackedWidget)
-        
     
     def setWidgetStack(self, text):
         """
         Set which stacked widget is displayed
         
         """
-        if text == "LBOMD XYZ":
-            self.stackedWidget.setCurrentIndex(0)
+        ok = self.okToChangeFileType()
         
-        elif text == "LBOMD LATTICE":
-            self.stackedWidget.setCurrentIndex(1)
-        
+        if ok:
+            if text == "LBOMD XYZ":
+                self.stackedWidget.setCurrentIndex(self.fileTypeComboBox.currentIndex())
+                self.fileTypeCurrentIndex = 0
+            
+            elif text == "LBOMD LATTICE":
+                self.stackedWidget.setCurrentIndex(self.fileTypeComboBox.currentIndex())
+                self.fileTypeCurrentIndex = 1
+                
         #TODO: when the stacked widget is changed I should change file type here,
         #      and warn that current data will be reset
         
+    def okToChangeFileType(self):
+        """
+        Is it ok to change the filetype
         
+        """
+        if self.mainWindow.refLoaded:
+            ok = 0
+            
+            if self.fileTypeComboBox.currentIndex() == self.fileTypeCurrentIndex:
+                pass
+            
+            else:
+                self.fileTypeComboBox.setCurrentIndex(self.fileTypeCurrentIndex)
+                self.warnClearReference()
+            
+        else:
+            ok = 1
+            
+        return ok
         
+    def warnClearReference(self):
+        """
+        Warn user that they must clear the 
+        reference file before changing file
+        type
         
-        
+        """
+        QtGui.QMessageBox.warning(self, "Warning", "Reference must be cleared before changing file type!")
