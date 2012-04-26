@@ -37,9 +37,6 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     int skip;
     double approxBoxWidth;
     
-    printf("CLIB: finding defects\n");
-    printf("  vac rad %f\n", vacancyRadius);
-    
     /* boxing parameters (100 will always be enough
      * since box width is similar to vacancy radius)
      * SHOULD BE CALCULATED DEPENDING ON APPROXBOXWIDTH!!!!
@@ -202,10 +199,13 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         }
         
         /* vacancies */
-        if ( (possibleVacancy[i] == 1) && (includeVacs == 1) )
+        if (possibleVacancy[i] == 1)
         {
-            vacancies[NVacancies] = i;
-            NVacancies++;
+            if (includeVacs == 1)
+            {
+                vacancies[NVacancies] = i;
+                NVacancies++;
+            }
         }
         
         /* antisites */
@@ -246,11 +246,6 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     }
         
     NDefects = NVacancies + NInterstitials + NAntisites;
-    
-    printf("  found %d defects\n", NDefects);
-    printf("    %d vacancies\n", NVacancies);
-    printf("    %d interstitials\n", NInterstitials);
-    printf("    %d antisites\n", NAntisites);
     
     NDefectsType[0] = NDefects;
     NDefectsType[1] = NVacancies;
