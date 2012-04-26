@@ -90,6 +90,17 @@ class LatticePage(QtGui.QWidget):
         
         latticeTabLayout.addWidget(self.inputBox)
     
+    def updateFileLabel(self, state, filename):
+        """
+        Update label with loaded file name
+        
+        """
+        if state == "ref":
+            self.latticeLabel.setText(str(filename))
+        
+        else:
+            self.inputLatticeLabel.setText(str(filename))
+    
     def openFile(self, who):
         """
         Open the specified file
@@ -102,9 +113,10 @@ class LatticePage(QtGui.QWidget):
         else:
             filename = self.inputLatticeLabel.text()
         
-        self.mainWindow.openFile(str(filename), who)
+        result = self.mainWindow.openFile(str(filename), who)
         
-        
+        if result is not None:
+            self.updateFileLabel(who, result)
     
     def openFileDialog(self, who):
         """
@@ -115,7 +127,10 @@ class LatticePage(QtGui.QWidget):
         self.mainWindow.setFileType("DAT")
         
         # then open the dialog
-        self.mainWindow.openFileDialog(who)
+        result = self.mainWindow.openFileDialog(who)
+        
+        if result is not None:
+            self.updateFileLabel(who, result)
 
 
 ################################################################################
@@ -189,7 +204,18 @@ class LBOMDPage(QtGui.QWidget):
         row.addWidget(self.openInputDialogButton)
         
         LBOMDTabLayout.addWidget(self.inputBox)
-            
+    
+    def updateFileLabel(self, state, filename):
+        """
+        Update label with loaded file name
+        
+        """
+        if state == "ref":
+            self.LBOMDRefLabel.setText(str(filename))
+        
+        else:
+            self.LBOMDInputLabel.setText(str(filename))
+    
     def openFile(self, who):
         """
         Open the specified file
@@ -202,7 +228,10 @@ class LBOMDPage(QtGui.QWidget):
         else:
             filename = self.LBOMDInputLabel.text()
         
-        self.mainWindow.openFile(str(filename), who)
+        result = self.mainWindow.openFile(str(filename), who)
+        
+        if result is not None:
+            self.updateFileLabel(who, result)
         
     def openFileDialog(self, who):
         """
@@ -213,7 +242,10 @@ class LBOMDPage(QtGui.QWidget):
         self.mainWindow.setFileType("LBOMD")
         
         # then open the dialog
-        self.mainWindow.openFileDialog(who)
+        result = self.mainWindow.openFileDialog(who)
+        
+        if result is not None:
+            self.updateFileLabel(who, result)
 
 
 ################################################################################

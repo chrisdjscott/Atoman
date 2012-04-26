@@ -261,13 +261,13 @@ class MainWindow(QtGui.QMainWindow):
             filesString = "Lattice files (*.dat *.dat.bz2 *.dat.gz)"
         else:
             self.displayError("openFileDialog: Unrecognised file type: "+self.fileType)
-            return
+            return None
         
         filename = fdiag.getOpenFileName(self, "Open file", os.getcwd(), filesString)
         filename = str(filename)
         
         if not len(filename):
-            return
+            return None
         
         (nwd, filename) = os.path.split(filename)        
         
@@ -277,7 +277,9 @@ class MainWindow(QtGui.QMainWindow):
         self.updateCWD()
         
         # open file
-        self.openFile(filename, state)
+        result = self.openFile(filename, state)
+        
+        return result
         
     def openFile(self, filename, state):
         """
@@ -292,7 +294,7 @@ class MainWindow(QtGui.QMainWindow):
         
         if state == "input" and not self.refLoaded:
             self.displayWarning("Must load reference before input")
-            return
+            return None
         
         #TODO: split path to check in directory of file already
         
@@ -313,7 +315,7 @@ class MainWindow(QtGui.QMainWindow):
                 status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write)
         else:
             self.displayError("openFile: Unrecognised file type: "+self.fileType)
-            return
+            return None
         
         if status:
             if status == -1:
@@ -325,7 +327,7 @@ class MainWindow(QtGui.QMainWindow):
             elif status == -3:
                 self.displayWarning("Unrecognised format for LBOMD XYZ input file!")
             
-            return
+            return None
         
         if state == "ref":
             self.postRefLoaded(filename)
@@ -336,6 +338,8 @@ class MainWindow(QtGui.QMainWindow):
         self.postInputLoaded(filename)
         
         self.setStatus("Ready")
+        
+        return filename
         
     def postRefLoaded(self, filename):
         """
