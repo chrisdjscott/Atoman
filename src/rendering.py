@@ -41,7 +41,7 @@ def setRes(num):
         res = 170*(num**-0.36)
         res = int(res)    
     
-    print "RES = ",res,num    
+#    print "RES = ",res,num    
     return res
 
 

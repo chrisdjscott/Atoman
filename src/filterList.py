@@ -5,37 +5,13 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
-
-import os
-import sys
-
 from PyQt4 import QtGui, QtCore, Qt
 
 from utilities import iconPath
-from genericForm import GenericForm
 import resources
 import filtering
 import filterSettings
 
-
-
-################################################################################
-class List(QtGui.QListWidget):
-    def __init__(self, parent):
-        super(List, self).__init__(parent)
-        
-        self.parent = parent
-        
-        self.setDragDropMode(self.InternalMove)
-        self.installEventFilter(self)
-
-    def eventFilter(self, sender, event):
-        if event.type() == Qt.QEvent.ChildRemoved:
-            self.on_order_changed()
-        return False
-
-    def on_order_changed(self):
-        pass
 
 
 ################################################################################
@@ -211,6 +187,8 @@ class FilterList(QtGui.QWidget):
         Move filter down in list
         
         """
+        self.filterer.removeActors()
+        
         self.listItems.clear()
         
         while len(self.currentFilters):
@@ -226,14 +204,38 @@ class FilterList(QtGui.QWidget):
         Move filter down in list
         
         """
-        print "MOVE UP"
+        # find which one is selected
+        row = self.listItems.currentRow()
+        
+        if not len(self.listItems) or row < 0:
+            return
+        
+        newRow = row + 1
+        if newRow == len(self.listItems):
+            return
+        
+        self.listItems.insertItem(newRow, self.listItems.takeItem(row))
+        self.currentFilters.insert(newRow, self.currentFilters.pop(row))
+        self.currentSettings.insert(newRow, self.currentSettings.pop(row))
     
     def moveFilterUpInList(self):
         """
         Move filter up in list
         
         """
-        pass
+        # find which one is selected
+        row = self.listItems.currentRow()
+        
+        if not len(self.listItems) or row < 0:
+            return
+        
+        newRow = row - 1
+        if newRow < 0:
+            return
+        
+        self.listItems.insertItem(newRow, self.listItems.takeItem(row))
+        self.currentFilters.insert(newRow, self.currentFilters.pop(row))
+        self.currentSettings.insert(newRow, self.currentSettings.pop(row))
     
     def warnDefectFilter(self):
         """
@@ -252,8 +254,6 @@ class FilterList(QtGui.QWidget):
         filterName, ok = QtGui.QInputDialog.getItem(self, "Add filter", "Select filter:", self.allFilters, editable=False)
         
         if ok:
-            print "SELECTED FILTER", filterName
-            
             if self.defectFilterSelected:
                 self.warnDefectFilter()
             
@@ -265,9 +265,6 @@ class FilterList(QtGui.QWidget):
                     self.currentFilters.append(str(filterName))
                     self.listItems.addItem(filterName)
                     
-                    # select the newly added filter
-#                    self.listItems.item(len(self.listItems)-1).setSelected(1)
-                    
                     # create option form? like console window (but blocking?)? and open it
                     form = self.createSettingsForm(filterName)
                     form.show()
@@ -275,7 +272,6 @@ class FilterList(QtGui.QWidget):
                     
                     if str(filterName) == "Point defects":
                         self.defectFilterSelected = 1
-                
     
     def removeFilter(self):
         """

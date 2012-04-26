@@ -130,34 +130,21 @@ class SpecieSettingsDialog(GenericSettingsDialog):
         
         """
         inputSpecieList = self.mainWindow.inputState.specieList
+        refSpecieList = self.mainWindow.refState.specieList
         
-        newSpecieList = []
-        for spec in inputSpecieList:
-            newSpecieList.append(spec)
-        
-        # compare
-        if not len(self.specieList):
-            self.specieList = newSpecieList
-            
-            for spec in self.specieList:
-                self.addSpecieCheck(spec)
-            
-            for spec in self.specieList:
-                self.specieBoxes[spec].setChecked(1)
-            
-            self.allSpeciesBox.setChecked(1)
-            self.allSpeciesSelected = True
-                
-        for spec in newSpecieList:
+        for spec in refSpecieList:
             if spec not in self.specieList:
-                print "NEED TO ADD SPEC", spec
-                
                 self.specieList.append(spec)
                 self.addSpecieCheck(spec)
                 if self.allSpeciesSelected:
                     self.specieBoxes[spec].setChecked(1)
         
-        print "REFRESHED SPEC LIST", self.specieList
+        for spec in inputSpecieList:
+            if spec not in self.specieList:                
+                self.specieList.append(spec)
+                self.addSpecieCheck(spec)
+                if self.allSpeciesSelected:
+                    self.specieBoxes[spec].setChecked(1)
         
         self.changedSpecie(0)
 
@@ -188,8 +175,6 @@ class SpecieSettingsDialog(GenericSettingsDialog):
         if len(self.visibleSpecieList) != len(self.specieList):
             self.allSpeciesBox.setChecked(0)
             self.allSpeciesSelected = False
-        
-        print "VIS SPEC LIST", self.visibleSpecieList
 
 
 ################################################################################
@@ -508,25 +493,14 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         refSpecieList = self.mainWindow.refState.specieList
         inputSpecieList = self.mainWindow.inputState.specieList
         
-        newSpecieList = []
         for spec in refSpecieList:
-            newSpecieList.append(spec)
-        
-        # compare
-        if not len(self.specieList):
-            self.specieList = newSpecieList
-            
-            for spec in self.specieList:
+            if spec not in self.specieList:
+                self.specieList.append(spec)
                 self.addSpecieCheck(spec)
-            
-            for spec in self.specieList:
-                self.specieBoxes[spec].setChecked(1)
+                if self.allSpeciesSelected:
+                    self.specieBoxes[spec].setChecked(1)
         
-        newSpecieList = []
         for spec in inputSpecieList:
-            newSpecieList.append(spec)
-        
-        for spec in newSpecieList:
             if spec not in self.specieList:                
                 self.specieList.append(spec)
                 self.addSpecieCheck(spec)

@@ -5,15 +5,10 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
-import os
-import sys
-
 from PyQt4 import QtGui, QtCore
 import numpy as np
 import vtk
 
-from utilities import iconPath
-from genericForm import GenericForm
 from visclibs import filtering_c
 from visclibs import defects_c
 import rendering
@@ -201,12 +196,12 @@ class Filterer:
             for i in xrange(len(exclSpecs)):
                 exclSpecsRef[i] = exclSpecs[i]
         
-        print "EXCLUDE SPECS INPUT"
-        print inputLattice.specieList
-        print exclSpecsInput
-        print "EXCLUDE SPECS REF"
-        print refLattice.specieList
-        print exclSpecsRef
+#        print "EXCLUDE SPECS INPUT"
+#        print inputLattice.specieList
+#        print exclSpecsInput
+#        print "EXCLUDE SPECS REF"
+#        print refLattice.specieList
+#        print exclSpecsRef
         
         NDefectsByType = np.zeros(4, np.int32)
         

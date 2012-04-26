@@ -5,16 +5,10 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
-
-import os
-import sys
-
 from PyQt4 import QtGui, QtCore, Qt
 
 from utilities import iconPath
-from genericForm import GenericForm
 import resources
-import filtering
 import filterList
 
 
@@ -29,7 +23,7 @@ class FilterTab(QtGui.QWidget):
         
         self.log = self.mainWindow.console.write
         
-        self.filterListCount = 1
+        self.filterListCount = 0
         self.filterLists = []
         
         # layout
@@ -67,19 +61,9 @@ class FilterTab(QtGui.QWidget):
         self.connect(self.filterTabBar, QtCore.SIGNAL('currentChanged(int)'), self.filterTabBarChanged)
         filterTabLayout.addWidget(self.filterTabBar)
         
-        # widget to hold filter list
-        self.filterListWidget = QtGui.QWidget()
-        self.filterListLayout = QtGui.QVBoxLayout(self.filterListWidget)
-        self.filterListLayout.setContentsMargins(0, 0, 0, 0)
-        
-        # add list
-        list1 = filterList.FilterList(self, self.mainToolbar, self.mainWindow, self.filterListCount, self.toolbarWidth)
-        self.filterListLayout.addWidget(list1)
-        self.filterLists.append(list1)
-        
-        # add to tab bar
-        self.filterTabBar.addTab(self.filterListWidget, str(self.filterListCount))
-        
+        # add a filter list
+        self.addFilterList()
+            
     def runAllFilterLists(self):
         """
         Run all the filter lists.
@@ -94,17 +78,59 @@ class FilterTab(QtGui.QWidget):
             count += 1
 
     def addFilterList(self):
-        pass
+        """
+        Add a new filter list
+        
+        """
+        # widget to hold filter list
+        filterListWidget = QtGui.QWidget()
+        filterListLayout = QtGui.QVBoxLayout(filterListWidget)
+        filterListLayout.setContentsMargins(0, 0, 0, 0)
+        
+        # add list
+        list1 = filterList.FilterList(self, self.mainToolbar, self.mainWindow, self.filterListCount, self.toolbarWidth)
+        filterListLayout.addWidget(list1)
+        self.filterLists.append(list1)
+        
+        # add to tab bar
+        self.filterTabBar.addTab(filterListWidget, str(self.filterListCount))
+        
+        self.filterListCount += 1
     
     def clearAllFilterLists(self):
-        pass
+        """
+        Clear all the filter lists
+        
+        """
+        self.log("Clearing all filter lists")
+        for filterList in self.filterLists:
+            filterList.clearList()
 
     def filterTabBarChanged(self, val):
         # guess need to handle addition and removal of tabs here
         pass
     
     def removeFilterList(self):
-        pass
+        """
+        Remove a filter list
+        
+        """
+        if self.filterListCount <= 1:
+            return
+        
+        currentList = self.filterTabBar.currentIndex()
+        
+        self.filterLists[currentList].clearList()
+        
+        for i in xrange(self.filterListCount):
+            if i > currentList:
+                self.filterTabBar.setTabText(i, str(i - 1))
+        
+        self.filterTabBar.removeTab(currentList)
+        
+        self.filterLists.pop(currentList)
+        
+        self.filterListCount -= 1
     
     def refreshAllFilters(self):
         """
