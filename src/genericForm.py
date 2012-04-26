@@ -2,8 +2,8 @@
 """
 Generic form class.
 
-author: Chris Scott
-last edited: February 2012
+@author: Chris Scott
+
 """
 
 import sys

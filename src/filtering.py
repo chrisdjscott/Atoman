@@ -134,13 +134,16 @@ class Filterer:
         
         """
         print "RUNNING SPECIE FILTER"
-        visSpecArray = np.empty(len(settings.visibleSpecieList), np.int32)
+        if settings.allSpeciesSelected:
+            visSpecArray = np.arange(len(self.mainWindow.inputState.specieList), dtype=np.int32)
         
-        count = 0
-        for i in xrange(len(self.mainWindow.inputState.specieList)):
-            if self.mainWindow.inputState.specieList[i] in settings.visibleSpecieList:
-                visSpecArray[count] = i
-                count += 1
+        else:
+            visSpecArray = np.empty(len(settings.visibleSpecieList), np.int32)
+            count = 0
+            for i in xrange(len(self.mainWindow.inputState.specieList)):
+                if self.mainWindow.inputState.specieList[i] in settings.visibleSpecieList:
+                    visSpecArray[count] = i
+                    count += 1
         
         NVisible = filtering_c.specieFilter(visibleAtoms, visSpecArray, self.mainWindow.inputState.specie)
         

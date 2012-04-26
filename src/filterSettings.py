@@ -90,8 +90,33 @@ class SpecieSettingsDialog(GenericSettingsDialog):
         self.specieBoxes = {}
         self.specieRows = {}
         self.visibleSpecieList = []
-                
+        self.allSpeciesSelected = True
+        
+        self.allSpeciesBox = QtGui.QCheckBox("All")
+        self.allSpeciesBox.setChecked(1)
+        self.connect(self.allSpeciesBox, QtCore.SIGNAL('stateChanged(int)'), self.allSpeciesBoxChanged)
+        row = self.newRow()
+        row.addWidget(self.allSpeciesBox)
+        
+        self.newRow()
+        
         self.refresh()
+    
+    def allSpeciesBoxChanged(self, val):
+        """
+        
+        
+        """
+        if self.allSpeciesBox.isChecked():
+            self.allSpeciesSelected = True
+            
+            for specie in self.specieList:
+                self.specieBoxes[specie].setChecked(1)
+            
+        else:
+            self.allSpeciesSelected = False
+        
+#        self.changedSpecie(0)
         
     def refresh(self):
         """
@@ -111,18 +136,38 @@ class SpecieSettingsDialog(GenericSettingsDialog):
             for spec in self.specieList:
                 self.addSpecieCheck(spec)
                 self.specieBoxes[spec].setChecked(1)
-            
-            self.changedSpecie(0)
         
         for spec in self.specieList:
             if spec not in newSpecieList:
                 print "NEED TO REMOVE SPEC", spec
+                
+                # remove from specie list
+#                index = self.specieList.index(spec)
+#                self.specieList.pop(index)
+#                
+#                # remove from visible specie list
+#                if spec in self.visibleSpecieList:
+#                    index = self.visibleSpecieList.index(spec)
+#                    self.visibleSpecieList.pop(index)
+#                
+#                # remove row
+#                self.specieRows[spec].removeWidget(self.specieBoxes[spec])
+#                self.removeRow(self.specieRows[spec])
+#                del self.specieRows[spec]
+#                del self.specieBoxes[spec]
         
         for spec in newSpecieList:
             if spec not in self.specieList:
                 print "NEED TO ADD SPEC", spec
+                
+                self.specieList.append(spec)
+                self.addSpecieCheck(spec)
+                if self.allSpeciesSelected:
+                    self.specieBoxes[spec].setChecked(1)
         
         print "REFRESHED SPEC LIST", self.specieList
+        
+        self.changedSpecie(0)
 
     def addSpecieCheck(self, specie):
         """
@@ -147,6 +192,11 @@ class SpecieSettingsDialog(GenericSettingsDialog):
         for specie in self.specieList:
             if self.specieBoxes[specie].isChecked():
                 self.visibleSpecieList.append(specie)
+        
+        if len(self.visibleSpecieList) != len(self.specieList):
+            self.allSpeciesBox.setChecked(0)
+            self.allSpeciesSelected = False
+        
         print "VIS SPEC LIST", self.visibleSpecieList
 
 
@@ -196,7 +246,7 @@ class CropSettingsDialog(GenericSettingsDialog):
         row.addWidget( label2 )
         row.addWidget( self.xMaxRangeSpinBox )
         
-        row = self.newRow()
+        self.newRow()
         
         label = QtGui.QLabel( " Y Min " )
         label2 = QtGui.QLabel( " Y Max " )
@@ -223,7 +273,7 @@ class CropSettingsDialog(GenericSettingsDialog):
         row.addWidget( label2 )
         row.addWidget( self.yMaxRangeSpinBox )
         
-        row = self.newRow()
+        self.newRow()
         
         label = QtGui.QLabel( " Z Min " )
         label2 = QtGui.QLabel( " Z Max " )
@@ -250,7 +300,7 @@ class CropSettingsDialog(GenericSettingsDialog):
         row.addWidget( label2 )
         row.addWidget( self.zMaxRangeSpinBox )
         
-        row = self.newRow()
+        self.newRow()
         
         self.setToLatticeButton = QtGui.QPushButton('Set to lattice')
         self.setToLatticeButton.setAutoDefault(0)
@@ -338,3 +388,92 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         GenericSettingsDialog.__init__(self, title)
         
         self.filterType = "Point defects"
+        
+        # settings
+        self.vacancyRadius = 1.3
+        self.visibleSpecieList = []
+        self.showInterstitials = 1
+        self.showAntisites = 1
+        self.showVacancies = 1
+        
+        # vacancy radius option
+        label = QtGui.QLabel("Vacancy radius ")
+        self.vacRadSpinBox = QtGui.QDoubleSpinBox()
+        self.vacRadSpinBox.setSingleStep(0.01)
+        self.vacRadSpinBox.setMinimum(0.01)
+        self.vacRadSpinBox.setMaximum(10.0)
+        self.vacRadSpinBox.setValue(self.vacancyRadius)
+        self.connect(self.vacRadSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.vacRadChanged)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.vacRadSpinBox)
+        
+        self.newRow()
+        
+        # defect type options
+        label = QtGui.QLabel("Visible types:")
+        row = self.newRow()
+        row.addWidget(label)
+        
+        self.intTypeCheckBox = QtGui.QCheckBox(" Interstitials")
+        self.intTypeCheckBox.setChecked(1)
+        self.connect( self.intTypeCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.intVisChanged )
+        row = self.newRow()
+        row.addWidget(self.intTypeCheckBox)
+        
+        self.vacTypeCheckBox = QtGui.QCheckBox(" Vacancies   ")
+        self.vacTypeCheckBox.setChecked(1)
+        self.connect( self.vacTypeCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.vacVisChanged )
+        row = self.newRow()
+        row.addWidget(self.vacTypeCheckBox)
+        
+        self.antTypeCheckBox = QtGui.QCheckBox(" Antisites    ")
+        self.antTypeCheckBox.setChecked(1)
+        self.connect( self.antTypeCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.antVisChanged )
+        row = self.newRow()
+        row.addWidget(self.antTypeCheckBox)
+        
+        self.newRow()
+        
+        label = QtGui.QLabel("Visible species:")
+        row = self.newRow()
+        row.addWidget(label)
+        
+        
+    def vacRadChanged(self, val):
+        """
+        Update vacancy radius
+        
+        """
+        self.vacancyRadius = val
+    
+    def intVisChanged(self):
+        """
+        Change visibility of interstitials
+        
+        """
+        if self.intTypeCheckBox.isChecked():
+            self.showInterstitials = 1
+        else:
+            self.showInterstitials = 0
+    
+    def vacVisChanged(self):
+        """
+        Change visibility of vacancies
+        
+        """
+        if self.vacTypeCheckBox.isChecked():
+            self.showVacancies = 1
+        else:
+            self.showVacancies = 0
+    
+    def antVisChanged(self):
+        """
+        Change visibility of antisites
+        
+        """
+        if self.antTypeCheckBox.isChecked():
+            self.showAntisites = 1
+        else:
+            self.showAntisites = 0
