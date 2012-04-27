@@ -5,6 +5,11 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
+import os
+import sys
+import tempfile
+import subprocess
+
 from PyQt4 import QtGui, QtCore
 import numpy as np
 import vtk
@@ -101,7 +106,10 @@ class Filterer:
                 interstitials, vacancies, antisites, onAntisites = self.pointDefectFilter(filterSettings)
             
             elif filterName == "Clusters":
-                self.clusterFilter(visibleAtoms, filterSettings)
+                clusterList = self.clusterFilter(visibleAtoms, filterSettings)
+                
+                if filterSettings.drawConvexHulls:
+                    self.clusterFilterDrawHulls(clusterList, filterSettings)
             
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites)
@@ -242,7 +250,7 @@ class Filterer:
         
         return (interstitials, vacancies, antisites, onAntisites)
     
-    def clusterFilter(self, visibleAtoms, settings):
+    def clusterFilter(self, visibleAtoms, settings, PBC=None, minSize=None):
         """
         Run the cluster filter
         
@@ -252,14 +260,20 @@ class Filterer:
         atomCluster = np.empty(len(visibleAtoms), np.int32)
         result = np.empty(2, np.int32)
         
-        clusters_c.findClusters(visibleAtoms, lattice.pos, atomCluster, settings.neighbourRadius, lattice.cellDims, self.mainWindow.PBC, 
-                                lattice.minPos, lattice.maxPos, settings.minClusterSize, result)
+        if PBC is not None and len(PBC) == 3:
+            pass
+        
+        else:
+            PBC = self.mainWindow.PBC
+        
+        if minSize is None:
+            minSize = settings.minClusterSize
+        
+        clusters_c.findClusters(visibleAtoms, lattice.pos, atomCluster, settings.neighbourRadius, lattice.cellDims, PBC, 
+                                lattice.minPos, lattice.maxPos, minSize, result)
         
         NVisible = result[0]
         NClusters = result[1]
-        
-        print "NUM VIS", NVisible
-        print "NUM VIS CLUSTERS", NClusters
         
         visibleAtoms.resize(NVisible, refcheck=False)
         atomCluster.resize(NVisible, refcheck=False)
@@ -283,6 +297,120 @@ class Filterer:
             clusterListIndex = clusterIndexMapper[clusterIndex]
             
             clusterList[clusterListIndex].append(atomIndex)
+        
+        #TODO: rebuild scalars array of atom cluster (so can colour by cluster maybe?)
+        
+        
+        return clusterList
+    
+    def clusterFilterDrawHulls(self, clusterList, settings):
+        """
+        Draw hulls around filters.
+        
+        If the clusterList was created using PBCs we need to recalculate each 
+        cluster without PBCs.
+        
+        """
+        PBC = self.mainWindow.PBC
+        if PBC[0] or PBC[1] or PBC[2]:
+            self.clusterFilterDrawHullsWithPBCs(clusterList, settings)
+        
+        else:
+            self.clusterFilterDrawHullsNoPBCs(clusterList, settings)
+    
+    def clusterFilterDrawHullsNoPBCs(self, clusterList, settings):
+        """
+        
+        
+        """
+        lattice = self.mainWindow.inputState
+        
+        # draw them as they are
+        for cluster in clusterList:
+            # first make pos array for this cluster
+            clusterPos = np.empty(3 * len(cluster), np.float64)
+            for i in xrange(len(cluster)):
+                index = cluster[i]
                 
+                clusterPos[3*i] = lattice.pos[3*index]
+                clusterPos[3*i+1] = lattice.pos[3*index+1]
+                clusterPos[3*i+2] = lattice.pos[3*index+2]
+            
+            # now get convex hull
+            if len(cluster) == 3:
+                facets = []
+                facets.append([0, 1, 2])
+            
+            elif len(cluster) == 2:
+                # draw bond
+                continue
+            
+            elif len(cluster) < 2:
+                continue
+            
+            else:
+                facets = findConvexHull(cluster, clusterPos, qconvex=settings.qconvex)
+            
+            # now render
+            if facets is not None:
+                rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection)
+    
+    def clusterFilterDrawHullsWithPBCs(self, clusterList, settings):
+        """
+        
+        
+        """
+        # recalc each volume with PBCs off
+        for cluster in clusterList:
+            clusterAtoms = np.empty(len(cluster), np.int32)
+            for i in xrange(len(cluster)):
+                clusterAtoms[i] = cluster[i]
+            
+            subClusterList = self.clusterFilter(clusterAtoms, settings, PBC=np.zeros(3, np.int32), minSize=1)
+            
+            self.clusterFilterDrawHullsNoPBCs(subClusterList, settings)
+    
 
 
+
+
+
+def findConvexHull(cluster, pos, qconvex="qconvex"):
+    """
+    Find convex hull of given points
+    
+    """
+    # write to file
+    fh, fn = tempfile.mkstemp(dir="/tmp")
+    f = open(fn, "w")
+    f.write("3\n")
+    f.write("%d\n" % (len(cluster),))
+    for i in xrange(len(cluster)):
+        string = "%f %f %f\n" % (pos[3*i], pos[3*i+1], pos[3*i+2])
+        f.write(string)
+    f.close()
+    
+    command = "%s Qt i < %s" % (qconvex, fn,)
+    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, stderr = proc.communicate()
+    status = proc.poll()
+    if status:
+        print "qconvex failed"
+        print stderr
+        os.unlink(fn)
+        sys.exit(35)
+    
+    output = output.strip()
+    lines = output.split("\n")
+    
+    lines.pop(0)
+    
+    facets = []
+    for line in lines:
+        array = line.split()
+        facets.append([np.int32(array[0]), np.int32(array[1]), np.int32(array[2])])
+    
+    # unlink temp file
+    os.unlink(fn)
+    
+    return facets

@@ -546,3 +546,62 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsActor.SetMapper(vacsMapper)
         
         actorsCollection.AddItem(vacsActor)
+
+
+################################################################################
+def makeTriangle(indexes):
+    """
+    Make a triangle given indexes in points array
+    
+    """
+    
+    inda = indexes[0]
+    indb = indexes[1]
+    indc = indexes[2]
+    
+    triangle = vtk.vtkTriangle()
+    triangle.GetPointIds().SetId(0,inda)
+    triangle.GetPointIds().SetId(1,indb)
+    triangle.GetPointIds().SetId(2,indc)
+    
+    return triangle
+
+
+################################################################################
+def getActorsForHullFacets(facets, pos, mainWindow, actorsCollection):
+    """
+    Render convex hull facets
+    
+    """
+    
+    # probably want to pass some settings through too eg colour, opacity etc
+    
+    
+    points = vtk.vtkPoints()
+    for i in xrange(len(pos) / 3):
+        points.InsertNextPoint(pos[3*i], pos[3*i+1], pos[3*i+2])
+    
+    # create triangles
+    triangles = vtk.vtkCellArray()
+    for i in xrange(len(facets)):
+        triangle = makeTriangle(facets[i])
+        triangles.InsertNextCell(triangle)
+    
+    # polydata object
+    trianglePolyData = vtk.vtkPolyData()
+    trianglePolyData.SetPoints(points)
+    trianglePolyData.SetPolys(triangles)
+    
+    # mapper
+    mapper = vtk.vtkPolyDataMapper()
+    mapper.SetInput(trianglePolyData)
+    
+    # actor
+    actor = vtk.vtkActor()
+    actor.SetMapper(mapper)
+    actor.GetProperty().SetOpacity(0.5)
+    actor.GetProperty().SetColor(0,0,1)
+    
+    actorsCollection.AddItem(actor)
+    
+    

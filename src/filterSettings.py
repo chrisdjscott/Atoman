@@ -12,6 +12,7 @@ from PyQt4 import QtGui, QtCore, Qt
 import resources
 from utilities import iconPath
 import genericForm
+import globals
 
 
 
@@ -558,12 +559,26 @@ class ClusterSettingsDialog(GenericSettingsDialog):
             if os.path.exists(os.path.join(syspath, "qconvex")):
                 found = 1
                 break
-        if found:
-            self.qconvex = 1
-        else:
-            self.qconvex = 0
         
-        self.minClusterSize = 3
+        if found:
+            self.qconvex = "qconvex"
+        
+        else:
+            for syspath in globals.PATH:
+                if os.path.join(syspath, "qconvex"):
+                    found = 1
+                    break
+            
+            if found:
+                self.qconvex = os.path.join(syspath, "qconvex")
+            
+            else:
+                self.qconvex = 0
+        
+        if self.qconvex:
+            self.mainWindow.console.write("'qconvex' executable located at: %s" % (self.qconvex,))
+        
+        self.minClusterSize = 5
         self.drawConvexHulls = 0
         self.neighbourRadius = 3.5
         
@@ -623,6 +638,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         
         """
         if not self.qconvex:
+            self.drawHullsCheckBox.setChecked(0)
             self.warnQconvex()
             return
         
