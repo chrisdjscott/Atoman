@@ -5,6 +5,7 @@ Settings for filters
 @author: Chris Scott
 
 """
+import os
 
 from PyQt4 import QtGui, QtCore, Qt
 
@@ -549,6 +550,19 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         
         self.filterType = "Clusters"
         
+        # check if qconvex programme located
+        syspath = os.getenv("PATH", "")
+        syspatharray = syspath.split(":")
+        found = 0
+        for syspath in syspatharray:
+            if os.path.exists(os.path.join(syspath, "qconvex")):
+                found = 1
+                break
+        if found:
+            self.qconvex = 1
+        else:
+            self.qconvex = 0
+        
         self.minClusterSize = 3
         self.drawConvexHulls = 0
         self.neighbourRadius = 3.5
@@ -608,8 +622,20 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         Change draw hulls setting.
         
         """
+        if not self.qconvex:
+            self.warnQconvex()
+            return
+        
         if self.drawHullsCheckBox.isChecked():
             self.drawConvexHulls = 1
         
         else:
             self.drawConvexHulls = 0
+
+    def warnQconvex(self):
+        """
+        Warn user that qconvex needs to be 
+        in system path
+        
+        """
+        QtGui.QMessageBox.warning(self, "Warning", "Could not locate qconvex in system path!")

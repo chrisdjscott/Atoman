@@ -27,7 +27,8 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
     double *visiblePos;
     struct Boxes *boxes;
     int *NAtomsCluster, clusterIndex;
-    int count;
+    int *NAtomsClusterNew;
+    int NVisible, count;
     
     
     visiblePos = malloc(3 * visibleAtomsDim * sizeof(double));
@@ -90,8 +91,15 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
         }
     }
     
+    NAtomsClusterNew = calloc(NClusters, sizeof(int));
+    if (NAtomsClusterNew == NULL)
+    {
+        printf("ERROR: could not allocate NAtomsClusterNew\n");
+        exit(50);
+    }
+    
     /* loop over visible atoms to see if their clusters has more than the min number */
-    count = 0;
+    NVisible = 0;
     for (i=0; i<visibleAtomsDim; i++)
     {
         clusterIndex = clusterArray[i];
@@ -104,16 +112,28 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
             continue;
         }
         
-        visibleAtoms[count] = index;
-        clusterArray[count] = clusterIndex;
+        visibleAtoms[NVisible] = index;
+        clusterArray[NVisible] = clusterIndex;
+        NAtomsClusterNew[clusterIndex]++;
         
-        count++;
+        NVisible++;
+    }
+    
+    /* how many clusters now */
+    count = 0;
+    for (i=0; i<NClusters; i++)
+    {
+        if (NAtomsClusterNew[i] > 0)
+        {
+            count += 1;
+        }
     }
     
     /* store results */
-    results[0] = count;
-    results[1] = NClusters;
+    results[0] = NVisible;
+    results[1] = count;
     
+    free(NAtomsClusterNew);
     free(NAtomsCluster);
     freeBoxes(boxes);
     free(visiblePos);

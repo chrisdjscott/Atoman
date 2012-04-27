@@ -264,7 +264,25 @@ class Filterer:
         visibleAtoms.resize(NVisible, refcheck=False)
         atomCluster.resize(NVisible, refcheck=False)
         
+        # build cluster lists
+        clusterList = []
+        for i in xrange(NClusters):
+            clusterList.append([])
         
-
+        # add atoms to cluster lists
+        clusterIndexMapper = {}
+        count = 0
+        for i in xrange(NVisible):
+            atomIndex = visibleAtoms[i]
+            clusterIndex = atomCluster[i]
+            
+            if clusterIndex not in clusterIndexMapper:
+                clusterIndexMapper[clusterIndex] = count
+                count += 1
+            
+            clusterListIndex = clusterIndexMapper[clusterIndex]
+            
+            clusterList[clusterListIndex].append(atomIndex)
+                
 
 
