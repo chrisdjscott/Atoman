@@ -34,8 +34,9 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     int NDefects, NAntisites, NInterstitials, NVacancies;
     int *possibleVacancy, *possibleInterstitial;
     int *possibleAntisite, *possibleOnAntisite;
-    int skip;
+    int skip, PBC[3], maxAtomsPerBox;
     double approxBoxWidth;
+    struct Boxes *boxes;
     
     /* boxing parameters (100 will always be enough
      * since box width is similar to vacancy radius)
@@ -48,13 +49,16 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     maxPos[1] = ymax;
     minPos[2] = zmin;
     maxPos[2] = zmax;
+    PBC[0] = 1;
+    PBC[1] = 1;
+    PBC[2] = 1;
     
     /* approx width, must be at least vacRad */
     approxBoxWidth = 1.1 * vacancyRadius;
     
     /* box reference atoms */
-    setupBoxes( minPos, maxPos, approxBoxWidth );
-    putAtomsInBoxes( refNAtoms, refPos );
+    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, maxAtomsPerBox);
+    putAtomsInBoxes(refNAtoms, refPos, boxes);
     
     /* allocate local arrays for checking atoms */
     possibleVacancy = malloc( refNAtoms * sizeof(int) );
@@ -106,10 +110,10 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         zpos = pos[3*i+2];
         
         /* get box index of this atom */
-        boxIndex = boxIndexOfAtom(xpos, ypos, zpos);
+        boxIndex = boxIndexOfAtom(xpos, ypos, zpos, boxes);
         
         /* find neighbouring boxes */
-        getBoxNeighbourhood(boxIndex, boxNebList);
+        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
                 
         /* loop over neighbouring boxes */
         exitLoop = 0;
@@ -123,9 +127,9 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
             checkBox = boxNebList[j];
             
             /* now loop over all reference atoms in the box */
-            for ( k=0; k<boxNAtoms[checkBox]; k++ )
+            for ( k=0; k<boxes->boxNAtoms[checkBox]; k++ )
             {
-                refIndex = boxAtoms[checkBox*maxAtomsPerBox+k];
+                refIndex = boxes->boxAtoms[checkBox][k];
                 
                 /* if this vacancy has already been filled then skip to the next one */
                 if ( possibleVacancy[refIndex] == 0 )
@@ -176,7 +180,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     }
     
     /* free box arrays */
-    cleanupBoxes();
+    freeBoxes(boxes);
         
     /* now classify defects */
     NVacancies = 0;

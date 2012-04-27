@@ -1,153 +1,179 @@
 
 /*******************************************************************************
  ** Copyright Chris Scott 2012
- ** Functions associated with spatially decomposing lattice into boxes
+ ** Functions associated with spatially decomposing a system of atoms into boxes
+ ** 
+ ** 
+ ** Include boxes.h to use this library
+ ** 
+ ** Call setupBoxes() to return the Boxes structure
+ ** 
+ ** Call putAtomInBoxes() to add atoms to the boxes
+ ** 
+ ** The Boxes structure must be freed by calling freeBoxes()
+ ** 
  *******************************************************************************/
 
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <math.h>
 #include "boxes.h"
 
 
-void boxIJKIndices( int, int*, int );
-int boxIndexFromIJK( int, int, int );
-
 
 /*******************************************************************************
- ** free box arrays
+ ** create and return pointer to Boxes structure
  *******************************************************************************/
-void cleanupBoxes()
-{
-    free(boxNAtoms);
-    free(boxAtoms);
-}
-
-
-/*******************************************************************************
- ** estup boxes
- *******************************************************************************/
-void setupBoxes( double *minPos, double *maxPos, double approxBoxWidth )
+struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos, int *PBC, int maxAtomsPerBox)
 {
     int i;
     double cellLength;
+    struct Boxes *boxes;
     
     
+    /* allocate space for boxes struct */
+    boxes = malloc( 1 * sizeof(struct Boxes));
+    if (boxes == NULL)
+    {
+        printf("ERROR: could not allocate boxes\n");
+        exit(50);
+    }
+    
+    /* setup boxes */
     for (i=0; i<3; i++)
     {
+        boxes->minPos[i] = minPos[i];
+        boxes->maxPos[i] = maxPos[i];
+        boxes->PBC[i] = PBC[i];
+        
         /* size of the region in this direction */
         cellLength = maxPos[i] - minPos[i];
         cellLength = (cellLength < 1.0) ? 1.0 : cellLength;
         
         /* number of boxes in this direction */
-        NBoxes[i] = (int) (cellLength / approxBoxWidth);
-        NBoxes[i] = (NBoxes[i] == 0) ? 1 : NBoxes[i];
+        boxes->NBoxes[i] = (int) (cellLength / approxBoxWidth);
+        boxes->NBoxes[i] = (boxes->NBoxes[i] == 0) ? 1 : boxes->NBoxes[i];
         
         /* length of box side */
-        boxWidth[i] = cellLength / NBoxes[i];
-        
-        boxMinPos[i] = minPos[i];
-        boxMaxPos[i] = maxPos[i];
+        boxes->boxWidth[i] = cellLength / boxes->NBoxes[i];
     }
-    
-    totNBoxes = NBoxes[0] * NBoxes[1] * NBoxes[2];
+    boxes->totNBoxes = boxes->NBoxes[0] * boxes->NBoxes[1] * boxes->NBoxes[2];
+    boxes->maxAtomsPerBox = maxAtomsPerBox;
     
     /* allocate arrays */
-    boxNAtoms = calloc(totNBoxes, sizeof(int));
-    if (boxNAtoms == NULL)
+    boxes->boxNAtoms = calloc(boxes->totNBoxes, sizeof(int));
+    if (boxes->boxNAtoms == NULL)
     {
-        printf("ERROR: Boxes: could not allocate boxNAtoms\n");
-        exit(1);
+        printf("ERROR: could not allocate boxNAtoms\n");
+        exit(50);
     }
-    boxAtoms = malloc( totNBoxes * maxAtomsPerBox * sizeof(int));
-    if (boxAtoms == NULL)
+    
+    boxes->boxAtoms = malloc(boxes->totNBoxes * sizeof(int *));
+    if (boxes->boxAtoms == NULL)
     {
-        printf("ERROR: Boxes: could not allocate boxAtoms\n");
-        exit(1);
+        printf("ERROR: could not allocate boxAtoms\n");
+        exit(50);
     }
+        
+    return boxes;
 }
 
 
 /*******************************************************************************
  ** put atoms into boxes
  *******************************************************************************/
-void putAtomsInBoxes( int NAtoms, double* pos )
+void putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
 {
-    long i;
-    long index, boxIndex, boxAtomsIndex;
+    int i, boxIndex;
     
-            
-    for ( i=0; i<NAtoms; i++ )
+    
+    for (i=0; i<NAtoms; i++)
     {
-        /* find which box this atom should be in */
-        boxIndex = boxIndexOfAtom( pos[3*i], pos[3*i+1], pos[3*i+2] );
+        boxIndex = boxIndexOfAtom(pos[3*i], pos[3*i+1], pos[3*i+2], boxes);
         
-        /* add atom to the box */
-        boxAtomsIndex = boxIndex*maxAtomsPerBox+boxNAtoms[boxIndex];
-        boxAtoms[boxAtomsIndex] = i;
-        boxNAtoms[boxIndex]++;
+        /* check if this box is full/already allocated */
+        if (boxes->boxNAtoms[boxIndex] + 1 == boxes->maxAtomsPerBox)
+        {
+            printf("ERROR: box limit reached\n");
+            exit(140);
+        }
+        
+        else if (boxes->boxNAtoms[boxIndex] == 0)
+        {
+            /* allocate this box */
+            boxes->boxAtoms[boxIndex] = malloc(boxes->maxAtomsPerBox * sizeof(int));
+            if (boxes->boxAtoms[boxIndex] == NULL)
+            {
+                printf("ERROR: could not allocate boxAtoms[%d]\n", boxIndex);
+                exit(50);
+            }
+        }
+        
+        /* add atom to box */
+        boxes->boxAtoms[boxIndex][boxes->boxNAtoms[boxIndex]] = i;
+        boxes->boxNAtoms[boxIndex]++;
     }
 }
 
 
 /*******************************************************************************
  ** returns box index of given atom
+ ** TODO: handle if atom outside min and max pos
  *******************************************************************************/
-int boxIndexOfAtom( double xpos, double ypos, double zpos )
+int boxIndexOfAtom(double xpos, double ypos, double zpos, struct Boxes *boxes)
 {
     int posintx, posinty, posintz;
     int boxIndex;
     
-    posintx = (int) ( (xpos - boxMinPos[0]) / boxWidth[0] );
-    if ( posintx >= NBoxes[0])
+    posintx = (int) ( (xpos - boxes->minPos[0]) / boxes->boxWidth[0] );
+    if ( posintx >= boxes->NBoxes[0])
     {
-        posintx = NBoxes[0] - 1;
+        posintx = boxes->NBoxes[0] - 1;
     }
     
-    posinty = (int) ( (ypos - boxMinPos[1]) / boxWidth[1] );
-    if ( posinty >= NBoxes[1])
+    posinty = (int) ( (ypos - boxes->minPos[1]) / boxes->boxWidth[1] );
+    if ( posinty >= boxes->NBoxes[1])
     {
-        posinty = NBoxes[1] - 1;
+        posinty = boxes->NBoxes[1] - 1;
     }
     
-    posintz = (int) ( (zpos - boxMinPos[2]) / boxWidth[2] );
-    if ( posintz >= NBoxes[2])
+    posintz = (int) ( (zpos - boxes->minPos[2]) / boxes->boxWidth[2] );
+    if ( posintz >= boxes->NBoxes[2])
     {
-        posintz = NBoxes[2] - 1;
+        posintz = boxes->NBoxes[2] - 1;
     }
     
     /* think this numbers by x then z then y (can't remember why I wanted it like this) */
-    boxIndex = (int) (posintx + posintz * NBoxes[0] + posinty * NBoxes[0] * NBoxes[2]);
+    boxIndex = (int) (posintx + posintz * boxes->NBoxes[0] + posinty * boxes->NBoxes[0] * boxes->NBoxes[2]);
     
     if (boxIndex < 0)
     {
         printf("WARNING: boxIndexOfAtom (CLIB): boxIndex < 0: %d, %d %d %d\n", boxIndex, posintx, posinty, posintz);
-        printf("         pos = %f %f %f, box widths = %f %f %f, NBoxes = %d %d %d\n", xpos, ypos, zpos, boxWidth[0], boxWidth[1], boxWidth[2], NBoxes[0], NBoxes[1], NBoxes[2]);
-        printf("         min box pos = %f %f %f\n", boxMinPos[0], boxMinPos[1], boxMinPos[2]);
+        printf("         pos = %f %f %f, box widths = %f %f %f, NBoxes = %d %d %d\n", xpos, ypos, zpos, boxes->boxWidth[0], boxes->boxWidth[1], 
+                boxes->boxWidth[2], boxes->NBoxes[0], boxes->NBoxes[1], boxes->NBoxes[2]);
+        printf("         min box pos = %f %f %f\n", boxes->minPos[0], boxes->minPos[1], boxes->minPos[2]);
     }
     
     return boxIndex;
 }
-    
+
 
 /*******************************************************************************
  ** return i, j, k indices of box
  *******************************************************************************/
-void boxIJKIndices( int dim1, int* ijkIndices, int boxIndex )
+void boxIJKIndices(int dim1, int* ijkIndices, int boxIndex, struct Boxes *boxes)
 {
     int xint, yint, zint, tmp;
     
     
     // maybe should check here that dim1 == 3
     
-    yint = (int) ( boxIndex / (NBoxes[0] * NBoxes[2]) );
+    yint = (int) ( boxIndex / (boxes->NBoxes[0] * boxes->NBoxes[2]) );
     
-    tmp = boxIndex - yint * NBoxes[0] * NBoxes[2];
-    zint = (int) ( tmp / NBoxes[0] );
+    tmp = boxIndex - yint * boxes->NBoxes[0] * boxes->NBoxes[2];
+    zint = (int) ( tmp / boxes->NBoxes[0] );
     
-    xint = (int) (tmp - zint * NBoxes[0]);
+    xint = (int) (tmp - zint * boxes->NBoxes[0]);
     
     ijkIndices[0] = xint;
     ijkIndices[1] = yint;
@@ -158,14 +184,14 @@ void boxIJKIndices( int dim1, int* ijkIndices, int boxIndex )
 /*******************************************************************************
  ** returns the box index of box with given i,j,k indices
  *******************************************************************************/
-int boxIndexFromIJK( int xindex, int yindex, int zindex )
+int boxIndexFromIJK(int xindex, int yindex, int zindex, struct Boxes *boxes)
 {
     int xint, yint, zint, box;
     
     
     xint = xindex;
-    zint = NBoxes[0] * zindex;
-    yint = NBoxes[0] * NBoxes[2] * yindex;
+    zint = boxes->NBoxes[0] * zindex;
+    yint = boxes->NBoxes[0] * boxes->NBoxes[2] * yindex;
     
     box = (int) (xint + yint + zint);
     
@@ -176,17 +202,17 @@ int boxIndexFromIJK( int xindex, int yindex, int zindex )
 /*******************************************************************************
  ** returns neighbourhood of given box
  *******************************************************************************/
-void getBoxNeighbourhood( int mainBox, int* boxNeighbourList )
+void getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes)
 {
     int mainBoxIJK[3];
     int i, j, k;
     int posintx, posinty, posintz;
     int index, count;
-    int xint,yint,zint,tmp;
+    int xint, yint, zint, tmp;
     
     
     /* first get i,j,k indices of the main box */
-    boxIJKIndices( 3, mainBoxIJK, mainBox );
+    boxIJKIndices( 3, mainBoxIJK, mainBox, boxes );
             
     /* loop over each direction */
     count = 0;
@@ -196,11 +222,11 @@ void getBoxNeighbourhood( int mainBox, int* boxNeighbourList )
         /* wrap */
         if ( posintx < 0 )
         {
-            posintx += NBoxes[0];
+            posintx += boxes->NBoxes[0];
         }
-        else if ( posintx >= NBoxes[0] )
+        else if ( posintx >= boxes->NBoxes[0] )
         {
-            posintx -= NBoxes[0];
+            posintx -= boxes->NBoxes[0];
         }
         
         for ( j=0; j<3; j++ )
@@ -209,11 +235,11 @@ void getBoxNeighbourhood( int mainBox, int* boxNeighbourList )
             /* wrap */
             if ( posinty < 0 )
             {
-                posinty += NBoxes[1];
+                posinty += boxes->NBoxes[1];
             }
-            else if ( posinty >= NBoxes[1] )
+            else if ( posinty >= boxes->NBoxes[1] )
             {
-                posinty -= NBoxes[1];
+                posinty -= boxes->NBoxes[1];
             }
             
             for ( k=0; k<3; k++ )
@@ -222,18 +248,39 @@ void getBoxNeighbourhood( int mainBox, int* boxNeighbourList )
                 /* wrap */
                 if ( posintz < 0 )
                 {
-                    posintz += NBoxes[2];
+                    posintz += boxes->NBoxes[2];
                 }
-                else if ( posintz >= NBoxes[2] )
+                else if ( posintz >= boxes->NBoxes[2] )
                 {
-                    posintz -= NBoxes[2];
+                    posintz -= boxes->NBoxes[2];
                 }
                 
                 /* get index of box from this i,j,k */
-                index = boxIndexFromIJK( posintx, posinty, posintz );
+                index = boxIndexFromIJK( posintx, posinty, posintz, boxes );
                 boxNeighbourList[count] = index;
                 count++;
             }
         }
     }
+}
+
+
+/*******************************************************************************
+ ** free boxes memory
+ *******************************************************************************/
+void freeBoxes(struct Boxes *boxes)
+{
+    int i;
+    
+    
+    for (i=0; i<boxes->totNBoxes; i++)
+    {
+        if (boxes->boxNAtoms[i] > 0)
+        {
+            free(boxes->boxAtoms[i]);
+        }
+    }
+    free(boxes->boxAtoms);
+    free(boxes->boxNAtoms);
+    free(boxes);
 }
