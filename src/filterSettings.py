@@ -536,3 +536,80 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         if len(self.visibleSpecieList) != len(self.specieList):
             self.allSpeciesBox.setChecked(0)
             self.allSpeciesSelected = False
+
+
+################################################################################
+class ClusterSettingsDialog(GenericSettingsDialog):
+    def __init__(self, mainWindow, title, parent=None):
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        
+        GenericSettingsDialog.__init__(self, title, parent)
+        
+        self.filterType = "Clusters"
+        
+        self.minClusterSize = 3
+        self.drawConvexHulls = 0
+        self.neighbourRadius = 3.5
+        
+        # neighbour rad spin box
+        label = QtGui.QLabel("Neighbour radius ")
+        self.nebRadSpinBox = QtGui.QDoubleSpinBox()
+        self.nebRadSpinBox.setSingleStep(0.01)
+        self.nebRadSpinBox.setMinimum(0.01)
+        self.nebRadSpinBox.setMaximum(100.0)
+        self.nebRadSpinBox.setValue(self.neighbourRadius)
+        self.connect(self.nebRadSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.nebRadChanged)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.nebRadSpinBox)
+        
+        # minimum size spin box
+        label = QtGui.QLabel("Minimum cluster size ")
+        self.minNumSpinBox = QtGui.QSpinBox()
+        self.minNumSpinBox.setMinimum(1)
+        self.minNumSpinBox.setMaximum(1000)
+        self.minNumSpinBox.setValue(self.minClusterSize)
+        self.connect(self.minNumSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.minNumChanged)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.minNumSpinBox)
+        
+        self.newRow()
+        
+        # draw hull check box
+        self.drawHullsCheckBox = QtGui.QCheckBox(" Draw convex hulls")
+        self.drawHullsCheckBox.setChecked(0)
+        self.connect( self.drawHullsCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.drawHullsChanged )
+        
+        row = self.newRow()
+        row.addWidget(self.drawHullsCheckBox)
+
+    
+    def minNumChanged(self, val):
+        """
+        Change min cluster size.
+        
+        """
+        self.minClusterSize = val
+    
+    def nebRadChanged(self, val):
+        """
+        Change neighbour radius.
+        
+        """
+        self.neighbourRadius = val
+    
+    def drawHullsChanged(self):
+        """
+        Change draw hulls setting.
+        
+        """
+        if self.drawHullsCheckBox.isChecked():
+            self.drawConvexHulls = 1
+        
+        else:
+            self.drawConvexHulls = 0

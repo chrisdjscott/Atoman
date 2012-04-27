@@ -60,6 +60,15 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
     boxes->totNBoxes = boxes->NBoxes[0] * boxes->NBoxes[1] * boxes->NBoxes[2];
     boxes->maxAtomsPerBox = maxAtomsPerBox;
     
+//    printf("DEBUG setupBoxes:\n");
+//    printf("  minPos = %f, %f, %f\n", boxes->minPos[0], boxes->minPos[1], boxes->minPos[2]);
+//    printf("  minPosIN = %f, %f, %f\n", minPos[0], minPos[1], minPos[2]);
+//    printf("  maxPos = %f, %f, %f\n", boxes->maxPos[0], boxes->maxPos[1], boxes->maxPos[2]);
+//    printf("  maxPosIN = %f, %f, %f\n", maxPos[0], maxPos[1], maxPos[2]);
+//    printf("  width = %f, %f, %f\n", boxes->boxWidth[0], boxes->boxWidth[1], boxes->boxWidth[2]);
+//    printf("  NBoxes = %d, %d, %d\n", boxes->NBoxes[0], boxes->NBoxes[1], boxes->NBoxes[2]);
+//    printf("END DEBUG setupBoxes:\n");
+    
     /* allocate arrays */
     boxes->boxNAtoms = calloc(boxes->totNBoxes, sizeof(int));
     if (boxes->boxNAtoms == NULL)

@@ -11,6 +11,7 @@ import vtk
 
 from visclibs import filtering_c
 from visclibs import defects_c
+from visclibs import clusters_c
 import rendering
 
 
@@ -79,6 +80,7 @@ class Filterer:
         
         if not self.parent.defectFilterSelected:
             visibleAtoms = np.arange(NAtoms, dtype=np.int32)
+            self.log("%d visible atoms" % (len(visibleAtoms),), 0, 2)
         
         # run filters
         currentFilters = self.parent.currentFilters
@@ -97,6 +99,16 @@ class Filterer:
             
             elif filterName == "Point defects":
                 interstitials, vacancies, antisites, onAntisites = self.pointDefectFilter(filterSettings)
+            
+            elif filterName == "Clusters":
+                self.clusterFilter(visibleAtoms, filterSettings)
+            
+            if self.parent.defectFilterSelected:
+                NVis = len(interstitials) + len(vacancies) + len(antisites)
+                self.log("%d visible atoms" % (NVis,), 0, 3)
+            
+            else:
+                self.log("%d visible atoms" % (len(visibleAtoms),), 0, 3)
         
         # render
         if self.parent.defectFilterSelected:
@@ -229,7 +241,30 @@ class Filterer:
         self.log("%d antisites" % (NAnt,), 0, 4)
         
         return (interstitials, vacancies, antisites, onAntisites)
-
+    
+    def clusterFilter(self, visibleAtoms, settings):
+        """
+        Run the cluster filter
+        
+        """
+        lattice = self.mainWindow.inputState
+        
+        atomCluster = np.empty(len(visibleAtoms), np.int32)
+        result = np.empty(2, np.int32)
+        
+        clusters_c.findClusters(visibleAtoms, lattice.pos, atomCluster, settings.neighbourRadius, lattice.cellDims, self.mainWindow.PBC, 
+                                lattice.minPos, lattice.maxPos, settings.minClusterSize, result)
+        
+        NVisible = result[0]
+        NClusters = result[1]
+        
+        print "NUM VIS", NVisible
+        print "NUM VIS CLUSTERS", NClusters
+        
+        visibleAtoms.resize(NVisible, refcheck=False)
+        atomCluster.resize(NVisible, refcheck=False)
+        
+        
 
 
 

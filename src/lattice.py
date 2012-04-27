@@ -116,4 +116,10 @@ class Lattice:
             self.charge[i] = lattice.charge[i]
             for j in xrange(3):
                 self.pos[3*i+j] = lattice.pos[3*i+j]
-
+        
+        self.minPos[0] = lattice.minPos[0]
+        self.minPos[1] = lattice.minPos[1]
+        self.minPos[2] = lattice.minPos[2]
+        self.maxPos[0] = lattice.maxPos[0]
+        self.maxPos[1] = lattice.maxPos[1]
+        self.maxPos[2] = lattice.maxPos[2]
