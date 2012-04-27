@@ -245,8 +245,8 @@ def checkForZipped(filename, tmpLocation):
             command = "bzcat -k %s.bz2 > " % (filename)
         
         elif os.path.exists(filename + '.gz'):
-            command = "zcat %s.gz > " % (filename)
-        
+            command = "gzcat %s.gz > " % (filename)
+            
         else:
             return (None, -1)
             
