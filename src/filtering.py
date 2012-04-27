@@ -250,7 +250,7 @@ class Filterer:
         
         return (interstitials, vacancies, antisites, onAntisites)
     
-    def clusterFilter(self, visibleAtoms, settings, PBC=None, minSize=None):
+    def clusterFilter(self, visibleAtoms, settings, PBC=None, minSize=None, nebRad=None):
         """
         Run the cluster filter
         
@@ -262,14 +262,16 @@ class Filterer:
         
         if PBC is not None and len(PBC) == 3:
             pass
-        
         else:
             PBC = self.mainWindow.PBC
         
         if minSize is None:
             minSize = settings.minClusterSize
         
-        clusters_c.findClusters(visibleAtoms, lattice.pos, atomCluster, settings.neighbourRadius, lattice.cellDims, PBC, 
+        if nebRad is None:
+            nebRad = settings.neighbourRadius
+        
+        clusters_c.findClusters(visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
                                 lattice.minPos, lattice.maxPos, minSize, result)
         
         NVisible = result[0]
@@ -366,7 +368,7 @@ class Filterer:
             for i in xrange(len(cluster)):
                 clusterAtoms[i] = cluster[i]
             
-            subClusterList = self.clusterFilter(clusterAtoms, settings, PBC=np.zeros(3, np.int32), minSize=1)
+            subClusterList = self.clusterFilter(clusterAtoms, settings, PBC=np.zeros(3, np.int32), minSize=1, nebRad=1.5*settings.neighbourRadius)
             
             self.clusterFilterDrawHullsNoPBCs(subClusterList, settings)
     
