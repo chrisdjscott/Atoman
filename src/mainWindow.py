@@ -108,6 +108,21 @@ class MainWindow(QtGui.QMainWindow):
         utilToolbar.addAction(openConsoleAction)
         utilToolbar.addSeparator()
         
+        # button to displace lattice frame
+        showCellAction = QtGui.QAction(QtGui.QIcon(iconPath("cell_icon.svg")), "Cell", self)
+        showCellAction.setStatusTip("Toggle cell frame visiblity")
+        showCellAction.triggered.connect(self.toggleCellFrame)
+        
+        # button to display axes
+        showAxesAction = QtGui.QAction(QtGui.QIcon(iconPath("axis_icon2.svg")), "Axes", self)
+        showAxesAction.setStatusTip("Toggle axes visiblity")
+        showAxesAction.triggered.connect(self.toggleAxes)
+        
+        visualisationToolbar = self.addToolBar("Visualisation")
+        visualisationToolbar.addAction(showCellAction)
+        visualisationToolbar.addAction(showAxesAction)
+        visualisationToolbar.addSeparator()
+        
         # add about action
         aboutAction = QtGui.QAction(QtGui.QIcon(iconPath("help-browser.svg")), "About", self)
         aboutAction.setStatusTip("About this application")
@@ -158,6 +173,19 @@ class MainWindow(QtGui.QMainWindow):
         self.show()
     
     
+    def toggleCellFrame(self):
+        """
+        Toggle lattice frame visibility
+        
+        """
+        self.renderer.toggleLatticeFrame()
+    
+    def toggleAxes(self):
+        """
+        Toggle axes visibility
+        
+        """
+        self.renderer.toggleAxes()
     
     def openNewWindow(self):
         """

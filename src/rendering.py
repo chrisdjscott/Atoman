@@ -87,6 +87,59 @@ class CellOutline:
 
 
 ################################################################################
+class Axes:
+    def __init__(self, ren):
+        
+        self.ren = ren
+        
+        self.actor = vtk.vtkAxesActor()
+        self.actor.SetTipTypeToCone()
+        self.actor.SetShaftTypeToCylinder()
+#        self.actor.GetXAxisCaptionActor2D().SetWidth(0.1)
+#        self.actor.GetXAxisCaptionActor2D().SetHeight(0.1)
+#        self.actor.GetYAxisCaptionActor2D().SetWidth(0.1)
+#        self.actor.GetYAxisCaptionActor2D().SetHeight(0.1)
+#        self.actor.GetZAxisCaptionActor2D().SetWidth(0.1)
+#        self.actor.GetZAxisCaptionActor2D().SetHeight(0.1)
+        self.actor.GetXAxisCaptionActor2D().GetTextActor().SetTextScaleModeToNone()
+        self.actor.GetYAxisCaptionActor2D().GetTextActor().SetTextScaleModeToNone()
+        self.actor.GetZAxisCaptionActor2D().GetTextActor().SetTextScaleModeToNone()
+        
+        transform = vtk.vtkTransform()
+        transform.Translate(-10.0, -10.0, -10.0)
+        self.actor.SetUserTransform(transform)
+        
+        self.actor.GetXAxisCaptionActor2D().GetCaptionTextProperty().SetColor(1,0,0)
+        self.actor.GetXAxisCaptionActor2D().GetCaptionTextProperty().SetFontSize(20)
+        self.actor.GetYAxisCaptionActor2D().GetCaptionTextProperty().SetColor(0,1,0)
+        self.actor.GetYAxisCaptionActor2D().GetCaptionTextProperty().SetFontSize(20)
+        self.actor.GetZAxisCaptionActor2D().GetCaptionTextProperty().SetColor(0,0,1)
+        self.actor.GetZAxisCaptionActor2D().GetCaptionTextProperty().SetFontSize(20)
+        
+        self.visible = 0
+    
+    def add(self, cellDims):
+        """
+        Add the axes.
+        
+        """
+        self.actor.SetTotalLength(0.2 * cellDims[0], 0.2 * cellDims[1], 0.2 * cellDims[2])
+        
+        
+        self.ren.AddActor(self.actor)
+        self.visible = 1
+        
+    def remove(self):
+        """
+        Remove the axes actor.
+        
+        """
+        self.ren.RemoveActor(self.actor)
+        
+        self.visible = 0
+
+
+################################################################################
 class Renderer:
     def __init__(self, mainWindow):
         
@@ -105,6 +158,9 @@ class Renderer:
         # lattice frame
         self.latticeFrame = CellOutline(self.ren)
         
+        # axes
+        self.axes = Axes(self.ren)
+        
         
     def reinit(self):
         """
@@ -122,10 +178,11 @@ class Renderer:
         Render post read reference file.
         
         """
-        dims = self.mainWindow.refState.cellDims
+        # add the lattice frame
+        self.addLatticeFrame()
         
-        # add lattice frame
-        self.latticeFrame.add([0, 0, 0], dims)
+        # add the axes
+        self.addAxes()
         
         # set camera to cell
         self.setCameraToCell()
@@ -172,20 +229,71 @@ class Renderer:
         
         """
         pass
+    
+    def addLatticeFrame(self):
+        """
+        Add the lattice frame
         
+        """
+        dims = self.mainWindow.refState.cellDims
+        
+        # add lattice frame
+        self.latticeFrame.add([0, 0, 0], dims)
+    
+    def removeLatticeFrame(self):
+        """
+        Remove the lattice frame
+        
+        """
+        self.latticeFrame.remove()
+    
+    def toggleLatticeFrame(self):
+        """
+        Toggle lattice frame visibility
+        
+        """
+        if self.mainWindow.refLoaded == 0:
+            return
+        
+        if self.latticeFrame.visible:
+            self.removeLatticeFrame()
+        
+        else:
+            self.addLatticeFrame()
+        
+        self.reinit()
+    
+    def toggleAxes(self):
+        """
+        Toggle axes visibilty
+        
+        """
+        if self.mainWindow.refLoaded == 0:
+            return
+        
+        if self.axes.visible:
+            self.removeAxes()
+        
+        else:
+            self.addAxes()
+        
+        self.reinit()
+    
     def addAxes(self):
         """
         Add the axis label
         
         """
-        pass
+        dims = self.mainWindow.refState.cellDims
+        
+        self.axes.add(dims)
     
     def removeAxes(self):
         """
         Remove the axis label
         
         """
-        pass
+        self.axes.remove()
     
     def removeAllActors(self):
         """
