@@ -9,6 +9,7 @@ import os
 import sys
 import tempfile
 import subprocess
+import copy
 
 from PyQt4 import QtGui, QtCore
 import numpy as np
@@ -225,13 +226,17 @@ class Filterer:
         
         NDefectsByType = np.zeros(4, np.int32)
         
+        # set min/max pos to lattice (for boxing)
+        minPos = refLattice.minPos
+        maxPos = refLattice.maxPos
+        
         # call C library
         status = defects_c.findDefects(settings.showVacancies, settings.showInterstitials, settings.showAntisites, NDefectsByType, vacancies, 
                                        interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
                                        inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
                                        refLattice.pos, refLattice.cellDims[0], refLattice.cellDims[1], refLattice.cellDims[2], int(self.mainWindow.PBC[0]),
-                                       int(self.mainWindow.PBC[1]), int(self.mainWindow.PBC[2]), settings.vacancyRadius, refLattice.minPos[0], 
-                                       refLattice.minPos[1], refLattice.minPos[2], refLattice.maxPos[0], refLattice.maxPos[1], refLattice.maxPos[2])
+                                       int(self.mainWindow.PBC[1]), int(self.mainWindow.PBC[2]), settings.vacancyRadius, minPos[0], minPos[1], 
+                                       minPos[2], maxPos[0], maxPos[1], maxPos[2])
         
         # summarise
         NDef = NDefectsByType[0]
@@ -271,8 +276,12 @@ class Filterer:
         if nebRad is None:
             nebRad = settings.neighbourRadius
         
+        # set min/max pos to lattice (for boxing)
+        minPos = np.zeros(3, np.float64)
+        maxPos = copy.deepcopy(lattice.cellDims)
+        
         clusters_c.findClusters(visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
-                                lattice.minPos, lattice.maxPos, minSize, result)
+                                minPos, maxPos, minSize, result)
         
         NVisible = result[0]
         NClusters = result[1]

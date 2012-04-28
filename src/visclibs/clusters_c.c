@@ -22,7 +22,7 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
                  int minClusterSize, int resultsDim, int *results)
 {
     int i, index, NClusters, numInCluster;
-    int maxAtomsPerBox, maxNumInCluster;
+    int maxNumInCluster;
     double nebRad2, approxBoxWidth;
     double *visiblePos;
     struct Boxes *boxes;
@@ -55,9 +55,8 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
     }
     
     /* box visible atoms */
-    maxAtomsPerBox = 100;
     approxBoxWidth = neighbourRad;
-    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, maxAtomsPerBox);
+    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
     putAtomsInBoxes(visibleAtomsDim, visiblePos, boxes);
     
     nebRad2 = neighbourRad * neighbourRad;

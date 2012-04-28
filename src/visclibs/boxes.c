@@ -17,14 +17,16 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "boxes.h"
 
 
 
 /*******************************************************************************
  ** create and return pointer to Boxes structure
+ ** #TODO: if PBCs are set min/max pos should be equal to cell dims
  *******************************************************************************/
-struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos, int *PBC, int maxAtomsPerBox)
+struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos, int *PBC, double *cellDims)
 {
     int i;
     double cellLength;
@@ -32,7 +34,7 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
     
     
     /* allocate space for boxes struct */
-    boxes = malloc( 1 * sizeof(struct Boxes));
+    boxes = malloc(1 * sizeof(struct Boxes));
     if (boxes == NULL)
     {
         printf("ERROR: could not allocate boxes\n");
@@ -42,9 +44,11 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
     /* setup boxes */
     for (i=0; i<3; i++)
     {
+        /* store some parameters */
         boxes->minPos[i] = minPos[i];
         boxes->maxPos[i] = maxPos[i];
         boxes->PBC[i] = PBC[i];
+        boxes->cellDims[i] = cellDims[i];
         
         /* size of the region in this direction */
         cellLength = maxPos[i] - minPos[i];
@@ -58,16 +62,8 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
         boxes->boxWidth[i] = cellLength / boxes->NBoxes[i];
     }
     boxes->totNBoxes = boxes->NBoxes[0] * boxes->NBoxes[1] * boxes->NBoxes[2];
-    boxes->maxAtomsPerBox = maxAtomsPerBox;
     
-//    printf("DEBUG setupBoxes:\n");
-//    printf("  minPos = %f, %f, %f\n", boxes->minPos[0], boxes->minPos[1], boxes->minPos[2]);
-//    printf("  minPosIN = %f, %f, %f\n", minPos[0], minPos[1], minPos[2]);
-//    printf("  maxPos = %f, %f, %f\n", boxes->maxPos[0], boxes->maxPos[1], boxes->maxPos[2]);
-//    printf("  maxPosIN = %f, %f, %f\n", maxPos[0], maxPos[1], maxPos[2]);
-//    printf("  width = %f, %f, %f\n", boxes->boxWidth[0], boxes->boxWidth[1], boxes->boxWidth[2]);
-//    printf("  NBoxes = %d, %d, %d\n", boxes->NBoxes[0], boxes->NBoxes[1], boxes->NBoxes[2]);
-//    printf("END DEBUG setupBoxes:\n");
+    boxes->allocChunk = 50;
     
     /* allocate arrays */
     boxes->boxNAtoms = calloc(boxes->totNBoxes, sizeof(int));
@@ -93,27 +89,33 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
  *******************************************************************************/
 void putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
 {
-    int i, boxIndex;
+    int i, boxIndex, newsize;
     
     
     for (i=0; i<NAtoms; i++)
     {
         boxIndex = boxIndexOfAtom(pos[3*i], pos[3*i+1], pos[3*i+2], boxes);
         
-        /* check if this box is full/already allocated */
-        if (boxes->boxNAtoms[boxIndex] + 1 == boxes->maxAtomsPerBox)
-        {
-            printf("ERROR: box limit reached\n");
-            exit(140);
-        }
-        
-        else if (boxes->boxNAtoms[boxIndex] == 0)
+        /* check if this box is empty or full */
+        if (boxes->boxNAtoms[boxIndex] == 0)
         {
             /* allocate this box */
-            boxes->boxAtoms[boxIndex] = malloc(boxes->maxAtomsPerBox * sizeof(int));
+            boxes->boxAtoms[boxIndex] = malloc(boxes->allocChunk * sizeof(int));
             if (boxes->boxAtoms[boxIndex] == NULL)
             {
                 printf("ERROR: could not allocate boxAtoms[%d]\n", boxIndex);
+                exit(50);
+            }
+        }
+        
+        else if (boxes->boxNAtoms[boxIndex] % boxes->allocChunk == 0)
+        {
+            /* realloc more space */
+            newsize = boxes->boxNAtoms[boxIndex] + boxes->allocChunk;
+            boxes->boxAtoms[boxIndex] = realloc(boxes->boxAtoms[boxIndex], newsize * sizeof(int));
+            if (boxes->boxAtoms[boxIndex] == NULL)
+            {
+                printf("ERROR: could not reallocate boxAtoms[%d]: %d\n", boxIndex, newsize);
                 exit(50);
             }
         }
@@ -127,13 +129,81 @@ void putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
 
 /*******************************************************************************
  ** returns box index of given atom
- ** TODO: handle if atom outside min and max pos
  *******************************************************************************/
 int boxIndexOfAtom(double xpos, double ypos, double zpos, struct Boxes *boxes)
 {
     int posintx, posinty, posintz;
     int boxIndex;
     
+    
+    /* if atom is outside boxes min/max pos we wrap or translate it back depending on PBCs */
+    if (xpos > boxes->maxPos[0] || xpos < boxes->minPos[0])
+    {
+        if (boxes->PBC[0] == 1)
+        {
+            /* wrap position */
+            xpos = xpos - floor( xpos / boxes->cellDims[0] ) * boxes->cellDims[0];
+        }
+        else
+        {
+            if (xpos > boxes->maxPos[0])
+            {
+                /* put it in the end box */
+                xpos = boxes->maxPos[0] - 0.5 * boxes->boxWidth[0];
+            }
+            else
+            {
+                /* put it in the end box */
+                xpos = boxes->minPos[0] + 0.5 * boxes->boxWidth[0];
+            }
+        }
+    }
+    
+    if (ypos > boxes->maxPos[1] || ypos < boxes->minPos[1])
+    {
+        if (boxes->PBC[1] == 1)
+        {
+            /* wrap position */
+            ypos = ypos - floor( ypos / boxes->cellDims[1] ) * boxes->cellDims[1];
+        }
+        else
+        {
+            if (ypos > boxes->maxPos[1])
+            {
+                /* put it in the end box */
+                ypos = boxes->maxPos[1] - 0.5 * boxes->boxWidth[1];
+            }
+            else
+            {
+                /* put it in the end box */
+                ypos = boxes->minPos[1] + 0.5 * boxes->boxWidth[1];
+            }
+        }
+    }
+    
+    if (zpos > boxes->maxPos[2] || zpos < boxes->minPos[2])
+    {
+        if (boxes->PBC[2] == 1)
+        {
+            /* wrap position */
+            zpos = zpos - floor( zpos / boxes->cellDims[2] ) * boxes->cellDims[2];
+        }
+        else
+        {
+            if (zpos > boxes->maxPos[2])
+            {
+                /* put it in the end box */
+                zpos = boxes->maxPos[2] - 0.5 * boxes->boxWidth[2];
+            }
+            else
+            {
+                /* put it in the end box */
+                zpos = boxes->minPos[2] + 0.5 * boxes->boxWidth[2];
+            }
+        }
+    }
+    
+    /* find box for atom */
     posintx = (int) ( (xpos - boxes->minPos[0]) / boxes->boxWidth[0] );
     if ( posintx >= boxes->NBoxes[0])
     {
@@ -152,7 +222,7 @@ int boxIndexOfAtom(double xpos, double ypos, double zpos, struct Boxes *boxes)
         posintz = boxes->NBoxes[2] - 1;
     }
     
-    /* think this numbers by x then z then y (can't remember why I wanted it like this) */
+    /* this numbers by x then z then y (can't remember why I wanted it like this) */
     boxIndex = (int) (posintx + posintz * boxes->NBoxes[0] + posinty * boxes->NBoxes[0] * boxes->NBoxes[2]);
     
     if (boxIndex < 0)

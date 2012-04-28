@@ -23,7 +23,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
                  int pbcy, int pbcz, double vacancyRadius, double xmin, double ymin, double zmin, double xmax, double ymax, double zmax )
 {
     int i, NSpecies, exitLoop, k, j, index;
-    double minPos[3], maxPos[3];
+    double minPos[3], maxPos[3], cellDims[3];
     double vacRad2;
     int boxNebList[27], specieIndex;
     char symtemp[3], symtemp2[3];
@@ -34,7 +34,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     int NDefects, NAntisites, NInterstitials, NVacancies;
     int *possibleVacancy, *possibleInterstitial;
     int *possibleAntisite, *possibleOnAntisite;
-    int skip, PBC[3], maxAtomsPerBox;
+    int skip, PBC[3];
     double approxBoxWidth;
     struct Boxes *boxes;
     
@@ -42,13 +42,15 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
      * since box width is similar to vacancy radius)
      * SHOULD BE CALCULATED DEPENDING ON APPROXBOXWIDTH!!!!
      */
-    maxAtomsPerBox = 100;
     minPos[0] = xmin;
     maxPos[0] = xmax;
     minPos[1] = ymin;
     maxPos[1] = ymax;
     minPos[2] = zmin;
     maxPos[2] = zmax;
+    cellDims[0] = xdim;
+    cellDims[1] = ydim;
+    cellDims[2] = zdim;
     PBC[0] = 1;
     PBC[1] = 1;
     PBC[2] = 1;
@@ -57,7 +59,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     approxBoxWidth = 1.1 * vacancyRadius;
     
     /* box reference atoms */
-    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, maxAtomsPerBox);
+    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
     putAtomsInBoxes(refNAtoms, refPos, boxes);
     
     /* allocate local arrays for checking atoms */
