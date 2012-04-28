@@ -192,7 +192,7 @@ def readLBOMDRef(filename, tmpLocation, lattice, fileType, state, log):
     maxNumSpecies = 20 ## if there are more than 20 species these must be changed
     dt = np.dtype((str, 2))
     specieListTemp = np.empty( maxNumSpecies+1, dt ) 
-    specieCountTemp = np.empty( maxNumSpecies+1, np.int32 )
+    specieCountTemp = np.zeros( maxNumSpecies+1, np.int32 )
     
     tmpForceArray = np.empty(3, np.float64)
     
