@@ -27,7 +27,10 @@ import_array();
 
 /* define numpy arrays here */
 %apply ( int DIM1, double* IN_ARRAY1 ) {(int posDim, double* pos),
-                                        (int refPosDim, double* refPos)}
+                                        (int refPosDim, double* refPos),
+                                        (int minPosDim, double *minPos),
+                                        (int maxPosDim, double *maxPos),
+                                        (int cellDimsDim, double *cellDims)}
 
 %apply ( int DIM1, char* INPLACE_ARRAY1 ) {(int specieListDim, char* specieList),
                                            (int specieListRefDim, char* specieListRef)}
@@ -40,7 +43,8 @@ import_array();
                                           (int onAntDim, int* onAntisites),
                                           (int NDefectsTypeDim, int* NDefectsType),
                                           (int exclSpecInputDim, int* exclSpecInput),
-                                          (int exclSpecRefDim, int* exclSpecRef)}
+                                          (int exclSpecRefDim, int* exclSpecRef),
+                                          (int PBCDim, int *PBC)}
 
 /* define functions here */
 %{
@@ -48,13 +52,13 @@ extern int findDefects( int includeVacs, int includeInts, int includeAnts, int N
                         int intDim, int* interstitials, int antDim, int* antisites, int onAntDim, int* onAntisites, int exclSpecInputDim, 
                         int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, int specieListDim, char* specieList, 
                         int specieDim, int* specie, int posDim, double* pos, int refNAtoms, int specieListRefDim, char* specieListRef, 
-                        int specieRefDim, int* specieRef, int refPosDim, double* refPos, double xdim, double ydim, double zdim, int pbcx, 
-                        int pbcy, int pbcz, double vacancyRadius, double xmin, double ymin, double zmin, double xmax, double ymax, double zmax );
+                        int specieRefDim, int* specieRef, int refPosDim, double* refPos, int cellDimsDim, double *cellDims, int PBCDim, 
+                        int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos );
 %}
 
 extern int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefectsTypeDim, int* NDefectsType, int vacDim, int* vacancies, 
                         int intDim, int* interstitials, int antDim, int* antisites, int onAntDim, int* onAntisites, int exclSpecInputDim, 
                         int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, int specieListDim, char* specieList, 
                         int specieDim, int* specie, int posDim, double* pos, int refNAtoms, int specieListRefDim, char* specieListRef, 
-                        int specieRefDim, int* specieRef, int refPosDim, double* refPos, double xdim, double ydim, double zdim, int pbcx, 
-                        int pbcy, int pbcz, double vacancyRadius, double xmin, double ymin, double zmin, double xmax, double ymax, double zmax );
+                        int specieRefDim, int* specieRef, int refPosDim, double* refPos, int cellDimsDim, double *cellDims, int PBCDim, 
+                        int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos );

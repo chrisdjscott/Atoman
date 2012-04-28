@@ -19,11 +19,10 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
                  int intDim, int* interstitials, int antDim, int* antisites, int onAntDim, int* onAntisites, int exclSpecInputDim, 
                  int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, int specieListDim, char* specieList, 
                  int specieDim, int* specie, int posDim, double* pos, int refNAtoms, int specieListRefDim, char* specieListRef, 
-                 int specieRefDim, int* specieRef, int refPosDim, double* refPos, double xdim, double ydim, double zdim, int pbcx, 
-                 int pbcy, int pbcz, double vacancyRadius, double xmin, double ymin, double zmin, double xmax, double ymax, double zmax )
+                 int specieRefDim, int* specieRef, int refPosDim, double* refPos, int cellDimsDim, double *cellDims, int PBCDim, 
+                 int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos )
 {
     int i, NSpecies, exitLoop, k, j, index;
-    double minPos[3], maxPos[3], cellDims[3];
     double vacRad2;
     int boxNebList[27], specieIndex;
     char symtemp[3], symtemp2[3];
@@ -34,28 +33,14 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     int NDefects, NAntisites, NInterstitials, NVacancies;
     int *possibleVacancy, *possibleInterstitial;
     int *possibleAntisite, *possibleOnAntisite;
-    int skip, PBC[3];
+    int skip;
     double approxBoxWidth;
     struct Boxes *boxes;
     
-    /* boxing parameters (100 will always be enough
-     * since box width is similar to vacancy radius)
-     * SHOULD BE CALCULATED DEPENDING ON APPROXBOXWIDTH!!!!
+    /* approx width, must be at least vacRad
+     * should vary depending on size of cell
+     * ie. don't want too many boxes
      */
-    minPos[0] = xmin;
-    maxPos[0] = xmax;
-    minPos[1] = ymin;
-    maxPos[1] = ymax;
-    minPos[2] = zmin;
-    maxPos[2] = zmax;
-    cellDims[0] = xdim;
-    cellDims[1] = ydim;
-    cellDims[2] = zdim;
-    PBC[0] = 1;
-    PBC[1] = 1;
-    PBC[2] = 1;
-    
-    /* approx width, must be at least vacRad */
     approxBoxWidth = 1.1 * vacancyRadius;
     
     /* box reference atoms */
@@ -144,7 +129,9 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
                 refzpos = refPos[3*refIndex+2];
                 
                 /* atomic separation of possible vacancy and possible interstitial */
-                sep2 = atomicSeparation2( xpos, ypos, zpos, refxpos, refypos, refzpos, xdim, ydim, zdim, pbcx, pbcy, pbcz );
+                sep2 = atomicSeparation2( xpos, ypos, zpos, refxpos, refypos, refzpos, 
+                                          cellDims[0], cellDims[1], cellDims[2], 
+                                          PBC[0], PBC[1], PBC[2] );
                 
                 /* if within vacancy radius, is it an antisite or normal lattice point */
                 if ( sep2 < vacRad2 )

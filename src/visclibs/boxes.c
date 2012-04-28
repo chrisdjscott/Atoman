@@ -45,13 +45,23 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
     for (i=0; i<3; i++)
     {
         /* store some parameters */
-        boxes->minPos[i] = minPos[i];
-        boxes->maxPos[i] = maxPos[i];
         boxes->PBC[i] = PBC[i];
         boxes->cellDims[i] = cellDims[i];
         
+        /* if PBC box cell, otherwise box min-max pos */
+        if (boxes->PBC[i] == 0)
+        {
+            boxes->minPos[i] = minPos[i];
+            boxes->maxPos[i] = maxPos[i];
+        }
+        else
+        {
+            boxes->minPos[i] = 0.0;
+            boxes->maxPos[i] = boxes->cellDims[i];
+        }
+        
         /* size of the region in this direction */
-        cellLength = maxPos[i] - minPos[i];
+        cellLength = boxes->maxPos[i] - boxes->minPos[i];
         cellLength = (cellLength < 1.0) ? 1.0 : cellLength;
         
         /* number of boxes in this direction */

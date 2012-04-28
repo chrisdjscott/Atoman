@@ -152,6 +152,9 @@ class Filterer:
                     visSpecArray[count] = i
                     count += 1
         
+        if count != len(visSpecArray):
+            visSpecArray.resize(count)
+        
         NVisible = filtering_c.specieFilter(visibleAtoms, visSpecArray, self.mainWindow.inputState.specie)
         
         visibleAtoms.resize(NVisible, refcheck=False)
@@ -217,13 +220,6 @@ class Filterer:
             for i in xrange(len(exclSpecs)):
                 exclSpecsRef[i] = exclSpecs[i]
         
-#        print "EXCLUDE SPECS INPUT"
-#        print inputLattice.specieList
-#        print exclSpecsInput
-#        print "EXCLUDE SPECS REF"
-#        print refLattice.specieList
-#        print exclSpecsRef
-        
         NDefectsByType = np.zeros(4, np.int32)
         
         # set min/max pos to lattice (for boxing)
@@ -234,9 +230,7 @@ class Filterer:
         status = defects_c.findDefects(settings.showVacancies, settings.showInterstitials, settings.showAntisites, NDefectsByType, vacancies, 
                                        interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
                                        inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
-                                       refLattice.pos, refLattice.cellDims[0], refLattice.cellDims[1], refLattice.cellDims[2], int(self.mainWindow.PBC[0]),
-                                       int(self.mainWindow.PBC[1]), int(self.mainWindow.PBC[2]), settings.vacancyRadius, minPos[0], minPos[1], 
-                                       minPos[2], maxPos[0], maxPos[1], maxPos[2])
+                                       refLattice.pos, refLattice.cellDims, self.mainWindow.PBC, settings.vacancyRadius, minPos, maxPos)
         
         # summarise
         NDef = NDefectsByType[0]
