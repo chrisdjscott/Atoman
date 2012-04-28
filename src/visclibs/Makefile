@@ -62,11 +62,11 @@ _input_c.so : input_c_wrap.o input_c.o
 _filtering_c.so : filtering_c_wrap.o filtering_c.o
 	$(CC) $(CCLINKFLAGS) filtering_c_wrap.o filtering_c.o -o _filtering_c.so
 
-_defects_c.so : defects_c_wrap.o defects_c.o boxes.o utilities.o
-	$(CC) $(CCLINKFLAGS) defects_c.o defects_c_wrap.o boxes.o utilities.o -o _defects_c.so
+_defects_c.so : defects_c_wrap.o defects_c.o boxeslib.o utilities.o
+	$(CC) $(CCLINKFLAGS) defects_c.o defects_c_wrap.o boxeslib.o utilities.o -o _defects_c.so
 
-_clusters_c.so : clusters_c_wrap.o clusters_c.o boxes.o utilities.o
-	$(CC) $(CCLINKFLAGS) clusters_c.o clusters_c_wrap.o boxes.o utilities.o -o _clusters_c.so
+_clusters_c.so : clusters_c_wrap.o clusters_c.o boxeslib.o utilities.o
+	$(CC) $(CCLINKFLAGS) clusters_c.o clusters_c_wrap.o boxeslib.o utilities.o -o _clusters_c.so
 
 # compile module
 input_c.o : input_c.c 
@@ -81,8 +81,8 @@ defects_c.o : defects_c.c
 clusters_c.o : clusters_c.c
 	$(CC) $(CCFLAGS) $(INCLUDES) clusters_c.c 
 
-boxes.o : boxes.c
-	$(CC) $(CCFLAGS) $(INCLUDES) boxes.c 
+boxeslib.o : boxeslib.c
+	$(CC) $(CCFLAGS) $(INCLUDES) boxeslib.c 
 
 utilities.o : utilities.c
 	$(CC) $(CCFLAGS) $(INCLUDES) utilities.c 
