@@ -173,18 +173,15 @@ class FilterList(QtGui.QWidget):
     
     def applyList(self):
         """
-        Move filter down in list
+        Run filters in this list.
         
         """
-        # remove actors
-        self.filterer.removeActors()
-        
         # apply filters
         self.filterer.runFilters()
             
     def clearList(self):
         """
-        Move filter down in list
+        Clear filters and actors from list.
         
         """
         self.filterer.removeActors()
@@ -320,7 +317,7 @@ class FilterList(QtGui.QWidget):
         if self.visibleButton.isChecked():
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.svg")))
             self.visible = 0
-            self.filterer.removeActors()
+            self.filterer.hideActors()
         else:
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))
             self.visible = 1

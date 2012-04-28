@@ -4,7 +4,7 @@
  ** Functions associated with spatially decomposing a system of atoms into boxes
  ** 
  ** 
- ** Include boxes.h to use this library
+ ** Include boxeslib.h to use this library
  ** 
  ** Call setupBoxes() to return the Boxes structure
  ** 

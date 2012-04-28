@@ -223,16 +223,17 @@ class Renderer:
         Render.
         
         """
-        print "RENDERING"
-        self.removeAllActors()
-        
-        filterLists = self.getFilterLists()
-        count = 0
-        for filterList in filterLists:
-            print "RENDERING LIST", count
-            count += 1
-            
-            filterList.addActors()
+        pass
+#        print "RENDERING"
+#        self.removeAllActors()
+#        
+#        filterLists = self.getFilterLists()
+#        count = 0
+#        for filterList in filterLists:
+#            print "RENDERING LIST", count
+#            count += 1
+#            
+#            filterList.addActors()
 
 
 ################################################################################

@@ -7,7 +7,6 @@ The main window class
 """
 
 import os
-import sys
 import shutil
 import platform
 
@@ -448,11 +447,7 @@ class ConsoleWindow(QtGui.QDialog):
         
         consoleLayout.addWidget(self.textWidget)
         
-        self.write("Hello there.")
-        self.write("OCH")
-    
-        #TODO: add clear button and close button.
-#        consoleLayout.addStretch()
+        #TODO: add save text.
         
         self.clearButton = QtGui.QPushButton("Clear")
         self.clearButton.setAutoDefault(0)

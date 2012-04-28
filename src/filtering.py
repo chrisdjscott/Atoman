@@ -40,7 +40,16 @@ class Filterer:
     
     def removeActors(self):
         """
-        Remove all actors
+        Remove actors.
+        
+        """
+        self.hideActors()
+        
+        self.actorsCollection = vtk.vtkActorCollection()
+    
+    def hideActors(self):
+        """
+        Hide all actors
         
         """
         self.actorsCollection.InitTraversal()
@@ -78,8 +87,6 @@ class Filterer:
         
         """
         self.removeActors()
-        
-        self.actorsCollection = vtk.vtkActorCollection()
         
         # first set up visible atoms arrays
         NAtoms = self.parent.mainWindow.inputState.NAtoms
