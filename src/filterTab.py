@@ -95,6 +95,9 @@ class FilterTab(QtGui.QWidget):
         # add to tab bar
         self.filterTabBar.addTab(filterListWidget, str(self.filterListCount))
         
+        # select new tab
+        self.filterTabBar.setCurrentIndex(self.filterListCount)
+        
         self.filterListCount += 1
     
     def clearAllFilterLists(self):
@@ -105,7 +108,8 @@ class FilterTab(QtGui.QWidget):
         self.log("Clearing all filter lists")
         for filterList in self.filterLists:
             filterList.clearList()
-
+            self.removeFilterList()
+        
     def filterTabBarChanged(self, val):
         # guess need to handle addition and removal of tabs here
         pass

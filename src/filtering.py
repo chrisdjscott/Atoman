@@ -159,8 +159,8 @@ class Filterer:
                     visSpecArray[count] = i
                     count += 1
         
-        if count != len(visSpecArray):
-            visSpecArray.resize(count)
+            if count != len(visSpecArray):
+                visSpecArray.resize(count)
         
         NVisible = filtering_c.specieFilter(visibleAtoms, visSpecArray, self.mainWindow.inputState.specie)
         
