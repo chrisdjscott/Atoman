@@ -15,6 +15,7 @@ from utilities import iconPath
 from genericForm import GenericForm
 from inputTab import InputTab
 from filterTab import FilterTab
+from outputTab import OutputTab
 import resources
 
 
@@ -76,7 +77,7 @@ class MainToolbar(QtGui.QDockWidget):
         self.tabBar.addTab(self.filterPage, "Filter")
         self.tabBar.setTabEnabled(1, False)
         
-        self.outputPage = QtGui.QWidget(self)
+        self.outputPage = OutputTab(self, self.mainWindow, self.toolbarWidth)
         self.tabBar.addTab(self.outputPage, "Output")
         self.tabBar.setTabEnabled(2, False)
         

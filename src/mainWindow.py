@@ -124,7 +124,7 @@ class MainWindow(QtGui.QMainWindow):
         visualisationToolbar.addSeparator()
         
         # add about action
-        aboutAction = QtGui.QAction(QtGui.QIcon(iconPath("help-browser.svg")), "About", self)
+        aboutAction = QtGui.QAction(QtGui.QIcon(iconPath("Information-icon.png")), "About", self)
         aboutAction.setStatusTip("About this application")
         aboutAction.triggered.connect(self.aboutMe)
         

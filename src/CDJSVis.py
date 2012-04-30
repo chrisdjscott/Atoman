@@ -20,7 +20,7 @@ def main():
     app = QtGui.QApplication(sys.argv)
     
     mw = mainWindow.MainWindow()
-    mw.setWindowIcon(QtGui.QIcon(iconPath("applications.ico")))
+    mw.setWindowIcon(QtGui.QIcon(iconPath("CDJSVis.ico")))
     
     sys.exit(app.exec_())
 
