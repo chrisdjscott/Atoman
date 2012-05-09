@@ -8,6 +8,7 @@ The output tab for the main toolbar
 
 import os
 import sys
+import shutil
 
 from PyQt4 import QtGui, QtCore
 
@@ -542,13 +543,50 @@ class ImageSequenceTab(QtGui.QWidget):
             self.warnFirstFileNotPresent(str(self.firstFileLabel.text()))
             return
         
-        fileText = "%s%s.%s" % (self.fileprefix.text(), self.numberFormat, self.mainWindow.fileExtension)
+        # formatted string
+        fileText = "%s%s.%s" % (str(self.fileprefix.text()), self.numberFormat, self.mainWindow.fileExtension)
+        
+        log = self.mainWindow.console.write
+        log("Running sequencer", 0, 0)
+        
+        # directory
+        saveDir = str(self.outputFolder.text())
+        if os.path.exists(saveDir):
+            if self.overwrite:
+                shutil.rmtree(saveDir)
+            
+            else:
+                count = 0
+                while os.path.exists(saveDir):
+                    count += 1
+                    saveDir = "%s.%d" % (self.outputFolder, count)
+        
+        os.mkdir(saveDir)
+        
+        saveText = "%s%s" % (str(self.fileprefix.text()), self.numberFormat)
         
         # loop over files
         for i in xrange(self.minIndex, self.maxIndex, self.interval):
             currentFile = fileText % (i,)
-            print "CURRENT FILE", currentFile
-    
+            log("Current file: %s" % (currentFile,), 0, 1)
+            
+            # first open the file
+            tmpname = self.mainWindow.openFile(currentFile, "input")
+            
+            if tmpname is None:
+                print "ERROR"
+                return
+            
+            # now apply all filters
+            self.mainWindow.mainToolbar.filterPage.runAllFilterLists()
+            
+            saveName = saveText % (i,)
+            log("Saving image: %s" % (os.path.join(saveDir, saveName),), 0, 2)
+            
+            # now save image
+            filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
+                                                          os.path.join(saveDir, saveName), 1)
+            
     def warnFirstFileNotPresent(self, filename):
         """
         Warn the first file is not present.
