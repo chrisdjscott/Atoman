@@ -88,9 +88,10 @@ class CellOutline:
 
 ################################################################################
 class Axes:
-    def __init__(self, ren):
+    def __init__(self, ren, renWinInteract):
         
         self.ren = ren
+        self.renWinInteract = renWinInteract
         
         self.actor = vtk.vtkAxesActor()
         self.actor.SetTipTypeToCone()
@@ -116,6 +117,14 @@ class Axes:
         self.actor.GetZAxisCaptionActor2D().GetCaptionTextProperty().SetColor(0,0,1)
         self.actor.GetZAxisCaptionActor2D().GetCaptionTextProperty().SetFontSize(20)
         
+        self.orientationWidget = vtk.vtkOrientationMarkerWidget()
+        self.orientationWidget.SetOrientationMarker(self.actor)
+#        self.orientationWidget.SetOutlineColor(0.93, 0.57, 0.13)
+        self.orientationWidget.SetInteractor(self.renWinInteract)
+#        self.orientationWidget.SetViewport(0.0, 0.0, 0.25, 0.25)
+        self.orientationWidget.SetEnabled(1)
+        self.orientationWidget.InteractiveOff()
+        
         self.visible = 0
     
     def add(self, cellDims):
@@ -124,7 +133,6 @@ class Axes:
         
         """
         self.actor.SetTotalLength(0.2 * cellDims[0], 0.2 * cellDims[1], 0.2 * cellDims[2])
-        
         
         self.ren.AddActor(self.actor)
         self.visible = 1
@@ -159,7 +167,7 @@ class Renderer:
         self.latticeFrame = CellOutline(self.ren)
         
         # axes
-        self.axes = Axes(self.ren)
+        self.axes = Axes(self.ren, self.renWinInteract)
         
         
     def reinit(self):
