@@ -413,12 +413,15 @@ class ImageSequenceTab(QtGui.QWidget):
         self.fileprefix.setFixedWidth(120)
         self.connect(self.fileprefix, QtCore.SIGNAL('textChanged(QString)'), self.fileprefixChanged)
         
+        resetPrefixButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-paste.svg")), "")
+        resetPrefixButton.setStatusTip("Set prefix to input file")
+        self.connect(resetPrefixButton, QtCore.SIGNAL("clicked()"), self.resetPrefix)
+        
         rowLayout.addWidget(label)
         rowLayout.addWidget(self.fileprefix)
+        rowLayout.addWidget(resetPrefixButton)
         
         mainLayout.addWidget(row)
-        
-        
         
         group = QtGui.QGroupBox("Numbering")
         group.setAlignment(QtCore.Qt.AlignHCenter)
@@ -530,6 +533,32 @@ class ImageSequenceTab(QtGui.QWidget):
         
         mainLayout.addWidget(row)
         
+    def resetPrefix(self):
+        """
+        Reset the prefix to the one from 
+        the input page
+        
+        """
+        filename = self.mainWindow.inputFile
+        
+        count = 0
+        for i in xrange(len(filename)):
+            if filename[i] == ".":
+                break
+            
+            error = 0
+            try:
+                int(filename[i])
+            except ValueError:
+                error = 1
+            
+            if not error:
+                break
+            
+            count += 1
+        
+        self.fileprefix.setText(filename[:count])
+    
     def startSequencer(self):
         """
         Start the sequencer

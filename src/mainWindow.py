@@ -260,6 +260,7 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         self.mainToolbar.currentRefLabel.setText("Reference: " + filename)
+        self.refFile = filename
     
     def setCurrentInputFile(self, filename):
         """
@@ -267,6 +268,7 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         self.mainToolbar.currentInputLabel.setText("Input: " + filename)
+        self.inputFile = filename
     
     def setStatus(self, string):
         """

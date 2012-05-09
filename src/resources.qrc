@@ -61,5 +61,6 @@
     <file>icons/console-icon.png</file>
     <file>icons/Information-icon.png</file>
     <file>icons/CDJSVis.ico</file>
+    <file>icons/edit-paste.svg</file>
 </qresource>
 </RCC>
