@@ -70,8 +70,8 @@ class ImageTab(QtGui.QWidget):
         self.imageFormat = "jpg"
         
         imageTabLayout = QtGui.QVBoxLayout(self)
-        imageTabLayout.setContentsMargins(0, 0, 0, 0)
-        imageTabLayout.setSpacing(0)
+#        imageTabLayout.setContentsMargins(0, 0, 0, 0)
+#        imageTabLayout.setSpacing(0)
         imageTabLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # Add the generic image options at the top
@@ -240,17 +240,119 @@ class SingleImageTab(QtGui.QWidget):
         self.mainWindow = mainWindow
         self.width = width
         
+        # initial values
+        self.overwriteImage = 0
+        self.openImage = 0
+        
         # layout
         mainLayout = QtGui.QVBoxLayout(self)
         mainLayout.setContentsMargins(0, 0, 0, 0)
-        mainLayout.setSpacing(0)
+#        mainLayout.setSpacing(0)
         mainLayout.setAlignment(QtCore.Qt.AlignTop)
         
+        # file name, save image button
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
         
+        label = QtGui.QLabel("File name")
+        self.imageFileName = QtGui.QLineEdit("image")
+        self.imageFileName.setFixedWidth(120)
+        saveImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
+        saveImageButton.setStatusTip("Save image")
+        self.connect(saveImageButton, QtCore.SIGNAL('clicked()'), self.saveSingleImage)
         
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.imageFileName)
+        rowLayout.addWidget(saveImageButton)
         
+        mainLayout.addWidget(row)
         
+        # dialog
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
         
+        saveImageDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Save image")
+        saveImageDialogButton.setStatusTip("Save image")
+        saveImageDialogButton.setCheckable(0)
+        saveImageDialogButton.setFixedWidth(150)
+        self.connect(saveImageDialogButton, QtCore.SIGNAL('clicked()'), self.saveSingleImageDialog)
+        
+        rowLayout.addWidget(saveImageDialogButton)
+        
+        mainLayout.addWidget(row)
+        
+        # options
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        self.overwriteCheck = QtGui.QCheckBox("Overwrite")
+        self.connect(self.overwriteCheck, QtCore.SIGNAL('stateChanged(int)'), self.overwriteCheckChanged)
+        
+        self.openImageCheck = QtGui.QCheckBox("Open image")
+        self.connect(self.openImageCheck, QtCore.SIGNAL('stateChanged(int)'), self.openImageCheckChanged)
+        
+        rowLayout.addWidget(self.overwriteCheck)
+        rowLayout.addWidget(self.openImageCheck)
+        
+        mainLayout.addWidget(row)
+        
+    
+    def saveSingleImageDialog(self):
+        """
+        Open dialog to get save file name
+        
+        """
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')
+        
+        if len(filename):
+            self.imageFileName.setText(str(filename))
+            self.saveSingleImage()
+    
+    def saveSingleImage(self):
+        """
+        Screen capture.
+        
+        """
+        filename = self.imageFileName.text()
+        
+        if not len(filename):
+            return
+        
+        print "SAVING TO FILE:", filename
+        
+        filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
+                                                      filename, self.overwriteImage)
+    
+    def openImageCheckChanged(self, val):
+        """
+        Open image
+        
+        """
+        if self.openImageCheck.isChecked():
+            self.openImage = 1
+        
+        else:
+            self.openImage = 0
+    
+    def overwriteCheckChanged(self, val):
+        """
+        Overwrite file
+        
+        """
+        if self.overwriteCheck.isChecked():
+            self.overwriteImage = 1
+        
+        else:
+            self.overwriteImage = 0
+    
+
 ################################################################################
 class ImageSequenceTab(QtGui.QWidget):
     def __init__(self, parent, mainWindow, width):

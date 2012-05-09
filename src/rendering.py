@@ -181,6 +181,13 @@ class Renderer:
             self.renWinInteract.Initialize()
             self.init = 1
     
+    def getRenWin(self):
+        """
+        Return the render window
+        
+        """
+        return self.renWinInteract.GetRenderWindow()
+    
     def postRefRender(self):
         """
         Render post read reference file.
@@ -350,7 +357,48 @@ class Renderer:
 #            count += 1
 #            
 #            filterList.addActors()
-
+    
+    def saveImage(self, renderType, imageFormat, fileprefix, overwrite):
+        """
+        Save image to file
+        
+        """
+        if renderType == "VTK":
+            filename = "%s.%s" % (fileprefix, imageFormat)
+            
+            renWin = self.getRenWin()
+            
+            w2if = vtk.vtkWindowToImageFilter()
+            w2if.SetInput(renWin)
+            
+            if imageFormat == "jpg":
+                writer = vtk.vtkJPEGWriter()
+            
+            elif imageFormat == "png":
+                writer = vtk.vtkPNGWriter()
+                
+            elif imageFormat == "tif":
+                writer = vtk.vtkTIFFWriter()
+            
+            writer.SetInput(w2if.GetOutput())
+            
+            if not overwrite:
+                count = 0
+                while os.path.exists(filename):
+                    count += 1
+                    filename = "%s(%d).%s" % (fileprefix, count, imageFormat)
+            
+            writer.SetFileName(filename)
+            writer.Write()
+        
+        elif renderType == "POV":
+            filename = None
+            pass
+        
+        return filename
+        
+        
+        
 
 ################################################################################
 def setupLUT(specieList, specieRGB):
