@@ -55,6 +55,7 @@ class MainWindow(QtGui.QMainWindow):
         self.refFile = ""
         self.inputFile = ""
         self.fileType = ""
+        self.fileExtension = ""
         self.refLoaded = 0
         self.inputLoaded = 0
         self.consoleOpen = 0
@@ -246,6 +247,12 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         self.fileType = fileType
+        
+        if fileType == "DAT":
+            self.fileExtension = "dat"
+        
+        elif fileType == "LBOMD":
+            self.fileExtension = "xyz"
     
     def setCurrentRefFile(self, filename):
         """

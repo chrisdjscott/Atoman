@@ -11,10 +11,11 @@ import sys
 
 from PyQt4 import QtGui, QtCore
 
+import utilities
 from utilities import iconPath
 from genericForm import GenericForm
 import resources
-
+import globals
 
 
 
@@ -91,11 +92,7 @@ class ImageTab(QtGui.QWidget):
         self.POVButton = QtGui.QPushButton(QtGui.QIcon(iconPath("pov-icon.svg")), "POV-Ray")
         self.POVButton.setChecked(0)
         self.checkForPOVRay()
-        if self.povray:
-            self.POVButton.setCheckable(1)
-        
-        else:
-            self.POVButton.setCheckable(0)
+        self.POVButton.setCheckable(1)
         
         self.VTKButton = QtGui.QPushButton(QtGui.QIcon(iconPath("vtk-icon.svg")), "VTK")
         self.VTKButton.setCheckable(1)
@@ -150,7 +147,7 @@ class ImageTab(QtGui.QWidget):
         singleImageTabLayout.setContentsMargins(0, 0, 0, 0)
         self.singleImageTab = SingleImageTab(self, self.mainWindow, self.width)
         singleImageTabLayout.addWidget(self.singleImageTab)
-        self.imageTabBar.addTab(singleImageTabWidget, "Capture")
+        self.imageTabBar.addTab(singleImageTabWidget, "Single")
         
         imageSequenceTabWidget = QtGui.QWidget()
         imageSequenceTabLayout = QtGui.QVBoxLayout(imageSequenceTabWidget)
@@ -190,14 +187,27 @@ class ImageTab(QtGui.QWidget):
         
         """
         if self.POVButton.isChecked():
-            self.renderType = "POV"
-            self.imageFormat = "png"
-            self.PNGCheck.setChecked(1)
+            if not self.povray:
+                self.POVButton.setChecked(0)
+                self.VTKButton.setChecked(1)
+                self.warnPOVRay()
+            
+            else:
+                self.renderType = "POV"
+                self.imageFormat = "png"
+                self.PNGCheck.setChecked(1)
         
         elif self.VTKButton.isChecked():
             self.renderType = "VTK"
             self.imageFormat = "jpg"
             self.JPEGCheck.setChecked(1)
+    
+    def warnPOVRay(self):
+        """
+        Warn POV-Ray not installed
+        
+        """
+        QtGui.QMessageBox.warning(self, "Warning", "Could not locate povray in system path!")
     
     def checkForPOVRay(self):
         """
@@ -246,7 +256,7 @@ class SingleImageTab(QtGui.QWidget):
         
         # layout
         mainLayout = QtGui.QVBoxLayout(self)
-        mainLayout.setContentsMargins(0, 0, 0, 0)
+#        mainLayout.setContentsMargins(0, 0, 0, 0)
 #        mainLayout.setSpacing(0)
         mainLayout.setAlignment(QtCore.Qt.AlignTop)
         
@@ -303,7 +313,6 @@ class SingleImageTab(QtGui.QWidget):
         
         mainLayout.addWidget(row)
         
-    
     def saveSingleImageDialog(self):
         """
         Open dialog to get save file name
@@ -324,8 +333,6 @@ class SingleImageTab(QtGui.QWidget):
         
         if not len(filename):
             return
-        
-        print "SAVING TO FILE:", filename
         
         filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
                                                       filename, self.overwriteImage)
@@ -362,11 +369,249 @@ class ImageSequenceTab(QtGui.QWidget):
         self.mainWindow = mainWindow
         self.width = width
         
+        # initial values
+        self.numberFormat = "%04d"
+        self.minIndex = 0
+        self.maxIndex = 10
+        self.interval = 1
+        self.fileprefixText = "guess"
+        self.overwrite = 0
+        
         # layout
         mainLayout = QtGui.QVBoxLayout(self)
-        mainLayout.setContentsMargins(0, 0, 0, 0)
-        mainLayout.setSpacing(0)
+#        mainLayout.setContentsMargins(0, 0, 0, 0)
+#        mainLayout.setSpacing(0)
         mainLayout.setAlignment(QtCore.Qt.AlignTop)
         
+        # output directory
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("Output folder")
+        self.outputFolder = QtGui.QLineEdit("sequencer")
+        self.outputFolder.setFixedWidth(120)
+        
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.outputFolder)
+        
+        mainLayout.addWidget(row)
+        
+        # file prefix
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("File prefix")
+                
+        self.fileprefix = QtGui.QLineEdit(self.fileprefixText)
+        self.fileprefix.setFixedWidth(120)
+        self.connect(self.fileprefix, QtCore.SIGNAL('textChanged(QString)'), self.fileprefixChanged)
+        
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.fileprefix)
+        
+        mainLayout.addWidget(row)
         
         
+        
+        group = QtGui.QGroupBox("Numbering")
+        group.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        groupLayout = QtGui.QVBoxLayout(group)
+        groupLayout.setContentsMargins(0, 0, 0, 0)
+        groupLayout.setSpacing(0)
+        
+        
+        
+        # numbering format
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+#        label = QtGui.QLabel("Number format")
+        self.numberFormatCombo = QtGui.QComboBox()
+        self.numberFormatCombo.addItem("%04d")
+        self.numberFormatCombo.addItem("%d")
+        self.connect(self.numberFormatCombo, QtCore.SIGNAL("currentIndexChanged(QString)"), self.numberFormatChanged)
+        
+#        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.numberFormatCombo)
+        
+        groupLayout.addWidget(row)
+        
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        self.minIndexSpinBox = QtGui.QSpinBox()
+        self.minIndexSpinBox.setMinimum(0)
+        self.minIndexSpinBox.setMaximum(99999)
+        self.minIndexSpinBox.setValue(self.minIndex)
+        self.connect(self.minIndexSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.minIndexChanged)
+        
+        label = QtGui.QLabel("to")
+        
+        self.maxIndexSpinBox = QtGui.QSpinBox()
+        self.maxIndexSpinBox.setMinimum(1)
+        self.maxIndexSpinBox.setMaximum(99999)
+        self.maxIndexSpinBox.setValue(self.maxIndex)
+        self.connect(self.maxIndexSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.maxIndexChanged)
+        
+        label2 = QtGui.QLabel("by")
+        
+        self.intervalSpinBox = QtGui.QSpinBox()
+        self.intervalSpinBox.setMinimum(1)
+        self.intervalSpinBox.setMaximum(99999)
+        self.intervalSpinBox.setValue(self.interval)
+        self.connect(self.intervalSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.intervalChanged)
+        
+        rowLayout.addWidget(self.minIndexSpinBox)
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.maxIndexSpinBox)
+        rowLayout.addWidget(label2)
+        rowLayout.addWidget(self.intervalSpinBox)
+        
+        groupLayout.addWidget(row)
+        
+        mainLayout.addWidget(group)
+        
+        # first file
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("First file:")
+        
+        self.firstFileLabel = QtGui.QLabel("")
+        self.setFirstFileLabel()
+        
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.firstFileLabel)
+        
+        mainLayout.addWidget(row)
+        
+        # overwrite check box
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        self.overwriteCheck = QtGui.QCheckBox("Overwrite")
+        self.connect(self.overwriteCheck, QtCore.SIGNAL('stateChanged(int)'), self.overwriteCheckChanged)
+        
+        rowLayout.addWidget(self.overwriteCheck)
+        
+        mainLayout.addWidget(row)
+        
+        # start button
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        startSequencerButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
+        self.connect(startSequencerButton, QtCore.SIGNAL('clicked()'), self.startSequencer)
+        
+        rowLayout.addWidget(startSequencerButton)
+        
+        mainLayout.addWidget(row)
+        
+    def startSequencer(self):
+        """
+        Start the sequencer
+        
+        """
+        self.setFirstFileLabel()
+        
+        # check first file exists
+        firstFileExists = utilities.checkForFile(str(self.firstFileLabel.text()))
+        if not firstFileExists:
+            self.warnFirstFileNotPresent(str(self.firstFileLabel.text()))
+            return
+        
+        fileText = "%s%s.%s" % (self.fileprefix.text(), self.numberFormat, self.mainWindow.fileExtension)
+        
+        # loop over files
+        for i in xrange(self.minIndex, self.maxIndex, self.interval):
+            currentFile = fileText % (i,)
+            print "CURRENT FILE", currentFile
+    
+    def warnFirstFileNotPresent(self, filename):
+        """
+        Warn the first file is not present.
+        
+        """
+        QtGui.QMessageBox.warning(self, "Warning", "Could not locate first file in sequence: %s" % (filename,))
+    
+    def overwriteCheckChanged(self, val):
+        """
+        Overwrite check changed
+        
+        """
+        if self.overwriteCheck.isChecked():
+            self.overwrite = 1
+        
+        else:
+            self.overwrite = 0
+    
+    def fileprefixChanged(self, text):
+        """
+        File prefix has changed
+        
+        """
+        self.fileprefixText = str(text)
+        
+        self.setFirstFileLabel()
+    
+    def setFirstFileLabel(self):
+        """
+        Set the first file label
+        
+        """
+        text = "%s%s.%s" % (self.fileprefix.text(), self.numberFormat, self.mainWindow.fileExtension)
+        self.firstFileLabel.setText(text % (self.minIndex,))
+    
+    def minIndexChanged(self, val):
+        """
+        Minimum index changed
+        
+        """
+        self.minIndex = val
+        
+        self.setFirstFileLabel()
+    
+    def maxIndexChanged(self, val):
+        """
+        Maximum index changed
+        
+        """
+        self.maxIndex = val
+    
+    def intervalChanged(self, val):
+        """
+        Interval changed
+        
+        """
+        self.interval = val
+    
+    def numberFormatChanged(self, text):
+        """
+        Change number format
+        
+        """
+        self.numberFormat = str(text)
+        
+        self.setFirstFileLabel()

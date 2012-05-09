@@ -60,3 +60,20 @@ def createTmpDirectory():
             tmpDir = os.path.join(os.getcwd(), name)
     
     return tmpDir
+
+
+################################################################################
+def checkForFile(filename):
+    
+    found = 0
+    if os.path.exists(filename):
+        found = 1
+    
+    else:
+        if os.path.exists(filename + '.bz2'):
+            found = 1
+        
+        elif os.path.exists(filename + '.gz'):
+            found = 1
+            
+    return found
