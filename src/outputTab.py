@@ -9,6 +9,7 @@ The output tab for the main toolbar
 import os
 import sys
 import shutil
+import subprocess
 
 from PyQt4 import QtGui, QtCore
 
@@ -588,7 +589,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 count = 0
                 while os.path.exists(saveDir):
                     count += 1
-                    saveDir = "%s.%d" % (self.outputFolder, count)
+                    saveDir = "%s.%d" % (str(self.outputFolder.text()), count)
         
         os.mkdir(saveDir)
         
@@ -621,7 +622,25 @@ class ImageSequenceTab(QtGui.QWidget):
             CWD = os.getcwd()
             os.chdir(saveDir)
             
-            self.mainWindow.console.write("CREATE MOVIE NOT IMPLEMENTED YET")
+            # temporary (should be optional)
+            framerate = 10
+            bitrate = 10000000
+            outputprefix = "movie"
+            outputsuffix = "mpg"
+            
+            command = "%s -r %d -y -i %s.%s -r %d -b %d %s.%s" % (self.parent.ffmpeg, framerate, saveText, 
+                                                                  self.parent.imageFormat, 25, bitrate, 
+                                                                  outputprefix, outputsuffix)
+            
+            log("Creating movie file: %s.%s" % (outputprefix, outputsuffix))
+            
+            # change to QProcess
+            process = subprocess.Popen(command, shell=True, executable="/bin/bash", stdin=subprocess.PIPE, 
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, stderr = process.communicate()
+            status = process.poll()
+            if status:
+                log("FFMPEG FAILED")
             
             os.chdir(CWD)
     
