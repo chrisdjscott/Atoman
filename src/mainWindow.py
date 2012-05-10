@@ -343,6 +343,8 @@ class MainWindow(QtGui.QMainWindow):
             if state == "ref":
                 status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
                 
+                self.readLBOMDIN()
+                
             else:
                 status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write, self.refState)
         
@@ -380,7 +382,51 @@ class MainWindow(QtGui.QMainWindow):
         self.setStatus("Ready")
         
         return filename
+    
+    def readLBOMDIN(self):
+        """
+        Try to read sim identity and PBCs from lbomd.IN
         
+        """
+        if os.path.exists("lbomd.IN"):
+            f = open("lbomd.IN")
+            
+            f.readline()
+            f.readline()
+            f.readline()
+            
+            line = f.readline().strip()
+            array = line.split()
+            simIdentity = array[0]
+            
+            line = f.readline().strip()
+            array = line.split()
+            PBC = [0]*3
+            PBC[0] = int(array[0])
+            PBC[1] = int(array[1])
+            PBC[2] = int(array[2])
+            
+            self.mainToolbar.inputTab.LBOMDPage.LBOMDInputLabel.setText("%s%04d.xyz" % (simIdentity, 0))
+            self.mainToolbar.outputPage.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
+            
+            if PBC[0]:
+                self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(2)
+            
+            else:
+                self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(0)
+            
+            if PBC[1]:
+                self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(2)
+            
+            else:
+                self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(0)
+            
+            if PBC[2]:
+                self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(2)
+            
+            else:
+                self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(0)
+    
     def postRefLoaded(self, filename):
         """
         Do stuff after the ref has been loaded.
