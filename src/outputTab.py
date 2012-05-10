@@ -91,9 +91,8 @@ class ImageTab(QtGui.QWidget):
         self.connect(renderTypeButtonGroup, QtCore.SIGNAL('buttonClicked(int)'), self.setRenderType)
         
         self.POVButton = QtGui.QPushButton(QtGui.QIcon(iconPath("pov-icon.svg")), "POV-Ray")
-        self.POVButton.setChecked(0)
-        self.checkForPOVRay()
         self.POVButton.setCheckable(1)
+        self.POVButton.setChecked(0)
         
         self.VTKButton = QtGui.QPushButton(QtGui.QIcon(iconPath("vtk-icon.svg")), "VTK")
         self.VTKButton.setCheckable(1)
@@ -159,7 +158,15 @@ class ImageTab(QtGui.QWidget):
         
         imageTabLayout.addWidget(self.imageTabBar)
         
-    
+        # check ffmpeg/povray installed
+        self.ffmpeg = utilities.checkForExe("ffmpeg")
+        self.povray = utilities.checkForExe("povray")
+        
+        if self.ffmpeg:
+            self.mainWindow.console.write("'ffmpeg' executable located at: %s" % (self.ffmpeg,))
+        
+        if self.povray:
+            self.mainWindow.console.write("'povray' executable located at: %s" % (self.povray,))
     
     def imageTabBarChanged(self, val):
         """
@@ -191,7 +198,7 @@ class ImageTab(QtGui.QWidget):
             if not self.povray:
                 self.POVButton.setChecked(0)
                 self.VTKButton.setChecked(1)
-                self.warnPOVRay()
+                utilities.warnExeNotFound(self, "povray")
             
             else:
                 self.renderType = "POV"
@@ -202,45 +209,7 @@ class ImageTab(QtGui.QWidget):
             self.renderType = "VTK"
             self.imageFormat = "jpg"
             self.JPEGCheck.setChecked(1)
-    
-    def warnPOVRay(self):
-        """
-        Warn POV-Ray not installed
         
-        """
-        QtGui.QMessageBox.warning(self, "Warning", "Could not locate povray in system path!")
-    
-    def checkForPOVRay(self):
-        """
-        Check if POV-Ray executable can be located 
-        
-        """
-        # check if qconvex programme located
-        syspath = os.getenv("PATH", "")
-        syspatharray = syspath.split(":")
-        found = 0
-        for syspath in syspatharray:
-            if os.path.exists(os.path.join(syspath, "povray")):
-                found = 1
-                break
-        
-        if found:
-            self.povray = "povray"
-        
-        else:
-            for syspath in globals.PATH:
-                if os.path.join(syspath, "povray"):
-                    found = 1
-                    break
-            
-            if found:
-                self.povray = os.path.join(syspath, "povray")
-            
-            else:
-                self.povray = 0
-        
-        if self.povray:
-            self.mainWindow.console.write("'povray' executable located at: %s" % (self.povray,))
 
 ################################################################################
 class SingleImageTab(QtGui.QWidget):
@@ -377,6 +346,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.interval = 1
         self.fileprefixText = "guess"
         self.overwrite = 0
+        self.createMovie = 0
         
         # layout
         mainLayout = QtGui.QVBoxLayout(self)
@@ -519,6 +489,20 @@ class ImageSequenceTab(QtGui.QWidget):
         
         mainLayout.addWidget(row)
         
+        # create movie check box
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        self.createMovieCheck = QtGui.QCheckBox("Create movie")
+        self.connect(self.createMovieCheck, QtCore.SIGNAL('stateChanged(int)'), self.createMovieCheckChanged)
+        
+        rowLayout.addWidget(self.createMovieCheck)
+        
+        mainLayout.addWidget(row)
+        
         # start button
         row = QtGui.QWidget(self)
         rowLayout = QtGui.QHBoxLayout(row)
@@ -532,7 +516,23 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.addWidget(startSequencerButton)
         
         mainLayout.addWidget(row)
+    
+    def createMovieCheckChanged(self, val):
+        """
+        Create movie?
         
+        """
+        if self.createMovieCheck.isChecked():
+            if not self.parent.ffmpeg:
+                utilities.warnExeNotFound(self.parent, "ffmpeg")
+                self.createMovieCheck.setCheckState(0)
+                return
+            
+            self.createMovie = 1
+        
+        else:
+            self.createMovie = 0
+    
     def resetPrefix(self):
         """
         Reset the prefix to the one from 
@@ -615,7 +615,16 @@ class ImageSequenceTab(QtGui.QWidget):
             # now save image
             filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
                                                           os.path.join(saveDir, saveName), 1)
+        
+        # create movie
+        if self.createMovie:
+            CWD = os.getcwd()
+            os.chdir(saveDir)
             
+            self.mainWindow.console.write("CREATE MOVIE NOT IMPLEMENTED YET")
+            
+            os.chdir(CWD)
+    
     def warnFirstFileNotPresent(self, filename):
         """
         Warn the first file is not present.

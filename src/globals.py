@@ -9,3 +9,5 @@ Don't like having this file
 # pyinstaller executable)
 PATH = ["/opt/local/bin",
         "/usr/local/bin"]
+
+PATH = []

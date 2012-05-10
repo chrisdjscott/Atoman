@@ -11,6 +11,10 @@ import sys
 import random
 import string
 
+from PyQt4 import QtGui
+
+import globals
+
 
 ################################################################################
 def resourcePath(relative):
@@ -77,3 +81,45 @@ def checkForFile(filename):
             found = 1
             
     return found
+
+
+################################################################################
+def warnExeNotFound(parent, exe):
+    """
+    Warn that an executable was not located.
+    
+    """
+    QtGui.QMessageBox.warning(parent, "Warning", "Could not locate '%s' executable!" % (exe,))
+
+
+################################################################################
+def checkForExe(exe):
+    """
+    Check if executable can be located 
+    
+    """
+    # check if exe programme located
+    syspath = os.getenv("PATH", "")
+    syspatharray = syspath.split(":")
+    found = 0
+    for syspath in syspatharray:
+        if os.path.exists(os.path.join(syspath, exe)):
+            found = 1
+            break
+    
+    if found:
+        exepath = exe
+    
+    else:
+        for syspath in globals.PATH:
+            if os.path.join(syspath, exe):
+                found = 1
+                break
+        
+        if found:
+            exepath = os.path.join(syspath, exe)
+        
+        else:
+            exepath = 0
+    
+    return exepath

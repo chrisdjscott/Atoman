@@ -10,6 +10,7 @@ import os
 from PyQt4 import QtGui, QtCore, Qt
 
 import resources
+import utilities
 from utilities import iconPath
 import genericForm
 import globals
@@ -552,28 +553,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.filterType = "Clusters"
         
         # check if qconvex programme located
-        syspath = os.getenv("PATH", "")
-        syspatharray = syspath.split(":")
-        found = 0
-        for syspath in syspatharray:
-            if os.path.exists(os.path.join(syspath, "qconvex")):
-                found = 1
-                break
-        
-        if found:
-            self.qconvex = "qconvex"
-        
-        else:
-            for syspath in globals.PATH:
-                if os.path.join(syspath, "qconvex"):
-                    found = 1
-                    break
-            
-            if found:
-                self.qconvex = os.path.join(syspath, "qconvex")
-            
-            else:
-                self.qconvex = 0
+        self.qconvex = utilities.checkForExe("qconvex")
         
         if self.qconvex:
             self.mainWindow.console.write("'qconvex' executable located at: %s" % (self.qconvex,))
@@ -637,21 +617,13 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         Change draw hulls setting.
         
         """
-        if not self.qconvex:
-            self.drawHullsCheckBox.setChecked(0)
-            self.warnQconvex()
-            return
-        
         if self.drawHullsCheckBox.isChecked():
+            if not self.qconvex:
+                utilities.warnExeNotFound(self, "qconvex")
+                self.drawHullsCheckBox.setCheckState(0)
+                return
+            
             self.drawConvexHulls = 1
         
         else:
             self.drawConvexHulls = 0
-
-    def warnQconvex(self):
-        """
-        Warn user that qconvex needs to be 
-        in system path
-        
-        """
-        QtGui.QMessageBox.warning(self, "Warning", "Could not locate qconvex in system path!")
