@@ -295,6 +295,67 @@ class InputTab(QtGui.QWidget):
         self.stackedWidget.addWidget(self.latticePage)
         
         inputTabLayout.addWidget(self.stackedWidget)
+        
+        # periodic boundaries
+        group = QtGui.QGroupBox("Periodic boundaries")
+        group.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        groupLayout = QtGui.QVBoxLayout(group)
+        
+        self.PBCXCheckBox = QtGui.QCheckBox("x")
+        self.PBCXCheckBox.setChecked(1)
+        self.PBCYCheckBox = QtGui.QCheckBox("y")
+        self.PBCYCheckBox.setChecked(1)
+        self.PBCZCheckBox = QtGui.QCheckBox("z")
+        self.PBCZCheckBox.setChecked(1)
+        
+        self.connect(self.PBCXCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.PBCXChanged)
+        self.connect(self.PBCYCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.PBCYChanged)
+        self.connect(self.PBCZCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.PBCZChanged)
+        
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        rowLayout.addWidget(self.PBCXCheckBox)
+        rowLayout.addWidget(self.PBCYCheckBox)
+        rowLayout.addWidget(self.PBCZCheckBox)
+        
+        groupLayout.addWidget(row)
+        
+        inputTabLayout.addWidget(group)
+        
+    def PBCXChanged(self, val):
+        """
+        PBC changed.
+        
+        """
+        if self.PBCXCheckBox.isChecked():
+            self.mainWindow.PBC[0] = 1
+        
+        else:
+            self.mainWindow.PBC[0] = 0
+    
+    def PBCYChanged(self, val):
+        """
+        PBC changed.
+        
+        """
+        if self.PBCYCheckBox.isChecked():
+            self.mainWindow.PBC[1] = 1
+        
+        else:
+            self.mainWindow.PBC[1] = 0
+    
+    def PBCZChanged(self, val):
+        """
+        PBC changed.
+        
+        """
+        if self.PBCZCheckBox.isChecked():
+            self.mainWindow.PBC[2] = 1
+        
+        else:
+            self.mainWindow.PBC[2] = 0
     
     def setWidgetStack(self, text):
         """
