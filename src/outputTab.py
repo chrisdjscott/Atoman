@@ -517,7 +517,7 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.addWidget(startSequencerButton)
         
         mainLayout.addWidget(row)
-    
+        
     def createMovieCheckChanged(self, val):
         """
         Create movie?
@@ -565,6 +565,13 @@ class ImageSequenceTab(QtGui.QWidget):
         Start the sequencer
         
         """
+        self.runSequencer()
+        
+    def runSequencer(self):
+        """
+        Run the sequencer
+        
+        """
         self.setFirstFileLabel()
         
         # check first file exists
@@ -593,7 +600,7 @@ class ImageSequenceTab(QtGui.QWidget):
         
         os.mkdir(saveDir)
         
-        saveText = "%s%s" % (str(self.fileprefix.text()), self.numberFormat)
+        saveText = os.path.join(saveDir, "%s%s" % (str(self.fileprefix.text()), self.numberFormat))
         
         # loop over files
         for i in xrange(self.minIndex, self.maxIndex, self.interval):
@@ -611,11 +618,11 @@ class ImageSequenceTab(QtGui.QWidget):
             self.mainWindow.mainToolbar.filterPage.runAllFilterLists()
             
             saveName = saveText % (i,)
-            log("Saving image: %s" % (os.path.join(saveDir, saveName),), 0, 2)
+            log("Saving image: %s" % (saveName,), 0, 2)
             
             # now save image
             filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                          os.path.join(saveDir, saveName), 1)
+                                                          saveName, 1)
         
         # create movie
         if self.createMovie:
@@ -627,6 +634,8 @@ class ImageSequenceTab(QtGui.QWidget):
             bitrate = 10000000
             outputprefix = "movie"
             outputsuffix = "mpg"
+            
+            saveText = os.path.basename(saveText)
             
             command = "%s -r %d -y -i %s.%s -r %d -b %d %s.%s" % (self.parent.ffmpeg, framerate, saveText, 
                                                                   self.parent.imageFormat, 25, bitrate, 
@@ -641,6 +650,7 @@ class ImageSequenceTab(QtGui.QWidget):
             status = process.poll()
             if status:
                 log("FFMPEG FAILED")
+                print stderr
             
             os.chdir(CWD)
     
@@ -710,3 +720,5 @@ class ImageSequenceTab(QtGui.QWidget):
         self.numberFormat = str(text)
         
         self.setFirstFileLabel()
+
+    
