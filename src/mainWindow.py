@@ -486,7 +486,7 @@ class MainWindow(QtGui.QMainWindow):
                                 """<b>CDJSVis</b> v%s
                                 <p>Copyright &copy; 2012 Chris Scott</p>
                                 <p>This application can be used to visualise atomistic simulations.</p>
-                                <p>The GUI is based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
+                                <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
                                    by Marc Robinson.</p>
                                 <p>Python %s - Qt %s - PyQt %s  - VTK %s on %s""" % (
                                 __version__, platform.python_version(), Qt.QT_VERSION_STR, Qt.PYQT_VERSION_STR,

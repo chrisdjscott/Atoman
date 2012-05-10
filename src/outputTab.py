@@ -602,57 +602,97 @@ class ImageSequenceTab(QtGui.QWidget):
         
         saveText = os.path.join(saveDir, "%s%s" % (str(self.fileprefix.text()), self.numberFormat))
         
+        # progress dialog
+        NSteps = int((self.maxIndex - self.minIndex) / self.interval) + 1
+        progDialog = QtGui.QProgressDialog("Running sequencer...", "Cancel", self.minIndex, NSteps)
+        progDialog.setWindowModality(QtCore.Qt.WindowModal)
+        progDialog.setWindowTitle("Progress")
+        progDialog.setValue(self.minIndex)
+        
         # loop over files
-        for i in xrange(self.minIndex, self.maxIndex, self.interval):
-            currentFile = fileText % (i,)
-            log("Current file: %s" % (currentFile,), 0, 1)
-            
-            # first open the file
-            tmpname = self.mainWindow.openFile(currentFile, "input")
-            
-            if tmpname is None:
-                print "ERROR"
-                return
-            
-            # now apply all filters
-            self.mainWindow.mainToolbar.filterPage.runAllFilterLists()
-            
-            saveName = saveText % (i,)
-            log("Saving image: %s" % (saveName,), 0, 2)
-            
-            # now save image
-            filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                          saveName, 1)
+        try:
+            count = 0
+            for i in xrange(self.minIndex, self.maxIndex + self.interval, self.interval):
+                currentFile = fileText % (i,)
+                log("Current file: %s" % (currentFile,), 0, 1)
+                
+                # first open the file
+                tmpname = self.mainWindow.openFile(currentFile, "input")
+                
+                # exit if cancelled
+                if progDialog.wasCanceled():
+                    return
+                
+                if tmpname is None:
+                    print "ERROR"
+                    return
+                
+                # now apply all filters
+                self.mainWindow.mainToolbar.filterPage.runAllFilterLists()
+                
+                # exit if cancelled
+                if progDialog.wasCanceled():
+                    return
+                
+                saveName = saveText % (i,)
+                log("Saving image: %s" % (saveName,), 0, 2)
+                
+                # now save image
+                filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
+                                                              saveName, 1)
+                
+                count += 1
+                
+                # exit if cancelled
+                if progDialog.wasCanceled():
+                    return
+                
+                # update progress
+                progDialog.setValue(count)
+                
+                QtGui.QApplication.processEvents()
+        
+        finally:
+            # close progress dialog
+            progDialog.close()
+        
+        # show wait cursor
+        QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
         
         # create movie
-        if self.createMovie:
-            CWD = os.getcwd()
-            os.chdir(saveDir)
-            
-            # temporary (should be optional)
-            framerate = 10
-            bitrate = 10000000
-            outputprefix = "movie"
-            outputsuffix = "mpg"
-            
-            saveText = os.path.basename(saveText)
-            
-            command = "%s -r %d -y -i %s.%s -r %d -b %d %s.%s" % (self.parent.ffmpeg, framerate, saveText, 
-                                                                  self.parent.imageFormat, 25, bitrate, 
-                                                                  outputprefix, outputsuffix)
-            
-            log("Creating movie file: %s.%s" % (outputprefix, outputsuffix))
-            
-            # change to QProcess
-            process = subprocess.Popen(command, shell=True, executable="/bin/bash", stdin=subprocess.PIPE, 
-                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output, stderr = process.communicate()
-            status = process.poll()
-            if status:
-                log("FFMPEG FAILED")
-                print stderr
-            
-            os.chdir(CWD)
+        try:
+            if self.createMovie:
+                CWD = os.getcwd()
+                os.chdir(saveDir)
+                
+                # temporary (should be optional)
+                framerate = 10
+                bitrate = 10000000
+                outputprefix = "movie"
+                outputsuffix = "mpg"
+                
+                saveText = os.path.basename(saveText)
+                
+                command = "%s -r %d -y -i %s.%s -r %d -b %d %s.%s" % (self.parent.ffmpeg, framerate, saveText, 
+                                                                      self.parent.imageFormat, 25, bitrate, 
+                                                                      outputprefix, outputsuffix)
+                
+                log("Creating movie file: %s.%s" % (outputprefix, outputsuffix))
+                
+                # change to QProcess
+                process = subprocess.Popen(command, shell=True, executable="/bin/bash", stdin=subprocess.PIPE, 
+                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                output, stderr = process.communicate()
+                status = process.poll()
+                if status:
+                    log("FFMPEG FAILED")
+                    print stderr
+                
+                os.chdir(CWD)
+        
+        finally:
+            # set cursor to normal
+            QtGui.QApplication.restoreOverrideCursor()
     
     def warnFirstFileNotPresent(self, filename):
         """
