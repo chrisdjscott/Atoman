@@ -257,7 +257,7 @@ class InputTab(QtGui.QWidget):
         self.mainWindow = mainWindow
         self.toolbarWidth = width
         
-        self.fileTypeCurrentIndex = None
+        self.fileTypeCurrentIndex = 0
         
         # layout
         inputTabLayout = QtGui.QVBoxLayout(self)
