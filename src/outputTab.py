@@ -15,9 +15,8 @@ from PyQt4 import QtGui, QtCore
 
 import utilities
 from utilities import iconPath
-from genericForm import GenericForm
 import resources
-import globals
+import globalsModule
 
 
 

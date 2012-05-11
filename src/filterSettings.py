@@ -13,7 +13,7 @@ import resources
 import utilities
 from utilities import iconPath
 import genericForm
-import globals
+import globalsModule
 
 
 

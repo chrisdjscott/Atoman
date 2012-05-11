@@ -2,8 +2,8 @@
 """
 Utility methods
 
-author: Chris Scott
-last edited: February 2012
+@author: Chris Scott
+
 """
 
 import os
@@ -13,7 +13,7 @@ import string
 
 from PyQt4 import QtGui
 
-import globals
+import globalsModule
 
 
 ################################################################################
@@ -33,6 +33,15 @@ def iconPath(icon):
     
     """
     return os.path.join(":/icons", icon)
+
+
+################################################################################
+def helpPath(page):
+    """
+    Return full path to given help page.
+    
+    """
+    return os.path.join(":/help", page)
 
 
 ################################################################################
@@ -111,7 +120,7 @@ def checkForExe(exe):
         exepath = exe
     
     else:
-        for syspath in globals.PATH:
+        for syspath in globalsModule.PATH:
             if os.path.join(syspath, exe):
                 found = 1
                 break

@@ -456,6 +456,9 @@ class Renderer:
         
         self.camera.SetFocalPoint(focpnt)
         self.camera.SetPosition(campos)
+        self.camera.SetViewUp(0, 1, 0)
+        
+        self.reinit()
     
     def setCameraToCOM(self):
         """

@@ -16,12 +16,13 @@ import vtk
 import numpy as np
 
 import utilities
-from utilities import iconPath
+from utilities import iconPath, helpPath
 import toolbar as toolbarModule
 import lattice
 import inputModule
 import resources
 import rendering
+import helpForm
 
 
 __version__ = "0.0.1"
@@ -59,6 +60,7 @@ class MainWindow(QtGui.QMainWindow):
         self.refLoaded = 0
         self.inputLoaded = 0
         self.consoleOpen = 0
+        self.helpOpen = 0
         self.verboseLevel = 3
         self.PBC = np.zeros(3, np.int32)
         self.PBC[0] = 1
@@ -78,60 +80,71 @@ class MainWindow(QtGui.QMainWindow):
         # console window for logging output to
         self.console = ConsoleWindow(self)
         
+        # help window for displaying help
+        self.helpWindow = helpForm.HelpForm("index.html", parent=self)
+        
         # add the main tool bar
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
         
-        # add exit action
-        exitAction = QtGui.QAction(QtGui.QIcon(iconPath("system-log-out.svg")), "Exit", self)
-        exitAction.setShortcut('Ctrl+Q')
-        exitAction.setStatusTip('Exit application')
-        exitAction.triggered.connect(self.close)
+        # add file actions
+        exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "system-log-out.svg", "Exit application")
+        newWindowAction = self.createAction("&New window", self.openNewWindow, "Ctrl-N", "document-new.svg", "Open new window")
         
-        # add new window action
-        newWindowAction = QtGui.QAction(QtGui.QIcon(iconPath("document-new.svg")), "New", self)
-        newWindowAction.setShortcut('Ctrl+N')
-        newWindowAction.setStatusTip('New window')
-        newWindowAction.triggered.connect(self.openNewWindow)
+        # add file menu
+        fileMenu = self.menuBar().addMenu("&File")
+        self.addActions(fileMenu, (newWindowAction, None, exitAction))
         
         # add file toolbar
         fileToolbar = self.addToolBar("File")
         fileToolbar.addAction(exitAction)
         fileToolbar.addAction(newWindowAction)
         fileToolbar.addSeparator()
-                
+        
         # button to show console window
-        openConsoleAction = QtGui.QAction(QtGui.QIcon(iconPath("console-icon.png")), "Console", self)
-        openConsoleAction.setStatusTip("Show console window")
-        openConsoleAction.triggered.connect(self.showConsole)
+        openConsoleAction = self.createAction("Console", self.showConsole, None, "console-icon.png", "Show console window")
         
         utilToolbar = self.addToolBar("Utilities")
         utilToolbar.addAction(openConsoleAction)
         utilToolbar.addSeparator()
         
         # button to displace lattice frame
-        showCellAction = QtGui.QAction(QtGui.QIcon(iconPath("cell_icon.svg")), "Cell", self)
-        showCellAction.setStatusTip("Toggle cell frame visiblity")
-        showCellAction.triggered.connect(self.toggleCellFrame)
+        showCellAction = self.createAction("Toggle cell", slot=self.toggleCellFrame, icon="cell_icon.svg", 
+                                           tip="Toggle cell frame visibility")
         
         # button to display axes
-        showAxesAction = QtGui.QAction(QtGui.QIcon(iconPath("axis_icon2.svg")), "Axes", self)
-        showAxesAction.setStatusTip("Toggle axes visiblity")
-        showAxesAction.triggered.connect(self.toggleAxes)
+        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon2.svg", 
+                                           tip="Toggle axes visiblity")
+        
+        # reset camera to cell
+        setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="set_cam_cell.svg", 
+                                           tip="Reset camera to cell")
         
         visualisationToolbar = self.addToolBar("Visualisation")
         visualisationToolbar.addAction(showCellAction)
         visualisationToolbar.addAction(showAxesAction)
+        visualisationToolbar.addAction(setCamToCellAction)
         visualisationToolbar.addSeparator()
         
+        renderingMenu = self.menuBar().addMenu("&Rendering")
+        self.addActions(renderingMenu, (showCellAction, showAxesAction))
+        
+        cameraMenu = self.menuBar().addMenu("&Camera")
+        self.addActions(cameraMenu, (setCamToCellAction,))
+        
         # add about action
-        aboutAction = QtGui.QAction(QtGui.QIcon(iconPath("Information-icon.png")), "About", self)
-        aboutAction.setStatusTip("About this application")
-        aboutAction.triggered.connect(self.aboutMe)
+        aboutAction = self.createAction("About", slot=self.aboutMe, icon="Information-icon.png", 
+                                           tip="About this application")
+        
+        helpAction = self.createAction("Help", slot=self.showHelp, icon="help-browser.svg", tip="Show help window")
         
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
         helpToolbar.addAction(aboutAction)
+        helpToolbar.addAction(helpAction)
+        
+        helpMenu = self.menuBar().addMenu("&Help")
+        self.addActions(helpMenu, (aboutAction, helpAction))
         
         # add cwd to status bar
         self.currentDirectoryLabel = QtGui.QLabel(os.getcwd())
@@ -174,6 +187,13 @@ class MainWindow(QtGui.QMainWindow):
         self.show()
     
     
+    def setCameraToCell(self):
+        """
+        Reset the camera to point at the cell
+        
+        """
+        self.renderer.setCameraToCell()
+    
     def toggleCellFrame(self):
         """
         Toggle lattice frame visibility
@@ -215,9 +235,23 @@ class MainWindow(QtGui.QMainWindow):
         if self.consoleOpen:
             self.console.closeEvent(1)
             self.console.show()
+        
         else:
             self.console.show()
             self.consoleOpen = 1
+    
+    def showHelp(self):
+        """
+        Show the help window.
+        
+        """
+        if self.helpOpen:
+            self.helpWindow.closeEvent(1)
+            self.helpWindow.show()
+        
+        else:
+            self.helpWindow.show()
+            self.helpOpen = 1
     
     def closeEvent(self, event):
         """
@@ -491,7 +525,45 @@ class MainWindow(QtGui.QMainWindow):
                                 <p>Python %s - Qt %s - PyQt %s  - VTK %s on %s""" % (
                                 __version__, platform.python_version(), Qt.QT_VERSION_STR, Qt.PYQT_VERSION_STR,
                                 vtk.vtkVersion.GetVTKVersion(), platform.system()))
-
+    
+    def createAction(self, text, slot=None, shortcut=None, icon=None,
+                     tip=None, checkable=False, signal="triggered()"):
+        """
+        Create an action
+        
+        """
+        action = QtGui.QAction(text, self)
+        
+        if icon is not None:
+            action.setIcon(QtGui.QIcon(iconPath(icon)))
+        
+        if shortcut is not None:
+            action.setShortcut(shortcut)
+        
+        if tip is not None:
+            action.setToolTip(tip)
+            action.setStatusTip(tip)
+        
+        if slot is not None:
+            self.connect(action, QtCore.SIGNAL(signal), slot)
+        
+        if checkable:
+            action.setCheckable(True)
+        
+        return action
+    
+    def addActions(self, target, actions):
+        """
+        Add a tuple of actions to the target.
+        
+        """
+        for action in actions:
+            if action is None:
+                target.addSeparator()
+            
+            else:
+                target.addAction(action)
+    
     @staticmethod
     def updateInstances(qobj):
         """
