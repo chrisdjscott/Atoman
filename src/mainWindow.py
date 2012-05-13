@@ -9,6 +9,7 @@ The main window class
 import os
 import shutil
 import platform
+import tempfile
 
 from PyQt4 import QtGui, QtCore, Qt
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -180,7 +181,7 @@ class MainWindow(QtGui.QMainWindow):
         self.refState = lattice.Lattice()        
         
         # create temporary directory for working in
-        self.tmpDirectory = utilities.createTmpDirectory()
+        self.tmpDirectory = tempfile.mkdtemp(prefix="CDJSVis")
         
         self.setStatus('Ready')
         

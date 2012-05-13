@@ -10,6 +10,7 @@ import os
 import sys
 import random
 import string
+import glob
 
 from PyQt4 import QtGui
 
@@ -132,3 +133,39 @@ def checkForExe(exe):
             exepath = 0
     
     return exepath
+
+
+################################################################################
+def checkForExeGlob(exe):
+    """
+    Check if executable can be located 
+    
+    """
+    # check if exe programme located
+    syspath = os.getenv("PATH", "")
+    syspatharray = syspath.split(":")
+    found = 0
+    for syspath in syspatharray:
+        matches = glob.glob(os.path.join(syspath, exe))
+        if len(matches):
+            found = 1
+            break
+    
+    if found:
+        exepath = matches[0]
+    
+    else:
+        for syspath in globalsModule.PATH:
+            matches = glob.glob(os.path.join(syspath, exe))
+            if len(matches):
+                found = 1
+                break
+        
+        if found:
+            exepath = matches[0]
+        
+        else:
+            exepath = 0
+    
+    return exepath
+
