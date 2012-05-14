@@ -7,7 +7,7 @@ Settings for filters
 """
 import sys
 
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui, QtCore, Qt
 
 import utilities
 from utilities import iconPath
@@ -565,6 +565,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.minClusterSize = 5
         self.drawConvexHulls = 0
         self.neighbourRadius = 3.5
+        self.calculateVolumes = 0
         
         # neighbour rad spin box
         label = QtGui.QLabel("Neighbour radius ")
@@ -600,7 +601,30 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         
         row = self.newRow()
         row.addWidget(self.drawHullsCheckBox)
+        
+        # calculate volumes check box
+        self.calcVolsCheckBox = QtGui.QCheckBox(" Calculate volumes")
+        self.calcVolsCheckBox.setChecked(0)
+        self.calcVolsCheckBox.setCheckable(0)
+        self.connect(self.calcVolsCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.calcVolsChanged)
+        
+        row = self.newRow()
+        row.addWidget(self.calcVolsCheckBox)
 
+    def calcVolsChanged(self, val):
+        """
+        Changed calc vols.
+        
+        """
+        if self.calcVolsCheckBox.isChecked():
+            if not self.drawHullsCheckBox.isChecked():
+                self.calcVolsCheckBox.setCheckState(0)
+            
+            else:
+                self.calculateVolumes = 1
+        
+        else:
+            self.calculateVolumes = 0
     
     def minNumChanged(self, val):
         """
@@ -628,6 +652,9 @@ class ClusterSettingsDialog(GenericSettingsDialog):
                 return
             
             self.drawConvexHulls = 1
+            self.calcVolsCheckBox.setCheckable(1)
         
         else:
             self.drawConvexHulls = 0
+            self.calcVolsCheckBox.setCheckState(0)
+            self.calcVolsCheckBox.setCheckable(0)

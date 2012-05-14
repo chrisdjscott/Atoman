@@ -627,6 +627,14 @@ class Renderer:
             writer.Write()
         
         elif renderType == "POV":
+            
+#            pov = vtk.vtkPOVExporter()
+#            pov.SetRenderWindow(self.renWinInteract.GetRenderWindow())
+#            pov.SetFileName("fruitcake.pov")
+#            pov.Write()
+#            print "WRITTEN"
+#            return None
+            
             povfile = os.path.join(self.mainWindow.tmpDirectory, "header.pov")
             fh = open(povfile, "w")
             

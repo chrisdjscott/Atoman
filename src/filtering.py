@@ -118,6 +118,9 @@ class Filterer:
                 
                 if filterSettings.drawConvexHulls:
                     self.clusterFilterDrawHulls(clusterList, filterSettings)
+                
+                if filterSettings.calculateVolumes:
+                    pass
             
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites)
@@ -387,7 +390,12 @@ class Filterer:
             
             self.clusterFilterDrawHullsNoPBCs(subClusterList, settings)
     
-
+    def clusterCalculateVolumes(self, clusterList, filterSettings):
+        """
+        Calculate volumes of clusters.
+        
+        """
+        pass
 
 
 
