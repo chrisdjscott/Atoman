@@ -593,7 +593,7 @@ class Renderer:
 #            
 #            filterList.addActors()
     
-    def saveImage(self, renderType, imageFormat, fileprefix, overwrite):
+    def saveImage(self, renderType, imageFormat, fileprefix, overwrite, povray="povray"):
         """
         Save image to file
         
@@ -667,9 +667,10 @@ class Renderer:
                     count += 1
                     filename = "%s(%d).%s" % (fileprefix, count, imageFormat)
             
-            command = "povray -I%s -D +A +W%d +H%d +O'%s'" % (os.path.join(self.mainWindow.tmpDirectory, "image.pov"), 
-                                                              800, 600, filename)
+            command = "%s -I%s -D +A +W%d +H%d +O'%s'" % (povray, os.path.join(self.mainWindow.tmpDirectory, "image.pov"), 
+                                                          800, 600, filename)
             output, stderr, status = utilities.runSubProcess(command)
+            print stderr
             if status:
                 print "STDERR:", stderr
                 return None
@@ -822,7 +823,6 @@ def writePovrayAtoms(filename, visibleAtoms, mainWindow):
     
     """
     povfile = os.path.join(mainWindow.tmpDirectory, filename)
-    print "FULL POV FILE PATH", povfile
     
     lattice = mainWindow.inputState
     

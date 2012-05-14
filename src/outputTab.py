@@ -309,7 +309,7 @@ class SingleImageTab(QtGui.QWidget):
             return
         
         filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                      filename, self.overwriteImage)
+                                                      filename, self.overwriteImage, povray=self.parent.povray)
     
     def openImageCheckChanged(self, val):
         """
