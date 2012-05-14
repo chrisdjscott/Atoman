@@ -10,54 +10,28 @@ Eventually should compile C libraries too.
 
 """
 import os
-import glob
+import sys
 
-
-################################################################################
-def checkForExeGlob(exe):
-    """
-    Check if executable can be located 
-    
-    """
-    # check if exe programme located
-    syspath = os.getenv("PATH", "")
-    syspatharray = syspath.split(":")
-    found = 0
-    for syspath in syspatharray:
-        matches = glob.glob(os.path.join(syspath, exe))
-        if len(matches):
-            found = 1
-            break
-    
-    if found:
-        exepath = matches[0]
-    
-    else:
-        for syspath in globalsModule.PATH:
-            matches = glob.glob(os.path.join(syspath, exe))
-            if len(matches):
-                found = 1
-                break
-        
-        if found:
-            exepath = matches[0]
-        
-        else:
-            exepath = 0
-    
-    return exepath
+import utilities
 
 
 ################################################################################
 def main():
     
-    print "IN SETUP SCRIPT"
+    pyrcc4 = utilities.checkForExe("pyrcc4")
     
+    # on mac it is appended with python version
+    if not pyrcc4:
+        pyrcc4 = utilities.checkForExe("pyrcc4-%d.%d" % (sys.version_info[0], sys.version_info[1]))
     
-
+    if not pyrcc4:
+        sys.exit("ERROR: COULD NOT LOCATE PYRCC4")
+    
+    command = "%s resources.qrc > resources.py" % (pyrcc4,)
+    print command
+    os.system(command)
 
 
 ################################################################################
 if __name__ == "__main__":
     main()
-
