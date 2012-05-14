@@ -5,8 +5,8 @@ The main window class
 @author: Chris Scott
 
 """
-
 import os
+import sys
 import shutil
 import platform
 import tempfile
@@ -21,9 +21,14 @@ from utilities import iconPath, helpPath
 import toolbar as toolbarModule
 import lattice
 import inputModule
-import resources
 import rendering
 import helpForm
+
+try:
+    import resources
+except ImportError:
+    print "ERROR: could not import resources: ensure setup.py ran correctly"
+    sys.exit(36)
 
 
 __version__ = "0.0.1"

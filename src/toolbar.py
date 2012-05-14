@@ -2,22 +2,23 @@
 """
 The main toolbar
 
-author: Chris Scott
-last edited: February 2012
-"""
+@author: Chris Scott
 
-import os
+"""
 import sys
 
 from PyQt4 import QtGui, QtCore
 
-from utilities import iconPath
 from genericForm import GenericForm
 from inputTab import InputTab
 from filterTab import FilterTab
 from outputTab import OutputTab
-import resources
 
+try:
+    import resources
+except ImportError:
+    print "ERROR: could not import resources: ensure setup.py ran correctly"
+    sys.exit(36)
 
 
 

@@ -5,11 +5,18 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
-from PyQt4 import QtGui, QtCore, Qt
+import sys
+
+from PyQt4 import QtGui, QtCore
 
 from utilities import iconPath
-import resources
 import filterList
+
+try:
+    import resources
+except ImportError:
+    print "ERROR: could not import resources: ensure setup.py ran correctly"
+    sys.exit(36)
 
 
 ################################################################################

@@ -5,16 +5,18 @@ The input tab for the main toolbar
 @author: Chris Scott
 
 """
-
-import os
 import sys
 
 from PyQt4 import QtGui, QtCore
 
 from utilities import iconPath
 from genericForm import GenericForm
-import resources
 
+try:
+    import resources
+except ImportError:
+    print "ERROR: could not import resources: ensure setup.py ran correctly"
+    sys.exit(36)
 
 
 

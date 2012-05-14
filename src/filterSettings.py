@@ -5,16 +5,20 @@ Settings for filters
 @author: Chris Scott
 
 """
-import os
+import sys
 
-from PyQt4 import QtGui, QtCore, Qt
+from PyQt4 import QtGui, QtCore
 
-import resources
 import utilities
 from utilities import iconPath
 import genericForm
 import globalsModule
 
+try:
+    import resources
+except ImportError:
+    print "ERROR: could not import resources: ensure setup.py ran correctly"
+    sys.exit(36)
 
 
 
