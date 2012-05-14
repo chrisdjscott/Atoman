@@ -12,6 +12,8 @@ import math
 
 import vtk
 
+from visclibs import output_c
+
 
 ################################################################################
 def setRes(num):
@@ -714,6 +716,22 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection):
         actorsCollection.AddItem(atomsActor)
 
 
+################################################################################
+def writePovrayAtoms(filename, visibleAtoms, mainWindow):
+    """
+    Write pov-ray atoms to file.
+    
+    """
+    povfile = os.path.join(mainWindow.tmpDirectory, filename)
+    print "FULL POV FILE PATH", povfile
+    
+    lattice = mainWindow.inputState
+    
+    # call C routine to write atoms to file
+    output_c.writePOVRAYAtoms(povfile, lattice.specie, lattice.pos, visibleAtoms, 
+                              lattice.specieRGB, lattice.specieCovalentRadius)
+    
+    
 ################################################################################
 def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, mainWindow, actorsCollection):
     

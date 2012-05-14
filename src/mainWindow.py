@@ -17,7 +17,7 @@ import vtk
 import numpy as np
 
 import utilities
-from utilities import iconPath, helpPath
+from utilities import iconPath
 import toolbar as toolbarModule
 import lattice
 import inputModule
@@ -142,7 +142,7 @@ class MainWindow(QtGui.QMainWindow):
         aboutAction = self.createAction("About", slot=self.aboutMe, icon="Information-icon.png", 
                                            tip="About this application")
         
-        helpAction = self.createAction("Help", slot=self.showHelp, icon="help-browser.svg", tip="Show help window")
+        helpAction = self.createAction("CDJSVis Help", slot=self.showHelp, icon="help-browser.svg", tip="Show help window")
         
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
@@ -186,7 +186,7 @@ class MainWindow(QtGui.QMainWindow):
         self.refState = lattice.Lattice()        
         
         # create temporary directory for working in
-        self.tmpDirectory = tempfile.mkdtemp(prefix="CDJSVis")
+        self.tmpDirectory = tempfile.mkdtemp(prefix="CDJSVisTemp-")
         
         self.setStatus('Ready')
         

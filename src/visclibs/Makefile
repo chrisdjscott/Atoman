@@ -51,13 +51,16 @@ SWIG := swig -python
 SHOBJECTS = *.o=.so
 OBJECTS = ${COBJECTS:.c=.o}
 COBJECTS = *.c
-SWIGSOURCE = input_c.i filtering_c.i defects_c.i clusters_c.i
+SWIGSOURCE = input_c.i filtering_c.i defects_c.i clusters_c.i output_c.i
 
-all : _input_c.so _filtering_c.so _defects_c.so _clusters_c.so
+all : _input_c.so _filtering_c.so _defects_c.so _clusters_c.so _output_c.so
 
 # create object file
 _input_c.so : input_c_wrap.o input_c.o
 	$(CC) $(CCLINKFLAGS) input_c_wrap.o input_c.o -o _input_c.so
+
+_output_c.so : output_c_wrap.o output_c.o
+	$(CC) $(CCLINKFLAGS) output_c_wrap.o output_c.o -o _output_c.so
 
 _filtering_c.so : filtering_c_wrap.o filtering_c.o
 	$(CC) $(CCLINKFLAGS) filtering_c_wrap.o filtering_c.o -o _filtering_c.so
@@ -71,6 +74,9 @@ _clusters_c.so : clusters_c_wrap.o clusters_c.o boxeslib.o utilities.o
 # compile module
 input_c.o : input_c.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) input_c.c 
+
+output_c.o : output_c.c 
+	$(CC) $(CCFLAGS) $(INCLUDES) output_c.c 
 
 filtering_c.o : filtering_c.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) filtering_c.c 
@@ -91,6 +97,10 @@ utilities.o : utilities.c
 input_c_wrap.o : input_c.i 
 	$(SWIG) input_c.i
 	$(CC) $(CCFLAGS) $(INCLUDES) input_c_wrap.c 
+
+output_c_wrap.o : output_c.i 
+	$(SWIG) output_c.i
+	$(CC) $(CCFLAGS) $(INCLUDES) output_c_wrap.c 
 
 filtering_c_wrap.o : filtering_c.i 
 	$(SWIG) filtering_c.i

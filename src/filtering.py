@@ -127,11 +127,16 @@ class Filterer:
                 self.log("%d visible atoms" % (len(visibleAtoms),), 0, 3)
         
         # render
+        povfile = "filter%d.pov" % (self.parent.tab,)
         if self.parent.defectFilterSelected:
+            # vtk render
             rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection)
         
         else:
             rendering.getActorsForFilteredSystem(visibleAtoms, self.mainWindow, self.actorsCollection)
+            
+            # write pov-ray file too (only if pov-ray located??)
+            rendering.writePovrayAtoms(povfile, visibleAtoms, self.mainWindow)
                 
         if self.parent.visible:
             self.addActors()
