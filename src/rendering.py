@@ -670,7 +670,6 @@ class Renderer:
             command = "%s -I%s -D +A +W%d +H%d +O'%s'" % (povray, os.path.join(self.mainWindow.tmpDirectory, "image.pov"), 
                                                           800, 600, filename)
             output, stderr, status = utilities.runSubProcess(command)
-            print stderr
             if status:
                 print "STDERR:", stderr
                 return None
