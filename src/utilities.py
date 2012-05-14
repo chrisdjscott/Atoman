@@ -11,6 +11,7 @@ import sys
 import random
 import string
 import glob
+import subprocess
 
 from PyQt4 import QtGui
 
@@ -168,4 +169,22 @@ def checkForExeGlob(exe):
             exepath = 0
     
     return exepath
+
+
+################################################################################
+def runSubProcess(command, verbose=0):
+    """
+    Run command using subprocess module.
+    Return tuple containing STDOUT, STDERR, STATUS
+    Caller can decide what to do if status is true
+    
+    """
+    if verbose:
+        print command
+    
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, stderr = process.communicate()
+    status = process.poll()
+    
+    return (output, stderr, status)
 

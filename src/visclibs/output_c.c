@@ -48,7 +48,7 @@ void writePOVRAYAtoms(char *filename, int specieDim, int *specie, int posDim, do
         index = visibleAtoms[i];
         specieIndex = specie[index];
         
-        addPOVRAYSphere(OUTFILE, pos[3*index], pos[3*index+1], pos[3*index+2], specieCovRad[specieIndex],
+        addPOVRAYSphere(OUTFILE, - pos[3*index], pos[3*index+1], pos[3*index+2], specieCovRad[specieIndex],
                         specieRGB[specieIndex*specieRGBDim1+0], specieRGB[specieIndex*specieRGBDim1+1],
                         specieRGB[specieIndex*specieRGBDim1+2]);
     }

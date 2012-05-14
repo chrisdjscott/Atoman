@@ -13,6 +13,7 @@ import math
 import vtk
 
 from visclibs import output_c
+import utilities
 
 
 ################################################################################
@@ -626,10 +627,108 @@ class Renderer:
             writer.Write()
         
         elif renderType == "POV":
-            filename = None
-            pass
+            povfile = os.path.join(self.mainWindow.tmpDirectory, "header.pov")
+            fh = open(povfile, "w")
+            
+            # first write the header (camera info etc.)
+            self.writePOVRAYHeader(fh)
+            
+            # write cell frame if visible
+            if self.latticeFrame.visible:
+                self.writePOVRAYCellFrame(fh)
+            
+            # write axes if visible
+            
+            
+            fh.close()
+            
+            # then join filter list files
+            filterLists = self.mainWindow.mainToolbar.filterPage.filterLists
+            CWD = os.getcwd()
+            try:
+                os.chdir(self.mainWindow.tmpDirectory)
+                command = "cat header.pov"
+                for filterList in filterLists:
+                    if filterList.visible:
+                        command += " filter%d.pov" % (filterList.tab,)
+                command += " > image.pov"
+                output, stderr, status = utilities.runSubProcess(command)
+                if status:
+                    return None
+            
+            finally:
+                os.chdir(CWD)
+            
+            # now run pov-ray
+            filename = "%s.%s" % (fileprefix, imageFormat)
+            if not overwrite:
+                count = 0
+                while os.path.exists(filename):
+                    count += 1
+                    filename = "%s(%d).%s" % (fileprefix, count, imageFormat)
+            
+            command = "povray -I%s -D +A +W%d +H%d +O'%s'" % (os.path.join(self.mainWindow.tmpDirectory, "image.pov"), 
+                                                              800, 600, filename)
+            output, stderr, status = utilities.runSubProcess(command)
+            if status:
+                print "STDERR:", stderr
+                return None
         
         return filename
+    
+    def writePOVRAYCellFrame(self, filehandle):
+        """
+        Write cell frame.
+        
+        """
+        lattice = self.mainWindow.inputState
+        
+        a = [0]*3
+        b = lattice.cellDims
+        b[0] = - 1 * lattice.cellDims[0]
+        
+        filehandle.write("#declare R = 0.1;\n")
+        filehandle.write("#declare myObject = union {\n")
+        filehandle.write("    sphere { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
+        filehandle.write("    sphere { <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
+        filehandle.write("    sphere { <"+str(a[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    sphere { <"+str(b[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    sphere { <"+str(a[0])+","+str(b[1])+","+str(a[2])+">, R }\n")
+        filehandle.write("    sphere { <"+str(b[0])+","+str(b[1])+","+str(a[2])+">, R }\n")
+        filehandle.write("    sphere { <"+str(a[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    sphere { <"+str(b[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(a[0])+","+str(a[1])+","+str(b[2])+">, <"+str(b[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(a[0])+","+str(b[1])+","+str(a[2])+">, <"+str(b[0])+","+str(b[1])+","+str(a[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(a[0])+","+str(b[1])+","+str(b[2])+">, <"+str(b[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, <"+str(a[0])+","+str(b[1])+","+str(a[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(a[0])+","+str(a[1])+","+str(b[2])+">, <"+str(a[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, <"+str(b[0])+","+str(b[1])+","+str(a[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(b[0])+","+str(a[1])+","+str(b[2])+">, <"+str(b[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, <"+str(a[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(a[0])+","+str(b[1])+","+str(a[2])+">, <"+str(a[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, <"+str(b[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    cylinder { <"+str(b[0])+","+str(b[1])+","+str(a[2])+">, <"+str(b[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
+        filehandle.write("    texture { pigment { color rgb <0,0,0> }\n")
+        filehandle.write("              finish { diffuse 0.9 phong 1 } } }\n")
+        filehandle.write("object{myObject}\n")
+    
+    def writePOVRAYHeader(self, filehandle):
+        """
+        Write POV-Ray header file.
+        
+        """
+        focalPoint = self.camera.GetFocalPoint()
+        campos = self.camera.GetPosition()
+        viewup = self.camera.GetViewUp()
+        
+        string = "camera { perspective location <%f,%f,%f> look_at <%f,%f,%f> angle 45\n" % (campos[0] * -1, campos[1], campos[2],
+                                                                                             focalPoint[0] * -1, focalPoint[1], focalPoint[2])
+        string += "sky <%f,%f,%f> }\n" % (viewup[0] * -1, viewup[1], viewup[2])
+        string += "light_source { <%f,%f,%f> color rgb <1,1,1> }\n" % (campos[0] * -1, campos[1], campos[2])
+        string += "background { color rgb <1,1,1> }\n"
+        
+        filehandle.write(string)
         
         
         
@@ -1018,5 +1117,5 @@ def getActorsForHullFacets(facets, pos, mainWindow, actorsCollection):
     actor.GetProperty().SetColor(0,0,1)
     
     actorsCollection.AddItem(actor)
-    
-    
+
+

@@ -186,7 +186,7 @@ class MainWindow(QtGui.QMainWindow):
         self.refState = lattice.Lattice()        
         
         # create temporary directory for working in
-        self.tmpDirectory = tempfile.mkdtemp(prefix="CDJSVisTemp-")
+        self.tmpDirectory = tempfile.mkdtemp(prefix="CDJSVisTemp-", dir="/tmp")
         
         self.setStatus('Ready')
         
