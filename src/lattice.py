@@ -3,8 +3,8 @@
 The Lattice object.
 Stores positions etc
 
-author: Chris Scott
-last edited: February 2012
+@author: Chris Scott
+
 """
 
 import os

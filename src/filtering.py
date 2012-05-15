@@ -11,7 +11,6 @@ import tempfile
 import subprocess
 import copy
 
-from PyQt4 import QtGui, QtCore
 import numpy as np
 import vtk
 
@@ -113,14 +112,14 @@ class Filterer:
             elif filterName == "Point defects":
                 interstitials, vacancies, antisites, onAntisites = self.pointDefectFilter(filterSettings)
             
-            elif filterName == "Clusters":
+            elif filterName == "Cluster":
                 clusterList = self.clusterFilter(visibleAtoms, filterSettings)
                 
                 if filterSettings.drawConvexHulls:
                     self.clusterFilterDrawHulls(clusterList, filterSettings)
                 
                 if filterSettings.calculateVolumes:
-                    pass
+                    self.clusterFilterCalculateVolumes(clusterList, filterSettings)
             
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites)
@@ -390,23 +389,47 @@ class Filterer:
             
             self.clusterFilterDrawHullsNoPBCs(subClusterList, settings)
     
-    def clusterCalculateVolumes(self, clusterList, filterSettings):
+    def clusterFilterCalculateVolumes(self, clusterList, filterSettings):
         """
         Calculate volumes of clusters.
         
-        """
-        pass
+        """    
+        # this will not work properly over PBCs at the moment
+        lattice = self.mainWindow.inputState
+        
+        # draw them as they are
+        count = 0
+        for cluster in clusterList:
+            # first make pos array for this cluster
+            clusterPos = np.empty(3 * len(cluster), np.float64)
+            for i in xrange(len(cluster)):
+                index = cluster[i]
+                
+                clusterPos[3*i] = lattice.pos[3*index]
+                clusterPos[3*i+1] = lattice.pos[3*index+1]
+                clusterPos[3*i+2] = lattice.pos[3*index+2]
+            
+            # now get convex hull
+            if len(cluster) < 4:
+                pass
+            
+            else:
+                volume, area = findConvexHullVolume(cluster, clusterPos, qconvex=filterSettings.qconvex)
+            
+            self.log("Cluster %d (%d atoms)" % (count, len(cluster)), 0, 4)
+            self.log("volume is %f; facet area is %f" % (volume, area), 0, 5)
+            
+            count += 1
 
 
-
-
+################################################################################
 def findConvexHull(cluster, pos, qconvex="qconvex"):
     """
     Find convex hull of given points
     
     """
     # write to file
-    fh, fn = tempfile.mkstemp(dir="/tmp")
+    fh, fn = tempfile.mkstemp(dir="/tmp", prefix="qhullTemp-")
     f = open(fn, "w")
     f.write("3\n")
     f.write("%d\n" % (len(cluster),))
@@ -439,3 +462,52 @@ def findConvexHull(cluster, pos, qconvex="qconvex"):
     os.unlink(fn)
     
     return facets
+
+
+################################################################################
+def findConvexHullVolume(cluster, pos, qconvex="qconvex"):
+    """
+    Find convex hull of given points
+    
+    """
+    # write to file
+    fh, fn = tempfile.mkstemp(dir="/tmp", prefix="qhullTemp-")
+    
+    volume = None
+    facetArea = None
+    try:
+        f = open(fn, "w")
+        f.write("3\n")
+        f.write("%d\n" % (len(cluster),))
+        for i in xrange(len(cluster)):
+            string = "%f %f %f\n" % (pos[3*i], pos[3*i+1], pos[3*i+2])
+            f.write(string)
+        f.close()
+        
+        command = "%s Qt FA < %s" % (qconvex, fn,)
+        proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, stderr = proc.communicate()
+        status = proc.poll()
+        if status:
+            print "qconvex failed"
+            print stderr
+            sys.exit(35)
+        
+        output = output.strip()
+        lines = output.split("\n")
+        
+        for line in lines:
+            line = line.strip()
+            if line[:12] == "Total volume":
+                array = line.split(":")
+                volume = float(array[1])
+            
+            elif line[:16] == "Total facet area":
+                array = line.split(":")
+                facetArea = float(array[1])
+        
+    finally:
+        # unlink temp file
+        os.unlink(fn)
+    
+    return volume, facetArea

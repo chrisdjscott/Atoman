@@ -35,7 +35,7 @@ class FilterList(QtGui.QWidget):
         self.defectFilterSelected = 0
         
         # all available filters
-        self.allFilters = ["Specie", "Point defects", "Crop", "Clusters"]
+        self.allFilters = ["Specie", "Point defects", "Crop", "Cluster"]
         self.allFilters.sort()
         
         # current selected filters
@@ -310,7 +310,7 @@ class FilterList(QtGui.QWidget):
         elif filterName == "Point defects":
             form = filterSettings.PointDefectsSettingsDialog(self.mainWindow, "Point defects filter settings", parent=self)
         
-        elif filterName == "Clusters":
+        elif filterName == "Cluster":
             form = filterSettings.ClusterSettingsDialog(self.mainWindow, "Cluster filter settings", parent=self)
         
         return form
