@@ -81,7 +81,7 @@ def readLattice(filename, tmpLocation, lattice, fileType, state, log):
     maxNumSpecies = 20
     dt = np.dtype((str, 2))
     specieListTemp = np.empty( maxNumSpecies+1, dt ) 
-    specieCountTemp = np.empty( maxNumSpecies+1, np.int32 )
+    specieCountTemp = np.zeros( maxNumSpecies+1, np.int32 )
     
     # call c lib
     input_c.readLatticeLBOMD( filename, lattice.specie, lattice.pos, lattice.charge, specieListTemp, 
