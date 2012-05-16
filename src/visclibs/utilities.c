@@ -63,3 +63,68 @@ double atomicSeparation2( double ax, double ay, double az, double bx, double by,
     
     return r2;
 }
+
+
+/*******************************************************************************
+ ** return atomic separation squared, with check if PBCs were applied
+ *******************************************************************************/
+double atomicSeparation2PBCCheck( double ax, double ay, double az, 
+                          double bx, double by, double bz, 
+                          double xdim, double ydim, double zdim, 
+                          int pbcx, int pbcy, int pbcz,
+                          int *appliedPBCs )
+{
+    double rx, ry, rz, r2;
+    double rxini, ryini, rzini;
+    
+    /* calculate separation */
+    rxini = ax - bx;
+    ryini = ay - by;
+    rzini = az - bz;
+    
+    /* handle PBCs here if required */
+    if ( pbcx == 1 )
+    {
+        rx = rx - round( rx / xdim ) * xdim;
+    }
+    else
+    {
+        rx = rxini;
+    }
+    
+    if ( pbcy == 1 )
+    {
+        ry = ry - round( ry / ydim ) * ydim;
+    }
+    else
+    {
+        ry = ryini;
+    }
+    
+    if ( pbcz == 1 )
+    {
+        rz = rz - round( rz / zdim ) * zdim;
+    }
+    else
+    {
+        rz = rzini;
+    }
+    
+    if (rx != rxini)
+    {
+        appliedPBCs[0] = 1;
+    }
+    if (ry != ryini)
+    {
+        appliedPBCs[1] = 1;
+    }
+    if (rz != rzini)
+    {
+        appliedPBCs[2] = 1;
+    }
+    
+    /* separation squared */
+    r2 = rx * rx + ry * ry + rz * rz;
+    
+    return r2;
+}

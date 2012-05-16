@@ -12,6 +12,7 @@
 
 
 int findNeighbours(int, int, int, int *, double *, double, struct Boxes *, double *, int *);
+int findNeighboursUnapplyPBC(int, int, int, int, int *, double *, double, double *, int *, int *);
 
 
 /*******************************************************************************
@@ -182,6 +183,119 @@ int findNeighbours(int index, int clusterID, int numInCluster, int* atomCluster,
                 /* search for neighbours to this new cluster atom */
                 numInCluster = findNeighbours(index2, clusterID, numInCluster, atomCluster, pos, maxSep2, boxes, cellDims, PBC);
             }
+        }
+    }
+    
+    return numInCluster;
+}
+
+
+/*******************************************************************************
+ * Prepare cluster to draw hulls (ie unapply PBCs)
+ *******************************************************************************/
+void prepareClusterToDrawHulls(int N, int posDim, double *pos, int cellDimsDim, double *cellDims, 
+                               int PBCDim, int *PBC, int appliedPBCsDims, int *appliedPBCs, 
+                               double neighbourRadius)
+{
+    int i, numInCluster, NClusters;
+    int *clusterArray;
+    double nebRad2;
+    
+    
+    /* is there any point boxing this? don't think so */
+    
+    nebRad2 = neighbourRadius * neighbourRadius;
+    
+    /* initialise clusters array */
+    clusterArray = malloc(N * sizeof(int));
+    if (clusterArray == NULL)
+    {
+        printf("ERROR: could not allocate cluster array\n");
+        exit(50);
+    }
+    for (i=0; i<N; i++)
+    {
+        clusterArray[i] = -1;
+    }
+    
+    
+    for (i=0; i<N; i++)
+    {
+        /* skip atom if already allocated */
+        if (clusterArray[i] == -1)
+        {
+            clusterArray[i] = NClusters;
+            
+            numInCluster = 1;
+            
+            /* recursive search for cluster atoms */
+            numInCluster = findNeighboursUnapplyPBC(N, i, clusterArray[i], numInCluster, clusterArray, pos, 
+                                                    nebRad2, cellDims, PBC, appliedPBCs);
+            
+            NClusters++;
+        }
+    }
+    
+    if (numInCluster != N)
+    {
+        printf("ERROR: SOME CLUSTER ATOMS ARE MISSING: %d %d\n", N, numInCluster);
+    }
+    
+    free(clusterArray);
+}
+
+
+/*******************************************************************************
+ * recursive search for neighbouring defects unapplying PBCs as going along
+ *******************************************************************************/
+int findNeighboursUnapplyPBC(int NAtoms, int index, int clusterID, int numInCluster, int* atomCluster, double *pos, double maxSep2, 
+                             double *cellDims, int *PBC, int *appliedPBCs)
+{
+    int i, j, index2;
+    int boxIndex, boxNebList[27];
+    double sep2;
+    int localPBCsApplied[3];
+    
+    
+    /* loop over atoms */
+    for (index2=0; index2<NAtoms; index2++)
+    {
+        /* skip itself or if already searched */
+        if ((index == index2) || (atomCluster[index2] != -1))
+            continue;
+        
+        /* calculate separation */
+        sep2 = atomicSeparation2PBCCheck(pos[3*index], pos[3*index+1], pos[3*index+2], 
+                                         pos[3*index2], pos[3*index2+1], pos[3*index2+2], 
+                                         cellDims[0], cellDims[1], cellDims[2], 
+                                         PBC[0], PBC[1], PBC[2],
+                                         localPBCsApplied);
+        
+        /* check if neighbours */
+        if (sep2 < maxSep2)
+        {
+            for (j=0; j<3; j++)
+            {
+                if (localPBCsApplied[j])
+                {
+                    appliedPBCs[j] = 1;
+                    
+                    if (pos[3*index2+j] < 0.5 * cellDims[j])
+                    {
+                        pos[3*index2+j] += cellDims[j];
+                    }
+                    else
+                    {
+                        pos[3*index2+j] -= cellDims[j];
+                    }
+                }
+            }
+            
+            atomCluster[index2] = clusterID;
+            numInCluster++;
+            
+            /* search for neighbours to this new cluster atom */
+            numInCluster = findNeighboursUnapplyPBC(NAtoms, index2, clusterID, numInCluster, atomCluster, pos, maxSep2, cellDims, PBC, appliedPBCs);
         }
     }
     

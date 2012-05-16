@@ -11,8 +11,8 @@
 #include "utilities.h"
 
 
-int findClusters(int, double *, int *, struct Boxes *, double, double *, int *);
-int findNeighbours(int, int, int, int *, double *, struct Boxes *, double, double *, int *);
+int findDefectClusters(int, double *, int *, struct Boxes *, double, double *, int *);
+int findDefectNeighbours(int, int, int, int *, double *, struct Boxes *, double, double *, int *);
 
 
 
@@ -310,7 +310,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         putAtomsInBoxes(NDefects, defectPos, boxes);
         
         /* find clusters */
-        NClusters = findClusters(NDefects, defectPos, defectCluster, boxes, clusterRadius, cellDims, PBC);
+        NClusters = findDefectClusters(NDefects, defectPos, defectCluster, boxes, clusterRadius, cellDims, PBC);
         
         NDefectsType[4] = NClusters;
         
@@ -326,8 +326,8 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
 /*******************************************************************************
  * put defects into clusters
  *******************************************************************************/
-int findClusters(int NDefects, double *defectPos, int *defectCluster, struct Boxes *boxes, double maxSep, 
-                 double *cellDims, int *PBC)
+int findDefectClusters(int NDefects, double *defectPos, int *defectCluster, struct Boxes *boxes, double maxSep, 
+                       double *cellDims, int *PBC)
 {
     int i, maxNumInCluster;
     int NClusters, numInCluster;
@@ -360,7 +360,7 @@ int findClusters(int NDefects, double *defectPos, int *defectCluster, struct Box
             numInCluster = 1;
             
             /* recursive search for cluster atoms */
-            numInCluster = findNeighbours(i, defectCluster[i], numInCluster, defectCluster, defectPos, boxes, maxSep2, cellDims, PBC);
+            numInCluster = findDefectNeighbours(i, defectCluster[i], numInCluster, defectCluster, defectPos, boxes, maxSep2, cellDims, PBC);
             
             maxNumInCluster = (numInCluster > maxNumInCluster) ? numInCluster : maxNumInCluster;
         }
@@ -373,8 +373,8 @@ int findClusters(int NDefects, double *defectPos, int *defectCluster, struct Box
 /*******************************************************************************
  * recursive search for neighbouring defects
  *******************************************************************************/
-int findNeighbours(int index, int clusterID, int numInCluster, int* atomCluster, double *pos, struct Boxes *boxes, 
-                   double maxSep2, double *cellDims, int *PBC)
+int findDefectNeighbours(int index, int clusterID, int numInCluster, int* atomCluster, double *pos, struct Boxes *boxes, 
+                         double maxSep2, double *cellDims, int *PBC)
 {
     int i, j, index2;
     int boxIndex, boxNebList[27];
@@ -411,7 +411,7 @@ int findNeighbours(int index, int clusterID, int numInCluster, int* atomCluster,
                 numInCluster++;
                 
                 /* search for neighbours to this new cluster atom */
-                numInCluster = findNeighbours(index2, clusterID, numInCluster, atomCluster, pos, boxes, maxSep2, cellDims, PBC);
+                numInCluster = findDefectNeighbours(index2, clusterID, numInCluster, atomCluster, pos, boxes, maxSep2, cellDims, PBC);
             }
         }
     }

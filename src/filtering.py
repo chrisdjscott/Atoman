@@ -451,6 +451,37 @@ class Filterer:
         
         
         """
+        lattice = self.mainWindow.inputState
+        
+        if False:
+            for cluster in clusterList:
+                
+                appliedPBCs = np.zeros(3, np.int32)
+                clusterPos = np.empty(3 * len(cluster), np.float64)
+                for i in xrange(len(cluster)):
+                    index = cluster[i]
+                    
+                    clusterPos[3*i] = lattice.pos[3*index]
+                    clusterPos[3*i+1] = lattice.pos[3*index+1]
+                    clusterPos[3*i+2] = lattice.pos[3*index+2]
+                
+                clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
+                                                     self.mainWindow.PBC, appliedPBCs, settings.neighbourRadius)
+                
+                if len(cluster) > 3:
+                    facets = findConvexHull(len(cluster), clusterPos, qconvex=settings.qconvex)
+            
+                # now render
+                if facets is not None:
+                    rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection)
+            
+            
+            
+            
+            return
+            
+        
+        
         # recalc each volume with PBCs off
         for cluster in clusterList:
             clusterAtoms = np.empty(len(cluster), np.int32)
@@ -460,6 +491,13 @@ class Filterer:
             subClusterList = self.clusterFilter(clusterAtoms, settings, PBC=np.zeros(3, np.int32), minSize=1, nebRad=1.5*settings.neighbourRadius)
             
             self.clusterFilterDrawHullsNoPBCs(subClusterList, settings)
+        
+        
+        
+        
+        
+        
+        
     
     def clusterFilterCalculateVolumes(self, clusterList, filterSettings):
         """
