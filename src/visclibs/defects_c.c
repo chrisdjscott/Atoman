@@ -11,6 +11,10 @@
 #include "utilities.h"
 
 
+int findClusters(int, double *, int *, struct Boxes *, double, double *, int *);
+int findNeighbours(int, int, int, int *, double *, struct Boxes *, double, double *, int *);
+
+
 
 /*******************************************************************************
  * Search for defects and return the sub-system surrounding them
@@ -20,7 +24,8 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
                  int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, int specieListDim, char* specieList, 
                  int specieDim, int* specie, int posDim, double* pos, int refNAtoms, int specieListRefDim, char* specieListRef, 
                  int specieRefDim, int* specieRef, int refPosDim, double* refPos, int cellDimsDim, double *cellDims, int PBCDim, 
-                 int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos )
+                 int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClustersFlag,
+                 double clusterRadius, int defectClusterDim, int *defectCluster )
 {
     int i, NSpecies, exitLoop, k, j, index;
     double vacRad2;
@@ -33,9 +38,11 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     int NDefects, NAntisites, NInterstitials, NVacancies;
     int *possibleVacancy, *possibleInterstitial;
     int *possibleAntisite, *possibleOnAntisite;
-    int skip;
+    int skip, count, NClusters;
     double approxBoxWidth;
     struct Boxes *boxes;
+    double *defectPos;
+    
     
     /* approx width, must be at least vacRad
      * should vary depending on size of cell
@@ -251,5 +258,166 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     free(possibleAntisite);
     free(possibleOnAntisite);
     
+    /* find clusters of defects */
+    if (findClustersFlag)
+    {
+        /* build positions array of all defects */
+        defectPos = malloc(3 * NDefects * sizeof(double));
+        if (defectPos == NULL)
+        {
+            printf("ERROR: could not allocate defectPos\n");
+            exit(50);
+        }
+        
+        /* add defects positions: vac then int then ant */
+        count = 0;
+        for (i=0; i<NVacancies; i++)
+        {
+            index = vacancies[i];
+            
+            defectPos[3*count] = refPos[3*index];
+            defectPos[3*count+1] = refPos[3*index+1];
+            defectPos[3*count+2] = refPos[3*index+2];
+            
+            count++;
+        }
+        
+        for (i=0; i<NInterstitials; i++)
+        {
+            index = interstitials[i];
+            
+            defectPos[3*count] = pos[3*index];
+            defectPos[3*count+1] = pos[3*index+1];
+            defectPos[3*count+2] = pos[3*index+2];
+            
+            count++;
+        }
+        
+        for (i=0; i<NAntisites; i++)
+        {
+            index = antisites[i];
+            
+            defectPos[3*count] = refPos[3*index];
+            defectPos[3*count+1] = refPos[3*index+1];
+            defectPos[3*count+2] = refPos[3*index+2];
+            
+            count++;
+        }
+        
+        /* box defects */
+        approxBoxWidth = clusterRadius;
+        boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
+        putAtomsInBoxes(NDefects, defectPos, boxes);
+        
+        /* find clusters */
+        NClusters = findClusters(NDefects, defectPos, defectCluster, boxes, clusterRadius, cellDims, PBC);
+        
+        NDefectsType[4] = NClusters;
+        
+        /* free stuff */
+        freeBoxes(boxes);
+        free(defectPos);
+    }
+    
     return 0;
 }
+
+
+/*******************************************************************************
+ * put defects into clusters
+ *******************************************************************************/
+int findClusters(int NDefects, double *defectPos, int *defectCluster, struct Boxes *boxes, double maxSep, 
+                 double *cellDims, int *PBC)
+{
+    int i, maxNumInCluster;
+    int NClusters, numInCluster;
+    double maxSep2;
+    
+    
+    maxSep2 = maxSep * maxSep;
+    
+    /* initialise cluster array
+     * = -1 : not yet allocated
+     * > -1 : cluster ID of defect
+     */
+    for (i=0; i<NDefects; i++)
+    {
+        defectCluster[i] = -1;
+    }
+    
+    /* loop over defects */
+    NClusters = 0;
+    maxNumInCluster = -9999;
+    for (i=0; i<NDefects; i++)
+    {
+        /* skip if atom already allocated */
+        if (defectCluster[i] == -1)
+        {
+            /* allocate cluster ID */
+            defectCluster[i] = NClusters;
+            NClusters++;
+            
+            numInCluster = 1;
+            
+            /* recursive search for cluster atoms */
+            numInCluster = findNeighbours(i, defectCluster[i], numInCluster, defectCluster, defectPos, boxes, maxSep2, cellDims, PBC);
+            
+            maxNumInCluster = (numInCluster > maxNumInCluster) ? numInCluster : maxNumInCluster;
+        }
+    }
+    
+    return NClusters;
+}
+
+
+/*******************************************************************************
+ * recursive search for neighbouring defects
+ *******************************************************************************/
+int findNeighbours(int index, int clusterID, int numInCluster, int* atomCluster, double *pos, struct Boxes *boxes, 
+                   double maxSep2, double *cellDims, int *PBC)
+{
+    int i, j, index2;
+    int boxIndex, boxNebList[27];
+    double sep2;
+    
+    
+    /* box of primary atom */
+    boxIndex = boxIndexOfAtom(pos[3*index], pos[3*index+1], pos[3*index+2], boxes);
+        
+    /* find neighbouring boxes */
+    getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+    
+    /* loop over neighbouring boxes */
+    for (i=0; i<27; i++)
+    {
+        boxIndex = boxNebList[i];
+        
+        for (j=0; j<boxes->boxNAtoms[boxIndex]; j++)
+        {
+            index2 = boxes->boxAtoms[boxIndex][j];
+            
+            /* skip itself or if already searched */
+            if ((index == index2) || (atomCluster[index2] != -1))
+                continue;
+            
+            /* calculate separation */
+            sep2 = atomicSeparation2( pos[3*index], pos[3*index+1], pos[3*index+2], pos[3*index2], pos[3*index2+1], pos[3*index2+2], 
+                                      cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2] );
+            
+            /* check if neighbours */
+            if (sep2 < maxSep2)
+            {
+                atomCluster[index2] = clusterID;
+                numInCluster++;
+                
+                /* search for neighbours to this new cluster atom */
+                numInCluster = findNeighbours(index2, clusterID, numInCluster, atomCluster, pos, boxes, maxSep2, cellDims, PBC);
+            }
+        }
+    }
+    
+    return numInCluster;
+}
+
+
+

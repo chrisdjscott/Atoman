@@ -109,8 +109,8 @@ class Filterer:
                 self.cropFilter(visibleAtoms, filterSettings)
             
             elif filterName == "Point defects":
-                interstitials, vacancies, antisites, onAntisites = self.pointDefectFilter(filterSettings)
-            
+                interstitials, vacancies, antisites, onAntisites, clusterList, defectType = self.pointDefectFilter(filterSettings)
+                
             elif filterName == "Cluster":
                 clusterList = self.clusterFilter(visibleAtoms, filterSettings)
                 
@@ -131,6 +131,9 @@ class Filterer:
         povfile = "filter%d.pov" % (self.parent.tab,)
         if self.parent.defectFilterSelected:
             # vtk render
+            if filterSettings.findClusters:
+                self.pointDefectFilterDrawHulls(clusterList, defectType, filterSettings)
+            
             rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection)
         
         else:
@@ -233,17 +236,24 @@ class Filterer:
             for i in xrange(len(exclSpecs)):
                 exclSpecsRef[i] = exclSpecs[i]
         
-        NDefectsByType = np.zeros(4, np.int32)
+        NDefectsByType = np.zeros(5, np.int32)
         
         # set min/max pos to lattice (for boxing)
         minPos = refLattice.minPos
         maxPos = refLattice.maxPos
         
+        if settings.findClusters:
+            defectCluster = np.empty(inputLattice.NAtoms + refLattice.NAtoms, np.int32)
+        
+        else:
+            defectCluster = np.empty(0, np.int32)
+        
         # call C library
         status = defects_c.findDefects(settings.showVacancies, settings.showInterstitials, settings.showAntisites, NDefectsByType, vacancies, 
                                        interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
                                        inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
-                                       refLattice.pos, refLattice.cellDims, self.mainWindow.PBC, settings.vacancyRadius, minPos, maxPos)
+                                       refLattice.pos, refLattice.cellDims, self.mainWindow.PBC, settings.vacancyRadius, minPos, maxPos, 
+                                       settings.findClusters, settings.neighbourRadius, defectCluster)
         
         # summarise
         NDef = NDefectsByType[0]
@@ -260,7 +270,70 @@ class Filterer:
         self.log("%d interstitials" % (NInt,), 0, 4)
         self.log("%d antisites" % (NAnt,), 0, 4)
         
-        return (interstitials, vacancies, antisites, onAntisites)
+        # sort clusters here
+        clusterList = []
+        defectType = []
+        if settings.findClusters:
+            NClusters = NDefectsByType[4]
+            
+            defectCluster.resize(NDef)
+            
+            # build cluster lists
+            for i in xrange(NClusters):
+                clusterList.append([])
+                defectType.append([])
+            
+            # add atoms to cluster lists
+            clusterIndexMapper = {}
+            count = 0
+            for i in xrange(NVac):
+                atomIndex = vacancies[i]
+                clusterIndex = defectCluster[i]
+                
+                if clusterIndex not in clusterIndexMapper:
+                    clusterIndexMapper[clusterIndex] = count
+                    count += 1
+                
+                clusterListIndex = clusterIndexMapper[clusterIndex]
+                
+                clusterList[clusterListIndex].append(atomIndex)
+                defectType[clusterIndex].append("R")
+            
+            for i in xrange(NInt):
+                atomIndex = interstitials[i]
+                clusterIndex = defectCluster[NVac + i]
+                
+                if clusterIndex not in clusterIndexMapper:
+                    clusterIndexMapper[clusterIndex] = count
+                    count += 1
+                
+                clusterListIndex = clusterIndexMapper[clusterIndex]
+                
+                clusterList[clusterListIndex].append(atomIndex)
+                defectType[clusterIndex].append("I")
+            
+            for i in xrange(NAnt):
+                atomIndex = antisites[i]
+                clusterIndex = defectCluster[NVac + NInt + i]
+                
+                if clusterIndex not in clusterIndexMapper:
+                    clusterIndexMapper[clusterIndex] = count
+                    count += 1
+                
+                clusterListIndex = clusterIndexMapper[clusterIndex]
+                
+                clusterList[clusterListIndex].append(atomIndex)
+                defectType[clusterIndex].append("R")
+            
+        
+        return (interstitials, vacancies, antisites, onAntisites, clusterList, defectType)
+    
+    def pointDefectFilterDrawHulls(self, clusterList, defectType, settings):
+        """
+        Draw convex hulls around defect volumes
+        
+        """
+        pass
     
     def clusterFilter(self, visibleAtoms, settings, PBC=None, minSize=None, nebRad=None):
         """

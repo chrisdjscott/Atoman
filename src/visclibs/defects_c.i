@@ -44,7 +44,8 @@ import_array();
                                           (int NDefectsTypeDim, int* NDefectsType),
                                           (int exclSpecInputDim, int* exclSpecInput),
                                           (int exclSpecRefDim, int* exclSpecRef),
-                                          (int PBCDim, int *PBC)}
+                                          (int PBCDim, int *PBC),
+                                          (int defectClusterDim, int *defectCluster)}
 
 /* define functions here */
 %{
@@ -53,7 +54,8 @@ extern int findDefects( int includeVacs, int includeInts, int includeAnts, int N
                         int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, int specieListDim, char* specieList, 
                         int specieDim, int* specie, int posDim, double* pos, int refNAtoms, int specieListRefDim, char* specieListRef, 
                         int specieRefDim, int* specieRef, int refPosDim, double* refPos, int cellDimsDim, double *cellDims, int PBCDim, 
-                        int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos );
+                        int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClusters,
+                        double clusterRadius, int defectClusterDim, int *defectCluster );
 %}
 
 extern int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefectsTypeDim, int* NDefectsType, int vacDim, int* vacancies, 
@@ -61,4 +63,5 @@ extern int findDefects( int includeVacs, int includeInts, int includeAnts, int N
                         int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, int specieListDim, char* specieList, 
                         int specieDim, int* specie, int posDim, double* pos, int refNAtoms, int specieListRefDim, char* specieListRef, 
                         int specieRefDim, int* specieRef, int refPosDim, double* refPos, int cellDimsDim, double *cellDims, int PBCDim, 
-                        int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos );
+                        int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClusters,
+                        double clusterRadius, int defectClusterDim, int *defectCluster );

@@ -383,7 +383,8 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.showInterstitials = 1
         self.showAntisites = 1
         self.showVacancies = 1
-        self.findVolumes = 0
+        self.findClusters = 0
+        self.neighbourRadius = 3.5
         
         # check if qconvex programme located
         self.qconvex = utilities.checkForExe("qconvex")
@@ -431,11 +432,24 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         self.newRow()
         
-        self.findVolumesCheckBox = QtGui.QCheckBox(" Find volumes")
-        self.findVolumesCheckBox.setChecked(0)
-        self.connect(self.findVolumesCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.findVolumesChanged)
+        # find clusters check box
+        self.findClustersCheckBox = QtGui.QCheckBox(" Find clusters")
+        self.findClustersCheckBox.setChecked(0)
+        self.connect(self.findClustersCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.findClustersChanged)
         row = self.newRow()
-        row.addWidget(self.findVolumesCheckBox)
+        row.addWidget(self.findClustersCheckBox)
+        
+        # neighbour rad spin box
+        label = QtGui.QLabel("Neighbour radius ")
+        self.nebRadSpinBox = QtGui.QDoubleSpinBox()
+        self.nebRadSpinBox.setSingleStep(0.01)
+        self.nebRadSpinBox.setMinimum(0.01)
+        self.nebRadSpinBox.setMaximum(100.0)
+        self.nebRadSpinBox.setValue(self.neighbourRadius)
+        self.connect(self.nebRadSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.nebRadChanged)
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.nebRadSpinBox)
         
         self.newRow()
         
@@ -453,21 +467,28 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         self.refresh()
     
-    def findVolumesChanged(self):
+    def nebRadChanged(self, val):
+        """
+        Change neighbour radius.
+        
+        """
+        self.neighbourRadius = val
+    
+    def findClustersChanged(self):
         """
         Change find volumes setting.
         
         """
-        if self.findVolumesCheckBox.isChecked():
+        if self.findClustersCheckBox.isChecked():
             if not self.qconvex:
                 utilities.warnExeNotFound(self, "qconvex")
-                self.findVolumesCheckBox.setCheckState(0)
+                self.findClustersCheckBox.setCheckState(0)
                 return
             
-            self.findVolumes = 1
+            self.findClusters = 1
         
         else:
-            self.findVolumes = 0
+            self.findClusters = 0
     
     def vacRadChanged(self, val):
         """
