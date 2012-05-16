@@ -383,6 +383,13 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.showInterstitials = 1
         self.showAntisites = 1
         self.showVacancies = 1
+        self.findVolumes = 0
+        
+        # check if qconvex programme located
+        self.qconvex = utilities.checkForExe("qconvex")
+        
+        if self.qconvex:
+            self.mainWindow.console.write("'qconvex' executable located at: %s" % (self.qconvex,))
         
         # vacancy radius option
         label = QtGui.QLabel("Vacancy radius ")
@@ -424,6 +431,14 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         self.newRow()
         
+        self.findVolumesCheckBox = QtGui.QCheckBox(" Find volumes")
+        self.findVolumesCheckBox.setChecked(0)
+        self.connect(self.findVolumesCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.findVolumesChanged)
+        row = self.newRow()
+        row.addWidget(self.findVolumesCheckBox)
+        
+        self.newRow()
+        
         label = QtGui.QLabel("Visible species:")
         row = self.newRow()
         row.addWidget(label)
@@ -437,8 +452,23 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
 #        self.newRow()
         
         self.refresh()
+    
+    def findVolumesChanged(self):
+        """
+        Change find volumes setting.
         
+        """
+        if self.findVolumesCheckBox.isChecked():
+            if not self.qconvex:
+                utilities.warnExeNotFound(self, "qconvex")
+                self.findVolumesCheckBox.setCheckState(0)
+                return
+            
+            self.findVolumes = 1
         
+        else:
+            self.findVolumes = 0
+    
     def vacRadChanged(self, val):
         """
         Update vacancy radius

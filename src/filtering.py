@@ -7,7 +7,6 @@ The filter tab for the main toolbar
 """
 import os
 import sys
-import tempfile
 import subprocess
 import copy
 
@@ -368,7 +367,7 @@ class Filterer:
                 continue
             
             else:
-                facets = findConvexHull(cluster, clusterPos, qconvex=settings.qconvex)
+                facets = findConvexHull(len(cluster), clusterPos, qconvex=settings.qconvex)
             
             # now render
             if facets is not None:
@@ -414,7 +413,7 @@ class Filterer:
                 pass
             
             else:
-                volume, area = findConvexHullVolume(cluster, clusterPos, qconvex=filterSettings.qconvex)
+                volume, area = findConvexHullVolume(len(cluster), clusterPos, qconvex=filterSettings.qconvex)
             
             self.log("Cluster %d (%d atoms)" % (count, len(cluster)), 0, 4)
             self.log("volume is %f; facet area is %f" % (volume, area), 0, 5)
@@ -423,31 +422,32 @@ class Filterer:
 
 
 ################################################################################
-def findConvexHull(cluster, pos, qconvex="qconvex"):
+def findConvexHull(N, pos, qconvex="qconvex"):
     """
     Find convex hull of given points
     
     """
-    # write to file
-    fh, fn = tempfile.mkstemp(dir="/tmp", prefix="qhullTemp-")
-    f = open(fn, "w")
-    f.write("3\n")
-    f.write("%d\n" % (len(cluster),))
-    for i in xrange(len(cluster)):
-        string = "%f %f %f\n" % (pos[3*i], pos[3*i+1], pos[3*i+2])
-        f.write(string)
-    f.close()
+    # create string to pass to qconvex
+    stringList = []
+    appList = stringList.append
+    appList("3")
+    appList("%d" % (N,))
+    for i in xrange(N):
+        appList("%f %f %f" % (pos[3*i], pos[3*i+1], pos[3*i+2]))
+    string = "\n".join(stringList)
     
-    command = "%s Qt i < %s" % (qconvex, fn,)
-    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    output, stderr = proc.communicate()
+    # run qconvex
+    command = "%s Qt i" % (qconvex,)
+    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+                            stdin=subprocess.PIPE)
+    output, stderr = proc.communicate(string)
     status = proc.poll()
     if status:
         print "qconvex failed"
         print stderr
-        os.unlink(fn)
         sys.exit(35)
     
+    # parse output
     output = output.strip()
     lines = output.split("\n")
     
@@ -458,56 +458,50 @@ def findConvexHull(cluster, pos, qconvex="qconvex"):
         array = line.split()
         facets.append([np.int32(array[0]), np.int32(array[1]), np.int32(array[2])])
     
-    # unlink temp file
-    os.unlink(fn)
-    
     return facets
 
 
 ################################################################################
-def findConvexHullVolume(cluster, pos, qconvex="qconvex"):
+def findConvexHullVolume(N, pos, qconvex="qconvex"):
     """
     Find convex hull of given points
     
     """
-    # write to file
-    fh, fn = tempfile.mkstemp(dir="/tmp", prefix="qhullTemp-")
+    # create string to pass to qconvex
+    stringList = []
+    appList = stringList.append
+    appList("3")
+    appList("%d" % (N,))
+    for i in xrange(N):
+        appList("%f %f %f" % (pos[3*i], pos[3*i+1], pos[3*i+2]))
+    string = "\n".join(stringList)
     
+    # run qconvex
+    command = "%s Qt FA" % (qconvex,)
+    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
+                            stdin=subprocess.PIPE)
+    output, stderr = proc.communicate(string)
+    status = proc.poll()
+    if status:
+        print "qconvex failed"
+        print stderr
+        sys.exit(35)
+    
+    # parse output
     volume = None
     facetArea = None
-    try:
-        f = open(fn, "w")
-        f.write("3\n")
-        f.write("%d\n" % (len(cluster),))
-        for i in xrange(len(cluster)):
-            string = "%f %f %f\n" % (pos[3*i], pos[3*i+1], pos[3*i+2])
-            f.write(string)
-        f.close()
+    
+    output = output.strip()
+    lines = output.split("\n")
+    
+    for line in lines:
+        line = line.strip()
+        if line[:12] == "Total volume":
+            array = line.split(":")
+            volume = float(array[1])
         
-        command = "%s Qt FA < %s" % (qconvex, fn,)
-        proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output, stderr = proc.communicate()
-        status = proc.poll()
-        if status:
-            print "qconvex failed"
-            print stderr
-            sys.exit(35)
-        
-        output = output.strip()
-        lines = output.split("\n")
-        
-        for line in lines:
-            line = line.strip()
-            if line[:12] == "Total volume":
-                array = line.split(":")
-                volume = float(array[1])
-            
-            elif line[:16] == "Total facet area":
-                array = line.split(":")
-                facetArea = float(array[1])
-        
-    finally:
-        # unlink temp file
-        os.unlink(fn)
+        elif line[:16] == "Total facet area":
+            array = line.split(":")
+            facetArea = float(array[1])
     
     return volume, facetArea
