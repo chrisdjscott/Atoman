@@ -123,7 +123,7 @@ def checkForExe(exe):
     
     else:
         for syspath in globalsModule.PATH:
-            if os.path.join(syspath, exe):
+            if os.path.exists(os.path.join(syspath, exe)):
                 found = 1
                 break
         
