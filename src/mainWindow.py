@@ -348,9 +348,10 @@ class MainWindow(QtGui.QMainWindow):
         (nwd, filename) = os.path.split(filename)        
         
         # change to new working directory
-        self.console.write("Changing to dir "+nwd)
-        os.chdir(nwd)
-        self.updateCWD()
+        if nwd != os.getcwd():
+            self.console.write("Changing to dir "+nwd)
+            os.chdir(nwd)
+            self.updateCWD()
         
         # open file
         result = self.openFile(filename, state)
