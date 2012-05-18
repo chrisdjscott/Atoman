@@ -77,6 +77,8 @@ def readLattice(filename, tmpLocation, lattice, fileType, state, log):
     
     lattice.reset(NAtoms)
     
+    log("%d atoms" % (NAtoms,), 0, 1)
+    
     # need temporary specie list and counter arrays
     maxNumSpecies = 20
     dt = np.dtype((str, 2))
@@ -88,7 +90,6 @@ def readLattice(filename, tmpLocation, lattice, fileType, state, log):
                               specieCountTemp, lattice.maxPos, lattice.minPos )
     
     # build specie list and counter in lattice object
-    log("Building specie list", 2, 1)
     NSpecies = 0
     for i in range(maxNumSpecies):
         if specieListTemp[i] == 'XX':
@@ -114,8 +115,7 @@ def readLattice(filename, tmpLocation, lattice, fileType, state, log):
         lattice.specieRGB[i][1] = rgbtemp[1]
         lattice.specieRGB[i][2] = rgbtemp[2]
         
-        log("new specie: " + specieListTemp[i] + " (" + atoms.atomName(specieListTemp[i]) + ")", 2, 2)
-        log(str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms", 2, 3)
+        log("%d %s (%s) atoms" % (specieCountTemp[i], specieListTemp[i], atoms.atomName(specieListTemp[i])), 0, 2)
     
     return 0
 
@@ -191,6 +191,8 @@ def readLBOMDRef(filename, tmpLocation, lattice, fileType, state, log):
     
     lattice.reset(NAtoms)
     
+    log("%d atoms" % (NAtoms,), 0, 1)
+    
     # temporary specie list and counter arrays
     maxNumSpecies = 20 ## if there are more than 20 species these must be changed
     dt = np.dtype((str, 2))
@@ -204,7 +206,6 @@ def readLBOMDRef(filename, tmpLocation, lattice, fileType, state, log):
                      specieListTemp, specieCountTemp, lattice.maxPos, lattice.minPos )
     
     # build specie list and counter in lattice object
-    log("Building specie list", 2, 1)
     NSpecies = 0
     for i in range(maxNumSpecies):
         if specieListTemp[i] == 'XX':
@@ -230,8 +231,7 @@ def readLBOMDRef(filename, tmpLocation, lattice, fileType, state, log):
         lattice.specieRGB[i][1] = rgbtemp[1]
         lattice.specieRGB[i][2] = rgbtemp[2]
         
-        log("new specie: " + specieListTemp[i] + " (" + atoms.atomName(specieListTemp[i]) + ")", 2, 2)
-        log(str(specieCountTemp[i]) + " " + atoms.atomName(specieListTemp[i]) + " atoms", 2, 3)
+        log("%d %s (%s) atoms" % (specieCountTemp[i], specieListTemp[i], atoms.atomName(specieListTemp[i])), 0, 2)
 
     return 0
 

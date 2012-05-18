@@ -2,7 +2,8 @@
 """
 Generic form class.
 
-@author: Chris Scott
+@author: Marc Robinson
+Modified by Chris Scott
 
 """
 
