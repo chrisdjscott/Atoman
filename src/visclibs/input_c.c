@@ -196,6 +196,10 @@ void readLBOMDXYZ( char* file, int posDim, double* pos, int chargeDim, double* c
         {
             fscanf(INFILE, "%d%lf%lf%lf%lf%lf", &id, &xpos, &ypos, &zpos, &KEtmp, &PEtmp);
         }
+        else if (xyzformat == 1)
+        {
+            fscanf(INFILE, "%d%lf%lf%lf%lf%lf%lf", &id, &xpos, &ypos, &zpos, &KEtmp, &PEtmp, &chargetmp);
+        }
         
         index = id - 1;
         
@@ -206,6 +210,11 @@ void readLBOMDXYZ( char* file, int posDim, double* pos, int chargeDim, double* c
         
         KE[index] = KEtmp;
         PE[index] = PEtmp;
+        
+        if (xyzformat == 1)
+        {
+            charge[index] = chargetmp;
+        }
         
         /* max and min positions */
         if ( xpos > maxPos[0] )

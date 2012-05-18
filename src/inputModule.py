@@ -139,6 +139,10 @@ def readLBOMDInput(filename, tmpLocation, lattice, fileType, state, log, refLatt
     array = line.split()
     if len(array) == 6:
         xyzformat = 0
+        
+    elif len(array) == 7:
+        xyzformat = 1
+    
     else:
         return -3
     
