@@ -27,24 +27,38 @@ import_array();
 
 /* define numpy arrays here */
 /* 1d arrays of doubles */
-%apply (int DIM1, double* INPLACE_ARRAY1) {(int posDim, double* pos)}
+%apply (int DIM1, double* INPLACE_ARRAY1) {
+    (int posDim, double* pos),
+    (int refPosDim, double *refPos),
+    (int cellDimsDim, double *cellDims)
+}
 
 /* 1d arrays of chars */
-%apply (int DIM1, char* INPLACE_ARRAY1) {(int dim6, char* sym),
-        (int speclistDim, char* specieList_c)}
+%apply (int DIM1, char* INPLACE_ARRAY1) {
+    (int speclistDim, char* specieList_c)
+}
 
 /* 1d arrays of ints */
-%apply (int DIM1, int* INPLACE_ARRAY1) {(int specieDim, int* specie),
-                                        (int NVisibleIn, int* visibleAtoms),
-                                        (int visSpecDim, int* visSpec)}
+%apply (int DIM1, int* INPLACE_ARRAY1) {
+    (int specieDim, int* specie),
+    (int NVisibleIn, int* visibleAtoms),
+    (int visSpecDim, int* visSpec),
+    (int PBCDim, int *PBC)
+}
 
 /* define functions here */
 %{
 extern int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie);
     
 extern int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, int xEnabled, int yEnabled, int zEnabled);
+
+extern int displacementFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, int refPosDim, double *refPos, 
+                              int cellDimsDim, double *cellDims, int PBCDim, int *PBC, double minDisp, double maxDisp);
 %}
 
 extern int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie);
 
 extern int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, int xEnabled, int yEnabled, int zEnabled);
+
+extern int displacementFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, int refPosDim, double *refPos, 
+                              int cellDimsDim, double *cellDims, int PBCDim, int *PBC, double minDisp, double maxDisp);

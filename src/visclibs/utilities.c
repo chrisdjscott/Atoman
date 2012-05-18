@@ -85,7 +85,7 @@ double atomicSeparation2PBCCheck( double ax, double ay, double az,
     /* handle PBCs here if required */
     if ( pbcx == 1 )
     {
-        rx = rx - round( rx / xdim ) * xdim;
+        rx = rxini - round( rxini / xdim ) * xdim;
     }
     else
     {
@@ -94,7 +94,7 @@ double atomicSeparation2PBCCheck( double ax, double ay, double az,
     
     if ( pbcy == 1 )
     {
-        ry = ry - round( ry / ydim ) * ydim;
+        ry = ryini - round( ryini / ydim ) * ydim;
     }
     else
     {
@@ -103,7 +103,7 @@ double atomicSeparation2PBCCheck( double ax, double ay, double az,
     
     if ( pbcz == 1 )
     {
-        rz = rz - round( rz / zdim ) * zdim;
+        rz = rzini - round( rzini / zdim ) * zdim;
     }
     else
     {
@@ -114,13 +114,27 @@ double atomicSeparation2PBCCheck( double ax, double ay, double az,
     {
         appliedPBCs[0] = 1;
     }
+    else
+    {
+        appliedPBCs[0] = 0;
+    }
+    
     if (ry != ryini)
     {
         appliedPBCs[1] = 1;
     }
+    else
+    {
+        appliedPBCs[1] = 0;
+    }
+    
     if (rz != rzini)
     {
         appliedPBCs[2] = 1;
+    }
+    else
+    {
+        appliedPBCs[2] = 0;
     }
     
     /* separation squared */

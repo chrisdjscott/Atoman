@@ -709,3 +709,56 @@ class ClusterSettingsDialog(GenericSettingsDialog):
             self.drawConvexHulls = 0
             self.calcVolsCheckBox.setCheckState(0)
             self.calcVolsCheckBox.setCheckable(0)
+
+
+################################################################################
+class DisplacementSettingsDialog(GenericSettingsDialog):
+    def __init__(self, mainWindow, title, parent=None):
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        
+        GenericSettingsDialog.__init__(self, title, parent)
+        
+        self.filterType = "Displacement"
+        
+        self.minDisplacement = 1.3
+        self.maxDisplacement = 1000.0
+        
+        label = QtGui.QLabel("Min displacement ")
+        self.minDisplacementSpinBox = QtGui.QDoubleSpinBox()
+        self.minDisplacementSpinBox.setSingleStep(0.1)
+        self.minDisplacementSpinBox.setMinimum(0.0)
+        self.minDisplacementSpinBox.setMaximum(9999.0)
+        self.minDisplacementSpinBox.setValue(self.minDisplacement)
+        self.connect(self.minDisplacementSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMinDisplacement)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.minDisplacementSpinBox)
+        
+        label = QtGui.QLabel("Max displacement ")
+        self.maxDisplacementSpinBox = QtGui.QDoubleSpinBox()
+        self.maxDisplacementSpinBox.setSingleStep(0.1)
+        self.maxDisplacementSpinBox.setMinimum(0.0)
+        self.maxDisplacementSpinBox.setMaximum(9999.0)
+        self.maxDisplacementSpinBox.setValue(self.maxDisplacement)
+        self.connect(self.maxDisplacementSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMaxDisplacement)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.maxDisplacementSpinBox)
+    
+    def setMinDisplacement(self, val):
+        """
+        Set the minimum displacement.
+        
+        """
+        self.minDisplacement = val
+
+    def setMaxDisplacement(self, val):
+        """
+        Set the maximum displacement.
+        
+        """
+        self.maxDisplacement = val

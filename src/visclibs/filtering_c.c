@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+#include "utilities.h"
 
 
 /*******************************************************************************
@@ -84,6 +85,40 @@ int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, doubl
         
         visibleAtoms[NVisible] = index;
         NVisible++;
+    }
+    
+    return NVisible;
+}
+
+
+/*******************************************************************************
+ ** Displacement filter
+ *******************************************************************************/
+int displacementFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, int refPosDim, double *refPos, 
+                       int cellDimsDim, double *cellDims, int PBCDim, int *PBC, double minDisp, double maxDisp)
+{
+    int i, NVisible, index;
+    double sep2, maxDisp2, minDisp2;
+    
+    
+    minDisp2 = minDisp * minDisp;
+    maxDisp2 = maxDisp * maxDisp;
+    
+    NVisible = 0;
+    for (i=0; i<NVisibleIn; i++)
+    {
+        index = visibleAtoms[i];
+        
+        sep2 = atomicSeparation2(pos[3*index], pos[3*index+1], pos[3*index+2], 
+                                 refPos[3*index], refPos[3*index+1], refPos[3*index+2], 
+                                 cellDims[0], cellDims[1], cellDims[2], 
+                                 PBC[0], PBC[1], PBC[2]);
+        
+        if (sep2 <= maxDisp2 && sep2 >= minDisp2)
+        {
+            visibleAtoms[NVisible] = index;
+            NVisible++;
+        }
     }
     
     return NVisible;

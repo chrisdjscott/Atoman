@@ -108,6 +108,9 @@ class Filterer:
             elif filterName == "Crop":
                 self.cropFilter(visibleAtoms, filterSettings)
             
+            elif filterName == "Displacement":
+                self.displacementFilter(visibleAtoms, filterSettings)
+            
             elif filterName == "Point defects":
                 interstitials, vacancies, antisites, onAntisites, clusterList, defectType = self.pointDefectFilter(filterSettings)
                 
@@ -174,7 +177,27 @@ class Filterer:
         NVisible = filtering_c.specieFilter(visibleAtoms, visSpecArray, self.mainWindow.inputState.specie)
         
         visibleAtoms.resize(NVisible, refcheck=False)
-
+    
+    def displacementFilter(self, visibleAtoms, settings):
+        """
+        Displacement filter
+        
+        """
+        # only run displacement filter if input and reference NAtoms are the same
+        inputState = self.mainWindow.inputState
+        refState = self.mainWindow.refState
+        
+        if inputState.NAtoms != refState.NAtoms:
+            self.log("WARNING: cannot run displacement filter with different numbers of input and reference atoms: skipping this filter list")
+            visibleAtoms.resize(0, refcheck=False)
+        
+        else:
+            # run displacement filter
+            NVisible = filtering_c.displacementFilter(visibleAtoms, inputState.pos, refState.pos, refState.cellDims, 
+                                                      self.mainWindow.PBC, settings.minDisplacement, settings.maxDisplacement)
+            
+            visibleAtoms.resize(NVisible, refcheck=False)
+    
     def cropFilter(self, visibleAtoms, settings):
         """
         Crop lattice
@@ -470,13 +493,28 @@ class Filterer:
                 
                 if len(cluster) > 3:
                     facets = findConvexHull(len(cluster), clusterPos, qconvex=settings.qconvex)
-            
+                    
                 # now render
                 if facets is not None:
                     rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection)
-            
-            
-            
+                
+                # handle PBCs
+                if len(cluster) > 3:
+                    tmpClusterPos = copy.deepcopy(clusterPos)
+                    for i in xrange(3):
+                        if appliedPBCs[i]:
+                            if min(tmpClusterPos[i::3]) < 0.0:
+                                tmpClusterPos[i::3] += lattice.cellDims[i]
+                            
+                            else:
+                                tmpClusterPos[i::3] -= lattice.cellDims[i]
+                    
+                    # get facets
+                    facets = findConvexHull(len(cluster), tmpClusterPos, qconvex=settings.qconvex)
+                    
+                    # render
+                    if facets is not None:
+                        rendering.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection)
             
             return
             
