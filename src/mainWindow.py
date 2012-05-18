@@ -142,7 +142,7 @@ class MainWindow(QtGui.QMainWindow):
         aboutAction = self.createAction("About", slot=self.aboutMe, icon="Information-icon.png", 
                                            tip="About this application")
         
-        helpAction = self.createAction("CDJSVis Help", slot=self.showHelp, icon="help-browser.svg", tip="Show help window")
+        helpAction = self.createAction("CDJSVis Help", slot=self.showHelp, icon="Help-icon.png", tip="Show help window")
         
         # add help toolbar
         helpToolbar = self.addToolBar("Help")

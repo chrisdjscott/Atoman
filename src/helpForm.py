@@ -25,7 +25,7 @@ class HelpForm(QtGui.QDialog):
         self.setModal(0)
         
 #        self.setWindowTitle("Help")
-        self.setWindowIcon(QtGui.QIcon(iconPath("help-browser.svg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("Help-icon.png")))
         
         self.open = 0
         

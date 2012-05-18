@@ -5,7 +5,6 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
-import os
 import sys
 import subprocess
 import copy
@@ -33,6 +32,8 @@ class Filterer:
         self.mainWindow = self.parent.mainWindow
         
         self.log = self.mainWindow.console.write
+        
+        self.visibleAtoms = np.empty(0, np.int32)
         
         self.actorsCollection = vtk.vtkActorCollection()
     
@@ -90,8 +91,8 @@ class Filterer:
         NAtoms = self.parent.mainWindow.inputState.NAtoms
         
         if not self.parent.defectFilterSelected:
-            visibleAtoms = np.arange(NAtoms, dtype=np.int32)
-            self.log("%d visible atoms" % (len(visibleAtoms),), 0, 2)
+            self.visibleAtoms = np.arange(NAtoms, dtype=np.int32)
+            self.log("%d visible atoms" % (len(self.visibleAtoms),), 0, 2)
         
         # run filters
         currentFilters = self.parent.currentFilters
@@ -103,19 +104,19 @@ class Filterer:
             self.log("Running filter: %s" % (filterName,), 0, 2)
             
             if filterName == "Specie":
-                self.filterSpecie(visibleAtoms, filterSettings)
+                self.filterSpecie(filterSettings)
             
             elif filterName == "Crop":
-                self.cropFilter(visibleAtoms, filterSettings)
+                self.cropFilter(filterSettings)
             
             elif filterName == "Displacement":
-                self.displacementFilter(visibleAtoms, filterSettings)
+                self.displacementFilter(filterSettings)
             
             elif filterName == "Point defects":
                 interstitials, vacancies, antisites, onAntisites, clusterList, defectType = self.pointDefectFilter(filterSettings)
                 
             elif filterName == "Cluster":
-                clusterList = self.clusterFilter(visibleAtoms, filterSettings)
+                clusterList = self.clusterFilter(filterSettings)
                 
                 if filterSettings.drawConvexHulls:
                     self.clusterFilterDrawHulls(clusterList, filterSettings)
@@ -128,7 +129,7 @@ class Filterer:
                 self.log("%d visible atoms" % (NVis,), 0, 3)
             
             else:
-                self.log("%d visible atoms" % (len(visibleAtoms),), 0, 3)
+                self.log("%d visible atoms" % (len(self.visibleAtoms),), 0, 3)
         
         # render
         povfile = "filter%d.pov" % (self.parent.tab,)
@@ -140,22 +141,22 @@ class Filterer:
             rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection)
         
         else:
-            rendering.getActorsForFilteredSystem(visibleAtoms, self.mainWindow, self.actorsCollection)
+            rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection)
             
             # write pov-ray file too (only if pov-ray located??)
-            rendering.writePovrayAtoms(povfile, visibleAtoms, self.mainWindow)
+            rendering.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
                 
         if self.parent.visible:
             self.addActors()
     
-    def getActorsForFilteredSystem(self, visibleAtoms):
+    def getActorsForFilteredSystem(self):
         """
         Render systems after applying filters.
         
         """
         pass
             
-    def filterSpecie(self, visibleAtoms, settings):
+    def filterSpecie(self, settings):
         """
         Filter by specie
         
@@ -174,11 +175,11 @@ class Filterer:
             if count != len(visSpecArray):
                 visSpecArray.resize(count)
         
-        NVisible = filtering_c.specieFilter(visibleAtoms, visSpecArray, self.mainWindow.inputState.specie)
+        NVisible = filtering_c.specieFilter(self.visibleAtoms, visSpecArray, self.mainWindow.inputState.specie)
         
-        visibleAtoms.resize(NVisible, refcheck=False)
+        self.visibleAtoms.resize(NVisible, refcheck=False)
     
-    def displacementFilter(self, visibleAtoms, settings):
+    def displacementFilter(self, settings):
         """
         Displacement filter
         
@@ -189,27 +190,27 @@ class Filterer:
         
         if inputState.NAtoms != refState.NAtoms:
             self.log("WARNING: cannot run displacement filter with different numbers of input and reference atoms: skipping this filter list")
-            visibleAtoms.resize(0, refcheck=False)
+            self.visibleAtoms.resize(0, refcheck=False)
         
         else:
             # run displacement filter
-            NVisible = filtering_c.displacementFilter(visibleAtoms, inputState.pos, refState.pos, refState.cellDims, 
+            NVisible = filtering_c.displacementFilter(self.visibleAtoms, inputState.pos, refState.pos, refState.cellDims, 
                                                       self.mainWindow.PBC, settings.minDisplacement, settings.maxDisplacement)
             
-            visibleAtoms.resize(NVisible, refcheck=False)
+            self.visibleAtoms.resize(NVisible, refcheck=False)
     
-    def cropFilter(self, visibleAtoms, settings):
+    def cropFilter(self, settings):
         """
         Crop lattice
         
         """
         lattice = self.mainWindow.inputState
         
-        NVisible = filtering_c.cropFilter(visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
+        NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
                                           settings.ymax, settings.zmin, settings.zmax, settings.xEnabled, 
                                           settings.yEnabled, settings.zEnabled)
         
-        visibleAtoms.resize(NVisible, refcheck=False)
+        self.visibleAtoms.resize(NVisible, refcheck=False)
     
     def pointDefectFilter(self, settings):
         """
@@ -358,14 +359,14 @@ class Filterer:
         """
         pass
     
-    def clusterFilter(self, visibleAtoms, settings, PBC=None, minSize=None, nebRad=None):
+    def clusterFilter(self, settings, PBC=None, minSize=None, nebRad=None):
         """
         Run the cluster filter
         
         """
         lattice = self.mainWindow.inputState
         
-        atomCluster = np.empty(len(visibleAtoms), np.int32)
+        atomCluster = np.empty(len(self.visibleAtoms), np.int32)
         result = np.empty(2, np.int32)
         
         if PBC is not None and len(PBC) == 3:
@@ -383,13 +384,13 @@ class Filterer:
         minPos = np.zeros(3, np.float64)
         maxPos = copy.deepcopy(lattice.cellDims)
         
-        clusters_c.findClusters(visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
+        clusters_c.findClusters(self.visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
                                 minPos, maxPos, minSize, result)
         
         NVisible = result[0]
         NClusters = result[1]
         
-        visibleAtoms.resize(NVisible, refcheck=False)
+        self.visibleAtoms.resize(NVisible, refcheck=False)
         atomCluster.resize(NVisible, refcheck=False)
         
         # build cluster lists
@@ -401,7 +402,7 @@ class Filterer:
         clusterIndexMapper = {}
         count = 0
         for i in xrange(NVisible):
-            atomIndex = visibleAtoms[i]
+            atomIndex = self.visibleAtoms[i]
             clusterIndex = atomCluster[i]
             
             if clusterIndex not in clusterIndexMapper:
@@ -562,6 +563,12 @@ class Filterer:
                 pass
             
             else:
+                PBC = self.mainWindow.PBC
+                if PBC[0] or PBC[1] or PBC[2]:
+                    appliedPBCs = np.zeros(3, np.int32)
+                    clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
+                                                         self.mainWindow.PBC, appliedPBCs, filterSettings.neighbourRadius)
+                
                 volume, area = findConvexHullVolume(len(cluster), clusterPos, qconvex=filterSettings.qconvex)
             
             self.log("Cluster %d (%d atoms)" % (count, len(cluster)), 0, 4)
