@@ -515,6 +515,7 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         startSequencerButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
+        startSequencerButton.setStatusTip("Start sequencer")
         self.connect(startSequencerButton, QtCore.SIGNAL('clicked()'), self.startSequencer)
         
         rowLayout.addWidget(startSequencerButton)
