@@ -62,7 +62,7 @@ _input_c.so : input_c_wrap.o input_c.o
 _output_c.so : output_c_wrap.o output_c.o
 	$(CC) $(CCLINKFLAGS) output_c_wrap.o output_c.o -o _output_c.so
 
-_filtering_c.so : filtering_c_wrap.o filtering_c.o
+_filtering_c.so : filtering_c_wrap.o filtering_c.o utilities.o
 	$(CC) $(CCLINKFLAGS) filtering_c_wrap.o filtering_c.o utilities.o -o _filtering_c.so
 
 _defects_c.so : defects_c_wrap.o defects_c.o boxeslib.o utilities.o
