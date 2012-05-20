@@ -70,7 +70,14 @@ class FilterTab(QtGui.QWidget):
         
         # add a filter list
         self.addFilterList()
-            
+    
+    def showFilterSummary(self):
+        """
+        Show filtering summary.
+        
+        """
+        print "OPEN FILTER SUMMARY"
+    
     def runAllFilterLists(self):
         """
         Run all the filter lists.

@@ -72,6 +72,7 @@ class MainWindow(QtGui.QMainWindow):
         self.PBC[0] = 1
         self.PBC[1] = 1
         self.PBC[2] = 1
+        self.mouseMotion = 0
         
         # window size and location
         self.renderWindowWidth = 750 #650
@@ -94,17 +95,22 @@ class MainWindow(QtGui.QMainWindow):
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
         
         # add file actions
-        exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "system-log-out.svg", "Exit application")
-        newWindowAction = self.createAction("&New window", self.openNewWindow, "Ctrl-N", "document-new.svg", "Open new window")
+        exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "system-log-out.svg", 
+                                       "Exit application")
+        newWindowAction = self.createAction("&New window", self.openNewWindow, "Ctrl-N", 
+                                            "document-new.svg", "Open new window")
+        openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="document-open.svg", 
+                                          tip="Open current working directory")
         
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, None, exitAction))
+        self.addActions(fileMenu, (newWindowAction, openCWDAction, None, exitAction))
         
         # add file toolbar
         fileToolbar = self.addToolBar("File")
         fileToolbar.addAction(exitAction)
         fileToolbar.addAction(newWindowAction)
+        fileToolbar.addAction(openCWDAction)
         fileToolbar.addSeparator()
         
         # button to show console window
@@ -137,6 +143,18 @@ class MainWindow(QtGui.QMainWindow):
         
         cameraMenu = self.menuBar().addMenu("&Camera")
         self.addActions(cameraMenu, (setCamToCellAction,))
+        
+        # add filtering actions
+        showFilterSummaryAction = self.createAction("Show summary", self.showFilterSummary, 
+                                                    icon="document-properties.svg", 
+                                                    tip="Show filter summary")
+        
+        filteringToolbar = self.addToolBar("Filtering")
+        filteringToolbar.addAction(showFilterSummaryAction)
+        filteringToolbar.addSeparator()
+        
+        filteringMenu = self.menuBar().addMenu("&Filtering")
+        self.addActions(filteringMenu, (showFilterSummaryAction,))
         
         # add about action
         aboutAction = self.createAction("About", slot=self.aboutMe, icon="Information-icon.png", 
@@ -174,6 +192,21 @@ class MainWindow(QtGui.QMainWindow):
         
         self.VTKWidget._Iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
         
+        # add observers
+        self.VTKWidget._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
+        self.VTKWidget._Iren.AddObserver("MouseMoveEvent", self.mouseMoved)
+        self.VTKWidget._Iren.AddObserver("LeftButtonReleaseEvent", self.leftButtonReleased)
+        
+#        self.VTKWidget.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
+#        self.VTKWidget.AddObserver("MouseMoveEvent", self.mouseMoved)
+#        self.VTKWidget.AddObserver("LeftButtonReleaseEvent", self.leftButtonReleased)
+        
+        # add picker
+        self.VTKPicker = vtk.vtkCellPicker()
+        self.VTKPicker.SetTolerance(0.000001)
+        self.VTKPicker.AddObserver("EndPickEvent", self.endPickEvent)
+        self.VTKWidget.SetPicker(self.VTKPicker)
+        
         self.setCentralWidget(self.VTKContainer)
                 
         self.renderer = rendering.Renderer(self)
@@ -192,6 +225,61 @@ class MainWindow(QtGui.QMainWindow):
         
         self.show()
     
+    def openCWD(self):
+        """
+        Open current working directory.
+        
+        """
+        dirname = os.getcwd()
+        osname = platform.system()
+        if osname == "Linux":
+            os.system("xdg-open '%s'" % dirname)
+        
+        elif osname == "Darwin":
+            os.system("open '%s'" % dirname)
+        
+#        elif osname == "Windows":
+#            os.startfile(dirname)
+    
+    def endPickEvent(self, obj, event):
+        """
+        End of vtk pick event.
+        
+        """
+        pass
+    
+    def leftButtonPressed(self, obj, event):
+        """
+        Left mouse button pressed
+        
+        """
+        self.mouseMotion = 0
+        
+        # left release event isn't working so have to pick by double click
+        if self.VTKWidget.GetRepeatCount() == 1:
+            pos = self.VTKWidget.GetEventPosition()
+            self.VTKPicker.Pick(pos[0], pos[1], 0, self.VTKRen)
+    
+    def mouseMoved(self, obj, event):
+        """
+        Mouse moved
+        
+        """
+        self.mouseMotion = 1
+    
+    def leftButtonReleased(self, obj, event):
+        """
+        Left button released.
+        
+        """
+        print "LEFT RELEASE", self.mouseMotion
+    
+    def showFilterSummary(self):
+        """
+        Show the filter window.
+        
+        """
+        self.mainToolbar.filterPage.showFilterSummary()
     
     def setCameraToCell(self):
         """
@@ -656,8 +744,6 @@ class ConsoleWindow(QtGui.QDialog):
     def closeEvent(self, event):
         self.hide()
         self.parent.consoleOpen = 0
-        
-    
-    
 
 
+   

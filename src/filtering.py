@@ -477,7 +477,7 @@ class Filterer:
         """
         lattice = self.mainWindow.inputState
         
-        if False:
+        if True:
             for cluster in clusterList:
                 
                 appliedPBCs = np.zeros(3, np.int32)
