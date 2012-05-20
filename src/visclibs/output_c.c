@@ -20,7 +20,7 @@ void addPOVRAYSphere(FILE *, double, double, double, double, double, double, dou
 void addPOVRAYSphere(FILE *fp, double xpos, double ypos, double zpos, double radius, double R, double G, double B)
 {
     fprintf(fp, "sphere { <%lf,%lf,%lf>, %lf pigment { color rgb <%lf,%lf,%lf> } finish { ambient %f phong %f } }\n",
-            - xpos, ypos, zpos, radius, R, G, B, 0.25, 0.9);
+            xpos, ypos, zpos, radius, R, G, B, 0.25, 0.9);
 }
 
 
