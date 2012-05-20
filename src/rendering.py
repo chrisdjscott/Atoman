@@ -692,8 +692,10 @@ class Renderer:
         lattice = self.mainWindow.inputState
         
         a = [0]*3
-        b = lattice.cellDims
-        b[0] = - 1 * lattice.cellDims[0]
+        b = [0]*3 
+        b[0] = - lattice.cellDims[0]
+        b[1] = lattice.cellDims[1]
+        b[2] = lattice.cellDims[2]
         
         filehandle.write("#declare R = 0.1;\n")
         filehandle.write("#declare myObject = union {\n")
@@ -730,11 +732,11 @@ class Renderer:
         campos = self.camera.GetPosition()
         viewup = self.camera.GetViewUp()
         
-        string = "camera { perspective location <%f,%f,%f> look_at <%f,%f,%f> angle %f\n" % (campos[0] * -1, campos[1], campos[2],
-                                                                                             focalPoint[0] * -1, focalPoint[1], focalPoint[2],
+        string = "camera { perspective location <%f,%f,%f> look_at <%f,%f,%f> angle %f\n" % (- campos[0], campos[1], campos[2],
+                                                                                             - focalPoint[0], focalPoint[1], focalPoint[2],
                                                                                              self.camera.GetViewAngle())
-        string += "sky <%f,%f,%f> }\n" % (viewup[0] * -1, viewup[1], viewup[2])
-        string += "light_source { <%f,%f,%f> color rgb <1,1,1> }\n" % (campos[0] * -1, campos[1], campos[2])
+        string += "sky <%f,%f,%f> }\n" % (- viewup[0], viewup[1], viewup[2])
+        string += "light_source { <%f,%f,%f> color rgb <1,1,1> }\n" % (- campos[0], campos[1], campos[2])
         string += "background { color rgb <1,1,1> }\n"
         
         filehandle.write(string)

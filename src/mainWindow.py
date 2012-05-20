@@ -213,6 +213,13 @@ class MainWindow(QtGui.QMainWindow):
         self.VTKPicker.AddObserver("EndPickEvent", self.endPickEvent)
         self.VTKWidget.SetPicker(self.VTKPicker)
         
+        # distance representation
+#        self.distanceWidget = vtk.vtkDistanceWidget()
+#        self.distanceWidget.SetInteractor(self.VTKWidget)
+#        self.distanceWidget.CreateDefaultRepresentation()
+##        self.distanceWidget.GetRepresentation().SetLabelFormat()
+#        self.distanceWidget.On()
+        
         self.setCentralWidget(self.VTKContainer)
                 
         self.renderer = rendering.Renderer(self)
