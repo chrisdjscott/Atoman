@@ -730,8 +730,9 @@ class Renderer:
         campos = self.camera.GetPosition()
         viewup = self.camera.GetViewUp()
         
-        string = "camera { perspective location <%f,%f,%f> look_at <%f,%f,%f> angle 45\n" % (campos[0] * -1, campos[1], campos[2],
-                                                                                             focalPoint[0] * -1, focalPoint[1], focalPoint[2])
+        string = "camera { perspective location <%f,%f,%f> look_at <%f,%f,%f> angle %f\n" % (campos[0] * -1, campos[1], campos[2],
+                                                                                             focalPoint[0] * -1, focalPoint[1], focalPoint[2],
+                                                                                             self.camera.GetViewAngle())
         string += "sky <%f,%f,%f> }\n" % (viewup[0] * -1, viewup[1], viewup[2])
         string += "light_source { <%f,%f,%f> color rgb <1,1,1> }\n" % (campos[0] * -1, campos[1], campos[2])
         string += "background { color rgb <1,1,1> }\n"

@@ -88,7 +88,7 @@ class FilterTab(QtGui.QWidget):
         for filterList in self.filterLists:
             self.log("Running filter list %d" % (count,), 0, 1)
             
-            if filterList.isStaticList:
+            if filterList.isStaticList():
                 self.log("Static filter list: skipping", 0, 2)
             
             else:
