@@ -39,7 +39,10 @@ class FilterList(QtGui.QWidget):
                            "Point defects", 
                            "Crop", 
                            "Cluster", 
-                           "Displacement"]
+                           "Displacement",
+                           "Kinetic energy",
+                           "Potential energy",
+                           "Charge"]
         self.allFilters.sort()
         
         # current selected filters
@@ -319,6 +322,15 @@ class FilterList(QtGui.QWidget):
         
         elif filterName == "Displacement":
             form = filterSettings.DisplacementSettingsDialog(self.mainWindow, "Displacement filter settings", parent=self)
+        
+        elif filterName == "Kinetic energy":
+            form = filterSettings.KESettingsDialog(self.mainWindow, "Kinetic energy filter settings", parent=self)
+        
+        elif filterName == "Potential energy":
+            form = filterSettings.PESettingsDialog(self.mainWindow, "Potential energy filter settings", parent=self)
+        
+        elif filterName == "Charge":
+            form = filterSettings.ChargeSettingsDialog(self.mainWindow, "Charge filter settings", parent=self)
         
         return form
     

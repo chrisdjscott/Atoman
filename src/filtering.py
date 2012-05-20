@@ -114,7 +114,16 @@ class Filterer:
             
             elif filterName == "Point defects":
                 interstitials, vacancies, antisites, onAntisites, clusterList, defectType = self.pointDefectFilter(filterSettings)
-                
+            
+            elif filterName == "Kinetic energy":
+                self.KEFilter(filterSettings)
+            
+            elif filterName == "Potential energy":
+                self.PEFilter(filterSettings)
+            
+            elif filterName == "Charge":
+                self.chargeFilter(filterSettings)
+            
             elif filterName == "Cluster":
                 clusterList = self.clusterFilter(filterSettings)
                 
@@ -124,6 +133,7 @@ class Filterer:
                 if filterSettings.calculateVolumes:
                     self.clusterFilterCalculateVolumes(clusterList, filterSettings)
             
+            # write to log
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites)
                 self.log("%d visible atoms" % (NVis,), 0, 3)
@@ -209,6 +219,39 @@ class Filterer:
         NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
                                           settings.ymax, settings.zmin, settings.zmax, settings.xEnabled, 
                                           settings.yEnabled, settings.zEnabled)
+        
+        self.visibleAtoms.resize(NVisible, refcheck=False)
+    
+    def chargeFilter(self, settings):
+        """
+        Charge filter.
+        
+        """
+        lattice = self.mainWindow.inputState
+        
+        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge)
+        
+        self.visibleAtoms.resize(NVisible, refcheck=False)
+    
+    def KEFilter(self, settings):
+        """
+        Filter kinetic energy.
+        
+        """
+        lattice = self.mainWindow.inputState
+        
+        NVisible = filtering_c.KEFilter(self.visibleAtoms, lattice.KE, settings.minKE, settings.maxKE)
+        
+        self.visibleAtoms.resize(NVisible, refcheck=False)
+    
+    def PEFilter(self, settings):
+        """
+        Filter potential energy.
+        
+        """
+        lattice = self.mainWindow.inputState
+        
+        NVisible = filtering_c.PEFilter(self.visibleAtoms, lattice.PE, settings.minPE, settings.maxPE)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
     

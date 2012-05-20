@@ -30,7 +30,10 @@ import_array();
 %apply (int DIM1, double* INPLACE_ARRAY1) {
     (int posDim, double* pos),
     (int refPosDim, double *refPos),
-    (int cellDimsDim, double *cellDims)
+    (int cellDimsDim, double *cellDims),
+    (int KEDim, double *KE),
+    (int PEDim, double *PE),
+    (int chargeDim, double *charge)
 }
 
 /* 1d arrays of chars */
@@ -54,6 +57,12 @@ extern int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos
 
 extern int displacementFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, int refPosDim, double *refPos, 
                               int cellDimsDim, double *cellDims, int PBCDim, int *PBC, double minDisp, double maxDisp);
+
+extern int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double minKE, double maxKE);
+
+extern int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE);
+
+extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge);
 %}
 
 extern int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie);
@@ -62,3 +71,9 @@ extern int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos
 
 extern int displacementFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, int refPosDim, double *refPos, 
                               int cellDimsDim, double *cellDims, int PBCDim, int *PBC, double minDisp, double maxDisp);
+
+extern int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double minKE, double maxKE);
+
+extern int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE);
+
+extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge);

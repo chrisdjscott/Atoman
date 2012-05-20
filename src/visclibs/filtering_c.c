@@ -123,3 +123,88 @@ int displacementFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *po
     
     return NVisible;
 }
+
+
+/*******************************************************************************
+ ** Kinetic energy filter
+ *******************************************************************************/
+int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double minKE, double maxKE)
+{
+    int i, NVisible, index;
+    
+    
+    NVisible = 0;
+    for (i=0; i<NVisibleIn; i++)
+    {
+        index = visibleAtoms[i];
+        
+        if (KE[index] < minKE || KE[index] > maxKE)
+        {
+            continue;
+        }
+        else
+        {
+            visibleAtoms[i] = index;
+            NVisible++;
+        }
+    }
+    
+    return NVisible;
+}
+
+
+/*******************************************************************************
+ ** Potential energy filter
+ *******************************************************************************/
+int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE)
+{
+    int i, NVisible, index;
+    
+    
+    NVisible = 0;
+    for (i=0; i<NVisibleIn; i++)
+    {
+        index = visibleAtoms[i];
+        
+        if (PE[index] < minPE || PE[index] > maxPE)
+        {
+            continue;
+        }
+        else
+        {
+            visibleAtoms[i] = index;
+            NVisible++;
+        }
+    }
+    
+    return NVisible;
+}
+
+
+/*******************************************************************************
+ ** Charge energy filter
+ *******************************************************************************/
+int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge)
+{
+    int i, NVisible, index;
+    
+    
+    NVisible = 0;
+    for (i=0; i<NVisibleIn; i++)
+    {
+        index = visibleAtoms[i];
+        
+        if (charge[index] < minCharge || charge[index] > maxCharge)
+        {
+            continue;
+        }
+        else
+        {
+            visibleAtoms[i] = index;
+            NVisible++;
+        }
+    }
+    
+    return NVisible;
+}
+

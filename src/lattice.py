@@ -47,9 +47,9 @@ class Lattice:
         
         self.specie = np.empty(NAtoms, np.int32)
         self.pos = np.empty(3 * NAtoms, np.float64)
-        self.KE = np.empty(NAtoms, np.float64)
-        self.PE = np.empty(NAtoms, np.float64)
-        self.charge = np.empty(NAtoms, np.float64)
+        self.KE = np.zeros(NAtoms, np.float64)
+        self.PE = np.zeros(NAtoms, np.float64)
+        self.charge = np.zeros(NAtoms, np.float64)
         
         self.specieList = []
         self.specieCount = []

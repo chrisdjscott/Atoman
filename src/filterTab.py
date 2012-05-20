@@ -76,7 +76,7 @@ class FilterTab(QtGui.QWidget):
         Show filtering summary.
         
         """
-        print "OPEN FILTER SUMMARY"
+        pass
     
     def runAllFilterLists(self):
         """
