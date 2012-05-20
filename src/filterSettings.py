@@ -889,7 +889,7 @@ class ChargeSettingsDialog(GenericSettingsDialog):
         self.minChargeSpinBox.setSingleStep(0.1)
         self.minChargeSpinBox.setMinimum(-999.0)
         self.minChargeSpinBox.setMaximum(999.0)
-        self.minChargeSpinBox.setValue(self.minPE)
+        self.minChargeSpinBox.setValue(self.minCharge)
         self.connect(self.minChargeSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMinCharge)
         
         row = self.newRow()
@@ -901,7 +901,7 @@ class ChargeSettingsDialog(GenericSettingsDialog):
         self.maxChargeSpinBox.setSingleStep(0.1)
         self.maxChargeSpinBox.setMinimum(-999.0)
         self.maxChargeSpinBox.setMaximum(999.0)
-        self.maxChargeSpinBox.setValue(self.maxPE)
+        self.maxChargeSpinBox.setValue(self.maxCharge)
         self.connect(self.maxChargeSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMaxCharge)
         
         row = self.newRow()

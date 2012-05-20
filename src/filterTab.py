@@ -87,10 +87,15 @@ class FilterTab(QtGui.QWidget):
         count = 0
         for filterList in self.filterLists:
             self.log("Running filter list %d" % (count,), 0, 1)
-            filterList.filterer.runFilters()
+            
+            if filterList.isStaticList:
+                self.log("Static filter list: skipping", 0, 2)
+            
+            else:
+                filterList.filterer.runFilters()
             
             count += 1
-
+    
     def addFilterList(self):
         """
         Add a new filter list

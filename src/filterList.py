@@ -75,8 +75,14 @@ class FilterList(QtGui.QWidget):
         trashButton.setFixedWidth(35)
         self.connect(trashButton, QtCore.SIGNAL('clicked()'), self.filterTab.removeFilterList)
         
+        # static list button
+        self.staticListButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Stop_hand_nuvola_black.svg")), "")
+        self.staticListButton.setFixedWidth(35)
+        self.staticListButton.setStatusTip("Static filter list")
+        self.staticListButton.setCheckable(1)
+        self.staticListButton.setChecked(0)
+        
         # show scalar bar
-        #TODO: need to think about this - how to know which filter the scalar bar refers to etc
         self.scalarBarButton = QtGui.QPushButton(QtGui.QIcon(iconPath("preferences-desktop-locale.svg")), "")
         self.scalarBarButton.setFixedWidth(35)
         self.scalarBarButton.setStatusTip("Show scalar bar")
@@ -95,6 +101,7 @@ class FilterList(QtGui.QWidget):
         row2 = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row2)
         rowLayout.setAlignment(QtCore.Qt.AlignRight)
+        rowLayout.addWidget(self.staticListButton)
         rowLayout.addWidget(self.scalarBarButton)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
@@ -207,13 +214,26 @@ class FilterList(QtGui.QWidget):
         while len(self.currentSettings):
             self.currentSettings.pop()
         
+        self.staticListButton.setChecked(0)
+        
         self.defectFilterSelected = 0
+    
+    def isStaticList(self):
+        """
+        Check if the list is a static list.
+        
+        """
+        return self.staticListButton.isChecked()
     
     def moveFilterDownInList(self):
         """
         Move filter down in list
         
         """
+        if self.isStaticList():
+            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            return
+        
         # find which one is selected
         row = self.listItems.currentRow()
         
@@ -233,6 +253,10 @@ class FilterList(QtGui.QWidget):
         Move filter up in list
         
         """
+        if self.isStaticList():
+            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            return
+        
         # find which one is selected
         row = self.listItems.currentRow()
         
@@ -260,6 +284,10 @@ class FilterList(QtGui.QWidget):
         Add new filter
         
         """
+        if self.isStaticList():
+            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            return
+        
         # first determine what filter is to be added
         filterName, ok = QtGui.QInputDialog.getItem(self, "Add filter", "Select filter:", self.allFilters, editable=False)
         
@@ -288,6 +316,10 @@ class FilterList(QtGui.QWidget):
         Remove new filter
         
         """
+        if self.isStaticList():
+            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            return
+        
         # find which one is selected
         row = self.listItems.currentRow()
         

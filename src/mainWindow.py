@@ -74,6 +74,12 @@ class MainWindow(QtGui.QMainWindow):
         self.PBC[2] = 1
         self.mouseMotion = 0
         
+        # change to home directory if running from pyinstaller bundle
+#        print os.environ.get("_MEIPASS2")
+#        print os.environ.get("HOME")
+#        if os.environ.get("_MEIPASS2") is not None:
+#            os.chdir(os.environ.get("HOME"))
+        
         # window size and location
         self.renderWindowWidth = 750 #650
         self.renderWindowHeight = 715 #650
