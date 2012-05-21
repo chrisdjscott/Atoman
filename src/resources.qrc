@@ -50,6 +50,10 @@
     <file>icons/Help-icon.png</file>
     <file>icons/document-properties.svg</file>
     <file>icons/Stop_hand_nuvola_black.svg</file>
+    <file>icons/periodic-table-icon.png</file>
+    <file>icons/undo_64.png</file>
+    <file>icons/redo_64.png</file>
+    <file>icons/save_64.png</file>
     
     <file>help/index.html</file>
     <file>help/input.html</file>

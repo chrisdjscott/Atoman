@@ -23,6 +23,7 @@ import lattice
 import inputModule
 import rendering
 import helpForm
+from atoms import elements
 
 try:
     import resources
@@ -134,6 +135,9 @@ class MainWindow(QtGui.QMainWindow):
         showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon2.svg", 
                                            tip="Toggle axes visiblity")
         
+        openElementEditorAction = self.createAction("Element editor", slot=self.openElementEditor, icon="periodic-table-icon.png", 
+                                                    tip="Open element editor")
+        
         # reset camera to cell
         setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="set_cam_cell.svg", 
                                            tip="Reset camera to cell")
@@ -142,10 +146,11 @@ class MainWindow(QtGui.QMainWindow):
         visualisationToolbar.addAction(showCellAction)
         visualisationToolbar.addAction(showAxesAction)
         visualisationToolbar.addAction(setCamToCellAction)
+        visualisationToolbar.addAction(openElementEditorAction)
         visualisationToolbar.addSeparator()
         
         renderingMenu = self.menuBar().addMenu("&Rendering")
-        self.addActions(renderingMenu, (showCellAction, showAxesAction))
+        self.addActions(renderingMenu, (showCellAction, showAxesAction, openElementEditorAction))
         
         cameraMenu = self.menuBar().addMenu("&Camera")
         self.addActions(cameraMenu, (setCamToCellAction,))
@@ -237,6 +242,16 @@ class MainWindow(QtGui.QMainWindow):
         self.setStatus('Ready')
         
         self.show()
+    
+    def openElementEditor(self):
+        """
+        Open element editor.
+        
+        """
+        if not self.refLoaded:
+            return
+        
+        elementEditor = ElementEditor(parent=self)
     
     def openCWD(self):
         """
@@ -757,6 +772,217 @@ class ConsoleWindow(QtGui.QDialog):
     def closeEvent(self, event):
         self.hide()
         self.parent.consoleOpen = 0
+
+
+################################################################################
+class ElementEditor(QtGui.QDialog):
+    """
+    Dialog to edit element properties.
+    
+    """
+    def __init__(self, parent=None):
+        super(ElementEditor, self).__init__(parent)
+        
+        self.parent = parent
+        self.setModal(1)
+        
+        self.setWindowTitle("Element editor")
+        self.setWindowIcon(QtGui.QIcon(iconPath("periodic-table-icon.png")))
+#        self.resize(250, 250)
+        
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.dirty = False
+        self.currentSym = ""
+        
+        layout = QtGui.QVBoxLayout(self)
+        layout.setAlignment(QtCore.Qt.AlignHCenter)
+#        layout.setContentsMargins(0, 0, 0, 0)
+#        layout.setSpacing(0)
+        
+        # lattice objects
+        self.inputLattice = self.parent.inputState
+        self.refLattice = self.parent.refState
+        
+        # list of unique species
+        uniqueSpecies = set()
+        for sym in self.inputLattice.specieList:
+            uniqueSpecies.add(sym)
+        
+        for sym in self.refLattice.specieList:
+            uniqueSpecies.add(sym)
+        
+        # selector
+        self.elementComboBox = QtGui.QComboBox()
+        
+        # add elements to combo box
+        self.fullSpecieList = []
+        for sym in uniqueSpecies:
+            self.fullSpecieList.append(sym)
+            self.elementComboBox.addItem("%s - %s" % (sym, elements.atomName(sym)))
+        
+        # add to layout
+        layout.addWidget(self.elementComboBox)
+        
+        # add sphere of first specie
+        sym = self.fullSpecieList[0]
+        self.currentSym = sym
+        
+        group = QtGui.QGroupBox("Element properties")
+        groupLayout = QtGui.QVBoxLayout(group)
+        groupLayout.setContentsMargins(0, 0, 0, 0)
+        
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("Colour: ")
+        
+        RGB = elements.RGB(sym)
+        self.colour = QtGui.QColor(RGB[0]*255.9, RGB[1]*255.0, RGB[2]*255.0)
+        
+        self.colourButton = QtGui.QPushButton("")
+        self.colourButton.setFixedWidth(50)
+        self.colourButton.setFixedHeight(30)
+        self.setButtonColour(self.colour)
+        self.colourButton.clicked.connect(self.showColourDialog)
+        
+        self.connect(self.elementComboBox, QtCore.SIGNAL("currentIndexChanged(QString)"), self.elementChanged)
+        
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.colourButton)
+        
+        groupLayout.addWidget(row)
+        
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("Covalent radius: ")
+        
+        self.radiusSpinBox = QtGui.QDoubleSpinBox(self)
+        self.radiusSpinBox.setSingleStep(0.01)
+        self.radiusSpinBox.setMinimum(0.0)
+        self.radiusSpinBox.setMaximum(100.0)
+        self.radiusSpinBox.setValue(elements.covalentRadius(sym))
+        self.connect(self.radiusSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.radiusChanged)
+        
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.radiusSpinBox)
+        
+        groupLayout.addWidget(row)
+        
+        # buttons
+        buttonContainer = QtGui.QWidget(self)
+        buttonLayout = QtGui.QHBoxLayout(buttonContainer)
+        buttonLayout.setContentsMargins(0, 0, 0, 0)
+        buttonLayout.setSpacing(0)
+        
+        # apply button
+        applyButton = QtGui.QPushButton(QtGui.QIcon(iconPath("redo_64.png")), "Apply")
+        applyButton.clicked.connect(self.applyChanges)
+        
+        saveButton = QtGui.QPushButton(QtGui.QIcon(iconPath("save_64.png")), "Save")
+        saveButton.clicked.connect(self.saveChanges)
+        
+        resetButton = QtGui.QPushButton(QtGui.QIcon(iconPath("undo_64.png")), "Reset")
+        resetButton.clicked.connect(self.resetChanges)
+        
+        buttonLayout.addWidget(applyButton)
+        buttonLayout.addWidget(saveButton)
+        buttonLayout.addWidget(resetButton)
+        
+        layout.addWidget(group)
+        
+        layout.addWidget(buttonContainer)
+        
+        self.show()
+    
+    def resetChanges(self):
+        """
+        Reset changes.
+        
+        """
+        self.dirty = False
+    
+    def saveChanges(self):
+        """
+        Save changes.
+        
+        """
+        self.applyChanges()
+        
+        # save to file
+        
+    
+    def applyChanges(self):
+        """
+        Apply changes.
+        
+        """
+        self.dirty = False
+    
+    def radiusChanged(self, val):
+        """
+        Radius has been changed.
+        
+        """
+        self.dirty = True
+    
+    def showColourDialog(self):
+        """
+        Show the color dialog.
+        
+        """
+        col = QtGui.QColorDialog.getColor()
+        
+        if col.isValid():
+            self.setButtonColour(col)
+            
+            self.colour = col
+            
+            self.dirty = True
+            
+    def setButtonColour(self, col):
+        """
+        Set the colour buttons colour.
+        
+        """
+        self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
+    
+    def getSpecieRGB(self, sym):
+        """
+        Get RGB from input/ref states.
+        
+        """
+        pass
+    
+    def elementChanged(self, text):
+        """
+        Changed which element we are editing
+        
+        """
+        if self.dirty:
+            pass
+#            print "WARN UNSAVED/APPIED CHANGES" # do you wish to continue (changes will be lost)
+        
+        sym = self.fullSpecieList[self.elementComboBox.currentIndex()]
+        self.currentSym = sym
+        
+        RGB = elements.RGB(sym)
+        self.colour = QtGui.QColor(RGB[0]*255.9, RGB[1]*255.0, RGB[2]*255.0)
+        
+        self.setButtonColour(self.colour)
+        
+        self.radiusSpinBox.setValue(elements.covalentRadius(sym))
+        
+        self.dirty = False
+        
+        
+
 
 
    

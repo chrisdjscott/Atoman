@@ -138,6 +138,15 @@ class Elements:
             sys.exit(__name__+": ERROR: no RGB for "+sym)
         
         return value
+    
+    def updateRGB(self, sym, R, G, B):
+        """
+        Update the RGB values for given specie.
+        
+        """
+        self.RGBDict[sym][0] = R
+        self.RGBDict[sym][1] = G
+        self.RGBDict[sym][2] = B
 
 
 ################################################################################
