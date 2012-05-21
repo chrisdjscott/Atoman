@@ -512,6 +512,8 @@ class Filterer:
             # now render
             if facets is not None:
                 rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection)
+                
+                # write povray file too
     
     def clusterFilterDrawHullsWithPBCs(self, clusterList, settings):
         """
@@ -520,38 +522,34 @@ class Filterer:
         """
         lattice = self.mainWindow.inputState
         
-        if True:
-            for cluster in clusterList:
+        for cluster in clusterList:
+            
+            appliedPBCs = np.zeros(7, np.int32)
+            clusterPos = np.empty(3 * len(cluster), np.float64)
+            for i in xrange(len(cluster)):
+                index = cluster[i]
                 
-                appliedPBCs = np.zeros(3, np.int32)
-                clusterPos = np.empty(3 * len(cluster), np.float64)
-                for i in xrange(len(cluster)):
-                    index = cluster[i]
-                    
-                    clusterPos[3*i] = lattice.pos[3*index]
-                    clusterPos[3*i+1] = lattice.pos[3*index+1]
-                    clusterPos[3*i+2] = lattice.pos[3*index+2]
+                clusterPos[3*i] = lattice.pos[3*index]
+                clusterPos[3*i+1] = lattice.pos[3*index+1]
+                clusterPos[3*i+2] = lattice.pos[3*index+2]
+            
+            clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
+                                                 self.mainWindow.PBC, appliedPBCs, settings.neighbourRadius)
+            
+            if len(cluster) > 2:
+                facets = findConvexHull(len(cluster), clusterPos, qconvex=settings.qconvex)
                 
-                clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
-                                                     self.mainWindow.PBC, appliedPBCs, settings.neighbourRadius)
+            # now render
+            if facets is not None:
+                rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection)
                 
-                if len(cluster) > 3:
-                    facets = findConvexHull(len(cluster), clusterPos, qconvex=settings.qconvex)
-                    
-                # now render
-                if facets is not None:
-                    rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection)
-                
-                # handle PBCs
-                if len(cluster) > 3:
+                # write povray file too
+            
+            # handle PBCs
+            if len(cluster) > 2:
+                while max(appliedPBCs) > 0:
                     tmpClusterPos = copy.deepcopy(clusterPos)
-                    for i in xrange(3):
-                        if appliedPBCs[i]:
-                            if min(tmpClusterPos[i::3]) < 0.0:
-                                tmpClusterPos[i::3] += lattice.cellDims[i]
-                            
-                            else:
-                                tmpClusterPos[i::3] -= lattice.cellDims[i]
+                    applyPBCsToCluster(tmpClusterPos, lattice.cellDims, appliedPBCs)
                     
                     # get facets
                     facets = findConvexHull(len(cluster), tmpClusterPos, qconvex=settings.qconvex)
@@ -559,27 +557,9 @@ class Filterer:
                     # render
                     if facets is not None:
                         rendering.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection)
-            
-            return
-            
-        
-        
-        # recalc each volume with PBCs off
-        for cluster in clusterList:
-            clusterAtoms = np.empty(len(cluster), np.int32)
-            for i in xrange(len(cluster)):
-                clusterAtoms[i] = cluster[i]
-            
-            subClusterList = self.clusterFilter(clusterAtoms, settings, PBC=np.zeros(3, np.int32), minSize=1, nebRad=1.5*settings.neighbourRadius)
-            
-            self.clusterFilterDrawHullsNoPBCs(subClusterList, settings)
-        
-        
-        
-        
-        
-        
-        
+                        
+                        # write povray file too
+                
     
     def clusterFilterCalculateVolumes(self, clusterList, filterSettings):
         """
@@ -608,9 +588,9 @@ class Filterer:
             else:
                 PBC = self.mainWindow.PBC
                 if PBC[0] or PBC[1] or PBC[2]:
-                    appliedPBCs = np.zeros(3, np.int32)
+                    appliedPBCs = np.zeros(7, np.int32)
                     clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
-                                                         self.mainWindow.PBC, appliedPBCs, filterSettings.neighbourRadius)
+                                                         PBC, appliedPBCs, filterSettings.neighbourRadius)
                 
                 volume, area = findConvexHullVolume(len(cluster), clusterPos, qconvex=filterSettings.qconvex)
             
@@ -704,3 +684,96 @@ def findConvexHullVolume(N, pos, qconvex="qconvex"):
             facetArea = float(array[1])
     
     return volume, facetArea
+
+
+################################################################################
+def applyPBCsToCluster(clusterPos, cellDims, appliedPBCs):
+    """
+    Apply PBCs to cluster.
+    
+    """
+    for i in xrange(7):
+        if appliedPBCs[i]:
+            # apply in x direction
+            if i == 0:
+                if min(clusterPos[0::3]) < 0.0:
+                    clusterPos[0::3] += cellDims[0]
+                
+                else:
+                    clusterPos[0::3] -= cellDims[0]
+            
+            elif i == 1:
+                if min(clusterPos[1::3]) < 0.0:
+                    clusterPos[1::3] += cellDims[1]
+                
+                else:
+                    clusterPos[1::3] -= cellDims[1]
+            
+            elif i == 2:
+                if min(clusterPos[2::3]) < 0.0:
+                    clusterPos[2::3] += cellDims[2]
+                
+                else:
+                    clusterPos[2::3] -= cellDims[2]
+            
+            elif i == 3:
+                if min(clusterPos[0::3]) < 0.0:
+                    clusterPos[0::3] += cellDims[0]
+                
+                else:
+                    clusterPos[0::3] -= cellDims[0]
+                
+                if min(clusterPos[1::3]) < 0.0:
+                    clusterPos[1::3] += cellDims[1]
+                
+                else:
+                    clusterPos[1::3] -= cellDims[1]
+            
+            elif i == 4:
+                if min(clusterPos[0::3]) < 0.0:
+                    clusterPos[0::3] += cellDims[0]
+                
+                else:
+                    clusterPos[0::3] -= cellDims[0]
+                
+                if min(clusterPos[2::3]) < 0.0:
+                    clusterPos[2::3] += cellDims[2]
+                
+                else:
+                    clusterPos[2::3] -= cellDims[2]
+            
+            elif i == 5:
+                if min(clusterPos[1::3]) < 0.0:
+                    clusterPos[1::3] += cellDims[1]
+                
+                else:
+                    clusterPos[1::3] -= cellDims[1]
+                
+                if min(clusterPos[2::3]) < 0.0:
+                    clusterPos[2::3] += cellDims[2]
+                
+                else:
+                    clusterPos[2::3] -= cellDims[2]
+            
+            elif i == 6:
+                if min(clusterPos[0::3]) < 0.0:
+                    clusterPos[0::3] += cellDims[0]
+                
+                else:
+                    clusterPos[0::3] -= cellDims[0]
+                
+                if min(clusterPos[1::3]) < 0.0:
+                    clusterPos[1::3] += cellDims[1]
+                
+                else:
+                    clusterPos[1::3] -= cellDims[1]
+                
+                if min(clusterPos[2::3]) < 0.0:
+                    clusterPos[2::3] += cellDims[2]
+                
+                else:
+                    clusterPos[2::3] -= cellDims[2]
+            
+            appliedPBCs[i] = 0
+            
+            break

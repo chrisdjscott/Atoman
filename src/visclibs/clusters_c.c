@@ -13,6 +13,7 @@
 
 int findNeighbours(int, int, int, int *, double *, double, struct Boxes *, double *, int *);
 int findNeighboursUnapplyPBC(int, int, int, int, int *, double *, double, double *, int *, int *);
+void setAppliedPBCs(int *, int *);
 
 
 /*******************************************************************************
@@ -278,8 +279,6 @@ int findNeighboursUnapplyPBC(int NAtoms, int index, int clusterID, int numInClus
             {
                 if (localPBCsApplied[j])
                 {
-                    appliedPBCs[j] = 1;
-                    
                     if (pos[3*index2+j] < 0.5 * cellDims[j])
                     {
                         pos[3*index2+j] += cellDims[j];
@@ -291,6 +290,8 @@ int findNeighboursUnapplyPBC(int NAtoms, int index, int clusterID, int numInClus
                 }
             }
             
+            setAppliedPBCs(localPBCsApplied, appliedPBCs);
+            
             atomCluster[index2] = clusterID;
             numInCluster++;
             
@@ -300,4 +301,42 @@ int findNeighboursUnapplyPBC(int NAtoms, int index, int clusterID, int numInClus
     }
     
     return numInCluster;
+}
+
+
+/*******************************************************************************
+ * set applied PBC
+ *******************************************************************************/
+void setAppliedPBCs(int *PBC, int *appliedPBCs)
+{
+    if (PBC[0] == 1 && PBC[1] == 0 && PBC[2] == 0)
+    {
+        appliedPBCs[0] = 1;
+    }
+    else if (PBC[0] == 0 && PBC[1] == 1 && PBC[2] == 0)
+    {
+        appliedPBCs[1] = 1;
+    }
+    else if (PBC[0] == 0 && PBC[1] == 0 && PBC[2] == 1)
+    {
+        appliedPBCs[2] = 1;
+    }
+    else if (PBC[0] == 1 && PBC[1] == 1 && PBC[2] == 0)
+    {
+        appliedPBCs[3] = 1;
+    }
+    else if (PBC[0] == 1 && PBC[1] == 0 && PBC[2] == 1)
+    {
+        appliedPBCs[4] = 1;
+    }
+    else if (PBC[0] == 0 && PBC[1] == 1 && PBC[2] == 1)
+    {
+        appliedPBCs[5] = 1;
+    }
+    else if (PBC[0] == 1 && PBC[1] == 1 && PBC[2] == 1)
+    {
+        appliedPBCs[6] = 1;
+    }
+    
+    
 }
