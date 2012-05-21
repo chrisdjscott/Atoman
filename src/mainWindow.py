@@ -16,8 +16,7 @@ from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import numpy as np
 
-import utilities
-from utilities import iconPath
+from utilities import iconPath, resourcePath
 import toolbar as toolbarModule
 import lattice
 import inputModule
@@ -788,10 +787,11 @@ class ElementEditor(QtGui.QDialog):
         
         self.setWindowTitle("Element editor")
         self.setWindowIcon(QtGui.QIcon(iconPath("periodic-table-icon.png")))
-#        self.resize(250, 250)
         
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.dirty = False
         
         layout = QtGui.QVBoxLayout(self)
         layout.setAlignment(QtCore.Qt.AlignHCenter)
@@ -821,6 +821,7 @@ class ElementEditor(QtGui.QDialog):
         self.radiusDict = {}
         for sym in self.fullSpecieList:
             group = QtGui.QGroupBox("%s - %s" % (sym, elements.atomName(sym)))
+            group.setAlignment(QtCore.Qt.AlignCenter)
             groupLayout = QtGui.QVBoxLayout(group)
             groupLayout.setContentsMargins(0, 0, 0, 0)
             
@@ -883,12 +884,15 @@ class ElementEditor(QtGui.QDialog):
         
         # apply button
         applyButton = QtGui.QPushButton(QtGui.QIcon(iconPath("redo_64.png")), "Apply")
+        applyButton.setStatusTip("Apply changes to current session")
         applyButton.clicked.connect(self.applyChanges)
         
         saveButton = QtGui.QPushButton(QtGui.QIcon(iconPath("save_64.png")), "Save")
+        applyButton.setStatusTip("Save changes for use in future sessions")
         saveButton.clicked.connect(self.saveChanges)
         
         resetButton = QtGui.QPushButton(QtGui.QIcon(iconPath("undo_64.png")), "Reset")
+        applyButton.setStatusTip("Reset changes to last applied")
         resetButton.clicked.connect(self.resetChanges)
         
         buttonLayout.addWidget(applyButton)
@@ -904,7 +908,16 @@ class ElementEditor(QtGui.QDialog):
         Reset changes.
         
         """
-        pass
+        for sym in self.fullSpecieList:
+            self.radiusSpinBoxDict[sym].setValue(elements.covalentRadius(sym))
+            self.radiusDict[sym] = elements.covalentRadius(sym)
+            
+            RGB = elements.RGB(sym)
+            col = QtGui.QColor(RGB[0]*255.0, RGB[1]*255.0, RGB[2]*255.0)
+            self.colourDict[sym] = col
+            self.colourButtonDict[sym].setStyleSheet("QPushButton { background-color: %s }" % col.name())
+        
+        self.parent.setStatus("Element properties reset")
     
     def saveChanges(self):
         """
@@ -914,14 +927,53 @@ class ElementEditor(QtGui.QDialog):
         self.applyChanges()
         
         # save to file
+        elements.write(resourcePath("data/atoms.IN"))
         
+        self.parent.setStatus("Saved element properties")
     
     def applyChanges(self):
         """
         Apply changes.
         
         """
-        pass
+        for sym in self.fullSpecieList:
+            
+            radius = self.radiusDict[sym]
+            
+            col = self.colourDict[sym] 
+            R = float(col.red()) / 255.0
+            G = float(col.green()) / 255.0
+            B = float(col.blue()) / 255.0
+            
+            # first modify the Lattice objects
+            if sym in self.inputLattice.specieList:
+                index = np.where(self.inputLattice.specieList == sym)[0][0]
+                
+                # radius
+                self.inputLattice.specieCovalentRadius[index] = radius
+                
+                # RGB
+                self.inputLattice.specieRGB[index][0] = R
+                self.inputLattice.specieRGB[index][1] = G
+                self.inputLattice.specieRGB[index][2] = B
+                
+            
+            if sym in self.refLattice.specieList:
+                index = np.where(self.refLattice.specieList == sym)[0][0]
+                
+                # radius
+                self.refLattice.specieCovalentRadius[index] = radius
+                
+                # RGB
+                self.refLattice.specieRGB[index][0] = R
+                self.refLattice.specieRGB[index][1] = G
+                self.refLattice.specieRGB[index][2] = B
+            
+            # now modify elements structure
+            elements.updateCovalentRadius(sym, radius)
+            elements.updateRGB(sym, R, G, B)
+            
+        self.parent.setStatus("Element properties applied")
     
     def radiusChanged(self, val, sym):
         """

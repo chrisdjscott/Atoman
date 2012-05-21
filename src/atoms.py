@@ -147,6 +147,13 @@ class Elements:
         self.RGBDict[sym][0] = R
         self.RGBDict[sym][1] = G
         self.RGBDict[sym][2] = B
+    
+    def updateCovalentRadius(self, sym, radius):
+        """
+        Update covalent radius values for given specie.
+        
+        """
+        self.covalentRadiusDict[sym] = radius
 
 
 ################################################################################
