@@ -54,6 +54,8 @@
     <file>icons/undo_64.png</file>
     <file>icons/redo_64.png</file>
     <file>icons/save_64.png</file>
+    <file>icons/file-export-icon.png</file>
+    <file>icons/file-import-icon.png</file>
     
     <file>help/index.html</file>
     <file>help/input.html</file>

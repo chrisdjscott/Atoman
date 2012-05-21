@@ -17,6 +17,7 @@ import vtk
 import numpy as np
 
 from utilities import iconPath
+from atoms import elements
 import toolbar as toolbarModule
 import lattice
 import inputModule
@@ -107,10 +108,14 @@ class MainWindow(QtGui.QMainWindow):
                                             "document-new.svg", "Open new window")
         openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="document-open.svg", 
                                           tip="Open current working directory")
+        exportElementsAction = self.createAction("Export elements", slot=self.exportElements,
+                                                 icon="file-export-icon.png", tip="Export element properties")
+        importElementsAction = self.createAction("Import elements", slot=self.importElements,
+                                                 icon="file-import-icon.png", tip="Import element properties")
         
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, openCWDAction, None, exitAction))
+        self.addActions(fileMenu, (newWindowAction, openCWDAction, importElementsAction, exportElementsAction, None, exitAction))
         
         # add file toolbar
         fileToolbar = self.addToolBar("File")
@@ -252,6 +257,31 @@ class MainWindow(QtGui.QMainWindow):
         
         elementEditor = dialogs.ElementEditor(parent=self)
         elementEditor.show()
+    
+    def importElements(self):
+        """
+        Import element properties file.
+        
+        """
+        pass
+    
+    def exportElements(self):
+        """
+        Export element properties to file.
+        
+        """
+        fname = os.path.join(".", "atoms-exported.IN")
+        
+        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export element properties", fname, 
+                                                  "IN files (*.IN)")
+        
+        if fname:
+            if not "." in fname or fname[-3:] != ".IN":
+                fname += ".IN"
+            
+            elements.write(fname)
+            
+            self.setStatus("Element properties exported")
     
     def openCWD(self):
         """
