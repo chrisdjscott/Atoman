@@ -15,7 +15,7 @@ import numpy as np
 
 import utilities
 from visclibs import input_c
-import atoms
+from atoms import elements
 
 
 
@@ -108,14 +108,14 @@ def readLattice(filename, tmpLocation, lattice, fileType, state, log):
         lattice.specieList[i] = specieListTemp[i]
         lattice.specieCount[i] = specieCountTemp[i]
         
-        lattice.specieMass[i] = atoms.atomicMass(lattice.specieList[i])
-        lattice.specieCovalentRadius[i] = atoms.covalentRadius(lattice.specieList[i])
-        rgbtemp = atoms.RGB(lattice.specieList[i])
+        lattice.specieMass[i] = elements.atomicMass(lattice.specieList[i])
+        lattice.specieCovalentRadius[i] = elements.covalentRadius(lattice.specieList[i])
+        rgbtemp = elements.RGB(lattice.specieList[i])
         lattice.specieRGB[i][0] = rgbtemp[0]
         lattice.specieRGB[i][1] = rgbtemp[1]
         lattice.specieRGB[i][2] = rgbtemp[2]
         
-        log("%d %s (%s) atoms" % (specieCountTemp[i], specieListTemp[i], atoms.atomName(specieListTemp[i])), 0, 2)
+        log("%d %s (%s) atoms" % (specieCountTemp[i], specieListTemp[i], elements.atomName(specieListTemp[i])), 0, 2)
     
     return 0
 
@@ -224,14 +224,14 @@ def readLBOMDRef(filename, tmpLocation, lattice, fileType, state, log):
         lattice.specieList[i] = specieListTemp[i]
         lattice.specieCount[i] = specieCountTemp[i]
         
-        lattice.specieMass[i] = atoms.atomicMass(lattice.specieList[i])
-        lattice.specieCovalentRadius[i] = atoms.covalentRadius(lattice.specieList[i])
-        rgbtemp = atoms.RGB(lattice.specieList[i])
+        lattice.specieMass[i] = elements.atomicMass(lattice.specieList[i])
+        lattice.specieCovalentRadius[i] = elements.covalentRadius(lattice.specieList[i])
+        rgbtemp = elements.RGB(lattice.specieList[i])
         lattice.specieRGB[i][0] = rgbtemp[0]
         lattice.specieRGB[i][1] = rgbtemp[1]
         lattice.specieRGB[i][2] = rgbtemp[2]
         
-        log("%d %s (%s) atoms" % (specieCountTemp[i], specieListTemp[i], atoms.atomName(specieListTemp[i])), 0, 2)
+        log("%d %s (%s) atoms" % (specieCountTemp[i], specieListTemp[i], elements.atomName(specieListTemp[i])), 0, 2)
 
     return 0
 

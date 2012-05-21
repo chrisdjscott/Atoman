@@ -1,132 +1,166 @@
 
-################################################################################
-## Copyright Chris Scott 2011
-## Requires Atoms.IN parameter file
-## Provides:
-##        atomicNumber()
-##        atomicMass()
-##        atomName()
-##        covalentRadius()
-##        RGB()
-################################################################################
+"""
+Provides information about elements.
 
+Eg. atomic mass, radius, etc.
+
+@author: Chris Scott
+
+"""
 import sys
-import os
 
 from utilities import resourcePath
 
 
-
-# atomic number
-def atomicNumber( sym ):
-    global atomicNumberDict
+################################################################################
+class Elements:
+    """
+    Structure to hold atomic data
+    ie mass, radius, etc
     
-    try:
-        value = atomicNumberDict[sym]
-    except:
-        sys.exit(__name__+": ERROR: no atomic number for "+sym)
+    """
+    def __init__(self):
+        self.atomicNumberDict = {}
+        self.atomicMassDict = {}
+        self.atomNameDict = {}
+        self.covalentRadiusDict = {}
+        self.RGBDict = {}
+        self.NElements = 0
     
-    return value
-
-
-# atomic mass
-def atomicMass(sym):
-    global atomicMassDict
-    
-    try:
-        value = atomicMassDict[sym]
-    except:
-        sys.exit(__name__+": ERROR: no atomic mass for "+sym)
-    
-    return value
-
-
-# name of atom
-def atomName(sym):
-    global atomNameDict
+    def read(self, filename):
+        """
+        Read in atomic information from given file.
         
-    try:
-        value = atomNameDict[sym]
-    except:
-        sys.exit(__name__+": ERROR: no atom name for "+sym)
+        """
+        f = open( filename, "r" )
+        
+        # read into dictionaries    
+        count = 0    
+        for line in f:
+            line = line.strip()
+            
+            array = line.split()
+            
+            key = array[3]
+            if len(key) == 1:
+                key = key + '_'
+            
+            self.atomicNumberDict[key] = int(array[0])
+            self.atomicMassDict[key] = float(array[1])
+            self.atomNameDict[key] = array[2]
+            self.covalentRadiusDict[key] = float(array[4])
+            self.RGBDict[key] = [float(array[5]), float(array[6]), float(array[7])]
+            
+            count += 1
+        
+        self.NElements = count
+        
+        f.close()
     
-    return value
-
-
-# covalent radius
-def covalentRadius(sym):
-    global covalentRadiusDict
+    def write(self, filename):
+        """
+        Write new atomic information file.
+        
+        """
+        f = open(filename, "w")
+        
+        for key, value in sorted(self.atomicNumberDict.iteritems(), key=lambda (k, v): (v, k)):
+            if key[1] == "_":
+                sym = key[0]
+            
+            else:
+                sym = key
+            
+            string = "%-3d  %-6f  %-20s  %-2s  %-6f  %-6f  %-6f  %-6f\n" % (value, self.atomicMassDict[key], self.atomNameDict[key],
+                                                                           sym, self.covalentRadiusDict[key], self.RGBDict[key][0],
+                                                                           self.RGBDict[key][1], self.RGBDict[key][2])
+            
+            f.write(string)
+        
+        f.close()
     
-    try:
-        value = covalentRadiusDict[sym]
-    except:
-        sys.exit(__name__+": ERROR: no covalent radius for "+sym)
+    def atomicNumber(self, sym):
+        """
+        Return atomic number of given element.
+        
+        """
+        try:
+            value = self.atomicNumberDict[sym]
+        except KeyError:
+            sys.exit(__name__+": ERROR: no atomic number for "+sym)
+        
+        return value
+
+    def atomicMass(self, sym):
+        """
+        Return atomic mass of given element.
+        
+        """
+        try:
+            value = self.atomicMassDict[sym]
+        except KeyError:
+            sys.exit(__name__+": ERROR: no atomic mass for "+sym)
+        
+        return value
     
-    return value
-
-
-# RGB values
-def RGB(sym):
-    global RGBDict
+    def atomName(self, sym):
+        """
+        Return name of given element.
+        
+        """
+        try:
+            value = self.atomNameDict[sym]
+        except KeyError:
+            sys.exit(__name__+": ERROR: no atom name for "+sym)
+        
+        return value
     
-    try:
-        value = RGBDict[sym]
-    except:
-        sys.exit(__name__+": ERROR: no RGB for "+sym)
+    def covalentRadius(self, sym):
+        """
+        Return covalent radius of given element.
+        
+        """
+        try:
+            value = self.covalentRadiusDict[sym]
+        except KeyError:
+            sys.exit(__name__+": ERROR: no covalent radius for "+sym)
+        
+        return value
     
-    return value
+    def RGB(self, sym):
+        """
+        Return RGB of given element.
+        
+        """
+        try:
+            value = self.RGBDict[sym]
+        except KeyError:
+            sys.exit(__name__+": ERROR: no RGB for "+sym)
+        
+        return value
 
 
+################################################################################
+# create global Atomic information object
+elements = Elements()
 
 
-
-# read atom data
+################################################################################
 def initialise():
-    global atomicNumberDict, atomicMassDict, atomNameDict, covalentRadiusDict, RGBDict
+    """
+    Initialise the module.
     
+    Create and read in Elements object.
+    
+    """
     filename = resourcePath("data/atoms.IN")
     
-    if os.path.exists( filename ):
-        try:
-            f = open( filename, "r" )
-        except:
-            sys.exit('error: could not open atoms file: ' + filename)
-    else:
-        sys.exit('error: could not find atoms file: ' + filename)    
+    elements.read(filename)
     
-    # read into dictionaries
-    atomicNumberDict = {}
-    atomicMassDict = {}
-    atomNameDict = {}
-    covalentRadiusDict = {}
-    RGBDict = {}
-    
-    count = 0
-    for line in f:
-        line = line.strip()
-        
-        array = line.split()
-        
-        key = array[3]
-        if len(key) == 1:
-            key = key + '_'
-        
-        atomicNumberDict[key] = int(array[0])
-        atomicMassDict[key] = float(array[1])
-        atomNameDict[key] = array[2]
-        covalentRadiusDict[key] = float(array[4])
-        RGBDict[key] = [float(array[5]), float(array[6]), float(array[7])]
-        
-        count += 1
-        
-    f.close()
-        
 
-
+################################################################################
 if __name__ == '__main__':
     pass
+
 else:
     initialise()
-
-
-
