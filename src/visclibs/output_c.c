@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 
 
 void addPOVRAYSphere(FILE *, double, double, double, double, double, double, double);
@@ -40,6 +41,7 @@ void writePOVRAYAtoms(char *filename, int specieDim, int *specie, int posDim, do
     if (OUTFILE == NULL)
     {
         printf("ERROR: could not open file: %s\n", filename);
+        printf("       reason: %s\n", strerror(errno));
         exit(35);
     }
     
