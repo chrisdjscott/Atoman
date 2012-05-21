@@ -251,6 +251,7 @@ class MainWindow(QtGui.QMainWindow):
             return
         
         elementEditor = dialogs.ElementEditor(parent=self)
+        elementEditor.show()
     
     def openCWD(self):
         """

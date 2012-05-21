@@ -213,8 +213,6 @@ class ElementEditor(QtGui.QDialog):
         buttonLayout.addWidget(resetButton)
         
         layout.addWidget(buttonContainer)
-        
-        self.show()
     
     def resetChanges(self):
         """
