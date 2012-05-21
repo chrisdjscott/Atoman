@@ -793,9 +793,6 @@ class ElementEditor(QtGui.QDialog):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
-        self.dirty = False
-        self.currentSym = ""
-        
         layout = QtGui.QVBoxLayout(self)
         layout.setAlignment(QtCore.Qt.AlignHCenter)
 #        layout.setContentsMargins(0, 0, 0, 0)
@@ -813,67 +810,70 @@ class ElementEditor(QtGui.QDialog):
         for sym in self.refLattice.specieList:
             uniqueSpecies.add(sym)
         
-        # selector
-        self.elementComboBox = QtGui.QComboBox()
-        
         # add elements to combo box
         self.fullSpecieList = []
         for sym in uniqueSpecies:
             self.fullSpecieList.append(sym)
-            self.elementComboBox.addItem("%s - %s" % (sym, elements.atomName(sym)))
         
-        # add to layout
-        layout.addWidget(self.elementComboBox)
-        
-        # add sphere of first specie
-        sym = self.fullSpecieList[0]
-        self.currentSym = sym
-        
-        group = QtGui.QGroupBox("Element properties")
-        groupLayout = QtGui.QVBoxLayout(group)
-        groupLayout.setContentsMargins(0, 0, 0, 0)
-        
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setContentsMargins(0, 0, 0, 0)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        label = QtGui.QLabel("Colour: ")
-        
-        RGB = elements.RGB(sym)
-        self.colour = QtGui.QColor(RGB[0]*255.9, RGB[1]*255.0, RGB[2]*255.0)
-        
-        self.colourButton = QtGui.QPushButton("")
-        self.colourButton.setFixedWidth(50)
-        self.colourButton.setFixedHeight(30)
-        self.setButtonColour(self.colour)
-        self.colourButton.clicked.connect(self.showColourDialog)
-        
-        self.connect(self.elementComboBox, QtCore.SIGNAL("currentIndexChanged(QString)"), self.elementChanged)
-        
-        rowLayout.addWidget(label)
-        rowLayout.addWidget(self.colourButton)
-        
-        groupLayout.addWidget(row)
-        
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setContentsMargins(0, 0, 0, 0)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        label = QtGui.QLabel("Covalent radius: ")
-        
-        self.radiusSpinBox = QtGui.QDoubleSpinBox(self)
-        self.radiusSpinBox.setSingleStep(0.01)
-        self.radiusSpinBox.setMinimum(0.0)
-        self.radiusSpinBox.setMaximum(100.0)
-        self.radiusSpinBox.setValue(elements.covalentRadius(sym))
-        self.connect(self.radiusSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.radiusChanged)
-        
-        rowLayout.addWidget(label)
-        rowLayout.addWidget(self.radiusSpinBox)
-        
-        groupLayout.addWidget(row)
+        self.colourButtonDict = {}
+        self.radiusSpinBoxDict = {}
+        self.colourDict = {}
+        self.radiusDict = {}
+        for sym in self.fullSpecieList:
+            group = QtGui.QGroupBox("%s - %s" % (sym, elements.atomName(sym)))
+            groupLayout = QtGui.QVBoxLayout(group)
+            groupLayout.setContentsMargins(0, 0, 0, 0)
+            
+            row = QtGui.QWidget(self)
+            rowLayout = QtGui.QHBoxLayout(row)
+            rowLayout.setContentsMargins(0, 0, 0, 0)
+            rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+            
+            # colour label
+            label = QtGui.QLabel("Colour: ")
+            rowLayout.addWidget(label)
+            
+            # colour
+            RGB = elements.RGB(sym)
+            col = QtGui.QColor(RGB[0]*255.0, RGB[1]*255.0, RGB[2]*255.0)
+            self.colourDict[sym] = col
+            
+            # colour button
+            button = QtGui.QPushButton("")
+            button.setFixedWidth(50)
+            button.setFixedHeight(30)
+            button.setStyleSheet("QPushButton { background-color: %s }" % col.name())
+            self.connect(button, QtCore.SIGNAL("clicked()"), lambda symbol=sym: self.showColourDialog(symbol))
+            self.colourButtonDict[sym] = button
+            rowLayout.addWidget(button)
+            
+            groupLayout.addWidget(row)
+            
+            row = QtGui.QWidget(self)
+            rowLayout = QtGui.QHBoxLayout(row)
+            rowLayout.setContentsMargins(0, 0, 0, 0)
+            rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+            
+            # radius label
+            label = QtGui.QLabel("Radius: ")
+            rowLayout.addWidget(label)
+            
+            # radius
+            self.radiusDict[sym] = elements.covalentRadius(sym)
+            
+            # radius spin box
+            spinBox = QtGui.QDoubleSpinBox(self)
+            spinBox.setSingleStep(0.01)
+            spinBox.setMinimum(0.0)
+            spinBox.setMaximum(100.0)
+            spinBox.setValue(elements.covalentRadius(sym))
+            self.connect(spinBox, QtCore.SIGNAL('valueChanged(double)'), lambda x, symbol=sym: self.radiusChanged(x, symbol))
+            self.radiusSpinBoxDict[sym] = spinBox
+            rowLayout.addWidget(spinBox)
+            
+            groupLayout.addWidget(row)
+            
+            layout.addWidget(group)
         
         # buttons
         buttonContainer = QtGui.QWidget(self)
@@ -895,8 +895,6 @@ class ElementEditor(QtGui.QDialog):
         buttonLayout.addWidget(saveButton)
         buttonLayout.addWidget(resetButton)
         
-        layout.addWidget(group)
-        
         layout.addWidget(buttonContainer)
         
         self.show()
@@ -906,7 +904,7 @@ class ElementEditor(QtGui.QDialog):
         Reset changes.
         
         """
-        self.dirty = False
+        pass
     
     def saveChanges(self):
         """
@@ -923,16 +921,16 @@ class ElementEditor(QtGui.QDialog):
         Apply changes.
         
         """
-        self.dirty = False
+        pass
     
-    def radiusChanged(self, val):
+    def radiusChanged(self, val, sym):
         """
         Radius has been changed.
         
         """
-        self.dirty = True
+        self.radiusDict[sym] = val
     
-    def showColourDialog(self):
+    def showColourDialog(self, sym):
         """
         Show the color dialog.
         
@@ -940,49 +938,6 @@ class ElementEditor(QtGui.QDialog):
         col = QtGui.QColorDialog.getColor()
         
         if col.isValid():
-            self.setButtonColour(col)
+            self.colourButtonDict[sym].setStyleSheet("QPushButton { background-color: %s }" % col.name())
             
-            self.colour = col
-            
-            self.dirty = True
-            
-    def setButtonColour(self, col):
-        """
-        Set the colour buttons colour.
-        
-        """
-        self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
-    
-    def getSpecieRGB(self, sym):
-        """
-        Get RGB from input/ref states.
-        
-        """
-        pass
-    
-    def elementChanged(self, text):
-        """
-        Changed which element we are editing
-        
-        """
-        if self.dirty:
-            pass
-#            print "WARN UNSAVED/APPIED CHANGES" # do you wish to continue (changes will be lost)
-        
-        sym = self.fullSpecieList[self.elementComboBox.currentIndex()]
-        self.currentSym = sym
-        
-        RGB = elements.RGB(sym)
-        self.colour = QtGui.QColor(RGB[0]*255.9, RGB[1]*255.0, RGB[2]*255.0)
-        
-        self.setButtonColour(self.colour)
-        
-        self.radiusSpinBox.setValue(elements.covalentRadius(sym))
-        
-        self.dirty = False
-        
-        
-
-
-
-   
+            self.colourDict[sym] = col
