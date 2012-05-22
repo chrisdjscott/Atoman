@@ -16,7 +16,7 @@ from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import numpy as np
 
-from utilities import iconPath
+from utilities import iconPath, resourcePath
 from atoms import elements
 import toolbar as toolbarModule
 import lattice
@@ -263,7 +263,24 @@ class MainWindow(QtGui.QMainWindow):
         Import element properties file.
         
         """
-        pass
+        reply = QtGui.QMessageBox.question(self, "Message", 
+                                           "This will overwrite the current element properties file. You should create a backup first!\n\nDo you wish to continue?",
+                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        
+        if reply == QtGui.QMessageBox.Yes:
+            # open file dialog
+            fname = QtGui.QFileDialog.getOpenFileName(self, "CDJSVis - Import element properties", ".", "IN files (*.IN)")
+            
+            if fname:
+                # read in new file
+                elements.read(fname)
+                
+                # overwrite current file
+                elements.write(resourcePath("data/atoms.IN"))
+                
+                self.setStatus("Imported element properties")
+            
+            
     
     def exportElements(self):
         """
@@ -272,8 +289,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         fname = os.path.join(".", "atoms-exported.IN")
         
-        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export element properties", fname, 
-                                                  "IN files (*.IN)")
+        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export element properties", fname, "IN files (*.IN)")
         
         if fname:
             if not "." in fname or fname[-3:] != ".IN":
@@ -485,7 +501,7 @@ class MainWindow(QtGui.QMainWindow):
             self.displayError("openFileDialog: Unrecognised file type: "+self.fileType)
             return None
         
-        filename = fdiag.getOpenFileName(self, "Open file", os.getcwd(), filesString)
+        filename = fdiag.getOpenFileName(self, "CDJSVis - Open file", os.getcwd(), filesString)
         filename = str(filename)
         
         if not len(filename):

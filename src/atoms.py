@@ -25,7 +25,6 @@ class Elements:
         self.atomNameDict = {}
         self.covalentRadiusDict = {}
         self.RGBDict = {}
-        self.NElements = 0
     
     def read(self, filename):
         """
@@ -35,7 +34,6 @@ class Elements:
         f = open( filename, "r" )
         
         # read into dictionaries    
-        count = 0    
         for line in f:
             line = line.strip()
             
@@ -50,10 +48,6 @@ class Elements:
             self.atomNameDict[key] = array[2]
             self.covalentRadiusDict[key] = float(array[4])
             self.RGBDict[key] = [float(array[5]), float(array[6]), float(array[7])]
-            
-            count += 1
-        
-        self.NElements = count
         
         f.close()
     

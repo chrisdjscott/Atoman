@@ -235,12 +235,17 @@ class ElementEditor(QtGui.QDialog):
         Save changes.
         
         """
-        self.applyChanges()
+        reply = QtGui.QMessageBox.question(self, "Message", 
+                                           "This will overwrite the current element properties file. You should create a backup first!\n\nDo you wish to continue?",
+                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         
-        # save to file
-        elements.write(resourcePath("data/atoms.IN"))
-        
-        self.parent.setStatus("Saved element properties")
+        if reply == QtGui.QMessageBox.Yes:
+            self.applyChanges()
+            
+            # save to file
+            elements.write(resourcePath("data/atoms.IN"))
+            
+            self.parent.setStatus("Saved element properties")
     
     def applyChanges(self):
         """
