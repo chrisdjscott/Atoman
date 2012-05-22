@@ -83,13 +83,13 @@ class MainWindow(QtGui.QMainWindow):
             os.chdir(os.environ.get("HOME"))
         
         # window size and location
-        self.renderWindowWidth = 750 #650
-        self.renderWindowHeight = 715 #650
+        self.renderWindowWidth = 760 #760 #650
+        self.renderWindowHeight = 715 #570 # 715 #650
         self.mainToolbarWidth = 350 #315
         self.mainToolbarHeight = 460 #420
         self.resize(self.renderWindowWidth+self.mainToolbarWidth, self.renderWindowHeight)
         self.centre()
-        
+                
         self.setWindowTitle("CDJSVis")
         
         # console window for logging output to

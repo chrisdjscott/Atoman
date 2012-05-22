@@ -537,9 +537,14 @@ class Filterer:
             clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
                                                  self.mainWindow.PBC, appliedPBCs, settings.neighbourRadius)
             
-            if len(cluster) > 2:
+            facets = None
+            if len(cluster) > 3:
                 facets = findConvexHull(len(cluster), clusterPos, qconvex=settings.qconvex)
-                
+            
+            elif len(cluster) == 3:
+                facets = []
+                facets.append([0, 1, 2])
+            
             # now render
             if facets is not None:
                 rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection)
@@ -547,13 +552,19 @@ class Filterer:
                 # write povray file too
             
             # handle PBCs
-            if len(cluster) > 2:
+            if len(cluster) > 1:
                 while max(appliedPBCs) > 0:
                     tmpClusterPos = copy.deepcopy(clusterPos)
                     applyPBCsToCluster(tmpClusterPos, lattice.cellDims, appliedPBCs)
                     
                     # get facets
-                    facets = findConvexHull(len(cluster), tmpClusterPos, qconvex=settings.qconvex)
+                    facets = None
+                    if len(cluster) > 3:
+                        facets = findConvexHull(len(cluster), tmpClusterPos, qconvex=settings.qconvex)
+                    
+                    elif len(cluster) == 3:
+                        facets = []
+                        facets.append([0, 1, 2])
                     
                     # render
                     if facets is not None:
