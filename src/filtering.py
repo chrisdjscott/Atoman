@@ -8,6 +8,7 @@ The filter tab for the main toolbar
 import sys
 import subprocess
 import copy
+import re
 
 import numpy as np
 import vtk
@@ -673,13 +674,17 @@ def findConvexHullVolume(N, pos, qconvex="qconvex"):
     output = output.strip()
     lines = output.split("\n")
     
+    volstr = re.compile("volume")
+    areastr = re.compile("facet area")
+    
     for line in lines:
         line = line.strip()
-        if line[:12] == "Total volume":
+        
+        if volstr.search(line):
             array = line.split(":")
             volume = float(array[1])
         
-        elif line[:16] == "Total facet area":
+        elif areastr.search(line):
             array = line.split(":")
             facetArea = float(array[1])
     

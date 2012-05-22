@@ -656,7 +656,6 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         # calculate volumes check box
         self.calcVolsCheckBox = QtGui.QCheckBox(" Calculate volumes")
         self.calcVolsCheckBox.setChecked(0)
-        self.calcVolsCheckBox.setCheckable(0)
         self.connect(self.calcVolsCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.calcVolsChanged)
         
         row = self.newRow()
@@ -668,11 +667,12 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         
         """
         if self.calcVolsCheckBox.isChecked():
-            if not self.drawHullsCheckBox.isChecked():
+            if not self.qconvex:
+                utilities.warnExeNotFound(self, "qconvex")
                 self.calcVolsCheckBox.setCheckState(0)
+                return
             
-            else:
-                self.calculateVolumes = 1
+            self.calculateVolumes = 1
         
         else:
             self.calculateVolumes = 0
@@ -703,12 +703,12 @@ class ClusterSettingsDialog(GenericSettingsDialog):
                 return
             
             self.drawConvexHulls = 1
-            self.calcVolsCheckBox.setCheckable(1)
+#            self.calcVolsCheckBox.setCheckable(1)
         
         else:
             self.drawConvexHulls = 0
-            self.calcVolsCheckBox.setCheckState(0)
-            self.calcVolsCheckBox.setCheckable(0)
+#            self.calcVolsCheckBox.setCheckState(0)
+#            self.calcVolsCheckBox.setCheckable(0)
 
 
 ################################################################################

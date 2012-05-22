@@ -51,8 +51,11 @@ class MainWindow(QtGui.QMainWindow):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         MainWindow.Instances.add(self)
         
-        
+        # initialise user interface
         self.initUI()
+        
+        # set focue
+        self.setFocus()
     
     def initUI(self):
         """
