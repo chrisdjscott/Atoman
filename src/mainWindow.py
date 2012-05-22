@@ -76,10 +76,8 @@ class MainWindow(QtGui.QMainWindow):
         self.mouseMotion = 0
         
         # change to home directory if running from pyinstaller bundle
-#        print os.environ.get("_MEIPASS2")
-#        print os.environ.get("HOME")
-#        if os.environ.get("_MEIPASS2") is not None:
-#            os.chdir(os.environ.get("HOME"))
+        if hasattr(sys, "_MEIPASS"):
+            os.chdir(os.environ.get("HOME"))
         
         # window size and location
         self.renderWindowWidth = 750 #650
@@ -283,8 +281,6 @@ class MainWindow(QtGui.QMainWindow):
                 self.refState.refreshElementProperties()
                 
                 self.setStatus("Imported element properties")
-            
-            
     
     def exportElements(self):
         """

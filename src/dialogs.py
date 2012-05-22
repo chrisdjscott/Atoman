@@ -22,6 +22,10 @@ except ImportError:
 
 ################################################################################
 class ConsoleWindow(QtGui.QDialog):
+    """
+    Console window for displaying output to the user.
+    
+    """
     def __init__(self, parent=None):
         super(ConsoleWindow, self).__init__(parent)
         
