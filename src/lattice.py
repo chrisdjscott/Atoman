@@ -6,14 +6,11 @@ Stores positions etc
 @author: Chris Scott
 
 """
-
-import os
-import sys
-
 import numpy as np
+from atoms import elements
 
 
-
+################################################################################
 class Lattice:
     def __init__(self):
         
@@ -69,6 +66,20 @@ class Lattice:
         self.cellDims[0] = float(dimsarray[0])
         self.cellDims[1] = float(dimsarray[1])
         self.cellDims[2] = float(dimsarray[2])
+    
+    def refreshElementProperties(self):
+        """
+        Refresh element properties.
+        
+        """
+        for i, sym in enumerate(self.specieList):
+            self.specieMass[i] = elements.atomicMass(sym)
+            self.specieCovalentRadius[i] = elements.covalentRadius(sym)
+            rgbtemp = elements.RGB(sym)
+            self.specieRGB[i][0] = rgbtemp[0]
+            self.specieRGB[i][1] = rgbtemp[1]
+            self.specieRGB[i][2] = rgbtemp[2]
+            
     
     def clone(self, lattice):
         """

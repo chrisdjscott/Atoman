@@ -278,6 +278,10 @@ class MainWindow(QtGui.QMainWindow):
                 # overwrite current file
                 elements.write(resourcePath("data/atoms.IN"))
                 
+                # set on Lattice objects too
+                self.inputState.refreshElementProperties()
+                self.refState.refreshElementProperties()
+                
                 self.setStatus("Imported element properties")
             
             
