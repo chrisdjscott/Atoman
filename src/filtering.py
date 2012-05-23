@@ -508,7 +508,7 @@ class Filterer:
                 continue
             
             else:
-                facets = findConvexHull(len(cluster), clusterPos, qconvex=settings.qconvex)
+                facets = findConvexHullFacets(len(cluster), clusterPos, qconvex=settings.qconvex)
             
             # now render
             if facets is not None:
@@ -539,7 +539,7 @@ class Filterer:
             
             facets = None
             if len(cluster) > 3:
-                facets = findConvexHull(len(cluster), clusterPos, qconvex=settings.qconvex)
+                facets = findConvexHullFacets(len(cluster), clusterPos, qconvex=settings.qconvex)
             
             elif len(cluster) == 3:
                 facets = []
@@ -547,6 +547,8 @@ class Filterer:
             
             # now render
             if facets is not None:
+                #TODO: make sure not facets more than neighbour rad from cell
+                
                 rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection)
                 
                 # write povray file too
@@ -560,7 +562,7 @@ class Filterer:
                     # get facets
                     facets = None
                     if len(cluster) > 3:
-                        facets = findConvexHull(len(cluster), tmpClusterPos, qconvex=settings.qconvex)
+                        facets = findConvexHullFacets(len(cluster), tmpClusterPos, qconvex=settings.qconvex)
                     
                     elif len(cluster) == 3:
                         facets = []
@@ -568,6 +570,8 @@ class Filterer:
                     
                     # render
                     if facets is not None:
+                        #TODO: make sure not facets more than neighbour rad from cell
+                        
                         rendering.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection)
                         
                         # write povray file too
@@ -613,7 +617,7 @@ class Filterer:
 
 
 ################################################################################
-def findConvexHull(N, pos, qconvex="qconvex"):
+def findConvexHullFacets(N, pos, qconvex="qconvex"):
     """
     Find convex hull of given points
     
