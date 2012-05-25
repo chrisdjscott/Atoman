@@ -548,6 +548,7 @@ class Filterer:
             # now render
             if facets is not None:
                 #TODO: make sure not facets more than neighbour rad from cell
+                facets = checkFacetsPBCs(facets, clusterPos, settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
                 
                 rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection)
                 
@@ -571,6 +572,7 @@ class Filterer:
                     # render
                     if facets is not None:
                         #TODO: make sure not facets more than neighbour rad from cell
+                        facets = checkFacetsPBCs(facets, clusterPos, settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
                         
                         rendering.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection)
                         
@@ -797,3 +799,57 @@ def applyPBCsToCluster(clusterPos, cellDims, appliedPBCs):
             appliedPBCs[i] = 0
             
             break
+
+
+################################################################################
+def checkFacetsPBCs(facetsIn, clusterPos, excludeRadius, PBC, cellDims):
+    """
+    Remove facets that are far from cell
+    
+    """
+    return facetsIn
+    
+    facets = []
+    for facet in facetsIn:
+        print "FACET", facet
+        includeFlag = 1
+        for i in xrange(3):
+            index = facet[i]
+            
+            for j in xrange(3):
+                if PBC[j]:
+                    if clusterPos[3*index+j] > cellDims[j] + excludeRadius or clusterPos[3*index+j] < 0.0 - excludeRadius:
+                        print "-"*20
+                        print "J", j
+                        print "DIMS", cellDims
+                        print clusterPos[3*index+j]
+                        
+                        
+                        
+                        includeFlag = 0
+                        break
+            
+            if not includeFlag:
+                break
+        
+        if includeFlag:
+            facets.append(facet)
+    
+#    print "LEN", len(facetsIn), len(facets)
+    
+    return facets
+                    
+                
+        
+        
+        
+        
+        
+        
+    
+    
+    
+    
+
+
+

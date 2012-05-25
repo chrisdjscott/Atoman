@@ -95,6 +95,8 @@ class FilterTab(QtGui.QWidget):
                 filterList.filterer.runFilters()
             
             count += 1
+        
+        self.mainWindow.setStatus("Ready")
     
     def addFilterList(self):
         """
