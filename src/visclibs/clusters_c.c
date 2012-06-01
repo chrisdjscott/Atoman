@@ -202,7 +202,7 @@ void prepareClusterToDrawHulls(int N, int posDim, double *pos, int cellDimsDim, 
     int *clusterArray;
     double nebRad2;
     
-    
+
     /* is there any point boxing this? don't think so */
     
     nebRad2 = neighbourRadius * neighbourRadius;
@@ -219,7 +219,7 @@ void prepareClusterToDrawHulls(int N, int posDim, double *pos, int cellDimsDim, 
         clusterArray[i] = -1;
     }
     
-    
+    NClusters = 0;
     for (i=0; i<N; i++)
     {
         /* skip atom if already allocated */
@@ -228,7 +228,7 @@ void prepareClusterToDrawHulls(int N, int posDim, double *pos, int cellDimsDim, 
             clusterArray[i] = NClusters;
             
             numInCluster = 1;
-            
+
             /* recursive search for cluster atoms */
             numInCluster = findNeighboursUnapplyPBC(N, i, clusterArray[i], numInCluster, clusterArray, pos, 
                                                     nebRad2, cellDims, PBC, appliedPBCs);
@@ -257,7 +257,7 @@ int findNeighboursUnapplyPBC(int NAtoms, int index, int clusterID, int numInClus
     double sep2;
     int localPBCsApplied[3];
     
-    
+
     /* loop over atoms */
     for (index2=0; index2<NAtoms; index2++)
     {
