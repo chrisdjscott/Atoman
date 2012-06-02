@@ -105,7 +105,7 @@ class ElementEditor(QtGui.QDialog):
         self.setWindowTitle("Element editor")
         self.setWindowIcon(QtGui.QIcon(iconPath("periodic-table-icon.png")))
         
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+#         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.dirty = False
