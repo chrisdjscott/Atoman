@@ -617,6 +617,9 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.drawConvexHulls = 0
         self.neighbourRadius = 3.5
         self.calculateVolumes = 0
+        self.hullCol = [0]*3
+        self.hullCol[2] = 1
+        self.hullOpacity = 0.5
         
         # neighbour rad spin box
         label = QtGui.QLabel("Neighbour radius ")
@@ -660,7 +663,58 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         
         row = self.newRow()
         row.addWidget(self.calcVolsCheckBox)
-
+        
+        # hull colour
+        label = QtGui.QLabel("Hull colour  ")
+        
+        col = QtGui.QColor(self.hullCol[0]*255.0, self.hullCol[1]*255.0, self.hullCol[2]*255.0)
+        self.hullColourButton = QtGui.QPushButton("")
+        self.hullColourButton.setFixedWidth(50)
+        self.hullColourButton.setFixedHeight(30)
+        self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
+        self.connect(self.hullColourButton, QtCore.SIGNAL("clicked()"), self.showColourDialog)
+        
+        self.newRow()
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.hullColourButton)
+        
+        # hull opacity
+        label = QtGui.QLabel("Hull opacity ")
+        
+        self.hullOpacitySpinBox = QtGui.QDoubleSpinBox()
+        self.hullOpacitySpinBox.setSingleStep(0.01)
+        self.hullOpacitySpinBox.setMinimum(0.01)
+        self.hullOpacitySpinBox.setMaximum(1.0)
+        self.hullOpacitySpinBox.setValue(self.hullOpacity)
+        self.connect(self.hullOpacitySpinBox, QtCore.SIGNAL('valueChanged(double)'), self.hullOpacityChanged)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.hullOpacitySpinBox)
+    
+    def hullOpacityChanged(self, val):
+        """
+        Change hull opacity setting.
+        
+        """
+        self.hullOpacity = val
+    
+    def showColourDialog(self):
+        """
+        Show hull colour dialog.
+        
+        """
+        col = QtGui.QColorDialog.getColor()
+        
+        if col.isValid():
+            self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
+            
+            self.hullCol[0] = float(col.red()) / 255.0
+            self.hullCol[1] = float(col.green()) / 255.0
+            self.hullCol[2] = float(col.blue()) / 255.0
+    
     def calcVolsChanged(self, val):
         """
         Changed calc vols.

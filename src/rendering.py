@@ -1092,7 +1092,7 @@ def makeTriangle(indexes):
 
 
 ################################################################################
-def getActorsForHullFacets(facets, pos, mainWindow, actorsCollection):
+def getActorsForHullFacets(facets, pos, mainWindow, actorsCollection, settings):
     """
     Render convex hull facets
     
@@ -1123,8 +1123,8 @@ def getActorsForHullFacets(facets, pos, mainWindow, actorsCollection):
     # actor
     actor = vtk.vtkActor()
     actor.SetMapper(mapper)
-    actor.GetProperty().SetOpacity(0.5)
-    actor.GetProperty().SetColor(0,0,1)
+    actor.GetProperty().SetOpacity(settings.hullOpacity)
+    actor.GetProperty().SetColor(settings.hullCol[0], settings.hullCol[1], settings.hullCol[2])
     
     actorsCollection.AddItem(actor)
 

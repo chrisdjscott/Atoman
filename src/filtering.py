@@ -401,8 +401,20 @@ class Filterer:
         Draw convex hulls around defect volumes
         
         """
-        pass
+        PBC = self.mainWindow.PBC
+        if PBC[0] or PBC[1] or PBC[2]:
+            self.pointDefectFilterDrawHullsWithPBCs(clusterList, settings)
+        
+        else:
+            self.pointDefectFilterDrawHullsWithPBCs(clusterList, settings)
     
+    def pointDefectFilterDrawHullsWithPBCs(self, clusterList, defectType):
+        """
+        Draw hulls around defect volumes (PBCs)
+        
+        """
+        pass
+        
     def clusterFilter(self, settings, PBC=None, minSize=None, nebRad=None):
         """
         Run the cluster filter
@@ -512,7 +524,7 @@ class Filterer:
             
             # now render
             if facets is not None:
-                rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection)
+                rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
                 
                 # write povray file too
     
@@ -550,7 +562,7 @@ class Filterer:
                 #TODO: make sure not facets more than neighbour rad from cell
                 facets = checkFacetsPBCs(facets, clusterPos, settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
                 
-                rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection)
+                rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
                 
                 # write povray file too
             
@@ -574,7 +586,7 @@ class Filterer:
                         #TODO: make sure not facets more than neighbour rad from cell
                         facets = checkFacetsPBCs(facets, clusterPos, settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
                         
-                        rendering.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection)
+                        rendering.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
                         
                         # write povray file too
                 
