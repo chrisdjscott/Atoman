@@ -154,7 +154,7 @@ class ElementEditor(QtGui.QDialog):
             # colour
             RGB = elements.RGB(sym)
             col = QtGui.QColor(RGB[0]*255.0, RGB[1]*255.0, RGB[2]*255.0)
-            self.colourDict[sym] = col
+            self.colourDict[sym] = RGB
             
             # colour button
             button = QtGui.QPushButton("")
@@ -229,7 +229,7 @@ class ElementEditor(QtGui.QDialog):
             
             RGB = elements.RGB(sym)
             col = QtGui.QColor(RGB[0]*255.0, RGB[1]*255.0, RGB[2]*255.0)
-            self.colourDict[sym] = col
+            self.colourDict[sym] = RGB
             self.colourButtonDict[sym].setStyleSheet("QPushButton { background-color: %s }" % col.name())
         
         self.parent.setStatus("Element properties reset")
@@ -260,10 +260,10 @@ class ElementEditor(QtGui.QDialog):
             
             radius = self.radiusDict[sym]
             
-            col = self.colourDict[sym] 
-            R = float(col.red()) / 255.0
-            G = float(col.green()) / 255.0
-            B = float(col.blue()) / 255.0
+            RGB = self.colourDict[sym] 
+            R = RGB[0]
+            G = RGB[1]
+            B = RGB[2]
             
             # first modify the Lattice objects
             if sym in self.inputLattice.specieList:
@@ -306,10 +306,12 @@ class ElementEditor(QtGui.QDialog):
         """
         Show the color dialog.
         
-        """
+        """        
         col = QtGui.QColorDialog.getColor()
         
         if col.isValid():
             self.colourButtonDict[sym].setStyleSheet("QPushButton { background-color: %s }" % col.name())
             
-            self.colourDict[sym] = col
+            self.colourDict[sym][0] = float(col.red() / 255.0)
+            self.colourDict[sym][1] = float(col.green() / 255.0)
+            self.colourDict[sym][2] = float(col.blue() / 255.0)

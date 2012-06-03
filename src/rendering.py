@@ -1097,7 +1097,6 @@ def getActorsForHullFacets(facets, pos, mainWindow, actorsCollection, settings):
     Render convex hull facets
     
     """
-    
     # probably want to pass some settings through too eg colour, opacity etc
     
     
