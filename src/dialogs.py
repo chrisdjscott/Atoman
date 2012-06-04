@@ -306,8 +306,11 @@ class ElementEditor(QtGui.QDialog):
         """
         Show the color dialog.
         
-        """        
-        col = QtGui.QColorDialog.getColor()
+        """
+        RGB = self.colourDict[sym]
+        cur = QtGui.QColor(RGB[0] * 255.0, RGB[1] * 255.0, RGB[2] * 255.0)
+        
+        col = QtGui.QColorDialog.getColor(cur, self, "%s" % sym)
         
         if col.isValid():
             self.colourButtonDict[sym].setStyleSheet("QPushButton { background-color: %s }" % col.name())

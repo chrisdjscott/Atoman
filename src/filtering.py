@@ -838,18 +838,3 @@ def checkFacetsPBCs(facetsIn, clusterPos, excludeRadius, PBC, cellDims):
             facets.append(facet)
     
     return facets
-                    
-                
-        
-        
-        
-        
-        
-        
-    
-    
-    
-    
-
-
-

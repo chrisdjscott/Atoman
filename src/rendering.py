@@ -1078,7 +1078,6 @@ def makeTriangle(indexes):
     Make a triangle given indexes in points array
     
     """
-    
     inda = indexes[0]
     indb = indexes[1]
     indc = indexes[2]
