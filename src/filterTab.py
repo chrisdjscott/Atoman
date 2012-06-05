@@ -5,6 +5,7 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
+import os
 import sys
 
 from PyQt4 import QtGui, QtCore
@@ -84,6 +85,10 @@ class FilterTab(QtGui.QWidget):
         
         """
         self.log("Running all filter lists")
+        
+        # first remove all old povray files
+        os.system("rm -f %s/*.pov" % self.mainWindow.tmpDirectory)
+        
         count = 0
         for filterList in self.filterLists:
             self.log("Running filter list %d" % (count,), 0, 1)

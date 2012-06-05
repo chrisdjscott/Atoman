@@ -7,8 +7,8 @@ Module for rendering
 """
 
 import os
-import sys
 import math
+import glob
 
 import vtk
 
@@ -635,6 +635,10 @@ class Renderer:
 #            print "WRITTEN"
 #            return None
             
+            # remove previous image file
+            if os.path.exists(os.path.join(self.mainWindow.tmpDirectory, "image.pov")):
+                os.unlink(os.path.join(self.mainWindow.tmpDirectory, "image.pov"))
+            
             povfile = os.path.join(self.mainWindow.tmpDirectory, "header.pov")
             fh = open(povfile, "w")
             
@@ -658,7 +662,12 @@ class Renderer:
                 command = "cat header.pov"
                 for filterList in filterLists:
                     if filterList.visible:
-                        command += " filter%d.pov" % (filterList.tab,)
+                        if os.path.exists("atoms%d.pov" % filterList.tab):
+                            command += " atoms%d.pov" % filterList.tab
+                        
+                        if os.path.exists("hulls%d.pov" % filterList.tab):
+                            command += " hulls%d.pov" % filterList.tab
+                        
                 command += " > image.pov"
                 output, stderr, status = utilities.runSubProcess(command)
                 if status:
@@ -839,7 +848,83 @@ def writePovrayAtoms(filename, visibleAtoms, mainWindow):
     # call C routine to write atoms to file
     output_c.writePOVRAYAtoms(povfile, lattice.specie, lattice.pos, visibleAtoms, 
                               lattice.specieRGB, lattice.specieCovalentRadius)
+
+
+################################################################################
+def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
+    """
+    Write hull to POV-Ray file.
     
+    """
+    if len(clusterPos) / 3 < 3:
+        pass
+    
+    else:
+        if os.path.exists(filename):
+            fh = open(filename, "a")
+        
+        else:
+            fh = open(filename, "w")
+        
+        # how many vertices
+        vertices = set()
+        vertexMapper = {}
+        NVertices = 0
+        for facet in facets:
+            for j in xrange(3):
+                if facet[j] not in vertices:
+                    vertices.add(facet[j])
+                    vertexMapper[facet[j]] = NVertices
+                    NVertices += 1
+        
+        # construct mesh
+        lines = []
+        nl = lines.append
+        
+        nl("mesh2 {")
+        nl("  vertex_vectors {")
+        nl("    %d," % NVertices)
+        
+        count = 0
+        for key, value in sorted(vertexMapper.iteritems(), key=lambda (k, v): (v, k)):
+#            print "value", value, "key", key
+            
+            if count == NVertices - 1:
+                string = ""
+            
+            else:
+                string = ","
+            
+            nl("    <%f,%f,%f>%s" % (- clusterPos[3*key], clusterPos[3*key+1], clusterPos[3*key+2], string))
+            
+            count += 1
+        
+        nl("  }")
+        nl("  face_indices {")
+        nl("    %d," % len(facets))
+        
+        count = 0
+        for facet in facets:
+            
+            if count == len(facets) - 1:
+                string = ""
+            
+            else:
+                string = ","
+            
+            nl("    <%d,%d,%d>%s" % (vertexMapper[facet[0]], vertexMapper[facet[1]], vertexMapper[facet[2]], string))
+            
+            count += 1
+        
+        nl("  }")
+        nl("  pigment { color rgbt <%f,%f,%f,%f> }" % (settings.hullCol[0], settings.hullCol[1], 
+                                                       settings.hullCol[2], 1.0 - settings.hullOpacity))
+        nl("}")
+        nl("")
+        
+        string = "\n".join(lines)
+        fh.write(string)
+
     
 ################################################################################
 def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, mainWindow, actorsCollection):

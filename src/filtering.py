@@ -5,6 +5,7 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
+import os
 import sys
 import subprocess
 import copy
@@ -129,7 +130,12 @@ class Filterer:
                 clusterList = self.clusterFilter(filterSettings)
                 
                 if filterSettings.drawConvexHulls:
-                    self.clusterFilterDrawHulls(clusterList, filterSettings)
+                    # povray file
+                    hullFile = os.path.join(self.mainWindow.tmpDirectory, "hulls%d.pov" % self.parent.tab)
+                    if os.path.exists(hullFile):
+                        os.unlink(hullFile)
+                    
+                    self.clusterFilterDrawHulls(clusterList, filterSettings, hullFile)
                 
                 if filterSettings.calculateVolumes:
                     self.clusterFilterCalculateVolumes(clusterList, filterSettings)
@@ -143,7 +149,7 @@ class Filterer:
                 self.log("%d visible atoms" % (len(self.visibleAtoms),), 0, 3)
         
         # render
-        povfile = "filter%d.pov" % (self.parent.tab,)
+        povfile = "atoms%d.pov" % (self.parent.tab,)
         if self.parent.defectFilterSelected:
             # vtk render
             if filterSettings.findClusters:
@@ -474,7 +480,7 @@ class Filterer:
         
         return clusterList
     
-    def clusterFilterDrawHulls(self, clusterList, settings):
+    def clusterFilterDrawHulls(self, clusterList, settings, hullPovFile):
         """
         Draw hulls around filters.
         
@@ -484,12 +490,12 @@ class Filterer:
         """
         PBC = self.mainWindow.PBC
         if PBC[0] or PBC[1] or PBC[2]:
-            self.clusterFilterDrawHullsWithPBCs(clusterList, settings)
+            self.clusterFilterDrawHullsWithPBCs(clusterList, settings, hullPovFile)
         
         else:
-            self.clusterFilterDrawHullsNoPBCs(clusterList, settings)
+            self.clusterFilterDrawHullsNoPBCs(clusterList, settings, hullPovFile)
     
-    def clusterFilterDrawHullsNoPBCs(self, clusterList, settings):
+    def clusterFilterDrawHullsNoPBCs(self, clusterList, settings, hullPovFile):
         """
         
         
@@ -527,8 +533,9 @@ class Filterer:
                 rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
                 
                 # write povray file too
+                rendering.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
     
-    def clusterFilterDrawHullsWithPBCs(self, clusterList, settings):
+    def clusterFilterDrawHullsWithPBCs(self, clusterList, settings, hullPovFile):
         """
         
         
@@ -565,6 +572,7 @@ class Filterer:
                 rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
                 
                 # write povray file too
+                rendering.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
             
             # handle PBCs
             if len(cluster) > 1:
@@ -589,6 +597,7 @@ class Filterer:
                         rendering.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
                         
                         # write povray file too
+                        rendering.writePovrayHull(facets, tmpClusterPos, self.mainWindow, hullPovFile, settings)
                 
     
     def clusterFilterCalculateVolumes(self, clusterList, filterSettings):
