@@ -676,7 +676,7 @@ class Renderer:
             finally:
                 os.chdir(CWD)
             
-            # now run pov-ray
+            # output filename
             filename = "%s.%s" % (fileprefix, imageFormat)
             if not overwrite:
                 count = 0
@@ -684,13 +684,30 @@ class Renderer:
                     count += 1
                     filename = "%s(%d).%s" % (fileprefix, count, imageFormat)
             
-            command = "%s -I%s -D +A +W%d +H%d +O'%s'" % (povray, os.path.join(self.mainWindow.tmpDirectory, "image.pov"), 
-                                                          800, 600, filename)
+            # create povray ini file
+            povIniFile = os.path.join(self.mainWindow.tmpDirectory, "image.ini")
+            
+            lines = []
+            nl = lines.append
+            nl("; CDJSVis auto-generated POV-Ray INI file")
+            nl("Input_File_Name='%s'" % os.path.join(self.mainWindow.tmpDirectory, "image.pov"))
+            nl("Width=%d" % 800)
+            nl("Height=%d" % 600)
+            nl("Display=off")
+            nl("Antialias=on")
+            nl("Output_File_Name='%s'" % filename)
+            
+            fh = open(povIniFile, "w")
+            fh.write("\n".join(lines))
+            fh.close()
+            
+            # run povray
+            command = "%s %s" % (povray, povIniFile)
             output, stderr, status = utilities.runSubProcess(command)
             if status:
                 print "STDERR:", stderr
                 return None
-        
+            
         return filename
     
     def writePOVRAYCellFrame(self, filehandle):
