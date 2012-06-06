@@ -5,6 +5,7 @@ Additional dialogs.
 @author: Chris Scott
 
 """
+import os
 import sys
 
 from PyQt4 import QtGui, QtCore
@@ -318,3 +319,116 @@ class ElementEditor(QtGui.QDialog):
             self.colourDict[sym][0] = float(col.red() / 255.0)
             self.colourDict[sym][1] = float(col.green() / 255.0)
             self.colourDict[sym][2] = float(col.blue() / 255.0)
+
+
+################################################################################
+class ImageViewer(QtGui.QDialog):
+    """
+    Image viewer.
+    
+    @author: Marc Robinson
+    Modified by Chris Scott
+    
+    """
+    def __init__(self, mainWindow, parent=None):
+        super(ImageViewer, self).__init__(parent)
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        
+        self.setWindowTitle("Image Viewer:")
+        
+        # main layout
+        dialogLayout = QtGui.QHBoxLayout()
+        
+        # initial dir
+        startDir = os.getcwd()
+        
+        # dir model
+        self.model = QtGui.QFileSystemModel()
+        self.model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
+        self.model.setNameFilters(["*.jpg", "*.tif","*.png","*.bmp"])
+        self.model.setNameFilterDisables(0)
+        self.model.setRootPath(startDir)
+        
+        # dir view
+        self.view = QtGui.QTreeView(parent=self)
+        self.view.setModel(self.model)
+        self.view.clicked[QtCore.QModelIndex].connect(self.clicked)
+        self.view.hideColumn(1)
+        self.view.setRootIndex(self.model.index(startDir))
+        self.view.setMinimumWidth(300)
+        self.view.setColumnWidth(0, 150)
+        self.view.setColumnWidth(2, 50)
+        
+        # add to main layout
+        dialogLayout.addWidget(self.view)
+        
+        # image label
+        self.imageLabel = QtGui.QLabel()
+        
+        column = QtGui.QWidget()
+        columnLayout = QtGui.QVBoxLayout(column)
+        columnLayout.setSpacing(0)
+        columnLayout.setContentsMargins(0, 0, 0, 0)
+        
+        columnLayout.addWidget(self.imageLabel)
+        
+        # delete button
+        deleteImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-delete.svg")), "Delete image")
+        deleteImageButton.clicked.connect(self.deleteImage)
+        deleteImageButton.setStatusTip("Delete image")
+        columnLayout.addWidget(deleteImageButton)
+        
+        # add to layout
+        dialogLayout.addWidget(column)
+        
+        # set layout
+        self.setLayout(dialogLayout)
+    
+    def clicked(self, index):
+        """
+        File clicked.
+        
+        """
+        self.showImage(self.model.filePath(index))
+    
+    def showImage(self, filename):
+        """
+        Show image.
+        
+        """
+        try:
+            image = QtGui.QImage(filename)
+            self.imageLabel.setPixmap(QtGui.QPixmap.fromImage(image))
+            self.setWindowTitle("Image Viewer: %s" % filename)
+        
+        except:
+            print "ERROR: could not display image in Image Viewer"
+    
+    def deleteImage(self):
+        """
+        Delete image.
+        
+        """
+        success = self.model.remove(self.view.currentIndex())
+        
+        if success:
+            self.imageLabel.clear()
+            self.setWindowTitle("Image Viewer:")
+    
+    def changeDir(self, dirname):
+        """
+        Change directory
+        
+        """
+        self.view.setRootIndex(self.model.index(dirname))
+    
+    def keyReleaseEvent(self, event):
+        """
+        Handle up/down key press
+        
+        """
+        if event.key() == QtCore.Qt.Key_Up or event.key() == QtCore.Qt.Key_Down:
+            self.model.filePath(self.view.currentIndex())
+            self.showImage(self.model.filePath(self.view.currentIndex()))

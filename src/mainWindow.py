@@ -98,6 +98,9 @@ class MainWindow(QtGui.QMainWindow):
         # help window for displaying help
         self.helpWindow = helpForm.HelpForm("index.html", parent=self)
         
+        # image viewer
+        self.imageViewer = dialogs.ImageViewer(self, parent=self)
+        
         # add the main tool bar
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
@@ -113,16 +116,20 @@ class MainWindow(QtGui.QMainWindow):
                                                  icon="file-export-icon.png", tip="Export element properties")
         importElementsAction = self.createAction("Import elements", slot=self.importElements,
                                                  icon="file-import-icon.png", tip="Import element properties")
+        showImageViewerAction = self.createAction("Image viewer", slot=self.showImageViewer, 
+                                                  icon="applications-graphics.svg", tip="Show image viewer")
         
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, openCWDAction, importElementsAction, exportElementsAction, None, exitAction))
+        self.addActions(fileMenu, (newWindowAction, openCWDAction, showImageViewerAction, importElementsAction, 
+                                   exportElementsAction, None, exitAction))
         
         # add file toolbar
         fileToolbar = self.addToolBar("File")
         fileToolbar.addAction(exitAction)
         fileToolbar.addAction(newWindowAction)
         fileToolbar.addAction(openCWDAction)
+        fileToolbar.addAction(showImageViewerAction)
         fileToolbar.addSeparator()
         
         # button to show console window
@@ -247,6 +254,14 @@ class MainWindow(QtGui.QMainWindow):
         self.setStatus('Ready')
         
         self.show()
+    
+    def showImageViewer(self):
+        """
+        Show the image viewer.
+        
+        """
+        self.imageViewer.hide()
+        self.imageViewer.show()
     
     def openElementEditor(self):
         """

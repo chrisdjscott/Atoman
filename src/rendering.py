@@ -635,9 +635,8 @@ class Renderer:
 #            print "WRITTEN"
 #            return None
             
-            # remove previous image file
-            if os.path.exists(os.path.join(self.mainWindow.tmpDirectory, "image.pov")):
-                os.unlink(os.path.join(self.mainWindow.tmpDirectory, "image.pov"))
+            # size of vtk widget
+            
             
             povfile = os.path.join(self.mainWindow.tmpDirectory, "header.pov")
             fh = open(povfile, "w")
@@ -708,6 +707,14 @@ class Renderer:
                 print "STDERR:", stderr
                 return None
             
+            # remove image files
+            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "image.pov"))
+            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "header.pov"))
+            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "image.ini"))
+        
+        if not os.path.exists(filename):
+            print "WARNING: SOMETHING WENT WRONG WITH SAVEIMAGE"
+        
         return filename
     
     def writePOVRAYCellFrame(self, filehandle):
@@ -904,8 +911,6 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
         
         count = 0
         for key, value in sorted(vertexMapper.iteritems(), key=lambda (k, v): (v, k)):
-#            print "value", value, "key", key
-            
             if count == NVertices - 1:
                 string = ""
             
@@ -922,7 +927,6 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
         
         count = 0
         for facet in facets:
-            
             if count == len(facets) - 1:
                 string = ""
             
@@ -936,11 +940,11 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
         nl("  }")
         nl("  pigment { color rgbt <%f,%f,%f,%f> }" % (settings.hullCol[0], settings.hullCol[1], 
                                                        settings.hullCol[2], 1.0 - settings.hullOpacity))
+        nl("  finish { diffuse 0.4 ambient 0.25 phong 0.9 }")
         nl("}")
         nl("")
         
-        string = "\n".join(lines)
-        fh.write(string)
+        fh.write("\n".join(lines))
 
     
 ################################################################################

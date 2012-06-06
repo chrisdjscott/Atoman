@@ -310,6 +310,16 @@ class SingleImageTab(QtGui.QWidget):
         
         filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
                                                       filename, self.overwriteImage, povray=self.parent.povray)
+        
+        if self.openImage:
+            dirname = os.path.dirname(filename)
+            if not dirname:
+                dirname = os.getcwd()
+            
+            self.mainWindow.imageViewer.changeDir(dirname)
+            self.mainWindow.imageViewer.showImage(filename)
+            self.mainWindow.imageViewer.hide()
+            self.mainWindow.imageViewer.show()
     
     def openImageCheckChanged(self, val):
         """
