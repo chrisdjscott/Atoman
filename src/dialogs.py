@@ -327,7 +327,7 @@ class ImageViewer(QtGui.QDialog):
     Image viewer.
     
     @author: Marc Robinson
-    Modified by Chris Scott
+    Rewritten by Chris Scott
     
     """
     def __init__(self, mainWindow, parent=None):
@@ -414,8 +414,15 @@ class ImageViewer(QtGui.QDialog):
         success = self.model.remove(self.view.currentIndex())
         
         if success:
-            self.imageLabel.clear()
-            self.setWindowTitle("Image Viewer:")
+            self.clearImage()
+    
+    def clearImage(self):
+        """
+        Clear the image label.
+        
+        """
+        self.imageLabel.clear()
+        self.setWindowTitle("Image Viewer:")
     
     def changeDir(self, dirname):
         """
@@ -423,6 +430,7 @@ class ImageViewer(QtGui.QDialog):
         
         """
         self.view.setRootIndex(self.model.index(dirname))
+        self.clearImage()
     
     def keyReleaseEvent(self, event):
         """

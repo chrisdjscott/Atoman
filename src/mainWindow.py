@@ -502,7 +502,10 @@ class MainWindow(QtGui.QMainWindow):
         Updates the CWD label in the status bar.
         
         """
-        self.currentDirectoryLabel.setText(os.getcwd())
+        dirname = os.getcwd()
+        
+        self.currentDirectoryLabel.setText(dirname)
+        self.imageViewer.changeDir(dirname)
     
     def openFileDialog(self, state):
         """
