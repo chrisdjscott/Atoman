@@ -226,7 +226,7 @@ class SingleImageTab(QtGui.QWidget):
         
         # initial values
         self.overwriteImage = 0
-        self.openImage = 0
+        self.openImage = 1
         
         # layout
         mainLayout = QtGui.QVBoxLayout(self)
@@ -280,6 +280,7 @@ class SingleImageTab(QtGui.QWidget):
         self.connect(self.overwriteCheck, QtCore.SIGNAL('stateChanged(int)'), self.overwriteCheckChanged)
         
         self.openImageCheck = QtGui.QCheckBox("Open image")
+        self.openImageCheck.setChecked(True)
         self.connect(self.openImageCheck, QtCore.SIGNAL('stateChanged(int)'), self.openImageCheckChanged)
         
         rowLayout.addWidget(self.overwriteCheck)

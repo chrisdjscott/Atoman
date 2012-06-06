@@ -337,6 +337,7 @@ class ImageViewer(QtGui.QDialog):
         self.mainWindow = mainWindow
         
         self.setWindowTitle("Image Viewer:")
+        self.setWindowIcon(QtGui.QIcon(iconPath("applications-graphics.svg")))
         
         # main layout
         dialogLayout = QtGui.QHBoxLayout()
