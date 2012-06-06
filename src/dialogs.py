@@ -378,6 +378,7 @@ class ImageViewer(QtGui.QDialog):
         deleteImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-delete.svg")), "Delete image")
         deleteImageButton.clicked.connect(self.deleteImage)
         deleteImageButton.setStatusTip("Delete image")
+        deleteImageButton.setAutoDefault(False)
         columnLayout.addWidget(deleteImageButton)
         
         # add to layout
