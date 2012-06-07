@@ -421,7 +421,7 @@ class Filterer:
         """
         pass
         
-    def clusterFilter(self, settings, PBC=None, minSize=None, nebRad=None):
+    def clusterFilter(self, settings, PBC=None, minSize=None, maxSize=None, nebRad=None):
         """
         Run the cluster filter
         
@@ -439,6 +439,9 @@ class Filterer:
         if minSize is None:
             minSize = settings.minClusterSize
         
+        if maxSize is None:
+            maxSize = settings.maxClusterSize
+        
         if nebRad is None:
             nebRad = settings.neighbourRadius
         
@@ -447,7 +450,7 @@ class Filterer:
         maxPos = copy.deepcopy(lattice.cellDims)
         
         clusters_c.findClusters(self.visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
-                                minPos, maxPos, minSize, result)
+                                minPos, maxPos, minSize, maxSize, result)
         
         NVisible = result[0]
         NClusters = result[1]

@@ -413,10 +413,15 @@ class ImageViewer(QtGui.QDialog):
         Delete image.
         
         """
-        success = self.model.remove(self.view.currentIndex())
+        reply = QtGui.QMessageBox.question(self, "Message", 
+                                           "Delete file: %s?" % self.model.filePath(self.view.currentIndex()),
+                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         
-        if success:
-            self.clearImage()
+        if reply == QtGui.QMessageBox.Yes:
+            success = self.model.remove(self.view.currentIndex())
+        
+            if success:
+                self.clearImage()
     
     def clearImage(self):
         """

@@ -21,7 +21,7 @@ void setAppliedPBCs(int *, int *);
  *******************************************************************************/
 void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *pos, int clusterArrayDim, int *clusterArray, double neighbourRad, 
                  int cellDimsDim, double *cellDims, int PBCDim, int *PBC, int minPosDim, double *minPos, int maxPosDim, double *maxPos, 
-                 int minClusterSize, int resultsDim, int *results)
+                 int minClusterSize, int maxClusterSize, int resultsDim, int *results)
 {
     int i, index, NClusters, numInCluster;
     int maxNumInCluster;
@@ -109,6 +109,11 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
         numInCluster = NAtomsCluster[clusterIndex];
         
         if (numInCluster < minClusterSize)
+        {
+            continue;
+        }
+        
+        if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize)
         {
             continue;
         }

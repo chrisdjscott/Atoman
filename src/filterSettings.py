@@ -613,9 +613,10 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         if self.qconvex:
             self.mainWindow.console.write("'qconvex' executable located at: %s" % (self.qconvex,))
         
-        self.minClusterSize = 5
+        self.minClusterSize = 8
+        self.maxClusterSize = -1
         self.drawConvexHulls = 0
-        self.neighbourRadius = 3.5
+        self.neighbourRadius = 5.0
         self.calculateVolumes = 0
         self.hullCol = [0]*3
         self.hullCol[2] = 1
@@ -645,6 +646,18 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         row = self.newRow()
         row.addWidget(label)
         row.addWidget(self.minNumSpinBox)
+        
+        # maximum size spin box
+        label = QtGui.QLabel("Maximum cluster size ")
+        self.maxNumSpinBox = QtGui.QSpinBox()
+        self.maxNumSpinBox.setMinimum(-1)
+        self.maxNumSpinBox.setMaximum(999999)
+        self.maxNumSpinBox.setValue(self.maxClusterSize)
+        self.connect(self.maxNumSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.maxNumChanged)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.maxNumSpinBox)
         
         self.newRow()
         
@@ -737,6 +750,13 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         
         """
         self.minClusterSize = val
+    
+    def maxNumChanged(self, val):
+        """
+        Change max cluster size.
+        
+        """
+        self.maxClusterSize = val
     
     def nebRadChanged(self, val):
         """

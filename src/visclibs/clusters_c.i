@@ -47,7 +47,7 @@ import_array();
 %{
 extern void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *pos, int clusterArrayDim, int *clusterArray, double neighbourRad, 
                          int cellDimsDim, double *cellDims, int PBCDim, int *PBC, int minPosDim, double *minPos, int maxPosDim, double *maxPos, 
-                         int minClusterSize, int resultsDim, int *results);
+                         int minClusterSize, int maxClusterSize, int resultsDim, int *results);
 
 extern void prepareClusterToDrawHulls(int N, int posDim, double *pos, int cellDimsDim, double *cellDims, 
                                       int PBCDim, int *PBC, int appliedPBCsDims, int *appliedPBCs, 
@@ -56,7 +56,7 @@ extern void prepareClusterToDrawHulls(int N, int posDim, double *pos, int cellDi
 
 extern void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *pos, int clusterArrayDim, int *clusterArray, double neighbourRad, 
                          int cellDimsDim, double *cellDims, int PBCDim, int *PBC, int minPosDim, double *minPos, int maxPosDim, double *maxPos, 
-                         int minClusterSize, int resultsDim, int *results);
+                         int minClusterSize, int maxClusterSize, int resultsDim, int *results);
 
 extern void prepareClusterToDrawHulls(int N, int posDim, double *pos, int cellDimsDim, double *cellDims, 
                                       int PBCDim, int *PBC, int appliedPBCsDims, int *appliedPBCs, 
