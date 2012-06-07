@@ -38,6 +38,8 @@ class Filterer:
         self.visibleAtoms = np.empty(0, np.int32)
         
         self.actorsCollection = vtk.vtkActorCollection()
+        
+        self.availableScreenInfo = {}
     
     def removeActors(self):
         """
@@ -96,6 +98,8 @@ class Filterer:
             self.visibleAtoms = np.arange(NAtoms, dtype=np.int32)
             self.log("%d visible atoms" % (len(self.visibleAtoms),), 0, 2)
         
+        self.availableScreenInfo = {}
+        
         # run filters
         currentFilters = self.parent.currentFilters
         currentSettings = self.parent.currentSettings
@@ -143,11 +147,13 @@ class Filterer:
             # write to log
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites)
-                self.log("%d visible atoms" % (NVis,), 0, 3)
-            
+                
             else:
-                self.log("%d visible atoms" % (len(self.visibleAtoms),), 0, 3)
-        
+                NVis = len(self.visibleAtoms)
+            
+            self.log("%d visible atoms" % (NVis,), 0, 3)
+            self.availableScreenInfo["visible"] = NVis
+            
         # render
         povfile = "atoms%d.pov" % (self.parent.tab,)
         if self.parent.defectFilterSelected:
@@ -339,7 +345,7 @@ class Filterer:
                                        inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
                                        refLattice.pos, refLattice.cellDims, self.mainWindow.PBC, settings.vacancyRadius, minPos, maxPos, 
                                        settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
-                                       onAntSpecCount)
+                                       onAntSpecCount, settings.minClusterSize, settings.maxClusterSize)
         
         # summarise
         NDef = NDefectsByType[0]
@@ -367,7 +373,6 @@ class Filterer:
         if settings.showAntisites:
             self.log("%d antisites" % (NAnt,), 0, 4)
             for i in xrange(len(refLattice.specieList)):
-#                self.log("%d %s antisites" % (antSpecCount[i], refLattice.specieList[i]), 0, 5)
                 for j in xrange(len(inputLattice.specieList)):
                     if inputLattice.specieList[j] == refLattice.specieList[i]:
                         continue
@@ -401,7 +406,7 @@ class Filterer:
                 clusterListIndex = clusterIndexMapper[clusterIndex]
                 
                 clusterList[clusterListIndex].append(atomIndex)
-                defectType[clusterIndex].append("R")
+                defectType[clusterListIndex].append("R")
             
             for i in xrange(NInt):
                 atomIndex = interstitials[i]
@@ -414,7 +419,7 @@ class Filterer:
                 clusterListIndex = clusterIndexMapper[clusterIndex]
                 
                 clusterList[clusterListIndex].append(atomIndex)
-                defectType[clusterIndex].append("I")
+                defectType[clusterListIndex].append("I")
             
             for i in xrange(NAnt):
                 atomIndex = antisites[i]
@@ -427,8 +432,7 @@ class Filterer:
                 clusterListIndex = clusterIndexMapper[clusterIndex]
                 
                 clusterList[clusterListIndex].append(atomIndex)
-                defectType[clusterIndex].append("R")
-            
+                defectType[clusterListIndex].append("R")
         
         return (interstitials, vacancies, antisites, onAntisites, clusterList, defectType)
     

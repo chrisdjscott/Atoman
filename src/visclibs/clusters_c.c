@@ -99,7 +99,7 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
         exit(50);
     }
     
-    /* loop over visible atoms to see if their clusters has more than the min number */
+    /* loop over visible atoms to see if their cluster has more than the min number */
     NVisible = 0;
     for (i=0; i<visibleAtomsDim; i++)
     {

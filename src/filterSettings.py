@@ -385,6 +385,8 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.showVacancies = 1
         self.findClusters = 0
         self.neighbourRadius = 3.5
+        self.minClusterSize = 3
+        self.maxClusterSize = -1
         
         # check if qconvex programme located
         self.qconvex = utilities.checkForExe("qconvex")
@@ -451,6 +453,30 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row.addWidget(label)
         row.addWidget(self.nebRadSpinBox)
         
+        # minimum size spin box
+        label = QtGui.QLabel("Minimum cluster size ")
+        self.minNumSpinBox = QtGui.QSpinBox()
+        self.minNumSpinBox.setMinimum(1)
+        self.minNumSpinBox.setMaximum(1000)
+        self.minNumSpinBox.setValue(self.minClusterSize)
+        self.connect(self.minNumSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.minNumChanged)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.minNumSpinBox)
+        
+        # maximum size spin box
+        label = QtGui.QLabel("Maximum cluster size ")
+        self.maxNumSpinBox = QtGui.QSpinBox()
+        self.maxNumSpinBox.setMinimum(-1)
+        self.maxNumSpinBox.setMaximum(999999)
+        self.maxNumSpinBox.setValue(self.maxClusterSize)
+        self.connect(self.maxNumSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.maxNumChanged)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.maxNumSpinBox)
+        
         self.newRow()
         
         label = QtGui.QLabel("Visible species:")
@@ -466,6 +492,20 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
 #        self.newRow()
         
         self.refresh()
+    
+    def minNumChanged(self, val):
+        """
+        Change min cluster size.
+        
+        """
+        self.minClusterSize = val
+    
+    def maxNumChanged(self, val):
+        """
+        Change max cluster size.
+        
+        """
+        self.maxClusterSize = val
     
     def nebRadChanged(self, val):
         """

@@ -11,7 +11,7 @@
 #include "utilities.h"
 
 
-int findDefectClusters(int, double *, int *, struct Boxes *, double, double *, int *);
+int findDefectClusters(int, double *, int *, int *, struct Boxes *, double, double *, int *);
 int findDefectNeighbours(int, int, int, int *, double *, struct Boxes *, double, double *, int *);
 
 
@@ -27,7 +27,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
                  int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClustersFlag,
                  double clusterRadius, int defectClusterDim, int *defectCluster, int vacSpecCountDim, int *vacSpecCount, 
                  int intSpecCountDim, int *intSpecCount, int antSpecCountDim, int *antSpecCount, int onAntSpecCntDim1, 
-                 int onAntSpecCntDim2, int *onAntSpecCount )
+                 int onAntSpecCntDim2, int *onAntSpecCount, int minClusterSize, int maxClusterSize )
 {
     int i, NSpecies, exitLoop, k, j, index;
     double vacRad2;
@@ -38,12 +38,14 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     double refxpos, refypos, refzpos;
     double sep2;
     int NDefects, NAntisites, NInterstitials, NVacancies;
+    int *NDefectsCluster, *NDefectsClusterNew;
     int *possibleVacancy, *possibleInterstitial;
     int *possibleAntisite, *possibleOnAntisite;
-    int skip, count, NClusters;
+    int skip, count, NClusters, clusterIndex;
     double approxBoxWidth;
     struct Boxes *boxes;
     double *defectPos;
+    int NVacNew, NIntNew, NAntNew, numInCluster;
     
     
     /* approx width, must be at least vacRad
@@ -246,13 +248,6 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
             }
         }
     }
-        
-    NDefects = NVacancies + NInterstitials + NAntisites;
-    
-    NDefectsType[0] = NDefects;
-    NDefectsType[1] = NVacancies;
-    NDefectsType[2] = NInterstitials;
-    NDefectsType[3] = NAntisites;
     
     /* free arrays */
     free(possibleVacancy);
@@ -264,6 +259,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     if (findClustersFlag)
     {
         /* build positions array of all defects */
+        NDefects = NVacancies + NInterstitials + NAntisites;
         defectPos = malloc(3 * NDefects * sizeof(double));
         if (defectPos == NULL)
         {
@@ -311,15 +307,145 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
         putAtomsInBoxes(NDefects, defectPos, boxes);
         
-        /* find clusters */
-        NClusters = findDefectClusters(NDefects, defectPos, defectCluster, boxes, clusterRadius, cellDims, PBC);
+        /* number of defects per cluster */
+        NDefectsCluster = malloc( (refNAtoms + NAtoms) * sizeof(int) );
+        if (NDefectsCluster == NULL)
+        {
+            printf("ERROR: Boxes: could not allocate NDefectsCluster\n");
+            exit(1);
+        }
         
+        /* find clusters */
+        NClusters = findDefectClusters(NDefects, defectPos, defectCluster, NDefectsCluster, boxes, clusterRadius, cellDims, PBC);
+        
+        NDefectsCluster = realloc(NDefectsCluster, NClusters * sizeof(int));
+        if (NDefectsCluster == NULL)
+        {
+            printf("ERROR: could not reallocate NDefectsCluster\n");
+            exit(51);
+        }
+        
+        /* now limit by size */
+        NDefectsClusterNew = calloc(NClusters, sizeof(int));
+        if (NDefectsClusterNew == NULL)
+        {
+            printf("ERROR: could not allocate NDefectsClusterNew\n");
+            exit(50);
+        }
+        
+        /* first vacancies */
+        NVacNew = 0;
+        for (i=0; i<NVacancies; i++)
+        {
+            clusterIndex = defectCluster[i];
+            index = vacancies[i];
+            
+            numInCluster = NDefectsCluster[clusterIndex];
+            
+            if (numInCluster < minClusterSize)
+            {
+                continue;
+            }
+            
+            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize)
+            {
+                continue;
+            }
+            
+            vacancies[NVacNew] = index;
+            defectCluster[NVacNew] = clusterIndex;
+            NDefectsClusterNew[clusterIndex]++;
+            
+            NVacNew++;
+        }
+        
+        /* now interstitials */
+        NIntNew = 0;
+        for (i=0; i<NInterstitials; i++)
+        {
+            clusterIndex = defectCluster[NVacancies+i];
+            index = interstitials[i];
+            
+            numInCluster = NDefectsCluster[clusterIndex];
+            
+            if (numInCluster < minClusterSize)
+            {
+                continue;
+            }
+            
+            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize)
+            {
+                continue;
+            }
+            
+            interstitials[NIntNew] = index;
+            defectCluster[NVacNew+NIntNew] = clusterIndex;
+            NDefectsClusterNew[clusterIndex]++;
+            
+            NIntNew++;
+        }
+        
+        /* antisites */
+        NAntNew = 0;
+        for (i=0; i<NAntisites; i++)
+        {
+            clusterIndex = defectCluster[NVacancies+NInterstitials+i];
+            index = antisites[i];
+            index2 = onAntisites[i];
+            
+            numInCluster = NDefectsCluster[clusterIndex];
+            
+            if (numInCluster < minClusterSize)
+            {
+                continue;
+            }
+            
+            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize)
+            {
+                continue;
+            }
+            
+            antisites[NAntNew] = index;
+            onAntisites[NAntNew] = index2;
+            defectCluster[NVacNew+NIntNew+NAntNew] = clusterIndex;
+            NDefectsClusterNew[clusterIndex]++;
+            
+            NAntNew++;
+        }
+        
+        /* number of visible defects */
+        NVacancies = NVacNew;
+        NInterstitials = NIntNew;
+        NAntisites = NAntNew;
+        
+        /* recalc number of clusters */
+        count = 0;
+        for (i=0; i<NClusters; i++)
+        {
+            if (NDefectsClusterNew[i] > 0)
+            {
+                count++;
+            }
+        }
+        NClusters = count;
+        
+        /* number of clusters */
         NDefectsType[4] = NClusters;
         
         /* free stuff */
         freeBoxes(boxes);
         free(defectPos);
+        free(NDefectsCluster);
+        free(NDefectsClusterNew);
     }
+    
+    /* counters */
+    NDefects = NVacancies + NInterstitials + NAntisites;
+    
+    NDefectsType[0] = NDefects;
+    NDefectsType[1] = NVacancies;
+    NDefectsType[2] = NInterstitials;
+    NDefectsType[3] = NAntisites;
     
     /* specie counters */
     for (i=0; i<NVacancies; i++)
@@ -350,7 +476,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
 /*******************************************************************************
  * put defects into clusters
  *******************************************************************************/
-int findDefectClusters(int NDefects, double *defectPos, int *defectCluster, struct Boxes *boxes, double maxSep, 
+int findDefectClusters(int NDefects, double *defectPos, int *defectCluster, int *NDefectsCluster, struct Boxes *boxes, double maxSep, 
                        double *cellDims, int *PBC)
 {
     int i, maxNumInCluster;
@@ -385,6 +511,8 @@ int findDefectClusters(int NDefects, double *defectPos, int *defectCluster, stru
             
             /* recursive search for cluster atoms */
             numInCluster = findDefectNeighbours(i, defectCluster[i], numInCluster, defectCluster, defectPos, boxes, maxSep2, cellDims, PBC);
+            
+            NDefectsCluster[defectCluster[i]] = numInCluster;
             
             maxNumInCluster = (numInCluster > maxNumInCluster) ? numInCluster : maxNumInCluster;
         }

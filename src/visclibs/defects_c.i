@@ -70,7 +70,7 @@ extern int findDefects( int includeVacs, int includeInts, int includeAnts, int N
                         int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClusters,
                         double clusterRadius, int defectClusterDim, int *defectCluster, int vacSpecCountDim, int *vacSpecCount, 
                         int intSpecCountDim, int *intSpecCount, int antSpecCountDim, int *antSpecCount, int onAntSpecCntDim1, 
-                        int onAntSpecCntDim2, int *onAntSpecCount);
+                        int onAntSpecCntDim2, int *onAntSpecCount, int minClusterSize, int maxClusterSize);
 %}
 
 extern int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefectsTypeDim, int* NDefectsType, int vacDim, int* vacancies, 
@@ -81,4 +81,4 @@ extern int findDefects( int includeVacs, int includeInts, int includeAnts, int N
                         int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClusters,
                         double clusterRadius, int defectClusterDim, int *defectCluster, int vacSpecCountDim, int *vacSpecCount, 
                         int intSpecCountDim, int *intSpecCount, int antSpecCountDim, int *antSpecCount, int onAntSpecCntDim1, 
-                        int onAntSpecCntDim2, int *onAntSpecCount);
+                        int onAntSpecCntDim2, int *onAntSpecCount, int minClusterSize, int maxClusterSize);
