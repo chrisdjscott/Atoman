@@ -158,7 +158,7 @@ class Filterer:
         povfile = "atoms%d.pov" % (self.parent.tab,)
         if self.parent.defectFilterSelected:
             # vtk render
-            if filterSettings.findClusters:
+            if filterSettings.findClusters and filterSettings.drawConvexHulls:
                 hullFile = os.path.join(self.mainWindow.tmpDirectory, "hulls%d.pov" % self.parent.tab)
                 if os.path.exists(hullFile):
                     os.unlink(hullFile)

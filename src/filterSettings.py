@@ -7,12 +7,11 @@ Settings for filters
 """
 import sys
 
-from PyQt4 import QtGui, QtCore, Qt
+from PyQt4 import QtGui, QtCore
 
 import utilities
 from utilities import iconPath
 import genericForm
-import globalsModule
 
 try:
     import resources
@@ -26,7 +25,7 @@ except ImportError:
 ################################################################################
 class GenericSettingsDialog(QtGui.QDialog):
     def __init__(self, title, parent):
-        QtGui.QDockWidget.__init__(self, parent=parent)
+        super(GenericSettingsDialog, self).__init__(parent)
         
         self.setModal(0)
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
@@ -40,16 +39,33 @@ class GenericSettingsDialog(QtGui.QDialog):
 #        dialogLayout.setContentsMargins(0, 0, 0, 0)
 #        dialogLayout.setSpacing(0)
         
+        tabWidget = QtGui.QTabWidget()
+        
+        # filter settings
         self.contentLayout = QtGui.QVBoxLayout()
         self.contentLayout.setAlignment(QtCore.Qt.AlignTop)
         self.contentLayout.setContentsMargins(0, 0, 0, 0)
         self.contentLayout.setSpacing(0)
         
-        contentWidget = QtGui.QGroupBox(title)
-        contentWidget.setAlignment(QtCore.Qt.AlignCenter)
+        contentWidget = QtGui.QWidget() #QtGui.QGroupBox(title)
+#        contentWidget.setAlignment(QtCore.Qt.AlignCenter)
         contentWidget.setLayout(self.contentLayout)
         
-        dialogLayout.addWidget(contentWidget)
+#        dialogLayout.addWidget(contentWidget)
+        tabWidget.addTab(contentWidget, "Filter")
+        
+        # display settings
+        self.displaySettingsLayout = QtGui.QVBoxLayout()
+        self.displaySettingsLayout.setAlignment(QtCore.Qt.AlignTop)
+        self.displaySettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.displaySettingsLayout.setSpacing(0)
+        
+        displaySettingsWidget = QtGui.QWidget()
+        displaySettingsWidget.setLayout(self.displaySettingsLayout)
+        
+        tabWidget.addTab(displaySettingsWidget, "Display")
+        
+        dialogLayout.addWidget(tabWidget)
         self.setLayout(dialogLayout)
         
         # buttons
@@ -66,14 +82,31 @@ class GenericSettingsDialog(QtGui.QDialog):
         dialogLayout.addWidget(buttonWidget)
     
     def newRow(self, align=None):
+        """
+        New filter settings row.
         
+        """
         row = genericForm.FormRow(align=align)
         self.contentLayout.addWidget(row)
         
         return row
     
     def removeRow(self,row):
+        """
+        Remove filter settings row
+        
+        """
         self.contentLayout.removeWidget(row)  
+    
+    def newDisplayRow(self, align=None):
+        """
+        New display settings row.
+        
+        """
+        row = genericForm.FormRow(align=align)
+        self.displaySettingsLayout.addWidget(row)
+        
+        return row
     
     def closeEvent(self, event):
         self.hide()
@@ -390,6 +423,8 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.hullCol = [0]*3
         self.hullCol[2] = 1
         self.hullOpacity = 0.5
+        self.calculateVolumes = 0
+        self.drawConvexHulls = 0
         
         # check if qconvex programme located
         self.qconvex = utilities.checkForExe("qconvex")
@@ -437,12 +472,27 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         self.newRow()
         
-        # find clusters check box
-        self.findClustersCheckBox = QtGui.QCheckBox(" Find clusters")
-        self.findClustersCheckBox.setChecked(0)
-        self.connect(self.findClustersCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.findClustersChanged)
+        # find clusters group box
+        self.findClustersGroupBox = QtGui.QGroupBox("Find clusters")
+        self.findClustersGroupBox.setCheckable(True)
+        self.findClustersGroupBox.setChecked(False)
+        self.findClustersGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
+        self.findClustersGroupBox.toggled.connect(self.findClustersChanged)
+        
+        findClustersLayout = QtGui.QVBoxLayout(self.findClustersGroupBox)
+        findClustersLayout.setAlignment(QtCore.Qt.AlignTop)
+        findClustersLayout.setContentsMargins(0, 0, 0, 0)
+        findClustersLayout.setSpacing(0)
+        
         row = self.newRow()
-        row.addWidget(self.findClustersCheckBox)
+        row.addWidget(self.findClustersGroupBox)
+        
+        # find clusters check box
+#        self.findClustersCheckBox = QtGui.QCheckBox(" Find clusters")
+#        self.findClustersCheckBox.setChecked(0)
+#        self.connect(self.findClustersCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.findClustersChanged)
+#        row = self.newRow()
+#        row.addWidget(self.findClustersCheckBox)
         
         # neighbour rad spin box
         label = QtGui.QLabel("Neighbour radius ")
@@ -452,9 +502,11 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.nebRadSpinBox.setMaximum(100.0)
         self.nebRadSpinBox.setValue(self.neighbourRadius)
         self.connect(self.nebRadSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.nebRadChanged)
-        row = self.newRow()
+        
+        row = genericForm.FormRow()
         row.addWidget(label)
         row.addWidget(self.nebRadSpinBox)
+        findClustersLayout.addWidget(row)
         
         # minimum size spin box
         label = QtGui.QLabel("Minimum cluster size ")
@@ -464,9 +516,10 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.minNumSpinBox.setValue(self.minClusterSize)
         self.connect(self.minNumSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.minNumChanged)
         
-        row = self.newRow()
+        row = genericForm.FormRow()
         row.addWidget(label)
         row.addWidget(self.minNumSpinBox)
+        findClustersLayout.addWidget(row)
         
         # maximum size spin box
         label = QtGui.QLabel("Maximum cluster size ")
@@ -476,9 +529,10 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.maxNumSpinBox.setValue(self.maxClusterSize)
         self.connect(self.maxNumSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.maxNumChanged)
         
-        row = self.newRow()
+        row = genericForm.FormRow()
         row.addWidget(label)
         row.addWidget(self.maxNumSpinBox)
+        findClustersLayout.addWidget(row)
         
         self.newRow()
         
@@ -492,7 +546,60 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row = self.newRow()
         row.addWidget(self.allSpeciesBox)
         
-#        self.newRow()
+        # draw hulls group box
+        self.drawHullsGroupBox = QtGui.QGroupBox(" Draw convex hulls")
+        self.drawHullsGroupBox.setCheckable(True)
+        self.drawHullsGroupBox.setChecked(False)
+        self.drawHullsGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
+        self.drawHullsGroupBox.toggled.connect(self.drawHullsChanged)
+        
+        drawHullsLayout = QtGui.QVBoxLayout(self.drawHullsGroupBox)
+        drawHullsLayout.setAlignment(QtCore.Qt.AlignTop)
+        drawHullsLayout.setContentsMargins(0, 0, 0, 0)
+        drawHullsLayout.setSpacing(0)
+        
+        row = self.newDisplayRow()
+        row.addWidget(self.drawHullsGroupBox)
+        
+        # hull colour
+        label = QtGui.QLabel("Hull colour  ")
+        
+        col = QtGui.QColor(self.hullCol[0]*255.0, self.hullCol[1]*255.0, self.hullCol[2]*255.0)
+        self.hullColourButton = QtGui.QPushButton("")
+        self.hullColourButton.setFixedWidth(50)
+        self.hullColourButton.setFixedHeight(30)
+        self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
+        self.connect(self.hullColourButton, QtCore.SIGNAL("clicked()"), self.showColourDialog)
+        
+        row = genericForm.FormRow()
+        row.addWidget(label)
+        row.addWidget(self.hullColourButton)
+        drawHullsLayout.addWidget(row)
+        
+        # hull opacity
+        label = QtGui.QLabel("Hull opacity ")
+        
+        self.hullOpacitySpinBox = QtGui.QDoubleSpinBox()
+        self.hullOpacitySpinBox.setSingleStep(0.01)
+        self.hullOpacitySpinBox.setMinimum(0.01)
+        self.hullOpacitySpinBox.setMaximum(1.0)
+        self.hullOpacitySpinBox.setValue(self.hullOpacity)
+        self.connect(self.hullOpacitySpinBox, QtCore.SIGNAL('valueChanged(double)'), self.hullOpacityChanged)
+        
+        row = genericForm.FormRow()
+        row.addWidget(label)
+        row.addWidget(self.hullOpacitySpinBox)
+        drawHullsLayout.addWidget(row)
+        
+        # calculate volumes check box
+        self.calcVolsCheckBox = QtGui.QCheckBox(" Calculate volumes")
+        self.calcVolsCheckBox.setChecked(0)
+        self.connect(self.calcVolsCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.calcVolsChanged)
+        
+        self.newDisplayRow()
+        
+        row = self.newDisplayRow()
+        row.addWidget(self.calcVolsCheckBox)
         
         self.refresh()
     
@@ -517,15 +624,15 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         """
         self.neighbourRadius = val
     
-    def findClustersChanged(self):
+    def findClustersChanged(self, findClusters):
         """
         Change find volumes setting.
         
         """
-        if self.findClustersCheckBox.isChecked():
+        if findClusters:
             if not self.qconvex:
                 utilities.warnExeNotFound(self, "qconvex")
-                self.findClustersCheckBox.setCheckState(0)
+                self.findClustersGroupBox.setChecked(False)
                 return
             
             self.findClusters = 1
@@ -637,7 +744,59 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         if len(self.visibleSpecieList) != len(self.specieList):
             self.allSpeciesBox.setChecked(0)
             self.allSpeciesSelected = False
-
+    
+    def drawHullsChanged(self, drawHulls):
+        """
+        Change draw hulls setting.
+        
+        """
+        if drawHulls:
+            if not self.qconvex:
+                utilities.warnExeNotFound(self, "qconvex")
+                self.drawHullsGroupBox.setChecked(False)
+                return
+            
+            self.drawConvexHulls = 1
+        
+        else:
+            self.drawConvexHulls = 0
+    
+    def hullOpacityChanged(self, val):
+        """
+        Change hull opacity setting.
+        
+        """
+        self.hullOpacity = val
+    
+    def showColourDialog(self):
+        """
+        Show hull colour dialog.
+        
+        """
+        col = QtGui.QColorDialog.getColor()
+        
+        if col.isValid():
+            self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
+            
+            self.hullCol[0] = float(col.red()) / 255.0
+            self.hullCol[1] = float(col.green()) / 255.0
+            self.hullCol[2] = float(col.blue()) / 255.0
+    
+    def calcVolsChanged(self, val):
+        """
+        Changed calc vols.
+        
+        """
+        if self.calcVolsCheckBox.isChecked():
+            if not self.qconvex:
+                utilities.warnExeNotFound(self, "qconvex")
+                self.calcVolsCheckBox.setCheckState(0)
+                return
+            
+            self.calculateVolumes = 1
+        
+        else:
+            self.calculateVolumes = 0
 
 ################################################################################
 class ClusterSettingsDialog(GenericSettingsDialog):
@@ -701,24 +860,21 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         row = self.newRow()
         row.addWidget(label)
         row.addWidget(self.maxNumSpinBox)
+                
+        # draw hulls group box
+        self.drawHullsGroupBox = QtGui.QGroupBox(" Draw convex hulls")
+        self.drawHullsGroupBox.setCheckable(True)
+        self.drawHullsGroupBox.setChecked(False)
+        self.drawHullsGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
+        self.drawHullsGroupBox.toggled.connect(self.drawHullsChanged)
         
-        self.newRow()
+        drawHullsLayout = QtGui.QVBoxLayout(self.drawHullsGroupBox)
+        drawHullsLayout.setAlignment(QtCore.Qt.AlignTop)
+        drawHullsLayout.setContentsMargins(0, 0, 0, 0)
+        drawHullsLayout.setSpacing(0)
         
-        # draw hull check box
-        self.drawHullsCheckBox = QtGui.QCheckBox(" Draw convex hulls")
-        self.drawHullsCheckBox.setChecked(0)
-        self.connect( self.drawHullsCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.drawHullsChanged )
-        
-        row = self.newRow()
-        row.addWidget(self.drawHullsCheckBox)
-        
-        # calculate volumes check box
-        self.calcVolsCheckBox = QtGui.QCheckBox(" Calculate volumes")
-        self.calcVolsCheckBox.setChecked(0)
-        self.connect(self.calcVolsCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.calcVolsChanged)
-        
-        row = self.newRow()
-        row.addWidget(self.calcVolsCheckBox)
+        row = self.newDisplayRow()
+        row.addWidget(self.drawHullsGroupBox)
         
         # hull colour
         label = QtGui.QLabel("Hull colour  ")
@@ -730,11 +886,10 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
         self.connect(self.hullColourButton, QtCore.SIGNAL("clicked()"), self.showColourDialog)
         
-        self.newRow()
-        
-        row = self.newRow()
+        row = genericForm.FormRow()
         row.addWidget(label)
         row.addWidget(self.hullColourButton)
+        drawHullsLayout.addWidget(row)
         
         # hull opacity
         label = QtGui.QLabel("Hull opacity ")
@@ -746,9 +901,20 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.hullOpacitySpinBox.setValue(self.hullOpacity)
         self.connect(self.hullOpacitySpinBox, QtCore.SIGNAL('valueChanged(double)'), self.hullOpacityChanged)
         
-        row = self.newRow()
+        row = genericForm.FormRow()
         row.addWidget(label)
         row.addWidget(self.hullOpacitySpinBox)
+        drawHullsLayout.addWidget(row)
+        
+        # calculate volumes check box
+        self.calcVolsCheckBox = QtGui.QCheckBox(" Calculate volumes")
+        self.calcVolsCheckBox.setChecked(0)
+        self.connect(self.calcVolsCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.calcVolsChanged)
+        
+#        self.newDisplayRow()
+        
+        row = self.newDisplayRow()
+        row.addWidget(self.calcVolsCheckBox)
     
     def hullOpacityChanged(self, val):
         """
@@ -808,24 +974,21 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         """
         self.neighbourRadius = val
     
-    def drawHullsChanged(self):
+    def drawHullsChanged(self, drawHulls):
         """
         Change draw hulls setting.
         
         """
-        if self.drawHullsCheckBox.isChecked():
+        if drawHulls:
             if not self.qconvex:
                 utilities.warnExeNotFound(self, "qconvex")
-                self.drawHullsCheckBox.setCheckState(0)
+                self.drawHullsGroupBox.setChecked(False)
                 return
             
             self.drawConvexHulls = 1
-#            self.calcVolsCheckBox.setCheckable(1)
         
         else:
             self.drawConvexHulls = 0
-#            self.calcVolsCheckBox.setCheckState(0)
-#            self.calcVolsCheckBox.setCheckable(0)
 
 
 ################################################################################
