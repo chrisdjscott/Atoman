@@ -25,11 +25,13 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
                  int specieDim, int* specie, int posDim, double* pos, int refNAtoms, int specieListRefDim, char* specieListRef, 
                  int specieRefDim, int* specieRef, int refPosDim, double* refPos, int cellDimsDim, double *cellDims, int PBCDim, 
                  int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClustersFlag,
-                 double clusterRadius, int defectClusterDim, int *defectCluster )
+                 double clusterRadius, int defectClusterDim, int *defectCluster, int vacSpecCountDim, int *vacSpecCount, 
+                 int intSpecCountDim, int *intSpecCount, int antSpecCountDim, int *antSpecCount, int onAntSpecCntDim1, 
+                 int onAntSpecCntDim2, int *onAntSpecCount )
 {
     int i, NSpecies, exitLoop, k, j, index;
     double vacRad2;
-    int boxNebList[27], specieIndex;
+    int boxNebList[27], specieIndex, index2;
     char symtemp[3], symtemp2[3];
     double xpos, ypos, zpos;
     int checkBox, refIndex, comp, boxIndex;
@@ -317,6 +319,28 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         /* free stuff */
         freeBoxes(boxes);
         free(defectPos);
+    }
+    
+    /* specie counters */
+    for (i=0; i<NVacancies; i++)
+    {
+        index = vacancies[i];
+        vacSpecCount[specieRef[index]]++;
+    }
+    
+    for (i=0; i<NInterstitials; i++)
+    {
+        index = interstitials[i];
+        intSpecCount[specie[index]]++;
+    }
+    
+    for (i=0; i<NAntisites; i++)
+    {
+        index = antisites[i];
+        antSpecCount[specieRef[index]]++;
+        
+        index2 = onAntisites[i];
+        onAntSpecCount[specieRef[index]*onAntSpecCntDim2+specie[index2]]++;
     }
     
     return 0;

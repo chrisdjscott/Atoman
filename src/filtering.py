@@ -273,15 +273,20 @@ class Filterer:
         # set up arrays
         if settings.showInterstitials:
             interstitials = np.empty(inputLattice.NAtoms, np.int32)
+        
         else:
             interstitials = np.empty(0, np.int32)
+        
         if settings.showVacancies:
             vacancies = np.empty(refLattice.NAtoms, np.int32)
+        
         else:
             vacancies = np.empty(0, np.int32)
+        
         if settings.showAntisites:
             antisites = np.empty(refLattice.NAtoms, np.int32)
             onAntisites = np.empty(refLattice.NAtoms, np.int32)
+        
         else:
             antisites = np.empty(0, np.int32)
             onAntisites = np.empty(0, np.int32)
@@ -310,6 +315,12 @@ class Filterer:
             for i in xrange(len(exclSpecs)):
                 exclSpecsRef[i] = exclSpecs[i]
         
+        # specie counter arrays
+        vacSpecCount = np.zeros( len(refLattice.specieList), np.int32 )
+        intSpecCount = np.zeros( len(inputLattice.specieList), np.int32 )
+        antSpecCount = np.zeros( len(refLattice.specieList), np.int32 )
+        onAntSpecCount = np.zeros( (len(refLattice.specieList), len(inputLattice.specieList)), np.int32 )
+        
         NDefectsByType = np.zeros(5, np.int32)
         
         # set min/max pos to lattice (for boxing)
@@ -327,7 +338,8 @@ class Filterer:
                                        interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
                                        inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
                                        refLattice.pos, refLattice.cellDims, self.mainWindow.PBC, settings.vacancyRadius, minPos, maxPos, 
-                                       settings.findClusters, settings.neighbourRadius, defectCluster)
+                                       settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
+                                       onAntSpecCount)
         
         # summarise
         NDef = NDefectsByType[0]
@@ -339,10 +351,28 @@ class Filterer:
         antisites.resize(NAnt)
         onAntisites.resize(NAnt)
         
+        # report counters
         self.log("Found %d defects" % (NDef,), 0, 3)
-        self.log("%d vacancies" % (NVac,), 0, 4)
-        self.log("%d interstitials" % (NInt,), 0, 4)
-        self.log("%d antisites" % (NAnt,), 0, 4)
+        
+        if settings.showVacancies:
+            self.log("%d vacancies" % (NVac,), 0, 4)
+            for i in xrange(len(refLattice.specieList)):
+                self.log("%d %s vacancies" % (vacSpecCount[i], refLattice.specieList[i]), 0, 5)
+        
+        if settings.showInterstitials:
+            self.log("%d interstitials" % (NInt,), 0, 4)
+            for i in xrange(len(inputLattice.specieList)):
+                self.log("%d %s interstitials" % (intSpecCount[i], inputLattice.specieList[i]), 0, 5)
+        
+        if settings.showAntisites:
+            self.log("%d antisites" % (NAnt,), 0, 4)
+            for i in xrange(len(refLattice.specieList)):
+#                self.log("%d %s antisites" % (antSpecCount[i], refLattice.specieList[i]), 0, 5)
+                for j in xrange(len(inputLattice.specieList)):
+                    if inputLattice.specieList[j] == refLattice.specieList[i]:
+                        continue
+                    
+                    self.log("%d %s on %s antisites" % (onAntSpecCount[i][j], inputLattice.specieList[j], refLattice.specieList[i]), 0, 6)
         
         # sort clusters here
         clusterList = []
