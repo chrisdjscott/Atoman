@@ -387,6 +387,9 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.neighbourRadius = 3.5
         self.minClusterSize = 3
         self.maxClusterSize = -1
+        self.hullCol = [0]*3
+        self.hullCol[2] = 1
+        self.hullOpacity = 0.5
         
         # check if qconvex programme located
         self.qconvex = utilities.checkForExe("qconvex")

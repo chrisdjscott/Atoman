@@ -119,7 +119,7 @@ class Filterer:
                 self.displacementFilter(filterSettings)
             
             elif filterName == "Point defects":
-                interstitials, vacancies, antisites, onAntisites, clusterList, defectType = self.pointDefectFilter(filterSettings)
+                interstitials, vacancies, antisites, onAntisites, clusterList = self.pointDefectFilter(filterSettings)
             
             elif filterName == "Kinetic energy":
                 self.KEFilter(filterSettings)
@@ -159,7 +159,11 @@ class Filterer:
         if self.parent.defectFilterSelected:
             # vtk render
             if filterSettings.findClusters:
-                self.pointDefectFilterDrawHulls(clusterList, defectType, filterSettings)
+                hullFile = os.path.join(self.mainWindow.tmpDirectory, "hulls%d.pov" % self.parent.tab)
+                if os.path.exists(hullFile):
+                    os.unlink(hullFile)
+                
+                self.pointDefectFilterDrawHulls(clusterList, filterSettings, hullFile)
             
             rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection)
         
@@ -389,8 +393,7 @@ class Filterer:
             
             # build cluster lists
             for i in xrange(NClusters):
-                clusterList.append([])
-                defectType.append([])
+                clusterList.append(DefectCluster())
             
             # add atoms to cluster lists
             clusterIndexMapper = {}
@@ -405,8 +408,7 @@ class Filterer:
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
                 
-                clusterList[clusterListIndex].append(atomIndex)
-                defectType[clusterListIndex].append("R")
+                clusterList[clusterListIndex].vacancies.append(atomIndex)
             
             for i in xrange(NInt):
                 atomIndex = interstitials[i]
@@ -418,11 +420,11 @@ class Filterer:
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
                 
-                clusterList[clusterListIndex].append(atomIndex)
-                defectType[clusterListIndex].append("I")
+                clusterList[clusterListIndex].interstitials.append(atomIndex)
             
             for i in xrange(NAnt):
                 atomIndex = antisites[i]
+                atomIndex2 = onAntisites[i]
                 clusterIndex = defectCluster[NVac + NInt + i]
                 
                 if clusterIndex not in clusterIndexMapper:
@@ -431,29 +433,123 @@ class Filterer:
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
                 
-                clusterList[clusterListIndex].append(atomIndex)
-                defectType[clusterListIndex].append("R")
+                clusterList[clusterListIndex].antisites.append(atomIndex)
+                clusterList[clusterListIndex].onAntisites.append(atomIndex2)
         
-        return (interstitials, vacancies, antisites, onAntisites, clusterList, defectType)
+        return (interstitials, vacancies, antisites, onAntisites, clusterList)
     
-    def pointDefectFilterDrawHulls(self, clusterList, defectType, settings):
+    def pointDefectFilterDrawHulls(self, clusterList, settings, hullPovFile):
         """
         Draw convex hulls around defect volumes
         
         """
+#        PBC = self.mainWindow.PBC
+#        if PBC[0] or PBC[1] or PBC[2]:
+#            self.pointDefectFilterDrawHullsWithPBCs(clusterList, settings)
+#        
+#        else:
+#            self.pointDefectFilterDrawHullsWithPBCs(clusterList, settings)
+#    
+#    def pointDefectFilterDrawHullsWithPBCs(self, clusterList, settings, hullPovFile):
+#        """
+#        Draw hulls around defect volumes (PBCs)
+#        
+#        """
         PBC = self.mainWindow.PBC
         if PBC[0] or PBC[1] or PBC[2]:
-            self.pointDefectFilterDrawHullsWithPBCs(clusterList, settings)
+            PBCFlag = True
         
         else:
-            self.pointDefectFilterDrawHullsWithPBCs(clusterList, settings)
-    
-    def pointDefectFilterDrawHullsWithPBCs(self, clusterList, defectType):
-        """
-        Draw hulls around defect volumes (PBCs)
+            PBCFlag = False
         
-        """
-        pass
+        inputLattice = self.mainWindow.inputState
+        refLattice = self.mainWindow.refState
+        
+        for cluster in clusterList:
+            
+            NDefects = cluster.getNDefects()
+            
+            appliedPBCs = np.zeros(7, np.int32)
+            clusterPos = np.empty(3 * NDefects, np.float64)
+            
+            # vacancy positions
+            count = 0
+            for i in xrange(cluster.getNVacancies()):
+                index = cluster.vacancies[i]
+                
+                clusterPos[3*count] = refLattice.pos[3*index]
+                clusterPos[3*count+1] = refLattice.pos[3*index+1]
+                clusterPos[3*count+2] = refLattice.pos[3*index+2]
+                
+                count += 1
+            
+            # antisite positions
+            for i in xrange(cluster.getNAntisites()):
+                index = cluster.antisites[i]
+                
+                clusterPos[3*count] = refLattice.pos[3*index]
+                clusterPos[3*count+1] = refLattice.pos[3*index+1]
+                clusterPos[3*count+2] = refLattice.pos[3*index+2]
+                
+                count += 1
+            
+            # interstitial positions
+            for i in xrange(cluster.getNInterstitials()):
+                index = cluster.interstitials[i]
+                
+                clusterPos[3*count] = inputLattice.pos[3*index]
+                clusterPos[3*count+1] = inputLattice.pos[3*index+1]
+                clusterPos[3*count+2] = inputLattice.pos[3*index+2]
+                
+                count += 1
+            
+            clusters_c.prepareClusterToDrawHulls(NDefects, clusterPos, inputLattice.cellDims, 
+                                                 self.mainWindow.PBC, appliedPBCs, settings.neighbourRadius)
+            
+            facets = None
+            if NDefects > 3:
+                facets = findConvexHullFacets(NDefects, clusterPos, qconvex=settings.qconvex)
+            
+            elif NDefects == 3:
+                facets = []
+                facets.append([0, 1, 2])
+            
+            # now render
+            if facets is not None:
+                #TODO: make sure not facets more than neighbour rad from cell
+                facets = checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, 
+                                         inputLattice.cellDims)
+                
+                rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
+                
+                # write povray file too
+                rendering.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
+            
+            # handle PBCs
+            if NDefects > 1 and PBCFlag:
+                while max(appliedPBCs) > 0:
+                    tmpClusterPos = copy.deepcopy(clusterPos)
+                    applyPBCsToCluster(tmpClusterPos, inputLattice.cellDims, appliedPBCs)
+                    
+                    # get facets
+                    facets = None
+                    if NDefects > 3:
+                        facets = findConvexHullFacets(NDefects, tmpClusterPos, qconvex=settings.qconvex)
+                    
+                    elif NDefects == 3:
+                        facets = []
+                        facets.append([0, 1, 2])
+                    
+                    # render
+                    if facets is not None:
+                        #TODO: make sure not facets more than neighbour rad from cell
+                        facets = checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, 
+                                                 self.mainWindow.PBC, inputLattice.cellDims)
+                        
+                        rendering.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
+                        
+                        # write povray file too
+                        rendering.writePovrayHull(facets, tmpClusterPos, self.mainWindow, hullPovFile, settings)
         
     def clusterFilter(self, settings, PBC=None, minSize=None, maxSize=None, nebRad=None):
         """
@@ -534,7 +630,7 @@ class Filterer:
     
     def clusterFilterDrawHullsNoPBCs(self, clusterList, settings, hullPovFile):
         """
-        
+        SHOULD BE ABLE TO GET RID OF THIS AND JUST USE PBCs ONE
         
         """
         lattice = self.mainWindow.inputState
@@ -884,3 +980,44 @@ def checkFacetsPBCs(facetsIn, clusterPos, excludeRadius, PBC, cellDims):
             facets.append(facet)
     
     return facets
+
+
+################################################################################
+class DefectCluster:
+    """
+    Defect cluster info.
+    
+    """
+    def __init__(self):
+        self.vacancies = []
+        self.interstitials = []
+        self.antisites = []
+        self.onAntisites = []
+    
+    def getNDefects(self):
+        """
+        Return total number of defects.
+        
+        """
+        return len(self.vacancies) + len(self.interstitials) + len(self.antisites)
+    
+    def getNVacancies(self):
+        """
+        Return number of vacancies
+        
+        """
+        return len(self.vacancies)
+    
+    def getNInterstitials(self):
+        """
+        Return number of interstitials
+        
+        """
+        return len(self.interstitials)
+    
+    def getNAntisites(self):
+        """
+        Return number of antisites
+        
+        """
+        return len(self.antisites)
