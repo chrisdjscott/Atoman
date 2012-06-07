@@ -245,7 +245,8 @@ class SingleImageTab(QtGui.QWidget):
         self.imageFileName.setFixedWidth(120)
         saveImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
         saveImageButton.setStatusTip("Save image")
-        self.connect(saveImageButton, QtCore.SIGNAL('clicked()'), self.saveSingleImage)
+        self.connect(saveImageButton, QtCore.SIGNAL('clicked()'), 
+                     lambda showProgress=True: self.saveSingleImage(showProgress))
         
         rowLayout.addWidget(label)
         rowLayout.addWidget(self.imageFileName)
@@ -296,9 +297,9 @@ class SingleImageTab(QtGui.QWidget):
         
         if len(filename):
             self.imageFileName.setText(str(filename))
-            self.saveSingleImage()
+            self.saveSingleImage(showProgress=True)
     
-    def saveSingleImage(self):
+    def saveSingleImage(self, showProgress=False):
         """
         Screen capture.
         
@@ -308,8 +309,22 @@ class SingleImageTab(QtGui.QWidget):
         if not len(filename):
             return
         
+        # show progress dialog
+        if showProgress and self.parent.renderType == "POV":
+            progress = QtGui.QProgressDialog(parent=self)
+            progress.setWindowModality(QtCore.Qt.WindowModal)
+            progress.setWindowTitle("Busy")
+            progress.setLabelText("Running POV-Ray...")
+            progress.setRange(0, 0)
+            progress.setMinimumDuration(0)
+            progress.show()
+        
         filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
                                                       filename, self.overwriteImage, povray=self.parent.povray)
+        
+        # hide progress dialog
+        if showProgress and self.parent.renderType == "POV":
+            progress.cancel()
         
         if self.openImage:
             dirname = os.path.dirname(filename)
