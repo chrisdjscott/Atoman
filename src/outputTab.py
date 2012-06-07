@@ -10,12 +10,12 @@ import os
 import sys
 import shutil
 import subprocess
+import multiprocessing
 
 from PyQt4 import QtGui, QtCore
 
 import utilities
 from utilities import iconPath
-import globalsModule
 
 try:
     import resources
@@ -318,6 +318,7 @@ class SingleImageTab(QtGui.QWidget):
             progress.setLabelText("Running POV-Ray...")
             progress.setRange(0, 0)
             progress.setMinimumDuration(0)
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
             progress.show()
         
         filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
@@ -325,6 +326,7 @@ class SingleImageTab(QtGui.QWidget):
         
         # hide progress dialog
         if showProgress and self.parent.renderType == "POV":
+            QtGui.QApplication.restoreOverrideCursor()
             progress.cancel()
         
         if self.openImage:
