@@ -667,6 +667,9 @@ class Renderer:
                         if os.path.exists("hulls%d.pov" % filterList.tab):
                             command += " hulls%d.pov" % filterList.tab
                         
+                        if os.path.exists("defects%d.pov" % filterList.tab):
+                            command += " defects%d.pov" % filterList.tab
+                        
                 command += " > image.pov"
                 output, stderr, status = utilities.runSubProcess(command)
                 if status:
@@ -857,6 +860,23 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection):
         atomsActor.SetMapper(atomsMapper)
         
         actorsCollection.AddItem(atomsActor)
+
+
+################################################################################
+def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 
+                       settings, mainWindow):
+    """
+    Write defects to povray file.
+    
+    """
+    povfile = os.path.join(mainWindow.tmpDirectory, filename)
+    
+    inputLattice = mainWindow.inputState
+    refLattice = mainWindow.refState
+    
+    output_c.writePOVRAYDefects(povfile, vacancies, interstitials, antisites, onAntisites, inputLattice.specie, inputLattice.pos,
+                                refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius,
+                                refLattice.specieRGB, refLattice.specieCovalentRadius)
 
 
 ################################################################################
@@ -1114,7 +1134,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsActor.SetMapper(vacsMapper)
         vacsActor.GetProperty().SetSpecular(0.4)
         vacsActor.GetProperty().SetSpecularPower(10)
-        vacsActor.GetProperty().SetOpacity(1.0)
+        vacsActor.GetProperty().SetOpacity(0.8)
         
         actorsCollection.AddItem(vacsActor)
     

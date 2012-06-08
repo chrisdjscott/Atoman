@@ -100,6 +100,10 @@ class Filterer:
         
         self.availableScreenInfo = {}
         
+        hullFile = os.path.join(self.mainWindow.tmpDirectory, "hulls%d.pov" % self.parent.tab)
+        if os.path.exists(hullFile):
+            os.unlink(hullFile)
+        
         # run filters
         currentFilters = self.parent.currentFilters
         currentSettings = self.parent.currentSettings
@@ -134,11 +138,6 @@ class Filterer:
                 clusterList = self.clusterFilter(filterSettings)
                 
                 if filterSettings.drawConvexHulls:
-                    # povray file
-                    hullFile = os.path.join(self.mainWindow.tmpDirectory, "hulls%d.pov" % self.parent.tab)
-                    if os.path.exists(hullFile):
-                        os.unlink(hullFile)
-                    
                     self.clusterFilterDrawHulls(clusterList, filterSettings, hullFile)
                 
                 if filterSettings.calculateVolumes:
@@ -159,13 +158,13 @@ class Filterer:
         if self.parent.defectFilterSelected:
             # vtk render
             if filterSettings.findClusters and filterSettings.drawConvexHulls:
-                hullFile = os.path.join(self.mainWindow.tmpDirectory, "hulls%d.pov" % self.parent.tab)
-                if os.path.exists(hullFile):
-                    os.unlink(hullFile)
-                
                 self.pointDefectFilterDrawHulls(clusterList, filterSettings, hullFile)
             
             rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection)
+            
+            # write pov-ray file too
+            povfile = "defects%d.pov" % self.parent.tab
+            rendering.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow)
         
         else:
             rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection)

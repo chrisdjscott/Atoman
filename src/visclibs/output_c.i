@@ -29,12 +29,15 @@ import_array();
 /* 1d arrays of doubles */
 %apply (int DIM1, double* INPLACE_ARRAY1) {
     (int posDim, double* pos),
-    (int specieCovRadDim, double* specieCovRad)
+    (int specieCovRadDim, double* specieCovRad),
+    (int refPosDim, double *refPos),
+    (int refSpecieCovRadDim, double* refSpecieCovRad)
 }
 
 /* 2d array of doubles */
 %apply (int DIM1, int DIM2, double *INPLACE_ARRAY2) {
-    (int specieRGBDim1, int specieRGBDim2, double *specieRGB)
+    (int specieRGBDim1, int specieRGBDim2, double *specieRGB),
+    (int refSpecieRGBDim1, int refSpecieRGBDim2, double *refSpecieRGB)
 }
 
 /* 1d arrays of chars */
@@ -46,7 +49,12 @@ import_array();
 /* 1d arrays of ints */
 %apply (int DIM1, int* INPLACE_ARRAY1) {
     (int specieDim, int* specie),
-    (int visibleAtomsDim, int *visibleAtoms)
+    (int visibleAtomsDim, int *visibleAtoms),
+    (int vacsDim, int *vacs),
+    (int intsDim, int *ints),
+    (int antsDim, int *ants),
+    (int onAntsDim, int *onAnts),
+    (int refSpecieDim, int *refSpecie)
 }
 
 /* define functions here */
@@ -54,8 +62,20 @@ import_array();
 extern void writePOVRAYAtoms(char *filename, int specieDim, int *specie, int posDim, double *pos, 
                              int visibleAtomsDim, int *visibleAtoms, int specieRGBDim1, int specieRGBDim2, 
                              double *specieRGB, int specieCovRadDim, double *specieCovRad);
+
+extern void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int *ints, int antsDim, int *ants, int onAntsDim, 
+                               int *onAnts, int specieDim, int *specie, int posDim, double *pos, int refSpecieDim, int *refSpecie, 
+                               int refPosDim, double *refPos, int specieRGBDim1, int specieRGBDim2, double *specieRGB, int specieCovRadDim,
+                               double *specieCovRad, int refSpecieRGBDim1, int refSpecieRGBDim2, double *refSpecieRGB, 
+                               int refSpecieCovRadDim, double* refSpecieCovRad);
 %}
 
 extern void writePOVRAYAtoms(char *filename, int specieDim, int *specie, int posDim, double *pos, 
                              int visibleAtomsDim, int *visibleAtoms, int specieRGBDim1, int specieRGBDim2, 
                              double *specieRGB, int specieCovRadDim, double *specieCovRad);
+
+extern void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int *ints, int antsDim, int *ants, int onAntsDim, 
+                               int *onAnts, int specieDim, int *specie, int posDim, double *pos, int refSpecieDim, int *refSpecie, 
+                               int refPosDim, double *refPos, int specieRGBDim1, int specieRGBDim2, double *specieRGB, int specieCovRadDim,
+                               double *specieCovRad, int refSpecieRGBDim1, int refSpecieRGBDim2, double *refSpecieRGB, 
+                               int refSpecieCovRadDim, double* refSpecieCovRad);
