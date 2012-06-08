@@ -12,6 +12,7 @@
 
 void addPOVRAYSphere(FILE *, double, double, double, double, double, double, double);
 void addPOVRAYCube(FILE *, double, double, double, double, double, double, double, double);
+void addPOVRAYCellFrame(FILE *, double, double, double, double, double, double, double, double, double);
 
 
 
@@ -33,6 +34,41 @@ void addPOVRAYCube(FILE *fp, double xpos, double ypos, double zpos, double radiu
 	fprintf(fp, "box { <%lf,%lf,%lf>,<%lf,%lf,%lf> pigment { color rgbt <%lf,%lf,%lf,%lf> } finish {diffuse %lf ambient %lf phong %lf } }\n",
 			xpos - radius, ypos - radius, zpos - radius, xpos + radius, ypos + radius, zpos + radius, R, G, B,
 			transparency, 0.4, 0.25, 0.9);
+}
+
+
+/*******************************************************************************
+ ** write cell frame to pov-ray file
+ *******************************************************************************/
+void addPOVRAYCellFrame(FILE *fp, double xposa, double yposa, double zposa, double xposb, double yposb, double zposb, 
+                        double R, double G, double B)
+{
+    fprintf( fp, "#declare R = 0.1;\n" );
+    fprintf( fp, "#declare myObject = union {\n" );
+    fprintf( fp, "  sphere { <%.2f,%.2f,%.2f>, R }\n", xposa, yposa, zposa );
+    fprintf( fp, "  sphere { <%.2f,%.2f,%.2f>, R }\n", xposb, yposa, zposa );
+    fprintf( fp, "  sphere { <%.2f,%.2f,%.2f>, R }\n", xposa, yposa, zposb );
+    fprintf( fp, "  sphere { <%.2f,%.2f,%.2f>, R }\n", xposb, yposa, zposb );
+    fprintf( fp, "  sphere { <%.2f,%.2f,%.2f>, R }\n", xposa, yposb, zposa );
+    fprintf( fp, "  sphere { <%.2f,%.2f,%.2f>, R }\n", xposb, yposb, zposa );
+    fprintf( fp, "  sphere { <%.2f,%.2f,%.2f>, R }\n", xposa, yposb, zposb );
+    fprintf( fp, "  sphere { <%.2f,%.2f,%.2f>, R }\n", xposb, yposb, zposb );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposa, yposa, zposa, xposb, yposa, zposa );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposa, yposa, zposb, xposb, yposa, zposb );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposa, yposb, zposa, xposb, yposb, zposa );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposa, yposb, zposb, xposb, yposb, zposb );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposa, yposa, zposa, xposa, yposb, zposa );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposa, yposa, zposb, xposa, yposb, zposb );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposb, yposa, zposa, xposb, yposb, zposa );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposb, yposa, zposb, xposb, yposb, zposb );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposa, yposa, zposa, xposa, yposa, zposb );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposa, yposb, zposa, xposa, yposb, zposb );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposb, yposa, zposa, xposb, yposa, zposb );
+    fprintf( fp, "  cylinder { <%.2f,%.2f,%.2f>, <%.2f,%.2f,%.2f>, R }\n", xposb, yposb, zposa, xposb, yposb, zposb );
+    fprintf( fp, "  texture { pigment { color rgb <%.2f,%.2f,%.2f> }\n", R, G, B );
+    fprintf( fp, "            finish { diffuse 0.9 phong 1 } } }\n" );
+    fprintf( fp, "object{myObject}\n" );
+ 
 }
 
 
@@ -104,18 +140,28 @@ void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int
 	}
 
 	/* write vacancies */
-	for (i=0; i<intsDim; i++)
+	for (i=0; i<vacsDim; i++)
 	{
-		index = ints[i];
-		specieIndex = specie[index];
+		index = vacs[i];
+		specieIndex = refSpecie[index];
 
-		addPOVRAYCube(OUTFILE, - refPos[3*index], refPos[3*index+1], refPos[3*index+2], specieCovRad[specieIndex],
-						specieRGB[specieIndex*specieRGBDim2+0], specieRGB[specieIndex*specieRGBDim2+1],
-						specieRGB[specieIndex*specieRGBDim2+2], 0.2);
+		addPOVRAYCube(OUTFILE, - refPos[3*index], refPos[3*index+1], refPos[3*index+2], refSpecieCovRad[specieIndex],
+						refSpecieRGB[specieIndex*refSpecieRGBDim2+0], refSpecieRGB[specieIndex*refSpecieRGBDim2+1],
+						refSpecieRGB[specieIndex*refSpecieRGBDim2+2], 0.2);
 	}
 
 	/* write antisites */
+	for (i=0; i<antsDim; i++)
+    {
+        index = ants[i];
+        specieIndex = refSpecie[index];
 
+        addPOVRAYCellFrame(OUTFILE, - refPos[3*index] - specieCovRad[specieIndex], refPos[3*index+1] - specieCovRad[specieIndex],
+                           refPos[3*index+2] - specieCovRad[specieIndex], - refPos[3*index] + specieCovRad[specieIndex],
+                           refPos[3*index+1] + specieCovRad[specieIndex], refPos[3*index+2] + specieCovRad[specieIndex],
+                           refSpecieRGB[specieIndex*refSpecieRGBDim2+0], refSpecieRGB[specieIndex*refSpecieRGBDim2+1],
+                           refSpecieRGB[specieIndex*refSpecieRGBDim2+2]);
+    }
 
 	/* write antisites occupying atom */
 	for (i=0; i<onAntsDim; i++)
