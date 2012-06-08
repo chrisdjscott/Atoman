@@ -636,7 +636,10 @@ class Renderer:
 #            return None
             
             # size of vtk widget
-            
+#            print "WINDOW HEIGHT", self.mainWindow.VTKWidget.height()
+#            print "WINDOW WIDTH", self.mainWindow.VTKWidget.width()
+            renWinH = self.mainWindow.VTKWidget.height()
+            renWinW = self.mainWindow.VTKWidget.width()
             
             povfile = os.path.join(self.mainWindow.tmpDirectory, "header.pov")
             fh = open(povfile, "w")
@@ -693,8 +696,8 @@ class Renderer:
             nl = lines.append
             nl("; CDJSVis auto-generated POV-Ray INI file")
             nl("Input_File_Name='%s'" % os.path.join(self.mainWindow.tmpDirectory, "image.pov"))
-            nl("Width=%d" % 800)
-            nl("Height=%d" % 600)
+            nl("Width=%d" % renWinW)
+            nl("Height=%d" % renWinH)
             nl("Display=off")
             nl("Antialias=on")
             nl("Output_File_Name='%s'" % filename)
@@ -776,6 +779,28 @@ class Renderer:
         string += "background { color rgb <1,1,1> }\n"
         
         filehandle.write(string)
+        
+#        lines = []
+#        nl = lines.append
+#        
+#        nl("camera { perspective")
+#        nl("         location <%f,%f,%f>" % (- campos[0], campos[1], campos[2]))
+#        nl("         sky <%f,%f,%f>" % (- viewup[0], viewup[1], viewup[2]))
+##        nl("         right <-1,0,0>")
+#        nl("         angle 30.0")
+#        nl("         look_at <%f,%f,%f>" % (- focalPoint[0], focalPoint[1], focalPoint[2]))
+#        nl("}")
+#        
+#        nl("light_source { <%f,%f,%f>" % (- campos[0], campos[1], campos[2]))
+#        nl("               color <1,1,1>*1.0")
+##        nl("               parallel")
+#        nl("               point_at <%f,%f,%f>" % (- focalPoint[0], focalPoint[1], focalPoint[2]))
+#        nl("}")
+#        
+#        nl("background { color rgb <1,1,1> }")
+#        
+#        filehandle.write("\n".join(lines))
+        
         
         
         

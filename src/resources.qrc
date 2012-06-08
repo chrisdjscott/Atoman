@@ -57,6 +57,9 @@
     <file>icons/file-export-icon.png</file>
     <file>icons/file-import-icon.png</file>
     <file>icons/applications-graphics.svg</file>
+    <file>icons/preferences-desktop-font.svg</file>
+    <file>icons/go-next.svg</file>
+    <file>icons/go-previous.svg</file>
     
     <file>help/index.html</file>
     <file>help/input.html</file>

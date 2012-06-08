@@ -447,3 +447,106 @@ class ImageViewer(QtGui.QDialog):
         if event.key() == QtCore.Qt.Key_Up or event.key() == QtCore.Qt.Key_Down:
             self.model.filePath(self.view.currentIndex())
             self.showImage(self.model.filePath(self.view.currentIndex()))
+
+
+################################################################################
+class OnScreenInfoDialog(QtGui.QDialog):
+    """
+    On screen info selector.
+    
+    """
+    def __init__(self, mainWindow, parent=None):
+        super(OnScreenInfoDialog, self).__init__(parent)
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        
+        self.setWindowTitle("Set on screen info")
+        self.setWindowIcon(QtGui.QIcon(iconPath("preferences-desktop-font.svg")))
+        
+        dialogLayout = QtGui.QVBoxLayout()
+        self.setLayout(dialogLayout)
+        
+        # row
+        row = QtGui.QWidget()
+        rowLayout = QtGui.QHBoxLayout(row)
+        
+        # list containing selected text
+        col = QtGui.QWidget()
+        colLayout = QtGui.QVBoxLayout(col)
+        
+        label = QtGui.QLabel("Selected text")
+        colLayout.addWidget(label)
+        
+        self.selectedText = QtGui.QListWidget()
+        self.selectedText.setFixedHeight(200)
+        colLayout.addWidget(self.selectedText)
+        
+        rowLayout.addWidget(col)
+        
+        # buttons
+        col = QtGui.QWidget()
+        colLayout = QtGui.QVBoxLayout(col)
+        
+        colLayout.addStretch()
+        
+        selectButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-previous.svg")), "")
+        selectButton.setStatusTip("Select text")
+        selectButton.setAutoDefault(False)
+        selectButton.clicked.connect(self.selectButtonClicked)
+        colLayout.addWidget(selectButton)
+        
+        removeButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-next.svg")), "")
+        removeButton.setStatusTip("Remove text")
+        removeButton.setAutoDefault(False)
+        removeButton.clicked.connect(self.removeButtonClicked)
+        colLayout.addWidget(removeButton)
+        
+        colLayout.addStretch()
+        
+        rowLayout.addWidget(col)
+        
+        # list containing available (unselected) text
+        col = QtGui.QWidget()
+        colLayout = QtGui.QVBoxLayout(col)
+        
+        label = QtGui.QLabel("Available text")
+        colLayout.addWidget(label)
+        
+        self.availableText = QtGui.QListWidget()
+        self.availableText.setFixedHeight(200)
+        colLayout.addWidget(self.availableText)
+        
+        rowLayout.addWidget(col)
+        
+        dialogLayout.addWidget(row)
+        
+        # add always available
+        self.availableText.addItem("Number of atoms")
+        self.availableText.addItem("Visible count")
+        
+        
+    def selectButtonClicked(self):
+        """
+        Select text.
+        
+        """
+        print "SELECT"
+    
+    def removeButtonClicked(self):
+        """
+        Select text.
+        
+        """
+        print "Remove"
+    
+    def refreshLists(self):
+        """
+        Refresh lists.
+        
+        Remove options that are no longer available.
+        Add options that are now available.
+        
+        """
+        pass
+

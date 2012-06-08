@@ -101,6 +101,9 @@ class MainWindow(QtGui.QMainWindow):
         # image viewer
         self.imageViewer = dialogs.ImageViewer(self, parent=self)
         
+        # text selector
+        self.textSelector = dialogs.OnScreenInfoDialog(self, parent=self)
+        
         # add the main tool bar
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
@@ -171,13 +174,17 @@ class MainWindow(QtGui.QMainWindow):
         showFilterSummaryAction = self.createAction("Show summary", self.showFilterSummary, 
                                                     icon="document-properties.svg", 
                                                     tip="Show filter summary")
+        openTextSelectorAction = self.createAction("On-screen info", self.showTextSelector, 
+                                                   icon="preferences-desktop-font.svg", 
+                                                   tip="Show on-screen text selector")
         
         filteringToolbar = self.addToolBar("Filtering")
         filteringToolbar.addAction(showFilterSummaryAction)
+        filteringToolbar.addAction(openTextSelectorAction)
         filteringToolbar.addSeparator()
         
         filteringMenu = self.menuBar().addMenu("&Filtering")
-        self.addActions(filteringMenu, (showFilterSummaryAction,))
+        self.addActions(filteringMenu, (showFilterSummaryAction,openTextSelectorAction))
         
         # add about action
         aboutAction = self.createAction("About CDJSVis", slot=self.aboutMe, icon="Information-icon.png", 
@@ -254,6 +261,17 @@ class MainWindow(QtGui.QMainWindow):
         self.setStatus('Ready')
         
         self.show()
+    
+    def showTextSelector(self):
+        """
+        Show the text selector.
+        
+        """
+        if not self.refLoaded:
+            return
+        
+        self.textSelector.hide()
+        self.textSelector.show()
     
     def showImageViewer(self):
         """
