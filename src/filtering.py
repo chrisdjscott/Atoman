@@ -105,6 +105,7 @@ class Filterer:
             os.unlink(hullFile)
         
         # run filters
+        filterName = ""
         currentFilters = self.parent.currentFilters
         currentSettings = self.parent.currentSettings
         for i in xrange(len(currentFilters)):
@@ -169,6 +170,9 @@ class Filterer:
                 # write pov-ray file too
                 povfile = "defects%d.pov" % self.parent.tab
                 rendering.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow)
+            
+            # add defect info to text screen?
+            
         
         else:
             if filterName == "Cluster" and filterSettings.drawConvexHulls and filterSettings.hideAtoms:
