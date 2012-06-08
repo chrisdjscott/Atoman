@@ -160,17 +160,25 @@ class Filterer:
             if filterSettings.findClusters and filterSettings.drawConvexHulls:
                 self.pointDefectFilterDrawHulls(clusterList, filterSettings, hullFile)
             
-            rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection)
+            if filterSettings.findClusters and filterSettings.drawConvexHulls and filterSettings.hideDefects:
+                pass
             
-            # write pov-ray file too
-            povfile = "defects%d.pov" % self.parent.tab
-            rendering.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow)
+            else:
+                rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection)
+                
+                # write pov-ray file too
+                povfile = "defects%d.pov" % self.parent.tab
+                rendering.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow)
         
         else:
-            rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection)
+            if filterName == "Cluster" and filterSettings.drawConvexHulls and filterSettings.hideAtoms:
+                pass
             
-            # write pov-ray file too (only if pov-ray located??)
-            rendering.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
+            else:
+                rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection)
+            
+                # write pov-ray file too (only if pov-ray located??)
+                rendering.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
                 
         if self.parent.visible:
             self.addActors()

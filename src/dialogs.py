@@ -450,6 +450,43 @@ class ImageViewer(QtGui.QDialog):
 
 
 ################################################################################
+class OnScreenTextListWidget(QtGui.QListWidget):
+    """
+    Override QListWidget to allow drag/drops.
+    
+    """
+    def __init__(self, parent=None):
+        super(OnScreenTextListWidget, self).__init__(parent)
+        
+#        self.setAcceptDrops(True)
+        self.setDragEnabled(True)
+        self.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+    
+#    def dragEnterEvent(self, event):
+#        """
+#        
+#        
+#        """
+##        print "DRAG ENTER EVENT", event
+##        event.accept()
+#    
+#    def dragMoveEvent(self, event):
+#        """
+#        
+#        
+#        """
+#        print "DRAG MOVE EVENT", event
+#        event.accept()
+    
+#    def dropEvent(self, event):
+#        """
+#        
+#        
+#        """
+#        print "DROP EVENT"
+
+
+################################################################################
 class OnScreenInfoDialog(QtGui.QDialog):
     """
     On screen info selector.
@@ -478,7 +515,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         label = QtGui.QLabel("Selected text")
         colLayout.addWidget(label)
         
-        self.selectedText = QtGui.QListWidget()
+        self.selectedText = OnScreenTextListWidget(self)
         self.selectedText.setFixedHeight(200)
         colLayout.addWidget(self.selectedText)
         
@@ -513,7 +550,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         label = QtGui.QLabel("Available text")
         colLayout.addWidget(label)
         
-        self.availableText = QtGui.QListWidget()
+        self.availableText = OnScreenTextListWidget(self)
         self.availableText.setFixedHeight(200)
         colLayout.addWidget(self.availableText)
         
@@ -522,7 +559,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         dialogLayout.addWidget(row)
         
         # add always available
-        self.availableText.addItem("Number of atoms")
+        self.selectedText.addItem("Atom count")
         self.availableText.addItem("Visible count")
         
         
@@ -531,14 +568,24 @@ class OnScreenInfoDialog(QtGui.QDialog):
         Select text.
         
         """
-        print "SELECT"
+        row = self.availableText.currentRow()
+        
+        if row < 0:
+            return
+        
+        self.selectedText.addItem(self.availableText.takeItem(row))
     
     def removeButtonClicked(self):
         """
         Select text.
         
         """
-        print "Remove"
+        row = self.selectedText.currentRow()
+        
+        if row < 0:
+            return
+        
+        self.availableText.addItem(self.selectedText.takeItem(row))
     
     def refreshLists(self):
         """

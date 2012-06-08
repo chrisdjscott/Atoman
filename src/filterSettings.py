@@ -425,12 +425,13 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.hullOpacity = 0.5
         self.calculateVolumes = 0
         self.drawConvexHulls = 0
+        self.hideDefects = 0
         
         # check if qconvex programme located
         self.qconvex = utilities.checkForExe("qconvex")
         
         if self.qconvex:
-            self.mainWindow.console.write("'qconvex' executable located at: %s" % (self.qconvex,))
+            self.mainWindow.console.write("'qconvex' executable located at: %s" % self.qconvex)
         
         # vacancy radius option
         label = QtGui.QLabel("Vacancy radius ")
@@ -591,6 +592,14 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row.addWidget(self.hullOpacitySpinBox)
         drawHullsLayout.addWidget(row)
         
+        # hide atoms
+        self.hideAtomsCheckBox = QtGui.QCheckBox(" Hide defects")
+        self.hideAtomsCheckBox.stateChanged.connect(self.hideDefectsChanged)
+        
+        row = genericForm.FormRow()
+        row.addWidget(self.hideAtomsCheckBox)
+        drawHullsLayout.addWidget(row)
+        
         # calculate volumes check box
         self.calcVolsCheckBox = QtGui.QCheckBox(" Calculate volumes")
         self.calcVolsCheckBox.setChecked(0)
@@ -602,6 +611,17 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row.addWidget(self.calcVolsCheckBox)
         
         self.refresh()
+    
+    def hideDefectsChanged(self, val):
+        """
+        Hide atoms check changed.
+        
+        """
+        if self.hideAtomsCheckBox.isChecked():
+            self.hideDefects = 1
+        
+        else:
+            self.hideDefects = 0
     
     def minNumChanged(self, val):
         """
@@ -823,6 +843,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.hullCol = [0]*3
         self.hullCol[2] = 1
         self.hullOpacity = 0.5
+        self.hideAtoms = 0
         
         # neighbour rad spin box
         label = QtGui.QLabel("Neighbour radius ")
@@ -906,15 +927,34 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         row.addWidget(self.hullOpacitySpinBox)
         drawHullsLayout.addWidget(row)
         
+        # hide atoms
+        self.hideAtomsCheckBox = QtGui.QCheckBox(" Hide atoms")
+        self.hideAtomsCheckBox.stateChanged.connect(self.hideAtomsChanged)
+        
+        row = genericForm.FormRow()
+        row.addWidget(self.hideAtomsCheckBox)
+        drawHullsLayout.addWidget(row)
+        
         # calculate volumes check box
         self.calcVolsCheckBox = QtGui.QCheckBox(" Calculate volumes")
         self.calcVolsCheckBox.setChecked(0)
         self.connect(self.calcVolsCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.calcVolsChanged)
         
-#        self.newDisplayRow()
+        self.newDisplayRow()
         
         row = self.newDisplayRow()
         row.addWidget(self.calcVolsCheckBox)
+    
+    def hideAtomsChanged(self, val):
+        """
+        Hide atoms check changed.
+        
+        """
+        if self.hideAtomsCheckBox.isChecked():
+            self.hideAtoms = 1
+        
+        else:
+            self.hideAtoms = 0
     
     def hullOpacityChanged(self, val):
         """
