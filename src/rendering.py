@@ -1089,7 +1089,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsPolyData.GetPointData().SetScalars(intScalarsList[i])
         
         intsGlyphSource = vtk.vtkSphereSource()
-        intsGlyphSource.SetRadius(refLattice.specieCovalentRadius[i])
+        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i])
         intsGlyphSource.SetPhiResolution(res)
         intsGlyphSource.SetThetaResolution(res)
         
