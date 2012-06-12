@@ -594,6 +594,8 @@ class MainWindow(QtGui.QMainWindow):
             if state == "ref":
                 status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
                 
+                self.readLBOMDIN()
+                
             else:
                 status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write)
         
