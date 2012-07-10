@@ -825,15 +825,18 @@ def setupLUT(specieList, specieRGB):
     return lut
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection):
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, NVisibleForRes=None):
     """
     Make the actors for the filtered system
     
     """
     NVisible = len(visibleAtoms)
     
+    if NVisibleForRes is None:
+        NVisibleForRes = NVisible
+    
     # resolution
-    res = setRes(NVisible)
+    res = setRes(NVisibleForRes)
     
     lattice = mainWindow.inputState
     

@@ -75,6 +75,13 @@ class FilterList(QtGui.QWidget):
         trashButton.setFixedWidth(35)
         self.connect(trashButton, QtCore.SIGNAL('clicked()'), self.filterTab.removeFilterList)
         
+        # persistent list button
+        self.persistButton = QtGui.QPushButton(QtGui.QIcon(iconPath("application-certificate.svg")), "")
+        self.persistButton.setFixedWidth(35)
+        self.persistButton.setStatusTip("Persistent filter list")
+        self.persistButton.setCheckable(1)
+        self.persistButton.setChecked(0)
+        
         # static list button
         self.staticListButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Stop_hand_nuvola_black.svg")), "")
         self.staticListButton.setFixedWidth(35)
@@ -101,6 +108,7 @@ class FilterList(QtGui.QWidget):
         row2 = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row2)
         rowLayout.setAlignment(QtCore.Qt.AlignRight)
+        rowLayout.addWidget(self.persistButton)
         rowLayout.addWidget(self.staticListButton)
         rowLayout.addWidget(self.scalarBarButton)
 #        rowLayout.setSpacing(0)
@@ -116,7 +124,6 @@ class FilterList(QtGui.QWidget):
         self.filterListLayout.addWidget(row3)
         
         # Now add the list widget
-#        self.listItems = List(self)
         self.listItems = QtGui.QListWidget(self)
         self.listItems.setFixedHeight(self.tabHeight)
         
@@ -172,9 +179,7 @@ class FilterList(QtGui.QWidget):
         self.extraOptionsList.addItem("Screen info: ...")
         
         self.filterListLayout.addWidget(self.extraOptionsList)
-        
-        
-        
+    
     def openFilterSettings(self):
         """
         Open filter settings window
@@ -215,6 +220,7 @@ class FilterList(QtGui.QWidget):
             self.currentSettings.pop()
         
         self.staticListButton.setChecked(0)
+        self.persistButton.setChecked(0)
         
         self.defectFilterSelected = 0
     
@@ -224,6 +230,13 @@ class FilterList(QtGui.QWidget):
         
         """
         return self.staticListButton.isChecked()
+    
+    def isPersistentList(self):
+        """
+        Check if the list is a persistent list.
+        
+        """
+        return self.persistButton.isChecked()
     
     def moveFilterDownInList(self):
         """

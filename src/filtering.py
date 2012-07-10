@@ -21,7 +21,7 @@ import rendering
 
 
 ################################################################################
-class Filterer:
+class Filterer(object):
     """
     Filter class.
     
@@ -89,7 +89,8 @@ class Filterer:
         Run the filters.
         
         """
-        self.removeActors()
+        if not self.parent.isPersistentList:
+            self.removeActors()
         
         # first set up visible atoms arrays
         NAtoms = self.parent.mainWindow.inputState.NAtoms
@@ -179,7 +180,13 @@ class Filterer:
                 pass
             
             else:
-                rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection)
+                if self.parent.isPersistentList:
+                    NVisibleForRes = 800
+                
+                else:
+                    NVisibleForRes = None
+                
+                rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, NVisibleForRes=NVisibleForRes)
             
                 # write pov-ray file too (only if pov-ray located??)
                 rendering.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
