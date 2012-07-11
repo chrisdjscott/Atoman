@@ -49,7 +49,7 @@ def setRes(num):
 
 
 ################################################################################
-class CellOutline:
+class CellOutline(object):
     def __init__(self, ren):
         
         self.ren = ren
@@ -318,7 +318,7 @@ class AxesBasic(vtk.vtkActorCollection):
         self.add()
 
 ################################################################################
-class Axes:
+class Axes(object):
     def __init__(self, ren, renWinInteract):
         
         self.ren = ren
@@ -379,7 +379,7 @@ class Axes:
 
 
 ################################################################################
-class Renderer:
+class Renderer(object):
     def __init__(self, mainWindow):
         
         self.mainWindow = mainWindow
@@ -592,6 +592,29 @@ class Renderer:
 #            count += 1
 #            
 #            filterList.addActors()
+    
+    def rotateAndSaveImage(self, renderType, imageFormat, fileprefix, overwrite, degreesPerRotation, povray="povray"):
+        """
+        Rotate image.
+        
+        """
+        NRotations = int(360.0 / degreesPerRotation)
+        
+        # main loop
+        for i in xrange(NRotations):
+            # file name
+            fileprefixFull = "%s%d" % (fileprefix, i)
+            
+            # save image
+            savedFile = self.saveImage(renderType, imageFormat, fileprefixFull, overwrite, povray)
+            
+            if savedFile is None:
+                return 1
+            
+            # apply rotation
+            self.camera.Azimuth(degreesPerRotation)
+        
+        return 0
     
     def saveImage(self, renderType, imageFormat, fileprefix, overwrite, povray="povray"):
         """

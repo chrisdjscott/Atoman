@@ -89,7 +89,7 @@ class Filterer(object):
         Run the filters.
         
         """
-        if not self.parent.isPersistentList:
+        if not self.parent.isPersistentList():
             self.removeActors()
         
         # first set up visible atoms arrays
@@ -180,7 +180,7 @@ class Filterer(object):
                 pass
             
             else:
-                if self.parent.isPersistentList:
+                if self.parent.isPersistentList():
                     NVisibleForRes = 800
                 
                 else:

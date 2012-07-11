@@ -158,7 +158,14 @@ class ImageTab(QtGui.QWidget):
         imageSequenceTabLayout.setContentsMargins(0, 0, 0, 0)
         self.imageSequenceTab = ImageSequenceTab(self, self.mainWindow, self.width)
         imageSequenceTabLayout.addWidget(self.imageSequenceTab)
-        self.imageTabBar.addTab(imageSequenceTabWidget, "Sequence")        
+        self.imageTabBar.addTab(imageSequenceTabWidget, "Sequence")
+        
+        imageRotateTabWidget = QtGui.QWidget()
+        imageRotateTabLayout = QtGui.QVBoxLayout(imageRotateTabWidget)
+        imageRotateTabLayout.setContentsMargins(0, 0, 0, 0)
+        self.imageRotateTab = ImageRotateTab(self, self.mainWindow, self.width)
+        imageRotateTabLayout.addWidget(self.imageRotateTab)
+        self.imageTabBar.addTab(imageRotateTabWidget, "Rotate")
         
         imageTabLayout.addWidget(self.imageTabBar)
         
@@ -671,7 +678,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 
                 # now save image
                 filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                              saveName, 1)
+                                                              saveName, 1, povray=self.parent.povray)
                 
                 count += 1
                 
@@ -793,4 +800,198 @@ class ImageSequenceTab(QtGui.QWidget):
         
         self.setFirstFileLabel()
 
+
+################################################################################
+class ImageRotateTab(QtGui.QWidget):
+    def __init__(self, parent, mainWindow, width):
+        super(ImageRotateTab, self).__init__(parent)
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        self.width = width
+        
+        # initial values
+        self.fileprefixText = "rotate"
+        self.overwrite = 0
+        self.createMovie = 0
+        self.degreesPerRotation = 5.0
+        
+        # layout
+        mainLayout = QtGui.QVBoxLayout(self)
+#        mainLayout.setContentsMargins(0, 0, 0, 0)
+#        mainLayout.setSpacing(0)
+        mainLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        # output directory
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("Output folder")
+        self.outputFolder = QtGui.QLineEdit("rotate")
+        self.outputFolder.setFixedWidth(120)
+        
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.outputFolder)
+        
+        mainLayout.addWidget(row)
+        
+        # file prefix
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("File prefix")
+                
+        self.fileprefix = QtGui.QLineEdit(self.fileprefixText)
+        self.fileprefix.setFixedWidth(120)
+        self.connect(self.fileprefix, QtCore.SIGNAL('textChanged(QString)'), self.fileprefixChanged)
+        
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.fileprefix)
+        
+        mainLayout.addWidget(row)
+        
+        # degrees per rotation
+        label = QtGui.QLabel("Degrees per rotation")
+        
+        degPerRotSpinBox = QtGui.QSpinBox(self)
+        degPerRotSpinBox.setMinimum(1)
+        degPerRotSpinBox.setMaximum(360)
+        degPerRotSpinBox.setValue(self.degreesPerRotation)
+        degPerRotSpinBox.valueChanged.connect(self.degPerRotChanged)
+        
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(degPerRotSpinBox)
+        
+        mainLayout.addWidget(row)
+                
+        # overwrite check box
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        self.overwriteCheck = QtGui.QCheckBox("Overwrite")
+        self.connect(self.overwriteCheck, QtCore.SIGNAL('stateChanged(int)'), self.overwriteCheckChanged)
+        
+        rowLayout.addWidget(self.overwriteCheck)
+        
+        mainLayout.addWidget(row)
+        
+        # create movie check box
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        self.createMovieCheck = QtGui.QCheckBox("Create movie")
+        self.connect(self.createMovieCheck, QtCore.SIGNAL('stateChanged(int)'), self.createMovieCheckChanged)
+        
+        rowLayout.addWidget(self.createMovieCheck)
+        
+        mainLayout.addWidget(row)
+        
+        # start button
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        startRotatorButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
+        startRotatorButton.setStatusTip("Start sequencer")
+        startRotatorButton.clicked.connect(self.startRotator)
+        
+        rowLayout.addWidget(startRotatorButton)
+        
+        mainLayout.addWidget(row)
     
+    def startRotator(self):
+        """
+        Start the rotator.
+        
+        """
+        log = self.mainWindow.console.write
+        log("Running rotator", 0, 0)
+        
+        # directory
+        saveDir = str(self.outputFolder.text())
+        if os.path.exists(saveDir):
+            if self.overwrite:
+                shutil.rmtree(saveDir)
+            
+            else:
+                count = 0
+                while os.path.exists(saveDir):
+                    count += 1
+                    saveDir = "%s.%d" % (str(self.outputFolder.text()), count)
+        
+        os.mkdir(saveDir)
+        
+        # file name prefix
+        fileprefix = os.path.join(saveDir, str(self.fileprefix.text()))
+        
+        # send to renderer
+        status = self.mainWindow.renderer.rotateAndSaveImage(self.parent.renderType, self.parent.imageFormat, fileprefix, 
+                                                             1, self.degreesPerRotation, povray=self.parent.povray)
+        
+        # movie?
+        if status:
+            print "ERROR: rotate failed"
+        
+        else:
+            if self.createMovie:
+                print "MOVIE"
+    
+    def degPerRotChanged(self, val):
+        """
+        Degrees per rotation changed.
+        
+        """
+        self.degreesPerRotation = val
+    
+    def createMovieCheckChanged(self, val):
+        """
+        Create movie?
+        
+        """
+        if self.createMovieCheck.isChecked():
+            if not self.parent.ffmpeg:
+                utilities.warnExeNotFound(self.parent, "ffmpeg")
+                self.createMovieCheck.setCheckState(0)
+                return
+            
+            self.createMovie = 1
+        
+        else:
+            self.createMovie = 0
+
+    def overwriteCheckChanged(self, val):
+        """
+        Overwrite check changed
+        
+        """
+        if self.overwriteCheck.isChecked():
+            self.overwrite = 1
+        
+        else:
+            self.overwrite = 0
+
+    def fileprefixChanged(self, text):
+        """
+        File prefix has changed
+        
+        """
+        self.fileprefixText = str(text)

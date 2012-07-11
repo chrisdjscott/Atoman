@@ -11,7 +11,7 @@ from atoms import elements
 
 
 ################################################################################
-class Lattice:
+class Lattice(object):
     def __init__(self):
         
         self.NAtoms = 0
