@@ -261,6 +261,9 @@ class MainWindow(QtGui.QMainWindow):
         self.setStatus('Ready')
         
         self.show()
+        
+        # give focus
+        self.raise_()
     
     def showTextSelector(self):
         """
