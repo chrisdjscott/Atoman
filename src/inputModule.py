@@ -5,15 +5,12 @@ File input methods.
 @author: Chris Scott
 
 """
-
 import os
 import sys
-import shutil
 import copy
 
 import numpy as np
 
-import utilities
 from visclibs import input_c
 from atoms import elements
 
@@ -159,13 +156,13 @@ def readLBOMDInput(filename, tmpLocation, lattice, fileType, state, log, refLatt
     
     
     # copy charge if not included in xyz
-    for i in xrange(NAtoms):
+    for i in xrange(refLattice.NAtoms):
         if xyzformat == 0:
             lattice.charge[i] = refLattice.charge[i]
         
         lattice.specie[i] = refLattice.specie[i]
     
-    # copy specie arrays for refLattice
+    # copy specie arrays from refLattice
     lattice.specieList = copy.deepcopy(refLattice.specieList)
     lattice.specieCount = copy.deepcopy(refLattice.specieCount)
     lattice.specieMass = copy.deepcopy(refLattice.specieMass)
