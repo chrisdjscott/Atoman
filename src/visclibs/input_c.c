@@ -41,10 +41,8 @@ int specieIndex(char* sym, int NSpecies, char* specieList)
 /*******************************************************************************
 ** read animation-reference file
 *******************************************************************************/
-void readRef( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, 
-              int KEDim, double* KE, int PEDim, double* PE, int forceDim, double* force, int speclistDim, 
-              char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, double* maxPos, int minPosDim, 
-              double* minPos )
+int readRef(char* file, int* specie, double* pos, double* charge, double* KE, double* PE, double* force, int maxNSpecies, 
+            char* specieList_c, int* specieCount_c, double* maxPos, double* minPos)
 {
     int i, j, NAtoms, specInd;
     FILE *INFILE;
@@ -156,15 +154,16 @@ void readRef( char* file, int specieDim, int* specie, int posDim, double* pos, i
     specieList_c[2*NSpecies+1] = 'X';
     
     free(specieList);
+    
+    return 0;
 }
 
 
 /*******************************************************************************
 ** read xyz input file
 *******************************************************************************/
-void readLBOMDXYZ( char* file, int posDim, double* pos, int chargeDim, double* charge, 
-                   int KEDim, double* KE, int PEDim, double* PE, int forceDim, double* force, 
-                   int maxPosDim, double* maxPos, int minPosDim, double* minPos, int xyzformat )
+void readLBOMDXYZ(char* file, double* pos, double* charge, double* KE, double* PE, double* force, 
+                  double* maxPos, double* minPos, int xyzformat)
 {
     FILE *INFILE;
     int i, index, id, NAtoms;
@@ -253,9 +252,8 @@ void readLBOMDXYZ( char* file, int posDim, double* pos, int chargeDim, double* c
 /*******************************************************************************
  * Read LBOMD lattice file
  *******************************************************************************/
-void readLatticeLBOMD( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, 
-                       int speclistDim, char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, 
-                       double* maxPos, int minPosDim, double* minPos )
+void readLatticeLBOMD(char* file, int* specie, double* pos, double* charge, int maxNSpecies, char* specieList_c, 
+                      int* specieCount_c, double* maxPos, double* minPos)
 {
     FILE *INFILE;
     int i, j, NAtoms, specInd;
@@ -364,9 +362,8 @@ void readLatticeLBOMD( char* file, int specieDim, int* specie, int posDim, doubl
 /*******************************************************************************
 ** write LBOMD lattice file
 *******************************************************************************/
-void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, 
-                        char* specieList_c, int specieDim, int* specie, int posDim, double* pos, int chargeDim, 
-                        double* charge )
+void writeLatticeLBOMD(char* file, int NAtoms, double *cellDims, char* specieList_c, 
+                       int* specie, double* pos, double* charge)
 {
     int i;
     FILE *OUTFILE;
@@ -382,7 +379,7 @@ void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double
     } 
     
     fprintf(OUTFILE, "%d\n", NAtoms);
-    fprintf(OUTFILE, "%f %f %f\n", xdim, ydim, zdim);
+    fprintf(OUTFILE, "%f %f %f\n", cellDims[0], cellDims[1], cellDims[2]);
     
     for ( i=0; i<NAtoms; i++ )
     {
@@ -390,7 +387,7 @@ void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double
         symtemp[1] = specieList_c[2*specie[i]+1];
         symtemp[2] = '\0';
         
-        fprintf( OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*i], pos[3*i+1], pos[3*i+2], charge[i] );
+        fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*i], pos[3*i+1], pos[3*i+2], charge[i]);
     }
     
     fclose(OUTFILE);
