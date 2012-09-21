@@ -188,13 +188,13 @@ class FilterList(QtGui.QWidget):
         groupLayout.setSpacing(0)
         
         # colouring options
-        colouringOptionsButton = QtGui.QPushButton("Colouring options")
-        colouringOptionsButton.clicked.connect(self.showColouringOptions)
+        self.colouringOptionsButton = QtGui.QPushButton("Colouring options: Specie")
+        self.colouringOptionsButton.clicked.connect(self.showColouringOptions)
         
         self.colouringOptionsWindow = filterListOptions.ColouringOptionsWindow(parent=self)
         self.colouringOptionsOpen = False
         
-        groupLayout.addWidget(colouringOptionsButton)
+        groupLayout.addWidget(self.colouringOptionsButton)
         
         
         self.filterListLayout.addWidget(extraOptionsGroupBox)

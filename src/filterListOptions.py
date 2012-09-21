@@ -38,10 +38,13 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         self.setWindowTitle("Filter list colouring options")
         self.setWindowIcon(QtGui.QIcon(iconPath("painticon.png")))
-        self.resize(500,300)
+#        self.resize(400,300)
         
         # defaults
         self.colourBy = "Specie"
+        self.heightAxis = 1
+        self.minHeight = 0.0
+        self.maxHeight = 1.0
         
         windowLayout = QtGui.QVBoxLayout(self)
 #        windowLayout.setAlignment(QtCore.Qt.AlignTop)
@@ -60,60 +63,89 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.stackedWidget = QtGui.QStackedWidget(self)
         
         # specie widget
-        class SpecieOptions(QtGui.QWidget):
-            """
-            Specie options.
-            
-            """
-            def __init__(self, parent=None):
-                super(SpecieOptions, self).__init__(parent)
-                
-                self.parent = parent
+        self.specieOptions = genericForm.GenericForm(self, 0, "Specie colouring options")
         
-        self.specieOptions = SpecieOptions(self)
-        self.stackedWidget.addWidget(self.specieOptions)
+        self.stackedWidget.addWidget(self.specieOptions)        
         
         # height widget
-        class HeightOptions(QtGui.QWidget):
-            """
-            Height options.
-            
-            """
-            def __init__(self, parent=None):
-                super(HeightOptions, self).__init__(parent)
-                
-                self.parent = parent
-                
-                self.axis = 1
-                
-                # layout
-                layout = QtGui.QVBoxLayout(self)
-                layout.setSpacing(0)
-                layout.setContentsMargins(0, 0, 0, 0)
-                layout.setAlignment(QtCore.Qt.AlignTop)
-                
-                # axis
-                axisCombo = QtGui.QComboBox()
-                axisCombo.addItem("Height in x")
-                axisCombo.addItem("Height in y")
-                axisCombo.addItem("Height in z")
-                axisCombo.currentIndexChanged.connect(self.axisChanged)
-                layout.addWidget(axisCombo)
-                
-                # min/max
-                
-            def axisChanged(self, index):
-                """
-                Changed axis.
-                
-                """
-                self.axis = index
-                
-        self.heightOptions = HeightOptions(self)
-        self.stackedWidget.addWidget(self.heightOptions)
+        heightOptions = genericForm.GenericForm(self, 0, "Height colouring options")
+        
+        # axis
+        axisCombo = QtGui.QComboBox()
+        axisCombo.addItem("Height in x")
+        axisCombo.addItem("Height in y")
+        axisCombo.addItem("Height in z")
+        axisCombo.setCurrentIndex(1)
+        axisCombo.currentIndexChanged.connect(self.axisChanged)
+        
+        row = heightOptions.newRow()
+        row.addWidget(axisCombo)
+        
+        # min/max
+        self.minHeightSpinBox = QtGui.QDoubleSpinBox()
+        self.minHeightSpinBox.setSingleStep(0.1)
+        self.minHeightSpinBox.setMinimum(-9999.0)
+        self.minHeightSpinBox.setMaximum(9999.0)
+        self.minHeightSpinBox.setValue(0)
+        self.minHeightSpinBox.valueChanged.connect(self.minHeightChanged)
+        
+        self.maxHeightSpinBox = QtGui.QDoubleSpinBox()
+        self.maxHeightSpinBox.setSingleStep(0.1)
+        self.maxHeightSpinBox.setMinimum(-9999.0)
+        self.maxHeightSpinBox.setMaximum(9999.0)
+        self.maxHeightSpinBox.setValue(1)
+        self.maxHeightSpinBox.valueChanged.connect(self.maxHeightChanged)
+        
+        label = QtGui.QLabel( " Min " )
+        label2 = QtGui.QLabel( " Max " )
+        
+        row = heightOptions.newRow()
+        row.addWidget(label)
+        row.addWidget(self.minHeightSpinBox)
+        
+        row = heightOptions.newRow()
+        row.addWidget(label2)
+        row.addWidget(self.maxHeightSpinBox)
+        
+        # set to lattice
+        setHeightToLatticeButton = QtGui.QPushButton("Set to lattice")
+        setHeightToLatticeButton.clicked.connect(self.setHeightToLattice)
+        
+        row = heightOptions.newRow()
+        row.addWidget(setHeightToLatticeButton)
+        
+        self.stackedWidget.addWidget(heightOptions)
         
         windowLayout.addWidget(self.stackedWidget)
-
+    
+    def setHeightToLattice(self):
+        """
+        Set height to lattice.
+        
+        """
+        self.minHeightSpinBox.setValue(0.0)
+        self.maxHeightSpinBox.setValue(self.parent.mainWindow.refState.cellDims[self.heightAxis])
+    
+    def maxHeightChanged(self, val):
+        """
+        Max height changed.
+        
+        """
+        self.maxHeight = val
+    
+    def minHeightChanged(self, val):
+        """
+        Min height changed.
+        
+        """
+        self.minHeight = val
+    
+    def axisChanged(self, index):
+        """
+        Changed axis.
+        
+        """
+        self.heightAxis = index
     
     def colourByChanged(self, index):
         """
@@ -121,6 +153,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         """
         self.colourBy = str(self.colouringCombo.currentText())
+        
+        self.parent.colouringOptionsButton.setText("Colouring options: %s" % self.colourBy)
         
         self.stackedWidget.setCurrentIndex(index)
     
