@@ -109,6 +109,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         # set to lattice
         setHeightToLatticeButton = QtGui.QPushButton("Set to lattice")
+        setHeightToLatticeButton.setAutoDefault(0)
         setHeightToLatticeButton.clicked.connect(self.setHeightToLattice)
         
         row = heightOptions.newRow()

@@ -829,26 +829,38 @@ class Renderer(object):
         
 
 ################################################################################
-def setupLUT(specieList, specieRGB):
+def setupLUT(specieList, specieRGB, colouringOptions):
     """
     Setup the colour look up table
     
     """
-    NSpecies = len(specieList)
-    
     lut = vtk.vtkLookupTable()
-    lut.SetNumberOfColors(NSpecies)
-    lut.SetNumberOfTableValues(NSpecies)
-    lut.SetTableRange(0, NSpecies - 1)
-    lut.SetRange(0, NSpecies - 1)
     
-    for i in xrange(NSpecies):
-        lut.SetTableValue(i, specieRGB[i][0], specieRGB[i][1], specieRGB[i][2], 1.0)
+    if colouringOptions.colourBy == "Specie":
+        NSpecies = len(specieList)
+        
+        lut.SetNumberOfColors(NSpecies)
+        lut.SetNumberOfTableValues(NSpecies)
+        lut.SetTableRange(0, NSpecies - 1)
+        lut.SetRange(0, NSpecies - 1)
+        
+        for i in xrange(NSpecies):
+            lut.SetTableValue(i, specieRGB[i][0], specieRGB[i][1], specieRGB[i][2], 1.0)
+    
+    elif colouringOptions.colourBy == "Height":
+        lut.SetNumberOfColors(1024)
+        lut.SetHueRange(0.667,0.0)
+        lut.SetRange(colouringOptions.minHeight, colouringOptions.maxHeight)    
+        lut.SetRampToLinear()
+        lut.Build()
+    
+    else:
+        print "ERROR: unknown colour by option: %s" % colouringOptions.colourBy
     
     return lut
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, NVisibleForRes=None):
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, NVisibleForRes=None):
     """
     Make the actors for the filtered system
     
@@ -864,7 +876,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, NVisi
     lattice = mainWindow.inputState
     
     # make LUT
-    lut = setupLUT(lattice.specieList, lattice.specieRGB)
+    lut = setupLUT(lattice.specieList, lattice.specieRGB, colouringOptions)
     
     NSpecies = len(lattice.specieList)
     
@@ -882,7 +894,12 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, NVisi
         specInd = spec[index]
         
         atomPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
-        atomScalarsList[specInd].InsertNextValue(specInd)
+        
+        if colouringOptions.colourBy == "Specie":
+            atomScalarsList[specInd].InsertNextValue(specInd)
+        
+        elif colouringOptions.colourBy == "Height":
+            atomScalarsList[specInd].InsertNextValue(pos[3*index+colouringOptions.heightAxis])
         
     # now loop over species, making actors
     for i in xrange(NSpecies):
@@ -905,7 +922,11 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, NVisi
         atomsMapper = vtk.vtkPolyDataMapper()
         atomsMapper.SetInput(atomsGlyph.GetOutput())
         atomsMapper.SetLookupTable(lut)
-        atomsMapper.SetScalarRange(0, NSpecies - 1)
+        if colouringOptions.colourBy == "Specie":
+            atomsMapper.SetScalarRange(0, NSpecies - 1)
+        
+        elif colouringOptions.colourBy == "Height":
+            atomsMapper.SetScalarRange(colouringOptions.minHeight, colouringOptions.maxHeight)
         
         atomsActor = vtk.vtkActor()
         atomsActor.SetMapper(atomsMapper)

@@ -54,9 +54,6 @@ class FilterList(QtGui.QWidget):
         
         self.visible = 1
         
-        # the filterer (does the filtering)
-        self.filterer = filtering.Filterer(self)
-        
         # layout
         self.filterListLayout = QtGui.QVBoxLayout(self)
         
@@ -173,13 +170,7 @@ class FilterList(QtGui.QWidget):
         self.filterListLayout.addWidget(buttonWidget)
         
         # add other option like colour by height etc
-#        self.extraOptionsList = QtGui.QListWidget(self)
-#        self.connect(self.extraOptionsList, QtCore.SIGNAL('itemClicked(QListWidgetItem*)'), self.openOptionsWindow)
-#        self.extraOptionsList.setFixedHeight(100)
-#        self.extraOptionsList.addItem("Colouring: ...")
-#        self.extraOptionsList.addItem("Screen info: ...")
-        
-        extraOptionsGroupBox = QtGui.QGroupBox("Extra options")
+        extraOptionsGroupBox = QtGui.QGroupBox("Additional filter list options")
         extraOptionsGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
         
         groupLayout = QtGui.QVBoxLayout(extraOptionsGroupBox)
@@ -191,13 +182,15 @@ class FilterList(QtGui.QWidget):
         self.colouringOptionsButton = QtGui.QPushButton("Colouring options: Specie")
         self.colouringOptionsButton.clicked.connect(self.showColouringOptions)
         
-        self.colouringOptionsWindow = filterListOptions.ColouringOptionsWindow(parent=self)
+        self.colouringOptions = filterListOptions.ColouringOptionsWindow(parent=self)
         self.colouringOptionsOpen = False
         
         groupLayout.addWidget(self.colouringOptionsButton)
         
-        
         self.filterListLayout.addWidget(extraOptionsGroupBox)
+        
+        # the filterer (does the filtering)
+        self.filterer = filtering.Filterer(self)
     
     def showColouringOptions(self):
         """
@@ -205,9 +198,9 @@ class FilterList(QtGui.QWidget):
         
         """
         if self.colouringOptionsOpen:
-            self.colouringOptionsWindow.closeEvent(1)
+            self.colouringOptions.closeEvent(1)
         
-        self.colouringOptionsWindow.show()
+        self.colouringOptions.show()
         self.colouringOptionsOpen = True
     
     def openFilterSettings(self):

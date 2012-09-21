@@ -40,6 +40,8 @@ class Filterer(object):
         self.actorsCollection = vtk.vtkActorCollection()
         
         self.availableScreenInfo = {}
+        
+        self.colouringOptions = self.parent.colouringOptions
     
     def removeActors(self):
         """
@@ -180,13 +182,15 @@ class Filterer(object):
                 pass
             
             else:
+                # this is a hack!! not ideal
                 if self.parent.isPersistentList():
                     NVisibleForRes = 800
                 
                 else:
                     NVisibleForRes = None
                 
-                rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, NVisibleForRes=NVisibleForRes)
+                rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
+                                                     self.colouringOptions, NVisibleForRes=NVisibleForRes)
             
                 # write pov-ray file too (only if pov-ray located??)
                 rendering.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
