@@ -12,6 +12,7 @@ from PyQt4 import QtGui, QtCore
 from utilities import iconPath
 import filtering
 import filterSettings
+import filterListOptions
 
 try:
     import resources
@@ -172,13 +173,42 @@ class FilterList(QtGui.QWidget):
         self.filterListLayout.addWidget(buttonWidget)
         
         # add other option like colour by height etc
-        self.extraOptionsList = QtGui.QListWidget(self)
-        self.connect(self.extraOptionsList, QtCore.SIGNAL('itemClicked(QListWidgetItem*)'), self.openOptionsWindow)
-        self.extraOptionsList.setFixedHeight(100)
-        self.extraOptionsList.addItem("Colouring: ...")
-        self.extraOptionsList.addItem("Screen info: ...")
+#        self.extraOptionsList = QtGui.QListWidget(self)
+#        self.connect(self.extraOptionsList, QtCore.SIGNAL('itemClicked(QListWidgetItem*)'), self.openOptionsWindow)
+#        self.extraOptionsList.setFixedHeight(100)
+#        self.extraOptionsList.addItem("Colouring: ...")
+#        self.extraOptionsList.addItem("Screen info: ...")
         
-        self.filterListLayout.addWidget(self.extraOptionsList)
+        extraOptionsGroupBox = QtGui.QGroupBox("Extra options")
+        extraOptionsGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        groupLayout = QtGui.QVBoxLayout(extraOptionsGroupBox)
+        groupLayout.setAlignment(QtCore.Qt.AlignTop)
+        groupLayout.setContentsMargins(0, 0, 0, 0)
+        groupLayout.setSpacing(0)
+        
+        # colouring options
+        colouringOptionsButton = QtGui.QPushButton("Colouring options")
+        colouringOptionsButton.clicked.connect(self.showColouringOptions)
+        
+        self.colouringOptionsWindow = filterListOptions.ColouringOptionsWindow(parent=self)
+        self.colouringOptionsOpen = False
+        
+        groupLayout.addWidget(colouringOptionsButton)
+        
+        
+        self.filterListLayout.addWidget(extraOptionsGroupBox)
+    
+    def showColouringOptions(self):
+        """
+        Show the colouring options window.
+        
+        """
+        if self.colouringOptionsOpen:
+            self.colouringOptionsWindow.closeEvent(1)
+        
+        self.colouringOptionsWindow.show()
+        self.colouringOptionsOpen = True
     
     def openFilterSettings(self):
         """
