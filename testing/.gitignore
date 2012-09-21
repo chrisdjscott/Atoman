@@ -6,3 +6,6 @@
 .project
 .DS_Store
 *_wrap.c
+*.IN
+*.jpg
+*.png
