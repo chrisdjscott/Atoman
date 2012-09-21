@@ -11,8 +11,7 @@ import copy
 
 import numpy as np
 
-import Clibs
-from Clibs import input_c
+from visclibs import input_c
 from atoms import elements
 
 
@@ -84,10 +83,8 @@ def readLattice(filename, tmpLocation, lattice, fileType, state, log):
     specieCountTemp = np.zeros( maxNumSpecies+1, np.int32 )
     
     # call c lib
-    input_c.readLatticeLBOMD(filename, Clibs.CPtrToInt(lattice.specie), Clibs.CPtrToDouble(lattice.pos), 
-                             Clibs.CPtrToDouble(lattice.charge), maxNumSpecies, Clibs.CPtrToChar(specieListTemp), 
-                             Clibs.CPtrToInt(specieCountTemp), Clibs.CPtrToDouble(lattice.maxPos), 
-                             Clibs.CPtrToDouble(lattice.minPos))
+    input_c.readLatticeLBOMD( filename, lattice.specie, lattice.pos, lattice.charge, specieListTemp, 
+                              specieCountTemp, lattice.maxPos, lattice.minPos )
     
     # build specie list and counter in lattice object
     NSpecies = 0
@@ -154,9 +151,8 @@ def readLBOMDInput(filename, tmpLocation, lattice, fileType, state, log, refLatt
     tmpForceArray = np.empty(3, np.float64)
     
     # call clib
-    input_c.readLBOMDXYZ(filename, Clibs.CPtrToDouble(lattice.pos), Clibs.CPtrToDouble(lattice.charge), 
-                         Clibs.CPtrToDouble(lattice.KE), Clibs.CPtrToDouble(lattice.PE), Clibs.CPtrToDouble(tmpForceArray), 
-                         Clibs.CPtrToDouble(lattice.maxPos), Clibs.CPtrToDouble(lattice.minPos), xyzformat)
+    input_c.readLBOMDXYZ(filename, lattice.pos, lattice.charge, lattice.KE, lattice.PE, tmpForceArray, 
+                         lattice.maxPos, lattice.minPos, xyzformat)
     
     
     # copy charge if not included in xyz
@@ -203,10 +199,8 @@ def readLBOMDRef(filename, tmpLocation, lattice, fileType, state, log):
     tmpForceArray = np.empty(3, np.float64)
     
     # call c lib
-    input_c.readRef(filename, Clibs.CPtrToInt(lattice.specie), Clibs.CPtrToDouble(lattice.pos), Clibs.CPtrToDouble(lattice.charge), 
-                    Clibs.CPtrToDouble(lattice.KE), Clibs.CPtrToDouble(lattice.PE), Clibs.CPtrToDouble(tmpForceArray), 
-                    maxNumSpecies, Clibs.CPtrToChar(specieListTemp), Clibs.CPtrToInt(specieCountTemp), 
-                    Clibs.CPtrToDouble(lattice.maxPos), Clibs.CPtrToDouble(lattice.minPos))
+    input_c.readRef( filename, lattice.specie, lattice.pos, lattice.charge, lattice.KE, lattice.PE, tmpForceArray, 
+                     specieListTemp, specieCountTemp, lattice.maxPos, lattice.minPos )
     
     # build specie list and counter in lattice object
     NSpecies = 0
