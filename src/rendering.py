@@ -836,7 +836,7 @@ def setupLUT(specieList, specieRGB, colouringOptions):
     """
     lut = vtk.vtkLookupTable()
     
-    if colouringOptions.colourBy == "Specie":
+    if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
         NSpecies = len(specieList)
         
         lut.SetNumberOfColors(NSpecies)
@@ -845,7 +845,11 @@ def setupLUT(specieList, specieRGB, colouringOptions):
         lut.SetRange(0, NSpecies - 1)
         
         for i in xrange(NSpecies):
-            lut.SetTableValue(i, specieRGB[i][0], specieRGB[i][1], specieRGB[i][2], 1.0)
+            if colouringOptions.colourBy == "Specie":
+                lut.SetTableValue(i, specieRGB[i][0], specieRGB[i][1], specieRGB[i][2], 1.0)
+            
+            elif colouringOptions.colourBy == "Solid colour":
+                lut.SetTableValue(i, colouringOptions.solidColourRGB[0], colouringOptions.solidColourRGB[1], colouringOptions.solidColourRGB[2])
     
     else:
         lut.SetNumberOfColors(1024)
@@ -892,7 +896,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         
         atomPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
         
-        if colouringOptions.colourBy == "Specie":
+        if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
             atomScalarsList[specInd].InsertNextValue(specInd)
         
         elif colouringOptions.colourBy == "Height":
@@ -1037,7 +1041,7 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
 
     
 ################################################################################
-def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, mainWindow, actorsCollection):
+def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, mainWindow, actorsCollection, colouringOptions):
     
     NInt = len(interstitials)
     NVac = len(vacancies)
@@ -1061,7 +1065,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intScalarsList.append(vtk.vtkFloatArray())
     
     # make LUT
-    lut = setupLUT(inputLattice.specieList, inputLattice.specieRGB)
+    lut = setupLUT(inputLattice.specieList, inputLattice.specieRGB, colouringOptions)
     
     # loop over interstitials, settings points
     pos = inputLattice.pos
@@ -1112,7 +1116,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intScalarsList.append(vtk.vtkFloatArray())
     
     # make LUT
-    lut = setupLUT(refLattice.specieList, refLattice.specieRGB)
+    lut = setupLUT(refLattice.specieList, refLattice.specieRGB, colouringOptions)
     
     # loop over interstitials, settings points
     pos = refLattice.pos
@@ -1164,7 +1168,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intScalarsList.append(vtk.vtkFloatArray())
     
     # make LUT
-    lut = setupLUT(refLattice.specieList, refLattice.specieRGB)
+    lut = setupLUT(refLattice.specieList, refLattice.specieRGB, colouringOptions)
     
     # loop over interstitials, settings points
     pos = refLattice.pos
@@ -1218,7 +1222,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intScalarsList.append(vtk.vtkFloatArray())
     
     # make LUT
-    lut = setupLUT(refLattice.specieList, refLattice.specieRGB)
+    lut = setupLUT(refLattice.specieList, refLattice.specieRGB, colouringOptions)
     
     # loop over interstitials, settings points
     pos = refLattice.pos

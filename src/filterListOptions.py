@@ -45,6 +45,10 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.heightAxis = 1
         self.minVal = 0.0
         self.maxVal = 1.0
+        self.solidColour = QtGui.QColor(255, 0, 0)
+        self.solidColourRGB = (float(self.solidColour.red()) / 255.0, 
+                               float(self.solidColour.green()) / 255.0,
+                               float(self.solidColour.blue()) / 255.0)
         
         windowLayout = QtGui.QVBoxLayout(self)
 #        windowLayout.setAlignment(QtCore.Qt.AlignTop)
@@ -55,6 +59,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.colouringCombo = QtGui.QComboBox()
         self.colouringCombo.addItem("Specie")
         self.colouringCombo.addItem("Height")
+        self.colouringCombo.addItem("Solid colour")
         self.colouringCombo.currentIndexChanged.connect(self.colourByChanged)
         
         windowLayout.addWidget(self.colouringCombo)
@@ -65,7 +70,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         # specie widget
         self.specieOptions = genericForm.GenericForm(self, 0, "Specie colouring options")
         
-        self.stackedWidget.addWidget(self.specieOptions)        
+        self.stackedWidget.addWidget(self.specieOptions)
         
         # height widget
         heightOptions = genericForm.GenericForm(self, 0, "Height colouring options")
@@ -117,7 +122,37 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         self.stackedWidget.addWidget(heightOptions)
         
+        # solid colour widget
+        solidColourOptions = genericForm.GenericForm(self, 0, "Solid colour options")
+        
+        # solid colour button
+        self.colourButton = QtGui.QPushButton("")
+        self.colourButton.setFixedWidth(30)
+        self.colourButton.setFixedHeight(20)
+        self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.solidColour.name())
+        self.colourButton.clicked.connect(self.changeSolidColour)
+        
+        row = solidColourOptions.newRow()
+        row.addWidget(self.colourButton)
+        
+        self.stackedWidget.addWidget(solidColourOptions)  
+        
         windowLayout.addWidget(self.stackedWidget)
+    
+    def changeSolidColour(self):
+        """
+        Change solid colour.
+        
+        """
+        col = QtGui.QColorDialog.getColor()
+        
+        if col.isValid():
+            self.solidColour = col
+            self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.solidColour.name())
+            
+            self.solidColourRGB = (float(self.solidColour.red()) / 255.0, 
+                                   float(self.solidColour.green()) / 255.0,
+                                   float(self.solidColour.blue()) / 255.0)   
     
     def setHeightToLattice(self):
         """

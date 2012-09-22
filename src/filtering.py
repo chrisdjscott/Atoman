@@ -168,7 +168,7 @@ class Filterer(object):
                 pass
             
             else:
-                rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection)
+                rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection, self.colouringOptions)
                 
                 # write pov-ray file too
                 povfile = "defects%d.pov" % self.parent.tab
