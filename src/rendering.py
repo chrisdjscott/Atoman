@@ -847,16 +847,13 @@ def setupLUT(specieList, specieRGB, colouringOptions):
         for i in xrange(NSpecies):
             lut.SetTableValue(i, specieRGB[i][0], specieRGB[i][1], specieRGB[i][2], 1.0)
     
-    elif colouringOptions.colourBy == "Height":
+    else:
         lut.SetNumberOfColors(1024)
         lut.SetHueRange(0.667,0.0)
-        lut.SetRange(colouringOptions.minHeight, colouringOptions.maxHeight)    
+        lut.SetRange(colouringOptions.minVal, colouringOptions.maxVal)    
         lut.SetRampToLinear()
         lut.Build()
-    
-    else:
-        print "ERROR: unknown colour by option: %s" % colouringOptions.colourBy
-    
+        
     return lut
 
 ################################################################################
@@ -925,8 +922,8 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         if colouringOptions.colourBy == "Specie":
             atomsMapper.SetScalarRange(0, NSpecies - 1)
         
-        elif colouringOptions.colourBy == "Height":
-            atomsMapper.SetScalarRange(colouringOptions.minHeight, colouringOptions.maxHeight)
+        else:
+            atomsMapper.SetScalarRange(colouringOptions.minVal, colouringOptions.maxVal)
         
         atomsActor = vtk.vtkActor()
         atomsActor.SetMapper(atomsMapper)

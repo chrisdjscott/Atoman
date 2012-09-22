@@ -43,8 +43,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
         # defaults
         self.colourBy = "Specie"
         self.heightAxis = 1
-        self.minHeight = 0.0
-        self.maxHeight = 1.0
+        self.minVal = 0.0
+        self.maxVal = 1.0
         
         windowLayout = QtGui.QVBoxLayout(self)
 #        windowLayout.setAlignment(QtCore.Qt.AlignTop)
@@ -87,14 +87,14 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.minHeightSpinBox.setMinimum(-9999.0)
         self.minHeightSpinBox.setMaximum(9999.0)
         self.minHeightSpinBox.setValue(0)
-        self.minHeightSpinBox.valueChanged.connect(self.minHeightChanged)
+        self.minHeightSpinBox.valueChanged.connect(self.minValChanged)
         
         self.maxHeightSpinBox = QtGui.QDoubleSpinBox()
         self.maxHeightSpinBox.setSingleStep(0.1)
         self.maxHeightSpinBox.setMinimum(-9999.0)
         self.maxHeightSpinBox.setMaximum(9999.0)
         self.maxHeightSpinBox.setValue(1)
-        self.maxHeightSpinBox.valueChanged.connect(self.maxHeightChanged)
+        self.maxHeightSpinBox.valueChanged.connect(self.maxValChanged)
         
         label = QtGui.QLabel( " Min " )
         label2 = QtGui.QLabel( " Max " )
@@ -127,19 +127,19 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.minHeightSpinBox.setValue(0.0)
         self.maxHeightSpinBox.setValue(self.parent.mainWindow.refState.cellDims[self.heightAxis])
     
-    def maxHeightChanged(self, val):
+    def maxValChanged(self, val):
         """
         Max height changed.
         
         """
-        self.maxHeight = val
+        self.maxVal = val
     
-    def minHeightChanged(self, val):
+    def minValChanged(self, val):
         """
         Min height changed.
         
         """
-        self.minHeight = val
+        self.minVal = val
     
     def axisChanged(self, index):
         """
