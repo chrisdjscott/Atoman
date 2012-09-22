@@ -10,6 +10,7 @@ import os
 import math
 import glob
 
+import numpy as np
 import vtk
 
 from visclibs import output_c
@@ -826,7 +827,16 @@ class Renderer(object):
         
         
         
-        
+################################################################################
+
+def povrayAtom(pos, radius, rgb):
+    """
+    Return string for rendering atom in POV-Ray.
+    
+    """
+    line = "sphere { <%f,%f,%f>, %f pigment { color rgb <%f,%f,%f> } finish { ambient %f phong %f } }\n" % (-pos[0], pos[1], pos[2], radius, rgb[0], rgb[1], rgb[2], 0.25, 0.9)
+    
+    return line     
 
 ################################################################################
 def setupLUT(specieList, specieRGB, colouringOptions):
@@ -861,7 +871,7 @@ def setupLUT(specieList, specieRGB, colouringOptions):
     return lut
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, NVisibleForRes=None):
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, NVisibleForRes=None):
     """
     Make the actors for the filtered system
     
@@ -870,6 +880,10 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     
     if NVisibleForRes is None:
         NVisibleForRes = NVisible
+    
+    # povray file
+    povFilePath = os.path.join(mainWindow.tmpDirectory, povFileName)
+    fpov = open(povFilePath, "w")
     
     # resolution
     res = setRes(NVisibleForRes)
@@ -887,20 +901,32 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         atomPointsList.append(vtk.vtkPoints())
         atomScalarsList.append(vtk.vtkFloatArray())
         
-    # loop over atoms, setting points
+    # loop over atoms, setting points and scalars
     pos = lattice.pos
     spec = lattice.specie
     for i in xrange(NVisible):
         index = visibleAtoms[i]
         specInd = spec[index]
         
+        # position
         atomPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
         
+        # scalar
         if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
-            atomScalarsList[specInd].InsertNextValue(specInd)
+            scalar = specInd
         
         elif colouringOptions.colourBy == "Height":
-            atomScalarsList[specInd].InsertNextValue(pos[3*index+colouringOptions.heightAxis])
+            scalar = pos[3*index+colouringOptions.heightAxis]
+        
+        # store scalar value
+        atomScalarsList[specInd].InsertNextValue(scalar)
+        
+        # colour for povray file
+        rgb = np.empty(3, np.float64)
+        lut.GetColor(scalar, rgb)
+        
+        # povray atom
+        fpov.write(povrayAtom(pos[3*index:3*index+3], lattice.specieCovalentRadius[specInd], rgb))
         
     # now loop over species, making actors
     for i in xrange(NSpecies):
@@ -933,6 +959,8 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         atomsActor.SetMapper(atomsMapper)
         
         actorsCollection.AddItem(atomsActor)
+        
+    fpov.close()
 
 
 ################################################################################

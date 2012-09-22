@@ -190,10 +190,10 @@ class Filterer(object):
                     NVisibleForRes = None
                 
                 rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
-                                                     self.colouringOptions, NVisibleForRes=NVisibleForRes)
+                                                     self.colouringOptions, povfile, NVisibleForRes=NVisibleForRes)
             
                 # write pov-ray file too (only if pov-ray located??)
-                rendering.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
+#                rendering.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
                 
         if self.parent.visible:
             self.addActors()
