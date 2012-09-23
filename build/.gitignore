@@ -7,3 +7,6 @@
 .DS_Store
 *_wrap.c
 .settings
+dist/
+build/
+*.log

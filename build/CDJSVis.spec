@@ -1,9 +1,19 @@
 # -*- mode: python -*-
-a = Analysis(['/Users/macdjs/git/CDJSVis/src/CDJSVis.py'],
-             pathex=['/Users/macdjs/git/pyinstaller'],
+
+import os
+rootpath = os.getenv("HOME")
+
+a = Analysis([os.path.join(rootpath, 'git/CDJSVis/src/CDJSVis.py')],
+             pathex=['/Users/chrisdjscott/git/CDJSVis/build/tmp'],
+             hiddenimports=[],
              hookspath=None)
-a.datas += [('data/atoms.IN','/Users/macdjs/git/CDJSVis/src/data/atoms.IN', 'DATA')]
+#              pathex=[os.path.join(rootpath, 'git/pyinstaller')],
+#              hookspath=None)
+
+a.datas += [('data/atoms.IN', os.path.join(rootpath, 'git/CDJSVis/src/data/atoms.IN'), 'DATA')]
+
 pyz = PYZ(a.pure)
+
 exe = EXE(pyz,
           a.scripts,
           exclude_binaries=1,
@@ -11,8 +21,8 @@ exe = EXE(pyz,
           debug=False,
           strip=None,
           upx=True,
-          console=False,
-          icon='CDJSVis.icns' )
+          console=False)
+
 coll = COLLECT( exe,
                a.binaries,
                a.zipfiles,
@@ -20,6 +30,7 @@ coll = COLLECT( exe,
                strip=None,
                upx=True,
                name=os.path.join('dist', 'CDJSVis'))
+
 app = BUNDLE(coll,
              name=os.path.join('dist', 'CDJSVis.app'),
-             version="0.0.1")
+             version="0.1")
