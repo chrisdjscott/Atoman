@@ -7,8 +7,6 @@ a = Analysis([os.path.join(rootpath, 'git/CDJSVis/src/CDJSVis.py')],
              pathex=[],
              hiddenimports=[],
              hookspath=None)
-#              pathex=[os.path.join(rootpath, 'git/pyinstaller')],
-#              hookspath=None)
 
 a.datas += [('data/atoms.IN', os.path.join(rootpath, 'git/CDJSVis/src/data/atoms.IN'), 'DATA')]
 
