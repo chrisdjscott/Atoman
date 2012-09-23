@@ -5,7 +5,6 @@ Module for rendering
 @author: Chris Scott
 
 """
-
 import os
 import math
 import glob

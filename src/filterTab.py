@@ -89,6 +89,8 @@ class FilterTab(QtGui.QWidget):
         # first remove all old povray files
         os.system("rm -f %s/*.pov" % self.mainWindow.tmpDirectory)
         
+        self.scalarBarAdded = False
+        
         count = 0
         for filterList in self.filterLists:
             self.log("Running filter list %d" % (count,), 0, 1)

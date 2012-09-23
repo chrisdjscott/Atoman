@@ -38,7 +38,6 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         self.setWindowTitle("Filter list colouring options")
         self.setWindowIcon(QtGui.QIcon(iconPath("painticon.png")))
-#        self.resize(400,300)
         
         # defaults
         self.colourBy = "Specie"
@@ -50,10 +49,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
                                float(self.solidColour.green()) / 255.0,
                                float(self.solidColour.blue()) / 255.0)
         
+        # layout
         windowLayout = QtGui.QVBoxLayout(self)
-#        windowLayout.setAlignment(QtCore.Qt.AlignTop)
-#        windowLayout.setContentsMargins(0, 0, 0, 0)
-#        windowLayout.setSpacing(0)
         
         # combo box
         self.colouringCombo = QtGui.QComboBox()
@@ -127,8 +124,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         # solid colour button
         self.colourButton = QtGui.QPushButton("")
-        self.colourButton.setFixedWidth(30)
-        self.colourButton.setFixedHeight(20)
+        self.colourButton.setFixedWidth(60)
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.solidColour.name())
         self.colourButton.clicked.connect(self.changeSolidColour)
         

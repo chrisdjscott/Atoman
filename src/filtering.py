@@ -42,6 +42,8 @@ class Filterer(object):
         self.availableScreenInfo = {}
         
         self.colouringOptions = self.parent.colouringOptions
+        self.scalarBarAdded = False
+        self.scalarBar = None
     
     def removeActors(self):
         """
@@ -197,6 +199,21 @@ class Filterer(object):
                 
         if self.parent.visible:
             self.addActors()
+    
+    def addScalarBar(self, toggle):
+        """
+        Add scalar bar.
+        
+        """
+        
+        
+    
+    def removeScalarBar(self):
+        """
+        Remove scalar bar.
+        
+        """
+        
     
     def getActorsForFilteredSystem(self):
         """

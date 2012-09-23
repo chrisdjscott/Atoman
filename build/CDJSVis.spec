@@ -4,7 +4,7 @@ import os
 rootpath = os.getenv("HOME")
 
 a = Analysis([os.path.join(rootpath, 'git/CDJSVis/src/CDJSVis.py')],
-             pathex=['/Users/chrisdjscott/git/CDJSVis/build/tmp'],
+             pathex=[],
              hiddenimports=[],
              hookspath=None)
 #              pathex=[os.path.join(rootpath, 'git/pyinstaller')],
