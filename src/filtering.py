@@ -53,6 +53,8 @@ class Filterer(object):
         self.hideActors()
         
         self.actorsCollection = vtk.vtkActorCollection()
+        
+        self.scalarBar = None
     
     def hideActors(self):
         """
@@ -70,6 +72,8 @@ class Filterer(object):
             actor = self.actorsCollection.GetNextItem()
         
         self.mainWindow.VTKWidget.ReInitialize()
+        
+        self.hideScalarBar()
     
     def addActors(self):
         """
@@ -87,6 +91,8 @@ class Filterer(object):
             actor = self.actorsCollection.GetNextItem()
         
         self.mainWindow.VTKWidget.ReInitialize()
+        
+        self.addScalarBar()
     
     def runFilters(self):
         """
@@ -162,6 +168,9 @@ class Filterer(object):
         # render
         povfile = "atoms%d.pov" % (self.parent.tab,)
         if self.parent.defectFilterSelected:
+            colourBy = self.colouringOptions.colourBy
+            self.colouringOptions.colourBy = "Specie"
+            
             # vtk render
             if filterSettings.findClusters and filterSettings.drawConvexHulls:
                 self.pointDefectFilterDrawHulls(clusterList, filterSettings, hullFile)
@@ -175,6 +184,8 @@ class Filterer(object):
                 # write pov-ray file too
                 povfile = "defects%d.pov" % self.parent.tab
                 rendering.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow)
+            
+            self.colouringOptions.colourBy = colourBy
             
             # add defect info to text screen?
             
@@ -191,29 +202,40 @@ class Filterer(object):
                 else:
                     NVisibleForRes = None
                 
-                rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
-                                                     self.colouringOptions, povfile, NVisibleForRes=NVisibleForRes)
+                self.scalarBar = rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
+                                                                      self.colouringOptions, povfile, NVisibleForRes=NVisibleForRes)
             
                 # write pov-ray file too (only if pov-ray located??)
 #                rendering.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
-                
+        
         if self.parent.visible:
             self.addActors()
     
-    def addScalarBar(self, toggle):
+    def addScalarBar(self):
         """
         Add scalar bar.
         
         """
+        if self.scalarBar is not None and self.parent.scalarBarButton.isChecked() and not self.parent.filterTab.scalarBarAdded:
+            self.mainWindow.VTKRen.AddActor2D(self.scalarBar)
+            self.mainWindow.VTKWidget.ReInitialize()
+            
+            self.parent.filterTab.scalarBarAdded = True
+            self.scalarBarAdded = True
         
-        
+        return self.scalarBarAdded
     
-    def removeScalarBar(self):
+    def hideScalarBar(self):
         """
         Remove scalar bar.
         
         """
-        
+        if self.scalarBarAdded:
+            self.mainWindow.VTKRen.RemoveActor2D(self.scalarBar)
+            self.mainWindow.VTKWidget.ReInitialize()
+            
+            self.parent.filterTab.scalarBarAdded = False
+            self.scalarBarAdded = False
     
     def getActorsForFilteredSystem(self):
         """

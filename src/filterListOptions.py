@@ -48,6 +48,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.solidColourRGB = (float(self.solidColour.red()) / 255.0, 
                                float(self.solidColour.green()) / 255.0,
                                float(self.solidColour.blue()) / 255.0)
+        self.scalarBarText = "Height in Y (A)"
         
         # layout
         windowLayout = QtGui.QVBoxLayout(self)
@@ -74,9 +75,9 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         # axis
         axisCombo = QtGui.QComboBox()
-        axisCombo.addItem("Height in x")
-        axisCombo.addItem("Height in y")
-        axisCombo.addItem("Height in z")
+        axisCombo.addItem("Height in X")
+        axisCombo.addItem("Height in Y")
+        axisCombo.addItem("Height in Z")
         axisCombo.setCurrentIndex(1)
         axisCombo.currentIndexChanged.connect(self.axisChanged)
         
@@ -84,30 +85,30 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(axisCombo)
         
         # min/max
-        self.minHeightSpinBox = QtGui.QDoubleSpinBox()
-        self.minHeightSpinBox.setSingleStep(0.1)
-        self.minHeightSpinBox.setMinimum(-9999.0)
-        self.minHeightSpinBox.setMaximum(9999.0)
-        self.minHeightSpinBox.setValue(0)
-        self.minHeightSpinBox.valueChanged.connect(self.minValChanged)
+        self.minValSpinBox = QtGui.QDoubleSpinBox()
+        self.minValSpinBox.setSingleStep(0.1)
+        self.minValSpinBox.setMinimum(-9999.0)
+        self.minValSpinBox.setMaximum(9999.0)
+        self.minValSpinBox.setValue(0)
+        self.minValSpinBox.valueChanged.connect(self.minValChanged)
         
-        self.maxHeightSpinBox = QtGui.QDoubleSpinBox()
-        self.maxHeightSpinBox.setSingleStep(0.1)
-        self.maxHeightSpinBox.setMinimum(-9999.0)
-        self.maxHeightSpinBox.setMaximum(9999.0)
-        self.maxHeightSpinBox.setValue(1)
-        self.maxHeightSpinBox.valueChanged.connect(self.maxValChanged)
+        self.maxValSpinBox = QtGui.QDoubleSpinBox()
+        self.maxValSpinBox.setSingleStep(0.1)
+        self.maxValSpinBox.setMinimum(-9999.0)
+        self.maxValSpinBox.setMaximum(9999.0)
+        self.maxValSpinBox.setValue(1)
+        self.maxValSpinBox.valueChanged.connect(self.maxValChanged)
         
         label = QtGui.QLabel( " Min " )
         label2 = QtGui.QLabel( " Max " )
         
         row = heightOptions.newRow()
         row.addWidget(label)
-        row.addWidget(self.minHeightSpinBox)
+        row.addWidget(self.minValSpinBox)
         
         row = heightOptions.newRow()
         row.addWidget(label2)
-        row.addWidget(self.maxHeightSpinBox)
+        row.addWidget(self.maxValSpinBox)
         
         # set to lattice
         setHeightToLatticeButton = QtGui.QPushButton("Set to lattice")
@@ -116,6 +117,17 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         row = heightOptions.newRow()
         row.addWidget(setHeightToLatticeButton)
+        
+        # scalar bar text
+        self.scalarBarTextEdit = QtGui.QLineEdit("Height in Y (A)")
+        self.scalarBarTextEdit.textChanged.connect(self.scalarBarTextChanged)
+        
+        label = QtGui.QLabel("Scalar bar title:")
+        row = heightOptions.newRow()
+        row.addWidget(label)
+        
+        row = heightOptions.newRow()
+        row.addWidget(self.scalarBarTextEdit)
         
         self.stackedWidget.addWidget(heightOptions)
         
@@ -134,6 +146,13 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.stackedWidget.addWidget(solidColourOptions)  
         
         windowLayout.addWidget(self.stackedWidget)
+    
+    def scalarBarTextChanged(self, text):
+        """
+        Scalar bar text changed.
+        
+        """
+        self.scalarBarText = str(text)
     
     def changeSolidColour(self):
         """
@@ -155,8 +174,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
         Set height to lattice.
         
         """
-        self.minHeightSpinBox.setValue(0.0)
-        self.maxHeightSpinBox.setValue(self.parent.mainWindow.refState.cellDims[self.heightAxis])
+        self.minValSpinBox.setValue(0.0)
+        self.maxValSpinBox.setValue(self.parent.mainWindow.refState.cellDims[self.heightAxis])
     
     def maxValChanged(self, val):
         """
@@ -178,6 +197,9 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         """
         self.heightAxis = index
+        
+        axis = ["X", "Y", "Z"]
+        self.scalarBarTextEdit.setText("Height in %s (A)" % axis[index])
     
     def colourByChanged(self, index):
         """

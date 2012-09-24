@@ -7,7 +7,6 @@ Module for rendering
 """
 import os
 import math
-import glob
 
 import numpy as np
 import vtk
@@ -960,6 +959,35 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         actorsCollection.AddItem(atomsActor)
         
     fpov.close()
+    
+    # scalar bar
+    scalarBar = None
+    if colouringOptions.colourBy != "Specie" and colouringOptions.colourBy != "Solid colour":
+        scalarBar = vtk.vtkScalarBarActor()
+        scalarBar.SetLookupTable(lut)
+        
+        scalarBar.SetTitle(colouringOptions.scalarBarText)
+        scalarBar.SetOrientationToHorizontal()
+        
+        lprop = scalarBar.GetTitleTextProperty()
+        lprop.SetColor((0, 0, 0))
+        lprop.ItalicOff()
+        lprop.BoldOn()
+        lprop.SetFontSize(20)
+        lprop.SetFontFamilyToArial()
+        
+        lprop = scalarBar.GetLabelTextProperty()
+        lprop.SetColor((0, 0, 0))
+        lprop.ItalicOff()
+        lprop.BoldOn()
+        lprop.SetFontSize(10)
+        lprop.SetFontFamilyToArial()
+        
+        scalarBar.SetWidth(0.85)
+        scalarBar.GetPositionCoordinate().SetValue(0.1, 0.01)
+        scalarBar.SetHeight(0.12)
+    
+    return scalarBar
 
 
 ################################################################################

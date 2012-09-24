@@ -93,6 +93,7 @@ class FilterList(QtGui.QWidget):
         self.scalarBarButton.setStatusTip("Show scalar bar")
         self.scalarBarButton.setCheckable(1)
         self.scalarBarButton.setChecked(0)
+        self.scalarBarButton.clicked.connect(self.toggleScalarBar)
         
         # set up the row of buttons
         row1 = QtGui.QWidget()
@@ -191,6 +192,20 @@ class FilterList(QtGui.QWidget):
         
         # the filterer (does the filtering)
         self.filterer = filtering.Filterer(self)
+    
+    def toggleScalarBar(self):
+        """
+        Toggle scalar bar (if there is one).
+        
+        """
+        if self.scalarBarButton.isChecked():
+            added = self.filterer.addScalarBar()
+            
+            if not added:
+                self.scalarBarButton.setChecked(0)
+        
+        else:
+            self.filterer.hideScalarBar()
     
     def showColouringOptions(self):
         """
