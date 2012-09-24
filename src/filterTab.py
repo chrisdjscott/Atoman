@@ -157,6 +157,16 @@ class FilterTab(QtGui.QWidget):
         if "Simulation time" not in self.onScreenInfo:
             self.onScreenInfo["Simulation time"] = "%.3f fs" % self.mainWindow.inputState.simTime
         
+        if "Specie count" not in self.onScreenInfo:
+            specList = self.mainWindow.inputState.specieList
+            specCount = self.mainWindow.inputState.specieCount
+            
+            info = ""
+            for (i, sym) in enumerate(specList):
+                info += "%d %s\n" % (specCount[i], sym)
+            
+            self.onScreenInfo["Specie count"] = info.strip()
+        
         # alignment/position stuff
         topy = self.mainWindow.VTKWidget.height() - 5
         topx = 5
@@ -171,17 +181,33 @@ class FilterTab(QtGui.QWidget):
             
             try:
                 line = self.onScreenInfo[item]
-                print "    LINE", line
                 
-                # add actor
-                actor = rendering.vtkRenderWindowText(line, 20, topx, topy, 0, 0, 0)
+                array = line.split("\n")
                 
-                topy -= 20
-                
-                self.onScreenInfoActors.AddItem(actor)
+                count = 0
+                for line in array:
+                    if not len(line):
+                        continue
+                    
+                    print "    LINE", line
+                    
+                    if item == "Specie count":
+                        r, g, b = self.mainWindow.inputState.specieRGB[count]
+                    
+                    else:
+                        r = g = b = 0
+                    
+                    # add actor
+                    actor = rendering.vtkRenderWindowText(line, 20, topx, topy, r, g, b)
+                    
+                    topy -= 20
+                    
+                    self.onScreenInfoActors.AddItem(actor)
+                    
+                    count += 1
             
             except KeyError:
-                print "WARNING: %s not in onScreenInfo dict" % item
+                print "WARNING: '%s' not in onScreenInfo dict" % item
         
         # add to render window
         self.onScreenInfoActors.InitTraversal()

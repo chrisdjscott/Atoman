@@ -261,6 +261,10 @@ class FilterList(QtGui.QWidget):
         self.persistButton.setChecked(0)
         
         self.defectFilterSelected = 0
+        
+        if self.filterer.scalarBarAdded:
+#            self.filterer.hideScalarBar()
+            self.scalarBarButton.setChecked(0)
     
     def isStaticList(self):
         """
