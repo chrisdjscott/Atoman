@@ -68,5 +68,6 @@
     <file>help/filtering.html</file>
     <file>help/output.html</file>
     <file>help/installation.html</file>
+    <file>help/changelog.html</file>
 </qresource>
 </RCC>
