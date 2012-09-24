@@ -101,7 +101,7 @@ class ElementEditor(QtGui.QDialog):
         super(ElementEditor, self).__init__(parent)
         
         self.parent = parent
-        self.setModal(1)
+        self.setModal(0)
         
         self.setWindowTitle("Element editor")
         self.setWindowIcon(QtGui.QIcon(iconPath("periodic-table-icon.png")))
