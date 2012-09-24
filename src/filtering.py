@@ -35,6 +35,7 @@ class Filterer(object):
         
         self.log = self.mainWindow.console.write
         
+        self.NVis = 0
         self.visibleAtoms = np.empty(0, np.int32)
         
         self.actorsCollection = vtk.vtkActorCollection()
@@ -161,6 +162,8 @@ class Filterer(object):
                 
             else:
                 NVis = len(self.visibleAtoms)
+            
+            self.NVis = NVis
             
             self.log("%d visible atoms" % (NVis,), 0, 3)
             self.availableScreenInfo["visible"] = NVis

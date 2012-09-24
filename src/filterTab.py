@@ -9,9 +9,11 @@ import os
 import sys
 
 from PyQt4 import QtGui, QtCore
+import vtk
 
 from utilities import iconPath
 import filterList
+import rendering
 
 try:
     import resources
@@ -33,6 +35,8 @@ class FilterTab(QtGui.QWidget):
         
         self.filterListCount = 0
         self.filterLists = []
+        self.onScreenInfo = {}
+        self.onScreenInfoActors = vtk.vtkActor2DCollection()
         
         # layout
         filterTabLayout = QtGui.QVBoxLayout(self)
@@ -79,6 +83,25 @@ class FilterTab(QtGui.QWidget):
         """
         pass
     
+    def removeOnScreenInfo(self):
+        """
+        Remove on screen info.
+        
+        """
+        self.onScreenInfoActors.InitTraversal()
+        actor = self.onScreenInfoActors.GetNextItem()
+        while actor is not None:
+            try:
+                self.mainWindow.VTKRen.RemoveActor(actor)
+            except:
+                pass
+            
+            actor = self.onScreenInfoActors.GetNextItem()
+        
+        self.mainWindow.VTKWidget.ReInitialize()
+        
+        self.onScreenInfoActors = vtk.vtkActor2DCollection()
+    
     def runAllFilterLists(self):
         """
         Run all the filter lists.
@@ -90,8 +113,11 @@ class FilterTab(QtGui.QWidget):
         os.system("rm -f %s/*.pov" % self.mainWindow.tmpDirectory)
         
         self.scalarBarAdded = False
+        self.onScreenInfo = {}
+        self.removeOnScreenInfo()
         
         count = 0
+        visCount = 0
         for filterList in self.filterLists:
             self.log("Running filter list %d" % (count,), 0, 1)
             
@@ -102,8 +128,73 @@ class FilterTab(QtGui.QWidget):
                 filterList.filterer.runFilters()
             
             count += 1
+            
+            if filterList.visible:
+                visCount += filterList.filterer.NVis
+        
+        self.onScreenInfo["Visible count"] = "%d visible" % visCount
+        
+        self.refreshOnScreenInfo()
         
         self.mainWindow.setStatus("Ready")
+    
+    def refreshOnScreenInfo(self):
+        """
+        Refresh the on-screen information.
+        
+        """
+        textSel = self.mainWindow.textSelector
+        selectedText = textSel.selectedText
+        
+        print "COUNT", selectedText.count()
+        if not selectedText.count():
+            return
+        
+        # add stuff that doesn't change
+        if "Atom count" not in self.onScreenInfo:
+            self.onScreenInfo["Atom count"] = "%d atoms" % self.mainWindow.inputState.NAtoms
+        
+        if "Simulation time" not in self.onScreenInfo:
+            self.onScreenInfo["Simulation time"] = "%.3f fs" % self.mainWindow.inputState.simTime
+        
+        # alignment/position stuff
+        topy = self.mainWindow.VTKWidget.height() - 5
+        topx = 5
+#        topyRight = self.mainWindow.VTKWidget.height() - 5
+#        topxRight = self.mainWindow.VTKWidget.width() - 220
+        
+        # loop over selected text
+        for i in xrange(selectedText.count()):
+            item = selectedText.item(i)
+            item = str(item.text())
+            print "  ITEM", item
+            
+            try:
+                line = self.onScreenInfo[item]
+                print "    LINE", line
+                
+                # add actor
+                actor = rendering.vtkRenderWindowText(line, 20, topx, topy, 0, 0, 0)
+                
+                topy -= 20
+                
+                self.onScreenInfoActors.AddItem(actor)
+            
+            except KeyError:
+                print "WARNING: %s not in onScreenInfo dict" % item
+        
+        # add to render window
+        self.onScreenInfoActors.InitTraversal()
+        actor = self.onScreenInfoActors.GetNextItem()
+        while actor is not None:
+            try:
+                self.mainWindow.VTKRen.AddActor(actor)
+            except:
+                pass
+            
+            actor = self.onScreenInfoActors.GetNextItem()
+        
+        self.mainWindow.VTKWidget.ReInitialize()
     
     def addFilterList(self):
         """
