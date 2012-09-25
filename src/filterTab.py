@@ -195,6 +195,9 @@ class FilterTab(QtGui.QWidget):
             vacSpecCount = np.zeros(len(self.mainWindow.refState.specieList), np.int32)
             intSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
             antSpecCount = np.zeros((len(self.mainWindow.refState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
+            showVacs = False
+            showInts = False
+            showAnts = False
             for filterList in self.filterLists:
                 if filterList.visible and filterList.defectFilterSelected and filterList.filterer.NVis:
                     if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
@@ -202,19 +205,28 @@ class FilterTab(QtGui.QWidget):
                         intSpecCount = np.add(intSpecCount, filterList.filterer.interstitialSpecieCount)
                         antSpecCount = np.add(antSpecCount, filterList.filterer.antisiteSpecieCount)
             
-            # defects settings
-            defectsSettings = filterList.currentSettings[0]
+                # defects settings
+                defectsSettings = filterList.currentSettings[0]
+                
+                if defectsSettings.showVacancies:
+                    showVacs = True
+                
+                if defectsSettings.showInterstitials:
+                    showInts = True
+                
+                if defectsSettings.showAntisites:
+                    showAnts = True
             
             # now add to dict
             self.onScreenInfo["Defect count"] = []
             
-            if defectsSettings.showVacancies:
+            if showVacs:
                 self.onScreenInfo["Defect count"].append("%d vacancies" % (NVac,))
             
-            if defectsSettings.showInterstitials:
+            if showInts:
                 self.onScreenInfo["Defect count"].append("%d interstitials" % (NInt,))
             
-            if defectsSettings.showAntisites:
+            if showAnts:
                 self.onScreenInfo["Defect count"].append("%d antisites" % (NAnt,))
             
             specListInput = self.mainWindow.inputState.specieList
@@ -224,15 +236,15 @@ class FilterTab(QtGui.QWidget):
             
             self.onScreenInfo["Defect specie count"] = []
             
-            if defectsSettings.showVacancies:
+            if showVacs:
                 for i, cnt in enumerate(vacSpecCount):
                     self.onScreenInfo["Defect specie count"].append(["%d %s vacancies" % (cnt, specListRef[i]), specRGBRef[i]])
             
-            if defectsSettings.showInterstitials:
+            if showInts:
                 for i, cnt in enumerate(intSpecCount):
                     self.onScreenInfo["Defect specie count"].append(["%d %s interstitials" % (cnt, specListInput[i]), specRGBInput[i]])
             
-            if defectsSettings.showAntisites:
+            if showAnts:
                 for i in xrange(len(specListRef)):
                     for j in xrange(len(specListInput)):
                         if i == j:
@@ -298,7 +310,8 @@ class FilterTab(QtGui.QWidget):
                     self.onScreenInfoActors.AddItem(actor)
             
             except KeyError:
-                print "WARNING: '%s' not in onScreenInfo dict" % item
+                pass
+#                print "WARNING: '%s' not in onScreenInfo dict" % item
         
         # add to render window
         self.onScreenInfoActors.InitTraversal()
