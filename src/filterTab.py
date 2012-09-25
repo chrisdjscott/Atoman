@@ -182,6 +182,9 @@ class FilterTab(QtGui.QWidget):
         NVac = 0
         NInt = 0
         NAnt = 0
+        showVacs = False
+        showInts = False
+        showAnts = False
         for filterList in self.filterLists:
             if filterList.visible and filterList.defectFilterSelected:
                 defectFilterActive = True
@@ -189,22 +192,7 @@ class FilterTab(QtGui.QWidget):
                 NVac += filterList.filterer.NVac
                 NInt += filterList.filterer.NInt
                 NAnt += filterList.filterer.NAnt
-        
-        if defectFilterActive:
-            # defect specie counters
-            vacSpecCount = np.zeros(len(self.mainWindow.refState.specieList), np.int32)
-            intSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
-            antSpecCount = np.zeros((len(self.mainWindow.refState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
-            showVacs = False
-            showInts = False
-            showAnts = False
-            for filterList in self.filterLists:
-                if filterList.visible and filterList.defectFilterSelected and filterList.filterer.NVis:
-                    if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
-                        vacSpecCount = np.add(vacSpecCount, filterList.filterer.vacancySpecieCount)
-                        intSpecCount = np.add(intSpecCount, filterList.filterer.interstitialSpecieCount)
-                        antSpecCount = np.add(antSpecCount, filterList.filterer.antisiteSpecieCount)
-            
+                
                 # defects settings
                 defectsSettings = filterList.currentSettings[0]
                 
@@ -216,6 +204,18 @@ class FilterTab(QtGui.QWidget):
                 
                 if defectsSettings.showAntisites:
                     showAnts = True
+        
+        if defectFilterActive:
+            # defect specie counters
+            vacSpecCount = np.zeros(len(self.mainWindow.refState.specieList), np.int32)
+            intSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
+            antSpecCount = np.zeros((len(self.mainWindow.refState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
+            for filterList in self.filterLists:
+                if filterList.visible and filterList.defectFilterSelected and filterList.filterer.NVis:
+                    if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
+                        vacSpecCount = np.add(vacSpecCount, filterList.filterer.vacancySpecieCount)
+                        intSpecCount = np.add(intSpecCount, filterList.filterer.interstitialSpecieCount)
+                        antSpecCount = np.add(antSpecCount, filterList.filterer.antisiteSpecieCount)
             
             # now add to dict
             self.onScreenInfo["Defect count"] = []

@@ -362,7 +362,7 @@ class FilterList(QtGui.QWidget):
                     self.currentFilters.append(str(filterName))
                     self.listItems.addItem(filterName)
                     
-                    # create option form? like console window (but blocking?)? and open it
+                    # create option form
                     form = self.createSettingsForm(filterName)
                     form.show()
                     self.currentSettings.append(form)

@@ -11,6 +11,7 @@ import sys
 from PyQt4 import QtGui, QtCore
 import numpy as np
 
+import genericForm
 from atoms import elements
 from utilities import resourcePath, iconPath
 
@@ -485,8 +486,55 @@ class OnScreenTextListWidget(QtGui.QListWidget):
 #        """
 #        print "DROP EVENT"
 
+################################################################################
+
+class TextSettingsDialog(QtGui.QDialog):
+    """
+    Dialog for setting text options.
+    
+    """
+    def __init__(self, title, parent=None):
+        super(TextSettingsDialog, self).__init__(parent)
+        
+        self.parent = parent
+        
+        titleText = "%s settings" % title
+        self.setWindowTitle(titleText)
+        
+        dialogLayout = QtGui.QVBoxLayout(self)
+        
+        groupBox = genericForm.GenericForm(self, 0, titleText)
+        groupBox.show()
+        
+        # defaults
+        self.textPosition = "Top right"
+        
+        # location of text
+        label = QtGui.QLabel("Text location: ")
+        positionComboBox = QtGui.QComboBox()
+        positionComboBox.addItem("Top left")
+        positionComboBox.addItem("Top right")
+        positionComboBox.currentIndexChanged.connect(self.positionChanged)
+        
+        self.positionList = ["Top left",
+                             "Top right"]
+        
+        row = groupBox.newRow()
+        row.addWidget(label)
+        row.addWidget(positionComboBox)
+        
+        dialogLayout.addWidget(groupBox)
+    
+    def positionChanged(self, item):
+        """
+        Position changed.
+        
+        """
+        self.textPosition = self.positionList[item]
+
 
 ################################################################################
+
 class OnScreenInfoDialog(QtGui.QDialog):
     """
     On screen info selector.
@@ -572,13 +620,41 @@ class OnScreenInfoDialog(QtGui.QDialog):
         
         dialogLayout.addWidget(buttonWidget)
         
-        # add always available
+        # add options
         self.selectedText.addItem("Atom count")
         self.selectedText.addItem("Visible count")
         self.availableText.addItem("Visible specie count")
         self.availableText.addItem("Simulation time")
         self.availableText.addItem("Defect count")
         self.selectedText.addItem("Defect specie count")
+        
+        # add settings
+        self.textSettings = {}
+        
+        for i in xrange(self.selectedText.count()):
+            item = self.selectedText.item(i)
+            text = str(item.text())
+            
+            self.textSettings[text] = TextSettingsDialog(text, self)
+        
+        for i in xrange(self.availableText.count()):
+            item = self.availableText.item(i)
+            text = str(item.text())
+            
+            self.textSettings[text] = TextSettingsDialog(text, self)
+        
+        # connect
+        self.selectedText.itemDoubleClicked.connect(self.showTextSettingsDialog)
+    
+    def showTextSettingsDialog(self, item):
+        """
+        Show text settings dialog.
+        
+        """
+        text = str(item.text())
+        
+        self.textSettings[text].hide()
+        self.textSettings[text].show()
     
     def refresh(self):
         """
