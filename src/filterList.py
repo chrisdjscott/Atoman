@@ -241,6 +241,8 @@ class FilterList(QtGui.QWidget):
         """
         # apply filters
         self.filterer.runFilters()
+        
+        self.filterTab.refreshOnScreenInfo()
             
     def clearList(self):
         """
@@ -265,6 +267,8 @@ class FilterList(QtGui.QWidget):
         if self.filterer.scalarBarAdded:
 #            self.filterer.hideScalarBar()
             self.scalarBarButton.setChecked(0)
+        
+        self.filterTab.refreshOnScreenInfo()
     
     def isStaticList(self):
         """
@@ -430,9 +434,11 @@ class FilterList(QtGui.QWidget):
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.svg")))
             self.visible = 0
             self.filterer.hideActors()
+        
         else:
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))
             self.visible = 1
             self.filterer.addActors()
-
+        
+        self.filterTab.refreshOnScreenInfo()
 

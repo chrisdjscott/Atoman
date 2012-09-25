@@ -10,10 +10,12 @@ import sys
 
 from PyQt4 import QtGui, QtCore
 import vtk
+import numpy as np
 
 from utilities import iconPath
 import filterList
 import rendering
+import utilities
 
 try:
     import resources
@@ -37,6 +39,7 @@ class FilterTab(QtGui.QWidget):
         self.filterLists = []
         self.onScreenInfo = {}
         self.onScreenInfoActors = vtk.vtkActor2DCollection()
+        self.visAtomsList = []
         
         # layout
         filterTabLayout = QtGui.QVBoxLayout(self)
@@ -113,11 +116,8 @@ class FilterTab(QtGui.QWidget):
         os.system("rm -f %s/*.pov" % self.mainWindow.tmpDirectory)
         
         self.scalarBarAdded = False
-        self.onScreenInfo = {}
-        self.removeOnScreenInfo()
         
         count = 0
-        visCount = 0
         for filterList in self.filterLists:
             self.log("Running filter list %d" % (count,), 0, 1)
             
@@ -128,11 +128,6 @@ class FilterTab(QtGui.QWidget):
                 filterList.filterer.runFilters()
             
             count += 1
-            
-            if filterList.visible:
-                visCount += filterList.filterer.NVis
-        
-        self.onScreenInfo["Visible count"] = "%d visible" % visCount
         
         self.refreshOnScreenInfo()
         
@@ -146,26 +141,60 @@ class FilterTab(QtGui.QWidget):
         textSel = self.mainWindow.textSelector
         selectedText = textSel.selectedText
         
-        print "COUNT", selectedText.count()
+        self.onScreenInfo = {}
+        self.removeOnScreenInfo()
+        
         if not selectedText.count():
             return
         
-        # add stuff that doesn't change
+        # atom count doesn't change
         if "Atom count" not in self.onScreenInfo:
             self.onScreenInfo["Atom count"] = "%d atoms" % self.mainWindow.inputState.NAtoms
         
+        # sim time doesn't change
         if "Simulation time" not in self.onScreenInfo:
-            self.onScreenInfo["Simulation time"] = "%.3f fs" % self.mainWindow.inputState.simTime
+            self.onScreenInfo["Simulation time"] = utilities.simulationTimeLine(self.mainWindow.inputState.simTime)
         
-        if "Specie count" not in self.onScreenInfo:
-            specList = self.mainWindow.inputState.specieList
-            specCount = self.mainWindow.inputState.specieCount
-            
-            info = ""
-            for (i, sym) in enumerate(specList):
-                info += "%d %s\n" % (specCount[i], sym)
-            
-            self.onScreenInfo["Specie count"] = info.strip()
+        # visible counts always recalculated
+        visCountActive = False
+        visCount = 0
+        for filterList in self.filterLists:
+            if filterList.visible and not filterList.defectFilterSelected:
+                visCountActive = True
+                visCount += filterList.filterer.NVis
+        
+        if visCountActive:
+            self.onScreenInfo["Visible count"] = "%d visible" % visCount
+        
+        visSpecCount = np.zeros(len(self.mainWindow.inputState.specieList))
+        for filterList in self.filterLists:
+            if filterList.visible and not filterList.defectFilterSelected and filterList.filterer.NVis:
+                if len(visSpecCount) == len(filterList.filterer.visibleSpecieCount):
+                    visSpecCount = np.add(visSpecCount, filterList.filterer.visibleSpecieCount)
+        
+        if visCountActive:
+            specieList = self.mainWindow.inputState.specieList
+            self.onScreenInfo["Visible specie count"] = []
+            for i, cnt in enumerate(visSpecCount):
+                self.onScreenInfo["Visible specie count"].append("%d %s" % (cnt, specieList[i]))
+        
+        # defects counts
+        defectFilterActive = False
+        NVac = 0
+        NInt = 0
+        NAnt = 0
+        for filterList in self.filterLists:
+            if filterList.visible and filterList.defectFilterSelected:
+                defectFilterActive = True
+                
+                NVac += filterList.filterer.NVac
+                NInt += filterList.filterer.NInt
+                NAnt += filterList.filterer.NAnt
+        
+        if defectFilterActive:
+            self.onScreenInfo["Defect count"] = ["%d vacancies" % (NVac,),
+                                                 "%d interstitials" % (NInt,),
+                                                 "%d antisites" % (NAnt,)]
         
         # alignment/position stuff
         topy = self.mainWindow.VTKWidget.height() - 5
@@ -177,34 +206,41 @@ class FilterTab(QtGui.QWidget):
         for i in xrange(selectedText.count()):
             item = selectedText.item(i)
             item = str(item.text())
-            print "  ITEM", item
             
             try:
                 line = self.onScreenInfo[item]
                 
-                array = line.split("\n")
+                if item == "Visible specie count":
+                    for j, specline in enumerate(line):
+                        r, g, b = self.mainWindow.inputState.specieRGB[j]
+                        
+                        # add actor
+                        actor = rendering.vtkRenderWindowText(specline, 20, topx, topy, r, g, b)
+                        
+                        topy -= 20
+                        
+                        self.onScreenInfoActors.AddItem(actor)
                 
-                count = 0
-                for line in array:
-                    if not len(line):
-                        continue
-                    
-                    print "    LINE", line
-                    
-                    if item == "Specie count":
-                        r, g, b = self.mainWindow.inputState.specieRGB[count]
-                    
-                    else:
+                elif item == "Defect count":
+                    for j, specline in enumerate(line):
                         r = g = b = 0
-                    
+                        
+                        # add actor
+                        actor = rendering.vtkRenderWindowText(specline, 20, topx, topy, r, g, b)
+                        
+                        topy -= 20
+                        
+                        self.onScreenInfoActors.AddItem(actor)
+                
+                else:
+                    r = g = b = 0
+                
                     # add actor
                     actor = rendering.vtkRenderWindowText(line, 20, topx, topy, r, g, b)
                     
                     topy -= 20
                     
                     self.onScreenInfoActors.AddItem(actor)
-                    
-                    count += 1
             
             except KeyError:
                 print "WARNING: '%s' not in onScreenInfo dict" % item
@@ -236,6 +272,7 @@ class FilterTab(QtGui.QWidget):
         list1 = filterList.FilterList(self, self.mainToolbar, self.mainWindow, self.filterListCount, self.toolbarWidth)
         filterListLayout.addWidget(list1)
         self.filterLists.append(list1)
+        self.visAtomsList.append([])
         
         # add to tab bar
         self.filterTabBar.addTab(filterListWidget, str(self.filterListCount))
@@ -278,6 +315,8 @@ class FilterTab(QtGui.QWidget):
         self.filterTabBar.removeTab(currentList)
         
         self.filterLists.pop(currentList)
+        
+        self.visAtomsList.pop(currentList)
         
         self.filterListCount -= 1
     

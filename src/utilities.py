@@ -188,3 +188,31 @@ def runSubProcess(command, verbose=0):
     
     return (output, stderr, status)
 
+################################################################################
+def simulationTimeLine(simTimeInFs):
+    """
+    Scales simulation time and returns line including units.
+    
+    """
+    if simTimeInFs > 1.0E15:
+        simTime = "%.3f s" % (simTimeInFs / 1.0E15,)
+    
+    elif simTimeInFs > 1.0E12:
+        simTime = "%.3f ms" % (simTimeInFs / 1.0E12,)
+    
+    elif simTimeInFs > 1.0E9:
+        simTime = "%.3f us" % (simTimeInFs / 1.0E9,)
+    
+    elif simTimeInFs > 1.0E6:
+        simTime = "%.3f ns" % (simTimeInFs / 1.0E6,)
+    
+    elif simTimeInFs > 1.0E3:
+        simTime = "%.3f ps" % (simTimeInFs / 1.0E3,)
+    
+    else:
+        simTime = "%.3f fs" % (simTimeInFs,)
+    
+    return simTime
+
+
+

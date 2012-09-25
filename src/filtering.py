@@ -31,12 +31,17 @@ class Filterer(object):
     def __init__(self, parent):
         
         self.parent = parent
+        self.filterTab = parent.filterTab
         self.mainWindow = self.parent.mainWindow
         
         self.log = self.mainWindow.console.write
         
         self.NVis = 0
+        self.NVac = 0
+        self.NInt = 0
+        self.NAnt = 0
         self.visibleAtoms = np.empty(0, np.int32)
+        self.visibleSpecieCount = []
         
         self.actorsCollection = vtk.vtkActorCollection()
         
@@ -159,6 +164,9 @@ class Filterer(object):
             # write to log
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites)
+                self.NVac = len(vacancies)
+                self.NInt = len(interstitials)
+                self.NAnt = len(antisites)
                 
             else:
                 NVis = len(self.visibleAtoms)
@@ -205,9 +213,11 @@ class Filterer(object):
                 else:
                     NVisibleForRes = None
                 
-                self.scalarBar = rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
-                                                                      self.colouringOptions, povfile, NVisibleForRes=NVisibleForRes)
-            
+                self.scalarBar, visSpecCount = rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
+                                                                                    self.colouringOptions, povfile, NVisibleForRes=NVisibleForRes)
+                
+                self.visibleSpecieCount = visSpecCount
+                
                 # write pov-ray file too (only if pov-ray located??)
 #                rendering.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
         

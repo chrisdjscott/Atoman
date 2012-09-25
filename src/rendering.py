@@ -930,6 +930,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     lut = setupLUT(lattice.specieList, lattice.specieRGB, colouringOptions)
     
     NSpecies = len(lattice.specieList)
+    specieCount = np.zeros(NSpecies, np.int32)
     
     atomPointsList = []
     atomScalarsList = []
@@ -943,6 +944,9 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     for i in xrange(NVisible):
         index = visibleAtoms[i]
         specInd = spec[index]
+        
+        # specie counter
+        specieCount[specInd] += 1
         
         # position
         atomPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
@@ -1025,7 +1029,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         scalarBar.GetPositionCoordinate().SetValue(0.1, 0.01)
         scalarBar.SetHeight(0.12)
     
-    return scalarBar
+    return scalarBar, specieCount
 
 
 ################################################################################
