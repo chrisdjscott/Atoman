@@ -166,13 +166,12 @@ class FilterTab(QtGui.QWidget):
         if visCountActive:
             self.onScreenInfo["Visible count"] = "%d visible" % visCount
         
-        visSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
-        for filterList in self.filterLists:
-            if filterList.visible and not filterList.defectFilterSelected and filterList.filterer.NVis:
-                if len(visSpecCount) == len(filterList.filterer.visibleSpecieCount):
-                    visSpecCount = np.add(visSpecCount, filterList.filterer.visibleSpecieCount)
+            visSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
+            for filterList in self.filterLists:
+                if filterList.visible and not filterList.defectFilterSelected and filterList.filterer.NVis:
+                    if len(visSpecCount) == len(filterList.filterer.visibleSpecieCount):
+                        visSpecCount = np.add(visSpecCount, filterList.filterer.visibleSpecieCount)
         
-        if visCountActive:
             specieList = self.mainWindow.inputState.specieList
             self.onScreenInfo["Visible specie count"] = []
             for i, cnt in enumerate(visSpecCount):
@@ -192,21 +191,22 @@ class FilterTab(QtGui.QWidget):
                 NAnt += filterList.filterer.NAnt
         
         if defectFilterActive:
+            # defect specie counters
+            vacSpecCount = np.zeros(len(self.mainWindow.refState.specieList), np.int32)
+            intSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
+            antSpecCount = np.zeros((len(self.mainWindow.refState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
+            for filterList in self.filterLists:
+                if filterList.visible and filterList.defectFilterSelected and filterList.filterer.NVis:
+                    if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
+                        vacSpecCount = np.add(vacSpecCount, filterList.filterer.vacancySpecieCount)
+                        intSpecCount = np.add(intSpecCount, filterList.filterer.interstitialSpecieCount)
+                        antSpecCount = np.add(antSpecCount, filterList.filterer.antisiteSpecieCount)
+            
+            # now add to dict
             self.onScreenInfo["Defect count"] = ["%d vacancies" % (NVac,),
                                                  "%d interstitials" % (NInt,),
                                                  "%d antisites" % (NAnt,)]
         
-        vacSpecCount = np.zeros(len(self.mainWindow.refState.specieList), np.int32)
-        intSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
-        antSpecCount = np.zeros((len(self.mainWindow.refState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
-        for filterList in self.filterLists:
-            if filterList.visible and filterList.defectFilterSelected and filterList.filterer.NVis:
-                if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
-                    vacSpecCount = np.add(vacSpecCount, filterList.filterer.vacancySpecieCount)
-                    intSpecCount = np.add(intSpecCount, filterList.filterer.interstitialSpecieCount)
-                    antSpecCount = np.add(antSpecCount, filterList.filterer.antisiteSpecieCount)
-        
-        if defectFilterActive:
             specListInput = self.mainWindow.inputState.specieList
             specListRef = self.mainWindow.refState.specieList
             specRGBInput = self.mainWindow.inputState.specieRGB

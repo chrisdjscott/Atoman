@@ -101,12 +101,12 @@ class MainWindow(QtGui.QMainWindow):
         # image viewer
         self.imageViewer = dialogs.ImageViewer(self, parent=self)
         
-        # text selector
-        self.textSelector = dialogs.OnScreenInfoDialog(self, parent=self)
-        
         # add the main tool bar
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
+        
+        # text selector
+        self.textSelector = dialogs.OnScreenInfoDialog(self, parent=self)
         
         # add file actions
         exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "system-log-out.svg", 

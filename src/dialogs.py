@@ -558,6 +558,20 @@ class OnScreenInfoDialog(QtGui.QDialog):
         
         dialogLayout.addWidget(row)
         
+        # refresh button
+        refreshButton = QtGui.QPushButton("Refresh")
+        refreshButton.setAutoDefault(0)
+        refreshButton.setStatusTip("Refresh on-screen information")
+        refreshButton.clicked.connect(self.refresh)
+        
+        buttonWidget = QtGui.QWidget()
+        buttonLayout = QtGui.QHBoxLayout(buttonWidget)
+        buttonLayout.addStretch()
+        buttonLayout.addWidget(refreshButton)
+        buttonLayout.addStretch()
+        
+        dialogLayout.addWidget(buttonWidget)
+        
         # add always available
         self.selectedText.addItem("Atom count")
         self.availableText.addItem("Visible count")
@@ -565,7 +579,14 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.availableText.addItem("Simulation time")
         self.availableText.addItem("Defect count")
         self.availableText.addItem("Defect specie count")
+    
+    def refresh(self):
+        """
+        Refresh on screen info.
         
+        """
+        self.mainWindow.mainToolbar.filterPage.refreshOnScreenInfo()
+    
     def selectButtonClicked(self):
         """
         Select text.
