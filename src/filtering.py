@@ -42,6 +42,9 @@ class Filterer(object):
         self.NAnt = 0
         self.visibleAtoms = np.empty(0, np.int32)
         self.visibleSpecieCount = []
+        self.vacancySpecieCount = []
+        self.interstitialSpecieCount = []
+        self.antisiteSpecieCount = []
         
         self.actorsCollection = vtk.vtkActorCollection()
         
@@ -190,7 +193,11 @@ class Filterer(object):
                 pass
             
             else:
-                rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection, self.colouringOptions)
+                counters = rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection, self.colouringOptions)
+                
+                self.vacancySpecieCount = counters[0]
+                self.interstitialSpecieCount = counters[1]
+                self.antisiteSpecieCount = counters[2]
                 
                 # write pov-ray file too
                 povfile = "defects%d.pov" % self.parent.tab

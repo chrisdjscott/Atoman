@@ -166,7 +166,7 @@ class FilterTab(QtGui.QWidget):
         if visCountActive:
             self.onScreenInfo["Visible count"] = "%d visible" % visCount
         
-        visSpecCount = np.zeros(len(self.mainWindow.inputState.specieList))
+        visSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
         for filterList in self.filterLists:
             if filterList.visible and not filterList.defectFilterSelected and filterList.filterer.NVis:
                 if len(visSpecCount) == len(filterList.filterer.visibleSpecieCount):
@@ -196,6 +196,37 @@ class FilterTab(QtGui.QWidget):
                                                  "%d interstitials" % (NInt,),
                                                  "%d antisites" % (NAnt,)]
         
+        vacSpecCount = np.zeros(len(self.mainWindow.refState.specieList), np.int32)
+        intSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
+        antSpecCount = np.zeros((len(self.mainWindow.refState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
+        for filterList in self.filterLists:
+            if filterList.visible and filterList.defectFilterSelected and filterList.filterer.NVis:
+                if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
+                    vacSpecCount = np.add(vacSpecCount, filterList.filterer.vacancySpecieCount)
+                    intSpecCount = np.add(intSpecCount, filterList.filterer.interstitialSpecieCount)
+                    antSpecCount = np.add(antSpecCount, filterList.filterer.antisiteSpecieCount)
+        
+        if defectFilterActive:
+            specListInput = self.mainWindow.inputState.specieList
+            specListRef = self.mainWindow.refState.specieList
+            specRGBInput = self.mainWindow.inputState.specieRGB
+            specRGBRef = self.mainWindow.refState.specieRGB
+            
+            self.onScreenInfo["Defect specie count"] = []
+            
+            for i, cnt in enumerate(vacSpecCount):
+                self.onScreenInfo["Defect specie count"].append(["%d %s vacancies" % (cnt, specListRef[i]), specRGBRef[i]])
+            
+            for i, cnt in enumerate(intSpecCount):
+                self.onScreenInfo["Defect specie count"].append(["%d %s interstitials" % (cnt, specListInput[i]), specRGBInput[i]])
+            
+            for i in xrange(len(specListRef)):
+                for j in xrange(len(specListInput)):
+                    if i == j:
+                        continue
+                    
+                    self.onScreenInfo["Defect specie count"].append(["%d %s on %s antisites" % (antSpecCount[i][j], specListInput[j], specListRef[i]), specRGBRef[i]])
+        
         # alignment/position stuff
         topy = self.mainWindow.VTKWidget.height() - 5
         topx = 5
@@ -222,11 +253,23 @@ class FilterTab(QtGui.QWidget):
                         self.onScreenInfoActors.AddItem(actor)
                 
                 elif item == "Defect count":
-                    for j, specline in enumerate(line):
+                    for specline in line:
                         r = g = b = 0
                         
                         # add actor
                         actor = rendering.vtkRenderWindowText(specline, 20, topx, topy, r, g, b)
+                        
+                        topy -= 20
+                        
+                        self.onScreenInfoActors.AddItem(actor)
+                
+                elif item == "Defect specie count":
+                    for array in line:
+                        lineToAdd = array[0]
+                        r, g, b = array[1]
+                        
+                        # add actor
+                        actor = rendering.vtkRenderWindowText(lineToAdd, 20, topx, topy, r, g, b)
                         
                         topy -= 20
                         

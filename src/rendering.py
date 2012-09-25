@@ -1151,6 +1151,13 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     inputLattice = mainWindow.inputState
     refLattice = mainWindow.refState
     
+    # specie counters
+    NSpeciesInput = len(inputLattice.specieList)
+    NSpeciesRef = len(refLattice.specieList)
+    vacSpecCount = np.zeros(NSpeciesRef, np.int32)
+    intSpecCount = np.zeros(NSpeciesInput, np.int32)
+    antSpecCount = np.zeros((NSpeciesRef, NSpeciesInput), np.int32)
+    
     #----------------------------------------#
     # interstitials first
     #----------------------------------------#
@@ -1170,6 +1177,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     for i in xrange(NInt):
         index = interstitials[i]
         specInd = spec[index]
+        
+        intSpecCount[specInd] += 1
         
         intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
         intScalarsList[specInd].InsertNextValue(specInd)
@@ -1274,6 +1283,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         index = vacancies[i]
         specInd = spec[index]
         
+        vacSpecCount[specInd] += 1
+        
         intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
         intScalarsList[specInd].InsertNextValue(specInd)
     
@@ -1321,12 +1332,14 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     # make LUT
     lut = setupLUT(refLattice.specieList, refLattice.specieRGB, colouringOptions)
     
-    # loop over interstitials, settings points
+    # loop over antisites, settings points
     pos = refLattice.pos
     spec = refLattice.specie
     for i in xrange(NAnt):
         index = antisites[i]
         specInd = spec[index]
+        
+        antSpecCount[specInd][inputLattice.specie[onAntisites[i]]] += 1
         
         intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
         intScalarsList[specInd].InsertNextValue(specInd)
@@ -1366,6 +1379,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsActor.SetMapper(vacsMapper)
         
         actorsCollection.AddItem(vacsActor)
+        
+        return (vacSpecCount, intSpecCount, antSpecCount)
 
 
 ################################################################################
