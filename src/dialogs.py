@@ -574,11 +574,11 @@ class OnScreenInfoDialog(QtGui.QDialog):
         
         # add always available
         self.selectedText.addItem("Atom count")
-        self.availableText.addItem("Visible count")
+        self.selectedText.addItem("Visible count")
         self.availableText.addItem("Visible specie count")
         self.availableText.addItem("Simulation time")
         self.availableText.addItem("Defect count")
-        self.availableText.addItem("Defect specie count")
+        self.selectedText.addItem("Defect specie count")
     
     def refresh(self):
         """
