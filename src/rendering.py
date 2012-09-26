@@ -10,6 +10,7 @@ import math
 
 import numpy as np
 import vtk
+from PIL import Image
 
 from visclibs import output_c
 import utilities
@@ -653,9 +654,9 @@ class Renderer(object):
         
         return 0
     
-    def saveImage(self, renderType, imageFormat, fileprefix, overwrite, povray="povray"):
+    def saveImage(self, renderType, imageFormat, fileprefix, overwrite, povray="povray", overlay=False):
         """
-        Save image to file
+        Save image to file.
         
         """
         if renderType == "VTK":
@@ -781,7 +782,163 @@ class Renderer(object):
         if not os.path.exists(filename):
             print "WARNING: SOMETHING WENT WRONG WITH SAVEIMAGE"
         
+        elif renderType == "POV" and overlay:
+            self.overlayImage(filename)
+        
         return filename
+    
+    def overlayImage(self, filename):
+        """
+        Overlay the image with on screen info.
+        
+        """
+        import time
+        overlayTime = time.time()
+        
+        # local refs
+        ren = self.ren
+        renWinInteract = self.renWinInteract
+        
+        # to do this we change cam pos to far away and
+        # save temp image with just text in
+        
+        # so move the camera far away
+        camera = ren.GetActiveCamera()
+        origCamPos = camera.GetPosition()
+        
+        newCampPos = [0]*3
+        newCampPos[0] = origCamPos[0] * 100000
+        newCampPos[1] = origCamPos[1] * 100000
+        newCampPos[2] = origCamPos[2] * 100000
+        
+        camera.SetPosition(newCampPos)
+        
+        try:
+            # save image
+            overlayFilePrefix = os.path.join(self.mainWindow.tmpDirectory, "overlay")
+            
+            overlayFile = self.saveImage("VTK", "jpg", overlayFilePrefix, False)
+            
+            if not os.path.exists(overlayFile):
+                print "WARNING: overlay file does not exist: %s" % overlayFile
+                return
+            
+            try:                
+                # open POV-Ray image
+                povim = Image.open(filename)
+                modified = False
+                
+                # find text in top left corner
+                im = Image.open(overlayFile)
+                
+                # start point
+                xmin = ymin = 0
+                xmax = int(im.size[0] * 0.5)
+                ymax = int(im.size[1] * 0.8)
+                
+                # find extremes
+                xmin, xmax, ymin, ymax = self.findOverlayExtremes(im, xmin, xmax, ymin, ymax)
+                
+                # crop
+                region = im.crop((xmin, ymin, xmax + 2, ymax + 2))
+                
+                # add to povray image
+                if region.size[0] != 0:
+                    region = region.resize((region.size[0], region.size[1]), Image.ANTIALIAS)
+                    povim.paste(region, (0, 0))
+                    modified = True
+                
+                # now look for anything at the bottom => scalar bar
+                im = Image.open(overlayFile)
+                
+                # start point
+                xmin = 0
+                ymin = im.size[1] - 80
+                xmax = im.size[0]
+                ymax = im.size[1]
+                
+                # find extremes
+                xmin, xmax, ymin, ymax = self.findOverlayExtremes(im, xmin, xmax, ymin, ymax)
+                
+                # crop
+                region = im.crop((xmin, ymin, xmax, ymax))
+                
+                # add?
+                if region.size[0] != 0:
+                    newregiondimx = int(povim.size[0]*0.8)
+                    dx = (float(povim.size[0]) * 0.8 - float(region.size[0])) / float(region.size[0])
+                    newregiondimy = region.size[1] + int(region.size[1] * dx)
+                    region = region.resize((newregiondimx, newregiondimy), Image.ANTIALIAS)
+                    
+                    xpos = int((povim.size[0] - region.size[0]) / 2.0)
+                    povim.paste(region, (xpos, int(povim.size[1] - region.size[1])))
+                    
+                    modified = True
+                
+                # now look for text in top right corner
+                im = Image.open(overlayFile)
+                
+                # start point
+                xmin = int(im.size[0] * 0.5)
+                ymin = 0
+                xmax = im.size[0]
+                ymax = int(im.size[1] * 0.6)
+                
+                # find extremes
+                xmin, xmax, ymin, ymax = self.findOverlayExtremes(im, xmin, xmax, ymin, ymax)
+                
+                # crop
+                region = im.crop((xmin - 2, ymin, xmax, ymax + 2))
+                
+                if region.size[0] != 0:
+                    region = region.resize((region.size[0], region.size[1]), Image.ANTIALIAS)
+                    xpos = povim.size[0] - 220
+                    povim.paste(region, (xpos, 0))
+                    
+                    modified = True
+                
+                # save image
+                if modified:
+                    povim.save(filename)
+            
+            finally:
+                os.unlink(overlayFile)
+        
+        finally:
+            # return to original cam pos
+            camera.SetPosition(origCamPos)
+            renWinInteract.ReInitialize()
+        
+        overlayTime = time.time() - overlayTime
+        print "OVERLAY TIME: %f s" % overlayTime
+        
+    def findOverlayExtremes(self, im, i0, i1, j0, j1):
+        """
+        Find extremes of non-white area.
+        
+        """
+        xmax = 0
+        ymax = 0
+        xmin = 1000
+        ymin = 1000    
+        for i in xrange(i0, i1):
+            for j in xrange(j0, j1):
+                r,g,b = im.getpixel((i, j))
+                
+                if r != 255 and g != 255 and b != 255:
+                    if i > xmax:
+                        xmax = i
+                    
+                    if j > ymax:    
+                        ymax = j
+                    
+                    if i < xmin:
+                        xmin = i
+                    
+                    if j < ymin:    
+                        ymin = j    
+        
+        return xmin, xmax, ymin, ymax
     
     def writePOVRAYCellFrame(self, filehandle):
         """

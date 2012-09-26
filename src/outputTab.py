@@ -354,7 +354,8 @@ class SingleImageTab(QtGui.QWidget):
             progress.show()
         
         filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                      filename, self.overwriteImage, povray=self.parent.povray)
+                                                      filename, self.overwriteImage, povray=self.parent.povray,
+                                                      overlay=self.parent.overlayImage)
         
         # hide progress dialog
         if showProgress and self.parent.renderType == "POV":
