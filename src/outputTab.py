@@ -704,7 +704,8 @@ class ImageSequenceTab(QtGui.QWidget):
                 
                 # now save image
                 filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                              saveName, 1, povray=self.parent.povray)
+                                                              saveName, 1, povray=self.parent.povray,
+                                                              overlay=self.parent.overlayImage)
                 
                 count += 1
                 
@@ -971,7 +972,8 @@ class ImageRotateTab(QtGui.QWidget):
         
         # send to renderer
         status = self.mainWindow.renderer.rotateAndSaveImage(self.parent.renderType, self.parent.imageFormat, fileprefix, 
-                                                             1, self.degreesPerRotation, povray=self.parent.povray)
+                                                             1, self.degreesPerRotation, povray=self.parent.povray,
+                                                             overlay=self.parent.overlayImage)
         
         # movie?
         if status:

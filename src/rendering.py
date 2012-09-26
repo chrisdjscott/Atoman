@@ -631,7 +631,7 @@ class Renderer(object):
 #            
 #            filterList.addActors()
     
-    def rotateAndSaveImage(self, renderType, imageFormat, fileprefix, overwrite, degreesPerRotation, povray="povray"):
+    def rotateAndSaveImage(self, renderType, imageFormat, fileprefix, overwrite, degreesPerRotation, povray="povray", overlay=False):
         """
         Rotate image.
         
@@ -644,7 +644,7 @@ class Renderer(object):
             fileprefixFull = "%s%d" % (fileprefix, i)
             
             # save image
-            savedFile = self.saveImage(renderType, imageFormat, fileprefixFull, overwrite, povray)
+            savedFile = self.saveImage(renderType, imageFormat, fileprefixFull, overwrite, povray=povray, overlay=overlay)
             
             if savedFile is None:
                 return 1
