@@ -10,12 +10,12 @@ import os
 import sys
 import shutil
 import subprocess
-import multiprocessing
 
 from PyQt4 import QtGui, QtCore
 
 import utilities
 from utilities import iconPath
+import dialogs
 
 try:
     import resources
@@ -74,7 +74,7 @@ class ImageTab(QtGui.QWidget):
         # initial values
         self.renderType = "VTK"
         self.imageFormat = "jpg"
-        self.overlayImage = False
+#        self.overlayImage = False
         
         imageTabLayout = QtGui.QVBoxLayout(self)
 #        imageTabLayout.setContentsMargins(0, 0, 0, 0)
@@ -144,9 +144,12 @@ class ImageTab(QtGui.QWidget):
         rowLayout = QtGui.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        self.overlayImageCheck = QtGui.QCheckBox("Overlay image")
-        self.overlayImageCheck.stateChanged.connect(self.overlayImageChanged)
-        rowLayout.addWidget(self.overlayImageCheck)
+        self.POVSettings = dialogs.PovraySettingsDialog(self)
+        
+        POVSettingsButton = QtGui.QPushButton("POV-Ray settings")
+        POVSettingsButton.clicked.connect(self.showPOVSettings)
+        
+        rowLayout.addWidget(POVSettingsButton)
         
         groupLayout.addWidget(row)
         
@@ -191,16 +194,13 @@ class ImageTab(QtGui.QWidget):
         if self.povray:
             self.mainWindow.console.write("'povray' executable located at: %s" % (self.povray,))
     
-    def overlayImageChanged(self, state):
+    def showPOVSettings(self):
         """
-        Overlay image changed.
+        Show POV-Ray settings dialog.
         
         """
-        if self.overlayImageCheck.isChecked():
-            self.overlayImage = True
-        
-        else:
-            self.overlayImage = False
+        self.POVSettings.hide()
+        self.POVSettings.show()
     
     def imageTabBarChanged(self, val):
         """
@@ -238,13 +238,11 @@ class ImageTab(QtGui.QWidget):
                 self.renderType = "POV"
                 self.imageFormat = "png"
                 self.PNGCheck.setChecked(1)
-                self.overlayImageCheck.setChecked(1)
         
         elif self.VTKButton.isChecked():
             self.renderType = "VTK"
             self.imageFormat = "jpg"
             self.JPEGCheck.setChecked(1)
-            self.overlayImageCheck.setChecked(0)
         
 
 ################################################################################
@@ -355,7 +353,7 @@ class SingleImageTab(QtGui.QWidget):
         
         filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
                                                       filename, self.overwriteImage, povray=self.parent.povray,
-                                                      overlay=self.parent.overlayImage)
+                                                      overlay=self.parent.POVSettings.overlayImage)
         
         # hide progress dialog
         if showProgress and self.parent.renderType == "POV":
@@ -705,7 +703,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 # now save image
                 filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
                                                               saveName, 1, povray=self.parent.povray,
-                                                              overlay=self.parent.overlayImage)
+                                                              overlay=self.parent.POVSettings.overlayImage)
                 
                 count += 1
                 
@@ -973,7 +971,7 @@ class ImageRotateTab(QtGui.QWidget):
         # send to renderer
         status = self.mainWindow.renderer.rotateAndSaveImage(self.parent.renderType, self.parent.imageFormat, fileprefix, 
                                                              1, self.degreesPerRotation, povray=self.parent.povray,
-                                                             overlay=self.parent.overlayImage)
+                                                             overlay=self.parent.POVSettings.overlayImage)
         
         # movie?
         if status:

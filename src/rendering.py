@@ -750,6 +750,9 @@ class Renderer(object):
                     count += 1
                     filename = "%s(%d).%s" % (fileprefix, count, imageFormat)
             
+            # POV-Ray settings
+            settings = self.mainWindow.mainToolbar.outputPage.imageTab.POVSettings
+            
             # create povray ini file
             povIniFile = os.path.join(self.mainWindow.tmpDirectory, "image.ini")
             
@@ -757,8 +760,8 @@ class Renderer(object):
             nl = lines.append
             nl("; CDJSVis auto-generated POV-Ray INI file")
             nl("Input_File_Name='%s'" % os.path.join(self.mainWindow.tmpDirectory, "image.pov"))
-            nl("Width=%d" % renWinW)
-            nl("Height=%d" % renWinH)
+            nl("Width=%d" % settings.HRes)
+            nl("Height=%d" % settings.VRes)
             nl("Display=off")
             nl("Antialias=on")
             nl("Output_File_Name='%s'" % filename)
@@ -984,17 +987,22 @@ class Renderer(object):
         Write POV-Ray header file.
         
         """
+        settings = self.mainWindow.mainToolbar.outputPage.imageTab.POVSettings
+        
         focalPoint = self.camera.GetFocalPoint()
         campos = self.camera.GetPosition()
         viewup = self.camera.GetViewUp()
-#        angle = self.camera.GetViewAngle()
-        angle = 45
+        angle = settings.viewAngle
+        if settings.shadowless:
+            shadowless = "shadowless "
+        else:
+            shadowless = ""
         
         string = "camera { perspective location <%f,%f,%f> look_at <%f,%f,%f> angle %f\n" % (- campos[0], campos[1], campos[2],
                                                                                              - focalPoint[0], focalPoint[1], focalPoint[2],
                                                                                              angle)
         string += "sky <%f,%f,%f> }\n" % (- viewup[0], viewup[1], viewup[2])
-        string += "light_source { <%f,%f,%f> color rgb <1,1,1> }\n" % (- campos[0], campos[1], campos[2])
+        string += "light_source { <%f,%f,%f> color rgb <1,1,1> %s}\n" % (- campos[0], campos[1], campos[2], shadowless)
         string += "background { color rgb <1,1,1> }\n"
         
         filehandle.write(string)

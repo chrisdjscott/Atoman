@@ -694,3 +694,145 @@ class OnScreenInfoDialog(QtGui.QDialog):
         """
         pass
 
+################################################################################
+
+class PovraySettingsDialog(QtGui.QDialog):
+    """
+    POV-Ray settings dialog.
+    
+    """
+    def __init__(self, parent=None):
+        super(PovraySettingsDialog, self).__init__(parent)
+        
+        self.parent = parent
+        
+        self.setWindowTitle("POV-Ray settings")
+        self.setWindowIcon(QtGui.QIcon(iconPath("pov-icon.svg")))
+        
+        dialogLayout = QtGui.QVBoxLayout(self)
+        
+        # default settings
+        self.overlayImage = True
+        self.shadowless = False
+        self.HRes = 800
+        self.VRes = 600
+        self.viewAngle = 45
+        
+                
+        # overlay check box
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        self.overlayImageCheck = QtGui.QCheckBox("Overlay image")
+        self.overlayImageCheck.setChecked(1)
+        self.overlayImageCheck.stateChanged.connect(self.overlayImageChanged)
+        
+        rowLayout.addWidget(self.overlayImageCheck)
+        
+        dialogLayout.addWidget(row)
+        
+        # shadowless check box
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        self.shadowlessCheck = QtGui.QCheckBox("Shadowless")
+        self.shadowlessCheck.stateChanged.connect(self.shadowlessChanged)
+        
+        rowLayout.addWidget(self.shadowlessCheck)
+        
+        dialogLayout.addWidget(row)
+        
+        # dimensions
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("Dimensions: ")
+        rowLayout.addWidget(label)
+        
+        HResSpinBox = QtGui.QSpinBox()
+        HResSpinBox.setMinimum(1)
+        HResSpinBox.setMaximum(10000)
+        HResSpinBox.setValue(self.HRes)
+        HResSpinBox.valueChanged.connect(self.HResChanged)
+        rowLayout.addWidget(HResSpinBox)
+        
+        label = QtGui.QLabel(" x ")
+        rowLayout.addWidget(label)
+        
+        VResSpinBox = QtGui.QSpinBox()
+        VResSpinBox.setMinimum(1)
+        VResSpinBox.setMaximum(10000)
+        VResSpinBox.setValue(self.VRes)
+        VResSpinBox.valueChanged.connect(self.VResChanged)
+        rowLayout.addWidget(VResSpinBox)
+        
+        dialogLayout.addWidget(row)
+        
+        # view angle
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("View angle: ")
+        rowLayout.addWidget(label)
+        
+        angleSpinBox = QtGui.QDoubleSpinBox()
+        angleSpinBox.setSingleStep(0.1)
+        angleSpinBox.setMinimum(0.1)
+        angleSpinBox.setMaximum(360.0)
+        angleSpinBox.setValue(self.viewAngle)
+        angleSpinBox.valueChanged.connect(self.viewAngleChanged)
+        rowLayout.addWidget(angleSpinBox)
+        
+        label = QtGui.QLabel(" degrees")
+        rowLayout.addWidget(label)
+        
+        dialogLayout.addWidget(row)
+        
+    def viewAngleChanged(self, val):
+        """
+        View angle changed.
+        
+        """
+        self.viewAngle = val
+    
+    def VResChanged(self, val):
+        """
+        Horizontal resolution changed.
+        
+        """
+        self.VRes = val
+    
+    def HResChanged(self, val):
+        """
+        Horizontal resolution changed.
+        
+        """
+        self.HRes = val
+    
+    def overlayImageChanged(self, state):
+        """
+        Overlay image changed.
+        
+        """
+        if self.overlayImageCheck.isChecked():
+            self.overlayImage = True
+        
+        else:
+            self.overlayImage = False
+    
+    def shadowlessChanged(self, state):
+        """
+        Overlay image changed.
+        
+        """
+        if self.shadowlessCheck.isChecked():
+            self.shadowless = True
+        
+        else:
+            self.shadowless = False
+
+
