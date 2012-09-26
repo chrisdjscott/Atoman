@@ -699,8 +699,8 @@ class Renderer(object):
             # size of vtk widget
 #            print "WINDOW HEIGHT", self.mainWindow.VTKWidget.height()
 #            print "WINDOW WIDTH", self.mainWindow.VTKWidget.width()
-            renWinH = self.mainWindow.VTKWidget.height()
-            renWinW = self.mainWindow.VTKWidget.width()
+            renWinH = 600 #self.mainWindow.VTKWidget.height()
+            renWinW = 800 #self.mainWindow.VTKWidget.width()
             
             povfile = os.path.join(self.mainWindow.tmpDirectory, "header.pov")
             fh = open(povfile, "w")
@@ -987,10 +987,12 @@ class Renderer(object):
         focalPoint = self.camera.GetFocalPoint()
         campos = self.camera.GetPosition()
         viewup = self.camera.GetViewUp()
+#        angle = self.camera.GetViewAngle()
+        angle = 45
         
         string = "camera { perspective location <%f,%f,%f> look_at <%f,%f,%f> angle %f\n" % (- campos[0], campos[1], campos[2],
                                                                                              - focalPoint[0], focalPoint[1], focalPoint[2],
-                                                                                             self.camera.GetViewAngle())
+                                                                                             angle)
         string += "sky <%f,%f,%f> }\n" % (- viewup[0], viewup[1], viewup[2])
         string += "light_source { <%f,%f,%f> color rgb <1,1,1> }\n" % (- campos[0], campos[1], campos[2])
         string += "background { color rgb <1,1,1> }\n"
