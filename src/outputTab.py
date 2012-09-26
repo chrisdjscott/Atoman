@@ -74,6 +74,7 @@ class ImageTab(QtGui.QWidget):
         # initial values
         self.renderType = "VTK"
         self.imageFormat = "jpg"
+        self.overlayImage = False
         
         imageTabLayout = QtGui.QVBoxLayout(self)
 #        imageTabLayout.setContentsMargins(0, 0, 0, 0)
@@ -138,6 +139,17 @@ class ImageTab(QtGui.QWidget):
         
         groupLayout.addWidget(row)
         
+        # additional (POV-Ray) options
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        self.overlayImageCheck = QtGui.QCheckBox("Overlay image")
+        self.overlayImageCheck.stateChanged.connect(self.overlayImageChanged)
+        rowLayout.addWidget(self.overlayImageCheck)
+        
+        groupLayout.addWidget(row)
+        
         imageTabLayout.addWidget(group)
         
         # tab bar for different types of image output
@@ -179,6 +191,17 @@ class ImageTab(QtGui.QWidget):
         if self.povray:
             self.mainWindow.console.write("'povray' executable located at: %s" % (self.povray,))
     
+    def overlayImageChanged(self, state):
+        """
+        Overlay image changed.
+        
+        """
+        if self.overlayImageCheck.isChecked():
+            self.overlayImage = True
+        
+        else:
+            self.overlayImage = False
+    
     def imageTabBarChanged(self, val):
         """
         
@@ -215,11 +238,13 @@ class ImageTab(QtGui.QWidget):
                 self.renderType = "POV"
                 self.imageFormat = "png"
                 self.PNGCheck.setChecked(1)
+                self.overlayImageCheck.setChecked(1)
         
         elif self.VTKButton.isChecked():
             self.renderType = "VTK"
             self.imageFormat = "jpg"
             self.JPEGCheck.setChecked(1)
+            self.overlayImageCheck.setChecked(0)
         
 
 ################################################################################
