@@ -507,21 +507,18 @@ class TextSettingsDialog(QtGui.QDialog):
         groupBox.show()
         
         # defaults
-        self.textPosition = "Top right"
+        self.textPosition = "Top left"
         
         # location of text
         label = QtGui.QLabel("Text location: ")
-        positionComboBox = QtGui.QComboBox()
-        positionComboBox.addItem("Top left")
-        positionComboBox.addItem("Top right")
-        positionComboBox.currentIndexChanged.connect(self.positionChanged)
-        
-        self.positionList = ["Top left",
-                             "Top right"]
+        self.positionComboBox = QtGui.QComboBox()
+        self.positionComboBox.addItem("Top left")
+        self.positionComboBox.addItem("Top right")
+        self.positionComboBox.currentIndexChanged.connect(self.positionChanged)
         
         row = groupBox.newRow()
         row.addWidget(label)
-        row.addWidget(positionComboBox)
+        row.addWidget(self.positionComboBox)
         
         dialogLayout.addWidget(groupBox)
     
@@ -530,7 +527,7 @@ class TextSettingsDialog(QtGui.QDialog):
         Position changed.
         
         """
-        self.textPosition = self.positionList[item]
+        self.textPosition = str(self.positionComboBox.currentText())
 
 
 ################################################################################

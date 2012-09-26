@@ -140,6 +140,7 @@ class FilterTab(QtGui.QWidget):
         """
         textSel = self.mainWindow.textSelector
         selectedText = textSel.selectedText
+        textSettings = textSel.textSettings
         
         self.onScreenInfo = {}
         self.removeOnScreenInfo()
@@ -252,15 +253,16 @@ class FilterTab(QtGui.QWidget):
                         self.onScreenInfo["Defect specie count"].append(["%d %s on %s antisites" % (antSpecCount[i][j], specListInput[j], specListRef[i]), specRGBRef[i]])
         
         # alignment/position stuff
-        topy = self.mainWindow.VTKWidget.height() - 5
-        topx = 5
-#        topyRight = self.mainWindow.VTKWidget.height() - 5
-#        topxRight = self.mainWindow.VTKWidget.width() - 220
+        topyLeft = self.mainWindow.VTKWidget.height() - 5
+        topxLeft = 5
+        topyRight = self.mainWindow.VTKWidget.height() - 5
+        topxRight = self.mainWindow.VTKWidget.width() - 220
         
         # loop over selected text
         for i in xrange(selectedText.count()):
             item = selectedText.item(i)
             item = str(item.text())
+            settings = textSettings[item]
             
             try:
                 line = self.onScreenInfo[item]
@@ -269,10 +271,20 @@ class FilterTab(QtGui.QWidget):
                     for j, specline in enumerate(line):
                         r, g, b = self.mainWindow.inputState.specieRGB[j]
                         
-                        # add actor
-                        actor = rendering.vtkRenderWindowText(specline, 20, topx, topy, r, g, b)
+                        if settings.textPosition == "Top left":
+                            xpos = topxLeft
+                            ypos = topyLeft
+                        else:
+                            xpos = topxRight
+                            ypos = topyRight
                         
-                        topy -= 20
+                        # add actor
+                        actor = rendering.vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
+                        
+                        if settings.textPosition == "Top left":
+                            topyLeft -= 20
+                        else:
+                            topyRight -= 20
                         
                         self.onScreenInfoActors.AddItem(actor)
                 
@@ -280,10 +292,20 @@ class FilterTab(QtGui.QWidget):
                     for specline in line:
                         r = g = b = 0
                         
-                        # add actor
-                        actor = rendering.vtkRenderWindowText(specline, 20, topx, topy, r, g, b)
+                        if settings.textPosition == "Top left":
+                            xpos = topxLeft
+                            ypos = topyLeft
+                        else:
+                            xpos = topxRight
+                            ypos = topyRight
                         
-                        topy -= 20
+                        # add actor
+                        actor = rendering.vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
+                        
+                        if settings.textPosition == "Top left":
+                            topyLeft -= 20
+                        else:
+                            topyRight -= 20
                         
                         self.onScreenInfoActors.AddItem(actor)
                 
@@ -292,20 +314,40 @@ class FilterTab(QtGui.QWidget):
                         lineToAdd = array[0]
                         r, g, b = array[1]
                         
-                        # add actor
-                        actor = rendering.vtkRenderWindowText(lineToAdd, 20, topx, topy, r, g, b)
+                        if settings.textPosition == "Top left":
+                            xpos = topxLeft
+                            ypos = topyLeft
+                        else:
+                            xpos = topxRight
+                            ypos = topyRight
                         
-                        topy -= 20
+                        # add actor
+                        actor = rendering.vtkRenderWindowText(lineToAdd, 20, xpos, ypos, r, g, b)
+                        
+                        if settings.textPosition == "Top left":
+                            topyLeft -= 20
+                        else:
+                            topyRight -= 20
                         
                         self.onScreenInfoActors.AddItem(actor)
                 
                 else:
                     r = g = b = 0
-                
-                    # add actor
-                    actor = rendering.vtkRenderWindowText(line, 20, topx, topy, r, g, b)
                     
-                    topy -= 20
+                    if settings.textPosition == "Top left":
+                        xpos = topxLeft
+                        ypos = topyLeft
+                    else:
+                        xpos = topxRight
+                        ypos = topyRight
+                    
+                    # add actor
+                    actor = rendering.vtkRenderWindowText(line, 20, xpos, ypos, r, g, b)
+                    
+                    if settings.textPosition == "Top left":
+                        topyLeft -= 20
+                    else:
+                        topyRight -= 20
                     
                     self.onScreenInfoActors.AddItem(actor)
             
