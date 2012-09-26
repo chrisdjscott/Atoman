@@ -619,10 +619,10 @@ class MainWindow(QtGui.QMainWindow):
             return None
         
         if state == "ref":
+            self.inputState.clone(self.refState)
+            
             self.postRefLoaded(filename)
             self.renderer.postRefRender()
-            
-            self.inputState.clone(self.refState)
         
         self.postInputLoaded(filename)
         
@@ -681,6 +681,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         self.setCurrentRefFile(filename)
         self.refLoaded = 1
+        self.textSelector.refresh()
 #        self.mainToolbar.inputTab.clearRefButton.setCheckable(1)
     
     def postInputLoaded(self, filename):
