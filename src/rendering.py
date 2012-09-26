@@ -956,7 +956,7 @@ class Renderer(object):
         b[1] = lattice.cellDims[1]
         b[2] = lattice.cellDims[2]
         
-        filehandle.write("#declare R = 0.1;\n")
+        filehandle.write("#declare R = 0.15;\n")
         filehandle.write("#declare myObject = union {\n")
         filehandle.write("    sphere { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
         filehandle.write("    sphere { <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
