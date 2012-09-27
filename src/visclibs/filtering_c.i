@@ -63,6 +63,10 @@ extern int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, do
 extern int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE);
 
 extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge);
+
+extern int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double xCentre, 
+                            double yCentre, double zCentre, double radius, int cellDimsDim, double *cellDims, 
+                            int PBCDim, int *PBC, int invertSelection);
 %}
 
 extern int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie);
@@ -77,3 +81,7 @@ extern int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, do
 extern int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE);
 
 extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge);
+
+extern int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double xCentre, 
+                            double yCentre, double zCentre, double radius, int cellDimsDim, double *cellDims, 
+                            int PBCDim, int *PBC, int invertSelection);

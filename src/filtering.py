@@ -164,6 +164,9 @@ class Filterer(object):
                 if filterSettings.calculateVolumes:
                     self.clusterFilterCalculateVolumes(clusterList, filterSettings)
             
+            elif filterName == "Crop sphere":
+                self.cropSphereFilter(filterSettings)
+            
             # write to log
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites)
@@ -317,6 +320,18 @@ class Filterer(object):
         NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
                                           settings.ymax, settings.zmin, settings.zmax, settings.xEnabled, 
                                           settings.yEnabled, settings.zEnabled)
+        
+        self.visibleAtoms.resize(NVisible, refcheck=False)
+    
+    def cropSphereFilter(self, settings):
+        """
+        Crop sphere filter.
+        
+        """
+        lattice = self.mainWindow.inputState
+        
+        NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, settings.xCentre, settings.yCentre, settings.zCentre, 
+                                                settings.radius, lattice.cellDims, self.mainWindow.PBC, settings.invertSelection)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
     

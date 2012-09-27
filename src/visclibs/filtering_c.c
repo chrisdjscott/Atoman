@@ -46,6 +46,51 @@ int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec
 
 
 /*******************************************************************************
+ ** Crop sphere filter
+ *******************************************************************************/
+int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double xCentre, 
+                     double yCentre, double zCentre, double radius, int cellDimsDim, double *cellDims, 
+                     int PBCDim, int *PBC, int invertSelection)
+{
+    int i, NVisible, index;
+    double radius2, sep2;
+    
+    
+    radius2 = radius * radius;
+    
+    NVisible = 0;
+    for (i=0; i<NVisibleIn; i++)
+    {
+        index = visibleAtoms[i];
+        
+        sep2 = atomicSeparation2(pos[3*index], pos[3*index+1], pos[3*index+2], 
+                                 xCentre, yCentre, zCentre, 
+                                 cellDims[0], cellDims[1], cellDims[2], 
+                                 PBC[0], PBC[1], PBC[2]);
+        
+        if (sep2 < radius2)
+        {
+            if (invertSelection)
+            {
+                visibleAtoms[NVisible] = index;
+                NVisible++;
+            }
+        }
+        else
+        {
+            if (!invertSelection)
+            {
+                visibleAtoms[NVisible] = index;
+                NVisible++;
+            }
+        }
+    }
+    
+    return NVisible;
+}
+
+
+/*******************************************************************************
  ** Crop filter
  *******************************************************************************/
 int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, double xmin, double xmax,

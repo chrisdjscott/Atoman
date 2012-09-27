@@ -43,7 +43,8 @@ class FilterList(QtGui.QWidget):
                            "Displacement",
                            "Kinetic energy",
                            "Potential energy",
-                           "Charge"]
+                           "Charge",
+                           "Crop sphere"]
         self.allFilters.sort()
         
         # current selected filters
@@ -422,6 +423,9 @@ class FilterList(QtGui.QWidget):
         
         elif filterName == "Charge":
             form = filterSettings.ChargeSettingsDialog(self.mainWindow, "Charge filter settings", parent=self)
+        
+        elif filterName == "Crop sphere":
+            form = filterSettings.CropSphereSettingsDialog(self.mainWindow, "Crop sphere settings", parent=self)
         
         return form
     
