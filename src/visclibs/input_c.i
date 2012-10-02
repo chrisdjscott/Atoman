@@ -47,16 +47,12 @@ import_array();
 %{
 extern void readLatticeLBOMD( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, int speclistDim, char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, double* maxPos, int minPosDim, double* minPos );
 
-extern void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, char* specieList_c, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge );
-
 extern void readRef( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, int KEDim, double* KE, int PEDim, double* PE, int forceDim, double* force, int speclistDim, char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, double* maxPos, int minPosDim, double* minPos );
 
 extern void readLBOMDXYZ( char* file, int posDim, double* pos, int chargeDim, double* charge, int KEDim, double* KE, int PEDim, double* PE, int forceDim, double* force, int maxPosDim, double* maxPos, int minPosDim, double* minPos, int xyzformat );
 %}
 
 extern void readLatticeLBOMD( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, int speclistDim, char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, double* maxPos, int minPosDim, double* minPos );
-
-extern void writeLatticeLBOMD( char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, char* specieList_c, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge );
 
 extern void readRef( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, int KEDim, double* KE, int PEDim, double* PE, int forceDim, double* force, int speclistDim, char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, double* maxPos, int minPosDim, double* minPos );
 

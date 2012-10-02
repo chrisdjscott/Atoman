@@ -178,4 +178,39 @@ void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int
 	fclose(OUTFILE);
 }
 
+/*******************************************************************************
+** write lattice file
+*******************************************************************************/
+void writeLattice(char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, 
+                  char* specieList_c, int specieDim, int* specie, int posDim, double* pos, int chargeDim, 
+                  double* charge)
+{
+    int i;
+    FILE *OUTFILE;
+    char symtemp[3];
+    
+    
+    OUTFILE = fopen( file, "w" );
+    if (OUTFILE == NULL)
+    {
+        printf("ERROR: could not open file: %s\n", file);
+        printf("       reason: %s\n", strerror(errno));
+        exit(35);
+    } 
+    
+    fprintf(OUTFILE, "%d\n", NAtoms);
+    fprintf(OUTFILE, "%f %f %f\n", xdim, ydim, zdim);
+    
+    for ( i=0; i<NAtoms; i++ )
+    {
+        symtemp[0] = specieList_c[2*specie[i]];
+        symtemp[1] = specieList_c[2*specie[i]+1];
+        symtemp[2] = '\0';
+        
+        fprintf( OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*i], pos[3*i+1], pos[3*i+2], charge[i] );
+    }
+    
+    fclose(OUTFILE);
+}
+
 

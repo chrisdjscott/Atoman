@@ -16,6 +16,8 @@ from PyQt4 import QtGui, QtCore
 import utilities
 from utilities import iconPath
 import dialogs
+import genericForm
+from visclibs import output_c
 
 try:
     import resources
@@ -45,6 +47,8 @@ class OutputTab(QtGui.QWidget):
         self.connect(self.outputTypeTabBar, QtCore.SIGNAL('currentChanged(int)'), self.outputTypeTabBarChanged)
         
         # add tabs to tab bar
+        
+        # image tab
         imageTabWidget = QtGui.QWidget()
         imageTabLayout = QtGui.QVBoxLayout(imageTabWidget)
         imageTabLayout.setContentsMargins(0, 0, 0, 0)
@@ -53,6 +57,16 @@ class OutputTab(QtGui.QWidget):
         imageTabLayout.addWidget(self.imageTab)
         
         self.outputTypeTabBar.addTab(imageTabWidget, "Image")
+        
+        # file tab
+        fileTabWidget = QtGui.QWidget()
+        fileTabLayout = QtGui.QVBoxLayout(fileTabWidget)
+        fileTabLayout.setContentsMargins(0, 0, 0, 0)
+        
+        self.fileTab = FileTab(self, self.mainWindow, self.width)
+        fileTabLayout.addWidget(self.fileTab)
+        
+        self.outputTypeTabBar.addTab(fileTabWidget, "File")
         
         # add tab bar to layout
         outputTabLayout.addWidget(self.outputTypeTabBar)
@@ -63,6 +77,115 @@ class OutputTab(QtGui.QWidget):
 
 
 ################################################################################
+
+class FileTab(QtGui.QWidget):
+    def __init__(self, parent, mainWindow, width):
+        super(FileTab, self).__init__(parent)
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        self.width = width
+        
+        # initial values
+        self.outputFileType = "LATTICE"
+        
+        # layout
+        mainLayout = QtGui.QVBoxLayout(self)
+        mainLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        # name group
+        fileNameGroup = genericForm.GenericForm(self, 0, "Output file options")
+        fileNameGroup.show()
+        
+        # file type
+        outputTypeCombo = QtGui.QComboBox()
+        outputTypeCombo.addItem("LATTICE")
+#         outputTypeCombo.addItem("LBOMD REF")
+#         outputTypeCombo.addItem("LBOMD XYZ")
+#         outputTypeCombo.addItem("LBOMD FAILSAFE")
+        outputTypeCombo.currentIndexChanged[QtCore.QString].connect(self.outputTypeChanged)
+        
+        label = QtGui.QLabel("File type: ")
+        
+        row = fileNameGroup.newRow()
+        row.addWidget(label)
+        row.addWidget(outputTypeCombo)
+        
+        # file name, save image button
+        row = fileNameGroup.newRow()
+        
+        label = QtGui.QLabel("File name: ")
+        self.outputFileName = QtGui.QLineEdit("lattice.dat")
+        self.outputFileName.setFixedWidth(120)
+        saveFileButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
+        saveFileButton.setStatusTip("Save to file")
+        saveFileButton.clicked.connect(self.saveToFile)
+        
+        row.addWidget(label)
+        row.addWidget(self.outputFileName)
+        row.addWidget(saveFileButton)
+        
+        # dialog
+        row = fileNameGroup.newRow()
+        
+        saveFileDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Save to file")
+        saveFileDialogButton.setStatusTip("Save to file")
+        saveFileDialogButton.setCheckable(0)
+        saveFileDialogButton.setFixedWidth(150)
+        saveFileDialogButton.clicked.connect(self.saveToFileDialog)
+        
+        row.addWidget(saveFileDialogButton)
+        
+        # overwrite
+        self.overwriteCheck = QtGui.QCheckBox("Overwrite")
+        
+        row = fileNameGroup.newRow()
+        row.addWidget(self.overwriteCheck)
+        
+        mainLayout.addWidget(fileNameGroup)
+    
+    def saveToFile(self):
+        """
+        Save current system to file.
+        
+        """
+        filename = str(self.outputFileName.text())
+        
+        if not len(filename):
+            return
+        
+        if os.path.exists(filename) and not self.overwriteCheck.isChecked():
+            self.mainWindow.displayWarning("File already exists: not overwriting")
+            return
+        
+        lattice = self.mainWindow.inputState
+        
+        #TODO: this should write visible atoms only, not whole lattice!
+        
+        output_c.writeLattice(filename, lattice.NAtoms, lattice.cellDims[0], lattice.cellDims[1], lattice.cellDims[2],
+                              lattice.specieList, lattice.specie, lattice.pos, lattice.charge)
+    
+    def saveToFileDialog(self):
+        """
+        Open dialog.
+        
+        """
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')
+        
+        if len(filename):
+            self.outputFileName.setText(str(filename))
+            self.saveToFile()
+    
+    def outputTypeChanged(self, fileType):
+        """
+        Output type changed.
+        
+        """
+        self.outputFileType = str(fileType)
+
+
+################################################################################
+
 class ImageTab(QtGui.QWidget):
     def __init__(self, parent, mainWindow, width):
         super(ImageTab, self).__init__(parent)

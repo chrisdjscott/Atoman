@@ -31,7 +31,8 @@ import_array();
     (int posDim, double* pos),
     (int specieCovRadDim, double* specieCovRad),
     (int refPosDim, double *refPos),
-    (int refSpecieCovRadDim, double* refSpecieCovRad)
+    (int refSpecieCovRadDim, double* refSpecieCovRad),
+    (int chargeDim, double* charge)
 }
 
 /* 2d array of doubles */
@@ -68,6 +69,9 @@ extern void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsD
                                int refPosDim, double *refPos, int specieRGBDim1, int specieRGBDim2, double *specieRGB, int specieCovRadDim,
                                double *specieCovRad, int refSpecieRGBDim1, int refSpecieRGBDim2, double *refSpecieRGB, 
                                int refSpecieCovRadDim, double* refSpecieCovRad);
+
+extern void writeLattice(char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, char* specieList_c, 
+                         int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge);
 %}
 
 extern void writePOVRAYAtoms(char *filename, int specieDim, int *specie, int posDim, double *pos, 
@@ -79,3 +83,6 @@ extern void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsD
                                int refPosDim, double *refPos, int specieRGBDim1, int specieRGBDim2, double *specieRGB, int specieCovRadDim,
                                double *specieCovRad, int refSpecieRGBDim1, int refSpecieRGBDim2, double *refSpecieRGB, 
                                int refSpecieCovRadDim, double* refSpecieCovRad);
+
+extern void writeLattice(char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, char* specieList_c, 
+                         int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge);
