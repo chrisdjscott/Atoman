@@ -458,10 +458,19 @@ class SingleImageTab(QtGui.QWidget):
         Screen capture.
         
         """
-        filename = self.imageFileName.text()
+        filename = str(self.imageFileName.text())
         
         if not len(filename):
             return
+        
+        # check if in different dir
+        head, tail = os.path.split(filename)
+        
+        # change to dir if required (for POV-Ray to work)
+        if len(head):
+            OWD = os.getcwd()
+            os.chdir(head)
+            filename = tail
         
         # show progress dialog
         if showProgress and self.parent.renderType == "POV":
@@ -483,6 +492,12 @@ class SingleImageTab(QtGui.QWidget):
             QtGui.QApplication.restoreOverrideCursor()
             progress.cancel()
         
+        # change back to original working dir
+        if len(head):
+            os.chdir(OWD)
+            filename = os.path.join(head, tail)
+        
+        # open image viewer
         if self.openImage:
             dirname = os.path.dirname(filename)
             if not dirname:
