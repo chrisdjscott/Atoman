@@ -379,9 +379,16 @@ class Filterer(object):
         # set up arrays
         if settings.showInterstitials:
             interstitials = np.empty(inputLattice.NAtoms, np.int32)
+            
+            if settings.identifySplitInts:
+                splitInterstitials = np.empty(inputLattice.NAtoms, np.int32)
+            
+            else:
+                splitInterstitials = np.empty(0, np.int32)
         
         else:
             interstitials = np.empty(0, np.int32)
+            splitInterstitials = np.empty(0, np.int32)
         
         if settings.showVacancies:
             vacancies = np.empty(refLattice.NAtoms, np.int32)
@@ -445,7 +452,7 @@ class Filterer(object):
                                        inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
                                        refLattice.pos, refLattice.cellDims, self.mainWindow.PBC, settings.vacancyRadius, minPos, maxPos, 
                                        settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
-                                       onAntSpecCount, settings.minClusterSize, settings.maxClusterSize)
+                                       onAntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials)
         
         # summarise
         NDef = NDefectsByType[0]

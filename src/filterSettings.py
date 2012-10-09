@@ -555,6 +555,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.calculateVolumes = 0
         self.drawConvexHulls = 0
         self.hideDefects = 0
+        self.identifySplitInts = 1
         
         # check if qconvex programme located
         self.qconvex = utilities.checkForExe("qconvex")
@@ -599,6 +600,15 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.connect( self.antTypeCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.antVisChanged )
         row = self.newRow()
         row.addWidget(self.antTypeCheckBox)
+        
+        self.newRow()
+        
+        # identify split ints check box
+        self.identifySplitsCheck = QtGui.QCheckBox(" Identify split interstitials")
+        self.identifySplitsCheck.setChecked(1)
+        self.identifySplitsCheck.stateChanged.connect(self.identifySplitsChanged)
+        row = self.newRow()
+        row.addWidget(self.identifySplitsCheck)
         
         self.newRow()
         
@@ -740,6 +750,17 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row.addWidget(self.calcVolsCheckBox)
         
         self.refresh()
+    
+    def identifySplitsChanged(self, state):
+        """
+        Identity splits changed.
+        
+        """
+        if self.identifySplitsCheck.isChecked():
+            self.identifySplitInts = 1
+        
+        else:
+            self.identifySplitInts = 0
     
     def hideDefectsChanged(self, val):
         """

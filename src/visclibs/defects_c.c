@@ -27,7 +27,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
                  int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClustersFlag,
                  double clusterRadius, int defectClusterDim, int *defectCluster, int vacSpecCountDim, int *vacSpecCount, 
                  int intSpecCountDim, int *intSpecCount, int antSpecCountDim, int *antSpecCount, int onAntSpecCntDim1, 
-                 int onAntSpecCntDim2, int *onAntSpecCount, int minClusterSize, int maxClusterSize )
+                 int onAntSpecCntDim2, int *onAntSpecCount, int minClusterSize, int maxClusterSize, int splitIntDim, int *splitInterstitials)
 {
     int i, NSpecies, exitLoop, k, j, index;
     double vacRad2;
@@ -54,6 +54,11 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
      */
     approxBoxWidth = 1.1 * vacancyRadius;
     
+    if (splitIntDim > 0)
+    {
+    	printf("IDENTIFYING SPLIT INTS\n");
+    }
+
     /* box reference atoms */
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
     putAtomsInBoxes(refNAtoms, refPos, boxes);
