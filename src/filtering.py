@@ -45,6 +45,7 @@ class Filterer(object):
         self.vacancySpecieCount = []
         self.interstitialSpecieCount = []
         self.antisiteSpecieCount = []
+        self.splitIntSpecieCount = []
         
         self.actorsCollection = vtk.vtkActorCollection()
         
@@ -144,7 +145,7 @@ class Filterer(object):
                 self.displacementFilter(filterSettings)
             
             elif filterName == "Point defects":
-                interstitials, vacancies, antisites, onAntisites, clusterList = self.pointDefectFilter(filterSettings)
+                interstitials, vacancies, antisites, onAntisites, splitInterstitials, clusterList = self.pointDefectFilter(filterSettings)
             
             elif filterName == "Kinetic energy":
                 self.KEFilter(filterSettings)
@@ -169,9 +170,9 @@ class Filterer(object):
             
             # write to log
             if self.parent.defectFilterSelected:
-                NVis = len(interstitials) + len(vacancies) + len(antisites)
+                NVis = len(interstitials) + len(vacancies) + len(antisites) + len(splitInterstitials)
                 self.NVac = len(vacancies)
-                self.NInt = len(interstitials)
+                self.NInt = len(interstitials) + len(splitInterstitials)
                 self.NAnt = len(antisites)
                 
             else:
@@ -196,11 +197,12 @@ class Filterer(object):
                 pass
             
             else:
-                counters = rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, self.mainWindow, self.actorsCollection, self.colouringOptions)
+                counters = rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.mainWindow, self.actorsCollection, self.colouringOptions)
                 
                 self.vacancySpecieCount = counters[0]
                 self.interstitialSpecieCount = counters[1]
                 self.antisiteSpecieCount = counters[2]
+                self.splitIntSpecieCount = counters[3]
                 
                 # write pov-ray file too
                 povfile = "defects%d.pov" % self.parent.tab
@@ -376,33 +378,19 @@ class Filterer(object):
         inputLattice = self.mainWindow.inputState
         refLattice = self.mainWindow.refState
         
-        # set up arrays
-        if settings.showInterstitials:
-            interstitials = np.empty(inputLattice.NAtoms, np.int32)
-            
-            if settings.identifySplitInts:
-                splitInterstitials = np.empty(inputLattice.NAtoms, np.int32)
-            
-            else:
-                splitInterstitials = np.empty(0, np.int32)
+    # set up arrays
+        interstitials = np.empty(inputLattice.NAtoms, np.int32)
+        
+        if settings.identifySplitInts:
+            splitInterstitials = np.empty(inputLattice.NAtoms, np.int32)
         
         else:
-            interstitials = np.empty(0, np.int32)
             splitInterstitials = np.empty(0, np.int32)
+                
+        vacancies = np.empty(refLattice.NAtoms, np.int32)
         
-        if settings.showVacancies:
-            vacancies = np.empty(refLattice.NAtoms, np.int32)
-        
-        else:
-            vacancies = np.empty(0, np.int32)
-        
-        if settings.showAntisites:
-            antisites = np.empty(refLattice.NAtoms, np.int32)
-            onAntisites = np.empty(refLattice.NAtoms, np.int32)
-        
-        else:
-            antisites = np.empty(0, np.int32)
-            onAntisites = np.empty(0, np.int32)
+        antisites = np.empty(refLattice.NAtoms, np.int32)
+        onAntisites = np.empty(refLattice.NAtoms, np.int32)
         
         # set up excluded specie arrays
         if settings.allSpeciesSelected:
@@ -433,8 +421,9 @@ class Filterer(object):
         intSpecCount = np.zeros( len(inputLattice.specieList), np.int32 )
         antSpecCount = np.zeros( len(refLattice.specieList), np.int32 )
         onAntSpecCount = np.zeros( (len(refLattice.specieList), len(inputLattice.specieList)), np.int32 )
+        splitIntSpecCount = np.zeros( (len(inputLattice.specieList), len(inputLattice.specieList)), np.int32 )
         
-        NDefectsByType = np.zeros(5, np.int32)
+        NDefectsByType = np.zeros(6, np.int32)
         
         # set min/max pos to lattice (for boxing)
         minPos = refLattice.minPos
@@ -452,17 +441,20 @@ class Filterer(object):
                                        inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
                                        refLattice.pos, refLattice.cellDims, self.mainWindow.PBC, settings.vacancyRadius, minPos, maxPos, 
                                        settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
-                                       onAntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials)
+                                       onAntSpecCount, splitIntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials, 
+                                       settings.identifySplitInts)
         
         # summarise
         NDef = NDefectsByType[0]
         NVac = NDefectsByType[1]
         NInt = NDefectsByType[2]
         NAnt = NDefectsByType[3]
+        NSplit = NDefectsByType[5]
         vacancies.resize(NVac)
         interstitials.resize(NInt)
         antisites.resize(NAnt)
         onAntisites.resize(NAnt)
+        splitInterstitials.resize(NSplit*3)
         
         # report counters
         self.log("Found %d defects" % (NDef,), 0, 3)
@@ -473,9 +465,15 @@ class Filterer(object):
                 self.log("%d %s vacancies" % (vacSpecCount[i], refLattice.specieList[i]), 0, 5)
         
         if settings.showInterstitials:
-            self.log("%d interstitials" % (NInt,), 0, 4)
+            self.log("%d interstitials" % (NInt + NSplit,), 0, 4)
             for i in xrange(len(inputLattice.specieList)):
                 self.log("%d %s interstitials" % (intSpecCount[i], inputLattice.specieList[i]), 0, 5)
+        
+            if settings.identifySplitInts:
+                self.log("%d split interstitials" % (NSplit,), 0, 5)
+                for i in xrange(len(inputLattice.specieList)):
+                    for j in xrange(len(inputLattice.specieList)):                        
+                        self.log("%d %s - %s split interstitials" % (splitIntSpecCount[i][j], inputLattice.specieList[j], inputLattice.specieList[i]), 0, 6)
         
         if settings.showAntisites:
             self.log("%d antisites" % (NAnt,), 0, 4)
@@ -539,7 +537,7 @@ class Filterer(object):
                 clusterList[clusterListIndex].antisites.append(atomIndex)
                 clusterList[clusterListIndex].onAntisites.append(atomIndex2)
         
-        return (interstitials, vacancies, antisites, onAntisites, clusterList)
+        return (interstitials, vacancies, antisites, onAntisites, splitInterstitials, clusterList)
     
     def pointDefectFilterDrawHulls(self, clusterList, settings, hullPovFile):
         """

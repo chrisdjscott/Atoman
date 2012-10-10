@@ -211,12 +211,14 @@ class FilterTab(QtGui.QWidget):
             vacSpecCount = np.zeros(len(self.mainWindow.refState.specieList), np.int32)
             intSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
             antSpecCount = np.zeros((len(self.mainWindow.refState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
+            splitSpecCount = np.zeros((len(self.mainWindow.inputState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
             for filterList in self.filterLists:
                 if filterList.visible and filterList.defectFilterSelected and filterList.filterer.NVis:
                     if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
                         vacSpecCount = np.add(vacSpecCount, filterList.filterer.vacancySpecieCount)
                         intSpecCount = np.add(intSpecCount, filterList.filterer.interstitialSpecieCount)
                         antSpecCount = np.add(antSpecCount, filterList.filterer.antisiteSpecieCount)
+                        splitSpecCount = np.add(splitSpecCount, filterList.filterer.splitIntSpecieCount)
             
             # now add to dict
             self.onScreenInfo["Defect count"] = []
@@ -244,6 +246,11 @@ class FilterTab(QtGui.QWidget):
             if showInts:
                 for i, cnt in enumerate(intSpecCount):
                     self.onScreenInfo["Defect specie count"].append(["%d %s interstitials" % (cnt, specListInput[i]), specRGBInput[i]])
+                
+                if defectsSettings.identifySplitInts:
+                    for i in xrange(len(specListInput)):
+                        for j in xrange(len(specListInput)):
+                            self.onScreenInfo["Defect specie count"].append(["%d %s-%s split ints" % (splitSpecCount[i][j], specListInput[j], specListInput[i]), specRGBInput[i]])
             
             if showAnts:
                 for i in xrange(len(specListRef)):

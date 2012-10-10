@@ -27,7 +27,8 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
                  int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClustersFlag,
                  double clusterRadius, int defectClusterDim, int *defectCluster, int vacSpecCountDim, int *vacSpecCount, 
                  int intSpecCountDim, int *intSpecCount, int antSpecCountDim, int *antSpecCount, int onAntSpecCntDim1, 
-                 int onAntSpecCntDim2, int *onAntSpecCount, int minClusterSize, int maxClusterSize, int splitIntDim, int *splitInterstitials)
+                 int onAntSpecCntDim2, int *onAntSpecCount, int splitIntSpecCntDim1, int splitIntSpecCntDim2, int* splitIntSpecCount,
+                 int minClusterSize, int maxClusterSize, int splitIntDim, int *splitInterstitials, int identifySplits)
 {
     int i, NSpecies, exitLoop, k, j, index;
     double vacRad2;
@@ -42,10 +43,12 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     int *possibleVacancy, *possibleInterstitial;
     int *possibleAntisite, *possibleOnAntisite;
     int skip, count, NClusters, clusterIndex;
-    double approxBoxWidth;
+    double approxBoxWidth, splitIntRad, splitIntRad2;
     struct Boxes *boxes;
-    double *defectPos;
+    double *defectPos, *intPos;
     int NVacNew, NIntNew, NAntNew, numInCluster;
+    int NVacNebs, intIndex, vacIndex, *vacNebs;
+    int NSplitInterstitials;
     
     
     /* approx width, must be at least vacRad
@@ -54,11 +57,6 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
      */
     approxBoxWidth = 1.1 * vacancyRadius;
     
-    if (splitIntDim > 0)
-    {
-    	printf("IDENTIFYING SPLIT INTS\n");
-    }
-
     /* box reference atoms */
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
     putAtomsInBoxes(refNAtoms, refPos, boxes);
@@ -191,34 +189,35 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     NVacancies = 0;
     NInterstitials = 0;
     NAntisites = 0;
+    NSplitInterstitials = 0;
     for ( i=0; i<refNAtoms; i++ )
     {
-        skip = 0;
-        for (j=0; j<exclSpecRefDim; j++)
-        {
-            if (specieRef[i] == exclSpecRef[j])
-            {
-                skip = 1;
-            }
-        }
-        
-        if (skip == 1)
-        {
-            continue;
-        }
+//        skip = 0;
+//        for (j=0; j<exclSpecRefDim; j++)
+//        {
+//            if (specieRef[i] == exclSpecRef[j])
+//            {
+//                skip = 1;
+//            }
+//        }
+//        
+//        if (skip == 1)
+//        {
+//            continue;
+//        }
         
         /* vacancies */
         if (possibleVacancy[i] == 1)
         {
-            if (includeVacs == 1)
-            {
+//            if (includeVacs == 1)
+//            {
                 vacancies[NVacancies] = i;
                 NVacancies++;
-            }
+//            }
         }
         
         /* antisites */
-        else if ( (possibleAntisite[i] == 1) && (includeAnts == 1) )
+        else if ( (possibleAntisite[i] == 1) )//&& (includeAnts == 1) )
         {
             antisites[NAntisites] = i;
             onAntisites[NAntisites] = possibleOnAntisite[i];
@@ -226,24 +225,24 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         }
     }
     
-    if (includeInts == 1)
-    {
+//    if (includeInts == 1)
+//    {
         for ( i=0; i<NAtoms; i++ )
         {
-            skip = 0;
-            for (j=0; j<exclSpecInputDim; j++)
-            {
-                if (specie[i] == exclSpecInput[j])
-                {
-                    skip = 1;
-                    break;
-                }
-            }
-            
-            if (skip == 1)
-            {
-                continue;
-            }
+//            skip = 0;
+//            for (j=0; j<exclSpecInputDim; j++)
+//            {
+//                if (specie[i] == exclSpecInput[j])
+//                {
+//                    skip = 1;
+//                    break;
+//                }
+//            }
+//            
+//            if (skip == 1)
+//            {
+//                continue;
+//            }
                         
             /* interstitials */
             if ( (possibleInterstitial[i] == 1) )
@@ -252,13 +251,225 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
                 NInterstitials++;
             }
         }
-    }
+//    }
     
     /* free arrays */
     free(possibleVacancy);
     free(possibleInterstitial);
     free(possibleAntisite);
     free(possibleOnAntisite);
+    
+    /* look for split interstitials */
+    if (identifySplits && NVacancies > 0)
+    {
+        printf("IDENTIFYING SPLIT INTS\n");
+        
+        intPos = malloc(3 * NInterstitials * sizeof(double));
+        if (intPos == NULL)
+        {
+            printf("ERROR: could not allocate intPos\n");
+            exit(50);
+        }
+        
+        vacNebs = malloc(NInterstitials * sizeof(int));
+        if (vacNebs == NULL)
+        {
+            printf("ERROR: could not allocate vacNebs\n");
+            exit(50);
+        }
+        
+        /* box interstitials */
+        for (i=0; i<NInterstitials; i++)
+        {
+            index = interstitials[i];
+            
+            intPos[3*i] = pos[3*index];
+            intPos[3*i+1] = pos[3*index+1];
+            intPos[3*i+2] = pos[3*index+2];
+        }
+        
+        splitIntRad = 2.0 * vacancyRadius;
+        splitIntRad2 = splitIntRad * splitIntRad;
+        
+        approxBoxWidth = splitIntRad;
+        boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
+        putAtomsInBoxes(NInterstitials, intPos, boxes);
+        
+        NVacNew = NVacancies;
+        NIntNew = NInterstitials;
+        NSplitInterstitials = 0;
+        
+        /* loop over vacs */
+        for (i=0; i<NVacancies; i++)
+        {
+            index = vacancies[i];
+            
+            xpos = refPos[3*index];
+            ypos = refPos[3*index+1];
+            zpos = refPos[3*index+2];
+            
+            boxIndex = boxIndexOfAtom(xpos, ypos, zpos, boxes);
+            
+            /* find neighbouring boxes */
+            getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+            
+            NVacNebs = 0;
+            
+            /* loop over neighbouring boxes */
+            for (j=0; j<27; j++)
+            {
+                checkBox = boxNebList[j];
+                
+                /* now loop over all reference atoms in the box */
+                for (k=0; k<boxes->boxNAtoms[checkBox]; k++)
+                {
+                    index2 = boxes->boxAtoms[checkBox][k];
+                    intIndex = interstitials[index2];
+                    
+                    if (intIndex == -1)
+                    {
+                        continue;
+                    }
+                    
+                    sep2 = atomicSeparation2(xpos, ypos, zpos, 
+                                             intPos[3*index2], intPos[3*index2+1], intPos[3*index2+2], 
+                                             cellDims[0], cellDims[1], cellDims[2], 
+                                             PBC[0], PBC[1], PBC[2]); 
+                    
+                    if (sep2 < splitIntRad2)
+                    {
+                        printf("VAC %d has neighbouring int %d (%lf)\n", i, index2, sqrt(sep2));
+                        vacNebs[NVacNebs] = index2;
+                        NVacNebs++;
+                    }
+                }
+            }
+            
+            if (NVacNebs == 2)
+            {
+                printf(">>> SPLIT INT\n");
+                
+                /* modify vacs/ints/split ints lists */
+                splitInterstitials[3*NSplitInterstitials] = index;
+                
+                index2 = vacNebs[0];
+                intIndex = interstitials[index2];
+                interstitials[index2] = -1;
+                splitInterstitials[3*NSplitInterstitials+1] = intIndex;
+                
+                index2 = vacNebs[1];
+                intIndex = interstitials[index2];
+                interstitials[index2] = -1;
+                splitInterstitials[3*NSplitInterstitials+2] = intIndex;
+                
+                vacancies[i] = -1;
+                
+                NIntNew -= 2;
+                NVacNew--;
+                NSplitInterstitials++;
+            }
+        }
+        
+        /* free box arrays */
+        freeBoxes(boxes);
+        free(intPos);
+        free(vacNebs);
+        
+        /* recreate interstitials array */
+        count = 0;
+        for (i=0; i<NInterstitials; i++)
+        {
+            if (interstitials[i] != -1)
+            {
+                interstitials[count] = interstitials[i];
+                count++;
+            }
+        }
+        NInterstitials = count;
+        
+        /* recreate vacancies array */
+        count = 0;
+        for (i=0; i<NVacancies; i++)
+        {
+            if (vacancies[i] != -1)
+            {
+                vacancies[count] = vacancies[i];
+                count++;
+            }
+        }
+        NVacancies = count;
+    }
+    
+    printf("NVACS %d; NINTS %d; NSPLITINTS %d\n", NVacancies, NInterstitials, NSplitInterstitials);
+    
+    /* exclude defect types and species here... */
+    if (!includeInts)
+    {
+        NInterstitials = 0;
+        NSplitInterstitials = 0;
+    }
+    else
+    {
+        NIntNew = 0;
+        for (i=0; i<NInterstitials; i++)
+        {
+            index = interstitials[i];
+            
+            skip = 0;
+            for (j=0; j<exclSpecInputDim; j++)
+            {
+                if (specie[index] == exclSpecInput[j])
+                {
+                    skip = 1;
+                    break;
+                }
+            }
+            
+            if (!skip)
+            {
+                interstitials[NIntNew] = index;
+                NIntNew++;
+            }
+        }
+        NInterstitials = NIntNew;
+    }
+    
+    if (!includeVacs)
+    {
+        NVacancies = 0;
+    }
+    else
+    {
+        NVacNew = 0;
+        for (i=0; i<NVacancies; i++)
+        {
+            index = vacancies[i];
+            
+            skip = 0;
+            for (j=0; j<exclSpecRefDim; j++)
+            {
+                if (specie[index] == exclSpecRef[j])
+                {
+                    skip = 1;
+                    break;
+                }
+            }
+            
+            if (!skip)
+            {
+                vacancies[NVacNew] = index;
+                NVacNew++;
+            }
+        }
+        NVacancies = NVacNew;
+    }
+    
+    if (!includeAnts)
+    {
+        NAntisites = 0;
+    }
+    
+    printf("NVACS %d; NINTS %d; NSPLITINTS %d\n", NVacancies, NInterstitials, NSplitInterstitials);
     
     /* find clusters of defects */
     if (findClustersFlag)
@@ -451,6 +662,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     NDefectsType[1] = NVacancies;
     NDefectsType[2] = NInterstitials;
     NDefectsType[3] = NAntisites;
+    NDefectsType[5] = NSplitInterstitials;
     
     /* specie counters */
     for (i=0; i<NVacancies; i++)
@@ -472,6 +684,14 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         
         index2 = onAntisites[i];
         onAntSpecCount[specieRef[index]*onAntSpecCntDim2+specie[index2]]++;
+    }
+    
+    for (i=0; i<NSplitInterstitials; i++)
+    {
+        index = splitInterstitials[3*i+1];
+        index2 = splitInterstitials[3*i+2];
+        
+        splitIntSpecCount[specie[index]*splitIntSpecCntDim2+specie[index2]]++;
     }
     
     return 0;

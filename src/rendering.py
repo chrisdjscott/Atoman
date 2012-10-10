@@ -7,6 +7,7 @@ Module for rendering
 """
 import os
 import math
+import copy
 
 import numpy as np
 import vtk
@@ -1305,12 +1306,13 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
 
     
 ################################################################################
-def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, mainWindow, actorsCollection, colouringOptions):
+def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, mainWindow, actorsCollection, colouringOptions):
     
     NInt = len(interstitials)
     NVac = len(vacancies)
     NAnt = len(antisites)
-    NDef = NInt + NVac + NAnt
+    NSplit = len(splitInterstitials) / 3
+    NDef = NInt + NVac + NAnt + len(splitInterstitials)
     
     # resolution
     res = setRes(NDef)
@@ -1324,6 +1326,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     vacSpecCount = np.zeros(NSpeciesRef, np.int32)
     intSpecCount = np.zeros(NSpeciesInput, np.int32)
     antSpecCount = np.zeros((NSpeciesRef, NSpeciesInput), np.int32)
+    splitSpecCount = np.zeros((NSpeciesInput, NSpeciesInput), np.int32)
     
     #----------------------------------------#
     # interstitials first
@@ -1377,7 +1380,127 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsActor.SetMapper(intsMapper)
         
         actorsCollection.AddItem(intsActor)
+    
+    #----------------------------------------#
+    # split interstitial atoms next
+    #----------------------------------------#
+    print "RENDER: NSPLIT", NSplit
+    
+    NSpecies = len(inputLattice.specieList)
+    intPointsList = []
+    intScalarsList = []
+    for i in xrange(NSpecies):
+        intPointsList.append(vtk.vtkPoints())
+        intScalarsList.append(vtk.vtkFloatArray())
+    
+    # make LUT
+    lut = setupLUT(inputLattice.specieList, inputLattice.specieRGB, colouringOptions)
+    
+    # loop over interstitials, settings points
+    pos = inputLattice.pos
+    spec = inputLattice.specie
+    for i in xrange(NSplit):
+        # first 
+        index = splitInterstitials[3*i+1]
+        specInd1 = spec[index]
         
+        intPointsList[specInd1].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
+        intScalarsList[specInd1].InsertNextValue(specInd1)
+        
+        # second
+        index = splitInterstitials[3*i+2]
+        specInd2 = spec[index]
+        
+        intPointsList[specInd2].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
+        intScalarsList[specInd2].InsertNextValue(specInd2)
+        
+        # counter
+        splitSpecCount[specInd1][specInd2] += 1
+    
+    # now loop over species making actors
+    for i in xrange(NSpecies):
+        
+        intsPolyData = vtk.vtkPolyData()
+        intsPolyData.SetPoints(intPointsList[i])
+        intsPolyData.GetPointData().SetScalars(intScalarsList[i])
+        
+        intsGlyphSource = vtk.vtkSphereSource()
+        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i])
+        intsGlyphSource.SetPhiResolution(res)
+        intsGlyphSource.SetThetaResolution(res)
+        
+        intsGlyph = vtk.vtkGlyph3D()
+        intsGlyph.SetSource(intsGlyphSource.GetOutput())
+        intsGlyph.SetInput(intsPolyData)
+        intsGlyph.SetScaleFactor(1.0)
+        intsGlyph.SetScaleModeToDataScalingOff()
+        
+        intsMapper = vtk.vtkPolyDataMapper()
+        intsMapper.SetInput(intsGlyph.GetOutput())
+        intsMapper.SetLookupTable(lut)
+        intsMapper.SetScalarRange(0, NSpecies - 1)
+        
+        intsActor = vtk.vtkActor()
+        intsActor.SetMapper(intsMapper)
+        
+        actorsCollection.AddItem(intsActor)
+    
+    #----------------------------------------#
+    # split interstitial bonds next
+    #----------------------------------------#
+    NSpecies = len(refLattice.specieList)
+    intPointsList = []
+    intScalarsList = []
+    for i in xrange(NSpecies):
+        intPointsList.append(vtk.vtkPoints())
+        intScalarsList.append(vtk.vtkFloatArray())
+    
+    # make LUT
+    lut = setupLUT(refLattice.specieList, refLattice.specieRGB, colouringOptions)
+    
+    # loop over interstitials, settings points
+    pos = refLattice.pos
+    spec = refLattice.specie
+    for i in xrange(NSplit):
+        index = splitInterstitials[3*i]
+        specInd = spec[index]
+        
+        intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
+        intScalarsList[specInd].InsertNextValue(specInd)
+    
+    # now loop over species making actors
+    for i in xrange(NSpecies):
+        
+        vacsPolyData = vtk.vtkPolyData()
+        vacsPolyData.SetPoints(intPointsList[i])
+        vacsPolyData.GetPointData().SetScalars(intScalarsList[i])
+        
+        vacsGlyphSource = vtk.vtkCubeSource()
+        vacsGlyphSource.SetXLength(1.5 * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetYLength(1.5 * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetZLength(1.5 * refLattice.specieCovalentRadius[i])
+        
+        vacsGlyph = vtk.vtkGlyph3D()
+        vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
+        vacsGlyph.SetInput(vacsPolyData)
+        vacsGlyph.SetScaleFactor(1.0)
+        vacsGlyph.SetScaleModeToDataScalingOff()
+        
+        vacsMapper = vtk.vtkPolyDataMapper()
+        vacsMapper.SetInput(vacsGlyph.GetOutput())
+        vacsMapper.SetLookupTable(lut)
+        vacsMapper.SetScalarRange(0, NSpecies - 1)
+        
+        vacsActor = vtk.vtkActor()
+        vacsActor.SetMapper(vacsMapper)
+        vacsActor.GetProperty().SetSpecular(0.4)
+        vacsActor.GetProperty().SetSpecularPower(10)
+        vacsActor.GetProperty().SetOpacity(0.8)
+        
+        actorsCollection.AddItem(vacsActor)
+    
+    
+    
     #----------------------------------------#
     # antisites occupying atom
     #----------------------------------------#
@@ -1547,7 +1670,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         
         actorsCollection.AddItem(vacsActor)
         
-        return (vacSpecCount, intSpecCount, antSpecCount)
+        return (vacSpecCount, intSpecCount, antSpecCount, splitSpecCount)
 
 
 ################################################################################

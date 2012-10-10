@@ -58,7 +58,8 @@ import_array();
 }
 
 %apply ( int DIM1, int DIM2, int *INPLACE_ARRAY2 ) {
-    (int onAntSpecCntDim1, int onAntSpecCntDim2, int *onAntSpecCount)
+    (int onAntSpecCntDim1, int onAntSpecCntDim2, int *onAntSpecCount),
+    (int splitIntSpecCntDim1, int splitIntSpecCntDim2, int* splitIntSpecCount)
 }
 
 /* define functions here */
@@ -71,7 +72,8 @@ extern int findDefects( int includeVacs, int includeInts, int includeAnts, int N
                         int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClusters,
                         double clusterRadius, int defectClusterDim, int *defectCluster, int vacSpecCountDim, int *vacSpecCount, 
                         int intSpecCountDim, int *intSpecCount, int antSpecCountDim, int *antSpecCount, int onAntSpecCntDim1, 
-                        int onAntSpecCntDim2, int *onAntSpecCount, int minClusterSize, int maxClusterSize, int splitIntDim, int *splitInterstitials);
+                        int onAntSpecCntDim2, int *onAntSpecCount, int splitIntSpecCntDim1, int splitIntSpecCntDim2, int* splitIntSpecCount,
+                        int minClusterSize, int maxClusterSize, int splitIntDim, int *splitInterstitials, int identifySplits);
 %}
 
 extern int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefectsTypeDim, int* NDefectsType, int vacDim, int* vacancies, 
@@ -82,4 +84,5 @@ extern int findDefects( int includeVacs, int includeInts, int includeAnts, int N
                         int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClusters,
                         double clusterRadius, int defectClusterDim, int *defectCluster, int vacSpecCountDim, int *vacSpecCount, 
                         int intSpecCountDim, int *intSpecCount, int antSpecCountDim, int *antSpecCount, int onAntSpecCntDim1, 
-                        int onAntSpecCntDim2, int *onAntSpecCount, int minClusterSize, int maxClusterSize, int splitIntDim, int *splitInterstitials);
+                        int onAntSpecCntDim2, int *onAntSpecCount, int splitIntSpecCntDim1, int splitIntSpecCntDim2, int* splitIntSpecCount,
+                        int minClusterSize, int maxClusterSize, int splitIntDim, int *splitInterstitials, int identifySplits);
