@@ -249,8 +249,15 @@ class FilterTab(QtGui.QWidget):
                 
                 if defectsSettings.identifySplitInts:
                     for i in xrange(len(specListInput)):
-                        for j in xrange(len(specListInput)):
-                            self.onScreenInfo["Defect specie count"].append(["%d %s-%s split ints" % (splitSpecCount[i][j], specListInput[j], specListInput[i]), specRGBInput[i]])
+                        for j in xrange(i, len(specListInput)):
+                            if j == i:
+                                N = splitSpecCount[i][j]
+                                rgb = specRGBInput[i]
+                            else:
+                                N = splitSpecCount[i][j] + splitSpecCount[j][i]
+                                rgb = (specRGBInput[i] + specRGBInput[j]) / 2.0
+                            
+                            self.onScreenInfo["Defect specie count"].append(["%d %s-%s split ints" % (N, specListInput[i], specListInput[j]), rgb])
             
             if showAnts:
                 for i in xrange(len(specListRef)):

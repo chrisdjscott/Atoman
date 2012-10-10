@@ -172,7 +172,7 @@ class Filterer(object):
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites) + len(splitInterstitials)
                 self.NVac = len(vacancies)
-                self.NInt = len(interstitials) + len(splitInterstitials)
+                self.NInt = len(interstitials) + len(splitInterstitials) / 3
                 self.NAnt = len(antisites)
                 
             else:
@@ -472,8 +472,12 @@ class Filterer(object):
             if settings.identifySplitInts:
                 self.log("%d split interstitials" % (NSplit,), 0, 5)
                 for i in xrange(len(inputLattice.specieList)):
-                    for j in xrange(len(inputLattice.specieList)):                        
-                        self.log("%d %s - %s split interstitials" % (splitIntSpecCount[i][j], inputLattice.specieList[j], inputLattice.specieList[i]), 0, 6)
+                    for j in xrange(i, len(inputLattice.specieList)):
+                        if j == i:
+                            N = splitIntSpecCount[i][j]
+                        else:
+                            N = splitIntSpecCount[i][j] + splitIntSpecCount[j][i]
+                        self.log("%d %s - %s split interstitials" % (N, inputLattice.specieList[i], inputLattice.specieList[j]), 0, 6)
         
         if settings.showAntisites:
             self.log("%d antisites" % (NAnt,), 0, 4)

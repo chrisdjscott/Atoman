@@ -48,7 +48,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     double *defectPos, *intPos;
     int NVacNew, NIntNew, NAntNew, numInCluster;
     int NVacNebs, intIndex, vacIndex, *vacNebs;
-    int NSplitInterstitials;
+    int NSplitInterstitials *intStat;
     
     
     /* approx width, must be at least vacRad
@@ -278,6 +278,13 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
             exit(50);
         }
         
+        intStat = calloc(NInterstitials, sizeof(int));
+        if (intStat == NULL)
+        {
+            printf("ERROR: could not allocate intStat\n");
+            exit(50);
+        }
+        
         /* box interstitials */
         for (i=0; i<NInterstitials; i++)
         {
@@ -374,6 +381,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         freeBoxes(boxes);
         free(intPos);
         free(vacNebs);
+        free(intStat);
         
         /* recreate interstitials array */
         count = 0;
