@@ -380,7 +380,6 @@ class CropSettingsDialog(GenericSettingsDialog):
         self.xCropCheckBox.setChecked( self.xEnabled )
         self.yCropCheckBox.setChecked( self.yEnabled )
         self.zCropCheckBox.setChecked( self.zEnabled )
-        print "REFRESHING CROP",self.xmin,self.xmax,self.ymin,self.ymax,self.zmin,self.zmax
     
     def reset(self):
         self.xmin = 0.0
