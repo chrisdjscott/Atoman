@@ -46,7 +46,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     double approxBoxWidth, splitIntRad, splitIntRad2;
     struct Boxes *boxes;
     double *defectPos, *intPos;
-    int NVacNew, NIntNew, NAntNew, numInCluster;
+    int NVacNew, NIntNew, NAntNew, numInCluster, NSplitNew;
     int NVacNebs, intIndex, vacIndex, *vacNebs;
     int NSplitInterstitials, *intStat, *defectClusterSplit, splitIndexes[3];
     
@@ -496,7 +496,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     if (findClustersFlag)
     {
         /* build positions array of all defects */
-        NDefects = NVacancies + NInterstitials + NAntisites;
+        NDefects = NVacancies + NInterstitials + NAntisites;// + 3 * NSplitInterstitials;
         defectPos = malloc(3 * NDefects * sizeof(double));
         if (defectPos == NULL)
         {
@@ -539,13 +539,34 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
             count++;
         }
         
+//        for (i=0; i<NSplitInterstitials; i++)
+//        {
+//            index = splitInterstitials[3*i];
+//            defectPos[3*count] = refPos[3*index];
+//            defectPos[3*count+1] = refPos[3*index+1];
+//            defectPos[3*count+2] = refPos[3*index+2];
+//            count++;
+//            
+//            index = splitInterstitials[3*i+1];
+//            defectPos[3*count] = pos[3*index];
+//            defectPos[3*count+1] = pos[3*index+1];
+//            defectPos[3*count+2] = pos[3*index+2];
+//            count++;
+//            
+//            index = splitInterstitials[3*i+2];
+//            defectPos[3*count] = pos[3*index];
+//            defectPos[3*count+1] = pos[3*index+1];
+//            defectPos[3*count+2] = pos[3*index+2];
+//            count++;
+//        }
+        
         /* box defects */
         approxBoxWidth = clusterRadius;
         boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
         putAtomsInBoxes(NDefects, defectPos, boxes);
         
         /* number of defects per cluster */
-        NDefectsCluster = malloc( (refNAtoms + NAtoms) * sizeof(int) );
+        NDefectsCluster = malloc(NDefects * sizeof(int));
         if (NDefectsCluster == NULL)
         {
             printf("ERROR: Boxes: could not allocate NDefectsCluster\n");
@@ -649,6 +670,16 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
             
             NAntNew++;
         }
+        
+        /* split interstitials */
+//        NSplitNew = 0;
+//        for (i=0; i<NSplitInterstitials; i++)
+//        {
+//            
+//            
+//            
+//            
+//        }
         
         /* number of visible defects */
         NVacancies = NVacNew;
