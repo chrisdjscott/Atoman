@@ -48,7 +48,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     double *defectPos, *intPos;
     int NVacNew, NIntNew, NAntNew, numInCluster;
     int NVacNebs, intIndex, vacIndex, *vacNebs;
-    int NSplitInterstitials *intStat;
+    int NSplitInterstitials, *intStat;
     
     
     /* approx width, must be at least vacRad
