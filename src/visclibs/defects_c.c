@@ -262,7 +262,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     /* look for split interstitials */
     if (identifySplits && NVacancies > 0 && NInterstitials > 1)
     {
-        printf("IDENTIFYING SPLIT INTS\n");
+//        printf("IDENTIFYING SPLIT INTS\n");
         
         /* build positions array of all defects */
         NDefects = NVacancies + NInterstitials;
@@ -341,7 +341,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
             if (NDefectsCluster[i] == 3)
             {
                 /* check if 2 interstitials and 1 vacancy */
-                printf("  POSSIBLE SPLIT INTERSTITIAL\n");
+//                printf("  POSSIBLE SPLIT INTERSTITIAL\n");
                 
                 count = 0;
                 vacCount = 0;
@@ -361,7 +361,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
                 
                 if (vacCount == 1)
                 {
-                    printf("    FOUND SPLIT INTERSTITIAL\n");
+//                    printf("    FOUND SPLIT INTERSTITIAL\n");
                     
                     /* indexes */
                     count = 1;
@@ -421,7 +421,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         NVacancies = count;
     }
     
-    printf("NVACS %d; NINTS %d; NSPLITINTS %d\n", NVacancies, NInterstitials, NSplitInterstitials);
+//    printf("NVACS %d; NINTS %d; NSPLITINTS %d\n", NVacancies, NInterstitials, NSplitInterstitials);
     
     /* exclude defect types and species here... */
     if (!includeInts)
@@ -490,7 +490,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         NAntisites = 0;
     }
     
-    printf("NVACS %d; NINTS %d; NSPLITINTS %d\n", NVacancies, NInterstitials, NSplitInterstitials);
+//    printf("NVACS %d; NINTS %d; NSPLITINTS %d\n", NVacancies, NInterstitials, NSplitInterstitials);
     
     /* find clusters of defects */
     if (findClustersFlag)
@@ -708,7 +708,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
     }
     
     /* counters */
-    NDefects = NVacancies + NInterstitials + NAntisites;
+    NDefects = NVacancies + NInterstitials + NAntisites + NSplitInterstitials;
     
     NDefectsType[0] = NDefects;
     NDefectsType[1] = NVacancies;

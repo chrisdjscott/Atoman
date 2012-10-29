@@ -378,7 +378,7 @@ class Filterer(object):
         inputLattice = self.mainWindow.inputState
         refLattice = self.mainWindow.refState
         
-    # set up arrays
+        # set up arrays
         interstitials = np.empty(inputLattice.NAtoms, np.int32)
         
         if settings.identifySplitInts:

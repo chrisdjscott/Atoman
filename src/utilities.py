@@ -25,7 +25,7 @@ def resourcePath(relative):
     PyInstaller bundle or from command line.
     
     """
-    return os.path.join(os.environ.get("_MEIPASS2", sys.path[0]), relative)
+    return os.path.join(os.environ.get("_MEIPASS2", os.path.abspath(os.path.dirname(__file__))), relative)
 
 
 ################################################################################
