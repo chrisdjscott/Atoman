@@ -249,7 +249,7 @@ class ElementEditor(QtGui.QDialog):
             self.applyChanges()
             
             # save to file
-            elements.write(resourcePath("data/atoms.IN"))
+            elements.write(resourcePath("atoms.IN"))
             
             self.parent.setStatus("Saved element properties")
     

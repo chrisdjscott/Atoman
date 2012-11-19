@@ -1,0 +1,12 @@
+*.pyc
+*.o
+*.so
+*.exe
+.pydevproject
+.project
+.DS_Store
+*_wrap.c
+.settings
+dist/
+build/
+*.log

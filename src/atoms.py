@@ -163,7 +163,7 @@ def initialise():
     Create and read in Elements object.
     
     """
-    filename = resourcePath("data/atoms.IN")
+    filename = resourcePath("atoms.IN")
     
     elements.read(filename)
     

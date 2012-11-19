@@ -5,9 +5,7 @@ Utility methods
 @author: Chris Scott
 
 """
-
 import os
-import sys
 import random
 import string
 import glob
@@ -25,8 +23,21 @@ def resourcePath(relative):
     PyInstaller bundle or from command line.
     
     """
-    return os.path.join(os.environ.get("_MEIPASS2", os.path.abspath(os.path.dirname(__file__))), relative)
-
+    # first look in pyinstaller bundle
+    path = os.environ.get("_MEIPASS2", None)
+    if path is not None:
+        os.path.join(path, "data")
+    
+    else:
+        # then look in py2app bundle
+        path = os.environ.get("RESOURCEPATH", None)
+        if path is None:
+            # then look in source code directory
+            path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
+    
+    path = os.path.join(path, relative)
+    
+    return path
 
 ################################################################################
 def iconPath(icon):

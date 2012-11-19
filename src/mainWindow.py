@@ -11,7 +11,8 @@ import shutil
 import platform
 import tempfile
 
-from PyQt4 import QtGui, QtCore, Qt
+import PyQt4.Qt
+from PyQt4 import QtGui, QtCore
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import numpy as np
@@ -313,7 +314,7 @@ class MainWindow(QtGui.QMainWindow):
                 elements.read(fname)
                 
                 # overwrite current file
-                elements.write(resourcePath("data/atoms.IN"))
+                elements.write(resourcePath("atoms.IN"))
                 
                 # set on Lattice objects too
                 self.inputState.refreshElementProperties()
@@ -737,7 +738,7 @@ class MainWindow(QtGui.QMainWindow):
                                 <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
                                    by Marc Robinson.</p>
                                 <p>Python %s - Qt %s - PyQt %s  - VTK %s on %s""" % (
-                                __version__, platform.python_version(), Qt.QT_VERSION_STR, Qt.PYQT_VERSION_STR,
+                                __version__, platform.python_version(), PyQt4.Qt.QT_VERSION_STR, PyQt4.Qt.PYQT_VERSION_STR,
                                 vtk.vtkVersion.GetVTKVersion(), platform.system()))
     
     def createAction(self, text, slot=None, shortcut=None, icon=None,
