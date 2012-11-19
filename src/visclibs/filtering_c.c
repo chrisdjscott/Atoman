@@ -139,7 +139,7 @@ int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, doubl
 /*******************************************************************************
  ** Displacement filter
  *******************************************************************************/
-int displacementFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, int refPosDim, double *refPos, 
+int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int posDim, double *pos, int refPosDim, double *refPos, 
                        int cellDimsDim, double *cellDims, int PBCDim, int *PBC, double minDisp, double maxDisp)
 {
     int i, NVisible, index;
@@ -162,6 +162,7 @@ int displacementFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *po
         if (sep2 <= maxDisp2 && sep2 >= minDisp2)
         {
             visibleAtoms[NVisible] = index;
+            scalars[NVisible] = sqrt(sep2);
             NVisible++;
         }
     }
@@ -173,7 +174,7 @@ int displacementFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *po
 /*******************************************************************************
  ** Kinetic energy filter
  *******************************************************************************/
-int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double minKE, double maxKE)
+int KEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int KEDim, double *KE, double minKE, double maxKE)
 {
     int i, NVisible, index;
     
@@ -189,7 +190,8 @@ int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double mi
         }
         else
         {
-            visibleAtoms[i] = index;
+            visibleAtoms[NVisible] = index;
+            scalars[NVisible] = KE[index];
             NVisible++;
         }
     }
@@ -217,8 +219,8 @@ int PEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars,
         }
         else
         {
-            visibleAtoms[i] = index;
-            scalars[i] = PE[index];
+            visibleAtoms[NVisible] = index;
+            scalars[NVisible] = PE[index];
             NVisible++;
         }
     }
@@ -230,7 +232,7 @@ int PEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars,
 /*******************************************************************************
  ** Charge energy filter
  *******************************************************************************/
-int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge)
+int chargeFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int chargeDim, double *charge, double minCharge, double maxCharge)
 {
     int i, NVisible, index;
     
@@ -246,7 +248,8 @@ int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charg
         }
         else
         {
-            visibleAtoms[i] = index;
+            visibleAtoms[NVisible] = index;
+            scalars[NVisible] = charge[index];
             NVisible++;
         }
     }

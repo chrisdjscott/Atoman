@@ -1089,6 +1089,8 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     """
     NVisible = len(visibleAtoms)
     
+    print "RENDERING: COLOUR BY", colouringOptions.colourBy
+    
     if NVisibleForRes is None:
         NVisibleForRes = NVisible
     
@@ -1170,8 +1172,11 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         if colouringOptions.colourBy == "Specie":
             atomsMapper.SetScalarRange(0, NSpecies - 1)
         
-        else:
+        elif colouringOptions.colourBy == "Height":
             atomsMapper.SetScalarRange(colouringOptions.minVal, colouringOptions.maxVal)
+        
+        else:
+            atomsMapper.SetScalarRange(colouringOptions.scalarMinSpin.value(), colouringOptions.scalarMaxSpin.value())
         
         atomsActor = vtk.vtkActor()
         atomsActor.SetMapper(atomsMapper)
@@ -1186,7 +1191,12 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         scalarBar = vtk.vtkScalarBarActor()
         scalarBar.SetLookupTable(lut)
         
-        scalarBar.SetTitle(colouringOptions.scalarBarText)
+        if colouringOptions.colourBy == "Height":
+            title = colouringOptions.scalarBarText
+        else:
+            title = str(colouringOptions.scalarBarTextEdit2.text())
+        
+        scalarBar.SetTitle(title)
         scalarBar.SetOrientationToHorizontal()
         
         lprop = scalarBar.GetTitleTextProperty()

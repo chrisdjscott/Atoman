@@ -148,12 +148,14 @@ class Filterer(object):
             
             elif filterName == "Displacement":
                 self.displacementFilter(filterSettings)
+                self.scalarsType = filterName
             
             elif filterName == "Point defects":
                 interstitials, vacancies, antisites, onAntisites, splitInterstitials, clusterList = self.pointDefectFilter(filterSettings)
             
             elif filterName == "Kinetic energy":
                 self.KEFilter(filterSettings)
+                self.scalarsType = filterName
             
             elif filterName == "Potential energy":
                 self.PEFilter(filterSettings)
@@ -161,6 +163,7 @@ class Filterer(object):
             
             elif filterName == "Charge":
                 self.chargeFilter(filterSettings)
+                self.scalarsType = filterName
             
             elif filterName == "Cluster":
                 clusterList = self.clusterFilter(filterSettings)
@@ -316,10 +319,11 @@ class Filterer(object):
         
         else:
             # run displacement filter
-            NVisible = filtering_c.displacementFilter(self.visibleAtoms, inputState.pos, refState.pos, refState.cellDims, 
+            NVisible = filtering_c.displacementFilter(self.visibleAtoms, self.scalars, inputState.pos, refState.pos, refState.cellDims, 
                                                       self.mainWindow.PBC, settings.minDisplacement, settings.maxDisplacement)
             
             self.visibleAtoms.resize(NVisible, refcheck=False)
+            self.scalars.resize(NVisible, refcheck=False)
     
     def cropFilter(self, settings):
         """
@@ -353,9 +357,10 @@ class Filterer(object):
         """
         lattice = self.mainWindow.inputState
         
-        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge)
+        NVisible = filtering_c.chargeFilter(self.visibleAtoms, self.scalars, lattice.charge, settings.minCharge, settings.maxCharge)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
+        self.scalars.resize(NVisible, refcheck=False)
     
     def KEFilter(self, settings):
         """
@@ -364,9 +369,10 @@ class Filterer(object):
         """
         lattice = self.mainWindow.inputState
         
-        NVisible = filtering_c.KEFilter(self.visibleAtoms, lattice.KE, settings.minKE, settings.maxKE)
+        NVisible = filtering_c.KEFilter(self.visibleAtoms, self.scalars, lattice.KE, settings.minKE, settings.maxKE)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
+        self.scalars.resize(NVisible, refcheck=False)
     
     def PEFilter(self, settings):
         """

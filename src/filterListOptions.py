@@ -182,8 +182,13 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(setToScalarRangeButton)
         
         # scalar bar text
+        self.scalarBarTextEdit2 = QtGui.QLineEdit("<insert title>")
         
-        
+        label = QtGui.QLabel("Scalar bar title:")
+        row = self.scalarOptions.newRow()
+        row.addWidget(label)
+        row = self.scalarOptions.newRow()
+        row.addWidget(self.scalarBarTextEdit2)
         
         self.stackedWidget.addWidget(self.scalarOptions)
         
@@ -195,8 +200,6 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         """
         scalars = self.parent.filterer.scalars
-        
-        print "SCALARS", len(scalars), scalars
         
         if len(scalars):
             minVal = min(scalars)
@@ -214,21 +217,19 @@ class ColouringOptionsWindow(QtGui.QDialog):
         Refresh colour by scalar options.
         
         """
-        selectScalar = False
-        if self.colouringCombo.count() == 4:
+        if self.colouringCombo.count() == 4 and self.colouringCombo.currentText() == scalarType:
+            print "SAME"
+        
+        else:
             if self.colouringCombo.currentIndex() == 3:
-                if str(self.colouringCombo.currentText()) == scalarType:
-                    selectScalar = True
-                
+                print "SET ZERO"
                 self.colouringCombo.setCurrentIndex(0)
             
             self.colouringCombo.removeItem(3)
-        
-        if len(scalarType):
-            self.colouringCombo.addItem(scalarType)
             
-            if selectScalar:
-                self.colouringCombo.setCurrentIndex(3)
+            if len(scalarType):
+                self.colouringCombo.addItem(scalarType)
+                print "ADD", scalarType
     
     def scalarBarTextChanged(self, text):
         """
