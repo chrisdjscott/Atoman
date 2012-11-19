@@ -201,7 +201,7 @@ int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double mi
 /*******************************************************************************
  ** Potential energy filter
  *******************************************************************************/
-int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE)
+int PEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int PEDim, double *PE, double minPE, double maxPE)
 {
     int i, NVisible, index;
     
@@ -218,6 +218,7 @@ int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double mi
         else
         {
             visibleAtoms[i] = index;
+            scalars[i] = PE[index];
             NVisible++;
         }
     }

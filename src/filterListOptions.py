@@ -58,6 +58,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.colouringCombo.addItem("Specie")
         self.colouringCombo.addItem("Height")
         self.colouringCombo.addItem("Solid colour")
+#        self.colouringCombo.addItem("Scalar")
         self.colouringCombo.currentIndexChanged.connect(self.colourByChanged)
         
         windowLayout.addWidget(self.colouringCombo)
@@ -143,9 +144,91 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row = solidColourOptions.newRow()
         row.addWidget(self.colourButton)
         
-        self.stackedWidget.addWidget(solidColourOptions)  
+        self.stackedWidget.addWidget(solidColourOptions)
+        
+        # scalar widget
+        self.scalarOptions = genericForm.GenericForm(self, 0, "Scalar colour options")
+        
+        # min/max
+        self.scalarMinSpin = QtGui.QDoubleSpinBox()
+        self.scalarMinSpin.setSingleStep(0.1)
+        self.scalarMinSpin.setMinimum(-9999.0)
+        self.scalarMinSpin.setMaximum(9999.0)
+        self.scalarMinSpin.setValue(0)
+        
+        self.scalarMaxSpin = QtGui.QDoubleSpinBox()
+        self.scalarMaxSpin.setSingleStep(0.1)
+        self.scalarMaxSpin.setMinimum(-9999.0)
+        self.scalarMaxSpin.setMaximum(9999.0)
+        self.scalarMaxSpin.setValue(1)
+        
+        label = QtGui.QLabel( " Min " )
+        label2 = QtGui.QLabel( " Max " )
+        
+        row = self.scalarOptions.newRow()
+        row.addWidget(label)
+        row.addWidget(self.scalarMinSpin)
+        
+        row = self.scalarOptions.newRow()
+        row.addWidget(label2)
+        row.addWidget(self.scalarMaxSpin)
+        
+        # set to scalar range
+        setToScalarRangeButton = QtGui.QPushButton("Set to scalar range")
+        setToScalarRangeButton.setAutoDefault(0)
+        setToScalarRangeButton.clicked.connect(self.setToScalarRange)
+        
+        row = self.scalarOptions.newRow()
+        row.addWidget(setToScalarRangeButton)
+        
+        # scalar bar text
+        
+        
+        
+        self.stackedWidget.addWidget(self.scalarOptions)
         
         windowLayout.addWidget(self.stackedWidget)
+    
+    def setToScalarRange(self):
+        """
+        Set min/max to scalar range.
+        
+        """
+        scalars = self.parent.filterer.scalars
+        
+        print "SCALARS", len(scalars), scalars
+        
+        if len(scalars):
+            minVal = min(scalars)
+            maxVal = max(scalars)
+            if minVal == maxVal:
+                maxVal += 1
+            
+            print "MIN,MAX", minVal, maxVal
+            
+            self.scalarMinSpin.setValue(minVal)
+            self.scalarMaxSpin.setValue(maxVal)
+    
+    def refreshScalarColourOption(self, scalarType):
+        """
+        Refresh colour by scalar options.
+        
+        """
+        selectScalar = False
+        if self.colouringCombo.count() == 4:
+            if self.colouringCombo.currentIndex() == 3:
+                if str(self.colouringCombo.currentText()) == scalarType:
+                    selectScalar = True
+                
+                self.colouringCombo.setCurrentIndex(0)
+            
+            self.colouringCombo.removeItem(3)
+        
+        if len(scalarType):
+            self.colouringCombo.addItem(scalarType)
+            
+            if selectScalar:
+                self.colouringCombo.setCurrentIndex(3)
     
     def scalarBarTextChanged(self, text):
         """

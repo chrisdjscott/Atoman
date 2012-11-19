@@ -54,6 +54,9 @@ class Filterer(object):
         self.colouringOptions = self.parent.colouringOptions
         self.scalarBarAdded = False
         self.scalarBar = None
+        
+        self.scalars = np.asarray([], dtype=np.float64)
+        self.scalarsType = ""
     
     def removeActors(self):
         """
@@ -117,6 +120,7 @@ class Filterer(object):
         
         if not self.parent.defectFilterSelected:
             self.visibleAtoms = np.arange(NAtoms, dtype=np.int32)
+            self.scalars = np.empty(NAtoms, dtype=np.float64)
             self.log("%d visible atoms" % (len(self.visibleAtoms),), 0, 2)
         
         self.availableScreenInfo = {}
@@ -127,6 +131,7 @@ class Filterer(object):
         
         # run filters
         filterName = ""
+        self.scalarsType = ""
         currentFilters = self.parent.currentFilters
         currentSettings = self.parent.currentSettings
         for i in xrange(len(currentFilters)):
@@ -152,6 +157,7 @@ class Filterer(object):
             
             elif filterName == "Potential energy":
                 self.PEFilter(filterSettings)
+                self.scalarsType = filterName
             
             elif filterName == "Charge":
                 self.chargeFilter(filterSettings)
@@ -182,7 +188,10 @@ class Filterer(object):
             
             self.log("%d visible atoms" % (NVis,), 0, 3)
             self.availableScreenInfo["visible"] = NVis
-            
+        
+        # refresh available scalars in extra options dialog
+        self.parent.colouringOptions.refreshScalarColourOption(self.scalarsType)
+        
         # render
         povfile = "atoms%d.pov" % (self.parent.tab,)
         if self.parent.defectFilterSelected:
@@ -226,7 +235,7 @@ class Filterer(object):
                     NVisibleForRes = None
                 
                 self.scalarBar, visSpecCount = rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
-                                                                                    self.colouringOptions, povfile, NVisibleForRes=NVisibleForRes)
+                                                                                    self.colouringOptions, povfile, self.scalars, NVisibleForRes=NVisibleForRes)
                 
                 self.visibleSpecieCount = visSpecCount
                 
@@ -366,9 +375,10 @@ class Filterer(object):
         """
         lattice = self.mainWindow.inputState
         
-        NVisible = filtering_c.PEFilter(self.visibleAtoms, lattice.PE, settings.minPE, settings.maxPE)
+        NVisible = filtering_c.PEFilter(self.visibleAtoms, self.scalars, lattice.PE, settings.minPE, settings.maxPE)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
+        self.scalars.resize(NVisible, refcheck=False)
     
     def pointDefectFilter(self, settings):
         """

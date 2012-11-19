@@ -33,7 +33,8 @@ import_array();
     (int cellDimsDim, double *cellDims),
     (int KEDim, double *KE),
     (int PEDim, double *PE),
-    (int chargeDim, double *charge)
+    (int chargeDim, double *charge),
+    (int scalarsDim, double *scalars)
 }
 
 /* 1d arrays of chars */
@@ -60,7 +61,7 @@ extern int displacementFilter(int NVisibleIn, int* visibleAtoms, int posDim, dou
 
 extern int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double minKE, double maxKE);
 
-extern int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE);
+extern int PEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int PEDim, double *PE, double minPE, double maxPE);
 
 extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge);
 
@@ -78,7 +79,7 @@ extern int displacementFilter(int NVisibleIn, int* visibleAtoms, int posDim, dou
 
 extern int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double minKE, double maxKE);
 
-extern int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE);
+extern int PEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int PEDim, double *PE, double minPE, double maxPE);
 
 extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge);
 

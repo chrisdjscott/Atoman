@@ -1065,17 +1065,24 @@ def setupLUT(specieList, specieRGB, colouringOptions):
             elif colouringOptions.colourBy == "Solid colour":
                 lut.SetTableValue(i, colouringOptions.solidColourRGB[0], colouringOptions.solidColourRGB[1], colouringOptions.solidColourRGB[2])
     
-    else:
+    elif colouringOptions.colourBy == "Height":
         lut.SetNumberOfColors(1024)
         lut.SetHueRange(0.667,0.0)
         lut.SetRange(colouringOptions.minVal, colouringOptions.maxVal)    
         lut.SetRampToLinear()
         lut.Build()
-        
+    
+    else:
+        lut.SetNumberOfColors(1024)
+        lut.SetHueRange(0.667,0.0)
+        lut.SetRange(colouringOptions.scalarMinSpin.value(), colouringOptions.scalarMaxSpin.value())    
+        lut.SetRampToLinear()
+        lut.Build()
+    
     return lut
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, NVisibleForRes=None):
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, NVisibleForRes=None):
     """
     Make the actors for the filtered system
     
@@ -1125,6 +1132,9 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         
         elif colouringOptions.colourBy == "Height":
             scalar = pos[3*index+colouringOptions.heightAxis]
+        
+        else:
+            scalar = scalarsArray[i]
         
         # store scalar value
         atomScalarsList[specInd].InsertNextValue(scalar)
