@@ -818,7 +818,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 log("Current file: %s" % (currentFile,), 0, 1)
                 
                 # first open the file
-                tmpname = self.mainWindow.openFile(currentFile, "input")
+                tmpname = self.mainWindow.openFile(currentFile, "input", rouletteIndex=i-1)
                 
                 # exit if cancelled
                 if progDialog.wasCanceled():

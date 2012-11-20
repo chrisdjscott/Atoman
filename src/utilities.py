@@ -225,5 +225,32 @@ def simulationTimeLine(simTimeInFs):
     
     return simTime
 
+################################################################################
+def getTimeFromRoulette(rouletteIndex):
+    """
+    Attempt to get time from KMC Roulette file.
+    
+    """
+    fn = None
+    if os.path.exists("Roulette%d.OUT" % rouletteIndex):
+        fn = "Roulette%d.OUT" % rouletteIndex
+    
+    elif os.path.exists("../Step%d/Roulette.OUT" % rouletteIndex):
+        fn = "../Step%d/Roulette.OUT" % rouletteIndex
+    
+    timeInFs = None
+    if fn is not None:
+        f = open(fn)
+        
+        for line in f:
+            if line[:15] == "Simulation time":
+                array = line.split()
+                timeStr = array[2]
+                timeInS = float(timeStr)
+                timeInFs = timeInS * 1e15
+    
+    return timeInFs
+    
+
 
 

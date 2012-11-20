@@ -13,11 +13,11 @@ import numpy as np
 
 from visclibs import input_c
 from atoms import elements
-
+import utilities
 
 
 ################################################################################
-def readFile(filename, tmpLocation, lattice, fileType, state, log, refLattice=None):
+def readFile(filename, tmpLocation, lattice, fileType, state, log, refLattice=None, rouletteIndex=None):
     """
     Read file.
     
@@ -51,7 +51,7 @@ def readFile(filename, tmpLocation, lattice, fileType, state, log, refLattice=No
             
     elif fileType == "DAT":
         
-        status = readLattice(filepath, tmpLocation, lattice, fileType, state, log)
+        status = readLattice(filepath, tmpLocation, lattice, fileType, state, log, rouletteIndex)
     
     cleanUnzipped(filepath, zipFlag)
     
@@ -59,7 +59,7 @@ def readFile(filename, tmpLocation, lattice, fileType, state, log, refLattice=No
 
 
 ################################################################################
-def readLattice(filename, tmpLocation, lattice, fileType, state, log):
+def readLattice(filename, tmpLocation, lattice, fileType, state, log, rouletteIndex):
     
     f = open(filename)
             
@@ -113,6 +113,13 @@ def readLattice(filename, tmpLocation, lattice, fileType, state, log):
         lattice.specieRGB[i][2] = rgbtemp[2]
         
         log("%d %s (%s) atoms" % (specieCountTemp[i], specieListTemp[i], elements.atomName(specieListTemp[i])), 0, 2)
+    
+    # attempt to read time from roulette
+    if rouletteIndex is not None:
+        simTime = utilities.getTimeFromRoulette(rouletteIndex)
+        
+        if simTime is not None:
+            lattice.simTime = simTime
     
     return 0
 

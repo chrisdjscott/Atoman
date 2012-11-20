@@ -563,7 +563,7 @@ class MainWindow(QtGui.QMainWindow):
         
         return result
         
-    def openFile(self, filename, state):
+    def openFile(self, filename, state, rouletteIndex=None):
         """
         Open file
         
@@ -601,7 +601,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.readLBOMDIN()
                 
             else:
-                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write)
+                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write, rouletteIndex=rouletteIndex)
         
         else:
             self.displayError("openFile: Unrecognised file type: "+self.fileType)
