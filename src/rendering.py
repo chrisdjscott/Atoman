@@ -1072,6 +1072,13 @@ def setupLUT(specieList, specieRGB, colouringOptions):
         lut.SetRampToLinear()
         lut.Build()
     
+    elif colouringOptions.colourBy == "Atom property":
+        lut.SetNumberOfColors(1024)
+        lut.SetHueRange(0.667,0.0)
+        lut.SetRange(colouringOptions.propertyMinSpin.value(), colouringOptions.propertyMaxSpin.value())    
+        lut.SetRampToLinear()
+        lut.Build()
+    
     else:
         lut.SetNumberOfColors(1024)
         lut.SetHueRange(0.667,0.0)
@@ -1135,6 +1142,14 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         elif colouringOptions.colourBy == "Height":
             scalar = pos[3*index+colouringOptions.heightAxis]
         
+        elif colouringOptions.colourBy == "Atom property":
+            if colouringOptions.atomPropertyType == "Kinetic energy":
+                scalar = lattice.KE[index]
+            elif colouringOptions.atomPropertyType == "Potential energy":
+                scalar = lattice.PE[index]
+            else:
+                scalar = lattice.charge[index]
+        
         else:
             scalar = scalarsArray[i]
         
@@ -1175,6 +1190,9 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         elif colouringOptions.colourBy == "Height":
             atomsMapper.SetScalarRange(colouringOptions.minVal, colouringOptions.maxVal)
         
+        elif colouringOptions.colourBy == "Atom property":
+            atomsMapper.SetScalarRange(colouringOptions.propertyMinSpin.value(), colouringOptions.propertyMaxSpin.value())
+        
         else:
             atomsMapper.SetScalarRange(colouringOptions.scalarMinSpin.value(), colouringOptions.scalarMaxSpin.value())
         
@@ -1193,6 +1211,8 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         
         if colouringOptions.colourBy == "Height":
             title = colouringOptions.scalarBarText
+        elif colouringOptions.colourBy == "Atom property":
+            title = str(colouringOptions.scalarBarTextEdit3.text())
         else:
             title = str(colouringOptions.scalarBarTextEdit2.text())
         

@@ -155,15 +155,12 @@ class Filterer(object):
             
             elif filterName == "Kinetic energy":
                 self.KEFilter(filterSettings)
-                self.scalarsType = filterName
             
             elif filterName == "Potential energy":
                 self.PEFilter(filterSettings)
-                self.scalarsType = filterName
             
             elif filterName == "Charge":
                 self.chargeFilter(filterSettings)
-                self.scalarsType = filterName
             
             elif filterName == "Cluster":
                 clusterList = self.clusterFilter(filterSettings)

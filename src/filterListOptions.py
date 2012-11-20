@@ -49,6 +49,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
                                float(self.solidColour.green()) / 255.0,
                                float(self.solidColour.blue()) / 255.0)
         self.scalarBarText = "Height in Y (A)"
+        self.atomPropertyType = "Kinetic energy"
         
         # layout
         windowLayout = QtGui.QVBoxLayout(self)
@@ -58,6 +59,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.colouringCombo.addItem("Specie")
         self.colouringCombo.addItem("Height")
         self.colouringCombo.addItem("Solid colour")
+        self.colouringCombo.addItem("Atom property")
 #        self.colouringCombo.addItem("Scalar")
         self.colouringCombo.currentIndexChanged.connect(self.colourByChanged)
         
@@ -146,6 +148,59 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         self.stackedWidget.addWidget(solidColourOptions)
         
+        # atom property widget
+        atomPropertyOptions = genericForm.GenericForm(self, 0, "Atom property options")
+        
+        # type
+        self.propertyTypeCombo = QtGui.QComboBox()
+        self.propertyTypeCombo.addItems(("Kinetic energy", "Potential energy", "Charge"))
+        self.propertyTypeCombo.currentIndexChanged.connect(self.propertyTypeChanged)
+        row = atomPropertyOptions.newRow()
+        row.addWidget(self.propertyTypeCombo)
+        
+        # min/max
+        self.propertyMinSpin = QtGui.QDoubleSpinBox()
+        self.propertyMinSpin.setSingleStep(0.1)
+        self.propertyMinSpin.setMinimum(-9999.0)
+        self.propertyMinSpin.setMaximum(9999.0)
+        self.propertyMinSpin.setValue(0)
+        
+        self.propertyMaxSpin = QtGui.QDoubleSpinBox()
+        self.propertyMaxSpin.setSingleStep(0.1)
+        self.propertyMaxSpin.setMinimum(-9999.0)
+        self.propertyMaxSpin.setMaximum(9999.0)
+        self.propertyMaxSpin.setValue(1)
+        
+        label = QtGui.QLabel( " Min " )
+        label2 = QtGui.QLabel( " Max " )
+        
+        row = atomPropertyOptions.newRow()
+        row.addWidget(label)
+        row.addWidget(self.propertyMinSpin)
+        
+        row = atomPropertyOptions.newRow()
+        row.addWidget(label2)
+        row.addWidget(self.propertyMaxSpin)
+        
+        # set to scalar range
+        setToPropertyRangeButton = QtGui.QPushButton("Set to scalar range")
+        setToPropertyRangeButton.setAutoDefault(0)
+        setToPropertyRangeButton.clicked.connect(self.setToPropertyRange)
+        
+        row = atomPropertyOptions.newRow()
+        row.addWidget(setToPropertyRangeButton)
+        
+        # scalar bar text
+        self.scalarBarTextEdit3 = QtGui.QLineEdit("<insert title>")
+        
+        label = QtGui.QLabel("Scalar bar title:")
+        row = atomPropertyOptions.newRow()
+        row.addWidget(label)
+        row = atomPropertyOptions.newRow()
+        row.addWidget(self.scalarBarTextEdit3)
+        
+        self.stackedWidget.addWidget(atomPropertyOptions)
+        
         # scalar widget
         self.scalarOptions = genericForm.GenericForm(self, 0, "Scalar colour options")
         
@@ -194,6 +249,40 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         windowLayout.addWidget(self.stackedWidget)
     
+    def propertyTypeChanged(self, val):
+        """
+        Property type changed.
+        
+        """
+        self.atomPropertyType = str(self.propertyTypeCombo.currentText())
+        
+        self.parent.colouringOptionsButton.setText("Colouring options: %s" % self.atomPropertyType)
+    
+    def setToPropertyRange(self):
+        """
+        Set min/max to scalar range.
+        
+        """
+        lattice = self.parent.mainWindow.inputState
+        
+        if self.atomPropertyType == "Kinetic energy":
+            minVal = min(lattice.KE)
+            maxVal = max(lattice.KE)
+        
+        elif self.atomPropertyType == "Potential energy":
+            minVal = min(lattice.PE)
+            maxVal = max(lattice.PE)
+        
+        else:
+            minVal = min(lattice.charge)
+            maxVal = max(lattice.charge)
+        
+        if minVal == maxVal:
+            maxVal += 1
+        
+        self.propertyMinSpin.setValue(minVal)
+        self.propertyMaxSpin.setValue(maxVal)
+    
     def setToScalarRange(self):
         """
         Set min/max to scalar range.
@@ -217,15 +306,15 @@ class ColouringOptionsWindow(QtGui.QDialog):
         Refresh colour by scalar options.
         
         """
-        if self.colouringCombo.count() == 4 and self.colouringCombo.currentText() == scalarType:
+        if self.colouringCombo.count() == 5 and self.colouringCombo.currentText() == scalarType:
             print "SAME"
         
         else:
-            if self.colouringCombo.currentIndex() == 3:
+            if self.colouringCombo.currentIndex() == 4:
                 print "SET ZERO"
                 self.colouringCombo.setCurrentIndex(0)
             
-            self.colouringCombo.removeItem(3)
+            self.colouringCombo.removeItem(4)
             
             if len(scalarType):
                 self.colouringCombo.addItem(scalarType)
@@ -292,7 +381,12 @@ class ColouringOptionsWindow(QtGui.QDialog):
         """
         self.colourBy = str(self.colouringCombo.currentText())
         
-        self.parent.colouringOptionsButton.setText("Colouring options: %s" % self.colourBy)
+        if self.colourBy == "Atom property":
+            colourByText = str(self.propertyTypeCombo.currentText())
+        else:
+            colourByText = self.colourBy
+        
+        self.parent.colouringOptionsButton.setText("Colouring options: %s" % colourByText)
         
         self.stackedWidget.setCurrentIndex(index)
     
