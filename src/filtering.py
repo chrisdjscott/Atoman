@@ -18,6 +18,7 @@ from visclibs import filtering_c
 from visclibs import defects_c
 from visclibs import clusters_c
 import rendering
+import vectors
 
 
 ################################################################################
@@ -115,6 +116,14 @@ class Filterer(object):
         if not self.parent.isPersistentList():
             self.removeActors()
         
+        # reset
+        self.visibleAtoms = np.asarray([], dtype=np.int32)
+        self.interstitials = np.asarray([], dtype=np.int32)
+        self.vacancies = np.asarray([], dtype=np.int32)
+        self.antisites = np.asarray([], dtype=np.int32)
+        self.onAntisites = np.asarray([], dtype=np.int32)
+        self.splitInterstitials = np.asarray([], dtype=np.int32)
+                
         # first set up visible atoms arrays
         NAtoms = self.parent.mainWindow.inputState.NAtoms
         
@@ -152,6 +161,12 @@ class Filterer(object):
             
             elif filterName == "Point defects":
                 interstitials, vacancies, antisites, onAntisites, splitInterstitials, clusterList = self.pointDefectFilter(filterSettings)
+                
+                self.interstitials = interstitials
+                self.vacancies = vacancies
+                self.antisites = antisites
+                self.onAntisites = onAntisites
+                self.splitInterstitials = splitInterstitials
             
             elif filterName == "Kinetic energy":
                 self.KEFilter(filterSettings)
@@ -500,6 +515,28 @@ class Filterer(object):
                         continue
                     
                     self.log("%d %s on %s antisites" % (onAntSpecCount[i][j], inputLattice.specieList[j], refLattice.specieList[i]), 0, 6)
+        
+        if settings.identifySplitInts:
+            self.log("Split int analysis")
+            
+            PBC = self.mainWindow.PBC
+            cellDims = inputLattice.cellDims
+            
+            for i in xrange(NSplit):
+                ind1 = splitInterstitials[3*i+1]
+                ind2 = splitInterstitials[3*i+2]
+                
+                pos1 = inputLattice.pos[3*ind1:3*ind1+3]
+                pos2 = inputLattice.pos[3*ind2:3*ind2+3]
+                
+                print "POS", pos1, pos2
+                
+                sepVec = vectors.separationVector(pos1, pos2, cellDims, PBC)
+                norm = vectors.normalise(sepVec)
+                print "SEPVEC", sepVec, norm
+                
+                self.log("Orientation of split int %d: (%.3f %.3f %.3f)" % (i, norm[0], norm[1], norm[2]), 0, 1)
+                
         
         # sort clusters here
         clusterList = []

@@ -25,6 +25,7 @@ import inputModule
 import rendering
 import helpForm
 import dialogs
+from visclibs import picker_c
 
 try:
     import resources
@@ -360,7 +361,74 @@ class MainWindow(QtGui.QMainWindow):
         End of vtk pick event.
         
         """
-        pass
+#        pos=[0]*2
+#        InpPnyIds = vtk.vtkIdTypeArray()
+        
+        if self.VTKPicker.GetCellId() < 0:
+            print "REINIT"
+            self.VTKWidget.ReInitialize()
+        
+        else:
+#            selPt = self.VTKPicker.GetSelectionPoint()
+            pickPos = self.VTKPicker.GetPickPosition()
+            pickPos_np = np.asarray(pickPos, dtype=np.float64)
+            print "PICK POS", pickPos_np
+            
+            # find which atom was picked...
+            
+            # loop over filter lists
+            filterLists = self.mainToolbar.filterPage.filterLists
+            
+            minSepIndex = -1
+            minSep = 9999999.0
+            minSepType = None
+            minSepScalarType = None
+            minSepScalar = None
+            for filterList in filterLists:
+                filterer = filterList.filterer
+                
+                visibleAtoms = filterer.visibleAtoms
+                interstitials = filterer.interstitials
+                vacancies = filterer.vacancies
+                antisites = filterer.antisites
+                onAntisites = filterer.onAntisites
+                splitInts = filterer.splitInterstitials
+                scalars = filterer.scalars
+                scalarsType = filterer.scalarsType
+                
+                result = np.empty(3, np.float64)
+                
+                status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos_np, 
+                                             self.inputState.pos, self.refState.pos, self.PBC, self.inputState.cellDims,
+                                             self.refState.minPos, self.refState.maxPos, self.inputState.specie, 
+                                             self.refState.specie, self.inputState.specieCovalentRadius, 
+                                             self.refState.specieCovalentRadius, result)
+                
+                tmp_type, tmp_index, tmp_sep = result
+                
+                if tmp_sep < minSep:
+                    minSep = tmp_sep
+                    minSepType = int(tmp_type)
+                    minSepIndex = visibleAtoms[int(tmp_index)]
+                    
+                    if len(scalarsType):
+                        minSepScalar = scalars[tmp_index]
+                        minSepScalarType = scalarsType
+                    else:
+                        minSepScalar = None
+                        minSepScalarType = None
+            
+            print "MIN SEP: type %d; index %d; sep %f" % (minSepType, minSepIndex, minSep)
+            
+            if minSep < 0.1:
+                if minSepType == 0:
+                    atomInfoWindow = dialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, parent=self)
+                    atomInfoWindow.show()
+                
+                
+            
+            
+        
     
     def leftButtonPressed(self, obj, event):
         """

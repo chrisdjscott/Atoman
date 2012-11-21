@@ -835,4 +835,61 @@ class PovraySettingsDialog(QtGui.QDialog):
         else:
             self.shadowless = False
 
+################################################################################
+
+class AtomInfoWindow(QtGui.QDialog):
+    """
+    Atom info window.
+    
+    """
+    def __init__(self, mainWindow, atomIndex, scalar, scalarType, parent=None):
+        super(AtomInfoWindow, self).__init__(parent)
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        self.atomIndex = atomIndex
+        
+        lattice = self.mainWindow.inputState
+        
+        self.setWindowTitle("Atom info")
+        
+        layout = QtGui.QVBoxLayout()
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("Atom: %d" % atomIndex))
+        layout.addLayout(row)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("Specie: %s" % lattice.specieList[lattice.specie[atomIndex]]))
+        layout.addLayout(row)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (lattice.pos[3*atomIndex], lattice.pos[3*atomIndex+1], lattice.pos[3*atomIndex+2])))
+        layout.addLayout(row)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("PE: %f eV" % (lattice.PE[atomIndex],)))
+        layout.addLayout(row)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("KE: %f eV" % (lattice.KE[atomIndex],)))
+        layout.addLayout(row)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("Charge: %f" % (lattice.charge[atomIndex],)))
+        layout.addLayout(row)
+        
+        if scalar is not None and scalarType is not None:
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("%s: %f" % (scalarType, scalar)))
+            layout.addLayout(row)
+        
+        self.setLayout(layout)
+        
+        
+
+
+
+
+
 
