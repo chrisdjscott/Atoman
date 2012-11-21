@@ -362,7 +362,7 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         if self.VTKPicker.GetCellId() < 0:
-            self.VTKWidget.ReInitialize()
+            pass
         
         else:
             pickPos = self.VTKPicker.GetPickPosition()
