@@ -53,7 +53,7 @@ class HelpForm(QtGui.QDialog):
         
         self.textBrowser.setSearchPaths([":/help"])
         self.textBrowser.setSource(QtCore.QUrl(page))
-        self.resize(400, 600)
+        self.resize(500, 600)
         self.setWindowTitle("CDJSVis Help")
         
     def updatePageTitle(self):
