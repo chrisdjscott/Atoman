@@ -104,7 +104,7 @@ int pickObject(int visibleAtomsDim, int *visibleAtoms, int vacsDim, int *vacs, i
     else
     {
         /* build positions array of all defects */
-        NVis = vacsDim + intsDim + onAntsDim + 3 * splitsDim;
+        NVis = vacsDim + intsDim + onAntsDim + splitsDim;
         visPos = malloc(3 * NVis * sizeof(double));
         if (visPos == NULL)
         {
@@ -129,7 +129,7 @@ int pickObject(int visibleAtomsDim, int *visibleAtoms, int vacsDim, int *vacs, i
             visPos[3*count+1] = refPos[3*index+1];
             visPos[3*count+2] = refPos[3*index+2];
             
-            visCovRad[count] = refSpecieCovRad[refSpecie[index]];// * 0.75; // multiply by 0.75 because vacs aren't full size (rendering.py)
+            visCovRad[count] = refSpecieCovRad[refSpecie[index]] * 1.2;// * 0.75; // multiply by 0.75 because vacs aren't full size (rendering.py)
             
             count++;
         }
