@@ -1424,8 +1424,6 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     #----------------------------------------#
     # split interstitial atoms next
     #----------------------------------------#
-    print "RENDER: NSPLIT", NSplit
-    
     NSpecies = len(inputLattice.specieList)
     intPointsList = []
     intScalarsList = []

@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-VERSION="0.2"
+VERSION="0.3"
 PREFIX="${HOME}/git/pyinstaller"
 
 rm -rf build/ dist/ *.log

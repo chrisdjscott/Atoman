@@ -14,6 +14,7 @@ import numpy as np
 import genericForm
 from atoms import elements
 from utilities import resourcePath, iconPath
+import vectors
 
 try:
     import resources
@@ -834,6 +835,198 @@ class PovraySettingsDialog(QtGui.QDialog):
         
         else:
             self.shadowless = False
+
+################################################################################
+
+class DefectInfoWindow(QtGui.QDialog):
+    """
+    Atom info window.
+    
+    """
+    def __init__(self, mainWindow, defectIndex, defectType, defList, parent=None):
+        super(DefectInfoWindow, self).__init__(parent)
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        self.defectIndex = defectIndex
+        self.defectType = defectType
+        self.defList = defList
+        
+        inputState = self.mainWindow.inputState
+        refState = self.mainWindow.refState
+        
+        self.setWindowTitle("Defect info")
+        
+        layout = QtGui.QVBoxLayout()
+        
+        if defectType == 1:
+            vacancies = defList[0]
+            
+            # vacancy
+            index = vacancies[defectIndex]
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Type: vacancy"))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Specie: %s" % refState.specieList[refState.specie[index]]))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (refState.pos[3*index], refState.pos[3*index+1], refState.pos[3*index+2])))
+            layout.addLayout(row)
+            
+        elif defectType == 2:
+            interstitials = defList[0]
+            
+            # vacancy
+            index = interstitials[defectIndex]
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Type: interstitial"))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Specie: %s" % inputState.specieList[inputState.specie[index]]))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (inputState.pos[3*index], inputState.pos[3*index+1], inputState.pos[3*index+2])))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("PE: %f eV" % (inputState.PE[index],)))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("KE: %f eV" % (inputState.KE[index],)))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Charge: %f" % (inputState.charge[index],)))
+            layout.addLayout(row)
+        
+        elif defectType == 3:
+            antisites = defList[0]
+            onAntisites = defList[1]
+            
+            # antisite
+            index = antisites[defectIndex]
+            index2 = onAntisites[defectIndex]
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Type: antisite"))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (refState.pos[3*index], refState.pos[3*index+1], refState.pos[3*index+2])))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Specie: %s" % refState.specieList[refState.specie[index]]))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Occupying atom:"))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    Specie: %s" % inputState.specieList[inputState.specie[index2]]))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    PE: %f eV" % (inputState.PE[index2],)))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    KE: %f eV" % (inputState.KE[index2],)))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    Charge: %f" % (inputState.charge[index2],)))
+            layout.addLayout(row)
+        
+        elif defectType == 4:
+            splitInts = defList[0]
+            
+            # split interstitial
+            vacIndex = splitInts[3*defectIndex]
+            int1Index = splitInts[3*defectIndex+1]
+            int2Index = splitInts[3*defectIndex+2]
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Type: split interstitial"))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Vacancy position: (%f, %f, %f)" % (refState.pos[3*vacIndex], refState.pos[3*vacIndex+1], refState.pos[3*vacIndex+2])))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Vacancy specie: %s" % refState.specieList[refState.specie[vacIndex]]))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Interstitial 1:"))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    Position: (%f, %f, %f)" % (inputState.pos[3*int1Index], inputState.pos[3*int1Index+1], inputState.pos[3*int1Index+2])))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    Specie: %s" % inputState.specieList[inputState.specie[int1Index]]))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    PE: %f eV" % (inputState.PE[int1Index],)))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    KE: %f eV" % (inputState.KE[int1Index],)))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    Charge: %f" % (inputState.charge[int1Index],)))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Interstitial 2:"))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    Position: (%f, %f, %f)" % (inputState.pos[3*int2Index], inputState.pos[3*int2Index+1], inputState.pos[3*int2Index+2])))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    Specie: %s" % inputState.specieList[inputState.specie[int2Index]]))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    PE: %f eV" % (inputState.PE[int2Index],)))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    KE: %f eV" % (inputState.KE[int2Index],)))
+            layout.addLayout(row)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("    Charge: %f" % (inputState.charge[int2Index],)))
+            layout.addLayout(row)
+            
+            # orientation
+            pos1 = inputState.pos[3*int1Index:3*int1Index+3]
+            pos2 = inputState.pos[3*int2Index:3*int2Index+3]
+            
+            sepVec = vectors.separationVector(pos1, pos2, inputState.cellDims, self.mainWindow.PBC)
+            norm = vectors.normalise(sepVec)
+            
+            row = QtGui.QHBoxLayout()
+            row.addWidget(QtGui.QLabel("Orientation: (%f %f %f)" % (norm[0], norm[1], norm[2])))
+            layout.addLayout(row)
+        
+        self.setLayout(layout)
 
 ################################################################################
 

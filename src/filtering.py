@@ -123,13 +123,14 @@ class Filterer(object):
         self.antisites = np.asarray([], dtype=np.int32)
         self.onAntisites = np.asarray([], dtype=np.int32)
         self.splitInterstitials = np.asarray([], dtype=np.int32)
-                
+        self.scalars = np.asarray([], dtype=np.float64)
+        
         # first set up visible atoms arrays
         NAtoms = self.parent.mainWindow.inputState.NAtoms
         
         if not self.parent.defectFilterSelected:
             self.visibleAtoms = np.arange(NAtoms, dtype=np.int32)
-            self.scalars = np.empty(NAtoms, dtype=np.float64)
+#            self.scalars = np.empty(NAtoms, dtype=np.float64)
             self.log("%d visible atoms" % (len(self.visibleAtoms),), 0, 2)
         
         self.availableScreenInfo = {}
@@ -330,6 +331,10 @@ class Filterer(object):
             self.visibleAtoms.resize(0, refcheck=False)
         
         else:
+            # scalars array
+            if len(self.scalars) != len(self.visibleAtoms):
+                self.scalars = np.empty(len(self.visibleAtoms), dtype=np.float64)
+            
             # run displacement filter
             NVisible = filtering_c.displacementFilter(self.visibleAtoms, self.scalars, inputState.pos, refState.pos, refState.cellDims, 
                                                       self.mainWindow.PBC, settings.minDisplacement, settings.maxDisplacement)
@@ -369,10 +374,9 @@ class Filterer(object):
         """
         lattice = self.mainWindow.inputState
         
-        NVisible = filtering_c.chargeFilter(self.visibleAtoms, self.scalars, lattice.charge, settings.minCharge, settings.maxCharge)
+        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        self.scalars.resize(NVisible, refcheck=False)
     
     def KEFilter(self, settings):
         """
@@ -381,10 +385,9 @@ class Filterer(object):
         """
         lattice = self.mainWindow.inputState
         
-        NVisible = filtering_c.KEFilter(self.visibleAtoms, self.scalars, lattice.KE, settings.minKE, settings.maxKE)
+        NVisible = filtering_c.KEFilter(self.visibleAtoms, lattice.KE, settings.minKE, settings.maxKE)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        self.scalars.resize(NVisible, refcheck=False)
     
     def PEFilter(self, settings):
         """
@@ -393,10 +396,9 @@ class Filterer(object):
         """
         lattice = self.mainWindow.inputState
         
-        NVisible = filtering_c.PEFilter(self.visibleAtoms, self.scalars, lattice.PE, settings.minPE, settings.maxPE)
+        NVisible = filtering_c.PEFilter(self.visibleAtoms, lattice.PE, settings.minPE, settings.maxPE)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        self.scalars.resize(NVisible, refcheck=False)
     
     def pointDefectFilter(self, settings):
         """
@@ -529,14 +531,10 @@ class Filterer(object):
                 pos1 = inputLattice.pos[3*ind1:3*ind1+3]
                 pos2 = inputLattice.pos[3*ind2:3*ind2+3]
                 
-                print "POS", pos1, pos2
-                
                 sepVec = vectors.separationVector(pos1, pos2, cellDims, PBC)
                 norm = vectors.normalise(sepVec)
-                print "SEPVEC", sepVec, norm
                 
                 self.log("Orientation of split int %d: (%.3f %.3f %.3f)" % (i, norm[0], norm[1], norm[2]), 0, 1)
-                
         
         # sort clusters here
         clusterList = []

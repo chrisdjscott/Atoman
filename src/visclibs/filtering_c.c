@@ -174,7 +174,7 @@ int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double
 /*******************************************************************************
  ** Kinetic energy filter
  *******************************************************************************/
-int KEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int KEDim, double *KE, double minKE, double maxKE)
+int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double minKE, double maxKE)
 {
     int i, NVisible, index;
     
@@ -191,7 +191,6 @@ int KEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars,
         else
         {
             visibleAtoms[NVisible] = index;
-            scalars[NVisible] = KE[index];
             NVisible++;
         }
     }
@@ -203,7 +202,7 @@ int KEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars,
 /*******************************************************************************
  ** Potential energy filter
  *******************************************************************************/
-int PEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int PEDim, double *PE, double minPE, double maxPE)
+int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE)
 {
     int i, NVisible, index;
     
@@ -220,7 +219,6 @@ int PEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars,
         else
         {
             visibleAtoms[NVisible] = index;
-            scalars[NVisible] = PE[index];
             NVisible++;
         }
     }
@@ -232,7 +230,7 @@ int PEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars,
 /*******************************************************************************
  ** Charge energy filter
  *******************************************************************************/
-int chargeFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int chargeDim, double *charge, double minCharge, double maxCharge)
+int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge)
 {
     int i, NVisible, index;
     
@@ -249,7 +247,6 @@ int chargeFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scal
         else
         {
             visibleAtoms[NVisible] = index;
-            scalars[NVisible] = charge[index];
             NVisible++;
         }
     }

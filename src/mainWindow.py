@@ -34,7 +34,7 @@ except ImportError:
     sys.exit(36)
 
 
-__version__ = "0.2"
+__version__ = "0.3"
 
 
 ################################################################################
@@ -361,18 +361,12 @@ class MainWindow(QtGui.QMainWindow):
         End of vtk pick event.
         
         """
-#        pos=[0]*2
-#        InpPnyIds = vtk.vtkIdTypeArray()
-        
         if self.VTKPicker.GetCellId() < 0:
-            print "REINIT"
             self.VTKWidget.ReInitialize()
         
         else:
-#            selPt = self.VTKPicker.GetSelectionPoint()
             pickPos = self.VTKPicker.GetPickPosition()
             pickPos_np = np.asarray(pickPos, dtype=np.float64)
-            print "PICK POS", pickPos_np
             
             # find which atom was picked...
             
@@ -398,7 +392,7 @@ class MainWindow(QtGui.QMainWindow):
                 
                 result = np.empty(3, np.float64)
                 
-                status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos_np, 
+                status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, antisites, splitInts, pickPos_np, 
                                              self.inputState.pos, self.refState.pos, self.PBC, self.inputState.cellDims,
                                              self.refState.minPos, self.refState.maxPos, self.inputState.specie, 
                                              self.refState.specie, self.inputState.specieCovalentRadius, 
@@ -406,10 +400,23 @@ class MainWindow(QtGui.QMainWindow):
                 
                 tmp_type, tmp_index, tmp_sep = result
                 
-                if tmp_sep < minSep:
+                if tmp_index >= 0 and tmp_sep < minSep:
                     minSep = tmp_sep
                     minSepType = int(tmp_type)
-                    minSepIndex = visibleAtoms[int(tmp_index)]
+                    
+                    if minSepType == 0:
+                        minSepIndex = visibleAtoms[int(tmp_index)]
+                    else:
+                        minSepIndex = int(tmp_index)
+                        
+                        if minSepType == 1:
+                            defList = (vacancies,)
+                        elif minSepType == 2:
+                            defList = (interstitials,)
+                        elif minSepType == 3:
+                            defList = (antisites, onAntisites)
+                        else:
+                            defList = (splitInts,)
                     
                     if len(scalarsType):
                         minSepScalar = scalars[tmp_index]
@@ -418,17 +425,16 @@ class MainWindow(QtGui.QMainWindow):
                         minSepScalar = None
                         minSepScalarType = None
             
-            print "MIN SEP: type %d; index %d; sep %f" % (minSepType, minSepIndex, minSep)
+            print "MIN SEP", minSep, "TYPE", minSepType, "INDEX", minSepIndex
             
             if minSep < 0.1:
                 if minSepType == 0:
                     atomInfoWindow = dialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, parent=self)
                     atomInfoWindow.show()
                 
-                
-            
-            
-        
+                else:
+                    defectInfoWindow = dialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, parent=self)
+                    defectInfoWindow.show()
     
     def leftButtonPressed(self, obj, event):
         """

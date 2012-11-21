@@ -59,11 +59,11 @@ extern int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos
 extern int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int posDim, double *pos, int refPosDim, double *refPos, 
                               int cellDimsDim, double *cellDims, int PBCDim, int *PBC, double minDisp, double maxDisp);
 
-extern int KEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int KEDim, double *KE, double minKE, double maxKE);
+extern int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double minKE, double maxKE);
 
-extern int PEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int PEDim, double *PE, double minPE, double maxPE);
+extern int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE);
 
-extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int chargeDim, double *charge, double minCharge, double maxCharge);
+extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge);
 
 extern int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double xCentre, 
                             double yCentre, double zCentre, double radius, int cellDimsDim, double *cellDims, 
@@ -77,11 +77,11 @@ extern int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos
 extern int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int posDim, double *pos, int refPosDim, double *refPos, 
                               int cellDimsDim, double *cellDims, int PBCDim, int *PBC, double minDisp, double maxDisp);
 
-extern int KEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int KEDim, double *KE, double minKE, double maxKE);
+extern int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double minKE, double maxKE);
 
-extern int PEFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int PEDim, double *PE, double minPE, double maxPE);
+extern int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE);
 
-extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int chargeDim, double *charge, double minCharge, double maxCharge);
+extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge);
 
 extern int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double xCentre, 
                             double yCentre, double zCentre, double radius, int cellDimsDim, double *cellDims, 
