@@ -784,7 +784,7 @@ class MainWindow(QtGui.QMainWindow):
         self.setCurrentInputFile("")
         self.mainToolbar.tabBar.setTabEnabled(1, False)
         self.mainToolbar.tabBar.setTabEnabled(2, False)
-        self.mainToolbar.filterPage.clearAllFilterLists()
+#        self.mainToolbar.filterPage.clearAllFilterLists()
     
     def displayWarning(self, message):
         """

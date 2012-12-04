@@ -1096,8 +1096,6 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     """
     NVisible = len(visibleAtoms)
     
-    print "RENDERING: COLOUR BY", colouringOptions.colourBy
-    
     if NVisibleForRes is None:
         NVisibleForRes = NVisible
     
