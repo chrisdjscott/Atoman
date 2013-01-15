@@ -120,6 +120,11 @@ def readLattice(filename, tmpLocation, lattice, fileType, state, log, rouletteIn
         
         if simTime is not None:
             lattice.simTime = simTime
+        
+        # get barrier
+        lattice.barrier = utilities.getBarrierFromRoulette(rouletteIndex)
+        
+        
     
     return 0
 

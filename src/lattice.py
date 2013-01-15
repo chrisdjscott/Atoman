@@ -17,6 +17,7 @@ class Lattice(object):
         self.NAtoms = 0
         
         self.simTime = 0.0
+        self.barrier = None
         
         self.cellDims = np.empty(3, np.float64)
         

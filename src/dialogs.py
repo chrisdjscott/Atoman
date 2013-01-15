@@ -623,6 +623,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.selectedText.addItem("Visible count")
         self.availableText.addItem("Visible specie count")
         self.availableText.addItem("Simulation time")
+        self.availableText.addItem("Energy barrier")
         self.availableText.addItem("Defect count")
         self.selectedText.addItem("Defect specie count")
         

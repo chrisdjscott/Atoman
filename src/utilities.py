@@ -251,6 +251,30 @@ def getTimeFromRoulette(rouletteIndex):
     
     return timeInFs
     
-
+################################################################################
+def getBarrierFromRoulette(rouletteIndex):
+    """
+    Attempt to get barrier from roulette.
+    
+    """
+    fn = None
+    if os.path.exists("Roulette%d.OUT" % rouletteIndex):
+        fn = "Roulette%d.OUT" % rouletteIndex
+    
+    elif os.path.exists("../Step%d/Roulette.OUT" % rouletteIndex):
+        fn = "../Step%d/Roulette.OUT" % rouletteIndex
+    
+    barrier = None
+    if fn is not None:
+        f = open(fn)
+        
+        for line in f:
+            line = line.strip()
+            if line[:7] == "Barrier":
+                array = line.split()
+                barrier = float(array[1])
+                break
+    
+    return barrier
 
 

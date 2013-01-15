@@ -156,6 +156,10 @@ class FilterTab(QtGui.QWidget):
         if "Simulation time" not in self.onScreenInfo:
             self.onScreenInfo["Simulation time"] = utilities.simulationTimeLine(self.mainWindow.inputState.simTime)
         
+        # barrier doesn't change
+        if "Energy barrier" not in self.onScreenInfo and self.mainWindow.inputState.barrier is not None:
+            self.onScreenInfo["Energy barrier"] = "Barrier: %f eV" % self.mainWindow.inputState.barrier
+        
         # visible counts always recalculated
         visCountActive = False
         visCount = 0
