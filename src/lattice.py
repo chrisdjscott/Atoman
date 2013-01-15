@@ -61,6 +61,7 @@ class Lattice(object):
 #         self.cellDims = np.zeros(3, np.float64)
         
         self.simTime = 0.0
+        self.barrier = None
     
     def setDims(self, dimsarray):
         

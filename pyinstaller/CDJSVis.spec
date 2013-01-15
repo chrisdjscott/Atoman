@@ -31,4 +31,4 @@ coll = COLLECT( exe,
 
 app = BUNDLE(coll,
              name=os.path.join('dist', 'CDJSVis.app'),
-             version="0.3.1")
+             version="0.3.2")
