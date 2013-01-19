@@ -34,7 +34,13 @@ except ImportError:
     sys.exit(36)
 
 
-__version__ = "0.3.2"
+import version
+__version__ = version.getVersion()
+
+# v = version.getVersion()
+# f = open("/tmp/CDJSVersion.txt", "w")
+# f.write("%s\n" % (str(v),))
+# f.close()
 
 
 ################################################################################
@@ -810,8 +816,8 @@ class MainWindow(QtGui.QMainWindow):
         sip_version = cfg.sip_version_str
         
         QtGui.QMessageBox.about(self, "About CDJSVis", 
-                                """<b>CDJSVis</b> v%s
-                                <p>Copyright &copy; 2012 Chris Scott</p>
+                                """<b>CDJSVis</b> %s
+                                <p>Copyright &copy; 2013 Chris Scott</p>
                                 <p>This application can be used to visualise atomistic simulations.</p>
                                 <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
                                    by Marc Robinson.</p>

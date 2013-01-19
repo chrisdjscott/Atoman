@@ -1,7 +1,10 @@
 # -*- mode: python -*-
 
 import os
-rootpath = os.getenv("HOME")
+import subprocess
+
+rootpath = os.environ["HOME"]
+__version__ = subprocess.Popen(["git", "describe"], stdout=subprocess.PIPE).communicate()[0].strip()
 
 a = Analysis([os.path.join(rootpath, 'git/CDJSVis/src/CDJSVis.py')],
              pathex=[],
@@ -31,4 +34,4 @@ coll = COLLECT( exe,
 
 app = BUNDLE(coll,
              name=os.path.join('dist', 'CDJSVis.app'),
-             version="0.3.2")
+             version=__version__)
