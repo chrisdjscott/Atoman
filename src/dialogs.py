@@ -499,6 +499,8 @@ class TextSettingsDialog(QtGui.QDialog):
         
         self.parent = parent
         
+        self.setModal(1)
+        
         titleText = "%s settings" % title
         self.setWindowTitle(titleText)
         
@@ -522,6 +524,19 @@ class TextSettingsDialog(QtGui.QDialog):
         row.addWidget(self.positionComboBox)
         
         dialogLayout.addWidget(groupBox)
+        
+        # add close button
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok)
+        buttonBox.accepted.connect(self.acceptOverride)
+        
+        dialogLayout.addWidget(buttonBox)
+    
+    def acceptOverride(self):
+        """
+        Accepted.
+        
+        """
+        self.hide()
     
     def positionChanged(self, item):
         """
