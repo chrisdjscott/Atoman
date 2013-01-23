@@ -258,7 +258,8 @@ class FilterList(QtGui.QWidget):
             self.currentFilters.pop()
         
         while len(self.currentSettings):
-            self.currentSettings.pop()
+            dlg = self.currentSettings.pop()
+            dlg.accept()
         
         self.staticListButton.setChecked(0)
         self.persistButton.setChecked(0)
@@ -389,7 +390,8 @@ class FilterList(QtGui.QWidget):
         # remove it from lists
         self.listItems.takeItem(row)
         filterName = self.currentFilters.pop(row)
-        self.currentSettings.pop(row)
+        dlg = self.currentSettings.pop(row)
+        dlg.accept()
         
         if filterName == "Point defects":
             self.defectFilterSelected = 0
