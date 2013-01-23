@@ -193,6 +193,9 @@ class Filterer(object):
             elif filterName == "Crop sphere":
                 self.cropSphereFilter(filterSettings)
             
+            elif filterName == "Slice":
+                self.sliceFilter(filterSettings)
+            
             # write to log
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites) + len(splitInterstitials)
@@ -367,6 +370,18 @@ class Filterer(object):
         
         NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, settings.xCentre, settings.yCentre, settings.zCentre, 
                                                 settings.radius, lattice.cellDims, self.mainWindow.PBC, settings.invertSelection)
+        
+        self.visibleAtoms.resize(NVisible, refcheck=False)
+    
+    def sliceFilter(self, settings):
+        """
+        Slice filter.
+        
+        """
+        lattice = self.mainWindow.inputState
+        
+        NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, settings.x0, settings.y0, settings.z0, 
+                                           settings.xn, settings.yn, settings.zn, settings.invert)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
     

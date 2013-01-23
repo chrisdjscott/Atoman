@@ -1348,3 +1348,240 @@ class ChargeSettingsDialog(GenericSettingsDialog):
         
         """
         self.maxPE = val
+
+################################################################################
+
+class SliceSettingsDialog(GenericSettingsDialog):
+    """
+    Slice filter settings.
+    
+    """
+    def __init__(self, mainWindow, title, parent=None):
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        
+        GenericSettingsDialog.__init__(self, title, parent)
+        
+        # defaults
+        lattice = self.mainWindow.inputState
+        self.x0 = lattice.cellDims[0] / 2.0
+        self.y0 = lattice.cellDims[1] / 2.0
+        self.z0 = lattice.cellDims[2] / 2.0
+        self.xn = 1.0
+        self.yn = 0.0
+        self.zn = 0.0
+        self.invert = 0
+        self.showSlicePlaneChecked = False
+        
+        # plane centre group box
+        planeCentreGroup = QtGui.QGroupBox("Plane centre")
+        planeCentreGroup.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        planeCentreLayout = QtGui.QVBoxLayout(planeCentreGroup)
+        planeCentreLayout.setAlignment(QtCore.Qt.AlignTop)
+        planeCentreLayout.setContentsMargins(0, 0, 0, 0)
+        planeCentreLayout.setSpacing(0)
+        
+        # spin boxes
+        x0SpinBox = QtGui.QDoubleSpinBox()
+        x0SpinBox.setSingleStep(1)
+        x0SpinBox.setMinimum(-1000)
+        x0SpinBox.setMaximum(1000)
+        x0SpinBox.setValue(self.x0)
+        x0SpinBox.valueChanged.connect(self.x0Changed)
+        
+        y0SpinBox = QtGui.QDoubleSpinBox()
+        y0SpinBox.setSingleStep(1)
+        y0SpinBox.setMinimum(-1000)
+        y0SpinBox.setMaximum(1000)
+        y0SpinBox.setValue(self.y0)
+        y0SpinBox.valueChanged.connect(self.y0Changed)
+        
+        z0SpinBox = QtGui.QDoubleSpinBox()
+        z0SpinBox.setSingleStep(1)
+        z0SpinBox.setMinimum(-1000)
+        z0SpinBox.setMaximum(1000)
+        z0SpinBox.setValue(self.z0)
+        z0SpinBox.valueChanged.connect(self.z0Changed)
+        
+        # row
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignHCenter)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        row.addWidget(x0SpinBox)
+        row.addWidget(y0SpinBox)
+        row.addWidget(z0SpinBox)
+        
+        planeCentreLayout.addLayout(row)
+        
+        row = self.newRow()
+        row.addWidget(planeCentreGroup)
+        
+        # plane normal group box
+        planeNormalGroup = QtGui.QGroupBox("Plane normal")
+        planeNormalGroup.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        planeNormalLayout = QtGui.QVBoxLayout(planeNormalGroup)
+        planeNormalLayout.setAlignment(QtCore.Qt.AlignTop)
+        planeNormalLayout.setContentsMargins(0, 0, 0, 0)
+        planeNormalLayout.setSpacing(0)
+        
+        # spin boxes
+        xnSpinBox = QtGui.QDoubleSpinBox()
+        xnSpinBox.setSingleStep(0.1)
+        xnSpinBox.setMinimum(-10)
+        xnSpinBox.setMaximum(10)
+        xnSpinBox.setValue(self.xn)
+        xnSpinBox.valueChanged.connect(self.xnChanged)
+        
+        ynSpinBox = QtGui.QDoubleSpinBox()
+        ynSpinBox.setSingleStep(0.1)
+        ynSpinBox.setMinimum(-10)
+        ynSpinBox.setMaximum(10)
+        ynSpinBox.setValue(self.yn)
+        ynSpinBox.valueChanged.connect(self.ynChanged)
+        
+        znSpinBox = QtGui.QDoubleSpinBox()
+        znSpinBox.setSingleStep(0.1)
+        znSpinBox.setMinimum(-10)
+        znSpinBox.setMaximum(10)
+        znSpinBox.setValue(self.zn)
+        znSpinBox.valueChanged.connect(self.znChanged)
+        
+        # row
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignHCenter)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        row.addWidget(xnSpinBox)
+        row.addWidget(ynSpinBox)
+        row.addWidget(znSpinBox)
+        
+        planeNormalLayout.addLayout(row)
+        
+        row = self.newRow()
+        row.addWidget(planeNormalGroup)
+        
+        # invert
+        self.invertCheck = QtGui.QCheckBox("Invert selection")
+        self.invertCheck.stateChanged.connect(self.changeInvert)
+        
+        row = self.newRow()
+        row.addWidget(self.invertCheck)
+        
+        # show slice plane
+        self.showSlicePlaneCheck = QtGui.QCheckBox("Show slice plane")
+        self.showSlicePlaneCheck.stateChanged.connect(self.showPlaneChanged)
+        
+        row = self.newRow()
+        row.addWidget(self.showSlicePlaneCheck)
+    
+    def refresh(self):
+        """
+        Called whenever new input is loaded.
+        
+        """
+        # need to change min/max of sliders for x0,y0,z0
+        pass
+    
+    def showPlaneChanged(self, state):
+        """
+        Show slice plane.
+        
+        """
+        if self.showSlicePlaneCheck.isChecked():
+            self.showSlicePlaneChecked = True
+            self.showSlicePlane()
+        else:
+            self.showSlicePlaneChecked = False
+            self.hideSlicePlane()
+    
+    def changeInvert(self, state):
+        """
+        Change invert.
+        
+        """
+        if self.invertCheck.isChecked():
+            self.invert = 1
+        else:
+            self.invert = 0
+    
+    def x0Changed(self, val):
+        """
+        x0 changed.
+        
+        """
+        self.x0 = val
+        self.showSlicePlane()
+    
+    def y0Changed(self, val):
+        """
+        y0 changed.
+        
+        """
+        self.y0 = val
+        self.showSlicePlane()
+    
+    def z0Changed(self, val):
+        """
+        z0 changed.
+        
+        """
+        self.z0 = val
+        self.showSlicePlane()
+    
+    def xnChanged(self, val):
+        """
+        xn changed.
+        
+        """
+        self.xn = val
+        self.showSlicePlane()
+    
+    def ynChanged(self, val):
+        """
+        yn changed.
+        
+        """
+        self.yn = val
+        self.showSlicePlane()
+    
+    def znChanged(self, val):
+        """
+        zn changed.
+        
+        """
+        self.zn = val
+        self.showSlicePlane()
+    
+    def showSlicePlane(self):
+        """
+        Update position of slice plane.
+        
+        """
+        if not self.showSlicePlaneChecked:
+            return
+        
+        p = (self.x0, self.y0, self.z0)
+        n = (self.xn, self.yn, self.zn)
+        
+        self.mainWindow.renderer.slicePlane.show(p, n)
+    
+    def hideSlicePlane(self):
+        """
+        Hide the slice plane.
+        
+        """
+        self.mainWindow.renderer.slicePlane.hide()
+    
+    def closeEvent(self, event):
+        """
+        Override closeEvent.
+        
+        """
+        if self.showSlicePlaneChecked:
+            self.showSlicePlaneCheck.setCheckState(0)
+        
+        self.hide()

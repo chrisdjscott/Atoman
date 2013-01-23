@@ -46,6 +46,50 @@ int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec
 
 
 /*******************************************************************************
+ ** Slice filter
+ *******************************************************************************/
+int sliceFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double x0,
+                double y0, double z0, double xn, double yn, double zn, int invert)
+{
+    int i, NVisible, index, addFlag;
+    double mag, xd, yd, zd, dotProd, distanceToPlane;
+    
+    /* normalise (xn, yn, zn) */
+    mag = sqrt(x0 * x0 + y0 * y0 + z0 * z0);
+    xn = xn / mag;
+    yn = yn / mag;
+    zn = zn / mag;
+    
+    NVisible = 0;
+    for (i=0; i<NVisibleIn; i++)
+    {
+        index = visibleAtoms[i];
+        
+        xd = pos[3*index] - x0;
+        yd = pos[3*index+1] - y0;
+        zd = pos[3*index+2] - z0;
+        
+        dotProd = xd * xn + yd * yn + zd * zn;
+        distanceToPlane = dotProd / mag;
+        
+        addFlag = 0;
+        if ((invert && distanceToPlane > 0) || (!invert && distanceToPlane < 0))
+        {
+            addFlag = 1;
+        }
+        
+        if (addFlag)
+        {
+            visibleAtoms[NVisible] = index;
+            NVisible++;
+        }
+    }
+    
+    return NVisible;
+}
+
+
+/*******************************************************************************
  ** Crop sphere filter
  *******************************************************************************/
 int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double xCentre, 

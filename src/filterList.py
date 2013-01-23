@@ -44,7 +44,8 @@ class FilterList(QtGui.QWidget):
                            "Kinetic energy",
                            "Potential energy",
                            "Charge",
-                           "Crop sphere"]
+                           "Crop sphere",
+                           "Slice"]
         self.allFilters.sort()
         
         # current selected filters
@@ -428,6 +429,9 @@ class FilterList(QtGui.QWidget):
         
         elif filterName == "Crop sphere":
             form = filterSettings.CropSphereSettingsDialog(self.mainWindow, "Crop sphere settings", parent=self)
+        
+        elif filterName == "Slice":
+            form = filterSettings.SliceSettingsDialog(self.mainWindow, "Slice settings", parent=self)
         
         return form
     

@@ -68,6 +68,9 @@ extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double
 extern int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double xCentre, 
                             double yCentre, double zCentre, double radius, int cellDimsDim, double *cellDims, 
                             int PBCDim, int *PBC, int invertSelection);
+
+extern int sliceFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double x0,
+                       double y0, double z0, double xn, double yn, double zn, int invert);
 %}
 
 extern int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie);
@@ -86,3 +89,6 @@ extern int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double
 extern int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double xCentre, 
                             double yCentre, double zCentre, double radius, int cellDimsDim, double *cellDims, 
                             int PBCDim, int *PBC, int invertSelection);
+
+extern int sliceFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double x0,
+                       double y0, double z0, double xn, double yn, double zn, int invert);
