@@ -13,6 +13,9 @@ import re
 
 import numpy as np
 import vtk
+import pyhull
+import pyhull.convex_hull
+
 
 from visclibs import filtering_c
 from visclibs import defects_c
@@ -661,7 +664,7 @@ class Filterer(object):
             
             facets = None
             if NDefects > 3:
-                facets = findConvexHullFacets(NDefects, clusterPos, qconvex=settings.qconvex)
+                facets = findConvexHullFacets(NDefects, clusterPos)
             
             elif NDefects == 3:
                 facets = []
@@ -687,7 +690,7 @@ class Filterer(object):
                     # get facets
                     facets = None
                     if NDefects > 3:
-                        facets = findConvexHullFacets(NDefects, tmpClusterPos, qconvex=settings.qconvex)
+                        facets = findConvexHullFacets(NDefects, tmpClusterPos)
                     
                     elif NDefects == 3:
                         facets = []
@@ -812,7 +815,7 @@ class Filterer(object):
                 continue
             
             else:
-                facets = findConvexHullFacets(len(cluster), clusterPos, qconvex=settings.qconvex)
+                facets = findConvexHullFacets(len(cluster), clusterPos)
             
             # now render
             if facets is not None:
@@ -844,7 +847,7 @@ class Filterer(object):
             
             facets = None
             if len(cluster) > 3:
-                facets = findConvexHullFacets(len(cluster), clusterPos, qconvex=settings.qconvex)
+                facets = findConvexHullFacets(len(cluster), clusterPos)
             
             elif len(cluster) == 3:
                 facets = []
@@ -869,7 +872,7 @@ class Filterer(object):
                     # get facets
                     facets = None
                     if len(cluster) > 3:
-                        facets = findConvexHullFacets(len(cluster), tmpClusterPos, qconvex=settings.qconvex)
+                        facets = findConvexHullFacets(len(cluster), tmpClusterPos)
                     
                     elif len(cluster) == 3:
                         facets = []
@@ -917,7 +920,7 @@ class Filterer(object):
                     clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
                                                          PBC, appliedPBCs, filterSettings.neighbourRadius)
                 
-                volume, area = findConvexHullVolume(len(cluster), clusterPos, qconvex=filterSettings.qconvex)
+                volume, area = findConvexHullVolume(len(cluster), clusterPos)
             
             self.log("Cluster %d (%d atoms)" % (count, len(cluster)), 0, 4)
             self.log("volume is %f; facet area is %f" % (volume, area), 0, 5)
@@ -926,91 +929,46 @@ class Filterer(object):
 
 
 ################################################################################
-def findConvexHullFacets(N, pos, qconvex="qconvex"):
+def findConvexHullFacets(N, pos):
     """
     Find convex hull of given points
     
-    """
-    # create string to pass to qconvex
-    stringList = []
-    appList = stringList.append
-    appList("3")
-    appList("%d" % (N,))
+    """    
+    # construct pts list
+    pts = []
     for i in xrange(N):
-        appList("%f %f %f" % (pos[3*i], pos[3*i+1], pos[3*i+2]))
-    string = "\n".join(stringList)
+        pts.append([pos[3*i], pos[3*i+1], pos[3*i+2]])
     
-    # run qconvex
-    command = "%s Qt i" % (qconvex,)
-    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
-                            stdin=subprocess.PIPE)
-    output, stderr = proc.communicate(string)
-    status = proc.poll()
-    if status:
-        print "qconvex failed"
-        print stderr
-        sys.exit(35)
-    
-    # parse output
-    output = output.strip()
-    lines = output.split("\n")
-    
-    lines.pop(0)
-    
-    facets = []
-    for line in lines:
-        array = line.split()
-        facets.append([np.int32(array[0]), np.int32(array[1]), np.int32(array[2])])
+    # call pyhull library
+    hull = pyhull.convex_hull.ConvexHull(pts)
+    facets = hull.vertices
     
     return facets
 
 
 ################################################################################
-def findConvexHullVolume(N, pos, qconvex="qconvex"):
+def findConvexHullVolume(N, pos):
     """
     Find convex hull of given points
     
-    """
-    # create string to pass to qconvex
-    stringList = []
-    appList = stringList.append
-    appList("3")
-    appList("%d" % (N,))
+    """    
+    # construct pts list
+    pts = []
     for i in xrange(N):
-        appList("%f %f %f" % (pos[3*i], pos[3*i+1], pos[3*i+2]))
-    string = "\n".join(stringList)
+        pts.append([pos[3*i], pos[3*i+1], pos[3*i+2]])
     
-    # run qconvex
-    command = "%s Qt FA" % (qconvex,)
-    proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
-                            stdin=subprocess.PIPE)
-    output, stderr = proc.communicate(string)
-    status = proc.poll()
-    if status:
-        print "qconvex failed"
-        print stderr
-        sys.exit(35)
+    # call pyhull library
+    output = pyhull.qconvex("Qt FA", pts)
     
     # parse output
-    volume = None
-    facetArea = None
-    
-    output = output.strip()
-    lines = output.split("\n")
-    
-    volstr = re.compile("volume")
-    areastr = re.compile("facet area")
-    
-    for line in lines:
-        line = line.strip()
-        
-        if volstr.search(line):
-            array = line.split(":")
-            volume = float(array[1])
-        
-        elif areastr.search(line):
+    for line in output:
+        if line.startswith("Total facet area"):
             array = line.split(":")
             facetArea = float(array[1])
+        
+        if line.startswith("Total volume"):
+            array = line.split(":")
+            volume = float(array[1])
     
     return volume, facetArea
 

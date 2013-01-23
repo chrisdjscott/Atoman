@@ -556,12 +556,6 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.hideDefects = 0
         self.identifySplitInts = 1
         
-        # check if qconvex programme located
-        self.qconvex = utilities.checkForExe("qconvex")
-        
-        if self.qconvex:
-            self.mainWindow.console.write("'qconvex' executable located at: %s" % self.qconvex)
-        
         # vacancy radius option
         label = QtGui.QLabel("Vacancy radius ")
         self.vacRadSpinBox = QtGui.QDoubleSpinBox()
@@ -799,13 +793,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         """
         if findClusters:
-            if not self.qconvex:
-                utilities.warnExeNotFound(self, "qconvex")
-                self.findClustersGroupBox.setChecked(False)
-                return
-            
             self.findClusters = 1
-        
         else:
             self.findClusters = 0
     
@@ -920,13 +908,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         """
         if drawHulls:
-            if not self.qconvex:
-                utilities.warnExeNotFound(self, "qconvex")
-                self.drawHullsGroupBox.setChecked(False)
-                return
-            
             self.drawConvexHulls = 1
-        
         else:
             self.drawConvexHulls = 0
     
@@ -957,13 +939,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         """
         if self.calcVolsCheckBox.isChecked():
-            if not self.qconvex:
-                utilities.warnExeNotFound(self, "qconvex")
-                self.calcVolsCheckBox.setCheckState(0)
-                return
-            
             self.calculateVolumes = 1
-        
         else:
             self.calculateVolumes = 0
 
@@ -977,12 +953,6 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         GenericSettingsDialog.__init__(self, title, parent)
         
         self.filterType = "Clusters"
-        
-        # check if qconvex programme located
-        self.qconvex = utilities.checkForExe("qconvex")
-        
-        if self.qconvex:
-            self.mainWindow.console.write("'qconvex' executable located at: %s" % (self.qconvex,))
         
         self.minClusterSize = 8
         self.maxClusterSize = -1
@@ -1132,13 +1102,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         
         """
         if self.calcVolsCheckBox.isChecked():
-            if not self.qconvex:
-                utilities.warnExeNotFound(self, "qconvex")
-                self.calcVolsCheckBox.setCheckState(0)
-                return
-            
             self.calculateVolumes = 1
-        
         else:
             self.calculateVolumes = 0
     
@@ -1169,13 +1133,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         
         """
         if drawHulls:
-            if not self.qconvex:
-                utilities.warnExeNotFound(self, "qconvex")
-                self.drawHullsGroupBox.setChecked(False)
-                return
-            
             self.drawConvexHulls = 1
-        
         else:
             self.drawConvexHulls = 0
 
