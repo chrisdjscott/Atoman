@@ -502,7 +502,7 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         mw = MainWindow()
-        mw.setWindowIcon(QtGui.QIcon(iconPath("applications.ico")))
+        mw.setWindowIcon(QtGui.QIcon(iconPath("CDJSVis.ico")))
         mw.show()
     
     def centre(self):
