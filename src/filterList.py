@@ -403,35 +403,15 @@ class FilterList(QtGui.QWidget):
         
         """
         form = None
-        if filterName == "Specie":
-            form = filterSettings.SpecieSettingsDialog(self.mainWindow, "Specie filter settings", parent=self)
         
-        elif filterName == "Crop":
-            form = filterSettings.CropSettingsDialog(self.mainWindow, "Crop filter settings", parent=self)
+        words = str(filterName).title().split()
         
-        elif filterName == "Point defects":
-            form = filterSettings.PointDefectsSettingsDialog(self.mainWindow, "Point defects filter settings", parent=self)
+        dialogName = "%sSettingsDialog" % "".join(words)
         
-        elif filterName == "Cluster":
-            form = filterSettings.ClusterSettingsDialog(self.mainWindow, "Cluster filter settings", parent=self)
-        
-        elif filterName == "Displacement":
-            form = filterSettings.DisplacementSettingsDialog(self.mainWindow, "Displacement filter settings", parent=self)
-        
-        elif filterName == "Kinetic energy":
-            form = filterSettings.KESettingsDialog(self.mainWindow, "Kinetic energy filter settings", parent=self)
-        
-        elif filterName == "Potential energy":
-            form = filterSettings.PESettingsDialog(self.mainWindow, "Potential energy filter settings", parent=self)
-        
-        elif filterName == "Charge":
-            form = filterSettings.ChargeSettingsDialog(self.mainWindow, "Charge filter settings", parent=self)
-        
-        elif filterName == "Crop sphere":
-            form = filterSettings.CropSphereSettingsDialog(self.mainWindow, "Crop sphere settings", parent=self)
-        
-        elif filterName == "Slice":
-            form = filterSettings.SliceSettingsDialog(self.mainWindow, "Slice settings", parent=self)
+        formObject = getattr(filterSettings, dialogName, None)
+        if formObject is not None:
+            title = "%s filter settings" % filterName
+            form = formObject(self.mainWindow, title, parent=self)
         
         return form
     

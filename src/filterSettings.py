@@ -1,6 +1,11 @@
 
 """
-Settings for filters
+Settings for filters.
+
+Dialogs must be named like: FilterNameSettingsDialog
+    where FilterName is the (capitalised) name of the
+    filter with no spaces. Eg "Point defects" becomes
+    "PointDefectsSettingsDialog".
 
 @author: Chris Scott
 
@@ -1192,7 +1197,7 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
 
 
 ################################################################################
-class KESettingsDialog(GenericSettingsDialog):
+class KineticEnergySettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
         
         self.parent = parent
@@ -1245,7 +1250,7 @@ class KESettingsDialog(GenericSettingsDialog):
 
 
 ################################################################################
-class PESettingsDialog(GenericSettingsDialog):
+class PotentialEnergySettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
         
         self.parent = parent
