@@ -51,7 +51,7 @@ int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec
 int sliceFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double x0,
                 double y0, double z0, double xn, double yn, double zn, int invert)
 {
-    int i, NVisible, index, addFlag;
+    int i, NVisible, index;
     double mag, xd, yd, zd, dotProd, distanceToPlane;
     
     /* normalise (xn, yn, zn) */
@@ -72,13 +72,7 @@ int sliceFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, doub
         dotProd = xd * xn + yd * yn + zd * zn;
         distanceToPlane = dotProd / mag;
         
-        addFlag = 0;
         if ((invert && distanceToPlane > 0) || (!invert && distanceToPlane < 0))
-        {
-            addFlag = 1;
-        }
-        
-        if (addFlag)
         {
             visibleAtoms[NVisible] = index;
             NVisible++;
