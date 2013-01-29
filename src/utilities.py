@@ -10,6 +10,7 @@ import random
 import string
 import glob
 import subprocess
+import tempfile
 
 from PyQt4 import QtGui
 
@@ -63,7 +64,7 @@ def idGenerator(size=16, chars=string.digits + string.ascii_letters + string.dig
     Generate random string of size "size" (defaults to 16)
     
     """
-    return ''.join(random.choice(chars) for x in range(size))
+    return ''.join(random.choice(chars) for _ in xrange(size))
 
 
 ################################################################################
@@ -72,18 +73,13 @@ def createTmpDirectory():
     Create temporary directory
     
     """
-    name = "CDJSVis-" + idGenerator(size=8)
-    try:
-        tmpDir = os.path.join("/tmp", name)
-        while os.path.exists(tmpDir):
-            name = "CDJSVis-" + idGenerator(size=8)
-            tmpDir = os.path.join("/tmp", name)
-        os.mkdir(tmpDir)
-    except:
-        tmpDir = os.path.join(os.getcwd(), name)
-        while os.path.exists(tmpDir):
-            name = "CDJSVis-" + idGenerator(size=8)
-            tmpDir = os.path.join(os.getcwd(), name)
+    # force /tmp as POV-Ray seems to require it
+    if os.path.isdir("/tmp"):
+        dirname = "/tmp"
+    else:
+        dirname = None
+    
+    tmpDir = tempfile.mkdtemp(prefix="CDJSVis-", dir=dirname)
     
     return tmpDir
 
