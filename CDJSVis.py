@@ -1,21 +1,20 @@
 #!/usr/bin/env python
 
 """
-Initialise application
+Initialise application.
 
 @author: Chris Scott
 
 """
-
 import sys
 
 from PyQt4 import QtGui
 
-import mainWindow
-from utilities import iconPath
-
+from CDJSVis import mainWindow
+from CDJSVis.utilities import iconPath
 
 ################################################################################
+
 def main():
     app = QtGui.QApplication(sys.argv)
     
@@ -24,7 +23,7 @@ def main():
     
     sys.exit(app.exec_())
 
-
 ################################################################################
+
 if __name__ == '__main__':
     main()

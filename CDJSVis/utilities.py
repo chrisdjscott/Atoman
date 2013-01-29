@@ -6,6 +6,7 @@ Utility methods
 
 """
 import os
+import sys
 import random
 import string
 import glob
@@ -25,9 +26,8 @@ def resourcePath(relative):
     
     """
     # first look in pyinstaller bundle
-    path = os.environ.get("_MEIPASS2", None)
-    if path is not None:
-        os.path.join(path, "data")
+    if hasattr(sys, "_MEIPASS"):
+        path = os.path.join(sys._MEIPASS, "data")
     
     else:
         # then look in py2app bundle

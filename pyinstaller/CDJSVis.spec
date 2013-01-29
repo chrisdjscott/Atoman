@@ -3,15 +3,14 @@
 import os
 import subprocess
 
-rootpath = os.environ["HOME"]
 __version__ = subprocess.Popen(["git", "describe"], stdout=subprocess.PIPE).communicate()[0].strip()
 
-a = Analysis([os.path.join(rootpath, 'git/CDJSVis/src/CDJSVis.py')],
+a = Analysis(['../CDJSVis.py'],
              pathex=[],
              hiddenimports=[],
              hookspath=None)
 
-a.datas += [('data/atoms.IN', os.path.join(rootpath, 'git/CDJSVis/src/data/atoms.IN'), 'DATA')]
+a.datas += [('data/atoms.IN', '../CDJSVis/data/atoms.IN', 'DATA')]
 
 pyz = PYZ(a.pure)
 

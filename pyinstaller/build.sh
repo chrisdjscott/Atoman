@@ -10,13 +10,13 @@ PYINSTALLER_PATH="${HOME}/git/pyinstaller/pyinstaller.py"
 
 VERSION=$(git describe)
 echo "BUILDING: CDJSVis $VERSION"
-echo "__version__ = \"$VERSION\"" > ../src/version_freeze.py
+echo "__version__ = \"$VERSION\"" > ../CDJSVis/version_freeze.py
 
-# TODO: automatically add env rthook to pyinstaller!
+#TODO: automatically add env rthook to pyinstaller!
 
 rm -rf build/ dist/ *.log
 
-cd ../src
+cd ../CDJSVis
 
 python setup.py
 
