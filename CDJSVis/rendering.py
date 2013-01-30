@@ -984,7 +984,7 @@ class Renderer(object):
             renWinInteract.ReInitialize()
         
         overlayTime = time.time() - overlayTime
-        print "OVERLAY TIME: %f s" % overlayTime
+#        print "OVERLAY TIME: %f s" % overlayTime
         
     def findOverlayExtremes(self, im, i0, i1, j0, j1):
         """
