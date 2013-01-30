@@ -20,15 +20,24 @@ def main():
     os.chdir("CDJSVis")
     
     if len(sys.argv) == 2 and sys.argv[1] == "clean":
-        command = "rm -f *.pyc"
-        print command
-        os.system(command)
-        
-        os.chdir("visclibs")
-        command = "make clean"
-        print command
-        os.system(command)
-        
+        # walk
+        for dirpath, dirnames, filenames in os.walk(os.getcwd()):
+            os.chdir(dirpath)
+            if "Makefile" in filenames:
+                command = "make clean"
+                print command
+                os.system(command)
+            
+            else:
+                command = "rm -f *.pyc *.pyo"
+                print command
+                os.system(command)
+                
+                if "resources.py" in filenames:
+                    command = "rm -f resources.py"
+                    print command
+                    os.system(command)
+    
     else:
         pyrcc4 = utilities.checkForExe("pyrcc4")
         
