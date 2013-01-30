@@ -9,13 +9,13 @@ import sys
 
 from PyQt4 import QtGui, QtCore
 
-from genericForm import GenericForm
-from inputTab import InputTab
-from filterTab import FilterTab
-from outputTab import OutputTab
+from .genericForm import GenericForm
+from .inputTab import InputTab
+from .filterTab import FilterTab
+from .outputTab import OutputTab
 
 try:
-    import resources
+    from .. import resources
 except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)

@@ -13,8 +13,8 @@ import numpy as np
 import vtk
 from PIL import Image
 
-from visclibs import output_c
-import utilities
+from ..visclibs import output_c
+from ..visutils import utilities
 
 
 ################################################################################

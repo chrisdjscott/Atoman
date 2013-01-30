@@ -11,7 +11,7 @@ import sys
 from PyQt4 import QtGui
 
 from CDJSVis import mainWindow
-from CDJSVis.utilities import iconPath
+from CDJSVis.visutils.utilities import iconPath
 
 ################################################################################
 

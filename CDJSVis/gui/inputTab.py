@@ -9,11 +9,11 @@ import sys
 
 from PyQt4 import QtGui, QtCore
 
-from utilities import iconPath
-from genericForm import GenericForm
+from ..visutils.utilities import iconPath
+from .genericForm import GenericForm
 
 try:
-    import resources
+    from .. import resources
 except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)

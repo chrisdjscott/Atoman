@@ -17,11 +17,11 @@ import pyhull
 import pyhull.convex_hull
 
 
-from visclibs import filtering_c
-from visclibs import defects_c
-from visclibs import clusters_c
-import rendering
-import vectors
+from ..visclibs import filtering_c
+from ..visclibs import defects_c
+from ..visclibs import clusters_c
+from .. import rendering
+from ..visutils import vectors
 
 
 ################################################################################

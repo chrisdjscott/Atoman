@@ -8,7 +8,7 @@ Help form
 from PyQt4 import QtGui, QtCore
 
 
-from utilities import iconPath
+from ..visutils.utilities import iconPath
 
 
 ################################################################################

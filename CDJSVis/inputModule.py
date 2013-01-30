@@ -13,7 +13,7 @@ import numpy as np
 
 from visclibs import input_c
 from atoms import elements
-import utilities
+from .visutils import utilities
 
 
 ################################################################################

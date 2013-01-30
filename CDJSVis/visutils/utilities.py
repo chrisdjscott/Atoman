@@ -15,7 +15,7 @@ import tempfile
 
 from PyQt4 import QtGui
 
-import globalsModule
+from .. import globalsModule
 
 
 ################################################################################
@@ -34,7 +34,7 @@ def resourcePath(relative):
         path = os.environ.get("RESOURCEPATH", None)
         if path is None:
             # then look in source code directory
-            path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data")
+            path = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), "data")
     
     path = os.path.join(path, relative)
     

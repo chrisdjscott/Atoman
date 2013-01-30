@@ -12,7 +12,7 @@ Eventually should compile C libraries too.
 import os
 import sys
 
-import utilities
+from .visutils import utilities
 
 
 ################################################################################

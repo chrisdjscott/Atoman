@@ -13,14 +13,14 @@ import subprocess
 
 from PyQt4 import QtGui, QtCore
 
-import utilities
-from utilities import iconPath
-import dialogs
-import genericForm
-from visclibs import output_c
+from ..visutils import utilities
+from ..visutils.utilities import iconPath
+from . import dialogs
+from . import genericForm
+from ..visclibs import output_c
 
 try:
-    import resources
+    from .. import resources
 except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)

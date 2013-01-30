@@ -4,7 +4,7 @@ Vector operations.
 
 """
 import numpy as np
-from visclibs import vectors as c_vectors
+from ..visclibs import vectors as c_vectors
 
 
 ################################################################################

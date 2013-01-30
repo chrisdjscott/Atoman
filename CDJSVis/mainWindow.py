@@ -17,30 +17,25 @@ from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import numpy as np
 
-from utilities import iconPath, resourcePath
-from atoms import elements
-import toolbar as toolbarModule
-import lattice
-import inputModule
-import rendering
-import helpForm
-import dialogs
-from visclibs import picker_c
+from .visutils.utilities import iconPath, resourcePath
+from .atoms import elements
+from .gui import toolbar as toolbarModule
+from . import lattice
+from . import inputModule
+from .rendering import renderer
+from .gui import helpForm
+from .gui import dialogs
+from .visclibs import picker_c
 
 try:
-    import resources
+    from . import resources
 except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)
 
 
-import version
+from .visutils import version
 __version__ = version.getVersion()
-
-# v = version.getVersion()
-# f = open("/tmp/CDJSVersion.txt", "w")
-# f.write("%s\n" % (str(v),))
-# f.close()
 
 
 ################################################################################
@@ -254,7 +249,7 @@ class MainWindow(QtGui.QMainWindow):
         
         self.setCentralWidget(self.VTKContainer)
                 
-        self.renderer = rendering.Renderer(self)
+        self.renderer = renderer.Renderer(self)
         
         # connect window destroyed to updateInstances
         self.connect(self, QtCore.SIGNAL("destroyed(QObject*)"), MainWindow.updateInstances)

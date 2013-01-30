@@ -11,13 +11,13 @@ import sys
 from PyQt4 import QtGui, QtCore
 import numpy as np
 
-import genericForm
-from atoms import elements
-from utilities import resourcePath, iconPath
-import vectors
+from . import genericForm
+from ..atoms import elements
+from ..visutils.utilities import resourcePath, iconPath
+from ..visutils import vectors
 
 try:
-    import resources
+    from .. import resources
 except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)

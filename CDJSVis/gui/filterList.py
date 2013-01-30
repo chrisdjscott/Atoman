@@ -9,13 +9,13 @@ import sys
 
 from PyQt4 import QtGui, QtCore
 
-from utilities import iconPath
-import filtering
-import filterSettings
-import filterListOptions
+from ..visutils.utilities import iconPath
+from ..filtering import filterer
+from . import filterSettings
+from . import filterListOptions
 
 try:
-    import resources
+    from .. import resources
 except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)
@@ -193,7 +193,7 @@ class FilterList(QtGui.QWidget):
         self.filterListLayout.addWidget(extraOptionsGroupBox)
         
         # the filterer (does the filtering)
-        self.filterer = filtering.Filterer(self)
+        self.filterer = filterer.Filterer(self)
     
     def toggleScalarBar(self):
         """
