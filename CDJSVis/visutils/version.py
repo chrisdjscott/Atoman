@@ -19,9 +19,9 @@ def getVersion():
     if hasattr(sys, "_MEIPASS"):
         # if frozen get version from version_freeze.py
         try:
-            import version_freeze
+            from . import version_freeze
             version = version_freeze.__version__
-        except:
+        except ImportError:
             version = "vUNKNOWN"
     
     else:

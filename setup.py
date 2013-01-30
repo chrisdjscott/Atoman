@@ -12,11 +12,12 @@ Eventually should compile C libraries too.
 import os
 import sys
 
-from .visutils import utilities
+from CDJSVis.visutils import utilities
 
 
 ################################################################################
 def main():
+    os.chdir("CDJSVis")
     
     if len(sys.argv) == 2 and sys.argv[1] == "clean":
         command = "rm -f *.pyc"
