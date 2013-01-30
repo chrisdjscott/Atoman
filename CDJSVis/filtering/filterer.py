@@ -20,7 +20,7 @@ import pyhull.convex_hull
 from ..visclibs import filtering_c
 from ..visclibs import defects_c
 from ..visclibs import clusters_c
-from .. import rendering
+from ..rendering import renderer
 from ..visutils import vectors
 
 
@@ -228,7 +228,7 @@ class Filterer(object):
                 pass
             
             else:
-                counters = rendering.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.mainWindow, self.actorsCollection, self.colouringOptions)
+                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.mainWindow, self.actorsCollection, self.colouringOptions)
                 
                 self.vacancySpecieCount = counters[0]
                 self.interstitialSpecieCount = counters[1]
@@ -237,7 +237,7 @@ class Filterer(object):
                 
                 # write pov-ray file too
                 povfile = "defects%d.pov" % self.parent.tab
-                rendering.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow)
+                renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow)
             
             self.colouringOptions.colourBy = colourBy
             
@@ -256,13 +256,13 @@ class Filterer(object):
                 else:
                     NVisibleForRes = None
                 
-                self.scalarBar, visSpecCount = rendering.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
+                self.scalarBar, visSpecCount = renderer.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
                                                                                     self.colouringOptions, povfile, self.scalars, NVisibleForRes=NVisibleForRes)
                 
                 self.visibleSpecieCount = visSpecCount
                 
                 # write pov-ray file too (only if pov-ray located??)
-#                rendering.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
+#                renderer.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
         
         if self.parent.visible:
             self.addActors()
@@ -691,10 +691,10 @@ class Filterer(object):
                 facets = checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, 
                                          inputLattice.cellDims)
                 
-                rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
+                renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
                 
                 # write povray file too
-                rendering.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
+                renderer.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
             
             # handle PBCs
             if NDefects > 1 and PBCFlag:
@@ -717,10 +717,10 @@ class Filterer(object):
                         facets = checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, 
                                                  self.mainWindow.PBC, inputLattice.cellDims)
                         
-                        rendering.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
+                        renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
                         
                         # write povray file too
-                        rendering.writePovrayHull(facets, tmpClusterPos, self.mainWindow, hullPovFile, settings)
+                        renderer.writePovrayHull(facets, tmpClusterPos, self.mainWindow, hullPovFile, settings)
         
     def clusterFilter(self, settings, PBC=None, minSize=None, maxSize=None, nebRad=None):
         """
@@ -834,10 +834,10 @@ class Filterer(object):
             
             # now render
             if facets is not None:
-                rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
+                renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
                 
                 # write povray file too
-                rendering.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
+                renderer.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
     
     def clusterFilterDrawHullsWithPBCs(self, clusterList, settings, hullPovFile):
         """
@@ -873,10 +873,10 @@ class Filterer(object):
                 #TODO: make sure not facets more than neighbour rad from cell
                 facets = checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
                 
-                rendering.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
+                renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
                 
                 # write povray file too
-                rendering.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
+                renderer.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
             
             # handle PBCs
             if len(cluster) > 1:
@@ -898,10 +898,10 @@ class Filterer(object):
                         #TODO: make sure not facets more than neighbour rad from cell
                         facets = checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
                         
-                        rendering.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
+                        renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
                         
                         # write povray file too
-                        rendering.writePovrayHull(facets, tmpClusterPos, self.mainWindow, hullPovFile, settings)
+                        renderer.writePovrayHull(facets, tmpClusterPos, self.mainWindow, hullPovFile, settings)
                 
     
     def clusterFilterCalculateVolumes(self, clusterList, filterSettings):

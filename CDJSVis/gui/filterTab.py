@@ -297,7 +297,7 @@ class FilterTab(QtGui.QWidget):
                             ypos = topyRight
                         
                         # add actor
-                        actor = rendering.vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
+                        actor = renderer.vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
                         
                         if settings.textPosition == "Top left":
                             topyLeft -= 20
@@ -318,7 +318,7 @@ class FilterTab(QtGui.QWidget):
                             ypos = topyRight
                         
                         # add actor
-                        actor = rendering.vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
+                        actor = renderer.vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
                         
                         if settings.textPosition == "Top left":
                             topyLeft -= 20
@@ -340,7 +340,7 @@ class FilterTab(QtGui.QWidget):
                             ypos = topyRight
                         
                         # add actor
-                        actor = rendering.vtkRenderWindowText(lineToAdd, 20, xpos, ypos, r, g, b)
+                        actor = renderer.vtkRenderWindowText(lineToAdd, 20, xpos, ypos, r, g, b)
                         
                         if settings.textPosition == "Top left":
                             topyLeft -= 20
@@ -360,7 +360,7 @@ class FilterTab(QtGui.QWidget):
                         ypos = topyRight
                     
                     # add actor
-                    actor = rendering.vtkRenderWindowText(line, 20, xpos, ypos, r, g, b)
+                    actor = renderer.vtkRenderWindowText(line, 20, xpos, ypos, r, g, b)
                     
                     if settings.textPosition == "Top left":
                         topyLeft -= 20
