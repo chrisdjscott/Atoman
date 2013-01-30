@@ -6,22 +6,17 @@ The filter tab for the main toolbar
 
 """
 import os
-import sys
-import subprocess
 import copy
-import re
 
 import numpy as np
 import vtk
-import pyhull
-import pyhull.convex_hull
-
 
 from ..visclibs import filtering_c
 from ..visclibs import defects_c
 from ..visclibs import clusters_c
 from ..rendering import renderer
 from ..visutils import vectors
+from . import clusters
 
 
 ################################################################################
@@ -564,7 +559,7 @@ class Filterer(object):
             
             # build cluster lists
             for i in xrange(NClusters):
-                clusterList.append(DefectCluster())
+                clusterList.append(clusters.DefectCluster())
             
             # add atoms to cluster lists
             clusterIndexMapper = {}
@@ -679,7 +674,7 @@ class Filterer(object):
             
             facets = None
             if NDefects > 3:
-                facets = findConvexHullFacets(NDefects, clusterPos)
+                facets = clusters.findConvexHullFacets(NDefects, clusterPos)
             
             elif NDefects == 3:
                 facets = []
@@ -688,8 +683,8 @@ class Filterer(object):
             # now render
             if facets is not None:
                 #TODO: make sure not facets more than neighbour rad from cell
-                facets = checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, 
-                                         inputLattice.cellDims)
+                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, 
+                                                  inputLattice.cellDims)
                 
                 renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
                 
@@ -700,12 +695,12 @@ class Filterer(object):
             if NDefects > 1 and PBCFlag:
                 while max(appliedPBCs) > 0:
                     tmpClusterPos = copy.deepcopy(clusterPos)
-                    applyPBCsToCluster(tmpClusterPos, inputLattice.cellDims, appliedPBCs)
+                    clusters.applyPBCsToCluster(tmpClusterPos, inputLattice.cellDims, appliedPBCs)
                     
                     # get facets
                     facets = None
                     if NDefects > 3:
-                        facets = findConvexHullFacets(NDefects, tmpClusterPos)
+                        facets = clusters.findConvexHullFacets(NDefects, tmpClusterPos)
                     
                     elif NDefects == 3:
                         facets = []
@@ -714,8 +709,8 @@ class Filterer(object):
                     # render
                     if facets is not None:
                         #TODO: make sure not facets more than neighbour rad from cell
-                        facets = checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, 
-                                                 self.mainWindow.PBC, inputLattice.cellDims)
+                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, 
+                                                          self.mainWindow.PBC, inputLattice.cellDims)
                         
                         renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
                         
@@ -830,7 +825,7 @@ class Filterer(object):
                 continue
             
             else:
-                facets = findConvexHullFacets(len(cluster), clusterPos)
+                facets = clusters.findConvexHullFacets(len(cluster), clusterPos)
             
             # now render
             if facets is not None:
@@ -862,7 +857,7 @@ class Filterer(object):
             
             facets = None
             if len(cluster) > 3:
-                facets = findConvexHullFacets(len(cluster), clusterPos)
+                facets = clusters.findConvexHullFacets(len(cluster), clusterPos)
             
             elif len(cluster) == 3:
                 facets = []
@@ -871,7 +866,7 @@ class Filterer(object):
             # now render
             if facets is not None:
                 #TODO: make sure not facets more than neighbour rad from cell
-                facets = checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
+                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
                 
                 renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
                 
@@ -882,12 +877,12 @@ class Filterer(object):
             if len(cluster) > 1:
                 while max(appliedPBCs) > 0:
                     tmpClusterPos = copy.deepcopy(clusterPos)
-                    applyPBCsToCluster(tmpClusterPos, lattice.cellDims, appliedPBCs)
+                    clusters.applyPBCsToCluster(tmpClusterPos, lattice.cellDims, appliedPBCs)
                     
                     # get facets
                     facets = None
                     if len(cluster) > 3:
-                        facets = findConvexHullFacets(len(cluster), tmpClusterPos)
+                        facets = clusters.findConvexHullFacets(len(cluster), tmpClusterPos)
                     
                     elif len(cluster) == 3:
                         facets = []
@@ -896,7 +891,7 @@ class Filterer(object):
                     # render
                     if facets is not None:
                         #TODO: make sure not facets more than neighbour rad from cell
-                        facets = checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
+                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
                         
                         renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
                         
@@ -935,7 +930,7 @@ class Filterer(object):
                     clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
                                                          PBC, appliedPBCs, filterSettings.neighbourRadius)
                 
-                volume, area = findConvexHullVolume(len(cluster), clusterPos)
+                volume, area = clusters.findConvexHullVolume(len(cluster), clusterPos)
             
             self.log("Cluster %d (%d atoms)" % (count, len(cluster)), 0, 4)
             self.log("volume is %f; facet area is %f" % (volume, area), 0, 5)
@@ -943,209 +938,3 @@ class Filterer(object):
             count += 1
 
 
-################################################################################
-def findConvexHullFacets(N, pos):
-    """
-    Find convex hull of given points
-    
-    """    
-    # construct pts list
-    pts = []
-    for i in xrange(N):
-        pts.append([pos[3*i], pos[3*i+1], pos[3*i+2]])
-    
-    # call pyhull library
-    hull = pyhull.convex_hull.ConvexHull(pts)
-    facets = hull.vertices
-    
-    return facets
-
-
-################################################################################
-def findConvexHullVolume(N, pos):
-    """
-    Find convex hull of given points
-    
-    """    
-    # construct pts list
-    pts = []
-    for i in xrange(N):
-        pts.append([pos[3*i], pos[3*i+1], pos[3*i+2]])
-    
-    # call pyhull library
-    output = pyhull.qconvex("Qt FA", pts)
-    
-    # parse output
-    volume = 0.0
-    facetArea = 0.0
-    for line in output:
-        if line.startswith("Total facet area"):
-            array = line.split(":")
-            facetArea = float(array[1])
-        
-        if line.startswith("Total volume"):
-            array = line.split(":")
-            volume = float(array[1])
-    
-    return volume, facetArea
-
-
-################################################################################
-def applyPBCsToCluster(clusterPos, cellDims, appliedPBCs):
-    """
-    Apply PBCs to cluster.
-    
-    """
-    for i in xrange(7):
-        if appliedPBCs[i]:
-            # apply in x direction
-            if i == 0:
-                if min(clusterPos[0::3]) < 0.0:
-                    clusterPos[0::3] += cellDims[0]
-                
-                else:
-                    clusterPos[0::3] -= cellDims[0]
-            
-            elif i == 1:
-                if min(clusterPos[1::3]) < 0.0:
-                    clusterPos[1::3] += cellDims[1]
-                
-                else:
-                    clusterPos[1::3] -= cellDims[1]
-            
-            elif i == 2:
-                if min(clusterPos[2::3]) < 0.0:
-                    clusterPos[2::3] += cellDims[2]
-                
-                else:
-                    clusterPos[2::3] -= cellDims[2]
-            
-            elif i == 3:
-                if min(clusterPos[0::3]) < 0.0:
-                    clusterPos[0::3] += cellDims[0]
-                
-                else:
-                    clusterPos[0::3] -= cellDims[0]
-                
-                if min(clusterPos[1::3]) < 0.0:
-                    clusterPos[1::3] += cellDims[1]
-                
-                else:
-                    clusterPos[1::3] -= cellDims[1]
-            
-            elif i == 4:
-                if min(clusterPos[0::3]) < 0.0:
-                    clusterPos[0::3] += cellDims[0]
-                
-                else:
-                    clusterPos[0::3] -= cellDims[0]
-                
-                if min(clusterPos[2::3]) < 0.0:
-                    clusterPos[2::3] += cellDims[2]
-                
-                else:
-                    clusterPos[2::3] -= cellDims[2]
-            
-            elif i == 5:
-                if min(clusterPos[1::3]) < 0.0:
-                    clusterPos[1::3] += cellDims[1]
-                
-                else:
-                    clusterPos[1::3] -= cellDims[1]
-                
-                if min(clusterPos[2::3]) < 0.0:
-                    clusterPos[2::3] += cellDims[2]
-                
-                else:
-                    clusterPos[2::3] -= cellDims[2]
-            
-            elif i == 6:
-                if min(clusterPos[0::3]) < 0.0:
-                    clusterPos[0::3] += cellDims[0]
-                
-                else:
-                    clusterPos[0::3] -= cellDims[0]
-                
-                if min(clusterPos[1::3]) < 0.0:
-                    clusterPos[1::3] += cellDims[1]
-                
-                else:
-                    clusterPos[1::3] -= cellDims[1]
-                
-                if min(clusterPos[2::3]) < 0.0:
-                    clusterPos[2::3] += cellDims[2]
-                
-                else:
-                    clusterPos[2::3] -= cellDims[2]
-            
-            appliedPBCs[i] = 0
-            
-            break
-
-
-################################################################################
-def checkFacetsPBCs(facetsIn, clusterPos, excludeRadius, PBC, cellDims):
-    """
-    Remove facets that are far from cell
-    
-    """
-    facets = []
-    for facet in facetsIn:
-        includeFlag = 1
-        for i in xrange(3):
-            index = facet[i]
-            
-            for j in xrange(3):
-                if PBC[j]:
-                    if clusterPos[3*index+j] > cellDims[j] + excludeRadius or clusterPos[3*index+j] < 0.0 - excludeRadius:
-                        includeFlag = 0
-                        break
-            
-            if not includeFlag:
-                break
-        
-        if includeFlag:
-            facets.append(facet)
-    
-    return facets
-
-
-################################################################################
-class DefectCluster:
-    """
-    Defect cluster info.
-    
-    """
-    def __init__(self):
-        self.vacancies = []
-        self.interstitials = []
-        self.antisites = []
-        self.onAntisites = []
-    
-    def getNDefects(self):
-        """
-        Return total number of defects.
-        
-        """
-        return len(self.vacancies) + len(self.interstitials) + len(self.antisites)
-    
-    def getNVacancies(self):
-        """
-        Return number of vacancies
-        
-        """
-        return len(self.vacancies)
-    
-    def getNInterstitials(self):
-        """
-        Return number of interstitials
-        
-        """
-        return len(self.interstitials)
-    
-    def getNAntisites(self):
-        """
-        Return number of antisites
-        
-        """
-        return len(self.antisites)
