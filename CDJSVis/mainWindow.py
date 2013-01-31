@@ -812,6 +812,9 @@ class MainWindow(QtGui.QMainWindow):
         self.mainToolbar.filterPage.clearAllFilterLists()
         
         self.mainToolbar.inputTab.loadInputBox.hide()
+        
+        self.mainToolbar.inputTab.lbomdXyzWidget_ref.refLoaded = False
+        self.mainToolbar.inputTab.lbomdXyzWidget_input.refLoaded = False
     
     def displayWarning(self, message):
         """

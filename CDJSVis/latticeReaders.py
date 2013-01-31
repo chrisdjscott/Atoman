@@ -6,6 +6,7 @@ Lattice reader objects.
 
 """
 import os
+import copy
 
 import numpy as np
 
@@ -108,7 +109,6 @@ class GenericLatticeReader(object):
         
         elif state is not None:
             self.currentFile = os.path.abspath(filename)
-            print "CURRENT FILE", self.currentFile
         
         return status, state
     
@@ -118,6 +118,119 @@ class GenericLatticeReader(object):
         
         """
         return 1, None
+
+################################################################################
+
+class LbomdXYZReader(GenericLatticeReader):
+    """
+    Read LBOMD XYZ files.
+    
+    This is harder since they must be linked with a reference!
+    
+    """
+    def __init__(self, tmpLocation, log, displayWarning):
+        super(LbomdXYZReader, self).__init__(tmpLocation, log, displayWarning)
+    
+    def readFile(self, xyzfilename, refState, rouletteIndex=None):
+        """
+        We override the main readFile function too, so that
+        we can pass the ref file name in.
+        
+        """
+        if os.path.abspath(xyzfilename) == self.currentFile:
+            print "ALREADY LOADED"
+#            return -4, None
+        
+        # check input exists, unzip if necessary
+        filepath, zipFlag = self.checkForZipped(xyzfilename)
+        if zipFlag == -1:
+            self.displayWarning("Could not find file: "+xyzfilename)
+            return -1, None
+        
+        # read input
+        status, state = self.readFileMain(filepath, refState, rouletteIndex)
+        
+        self.cleanUnzipped(filepath, zipFlag)
+        
+        if status:
+            if status == -1:
+                self.displayWarning("Could not find file: "+xyzfilename)
+            
+            elif status == -2:
+                self.displayWarning("LBOMD XYZ input NAtoms does not match reference!")
+            
+            elif status == -3:
+                self.displayWarning("Unrecognised format for LBOMD XYZ input file!")
+            
+            return None, None
+        
+        elif state is not None:
+            self.currentFile = os.path.abspath(xyzfilename)
+            print "CURRENT FILE", self.currentFile
+        
+        return status, state
+    
+    def readFileMain(self, filename, refLattice, rouletteIndex):
+        """
+        Main read file routine.
+        
+        """
+        state = Lattice()
+        
+        f = open(filename)
+            
+        line = f.readline().strip()
+        NAtoms = int(line)
+        
+        if NAtoms != refLattice.NAtoms:
+            return -2, None
+        
+        # simulation time
+        line = f.readline().strip()
+        simTime = float(line)
+        
+        # read first line to get format
+        line = f.readline().strip()
+        array = line.split()
+        if len(array) == 6:
+            xyzformat = 0
+            
+        elif len(array) == 7:
+            xyzformat = 1
+        
+        else:
+            return -3, None
+        
+        f.close()
+        
+        state.reset(NAtoms)
+        state.simTime = simTime
+        
+        tmpForceArray = np.empty(3, np.float64)
+        
+        # call clib
+        input_c.readLBOMDXYZ(filename, state.pos, state.charge, state.KE, state.PE, tmpForceArray, 
+                             state.maxPos, state.minPos, xyzformat)
+        
+        
+        # copy charge if not included in xyz
+        for i in xrange(refLattice.NAtoms):
+            if xyzformat == 0:
+                state.charge[i] = refLattice.charge[i]
+            
+            state.specie[i] = refLattice.specie[i]
+        
+        state.setDims(refLattice.cellDims)
+        
+        # copy specie arrays from refLattice
+        state.specieList = copy.deepcopy(refLattice.specieList)
+        state.specieCount = copy.deepcopy(refLattice.specieCount)
+        state.specieMass = copy.deepcopy(refLattice.specieMass)
+        state.specieCovalentRadius = copy.deepcopy(refLattice.specieCovalentRadius)
+        state.specieRGB = copy.deepcopy(refLattice.specieRGB)
+        
+        return 0, state
+        
 
 ################################################################################
 

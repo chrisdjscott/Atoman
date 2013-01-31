@@ -10,7 +10,7 @@ import sys
 from PyQt4 import QtGui, QtCore
 
 from .genericForm import GenericForm
-from .inputTab import InputTab, InputTabNew
+from .inputTab import InputTab
 from .filterTab import FilterTab
 from .outputTab import OutputTab
 
@@ -71,7 +71,7 @@ class MainToolbar(QtGui.QDockWidget):
         self.tabBar.setSizePolicy(QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.Minimum)
         
         # add tabs
-        self.inputTab = InputTabNew(self, self.mainWindow, self.toolbarWidth)
+        self.inputTab = InputTab(self, self.mainWindow, self.toolbarWidth)
         self.tabBar.addTab(self.inputTab, "Input")
         
         self.filterPage = FilterTab(self, self.mainWindow, self.toolbarWidth)

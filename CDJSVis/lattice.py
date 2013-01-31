@@ -81,7 +81,6 @@ class Lattice(object):
             self.specieRGB[i][0] = rgbtemp[0]
             self.specieRGB[i][1] = rgbtemp[1]
             self.specieRGB[i][2] = rgbtemp[2]
-            
     
     def clone(self, lattice):
         """
