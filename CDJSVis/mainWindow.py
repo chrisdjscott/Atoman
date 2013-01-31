@@ -729,7 +729,8 @@ class MainWindow(QtGui.QMainWindow):
             PBC[1] = int(array[1])
             PBC[2] = int(array[2])
             
-            self.mainToolbar.inputTab.LBOMDPage.LBOMDInputLabel.setText("%s%04d.xyz" % (simIdentity, 0))
+#            self.mainToolbar.inputTab.LBOMDPage.LBOMDInputLabel.setText("%s%04d.xyz" % (simIdentity, 0))
+            self.mainToolbar.inputTab.lbomdXyzWidget_input.updateFileLabelCustom("%s%04d.xyz" % (simIdentity, 0), isRef=False)
             self.mainToolbar.outputPage.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
             
             if PBC[0]:

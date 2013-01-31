@@ -166,7 +166,6 @@ class LbomdXYZReader(GenericLatticeReader):
         
         elif state is not None:
             self.currentFile = os.path.abspath(xyzfilename)
-            print "CURRENT FILE", self.currentFile
         
         return status, state
     
