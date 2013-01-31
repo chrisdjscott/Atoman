@@ -394,6 +394,14 @@ class LbomdXYZReaderForm(GenericReaderForm):
             self.mainWindow.displayWarning("Must load corresponding reference first!")
             return None
         
+        if isRef and self.refLoaded:
+            reply = QtGui.QMessageBox.question(self, "Message", 
+                                               "Ref is already loaded: do you want to overwrite it?",
+                                               QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        
+            if reply != QtGui.QMessageBox.Yes:
+                return None
+        
         fdiag = QtGui.QFileDialog()
         
         if isRef:
@@ -444,19 +452,18 @@ class LbomdXYZReaderForm(GenericReaderForm):
             self.mainWindow.displayWarning("Must load corresponding reference first!")
             return None
         
-#        if hasattr(self, label):
-#            label = getattr(self, label)
-#        else:
-#            self.mainWindow.displayError("Reader: label error (%s)" % str(label))
-#            return None
+        if isRef and self.refLoaded:
+            reply = QtGui.QMessageBox.question(self, "Message", 
+                                               "Ref is already loaded: do you want to overwrite it?",
+                                               QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        
+            if reply != QtGui.QMessageBox.Yes:
+                return None
         
         if filename is None:
             filename = self.getFileName(isRef)
         
         filename = str(filename)
-        
-#        if not len(filename):
-#            return None
         
         # remove zip extensions
         if filename[-3:] == ".gz":
