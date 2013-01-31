@@ -17,6 +17,7 @@ from PyQt4 import QtGui, QtCore
 from ..visutils import utilities
 from ..visutils.utilities import iconPath
 from . import genericForm
+from ..rendering import slicePlane
 
 try:
     from .. import resources
@@ -31,6 +32,14 @@ except ImportError:
 class GenericSettingsDialog(QtGui.QDialog):
     def __init__(self, title, parent):
         super(GenericSettingsDialog, self).__init__(parent)
+        
+        self.parent = parent
+#        self.mainWindow = self.parent.mainWindow
+        
+        # get tab and filter id's
+        array = title.split("(")[1].split(")")[0].split()
+        self.listID = int(array[1])
+        self.filterID = int(array[3])
         
         self.setModal(0)
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
@@ -1366,6 +1375,11 @@ class SliceSettingsDialog(GenericSettingsDialog):
         self.parent = parent
         self.mainWindow = mainWindow
         
+        self.ren = self.mainWindow.VTKRen
+        self.renWinInteract = self.mainWindow.VTKWidget
+        
+        self.slicePlane = slicePlane.SlicePlane(self.ren, self.renWinInteract, self.mainWindow)
+        
         GenericSettingsDialog.__init__(self, title, parent)
         
         # defaults
@@ -1572,14 +1586,14 @@ class SliceSettingsDialog(GenericSettingsDialog):
         p = (self.x0, self.y0, self.z0)
         n = (self.xn, self.yn, self.zn)
         
-        self.mainWindow.renderer.slicePlane.show(p, n)
+        self.slicePlane.show(p, n)
     
     def hideSlicePlane(self):
         """
         Hide the slice plane.
         
         """
-        self.mainWindow.renderer.slicePlane.hide()
+        self.slicePlane.hide()
     
     def closeEvent(self, event):
         """

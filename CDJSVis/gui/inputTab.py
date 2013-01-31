@@ -202,6 +202,12 @@ class InputTab(QtGui.QWidget):
         if ok:
             self.loadRefStack.setCurrentIndex(index)
             self.refTypeCurrentIndex = index
+            
+            if index == 0:
+                self.inputTypeCombo.setCurrentIndex(0)
+            
+            elif index == 1:
+                self.inputTypeCombo.setCurrentIndex(2)
     
     def setLoadInputStack(self, index):
         """

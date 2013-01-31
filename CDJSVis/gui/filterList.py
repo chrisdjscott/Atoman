@@ -32,6 +32,7 @@ class FilterList(QtGui.QWidget):
         self.tab = tab
         self.tabWidth = width
         self.tabHeight = height
+        self.filterCounter = 0
         
         self.defectFilterSelected = 0
         
@@ -361,17 +362,19 @@ class FilterList(QtGui.QWidget):
                 self.warnDefectFilter()
             
             else:
-                if filterName not in self.currentFilters:
-                    self.currentFilters.append(str(filterName))
-                    self.listItems.addItem(filterName)
-                    
-                    # create option form
-                    form = self.createSettingsForm(filterName)
-                    form.show()
-                    self.currentSettings.append(form)
-                    
-                    if str(filterName) == "Point defects":
-                        self.defectFilterSelected = 1
+#                if filterName not in self.currentFilters:
+                filterNameString = "%s [%d]" % (filterName, self.filterCounter)
+                
+                self.currentFilters.append(str(filterNameString))
+                self.listItems.addItem(filterNameString)
+                
+                # create option form
+                form = self.createSettingsForm(filterName)
+                form.show()
+                self.currentSettings.append(form)
+                
+                if str(filterName) == "Point defects":
+                    self.defectFilterSelected = 1
     
     def removeFilter(self):
         """
@@ -392,6 +395,7 @@ class FilterList(QtGui.QWidget):
         self.listItems.takeItem(row)
         filterName = self.currentFilters.pop(row)
         dlg = self.currentSettings.pop(row)
+        dlg.close()
         dlg.accept()
         
         if filterName == "Point defects":
@@ -410,8 +414,9 @@ class FilterList(QtGui.QWidget):
         
         formObject = getattr(filterSettings, dialogName, None)
         if formObject is not None:
-            title = "%s filter settings" % filterName
+            title = "%s filter settings (List %d - %d)" % (filterName, self.tab, self.filterCounter)
             form = formObject(self.mainWindow, title, parent=self)
+            self.filterCounter += 1
         
         return form
     

@@ -16,7 +16,6 @@ from PIL import Image
 from ..visclibs import output_c
 from ..visutils import utilities
 
-
 ################################################################################
 def setRes(num):
     #res = 15.84 * (0.99999**natoms)
@@ -506,10 +505,7 @@ class Renderer(object):
         # axes
 #        self.axes = Axes(self.ren, self.renWinInteract)
         self.axes = AxesBasic(self.ren, self.renWinInteract)
-        
-        # slice plane
-        self.slicePlane = SlicePlane(self.ren, self.renWinInteract, self.mainWindow)
-        
+            
     def reinit(self):
         """
         Reinitialise.

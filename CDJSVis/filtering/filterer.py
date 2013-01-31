@@ -143,7 +143,12 @@ class Filterer(object):
         currentFilters = self.parent.currentFilters
         currentSettings = self.parent.currentSettings
         for i in xrange(len(currentFilters)):
-            filterName = currentFilters[i]
+            # filter name
+            filterNameString = currentFilters[i]
+            array = filterNameString.split("[")
+            filterName = array[0].strip()
+            
+            # filter settings
             filterSettings = currentSettings[i]
             
             self.log("Running filter: %s" % (filterName,), 0, 2)
