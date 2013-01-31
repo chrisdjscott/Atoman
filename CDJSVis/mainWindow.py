@@ -95,6 +95,9 @@ class MainWindow(QtGui.QMainWindow):
                 
         self.setWindowTitle("CDJSVis")
         
+        # create temporary directory for working in
+        self.tmpDirectory = tempfile.mkdtemp(prefix="CDJSVisTemp-", dir="/tmp")
+        
         # console window for logging output to
         self.console = dialogs.ConsoleWindow(self)
         
@@ -257,9 +260,6 @@ class MainWindow(QtGui.QMainWindow):
         # initiate lattice objects for storing reference and input states
         self.inputState = lattice.Lattice()
         self.refState = lattice.Lattice()        
-        
-        # create temporary directory for working in
-        self.tmpDirectory = tempfile.mkdtemp(prefix="CDJSVisTemp-", dir="/tmp")
         
         self.setStatus('Ready')
         
@@ -684,7 +684,7 @@ class MainWindow(QtGui.QMainWindow):
         
         if status:
             if status == -1:
-                self.displayWarning("Could not find file: "+filename)
+                self.displayWarning("Could not find file: %s" % filename)
             
             elif status == -2:
                 self.displayWarning("LBOMD XYZ input NAtoms does not match reference!")
@@ -750,6 +750,24 @@ class MainWindow(QtGui.QMainWindow):
             else:
                 self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(0)
     
+    def postFileLoaded(self, fileType, state, filename):
+        """
+        Called when a new file has been loaded.
+        
+         - fileType should be "ref" or "input"
+         - state is the new Lattice object
+        
+        """
+        if fileType == "ref":
+            self.refState = state
+            
+            self.postRefLoaded(filename)
+        
+        else:
+            self.inputState = state
+        
+        self.postInputLoaded(filename)
+    
     def postRefLoaded(self, filename):
         """
         Do stuff after the ref has been loaded.
@@ -759,6 +777,12 @@ class MainWindow(QtGui.QMainWindow):
         self.refLoaded = 1
         self.textSelector.refresh()
 #        self.mainToolbar.inputTab.clearRefButton.setCheckable(1)
+        
+        self.inputState.clone(self.refState)
+        
+        self.renderer.postRefRender()
+        
+        self.mainToolbar.inputTab.loadInputBox.show()
     
     def postInputLoaded(self, filename):
         """
@@ -786,6 +810,8 @@ class MainWindow(QtGui.QMainWindow):
         self.mainToolbar.tabBar.setTabEnabled(1, False)
         self.mainToolbar.tabBar.setTabEnabled(2, False)
         self.mainToolbar.filterPage.clearAllFilterLists()
+        
+        self.mainToolbar.inputTab.loadInputBox.hide()
     
     def displayWarning(self, message):
         """
