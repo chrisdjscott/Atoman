@@ -14,7 +14,7 @@ import numpy as np
 
 from ..visutils.utilities import iconPath
 from . import filterList
-from ..rendering import renderer
+from ..rendering.text import vtkRenderWindowText
 from ..visutils import utilities
 
 try:
@@ -297,7 +297,7 @@ class FilterTab(QtGui.QWidget):
                             ypos = topyRight
                         
                         # add actor
-                        actor = renderer.vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
+                        actor = vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
                         
                         if settings.textPosition == "Top left":
                             topyLeft -= 20
@@ -318,7 +318,7 @@ class FilterTab(QtGui.QWidget):
                             ypos = topyRight
                         
                         # add actor
-                        actor = renderer.vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
+                        actor = vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
                         
                         if settings.textPosition == "Top left":
                             topyLeft -= 20
@@ -340,7 +340,7 @@ class FilterTab(QtGui.QWidget):
                             ypos = topyRight
                         
                         # add actor
-                        actor = renderer.vtkRenderWindowText(lineToAdd, 20, xpos, ypos, r, g, b)
+                        actor = vtkRenderWindowText(lineToAdd, 20, xpos, ypos, r, g, b)
                         
                         if settings.textPosition == "Top left":
                             topyLeft -= 20
@@ -360,7 +360,7 @@ class FilterTab(QtGui.QWidget):
                         ypos = topyRight
                     
                     # add actor
-                    actor = renderer.vtkRenderWindowText(line, 20, xpos, ypos, r, g, b)
+                    actor = vtkRenderWindowText(line, 20, xpos, ypos, r, g, b)
                     
                     if settings.textPosition == "Top left":
                         topyLeft -= 20
