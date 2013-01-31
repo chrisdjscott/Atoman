@@ -82,8 +82,8 @@ class GenericLatticeReader(object):
         -4 : file already loaded
         
         """
-        if os.path.abspath(filename) == self.currentFile:
-            print "ALREADY LOADED"
+#        if os.path.abspath(filename) == self.currentFile:
+#            print "ALREADY LOADED"
 #            return -4, None
         
         filepath, zipFlag = self.checkForZipped(filename)
@@ -137,8 +137,8 @@ class LbomdXYZReader(GenericLatticeReader):
         we can pass the ref file name in.
         
         """
-        if os.path.abspath(xyzfilename) == self.currentFile:
-            print "ALREADY LOADED"
+#        if os.path.abspath(xyzfilename) == self.currentFile:
+#            print "ALREADY LOADED"
 #            return -4, None
         
         # check input exists, unzip if necessary

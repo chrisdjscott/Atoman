@@ -548,7 +548,6 @@ class ImageSequenceTab(QtGui.QWidget):
         self.fileprefixText = "guess"
         self.overwrite = 0
         self.createMovie = 0
-        self.outputIndex = 0
         
         # layout
         mainLayout = QtGui.QVBoxLayout(self)
@@ -788,8 +787,6 @@ class ImageSequenceTab(QtGui.QWidget):
         log = self.mainWindow.console.write
         log("Running sequencer", 0, 0)
         
-        self.outputIndex = 0
-        
         # directory
         saveDir = str(self.outputFolder.text())
         if os.path.exists(saveDir):
@@ -821,14 +818,15 @@ class ImageSequenceTab(QtGui.QWidget):
                 log("Current file: %s" % (currentFile,), 0, 1)
                 
                 # first open the file
-                tmpname = self.mainWindow.openFile(currentFile, "input", rouletteIndex=i-1)
+                form = self.mainWindow.mainToolbar.inputTab.loadInputStack.widget(self.mainWindow.mainToolbar.inputTab.inputTypeCurrentIndex)
+                status = form.openFile(filename=currentFile, rouletteIndex=i-1)
                 
                 # exit if cancelled
                 if progDialog.wasCanceled():
                     return
                 
-                if tmpname is None:
-                    print "ERROR"
+                if status:
+                    print "SEQUENCER ERROR"
                     return
                 
                 # now apply all filters
@@ -838,8 +836,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 if progDialog.wasCanceled():
                     return
                 
-                saveName = saveText % (self.outputIndex,)
-                self.outputIndex += 1
+                saveName = saveText % (count,)
                 log("Saving image: %s" % (saveName,), 0, 2)
                 
                 # now save image

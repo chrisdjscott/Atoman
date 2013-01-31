@@ -43,10 +43,12 @@ class GenericReaderForm(GenericForm):
         
         self.fileFormatString = None
         
+        self.fileExtension = None
+        
         # always show widget
         self.show()
         
-    def openFile(self, label=None, filename=None):
+    def openFile(self, label=None, filename=None, rouletteIndex=None):
         """
         This should be sub-classed to load the selected file.
         
@@ -69,7 +71,7 @@ class GenericReaderForm(GenericForm):
         """
         self.updateFileLabel(filename)
         
-        self.parent.fileLoaded(stateType, state, filename)
+        self.parent.fileLoaded(stateType, state, filename, self.fileExtension)
     
     def openFileDialog(self):
         """
@@ -94,7 +96,7 @@ class GenericReaderForm(GenericForm):
         
         # change to new working directory
         if nwd != os.getcwd():
-            self.console.write("Changing to dir "+nwd)
+            self.mainWindow.console.write("Changing to dir "+nwd)
             os.chdir(nwd)
             self.mainWindow.updateCWD()
         
@@ -125,6 +127,8 @@ class LbomdDatReaderForm(GenericReaderForm):
         self.mainToolbar = mainToolbar
         self.mainWindow = mainWindow
         self.toolbarWidth = width
+        
+        self.fileExtension = "dat"
         
         # acceptable formats string
         self.fileFormatString = "Lattice files (*.dat *.dat.bz2 *.dat.gz)"
@@ -170,7 +174,7 @@ class LbomdDatReaderForm(GenericReaderForm):
         """
         return str(self.latticeLabel.text())
     
-    def openFile(self, filename=None):
+    def openFile(self, filename=None, rouletteIndex=None):
         """
         Open file.
         
@@ -189,8 +193,7 @@ class LbomdDatReaderForm(GenericReaderForm):
         elif filename[-4:] == ".bz2":
             filename = filename[:-4]
         
-        print "FILENAME", filename
-        status, state = self.latticeReader.readFile(filename)
+        status, state = self.latticeReader.readFile(filename, rouletteIndex=rouletteIndex)
         
         if not status:
             GenericReaderForm.postOpenFile(self, self.stateType, state, filename)
@@ -211,6 +214,8 @@ class LbomdRefReaderForm(GenericReaderForm):
         self.mainToolbar = mainToolbar
         self.mainWindow = mainWindow
         self.toolbarWidth = width
+        
+        self.fileExtension = "xyz"
         
         self.fileFormatString = "REF files (*.xyz *.xyz.bz2 *.xyz.gz)"
         
@@ -254,7 +259,7 @@ class LbomdRefReaderForm(GenericReaderForm):
         """
         return str(self.latticeLabel.text())
     
-    def openFile(self, filename=None):
+    def openFile(self, filename=None, rouletteIndex=None):
         """
         Open file.
         
@@ -273,8 +278,7 @@ class LbomdRefReaderForm(GenericReaderForm):
         elif filename[-4:] == ".bz2":
             filename = filename[:-4]
         
-        print "FILENAME", filename
-        status, state = self.latticeReader.readFile(filename)
+        status, state = self.latticeReader.readFile(filename, rouletteIndex=rouletteIndex)
         
         if not status:
             GenericReaderForm.postOpenFile(self, self.stateType, state, filename)
@@ -300,6 +304,8 @@ class LbomdXYZReaderForm(GenericReaderForm):
         self.toolbarWidth = width
         
         self.refLoaded = False
+        
+        self.fileExtension = "xyz"
         
         self.fileFormatString = "XYZ files (*.xyz *.xyz.bz2 *.xyz.gz)"
         self.fileFormatStringRef = "XYZ files (*.xyz *.xyz.bz2 *.xyz.gz)"
@@ -375,15 +381,6 @@ class LbomdXYZReaderForm(GenericReaderForm):
         else:
             self.latticeLabel.setText(filename)
     
-#    def postOpenFile(self, stateType, state, filename):
-#        """
-#        Should always be called at the end of openFile.
-#        
-#        """
-#        self.updateFileLabel(filename)
-#        
-#        self.parent.fileLoaded(stateType, state, filename)
-    
     def openFileDialog(self, isRef):
         """
         Open a file dialog to select a file.
@@ -414,7 +411,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
         
         # change to new working directory
         if nwd != os.getcwd():
-            self.console.write("Changing to dir "+nwd)
+            self.mainWindow.console.write("Changing to dir "+nwd)
             os.chdir(nwd)
             self.mainWindow.updateCWD()
         
@@ -438,7 +435,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
         self.refLabel.setText(filename)
         self.refLoaded = True
     
-    def openFile(self, filename=None, isRef=False):
+    def openFile(self, filename=None, isRef=False, rouletteIndex=None):
         """
         Open file.
         
@@ -470,7 +467,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
         if isRef:
             status, state = self.refReader.readFile(filename)
         else:
-            status, state = self.latticeReader.readFile(filename, self.currentRefState)
+            status, state = self.latticeReader.readFile(filename, self.currentRefState, rouletteIndex=rouletteIndex)
         
         if not status:
             if isRef:

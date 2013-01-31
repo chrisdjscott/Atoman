@@ -750,7 +750,7 @@ class MainWindow(QtGui.QMainWindow):
             else:
                 self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(0)
     
-    def postFileLoaded(self, fileType, state, filename):
+    def postFileLoaded(self, fileType, state, filename, extension):
         """
         Called when a new file has been loaded.
         
@@ -761,12 +761,16 @@ class MainWindow(QtGui.QMainWindow):
         if fileType == "ref":
             self.refState = state
             
+            self.readLBOMDIN()
+            
             self.postRefLoaded(filename)
         
         else:
             self.inputState = state
         
         self.postInputLoaded(filename)
+        
+        self.fileExtension = extension
     
     def postRefLoaded(self, filename):
         """
@@ -775,7 +779,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         self.setCurrentRefFile(filename)
         self.refLoaded = 1
-        self.textSelector.refresh()
+        
 #        self.mainToolbar.inputTab.clearRefButton.setCheckable(1)
         
         self.inputState.clone(self.refState)
@@ -783,6 +787,8 @@ class MainWindow(QtGui.QMainWindow):
         self.renderer.postRefRender()
         
         self.mainToolbar.inputTab.loadInputBox.show()
+        
+        self.textSelector.refresh()
     
     def postInputLoaded(self, filename):
         """

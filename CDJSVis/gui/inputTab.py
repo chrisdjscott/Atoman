@@ -36,6 +36,7 @@ class InputTab(QtGui.QWidget):
         self.toolbarWidth = width
         
         self.refTypeCurrentIndex = 0
+        self.inputTypeCurrentIndex = 0
         
         # layout
         inputTabLayout = QtGui.QVBoxLayout(self)
@@ -148,7 +149,7 @@ class InputTab(QtGui.QWidget):
         """
         
     
-    def fileLoaded(self, fileType, state, filename):
+    def fileLoaded(self, fileType, state, filename, extension):
         """
         Called when a new file is loaded.
         
@@ -156,7 +157,7 @@ class InputTab(QtGui.QWidget):
          - state is the new Lattice object
         
         """
-        self.mainWindow.postFileLoaded(fileType, state, filename)
+        self.mainWindow.postFileLoaded(fileType, state, filename, extension)
     
     def PBCXChanged(self, val):
         """
@@ -199,7 +200,6 @@ class InputTab(QtGui.QWidget):
         ok = self.okToChangeFileType() 
         
         if ok:
-            print "LOAD REF STACK", index
             self.loadRefStack.setCurrentIndex(index)
             self.refTypeCurrentIndex = index
     
@@ -208,8 +208,8 @@ class InputTab(QtGui.QWidget):
         Change load input stack.
         
         """
-        print "LOAD INPUT STACK", index
         self.loadInputStack.setCurrentIndex(index)
+        self.inputTypeCurrentIndex = index
     
     def okToChangeFileType(self):
         """
