@@ -42,8 +42,8 @@ class InputTab(QtGui.QWidget):
         inputTabLayout = QtGui.QVBoxLayout(self)
         
         # ref box
-        loadRefBox = GenericForm(self, self.toolbarWidth, "Load reference state")
-        loadRefBox.show()
+        self.loadRefBox = GenericForm(self, self.toolbarWidth, "Load reference state")
+        self.loadRefBox.show()
         
         # file type combo
         self.refTypeCombo = QtGui.QComboBox()
@@ -52,10 +52,10 @@ class InputTab(QtGui.QWidget):
         self.refTypeCombo.addItem("LBOMD XYZ")
         self.refTypeCombo.currentIndexChanged.connect(self.setLoadRefStack)
         
-        row = loadRefBox.newRow()
+        row = self.loadRefBox.newRow()
         row.addWidget(self.refTypeCombo)
         
-        inputTabLayout.addWidget(loadRefBox)
+        inputTabLayout.addWidget(self.loadRefBox)
         
         # stacked widget
         self.loadRefStack = QtGui.QStackedWidget()
@@ -69,8 +69,11 @@ class InputTab(QtGui.QWidget):
         self.lbomdXyzWidget_ref = latticeReaderForms.LbomdXYZReaderForm(self, self.mainToolbar, self.mainWindow, self.toolbarWidth, "ref")
         self.loadRefStack.addWidget(self.lbomdXyzWidget_ref)
         
-        row = loadRefBox.newRow()
+        row = self.loadRefBox.newRow()
         row.addWidget(self.loadRefStack)
+        
+        # clear ref box
+        self.clearRefBox = GenericForm(self, self.toolbarWidth, "Load reference state")
         
         # clear ref button
         clearRefButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-delete.svg")), "Clear reference")
@@ -79,8 +82,10 @@ class InputTab(QtGui.QWidget):
         clearRefButton.setChecked(1)
         clearRefButton.clicked.connect(self.mainWindow.clearReference)
         
-        row = loadRefBox.newRow()
+        row = self.clearRefBox.newRow()
         row.addWidget(clearRefButton)
+        
+        inputTabLayout.addWidget(self.clearRefBox)
         
         # input box
         self.loadInputBox = GenericForm(self, self.toolbarWidth, "Load input state")

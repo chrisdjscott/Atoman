@@ -854,6 +854,77 @@ class PovraySettingsDialog(QtGui.QDialog):
 
 ################################################################################
 
+class FfmpegSettingsDialog(QtGui.QDialog):
+    """
+    ffmpeg settings dialog.
+    
+    """
+    def __init__(self, parent=None):
+        super(FfmpegSettingsDialog, self).__init__(parent)
+        
+        self.parent = parent
+        
+        self.setWindowTitle("ffmpeg settings")
+        #TODO: change to movie camera icon
+        self.setWindowIcon(QtGui.QIcon(iconPath("pov-icon.svg")))
+        
+        dialogLayout = QtGui.QVBoxLayout(self)
+        
+        # default settings
+        self.framerate = 10
+        self.bitrate = 10000000
+        self.suffix = "mpg"
+                
+        # framerate
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("Framerate: ")
+        rowLayout.addWidget(label)
+        
+        framerateSpin = QtGui.QSpinBox()
+        framerateSpin.setMinimum(1)
+        framerateSpin.setMaximum(10000)
+        framerateSpin.setValue(self.framerate)
+        framerateSpin.valueChanged.connect(self.framerateChanged)
+        rowLayout.addWidget(framerateSpin)
+        
+        dialogLayout.addWidget(row)
+        
+        # bitrate
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("Bitrate: ")
+        rowLayout.addWidget(label)
+        
+        bitrateSpin = QtGui.QSpinBox()
+        bitrateSpin.setMinimum(1)
+        bitrateSpin.setMaximum(10000000000)
+        bitrateSpin.setValue(self.bitrate)
+        bitrateSpin.valueChanged.connect(self.bitrateChanged)
+        rowLayout.addWidget(bitrateSpin)
+        
+        dialogLayout.addWidget(row)
+    
+    def bitrateChanged(self, val):
+        """
+        Bitrate changed.
+        
+        """
+        self.bitrate = val
+    
+    def framerateChanged(self, val):
+        """
+        Framerate changed.
+        
+        """
+        self.framerate = val
+
+################################################################################
+
 class DefectInfoWindow(QtGui.QDialog):
     """
     Atom info window.
