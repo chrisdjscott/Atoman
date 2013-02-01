@@ -181,16 +181,16 @@ void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int
 /*******************************************************************************
 ** write lattice file
 *******************************************************************************/
-void writeLattice(char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, 
+void writeLattice(char* file, int visibleAtomsDim, int *visibleAtoms, double xdim, double ydim, double zdim, int speclistDim, 
                   char* specieList_c, int specieDim, int* specie, int posDim, double* pos, int chargeDim, 
                   double* charge)
 {
-    int i;
+    int i, index;
     FILE *OUTFILE;
     char symtemp[3];
     
     
-    OUTFILE = fopen( file, "w" );
+    OUTFILE = fopen(file, "w");
     if (OUTFILE == NULL)
     {
         printf("ERROR: could not open file: %s\n", file);
@@ -198,16 +198,18 @@ void writeLattice(char* file, int NAtoms, double xdim, double ydim, double zdim,
         exit(35);
     } 
     
-    fprintf(OUTFILE, "%d\n", NAtoms);
+    fprintf(OUTFILE, "%d\n", visibleAtomsDim);
     fprintf(OUTFILE, "%f %f %f\n", xdim, ydim, zdim);
     
-    for ( i=0; i<NAtoms; i++ )
+    for (i=0; i<visibleAtomsDim; i++)
     {
-        symtemp[0] = specieList_c[2*specie[i]];
-        symtemp[1] = specieList_c[2*specie[i]+1];
+        index = visibleAtoms[i];
+        
+        symtemp[0] = specieList_c[2*specie[index]];
+        symtemp[1] = specieList_c[2*specie[index]+1];
         symtemp[2] = '\0';
         
-        fprintf( OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*i], pos[3*i+1], pos[3*i+2], charge[i] );
+        fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*index], pos[3*index+1], pos[3*index+2], charge[index]);
     }
     
     fclose(OUTFILE);

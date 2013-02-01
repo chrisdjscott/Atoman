@@ -70,7 +70,7 @@ extern void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsD
                                double *specieCovRad, int refSpecieRGBDim1, int refSpecieRGBDim2, double *refSpecieRGB, 
                                int refSpecieCovRadDim, double* refSpecieCovRad);
 
-extern void writeLattice(char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, char* specieList_c, 
+extern void writeLattice(char* file, int visibleAtomsDim, int *visibleAtoms, double xdim, double ydim, double zdim, int speclistDim, char* specieList_c, 
                          int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge);
 %}
 
@@ -84,5 +84,5 @@ extern void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsD
                                double *specieCovRad, int refSpecieRGBDim1, int refSpecieRGBDim2, double *refSpecieRGB, 
                                int refSpecieCovRadDim, double* refSpecieCovRad);
 
-extern void writeLattice(char* file, int NAtoms, double xdim, double ydim, double zdim, int speclistDim, char* specieList_c, 
+extern void writeLattice(char* file, int visibleAtomsDim, int *visibleAtoms, double xdim, double ydim, double zdim, int speclistDim, char* specieList_c, 
                          int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge);

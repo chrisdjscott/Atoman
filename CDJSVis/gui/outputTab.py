@@ -425,11 +425,15 @@ class FileTab(QtGui.QWidget):
             self.mainWindow.displayWarning("File already exists: not overwriting")
             return
         
+        # lattice object
         lattice = self.mainWindow.inputState
+        
+        # gather vis atoms
+        visibleAtoms = self.mainWindow.mainToolbar.filterPage.gatherVisibleAtoms()
         
         #TODO: this should write visible atoms only, not whole lattice!
         
-        output_c.writeLattice(filename, lattice.NAtoms, lattice.cellDims[0], lattice.cellDims[1], lattice.cellDims[2],
+        output_c.writeLattice(filename, visibleAtoms, lattice.cellDims[0], lattice.cellDims[1], lattice.cellDims[2],
                               lattice.specieList, lattice.specie, lattice.pos, lattice.charge)
     
     def saveToFileDialog(self):
