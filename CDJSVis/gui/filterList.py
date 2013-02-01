@@ -398,7 +398,7 @@ class FilterList(QtGui.QWidget):
         dlg.close()
         dlg.accept()
         
-        if filterName == "Point defects":
+        if filterName.startswith("Point defects"):
             self.defectFilterSelected = 0
     
     def createSettingsForm(self, filterName):
