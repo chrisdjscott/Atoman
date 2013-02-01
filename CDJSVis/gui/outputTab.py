@@ -269,6 +269,8 @@ class ImageTab(QtGui.QWidget):
         
         self.POVSettings = dialogs.PovraySettingsDialog(self)
         
+        self.ffmpegSettings = dialogs.FfmpegSettingsDialog(self)
+        
         POVSettingsButton = QtGui.QPushButton("POV-Ray settings")
         POVSettingsButton.clicked.connect(self.showPOVSettings)
         
@@ -325,6 +327,14 @@ class ImageTab(QtGui.QWidget):
         self.POVSettings.hide()
         self.POVSettings.show()
     
+    def showFfmpegSettings(self):
+        """
+        Show ffmpeg settings dialog.
+        
+        """
+        self.ffmpegSettings.hide()
+        self.ffmpegSettings.show()
+    
     def imageTabBarChanged(self, val):
         """
         
@@ -366,6 +376,47 @@ class ImageTab(QtGui.QWidget):
             self.renderType = "VTK"
             self.imageFormat = "jpg"
             self.JPEGCheck.setChecked(1)
+    
+    def createMovie(self, saveDir, saveText):
+        """
+        Create movie.
+        
+        """
+        log = self.mainWindow.console.write
+        
+        CWD = os.getcwd()
+        try:
+            os.chdir(saveDir)
+        except OSError:
+            return 1
+        
+        try:
+            # temporary (should be optional)
+            settings = self.ffmpegSettings
+            framerate = settings.framerate
+            bitrate = settings.bitrate
+            outputprefix = settings.prefix
+            outputsuffix = settings.suffix
+            
+            saveText = os.path.basename(saveText)
+            
+            command = "%s -r %d -y -i %s.%s -r %d -b %dk %s.%s" % (self.ffmpeg, framerate, saveText, 
+                                                                  self.imageFormat, 25, bitrate, 
+                                                                  outputprefix, outputsuffix)
+            
+            log("Creating movie file: %s.%s" % (outputprefix, outputsuffix))
+            
+            # change to QProcess
+            process = subprocess.Popen(command, shell=True, executable="/bin/bash", stdin=subprocess.PIPE, 
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            output, stderr = process.communicate()
+            status = process.poll()
+            if status:
+                log("FFMPEG FAILED")
+                print stderr
+        
+        finally:
+            os.chdir(CWD)
         
 
 ################################################################################
@@ -702,6 +753,11 @@ class ImageSequenceTab(QtGui.QWidget):
         
         rowLayout.addWidget(self.createMovieCheck)
         
+        ffmpegSettingsButton = QtGui.QPushButton("Ffmpeg settings")
+        ffmpegSettingsButton.clicked.connect(self.parent.showFfmpegSettings)
+        
+        rowLayout.addWidget(ffmpegSettingsButton)
+        
         mainLayout.addWidget(row)
         
         # start button
@@ -859,43 +915,18 @@ class ImageSequenceTab(QtGui.QWidget):
             # close progress dialog
             progDialog.close()
         
-        # show wait cursor
-        QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
-        
         # create movie
-        try:
-            if self.createMovie:
-                CWD = os.getcwd()
-                os.chdir(saveDir)
-                
-                # temporary (should be optional)
-                framerate = 10
-                bitrate = 10000000
-                outputprefix = "movie"
-                outputsuffix = "mpg"
-                
-                saveText = os.path.basename(saveText)
-                
-                command = "%s -r %d -y -i %s.%s -r %d -b %d %s.%s" % (self.parent.ffmpeg, framerate, saveText, 
-                                                                      self.parent.imageFormat, 25, bitrate, 
-                                                                      outputprefix, outputsuffix)
-                
-                log("Creating movie file: %s.%s" % (outputprefix, outputsuffix))
-                
-                # change to QProcess
-                process = subprocess.Popen(command, shell=True, executable="/bin/bash", stdin=subprocess.PIPE, 
-                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                output, stderr = process.communicate()
-                status = process.poll()
-                if status:
-                    log("FFMPEG FAILED")
-                    print stderr
-                
-                os.chdir(CWD)
-        
-        finally:
-            # set cursor to normal
-            QtGui.QApplication.restoreOverrideCursor()
+        if self.createMovie:
+            # show wait cursor
+            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+            
+            
+            try:
+                self.parent.createMovie(saveDir, saveText)
+            
+            finally:
+                # set cursor to normal
+                QtGui.QApplication.restoreOverrideCursor()
     
     def warnFirstFileNotPresent(self, filename):
         """
@@ -1065,6 +1096,11 @@ class ImageRotateTab(QtGui.QWidget):
         
         rowLayout.addWidget(self.createMovieCheck)
         
+        ffmpegSettingsButton = QtGui.QPushButton("Ffmpeg settings")
+        ffmpegSettingsButton.clicked.connect(self.parent.showFfmpegSettings)
+        
+        rowLayout.addWidget(ffmpegSettingsButton)
+        
         mainLayout.addWidget(row)
         
         # start button
@@ -1117,8 +1153,19 @@ class ImageRotateTab(QtGui.QWidget):
             print "ERROR: rotate failed"
         
         else:
+            # create movie
             if self.createMovie:
-                print "MOVIE"
+                # show wait cursor
+                QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+                
+                
+                try:
+                    saveText = os.path.join(saveDir, "%s%s" % (str(self.fileprefix.text()), "%d"))
+                    self.parent.createMovie(saveDir, saveText)
+                
+                finally:
+                    # set cursor to normal
+                    QtGui.QApplication.restoreOverrideCursor()
     
     def degPerRotChanged(self, val):
         """

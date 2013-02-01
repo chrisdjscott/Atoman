@@ -143,7 +143,14 @@ class LbomdDatReaderForm(GenericReaderForm):
         label = QtGui.QLabel("File name")
         row.addWidget(label)
         
-        self.latticeLabel = QtGui.QLineEdit("lattice.dat")
+        if state == "ref" and os.path.exists("ref.dat"):
+            ininame = "ref.dat"
+        elif state == "input" and os.path.exists("launch.dat"):
+            ininame = "launch.dat"
+        else:
+            ininame = "lattice.dat"
+        
+        self.latticeLabel = QtGui.QLineEdit(ininame)
         self.latticeLabel.setFixedWidth(150)
         row.addWidget(self.latticeLabel)
         

@@ -872,15 +872,16 @@ class FfmpegSettingsDialog(QtGui.QDialog):
         
         # default settings
         self.framerate = 10
-        self.bitrate = 10000000
+        self.bitrate = 10000
         self.suffix = "mpg"
+        self.prefix = "movie"
                 
         # framerate
         row = QtGui.QWidget(self)
         rowLayout = QtGui.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        label = QtGui.QLabel("Framerate: ")
+        label = QtGui.QLabel("Framerate:")
         rowLayout.addWidget(label)
         
         framerateSpin = QtGui.QSpinBox()
@@ -890,6 +891,9 @@ class FfmpegSettingsDialog(QtGui.QDialog):
         framerateSpin.valueChanged.connect(self.framerateChanged)
         rowLayout.addWidget(framerateSpin)
         
+        label = QtGui.QLabel("fps")
+        rowLayout.addWidget(label)
+        
         dialogLayout.addWidget(row)
         
         # bitrate
@@ -897,7 +901,7 @@ class FfmpegSettingsDialog(QtGui.QDialog):
         rowLayout = QtGui.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        label = QtGui.QLabel("Bitrate: ")
+        label = QtGui.QLabel("Bitrate:")
         rowLayout.addWidget(label)
         
         bitrateSpin = QtGui.QSpinBox()
@@ -907,7 +911,57 @@ class FfmpegSettingsDialog(QtGui.QDialog):
         bitrateSpin.valueChanged.connect(self.bitrateChanged)
         rowLayout.addWidget(bitrateSpin)
         
+        label = QtGui.QLabel("kbits/s")
+        rowLayout.addWidget(label)
+        
         dialogLayout.addWidget(row)
+        
+        # file prefix
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("File prefix:")
+        rowLayout.addWidget(label)
+        
+        prefixLineEdit = QtGui.QLineEdit(self.prefix)
+        prefixLineEdit.setFixedWidth(130)
+        prefixLineEdit.textChanged.connect(self.prefixChanged)
+        rowLayout.addWidget(prefixLineEdit)
+        
+        dialogLayout.addWidget(row)
+        
+        # file suffix
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("Container:")
+        rowLayout.addWidget(label)
+        
+        containerCombo = QtGui.QComboBox()
+        containerCombo.addItem("mpg")
+#        containerCombo.addItem("mp4")
+        containerCombo.addItem("avi")
+#        containerCombo.addItem("mov")
+        containerCombo.currentIndexChanged[QtCore.QString].connect(self.suffixChanged)
+        rowLayout.addWidget(containerCombo)
+        
+        dialogLayout.addWidget(row)
+    
+    def suffixChanged(self, text):
+        """
+        Suffix changed
+        
+        """
+        self.suffix = str(text)
+    
+    def prefixChanged(self, text):
+        """
+        Prefix changed.
+        
+        """
+        self.prefix = str(text)
     
     def bitrateChanged(self, val):
         """
