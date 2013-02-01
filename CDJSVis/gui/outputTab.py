@@ -245,13 +245,13 @@ class RDFTab(QtGui.QWidget):
         if self.spec1 == "ALL":
             spec1Index = -1
         else:
-            spec1Index = np.where(specieList == self.spec1)[0][0]
+            spec1Index = int(np.where(specieList == self.spec1)[0][0])
         print "SPEC 1 INDEX", spec1Index, self.spec1
         
         if self.spec2 == "ALL":
             spec2Index = -1
         else:
-            spec2Index = np.where(specieList == self.spec2)[0][0]
+            spec2Index = int(np.where(specieList == self.spec2)[0][0])
         print "SPEC 2 INDEX", spec2Index, self.spec2
         
         # prelims
