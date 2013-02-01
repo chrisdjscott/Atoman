@@ -13,10 +13,6 @@ import subprocess
 
 import numpy as np
 from PyQt4 import QtGui, QtCore
-import matplotlib
-import matplotlib.pyplot as plt
-#from matplotlib import rc
-#rc('text', usetex=True)
 
 from ..visutils import utilities
 from ..visutils.utilities import iconPath
@@ -24,6 +20,7 @@ from . import dialogs
 from . import genericForm
 from ..visclibs import output_c
 from ..visclibs import rdf as rdf_c
+from . import plotDialog
 
 try:
     from .. import resources
@@ -269,39 +266,19 @@ class RDFTab(QtGui.QWidget):
         interval = (self.binMax - self.binMin) / float(self.NBins)
         xn = np.arange(self.binMin + interval / 2.0, self.binMax, interval, dtype=np.float64)
         
-        #TODO: do in clib!
-#        f = open("RDF.OUT", "w")
-#        
-#        for i in xrange(self.NBins):
-#            ini = float(i) * interval + self.binMin
-#            fin = float(i + 1) * interval + self.binMin
-#            
-#            xn[i] = ini + (fin - ini) / 2.0
-#            
-#            f.write("%f,%f,%f\n" % (xn[i], xn2[i], rdfArray[i]))
-#        f.close()
-        #END TODO
+        #TODO: option to write to file?
         
-        pars = matplotlib.figure.SubplotParams(left=0.14, bottom=0.12, right=None, top=None, wspace=None, hspace=None)
+        # prepare to plot
+        settingsDict = {}
+        settingsDict["title"] = "Radial distribution function"
+        settingsDict["xlabel"] = "Bond length (A)"
+        settingsDict["ylabel"] = "%s - %s G(r)" % (self.spec1, self.spec2)
         
-        fig = plt.figure(figsize=(6,5), subplotpars=pars)
-        
-        ax = fig.add_subplot(111)
-        
-        ax.plot(xn, rdfArray, linewidth=2, label=None)
-        
-        plt.xlabel("Bond length (\AA)", fontsize=18)
-        plt.ylabel("%s - %s G(r)" % (self.spec1, self.spec2), fontsize=18)
-        plt.title("Radial distribution function")
-        
-        for tick in ax.xaxis.get_major_ticks():
-            tick.label1.set_fontsize(16)
-        for tick in ax.yaxis.get_major_ticks():
-            tick.label1.set_fontsize(16)
-        
-        plt.show()
-        
-        
+        # show plot dialog
+        dialog = plotDialog.PlotDialog(self, self.mainWindow, "Radial distribution function ", 
+                                       "plot", (xn, rdfArray), {"linewidth": 2, "label": None},
+                                       settingsDict=settingsDict)
+        dialog.show()
     
     def numBinsChanged(self, val):
         """
