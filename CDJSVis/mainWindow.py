@@ -806,6 +806,9 @@ class MainWindow(QtGui.QMainWindow):
         
         # refresh filters eg specie filter
         self.mainToolbar.filterPage.refreshAllFilters()
+        
+        # refresh rdf page (new specie list)
+        self.mainToolbar.outputPage.rdfTab.refresh()
     
     def clearReference(self):
         """

@@ -457,6 +457,25 @@ class FilterTab(QtGui.QWidget):
         for filterList in self.filterLists:
             for filterSettings in filterList.currentSettings:
                 filterSettings.refresh()
-
+    
+    def gatherVisibleAtoms(self):
+        """
+        Builds an array containing all (unique) visible atoms.
+        
+        """
+        visibleAtomsFull = None
+        for filterList in self.filterLists:
+            visibleAtoms = filterList.filterer.visibleAtoms
+            
+            if visibleAtomsFull is None:
+                visibleAtomsFull = visibleAtoms
+            else:
+                visibleAtomsFull = np.append(visibleAtomsFull, visibleAtoms)
+        
+        visibleAtomsFull = np.unique(visibleAtomsFull)
+        
+        return visibleAtomsFull
+        
+        
 
 

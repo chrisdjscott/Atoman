@@ -128,6 +128,8 @@ class Filterer(object):
         
         if not self.parent.defectFilterSelected:
             self.visibleAtoms = np.arange(NAtoms, dtype=np.int32)
+            NVis = NAtoms
+            self.NVis = NAtoms
 #            self.scalars = np.empty(NAtoms, dtype=np.float64)
             self.log("%d visible atoms" % (len(self.visibleAtoms),), 0, 2)
         

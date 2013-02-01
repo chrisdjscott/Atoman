@@ -11,13 +11,19 @@ import sys
 import shutil
 import subprocess
 
+import numpy as np
 from PyQt4 import QtGui, QtCore
+import matplotlib
+import matplotlib.pyplot as plt
+#from matplotlib import rc
+#rc('text', usetex=True)
 
 from ..visutils import utilities
 from ..visutils.utilities import iconPath
 from . import dialogs
 from . import genericForm
 from ..visclibs import output_c
+from ..visclibs import rdf as rdf_c
 
 try:
     from .. import resources
@@ -68,6 +74,16 @@ class OutputTab(QtGui.QWidget):
         
         self.outputTypeTabBar.addTab(fileTabWidget, "File")
         
+        # rdf tab
+        rdfTabWidget = QtGui.QWidget()
+        rdfTabLayout = QtGui.QVBoxLayout(rdfTabWidget)
+        rdfTabLayout.setContentsMargins(0, 0, 0, 0)
+        
+        self.rdfTab = RDFTab(self, self.mainWindow, self.width)
+        rdfTabLayout.addWidget(self.rdfTab)
+        
+        self.outputTypeTabBar.addTab(rdfTabWidget, "RDF")
+        
         # add tab bar to layout
         outputTabLayout.addWidget(self.outputTypeTabBar)
         
@@ -75,10 +91,261 @@ class OutputTab(QtGui.QWidget):
     def outputTypeTabBarChanged(self):
         pass
 
+################################################################################
+
+class RDFTab(QtGui.QWidget):
+    """
+    RDF output tab.
+    
+    """
+    def __init__(self, parent, mainWindow, tabWidth):
+        super(RDFTab, self).__init__(parent)
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        self.tabWidth = tabWidth
+        
+        # defaults
+        self.spec1 = "ALL"
+        self.spec2 = "ALL"
+        self.binMin = 2.0
+        self.binMax = 10.0
+        self.NBins = 100
+        
+        # layout
+        formLayout = QtGui.QVBoxLayout(self)
+        formLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        # form
+        rdfForm = genericForm.GenericForm(self, 0, "RDF options")
+        rdfForm.show()
+        
+        # bond type
+        label = QtGui.QLabel("Bond type:")
+        row = rdfForm.newRow()
+        row.addWidget(label)
+        
+        self.spec1Combo = QtGui.QComboBox()
+        self.spec1Combo.addItem("ALL")
+        self.spec1Combo.currentIndexChanged[QtCore.QString].connect(self.spec1Changed)
+        row.addWidget(self.spec1Combo)
+        
+        label = QtGui.QLabel(" - ")
+        row.addWidget(label)
+        
+        self.spec2Combo = QtGui.QComboBox()
+        self.spec2Combo.addItem("ALL")
+        self.spec2Combo.currentIndexChanged[QtCore.QString].connect(self.spec2Changed)
+        row.addWidget(self.spec2Combo)
+        
+        # bin range
+        label = QtGui.QLabel("Bin range:")
+        row = rdfForm.newRow()
+        row.addWidget(label)
+        
+        binMinSpin = QtGui.QDoubleSpinBox()
+        binMinSpin.setMinimum(0.0)
+        binMinSpin.setMaximum(500.0)
+        binMinSpin.setSingleStep(0.01)
+        binMinSpin.setValue(self.binMin)
+        binMinSpin.valueChanged.connect(self.binMinChanged)
+        row.addWidget(binMinSpin)
+        
+        label = QtGui.QLabel(" - ")
+        row.addWidget(label)
+        
+        binMaxSpin = QtGui.QDoubleSpinBox()
+        binMaxSpin.setMinimum(0.0)
+        binMaxSpin.setMaximum(500.0)
+        binMaxSpin.setSingleStep(0.01)
+        binMaxSpin.setValue(self.binMax)
+        binMaxSpin.valueChanged.connect(self.binMaxChanged)
+        row.addWidget(binMaxSpin)
+        
+        # num bins
+        label = QtGui.QLabel("Number of bins:")
+        row = rdfForm.newRow()
+        row.addWidget(label)
+        
+        numBinsSpin = QtGui.QSpinBox()
+        numBinsSpin.setMinimum(2)
+        numBinsSpin.setMaximum(100000)
+        numBinsSpin.setSingleStep(1)
+        numBinsSpin.setValue(self.NBins)
+        numBinsSpin.valueChanged.connect(self.numBinsChanged)
+        row.addWidget(numBinsSpin)
+        
+        # plot button
+        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Plotter.png")), "Plot")
+        plotButton.clicked.connect(self.plotRDF)
+        row = rdfForm.newRow()
+        row.addWidget(plotButton)
+        
+        formLayout.addWidget(rdfForm)
+    
+    def refresh(self):
+        """
+        Should be called whenver a new input is loaded.
+        
+        Refreshes the combo boxes with input specie list.
+        
+        """
+        # lattice
+        specieList = self.mainWindow.inputState.specieList
+        
+        # store current so can try to reselect
+        spec1CurrentText = str(self.spec1Combo.currentText())
+        spec2CurrentText = str(self.spec2Combo.currentText())
+        
+        # clear and rebuild combo box
+        self.spec1Combo.clear()
+        self.spec2Combo.clear()
+        
+        self.spec1Combo.addItem("ALL")
+        self.spec2Combo.addItem("ALL")
+        
+        count = 1
+        match1 = False
+        match2 = False
+        for sym in specieList:
+            self.spec1Combo.addItem(sym)
+            self.spec2Combo.addItem(sym)
+            
+            if sym == spec1CurrentText:
+                self.spec1Combo.setCurrentIndex(count)
+                match1 = True
+            
+            if sym == spec2CurrentText:
+                self.spec2Combo.setCurrentIndex(count)
+                match2 = True
+            
+            count += 1
+        
+        if not match1:
+            self.spec1Combo.setCurrentIndex(0)
+        
+        if not match2:
+            self.spec2Combo.setCurrentIndex(0)
+    
+    def plotRDF(self):
+        """
+        Plot RDF.
+        
+        """
+        # first gather vis atoms
+        visibleAtoms = self.mainWindow.mainToolbar.filterPage.gatherVisibleAtoms()
+                    
+        print "LEN", len(visibleAtoms)
+        
+        if not len(visibleAtoms):
+            self.mainWindow.displayWarning("No visible atoms: cannot calculate RDF")
+            return
+        
+        # then determine species
+        inputLattice = self.mainWindow.inputState
+        specieList = inputLattice.specieList
+        
+        if self.spec1 == "ALL":
+            spec1Index = -1
+        else:
+            spec1Index = np.where(specieList == self.spec1)[0][0]
+        print "SPEC 1 INDEX", spec1Index, self.spec1
+        
+        if self.spec2 == "ALL":
+            spec2Index = -1
+        else:
+            spec2Index = np.where(specieList == self.spec2)[0][0]
+        print "SPEC 2 INDEX", spec2Index, self.spec2
+        
+        # prelims
+        rdfArray = np.zeros(self.NBins, np.float64)
+        
+        # then calculate
+        rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.minPos,
+                           inputLattice.maxPos, inputLattice.cellDims, self.mainWindow.PBC, self.binMin, self.binMax, self.NBins,
+                           rdfArray)
+                
+        # then plot
+        interval = (self.binMax - self.binMin) / float(self.NBins)
+        xn = np.arange(self.binMin + interval / 2.0, self.binMax, interval, dtype=np.float64)
+        
+        #TODO: do in clib!
+#        f = open("RDF.OUT", "w")
+#        
+#        for i in xrange(self.NBins):
+#            ini = float(i) * interval + self.binMin
+#            fin = float(i + 1) * interval + self.binMin
+#            
+#            xn[i] = ini + (fin - ini) / 2.0
+#            
+#            f.write("%f,%f,%f\n" % (xn[i], xn2[i], rdfArray[i]))
+#        f.close()
+        #END TODO
+        
+        pars = matplotlib.figure.SubplotParams(left=0.14, bottom=0.12, right=None, top=None, wspace=None, hspace=None)
+        
+        fig = plt.figure(figsize=(6,5), subplotpars=pars)
+        
+        ax = fig.add_subplot(111)
+        
+        ax.plot(xn, rdfArray, linewidth=2, label=None)
+        
+        plt.xlabel("Bond length (\AA)", fontsize=18)
+        plt.ylabel("%s - %s G(r)" % (self.spec1, self.spec2), fontsize=18)
+        plt.title("Radial distribution function")
+        
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label1.set_fontsize(16)
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label1.set_fontsize(16)
+        
+        plt.show()
+        
+        
+    
+    def numBinsChanged(self, val):
+        """
+        Num bins changed.
+        
+        """
+        self.NBins = val
+    
+    def binMinChanged(self, val):
+        """
+        Bin min changed.
+        
+        """
+        self.binMin = val
+    
+    def binMaxChanged(self, val):
+        """
+        Bin max changed.
+        
+        """
+        self.binMax = val
+    
+    def spec1Changed(self, text):
+        """
+        Spec 1 changed.
+        
+        """
+        self.spec1 = str(text)
+    
+    def spec2Changed(self, text):
+        """
+        Spec 2 changed.
+        
+        """
+        self.spec2 = str(text)
+    
 
 ################################################################################
 
 class FileTab(QtGui.QWidget):
+    """
+    File output tab.
+    
+    """
     def __init__(self, parent, mainWindow, width):
         super(FileTab, self).__init__(parent)
         
