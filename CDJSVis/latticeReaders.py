@@ -227,6 +227,7 @@ class LbomdXYZReader(GenericLatticeReader):
         state.specieMass = copy.deepcopy(refLattice.specieMass)
         state.specieCovalentRadius = copy.deepcopy(refLattice.specieCovalentRadius)
         state.specieRGB = copy.deepcopy(refLattice.specieRGB)
+        state.specieAtomicNumber = copy.deepcopy(refLattice.specieAtomicNumber)
         
         return 0, state
         
@@ -295,6 +296,7 @@ class LbomdRefReader(GenericLatticeReader):
         state.specieCount = np.empty(NSpecies, np.int32)
         state.specieMass = np.empty(NSpecies, np.float64)
         state.specieCovalentRadius = np.empty(NSpecies, np.float64)
+        state.specieAtomicNumber = np.empty(NSpecies, np.int32)
         state.specieRGB = np.empty((NSpecies, 3), np.float64)
         for i in xrange(NSpecies):
             state.specieList[i] = specieListTemp[i]
@@ -302,6 +304,7 @@ class LbomdRefReader(GenericLatticeReader):
             
             state.specieMass[i] = elements.atomicMass(state.specieList[i])
             state.specieCovalentRadius[i] = elements.covalentRadius(state.specieList[i])
+            state.specieAtomicNumber[i] = elements.atomicNumber(state.specieList[i])
             rgbtemp = elements.RGB(state.specieList[i])
             state.specieRGB[i][0] = rgbtemp[0]
             state.specieRGB[i][1] = rgbtemp[1]
@@ -374,6 +377,7 @@ class LbomdDatReader(GenericLatticeReader):
         state.specieCount = np.empty(NSpecies, np.int32)
         state.specieMass = np.empty(NSpecies, np.float64)
         state.specieCovalentRadius = np.empty(NSpecies, np.float64)
+        state.specieAtomicNumber = np.empty(NSpecies, np.int32)
         state.specieRGB = np.empty((NSpecies, 3), np.float64)
         for i in xrange(NSpecies):
             state.specieList[i] = specieListTemp[i]
@@ -381,6 +385,7 @@ class LbomdDatReader(GenericLatticeReader):
             
             state.specieMass[i] = elements.atomicMass(state.specieList[i])
             state.specieCovalentRadius[i] = elements.covalentRadius(state.specieList[i])
+            state.specieAtomicNumber[i] = elements.atomicNumber(state.specieList[i])
             rgbtemp = elements.RGB(state.specieList[i])
             state.specieRGB[i][0] = rgbtemp[0]
             state.specieRGB[i][1] = rgbtemp[1]

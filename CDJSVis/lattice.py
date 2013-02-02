@@ -26,6 +26,7 @@ class Lattice(object):
         self.specieMass = []
         self.specieCovalentRadius = []
         self.specieRGB = []
+        self.specieAtomicNumber = []
         
         self.minPos = np.empty(3, np.float64)
         self.maxPos = np.empty(3, np.float64)
@@ -54,6 +55,7 @@ class Lattice(object):
         self.specieMass = []
         self.specieCovalentRadius = []
         self.specieRGB = []
+        self.specieAtomicNumber = []
         
 #         self.minPos = np.empty(3, np.float64)
 #         self.maxPos = np.empty(3, np.float64)
@@ -77,6 +79,7 @@ class Lattice(object):
         for i, sym in enumerate(self.specieList):
             self.specieMass[i] = elements.atomicMass(sym)
             self.specieCovalentRadius[i] = elements.covalentRadius(sym)
+            self.specieAtomicNumber[i] = elements.atomicNumber(sym)
             rgbtemp = elements.RGB(sym)
             self.specieRGB[i][0] = rgbtemp[0]
             self.specieRGB[i][1] = rgbtemp[1]
@@ -106,12 +109,14 @@ class Lattice(object):
         self.specieCount = np.zeros(NSpecies, np.int32)
         self.specieMass = np.empty(NSpecies, np.float64)
         self.specieCovalentRadius = np.empty(NSpecies, np.float64)
+        self.specieAtomicNumber = np.zeros(NSpecies, np.int32)
         self.specieRGB = np.empty((NSpecies, 3), np.float64)
         for i in xrange(NSpecies):
             self.specieList[i] = lattice.specieList[i]
             self.specieCount[i] = lattice.specieCount[i]
             self.specieMass[i] = lattice.specieMass[i]
             self.specieCovalentRadius[i] = lattice.specieCovalentRadius[i]
+            self.specieAtomicNumber[i] = lattice.specieAtomicNumber[i]
             for j in xrange(3):
                 self.specieRGB[i][j] = lattice.specieRGB[i][j]
         
