@@ -985,7 +985,7 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
 
     
 ################################################################################
-def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, mainWindow, actorsCollection, colouringOptions):
+def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, mainWindow, actorsCollection, colouringOptions, filterSettings):
     
     NInt = len(interstitials)
     NVac = len(vacancies)
@@ -1153,9 +1153,10 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsPolyData.GetPointData().SetScalars(intScalarsList[i])
         
         vacsGlyphSource = vtk.vtkCubeSource()
-        vacsGlyphSource.SetXLength(1.5 * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetYLength(1.5 * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetZLength(1.5 * refLattice.specieCovalentRadius[i])
+        scaleVacs = 2.0 * filterSettings.vacScaleSize
+        vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i])
         
         vacsGlyph = vtk.vtkGlyph3D()
         vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
@@ -1170,9 +1171,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         
         vacsActor = vtk.vtkActor()
         vacsActor.SetMapper(vacsMapper)
-        vacsActor.GetProperty().SetSpecular(0.4)
-        vacsActor.GetProperty().SetSpecularPower(10)
-        vacsActor.GetProperty().SetOpacity(0.8)
+        vacsActor.GetProperty().SetSpecular(filterSettings.vacSpecular)
+        vacsActor.GetProperty().SetSpecularPower(filterSettings.vacSpecularPower)
+        vacsActor.GetProperty().SetOpacity(filterSettings.vacOpacity)
         
         actorsCollection.AddItem(vacsActor)
     
@@ -1263,9 +1264,10 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsPolyData.GetPointData().SetScalars(intScalarsList[i])
         
         vacsGlyphSource = vtk.vtkCubeSource()
-        vacsGlyphSource.SetXLength(1.5 * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetYLength(1.5 * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetZLength(1.5 * refLattice.specieCovalentRadius[i])
+        scaleVacs = 2.0 * filterSettings.vacScaleSize
+        vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i])
         
         vacsGlyph = vtk.vtkGlyph3D()
         vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
@@ -1280,9 +1282,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         
         vacsActor = vtk.vtkActor()
         vacsActor.SetMapper(vacsMapper)
-        vacsActor.GetProperty().SetSpecular(0.4)
-        vacsActor.GetProperty().SetSpecularPower(10)
-        vacsActor.GetProperty().SetOpacity(0.8)
+        vacsActor.GetProperty().SetSpecular(filterSettings.vacSpecular)
+        vacsActor.GetProperty().SetSpecularPower(filterSettings.vacSpecularPower)
+        vacsActor.GetProperty().SetOpacity(filterSettings.vacOpacity)
         
         actorsCollection.AddItem(vacsActor)
     

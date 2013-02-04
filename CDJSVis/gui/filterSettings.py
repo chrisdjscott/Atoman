@@ -569,6 +569,10 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.drawConvexHulls = 0
         self.hideDefects = 0
         self.identifySplitInts = 1
+        self.vacScaleSize = 0.75
+        self.vacOpacity = 0.8
+        self.vacSpecular = 0.4
+        self.vacSpecularPower = 10
         
         # vacancy radius option
         label = QtGui.QLabel("Vacancy radius ")
@@ -756,7 +760,95 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row = self.newDisplayRow()
         row.addWidget(self.calcVolsCheckBox)
         
+        # vac display settings
+        vacForm = genericForm.GenericForm(self, 0, "Vac display settings")
+        vacForm.show()
+        
+#        self.vacScaleSize = 0.75
+#        self.vacOpacity = 0.8
+#        self.vacSpecular = 0.4
+#        self.vacSpecularPower = 10
+        
+        # scale size
+        vacScaleSizeSpin = QtGui.QDoubleSpinBox()
+        vacScaleSizeSpin.setMinimum(0.1)
+        vacScaleSizeSpin.setMaximum(2.0)
+        vacScaleSizeSpin.setSingleStep(0.1)
+        vacScaleSizeSpin.setValue(self.vacScaleSize)
+        vacScaleSizeSpin.valueChanged.connect(self.vacScaleSizeChanged)
+        
+        row = vacForm.newRow()
+        row.addWidget(QtGui.QLabel("Scale size:"))
+        row.addWidget(vacScaleSizeSpin)
+        
+        # opacity
+        vacOpacitySpin = QtGui.QDoubleSpinBox()
+        vacOpacitySpin.setMinimum(0.01)
+        vacOpacitySpin.setMaximum(1.0)
+        vacOpacitySpin.setSingleStep(0.01)
+        vacOpacitySpin.setValue(self.vacOpacity)
+        vacOpacitySpin.valueChanged.connect(self.vacOpacityChanged)
+        
+        row = vacForm.newRow()
+        row.addWidget(QtGui.QLabel("Opacity:"))
+        row.addWidget(vacOpacitySpin)
+        
+        # specular
+        vacSpecularSpin = QtGui.QDoubleSpinBox()
+        vacSpecularSpin.setMinimum(0.01)
+        vacSpecularSpin.setMaximum(1.0)
+        vacSpecularSpin.setSingleStep(0.01)
+        vacSpecularSpin.setValue(self.vacSpecular)
+        vacSpecularSpin.valueChanged.connect(self.vacSpecularChanged)
+        
+        row = vacForm.newRow()
+        row.addWidget(QtGui.QLabel("Specular:"))
+        row.addWidget(vacSpecularSpin)
+        
+        # specular power
+        vacSpecularPowerSpin = QtGui.QDoubleSpinBox()
+        vacSpecularPowerSpin.setMinimum(0)
+        vacSpecularPowerSpin.setMaximum(100)
+        vacSpecularPowerSpin.setSingleStep(0.1)
+        vacSpecularPowerSpin.setValue(self.vacSpecularPower)
+        vacSpecularPowerSpin.valueChanged.connect(self.vacSpecularPowerChanged)
+        
+        row = vacForm.newRow()
+        row.addWidget(QtGui.QLabel("Specular power:"))
+        row.addWidget(vacSpecularPowerSpin)
+        
+        row = self.newDisplayRow()
+        row.addWidget(vacForm)
+        
         self.refresh()
+    
+    def vacSpecularPowerChanged(self, val):
+        """
+        Vac specular power changed.
+        
+        """
+        self.vacSpecularPower = val
+    
+    def vacSpecularChanged(self, val):
+        """
+        Vac specular changed.
+        
+        """
+        self.vacSpecular = val
+    
+    def vacOpacityChanged(self, val):
+        """
+        Vac opacity changed.
+        
+        """
+        self.vacOpacity = val
+    
+    def vacScaleSizeChanged(self, val):
+        """
+        Vac scale size changed.
+        
+        """
+        self.vacScaleSize = val
     
     def identifySplitsChanged(self, state):
         """

@@ -230,7 +230,7 @@ class Filterer(object):
                 pass
             
             else:
-                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.mainWindow, self.actorsCollection, self.colouringOptions)
+                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.mainWindow, self.actorsCollection, self.colouringOptions, filterSettings)
                 
                 self.vacancySpecieCount = counters[0]
                 self.interstitialSpecieCount = counters[1]
