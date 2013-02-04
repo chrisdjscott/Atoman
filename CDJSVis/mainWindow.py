@@ -16,6 +16,7 @@ from PyQt4.pyqtconfig import Configuration as PyQt4Config
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import numpy as np
+import matplotlib
 
 from .visutils.utilities import iconPath, resourcePath
 from .atoms import elements
@@ -859,9 +860,9 @@ class MainWindow(QtGui.QMainWindow):
                                 <p>This application can be used to visualise atomistic simulations.</p>
                                 <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
                                    by Marc Robinson.</p>
-                                <p>Python %s - Qt %s - PyQt %s  - VTK %s on %s""" % (
+                                <p>Python %s - Qt %s - PyQt %s - VTK %s - Matplotlib %s on %s""" % (
                                 __version__, platform.python_version(), QtCore.QT_VERSION_STR, pyqt4_version,
-                                vtk.vtkVersion.GetVTKVersion(), platform.system()))
+                                vtk.vtkVersion.GetVTKVersion(), matplotlib.__version__, platform.system()))
     
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):
