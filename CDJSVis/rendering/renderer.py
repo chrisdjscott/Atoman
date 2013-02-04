@@ -330,7 +330,6 @@ class Renderer(object):
             writer.Write()
         
         elif renderType == "POV":
-            
 #            pov = vtk.vtkPOVExporter()
 #            pov.SetRenderWindow(self.renWinInteract.GetRenderWindow())
 #            pov.SetFileName("fruitcake.pov")
@@ -359,6 +358,9 @@ class Renderer(object):
             
             fh.close()
             
+            # POV-Ray settings
+            settings = self.mainWindow.mainToolbar.outputPage.imageTab.POVSettings
+            
             # then join filter list files
             filterLists = self.mainWindow.mainToolbar.filterPage.filterLists
             CWD = os.getcwd()
@@ -380,7 +382,33 @@ class Renderer(object):
                 output, stderr, status = utilities.runSubProcess(command)
                 if status:
                     return None
-            
+                
+                # create povray ini file
+                povIniFile = "image.ini"
+                
+                tmpPovOutputFile = "image.%s" % imageFormat
+                
+                lines = []
+                nl = lines.append
+                nl("; CDJSVis auto-generated POV-Ray INI file")
+                nl("Input_File_Name='%s'" % "image.pov")
+                nl("Width=%d" % settings.HRes)
+                nl("Height=%d" % settings.VRes)
+                nl("Display=off")
+                nl("Antialias=on")
+                nl("Output_File_Name='%s'" % tmpPovOutputFile)
+                
+                fh = open(povIniFile, "w")
+                fh.write("\n".join(lines))
+                fh.close()
+                
+                # run povray
+                command = "%s %s" % (povray, povIniFile)
+                output, stderr, status = utilities.runSubProcess(command)
+                if status:
+                    print "STDERR:", stderr
+                    return None
+                
             finally:
                 os.chdir(CWD)
             
@@ -392,33 +420,12 @@ class Renderer(object):
                     count += 1
                     filename = "%s(%d).%s" % (fileprefix, count, imageFormat)
             
-            # POV-Ray settings
-            settings = self.mainWindow.mainToolbar.outputPage.imageTab.POVSettings
-            
-            # create povray ini file
-            povIniFile = os.path.join(self.mainWindow.tmpDirectory, "image.ini")
-            
-            lines = []
-            nl = lines.append
-            nl("; CDJSVis auto-generated POV-Ray INI file")
-            nl("Input_File_Name='%s'" % os.path.join(self.mainWindow.tmpDirectory, "image.pov"))
-            nl("Width=%d" % settings.HRes)
-            nl("Height=%d" % settings.VRes)
-            nl("Display=off")
-            nl("Antialias=on")
-            nl("Output_File_Name='%s'" % filename)
-            
-            fh = open(povIniFile, "w")
-            fh.write("\n".join(lines))
-            fh.close()
-            
-            # run povray
-            command = "%s %s" % (povray, povIniFile)
-            output, stderr, status = utilities.runSubProcess(command)
-            if status:
-                print "STDERR:", stderr
-                return None
-            
+            # rename tmp image file to where it should be
+            try:
+                os.rename(os.path.join(self.mainWindow.tmpDirectory, tmpPovOutputFile), filename)
+            except OSError:
+                print "ERROR COPYING POV FILE"
+                        
             # remove image files
             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "image.pov"))
             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "header.pov"))
@@ -426,6 +433,7 @@ class Renderer(object):
         
         if not os.path.exists(filename):
             print "WARNING: SOMETHING WENT WRONG WITH SAVEIMAGE"
+            return None
         
         elif renderType == "POV" and overlay:
             self.overlayImage(filename)
