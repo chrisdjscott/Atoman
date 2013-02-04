@@ -79,7 +79,7 @@ class OutputTab(QtGui.QWidget):
         self.rdfTab = RDFTab(self, self.mainWindow, self.width)
         rdfTabLayout.addWidget(self.rdfTab)
         
-        self.outputTypeTabBar.addTab(rdfTabWidget, "RDF")
+        self.outputTypeTabBar.addTab(rdfTabWidget, "Plot")
         
         # add tab bar to layout
         outputTabLayout.addWidget(self.outputTypeTabBar)
@@ -114,7 +114,7 @@ class RDFTab(QtGui.QWidget):
         formLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # form
-        rdfForm = genericForm.GenericForm(self, 0, "RDF options")
+        rdfForm = genericForm.GenericForm(self, 0, "RDF plot options")
         rdfForm.show()
         
         # bond type
@@ -232,8 +232,6 @@ class RDFTab(QtGui.QWidget):
         # first gather vis atoms
         visibleAtoms = self.mainWindow.mainToolbar.filterPage.gatherVisibleAtoms()
                     
-        print "LEN", len(visibleAtoms)
-        
         if not len(visibleAtoms):
             self.mainWindow.displayWarning("No visible atoms: cannot calculate RDF")
             return
@@ -246,13 +244,11 @@ class RDFTab(QtGui.QWidget):
             spec1Index = -1
         else:
             spec1Index = int(np.where(specieList == self.spec1)[0][0])
-        print "SPEC 1 INDEX", spec1Index, self.spec1
         
         if self.spec2 == "ALL":
             spec2Index = -1
         else:
             spec2Index = int(np.where(specieList == self.spec2)[0][0])
-        print "SPEC 2 INDEX", spec2Index, self.spec2
         
         # prelims
         rdfArray = np.zeros(self.NBins, np.float64)
