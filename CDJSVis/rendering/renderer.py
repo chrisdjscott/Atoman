@@ -273,7 +273,7 @@ class Renderer(object):
 #            
 #            filterList.addActors()
     
-    def rotateAndSaveImage(self, renderType, imageFormat, fileprefix, overwrite, degreesPerRotation, povray="povray", overlay=False):
+    def rotateAndSaveImage(self, renderType, imageFormat, fileprefix, overwrite, degreesPerRotation, povray="povray"):
         """
         Rotate image.
         
@@ -286,7 +286,7 @@ class Renderer(object):
             fileprefixFull = "%s%d" % (fileprefix, i)
             
             # save image
-            savedFile = self.saveImage(renderType, imageFormat, fileprefixFull, overwrite, povray=povray, overlay=overlay)
+            savedFile = self.saveImage(renderType, imageFormat, fileprefixFull, overwrite, povray=povray)
             
             if savedFile is None:
                 return 1
@@ -296,7 +296,7 @@ class Renderer(object):
         
         return 0
     
-    def saveImage(self, renderType, imageFormat, fileprefix, overwrite, povray="povray", overlay=False):
+    def saveImage(self, renderType, imageFormat, fileprefix, overwrite, povray="povray"):
         """
         Save image to file.
         
@@ -337,12 +337,7 @@ class Renderer(object):
 #            print "WRITTEN"
 #            return None
             
-            # size of vtk widget
-#            print "WINDOW HEIGHT", self.mainWindow.VTKWidget.height()
-#            print "WINDOW WIDTH", self.mainWindow.VTKWidget.width()
-            renWinH = 600 #self.mainWindow.VTKWidget.height()
-            renWinW = 800 #self.mainWindow.VTKWidget.width()
-            
+            # header file
             povfile = os.path.join(self.mainWindow.tmpDirectory, "header.pov")
             fh = open(povfile, "w")
             
@@ -359,7 +354,8 @@ class Renderer(object):
             fh.close()
             
             # POV-Ray settings
-            settings = self.mainWindow.mainToolbar.outputPage.imageTab.POVSettings
+            settings = self.mainWindow.preferences.povrayForm
+            overlay = settings.overlayImage
             
             # then join filter list files
             filterLists = self.mainWindow.mainToolbar.filterPage.filterLists
@@ -637,7 +633,7 @@ class Renderer(object):
         Write POV-Ray header file.
         
         """
-        settings = self.mainWindow.mainToolbar.outputPage.imageTab.POVSettings
+        settings = self.mainWindow.preferences.povrayForm
         
         focalPoint = self.camera.GetFocalPoint()
         campos = self.camera.GetPosition()

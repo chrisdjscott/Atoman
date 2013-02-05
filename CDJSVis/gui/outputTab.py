@@ -443,6 +443,16 @@ class ImageTab(QtGui.QWidget):
         self.imageFormat = "jpg"
 #        self.overlayImage = False
         
+        # check ffmpeg/povray installed
+        self.ffmpeg = utilities.checkForExe("ffmpeg")
+        self.povray = utilities.checkForExe("povray")
+        
+        if self.ffmpeg:
+            self.mainWindow.console.write("'ffmpeg' executable located at: %s" % (self.ffmpeg,))
+        
+        if self.povray:
+            self.mainWindow.console.write("'povray' executable located at: %s" % (self.povray,))
+        
         imageTabLayout = QtGui.QVBoxLayout(self)
 #        imageTabLayout.setContentsMargins(0, 0, 0, 0)
 #        imageTabLayout.setSpacing(0)
@@ -511,15 +521,6 @@ class ImageTab(QtGui.QWidget):
         rowLayout = QtGui.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        self.POVSettings = dialogs.PovraySettingsDialog(self)
-        
-        self.ffmpegSettings = dialogs.FfmpegSettingsDialog(self)
-        
-        POVSettingsButton = QtGui.QPushButton("POV-Ray settings")
-        POVSettingsButton.clicked.connect(self.showPOVSettings)
-        
-        rowLayout.addWidget(POVSettingsButton)
-        
         groupLayout.addWidget(row)
         
         imageTabLayout.addWidget(group)
@@ -552,32 +553,6 @@ class ImageTab(QtGui.QWidget):
         self.imageTabBar.addTab(imageRotateTabWidget, "Rotate")
         
         imageTabLayout.addWidget(self.imageTabBar)
-        
-        # check ffmpeg/povray installed
-        self.ffmpeg = utilities.checkForExe("ffmpeg")
-        self.povray = utilities.checkForExe("povray")
-        
-        if self.ffmpeg:
-            self.mainWindow.console.write("'ffmpeg' executable located at: %s" % (self.ffmpeg,))
-        
-        if self.povray:
-            self.mainWindow.console.write("'povray' executable located at: %s" % (self.povray,))
-    
-    def showPOVSettings(self):
-        """
-        Show POV-Ray settings dialog.
-        
-        """
-        self.POVSettings.hide()
-        self.POVSettings.show()
-    
-    def showFfmpegSettings(self):
-        """
-        Show ffmpeg settings dialog.
-        
-        """
-        self.ffmpegSettings.hide()
-        self.ffmpegSettings.show()
     
     def imageTabBarChanged(self, val):
         """
@@ -636,7 +611,7 @@ class ImageTab(QtGui.QWidget):
         
         try:
             # temporary (should be optional)
-            settings = self.ffmpegSettings
+            settings = self.mainWindow.preferences.ffmpegForm
             framerate = settings.framerate
             bitrate = settings.bitrate
             outputprefix = settings.prefix
@@ -779,8 +754,7 @@ class SingleImageTab(QtGui.QWidget):
             progress.show()
         
         filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                      filename, self.overwriteImage, povray=self.parent.povray,
-                                                      overlay=self.parent.POVSettings.overlayImage)
+                                                      filename, self.overwriteImage, povray=self.parent.povray)
         
         # hide progress dialog
         if showProgress and self.parent.renderType == "POV":
@@ -842,7 +816,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.interval = 1
         self.fileprefixText = "guess"
         self.overwrite = 0
-        self.createMovie = 0
+        self.createMovie = 1
         
         # layout
         mainLayout = QtGui.QVBoxLayout(self)
@@ -993,14 +967,15 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         self.createMovieCheck = QtGui.QCheckBox("Create movie")
+        if self.parent.ffmpeg:
+            self.createMovieCheck.setChecked(True)
+            self.createMovie = True
+        else:
+            self.createMovieCheck.setChecked(False)
+            self.createMovie = False
         self.connect(self.createMovieCheck, QtCore.SIGNAL('stateChanged(int)'), self.createMovieCheckChanged)
         
         rowLayout.addWidget(self.createMovieCheck)
-        
-        ffmpegSettingsButton = QtGui.QPushButton("Ffmpeg settings")
-        ffmpegSettingsButton.clicked.connect(self.parent.showFfmpegSettings)
-        
-        rowLayout.addWidget(ffmpegSettingsButton)
         
         mainLayout.addWidget(row)
         
@@ -1030,10 +1005,10 @@ class ImageSequenceTab(QtGui.QWidget):
                 self.createMovieCheck.setCheckState(0)
                 return
             
-            self.createMovie = 1
+            self.createMovie = True
         
         else:
-            self.createMovie = 0
+            self.createMovie = False
     
     def resetPrefix(self):
         """
@@ -1141,8 +1116,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 
                 # now save image
                 filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                              saveName, 1, povray=self.parent.povray,
-                                                              overlay=self.parent.POVSettings.overlayImage)
+                                                              saveName, 1, povray=self.parent.povray)
                 
                 count += 1
                 
@@ -1336,14 +1310,15 @@ class ImageRotateTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         self.createMovieCheck = QtGui.QCheckBox("Create movie")
+        if self.parent.ffmpeg:
+            self.createMovieCheck.setChecked(True)
+            self.createMovie = True
+        else:
+            self.createMovieCheck.setChecked(False)
+            self.createMovie = False
         self.connect(self.createMovieCheck, QtCore.SIGNAL('stateChanged(int)'), self.createMovieCheckChanged)
         
         rowLayout.addWidget(self.createMovieCheck)
-        
-        ffmpegSettingsButton = QtGui.QPushButton("Ffmpeg settings")
-        ffmpegSettingsButton.clicked.connect(self.parent.showFfmpegSettings)
-        
-        rowLayout.addWidget(ffmpegSettingsButton)
         
         mainLayout.addWidget(row)
         
@@ -1389,8 +1364,7 @@ class ImageRotateTab(QtGui.QWidget):
         
         # send to renderer
         status = self.mainWindow.renderer.rotateAndSaveImage(self.parent.renderType, self.parent.imageFormat, fileprefix, 
-                                                             1, self.degreesPerRotation, povray=self.parent.povray,
-                                                             overlay=self.parent.POVSettings.overlayImage)
+                                                             1, self.degreesPerRotation, povray=self.parent.povray)
         
         # movie?
         if status:
@@ -1429,10 +1403,10 @@ class ImageRotateTab(QtGui.QWidget):
                 self.createMovieCheck.setCheckState(0)
                 return
             
-            self.createMovie = 1
+            self.createMovie = True
         
         else:
-            self.createMovie = 0
+            self.createMovie = False
 
     def overwriteCheckChanged(self, val):
         """

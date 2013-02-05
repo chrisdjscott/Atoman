@@ -108,6 +108,9 @@ class MainWindow(QtGui.QMainWindow):
         # image viewer
         self.imageViewer = dialogs.ImageViewer(self, parent=self)
         
+        # preferences dialog
+        self.preferences = dialogs.PreferencesDialog(parent=self)
+        
         # add the main tool bar
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
@@ -128,11 +131,17 @@ class MainWindow(QtGui.QMainWindow):
                                                  icon="file-import-icon.png", tip="Import element properties")
         showImageViewerAction = self.createAction("Image viewer", slot=self.showImageViewer, 
                                                   icon="applications-graphics.svg", tip="Show image viewer")
+        showPreferencesAction = self.createAction("Preferences", slot=self.showPreferences, 
+                                                  icon="applications-system.svg", tip="Show preferences window")
         
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
         self.addActions(fileMenu, (newWindowAction, openCWDAction, showImageViewerAction, importElementsAction, 
                                    exportElementsAction, None, exitAction))
+        
+        # add edit menu
+        editMenu = self.menuBar().addMenu("&Edit")
+        self.addActions(editMenu, (showPreferencesAction,))
         
         # add file toolbar
         fileToolbar = self.addToolBar("File")
@@ -201,6 +210,7 @@ class MainWindow(QtGui.QMainWindow):
         
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
+        helpToolbar.addAction(showPreferencesAction)
         helpToolbar.addAction(aboutAction)
         helpToolbar.addAction(helpAction)
         
@@ -268,6 +278,14 @@ class MainWindow(QtGui.QMainWindow):
         
         # give focus
         self.raise_()
+    
+    def showPreferences(self):
+        """
+        Show preferences window.
+        
+        """
+        self.preferences.hide()
+        self.preferences.show()
     
     def showTextSelector(self):
         """

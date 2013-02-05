@@ -47,15 +47,16 @@ class PlotDialog(QtGui.QDialog):
         self.setWindowTitle("Plotter - %s" % dlgTitle)
         self.setWindowIcon(QtGui.QIcon(iconPath("Plotter.png")))
         
-        #TODO: these should be read from preferences
-        figWidth = 8
-        figHeight = 6
-        figDpi = 100
-        showGrid = True
-        fontsize = 18
-        tickFontsize = 16
-        legendFontsize = 16
-        #END TODO
+        # settings
+        settings = self.mainWindow.preferences.matplotlibForm
+        
+        figWidth = settings.figWidth
+        figHeight = settings.figHeight
+        figDpi = settings.figDpi
+        showGrid = settings.showGrid
+        fontsize = settings.fontsize
+        tickFontsize = settings.tickFontsize
+        legendFontsize = settings.legendFontsize
         
         # set dimension of dialog
         self.dlgWidth = figWidth * figDpi + 20
