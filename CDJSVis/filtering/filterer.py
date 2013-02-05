@@ -18,6 +18,8 @@ from ..rendering import renderer
 from ..visutils import vectors
 from . import clusters
 from ..atoms import elements
+from ..visclibs_ctypes import bonds as bonds_c
+from ..visclibs_ctypes import numpy_utils as nputils
 
 
 ################################################################################
@@ -291,6 +293,7 @@ class Filterer(object):
         
         # construct bonds array
         calcBonds = False
+        maxBond = -1
         for i in xrange(self.bondsOptions.NBondPairs):
             pair = self.bondsOptions.bondPairsList[i]
             drawPair = self.bondsOptions.bondPairDrawStatus[i]
@@ -323,6 +326,9 @@ class Filterer(object):
                         bondMaxArray[indexa][indexb] = bondMax
                         bondMaxArray[indexb][indexa] = bondMax
                         
+                        if bondMax > maxBond:
+                            maxBond = bondMax
+                        
                         calcBonds = True
                 
                         print "PAIR: %s - %s; bond range: %f -> %f" % (pair[0], pair[1], bondMin, bondMax)
@@ -331,11 +337,37 @@ class Filterer(object):
             print "NO BONDS TO CALC"
             return
         
+        # arrays for results
+        maxBondsPerAtom = 50
+        size = self.NVis * maxBondsPerAtom
+        print "SIZE", size
+        print "MAX BOND", maxBond
+        bondArray = np.empty(size, np.int32)
+        NBondsArray = np.zeros(self.NVis, np.int32)
+        
+        status = bonds_c.calculateBonds(self.NVis, self.visibleAtoms, inputState.pos, inputState.specie, len(specieList), bondMinArray, bondMaxArray, 
+                                        maxBond, maxBondsPerAtom, inputState.cellDims, self.mainWindow.PBC, inputState.minPos, inputState.maxPos, 
+                                        bondArray, NBondsArray)
+        
+        print "BACK IN PY"
+        
+        if status:
+            print "ERROR IN BONDS LIB"
+            return 1
+        
+        # total number of bonds
+        NBondsTotal = np.sum(NBondsArray)
+        print "NBONDSTOT", NBondsTotal
+        
+        # resize bond array
+        bondArray.resize(NBondsTotal)
         
         
         
         
         
+        
+        return 0
     
     def addScalarBar(self):
         """

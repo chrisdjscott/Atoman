@@ -57,6 +57,14 @@ def main():
         command = "make"
         print command
         os.system(command)
+        os.chdir("..")
+        
+        # run Makefile
+        os.chdir("visclibs_ctypes")
+        command = "make"
+        print command
+        os.system(command)
+        os.chdir("..")
 
 
 ################################################################################
