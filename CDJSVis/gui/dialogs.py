@@ -24,6 +24,7 @@ except ImportError:
 
 
 ################################################################################
+
 class ConsoleWindow(QtGui.QDialog):
     """
     Console window for displaying output to the user.
@@ -92,8 +93,8 @@ class ConsoleWindow(QtGui.QDialog):
         self.hide()
         self.parent.consoleOpen = 0
 
-
 ################################################################################
+
 class ElementEditor(QtGui.QDialog):
     """
     Dialog to edit element properties.
@@ -322,8 +323,8 @@ class ElementEditor(QtGui.QDialog):
             self.colourDict[sym][1] = float(col.green() / 255.0)
             self.colourDict[sym][2] = float(col.blue() / 255.0)
 
-
 ################################################################################
+
 class ImageViewer(QtGui.QDialog):
     """
     Image viewer.
@@ -450,8 +451,8 @@ class ImageViewer(QtGui.QDialog):
             self.model.filePath(self.view.currentIndex())
             self.showImage(self.model.filePath(self.view.currentIndex()))
 
-
 ################################################################################
+
 class OnScreenTextListWidget(QtGui.QListWidget):
     """
     Override QListWidget to allow drag/drops.
@@ -713,272 +714,6 @@ class OnScreenInfoDialog(QtGui.QDialog):
 
 ################################################################################
 
-class PovraySettingsDialog(QtGui.QDialog):
-    """
-    POV-Ray settings dialog.
-    
-    """
-    def __init__(self, parent=None):
-        super(PovraySettingsDialog, self).__init__(parent)
-        
-        self.parent = parent
-        
-        self.setWindowTitle("POV-Ray settings")
-        self.setWindowIcon(QtGui.QIcon(iconPath("pov-icon.svg")))
-        
-        dialogLayout = QtGui.QVBoxLayout(self)
-        
-        # default settings
-        self.overlayImage = True
-        self.shadowless = False
-        self.HRes = 800
-        self.VRes = 600
-        self.viewAngle = 45
-        
-                
-        # overlay check box
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        self.overlayImageCheck = QtGui.QCheckBox("Overlay image")
-        self.overlayImageCheck.setChecked(1)
-        self.overlayImageCheck.stateChanged.connect(self.overlayImageChanged)
-        
-        rowLayout.addWidget(self.overlayImageCheck)
-        
-        dialogLayout.addWidget(row)
-        
-        # shadowless check box
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        self.shadowlessCheck = QtGui.QCheckBox("Shadowless")
-        self.shadowlessCheck.stateChanged.connect(self.shadowlessChanged)
-        
-        rowLayout.addWidget(self.shadowlessCheck)
-        
-        dialogLayout.addWidget(row)
-        
-        # dimensions
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        label = QtGui.QLabel("Dimensions: ")
-        rowLayout.addWidget(label)
-        
-        HResSpinBox = QtGui.QSpinBox()
-        HResSpinBox.setMinimum(1)
-        HResSpinBox.setMaximum(10000)
-        HResSpinBox.setValue(self.HRes)
-        HResSpinBox.valueChanged.connect(self.HResChanged)
-        rowLayout.addWidget(HResSpinBox)
-        
-        label = QtGui.QLabel(" x ")
-        rowLayout.addWidget(label)
-        
-        VResSpinBox = QtGui.QSpinBox()
-        VResSpinBox.setMinimum(1)
-        VResSpinBox.setMaximum(10000)
-        VResSpinBox.setValue(self.VRes)
-        VResSpinBox.valueChanged.connect(self.VResChanged)
-        rowLayout.addWidget(VResSpinBox)
-        
-        dialogLayout.addWidget(row)
-        
-        # view angle
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        label = QtGui.QLabel("View angle: ")
-        rowLayout.addWidget(label)
-        
-        angleSpinBox = QtGui.QDoubleSpinBox()
-        angleSpinBox.setSingleStep(0.1)
-        angleSpinBox.setMinimum(0.1)
-        angleSpinBox.setMaximum(360.0)
-        angleSpinBox.setValue(self.viewAngle)
-        angleSpinBox.valueChanged.connect(self.viewAngleChanged)
-        rowLayout.addWidget(angleSpinBox)
-        
-        label = QtGui.QLabel(" degrees")
-        rowLayout.addWidget(label)
-        
-        dialogLayout.addWidget(row)
-        
-    def viewAngleChanged(self, val):
-        """
-        View angle changed.
-        
-        """
-        self.viewAngle = val
-    
-    def VResChanged(self, val):
-        """
-        Horizontal resolution changed.
-        
-        """
-        self.VRes = val
-    
-    def HResChanged(self, val):
-        """
-        Horizontal resolution changed.
-        
-        """
-        self.HRes = val
-    
-    def overlayImageChanged(self, state):
-        """
-        Overlay image changed.
-        
-        """
-        if self.overlayImageCheck.isChecked():
-            self.overlayImage = True
-        
-        else:
-            self.overlayImage = False
-    
-    def shadowlessChanged(self, state):
-        """
-        Overlay image changed.
-        
-        """
-        if self.shadowlessCheck.isChecked():
-            self.shadowless = True
-        
-        else:
-            self.shadowless = False
-
-################################################################################
-
-class FfmpegSettingsDialog(QtGui.QDialog):
-    """
-    ffmpeg settings dialog.
-    
-    """
-    def __init__(self, parent=None):
-        super(FfmpegSettingsDialog, self).__init__(parent)
-        
-        self.parent = parent
-        
-        self.setWindowTitle("ffmpeg settings")
-        #TODO: change to movie camera icon
-        self.setWindowIcon(QtGui.QIcon(iconPath("pov-icon.svg")))
-        
-        dialogLayout = QtGui.QVBoxLayout(self)
-        
-        # default settings
-        self.framerate = 10
-        self.bitrate = 10000
-        self.suffix = "mpg"
-        self.prefix = "movie"
-                
-        # framerate
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        label = QtGui.QLabel("Framerate:")
-        rowLayout.addWidget(label)
-        
-        framerateSpin = QtGui.QSpinBox()
-        framerateSpin.setMinimum(1)
-        framerateSpin.setMaximum(10000)
-        framerateSpin.setValue(self.framerate)
-        framerateSpin.valueChanged.connect(self.framerateChanged)
-        rowLayout.addWidget(framerateSpin)
-        
-        label = QtGui.QLabel("fps")
-        rowLayout.addWidget(label)
-        
-        dialogLayout.addWidget(row)
-        
-        # bitrate
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        label = QtGui.QLabel("Bitrate:")
-        rowLayout.addWidget(label)
-        
-        bitrateSpin = QtGui.QSpinBox()
-        bitrateSpin.setMinimum(1)
-        bitrateSpin.setMaximum(10000000000)
-        bitrateSpin.setValue(self.bitrate)
-        bitrateSpin.valueChanged.connect(self.bitrateChanged)
-        rowLayout.addWidget(bitrateSpin)
-        
-        label = QtGui.QLabel("kbits/s")
-        rowLayout.addWidget(label)
-        
-        dialogLayout.addWidget(row)
-        
-        # file prefix
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        label = QtGui.QLabel("File prefix:")
-        rowLayout.addWidget(label)
-        
-        prefixLineEdit = QtGui.QLineEdit(self.prefix)
-        prefixLineEdit.setFixedWidth(130)
-        prefixLineEdit.textChanged.connect(self.prefixChanged)
-        rowLayout.addWidget(prefixLineEdit)
-        
-        dialogLayout.addWidget(row)
-        
-        # file suffix
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        label = QtGui.QLabel("Container:")
-        rowLayout.addWidget(label)
-        
-        containerCombo = QtGui.QComboBox()
-        containerCombo.addItem("mpg")
-#        containerCombo.addItem("mp4")
-        containerCombo.addItem("avi")
-#        containerCombo.addItem("mov")
-        containerCombo.currentIndexChanged[QtCore.QString].connect(self.suffixChanged)
-        rowLayout.addWidget(containerCombo)
-        
-        dialogLayout.addWidget(row)
-    
-    def suffixChanged(self, text):
-        """
-        Suffix changed
-        
-        """
-        self.suffix = str(text)
-    
-    def prefixChanged(self, text):
-        """
-        Prefix changed.
-        
-        """
-        self.prefix = str(text)
-    
-    def bitrateChanged(self, val):
-        """
-        Bitrate changed.
-        
-        """
-        self.bitrate = val
-    
-    def framerateChanged(self, val):
-        """
-        Framerate changed.
-        
-        """
-        self.framerate = val
-
-################################################################################
-
 class DefectInfoWindow(QtGui.QDialog):
     """
     Atom info window.
@@ -1219,9 +954,9 @@ class AtomInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
         
         self.setLayout(layout)
-    
 
 ################################################################################
+
 class GenericPreferencesSettingsForm(QtGui.QWidget):
     """
     Tab for preference dialog.
@@ -1251,6 +986,7 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
         return rowLayout
 
 ################################################################################
+
 class FfmpegSettingsForm(GenericPreferencesSettingsForm):
     """
     FFMPEG settings form for preferences dialog.
@@ -1349,12 +1085,9 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         
         """
         self.framerate = val
-        
-        
-        
-        
 
 ################################################################################
+
 class PovraySettingsForm(GenericPreferencesSettingsForm):
     """
     POV-Ray settings form for preferences dialog.
@@ -1468,6 +1201,7 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         else:
             self.shadowless = False
 
+################################################################################
 
 class MatplotlibSettingsForm(GenericPreferencesSettingsForm):
     """
@@ -1631,8 +1365,8 @@ class MatplotlibSettingsForm(GenericPreferencesSettingsForm):
         """
         self.figHeight = val
 
-        
 ################################################################################
+
 class PreferencesDialog(QtGui.QDialog):
     """
     Preferences dialog.
@@ -1671,12 +1405,4 @@ class PreferencesDialog(QtGui.QDialog):
         # matplotlib tab
         self.matplotlibForm = MatplotlibSettingsForm(self)
         self.tabWidget.addTab(self.matplotlibForm, QtGui.QIcon(iconPath("Plotter.png")), "Matplotlib")
-        
-        
-        
-
-
-
-
-
 

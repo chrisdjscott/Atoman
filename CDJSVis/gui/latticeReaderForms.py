@@ -56,7 +56,7 @@ class GenericReaderForm(GenericForm):
         
         """
         self.mainWindow.displayError("GenericReaderWidget: openFile has not been overriden on:\n%s" % str(self))
-        return None
+        return 1
     
     def getFileName(self):
         pass
@@ -457,7 +457,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
         """
         if not isRef and not self.refLoaded:
             self.mainWindow.displayWarning("Must load corresponding reference first!")
-            return None
+            return 2
         
         if isRef and self.refLoaded:
             reply = QtGui.QMessageBox.question(self, "Message", 
@@ -465,7 +465,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
                                                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         
             if reply != QtGui.QMessageBox.Yes:
-                return None
+                return 3
         
         if filename is None:
             filename = self.getFileName(isRef)
