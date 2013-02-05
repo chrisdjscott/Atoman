@@ -7,6 +7,7 @@ Eg. atomic mass, radius, etc.
 @author: Chris Scott
 
 """
+import os
 import sys
 
 from .visutils.utilities import resourcePath
@@ -25,6 +26,7 @@ class Elements:
         self.atomNameDict = {}
         self.covalentRadiusDict = {}
         self.RGBDict = {}
+        self.bondDict = {}
     
     def read(self, filename):
         """
@@ -37,7 +39,14 @@ class Elements:
         for line in f:
             line = line.strip()
             
+            if not len(line):
+                continue
+            
             array = line.split()
+            
+            if not len(array) == 8:
+                print "ERROR LEN WRONG"
+                continue
             
             key = array[3]
             if len(key) == 1:
@@ -50,6 +59,57 @@ class Elements:
             self.RGBDict[key] = [float(array[5]), float(array[6]), float(array[7])]
         
         f.close()
+    
+    def readBonds(self, filename):
+        """
+        Read bonds file.
+        
+        """
+        if filename is None or not os.path.exists(filename):
+            return
+        
+        f = open(filename)
+        
+        for line in f:
+            line = line.strip()
+            
+            if not len(line):
+                continue
+            
+            array = line.split()
+            
+            if len(array) != 4:
+                print "BAD LEN"
+                continue
+            
+            keya = array[0]
+            keyb = array[1]
+            bondMin = float(array[2])
+            bondMax = float(array[3])
+            
+            # ensure bondMin >= 0 and bondMax >= bondMin
+            bondMin = max(bondMin, 0)
+            bondMax = max(bondMin, bondMax)
+            
+            if len(keya) == 1:
+                keya += "_"
+            if len(keyb) == 1:
+                keyb += "_"
+            
+            if not keya in self.bondDict:
+                self.bondDict[keya] = {}
+            if not keyb in self.bondDict:
+                self.bondDict[keyb] = {}
+            
+            self.bondDict[keya][keyb] = (bondMin, bondMax)
+            if keya != keyb:
+                self.bondDict[keyb][keya] = (bondMin, bondMax)
+        
+        f.close()
+        
+#        for keya in self.bondDict:
+#            for keyb, val in self.bondDict[keya].items():
+#                print "%s - %s: %f -> %f" % (keya, keyb, val[0], val[1])
     
     def write(self, filename):
         """
@@ -164,8 +224,10 @@ def initialise():
     
     """
     filename = resourcePath("atoms.IN")
+    bondfile = resourcePath("bonds.IN")
     
     elements.read(filename)
+    elements.readBonds(bondfile)
     
 
 ################################################################################

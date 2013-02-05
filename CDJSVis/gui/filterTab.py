@@ -457,6 +457,8 @@ class FilterTab(QtGui.QWidget):
         for filterList in self.filterLists:
             for filterSettings in filterList.currentSettings:
                 filterSettings.refresh()
+            
+            filterList.bondsOptions.refresh()
     
     def gatherVisibleAtoms(self):
         """

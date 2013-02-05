@@ -6,6 +6,7 @@ Options for filter lists.
 
 """
 import sys
+import functools
 
 from PyQt4 import QtGui, QtCore
 
@@ -19,6 +20,133 @@ except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)
 
+
+################################################################################
+
+class BondsOptionsWindow(QtGui.QDialog):
+    """
+    Bond options for filter list.
+    
+    """
+    def __init__(self, mainWindow, parent=None):
+        super(BondsOptionsWindow, self).__init__(parent)
+        
+        self.parent = parent
+        
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.setWindowTitle("Filter list colouring options")
+        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        
+        self.mainWindow = mainWindow
+        
+        # current species set
+        self.currentSpecies = set()
+        self.bondChecksList = []
+        self.bondPairDrawStatus = []
+        self.bondPairsList = []
+        self.NBondPairs = 0
+        
+        # options
+        self.drawBonds = False
+        
+        # layout
+        layout = QtGui.QVBoxLayout(self)
+#        layout.setSpacing(0)
+#        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        
+        # draw bonds group box
+        self.drawBondsGroup = QtGui.QGroupBox("Draw bonds")
+        self.drawBondsGroup.setCheckable(True)
+        self.drawBondsGroup.setChecked(False)
+        self.drawBondsGroup.setAlignment(QtCore.Qt.AlignCenter)
+        self.drawBondsGroup.toggled.connect(self.drawBondsToggled)
+        
+        layout.addWidget(self.drawBondsGroup)
+        
+        self.groupLayout = QtGui.QVBoxLayout()
+#        self.groupLayout.setSpacing(0)
+#        self.groupLayout.setContentsMargins(0, 0, 0, 0)
+        self.groupLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        self.drawBondsGroup.setLayout(self.groupLayout)
+    
+    def drawBondsToggled(self, state):
+        """
+        Draw bonds changed.
+        
+        """
+        self.drawBonds = state
+        
+        if self.drawBonds:
+            self.parent.bondsOptionsButton.setText("Bonds options: On")
+        
+        else:
+            self.parent.bondsOptionsButton.setText("Bonds options: Off")
+    
+    def addSpecie(self, sym):
+        """
+        Add specie to bonding options.
+        
+        """
+        # first test if already added
+        if sym in self.currentSpecies:
+            print "SPEC ALREADY ADDED", sym, self.currentSpecies
+            return
+        
+        # add to set
+        self.currentSpecies.add(sym)
+        
+        # now add line(s) to group box
+        for symb in self.currentSpecies:
+            # check box
+            check = QtGui.QCheckBox()
+            check.stateChanged.connect(functools.partial(self.checkStateChanged, len(self.bondPairDrawStatus)))
+            self.bondChecksList.append(check)
+            
+            # draw status
+            self.bondPairDrawStatus.append(False)
+            
+            # label
+            label = QtGui.QLabel("%s - %s" % (sym, symb))
+            
+            # pair
+            pair = (sym, symb)
+            self.bondPairsList.append(pair)
+            
+            # row
+            row = QtGui.QHBoxLayout()
+            row.addWidget(check)
+            row.addWidget(label)
+            
+            self.groupLayout.addLayout(row)
+            
+            self.NBondPairs += 1
+    
+    def checkStateChanged(self, index, state):
+        """
+        Check state changed.
+        
+        """
+        if state == 2:
+            self.bondPairDrawStatus[index] = True
+        
+        else:
+            self.bondPairDrawStatus[index] = False
+    
+    def refresh(self):
+        """
+        Refresh available bonds.
+        
+        Should be called whenever a new input is loaded!?
+        If the species are the same don't change anything!?
+        
+        """
+        inputState = self.mainWindow.inputState
+        
+        for specie in inputState.specieList:
+            self.addSpecie(specie)
 
 
 

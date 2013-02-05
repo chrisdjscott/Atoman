@@ -65,6 +65,19 @@ class Lattice(object):
         self.simTime = 0.0
         self.barrier = None
     
+    def getSpecieIndex(self, sym):
+        """
+        Return index of specie in specie list.
+        
+        """
+        index = -1
+        for i in xrange(len(self.specieList)):
+            if self.specieList[i] == sym:
+                index = i
+                break
+        
+        return index
+    
     def setDims(self, dimsarray):
         
         self.cellDims[0] = float(dimsarray[0])

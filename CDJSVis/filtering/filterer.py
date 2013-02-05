@@ -17,6 +17,7 @@ from ..visclibs import clusters_c
 from ..rendering import renderer
 from ..visutils import vectors
 from . import clusters
+from ..atoms import elements
 
 
 ################################################################################
@@ -51,6 +52,7 @@ class Filterer(object):
         self.availableScreenInfo = {}
         
         self.colouringOptions = self.parent.colouringOptions
+        self.bondsOptions = self.parent.bondsOptions
         self.scalarBarAdded = False
         self.scalarBar = None
         
@@ -265,9 +267,75 @@ class Filterer(object):
                 
                 # write pov-ray file too (only if pov-ray located??)
 #                renderer.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
+            
+            if self.bondsOptions.drawBonds:
+                # find bonds
+                self.calculateBonds()
         
         if self.parent.visible:
             self.addActors()
+    
+    def calculateBonds(self):
+        """
+        Calculate bonds.
+        
+        """
+        print "CALCULATING BONDS"
+                
+        inputState = self.mainWindow.inputState
+        specieList = inputState.specieList
+        NSpecies = len(specieList)
+        
+        bondMinArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
+        bondMaxArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
+        
+        # construct bonds array
+        calcBonds = False
+        for i in xrange(self.bondsOptions.NBondPairs):
+            pair = self.bondsOptions.bondPairsList[i]
+            drawPair = self.bondsOptions.bondPairDrawStatus[i]
+            
+            if drawPair:
+                syma, symb = pair
+                
+                # check if in current specie list and if so what indexes
+                if syma in specieList:
+                    indexa = inputState.getSpecieIndex(syma)
+                else:
+                    continue
+                
+                if symb in specieList:
+                    indexb = inputState.getSpecieIndex(symb)
+                else:
+                    continue
+                
+                bondDict = elements.bondDict
+                
+                if syma in bondDict:
+                    d = bondDict[syma]
+                    
+                    if symb in d:
+                        bondMin, bondMax = d[symb]
+                        
+                        bondMinArray[indexa][indexb] = bondMin
+                        bondMinArray[indexb][indexa] = bondMin
+                        
+                        bondMaxArray[indexa][indexb] = bondMax
+                        bondMaxArray[indexb][indexa] = bondMax
+                        
+                        calcBonds = True
+                
+                        print "PAIR: %s - %s; bond range: %f -> %f" % (pair[0], pair[1], bondMin, bondMax)
+        
+        if not calcBonds:
+            print "NO BONDS TO CALC"
+            return
+        
+        
+        
+        
+        
+        
     
     def addScalarBar(self):
         """

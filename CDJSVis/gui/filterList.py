@@ -191,6 +191,14 @@ class FilterList(QtGui.QWidget):
         
         groupLayout.addWidget(self.colouringOptionsButton)
         
+        # bonding options
+        self.bondsOptionsButton = QtGui.QPushButton("Bonds options: Off")
+        self.bondsOptionsButton.clicked.connect(self.showBondsOptions)
+        
+        self.bondsOptions = filterListOptions.BondsOptionsWindow(self.mainWindow, parent=self)
+        
+        groupLayout.addWidget(self.bondsOptionsButton)
+        
         self.filterListLayout.addWidget(extraOptionsGroupBox)
         
         # the filterer (does the filtering)
@@ -209,6 +217,14 @@ class FilterList(QtGui.QWidget):
         
         else:
             self.filterer.hideScalarBar()
+    
+    def showBondsOptions(self):
+        """
+        Show the bonds options window.
+        
+        """
+        self.bondsOptions.hide()
+        self.bondsOptions.show()
     
     def showColouringOptions(self):
         """

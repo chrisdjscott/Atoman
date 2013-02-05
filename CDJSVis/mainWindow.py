@@ -445,7 +445,7 @@ class MainWindow(QtGui.QMainWindow):
                         minSepScalar = None
                         minSepScalarType = None
             
-            print "MIN SEP", minSep, "TYPE", minSepType, "INDEX", minSepIndex
+#            print "MIN SEP", minSep, "TYPE", minSepType, "INDEX", minSepIndex
             
             if minSep < 0.1:
                 if minSepType == 0:
