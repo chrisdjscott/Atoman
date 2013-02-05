@@ -734,13 +734,13 @@ class SingleImageTab(QtGui.QWidget):
             return
         
         # check if in different dir
-        head, tail = os.path.split(filename)
+#        head, tail = os.path.split(filename)
         
         # change to dir if required (for POV-Ray to work)
-        if len(head):
-            OWD = os.getcwd()
-            os.chdir(head)
-            filename = tail
+#        if len(head):
+#            OWD = os.getcwd()
+#            os.chdir(head)
+#            filename = tail
         
         # show progress dialog
         if showProgress and self.parent.renderType == "POV":
@@ -762,9 +762,13 @@ class SingleImageTab(QtGui.QWidget):
             progress.cancel()
         
         # change back to original working dir
-        if len(head):
-            os.chdir(OWD)
-            filename = os.path.join(head, tail)
+#        if len(head):
+#            os.chdir(OWD)
+#            filename = os.path.join(head, tail)
+        
+        if filename is None:
+            print "SAVE IMAGE FAILED"
+            return
         
         # open image viewer
         if self.openImage:
