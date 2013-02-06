@@ -340,7 +340,7 @@ class Filterer(object):
         
         # arrays for results
         maxBondsPerAtom = 50
-        size = self.NVis * maxBondsPerAtom
+        size = int(self.NVis * maxBondsPerAtom / 2)
         bondArray = np.empty(size, np.int32)
         NBondsArray = np.zeros(self.NVis, np.int32)
         bondVectorArray = np.empty(3 * size, np.float64)

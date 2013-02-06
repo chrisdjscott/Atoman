@@ -101,7 +101,7 @@ class BondsOptionsWindow(QtGui.QDialog):
         # now add line(s) to group box
         for symb in self.currentSpecies:
             # check box
-            check = QtGui.QCheckBox()
+            check = QtGui.QCheckBox("  %s - %s" % (sym, symb))
             check.stateChanged.connect(functools.partial(self.checkStateChanged, len(self.bondPairDrawStatus)))
             self.bondChecksList.append(check)
             
@@ -109,7 +109,7 @@ class BondsOptionsWindow(QtGui.QDialog):
             self.bondPairDrawStatus.append(False)
             
             # label
-            label = QtGui.QLabel("%s - %s" % (sym, symb))
+#            label = QtGui.QLabel("%s - %s" % (sym, symb))
             
             # pair
             pair = (sym, symb)
@@ -118,7 +118,7 @@ class BondsOptionsWindow(QtGui.QDialog):
             # row
             row = QtGui.QHBoxLayout()
             row.addWidget(check)
-            row.addWidget(label)
+#            row.addWidget(label)
             
             self.groupLayout.addLayout(row)
             

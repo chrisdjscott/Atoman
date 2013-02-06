@@ -338,6 +338,9 @@ class Renderer(object):
                         if os.path.exists("defects%d.pov" % filterList.tab):
                             command += " defects%d.pov" % filterList.tab
                         
+                        if os.path.exists("bonds%d.pov" % filterList.tab):
+                            command += " bonds%d.pov" % filterList.tab
+                        
                 command += " > image.pov"
                 output, stderr, status = utilities.runSubProcess(command)
                 if status:
@@ -649,7 +652,7 @@ def povrayAtom(pos, radius, rgb):
     """
     line = "sphere { <%f,%f,%f>, %f pigment { color rgb <%f,%f,%f> } finish { ambient %f phong %f } }\n" % (-pos[0], pos[1], pos[2], radius, rgb[0], rgb[1], rgb[2], 0.25, 0.9)
     
-    return line     
+    return line
 
 ################################################################################
 

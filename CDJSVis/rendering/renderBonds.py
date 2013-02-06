@@ -12,6 +12,7 @@ import numpy as np
 import vtk
 
 from .utils import setRes, setupLUT
+from .povutils import povrayBond
 
 
 ################################################################################
@@ -108,6 +109,8 @@ def renderBonds(visibleAtoms, mainWindow, actorsCollection, colouringOptions, po
     bondVectors.SetNumberOfTuples(NBonds)
     
     # construct vtk bond arrays
+    pov_rgb = np.empty(3, np.float64)
+    pov_rgb2 = np.empty(3, np.float64)
     count = 0
     bcount = 0
     for i in xrange(NVisible):
@@ -115,6 +118,9 @@ def renderBonds(visibleAtoms, mainWindow, actorsCollection, colouringOptions, po
         
         # scalar
         scalar = getScalarValue(lattice, index, scalars, i, colouringOptions)
+        
+        # colour for povray
+        lut.GetColor(scalar, pov_rgb)
         
         # pos
         xpos = lattice.pos[3*index]
@@ -126,8 +132,10 @@ def renderBonds(visibleAtoms, mainWindow, actorsCollection, colouringOptions, po
             bondVectors.SetTuple3(bcount, bondVectorArray[3*count], bondVectorArray[3*count+1], bondVectorArray[3*count+2])
             bondScalars.SetTuple1(bcount, scalar)
             
-            # povray
-            
+            # povray bond
+            fpov.write(povrayBond(lattice.pos[3*index:3*index+3], 
+                                  lattice.pos[3*index:3*index+3] + bondVectorArray[3*count:3*count+3], 
+                                  bondThicknessPOV, pov_rgb, 0.0))
             
             bcount += 1
             
@@ -141,8 +149,13 @@ def renderBonds(visibleAtoms, mainWindow, actorsCollection, colouringOptions, po
             bondVectors.SetTuple3(bcount, -1 * bondVectorArray[3*count], -1 * bondVectorArray[3*count+1], -1 * bondVectorArray[3*count+2])
             bondScalars.SetTuple1(bcount, scalar2)
             
-            # povray
+            # colour for povray
+            lut.GetColor(scalar2, pov_rgb2)
             
+            # povray bond
+            fpov.write(povrayBond(lattice.pos[3*index2:3*index2+3], 
+                                  lattice.pos[3*index2:3*index2+3] - bondVectorArray[3*count:3*count+3], 
+                                  bondThicknessPOV, pov_rgb2, 0.0))
             
             bcount += 1
             
