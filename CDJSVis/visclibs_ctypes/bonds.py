@@ -5,6 +5,7 @@ Wrapper to bonds.c
 @author: Chris Scott
 
 """
+import os
 import platform
 
 from ctypes import CDLL
@@ -17,7 +18,10 @@ from .numpy_utils import CPtrToDouble, CPtrToInt
 # load lib
 osname = platform.system()
 if osname == "Darwin":
-    _bonds = CDLL("_bonds.dylib")
+    try:
+        _bonds = CDLL("_bonds.dylib")
+    except OSError:
+        _bonds = CDLL(os.path.join(os.path.dirname(__file__), "_bonds.dylib"))
 
 elif osname == "Linux":
     _bonds = CDLL("_bonds.so")

@@ -43,39 +43,6 @@ void calcForceInfNorm(int dim1, double* returnVector, int dim4, double* pos1)
 
 
 /*******************************************************************************
- * Find separation vector between two atoms
- *******************************************************************************/
-void atomSeparationVector( double *vector3, double ax, double ay, double az, double bx, double by, double bz, double xdim, double ydim, double zdim, int pbcx, int pbcy, int pbcz )
-{
-    double dx, dy, dz;
-    
-    
-    /* calculate separation */
-    dx = bx - ax;
-    dy = by - ay;
-    dz = bz - az;
-    
-    /* handle PBCs here if required */
-    if ( pbcx == 1 )
-    {
-        dx = dx - round( dx / xdim ) * xdim;
-    }
-    if ( pbcy == 1 )
-    {
-        dy = dy - round( dy / ydim ) * ydim;
-    }
-    if ( pbcz == 1 )
-    {
-        dz = dz - round( dz / zdim ) * zdim;
-    }
-    
-    vector3[0] = dx;
-    vector3[1] = dy;
-    vector3[2] = dz;
-}
-
-
-/*******************************************************************************
  * Find max moved atom and average movement
  *******************************************************************************/
 void maxMovement( int dim1, double* returnVector, int dim4, double* pos1, int dim12, double* pos2, int dim2, double* cellDims, int pbcx, int pbcy, int pbcz )

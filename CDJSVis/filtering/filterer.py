@@ -343,7 +343,7 @@ class Filterer(object):
         
         if not calcBonds:
             print "NO BONDS TO CALC"
-            return
+            return 1
         
         # arrays for results
         maxBondsPerAtom = 50
@@ -352,10 +352,11 @@ class Filterer(object):
         print "MAX BOND", maxBond
         bondArray = np.empty(size, np.int32)
         NBondsArray = np.zeros(self.NVis, np.int32)
+        bondVectorArray = np.empty(3 * size, np.float64)
         
         status = bonds_c.calculateBonds(self.NVis, self.visibleAtoms, inputState.pos, inputState.specie, len(specieList), bondMinArray, bondMaxArray, 
                                         maxBond, maxBondsPerAtom, inputState.cellDims, self.mainWindow.PBC, inputState.minPos, inputState.maxPos, 
-                                        bondArray, NBondsArray)
+                                        bondArray, NBondsArray, bondVectorArray)
         
         print "BACK IN PY"
         
@@ -369,7 +370,7 @@ class Filterer(object):
         
         # resize bond array
         bondArray.resize(NBondsTotal)
-        
+        bondVectorArray.resize(NBondsTotal * 3)
         
         
         

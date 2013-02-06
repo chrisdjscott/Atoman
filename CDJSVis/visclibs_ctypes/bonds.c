@@ -12,14 +12,19 @@
 #include "bonds.h"
 
 
+
+/*******************************************************************************
+ * Calculate bonds
+ *******************************************************************************/
 int calculateBonds(int NVisible, int *visibleAtoms, double *pos, int *specie, int NSpecies, double *bondMinArray, double *bondMaxArray, 
                    double approxBoxWidth, int maxBondsPerAtom, double *cellDims, int *PBC, double *minPos, double *maxPos,
-                   int *bondArray, int *NBondsArray)
+                   int *bondArray, int *NBondsArray, double *bondVectorArray)
 {
     int i, j, k, index, index2, visIndex;
     int speca, specb, count;
     int boxIndex, boxNebList[27];
     double *visiblePos, sep2, sep;
+    double sepVec[3];
     struct Boxes *boxes;
     
     
@@ -110,6 +115,17 @@ int calculateBonds(int NVisible, int *visibleAtoms, double *pos, int *specie, in
                     
                     bondArray[count] = visIndex;
                     NBondsArray[i]++;
+                    
+                    /* separation vector */
+                    atomSeparationVector(sepVec, pos[3*index], pos[3*index+1], pos[3*index+2], 
+                                         pos[3*index2], pos[3*index2+1], pos[3*index2+2], 
+                                         cellDims[0], cellDims[1], cellDims[2], 
+                                         PBC[0], PBC[1], PBC[2]);
+                    
+                    bondVectorArray[3*count] = sepVec[0] / 2.0;
+                    bondVectorArray[3*count+1] = sepVec[1] / 2.0;
+                    bondVectorArray[3*count+2] = sepVec[2] / 2.0;
+                    
                     count++;
                 }
             }
