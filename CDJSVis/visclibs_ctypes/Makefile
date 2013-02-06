@@ -11,18 +11,10 @@ SHELL = /bin/sh
 # mac, assumes latest macports python being used and setup correctly
 ifeq (Darwin, $(shell uname -s))
     # compiler flags
-    CCLINKFLAGS =   -bundle -flat_namespace -undefined suppress
+    CCLINKFLAGS =   -bundle #-flat_namespace -undefined suppress
 	CCFLAGS =  -c -O3 -fPIC
 	CC = gcc
-    
-    # which python version are we using (includes are different)
     INCLUDES = 
-#    ifeq (2.7.3, $(shell python -V 2>&1 | awk '{ gsub(/Python /,""); print }'))
-#        INCLUDES = -I/opt/local/Library/Frameworks/Python.framework/Versions/2.7/include/python2.7 -I/opt/local/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/numpy/core/include
-#    endif
-#    ifeq (2.6.6, $(shell python -V 2>&1 | awk '{ gsub(/Python /,""); print }'))
-#        INCLUDES = -I/opt/local/Library/Frameworks/Python.framework/Versions/2.6/include/python2.6 -I/opt/local/Library/Frameworks/Python.framework/Versions/2.6/lib/python2.6/site-packages/numpy/core/include
-#    endif
 endif
     
 # linux - ubuntu or hydra
@@ -39,7 +31,6 @@ ifeq (Linux, $(shell uname -s))
 	# modify for hydra
     ifeq (hydra3, $(shell uname -n))
         CCFLAGS += -std=c99
-        INCLUDES = #-I/home/ma/macdjs/Applications/local/include/python2.7/ -I/home/ma/macdjs/Applications/local/lib/python2.7/site-packages/numpy/core/include
     endif
 endif
 
@@ -60,6 +51,7 @@ endif
 
 LIBFILES = _bonds.$(LIBSUFFIX)
 
+# target
 all : $(LIBFILES)
 
 # create object file

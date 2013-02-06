@@ -28,16 +28,16 @@ int calculateBonds(int NVisible, int *visibleAtoms, double *pos, int *specie, in
     struct Boxes *boxes;
     
     
-    printf("BONDS CLIB\n");
-    printf("N VIS: %d\n", NVisible);
-    
-    for (i=0; i<NSpecies; i++)
-    {
-        for (j=i; j<NSpecies; j++)
-        {
-            printf("%d - %d: %lf -> %lf\n", i, j, bondMinArray[i*NSpecies+j], bondMaxArray[i*NSpecies+j]);
-        }
-    }
+//    printf("BONDS CLIB\n");
+//    printf("N VIS: %d\n", NVisible);
+//    
+//    for (i=0; i<NSpecies; i++)
+//    {
+//        for (j=i; j<NSpecies; j++)
+//        {
+//            printf("%d - %d: %lf -> %lf\n", i, j, bondMinArray[i*NSpecies+j], bondMaxArray[i*NSpecies+j]);
+//        }
+//    }
     
     /* construct visible pos array */
     visiblePos = malloc(3 * NVisible * sizeof(double));
@@ -132,7 +132,7 @@ int calculateBonds(int NVisible, int *visibleAtoms, double *pos, int *specie, in
         }
     }
     
-    printf("  N BONDS TOT: %d\n", count);
+//    printf("  N BONDS TOT: %d\n", count);
     
     /* free */
     free(visiblePos);

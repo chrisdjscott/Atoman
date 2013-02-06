@@ -274,13 +274,6 @@ class Filterer(object):
             if self.bondsOptions.drawBonds:
                 # find bonds
                 status = self.calculateBonds()
-                
-                if not status:
-                    povfile = "bonds%d.pov" % (self.parent.tab,)
-                    
-                    # draw bonds
-                    renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.actorsCollection, self.colouringOptions, povfile, 
-                                            self.scalars)
         
         if self.parent.visible:
             self.addActors()
@@ -290,7 +283,7 @@ class Filterer(object):
         Calculate bonds.
         
         """
-        print "CALCULATING BONDS"
+        self.log("Calculating bonds", 0, 2)
                 
         inputState = self.mainWindow.inputState
         specieList = inputState.specieList
@@ -339,17 +332,15 @@ class Filterer(object):
                         
                         calcBonds = True
                 
-                        print "PAIR: %s - %s; bond range: %f -> %f" % (pair[0], pair[1], bondMin, bondMax)
+                        self.log("PAIR: %s - %s; bond range: %f -> %f" % (pair[0], pair[1], bondMin, bondMax), 0, 3)
         
         if not calcBonds:
-            print "NO BONDS TO CALC"
+            self.log("No bonds to calculate", 0, 3)
             return 1
         
         # arrays for results
         maxBondsPerAtom = 50
         size = self.NVis * maxBondsPerAtom
-        print "SIZE", size
-        print "MAX BOND", maxBond
         bondArray = np.empty(size, np.int32)
         NBondsArray = np.zeros(self.NVis, np.int32)
         bondVectorArray = np.empty(3 * size, np.float64)
@@ -358,23 +349,24 @@ class Filterer(object):
                                         maxBond, maxBondsPerAtom, inputState.cellDims, self.mainWindow.PBC, inputState.minPos, inputState.maxPos, 
                                         bondArray, NBondsArray, bondVectorArray)
         
-        print "BACK IN PY"
-        
         if status:
-            print "ERROR IN BONDS LIB (%d)" % status
+            self.log("ERROR IN BONDS LIB (%d)" % (status,), 0, 3)
             return 1
         
         # total number of bonds
         NBondsTotal = np.sum(NBondsArray)
-        print "NBONDSTOT", NBondsTotal
+        self.log("Total number of bonds: %d (x2 for actors)" % (NBondsTotal,), 0, 3)
         
         # resize bond array
         bondArray.resize(NBondsTotal)
         bondVectorArray.resize(NBondsTotal * 3)
         
+        # now render bonds
+        povfile = "bonds%d.pov" % (self.parent.tab,)
         
-        
-        
+        # draw bonds
+        renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.actorsCollection, self.colouringOptions, povfile, 
+                                self.scalars, bondArray, NBondsArray, bondVectorArray)
         
         return 0
     
