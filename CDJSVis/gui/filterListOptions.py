@@ -49,6 +49,9 @@ class BondsOptionsWindow(QtGui.QDialog):
         
         # options
         self.drawBonds = False
+        self.bondThicknessPOV = 0.08
+        self.bondThicknessVTK = 0.2
+        self.bondNumSides = 5
         
         # layout
         layout = QtGui.QVBoxLayout(self)
@@ -71,6 +74,79 @@ class BondsOptionsWindow(QtGui.QDialog):
         self.groupLayout.setAlignment(QtCore.Qt.AlignTop)
         
         self.drawBondsGroup.setLayout(self.groupLayout)
+        
+        # thickness
+        bondThicknessGroup = QtGui.QGroupBox("Bond thickness")
+        bondThicknessGroup.setAlignment(QtCore.Qt.AlignCenter)
+        bondThicknessLayout = QtGui.QVBoxLayout()
+        bondThicknessGroup.setLayout(bondThicknessLayout)
+        layout.addWidget(bondThicknessGroup)
+        
+        # vtk
+        vtkThickSpin = QtGui.QDoubleSpinBox()
+        vtkThickSpin.setMinimum(0.01)
+        vtkThickSpin.setMaximum(10)
+        vtkThickSpin.setSingleStep(0.01)
+        vtkThickSpin.setValue(self.bondThicknessVTK)
+        vtkThickSpin.valueChanged.connect(self.vtkThickChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("VTK:"))
+        row.addWidget(vtkThickSpin)
+        bondThicknessLayout.addLayout(row)
+        
+        # pov
+        povThickSpin = QtGui.QDoubleSpinBox()
+        povThickSpin.setMinimum(0.01)
+        povThickSpin.setMaximum(10)
+        povThickSpin.setSingleStep(0.01)
+        povThickSpin.setValue(self.bondThicknessPOV)
+        povThickSpin.valueChanged.connect(self.povThickChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("POV:"))
+        row.addWidget(povThickSpin)
+        bondThicknessLayout.addLayout(row)
+        
+        # thickness
+        numSidesGroup = QtGui.QGroupBox("Number of sides")
+        numSidesGroup.setAlignment(QtCore.Qt.AlignCenter)
+        numSidesLayout = QtGui.QVBoxLayout()
+        numSidesGroup.setLayout(numSidesLayout)
+        layout.addWidget(numSidesGroup)
+        
+        # pov
+        numSidesSpin = QtGui.QSpinBox()
+        numSidesSpin.setMinimum(3)
+        numSidesSpin.setMaximum(999)
+        numSidesSpin.setSingleStep(1)
+        numSidesSpin.setValue(self.bondNumSides)
+        numSidesSpin.valueChanged.connect(self.numSidesChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(numSidesSpin)
+        numSidesLayout.addLayout(row)
+    
+    def numSidesChanged(self, val):
+        """
+        Number of sides changed.
+        
+        """
+        self.bondNumSides = val
+    
+    def vtkThickChanged(self, val):
+        """
+        VTK thickness changed.
+        
+        """
+        self.bondThicknessVTK = val
+    
+    def povThickChanged(self, val):
+        """
+        POV thickness changed.
+        
+        """
+        self.bondThicknessPOV = val
     
     def drawBondsToggled(self, state):
         """

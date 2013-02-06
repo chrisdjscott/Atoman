@@ -280,7 +280,7 @@ class Filterer(object):
     
     def calculateBonds(self):
         """
-        Calculate bonds.
+        Calculate and render bonds.
         
         """
         self.log("Calculating bonds", 0, 2)
@@ -366,7 +366,7 @@ class Filterer(object):
         
         # draw bonds
         renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.actorsCollection, self.colouringOptions, povfile, 
-                                self.scalars, bondArray, NBondsArray, bondVectorArray)
+                                self.scalars, bondArray, NBondsArray, bondVectorArray, self.bondsOptions)
         
         return 0
     

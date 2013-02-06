@@ -11,7 +11,7 @@ import functools
 import numpy as np
 import vtk
 
-from .utils import setRes, setupLUT
+from .utils import setupLUT
 from .povutils import povrayBond
 
 
@@ -58,15 +58,15 @@ def bondGlyphMethod(bondGlyph, bondGlyphSource, *args, **kwargs):
 
 ################################################################################
 
-def renderBonds(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povfile, scalars, bondArray, NBondsArray, bondVectorArray):
+def renderBonds(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povfile, scalars, bondArray, NBondsArray, bondVectorArray, bondsOptions):
     """
     Render bonds.
     
     """
     # SETTINGS
-    bondThicknessVTK = 0.2
-    bondThicknessPOV = 0.08
-    bondNumSides = 5
+    bondThicknessVTK = bondsOptions.bondThicknessVTK
+    bondThicknessPOV = bondsOptions.bondThicknessPOV
+    bondNumSides = bondsOptions.bondNumSides
     # END SETTINGS
     
     NVisible = len(visibleAtoms)
@@ -74,15 +74,9 @@ def renderBonds(visibleAtoms, mainWindow, actorsCollection, colouringOptions, po
     NBondsHalf = np.sum(NBondsArray)
     NBonds = NBondsHalf * 2
     
-#    if NVisibleForRes is None:
-#        NVisibleForRes = NVisible
-    
     # povray file
     povFilePath = os.path.join(mainWindow.tmpDirectory, povfile)
     fpov = open(povFilePath, "w")
-    
-    # resolution
-#    res = setRes(NBonds)
     
     lattice = mainWindow.inputState
     
@@ -91,7 +85,6 @@ def renderBonds(visibleAtoms, mainWindow, actorsCollection, colouringOptions, po
     
     # number of species
     NSpecies = len(lattice.specieList)
-#    specieCount = np.zeros(NSpecies, np.int32)
     
     # vtk array storing coords of bonds
     bondCoords = vtk.vtkFloatArray()
@@ -216,10 +209,4 @@ def renderBonds(visibleAtoms, mainWindow, actorsCollection, colouringOptions, po
     
     # close pov file
     fpov.close()
-    
-    
-    
-
-
-
 
