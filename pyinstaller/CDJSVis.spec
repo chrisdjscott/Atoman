@@ -10,7 +10,8 @@ a = Analysis(['../CDJSVis.py'],
              hiddenimports=[],
              hookspath=None)
 
-a.datas += [('data/atoms.IN', '../CDJSVis/data/atoms.IN', 'DATA')]
+a.datas += [('data/atoms.IN', '../CDJSVis/data/atoms.IN', 'DATA'),
+            ('data/bonds.IN', '../CDJSVis/data/bonds.IN', 'DATA')]
 
 pyz = PYZ(a.pure)
 
