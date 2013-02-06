@@ -15,6 +15,7 @@ from ..visclibs import filtering_c
 from ..visclibs import defects_c
 from ..visclibs import clusters_c
 from ..rendering import renderer
+from ..rendering import renderBonds
 from ..visutils import vectors
 from . import clusters
 from ..atoms import elements
@@ -272,7 +273,14 @@ class Filterer(object):
             
             if self.bondsOptions.drawBonds:
                 # find bonds
-                self.calculateBonds()
+                status = self.calculateBonds()
+                
+                if not status:
+                    povfile = "bonds%d.pov" % (self.parent.tab,)
+                    
+                    # draw bonds
+                    renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.actorsCollection, self.colouringOptions, povfile, 
+                                            self.scalars)
         
         if self.parent.visible:
             self.addActors()
@@ -352,7 +360,7 @@ class Filterer(object):
         print "BACK IN PY"
         
         if status:
-            print "ERROR IN BONDS LIB"
+            print "ERROR IN BONDS LIB (%d)" % status
             return 1
         
         # total number of bonds

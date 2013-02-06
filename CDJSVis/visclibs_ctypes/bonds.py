@@ -5,27 +5,23 @@ Wrapper to bonds.c
 @author: Chris Scott
 
 """
-#import platform
+import platform
 
 from ctypes import CDLL
 import ctypes as C
 
-from . import numpy_utils as nu
-from .utils import libSuffix
+from .numpy_utils import CPtrToDouble, CPtrToInt
 
 
-#libdir = os.path.dirname(__file__)
-#print "LIBDIR", libdir
-#libpath = os.path.join(libdir, "_bonds.so")
-
-#osname = platform.system()
-#if osname == "Darwin":
-#    libname = "_bonds.dylib"
-#elif osname == "Linux":
-#    libname = "_bonds.so"
 
 # load lib
-_bonds = CDLL("_bonds.dylib")
+osname = platform.system()
+if osname == "Darwin":
+    _bonds = CDLL("_bonds.dylib")
+
+elif osname == "Linux":
+    _bonds = CDLL("_bonds.so")
+
 
 # calculate bonds prototype
 _bonds.calculateBonds.restype = C.c_int
@@ -33,13 +29,14 @@ _bonds.calculateBonds.argtypes = [C.c_int, C.POINTER(C.c_int), C.POINTER(C.c_dou
                                   C.POINTER(C.c_double), C.c_double, C.c_int, C.POINTER(C.c_double), C.POINTER(C.c_int), C.POINTER(C.c_double), 
                                   C.POINTER(C.c_double), C.POINTER(C.c_int), C.POINTER(C.c_int)]
 
+# calculate bonds function
 def calculateBonds(NVisible, visibleAtoms, pos, specie, NSpecies, bondMinArray, bondMaxArray, approxBoxWidth, maxBondsPerAtom, cellDims, 
                    PBC, minPos, maxPos, bondArray, NBondsArray):
     """
     Calculate bonds between visible atoms.
     
     """
-    return _bonds.calculateBonds(NVisible, nu.CPtrToInt(visibleAtoms), nu.CPtrToDouble(pos), nu.CPtrToInt(specie), NSpecies, 
-                                 nu.CPtrToDouble(bondMinArray), nu.CPtrToDouble(bondMaxArray), approxBoxWidth, maxBondsPerAtom,
-                                 nu.CPtrToDouble(cellDims), nu.CPtrToInt(PBC), nu.CPtrToDouble(minPos), nu.CPtrToDouble(maxPos),
-                                 nu.CPtrToInt(bondArray), nu.CPtrToInt(NBondsArray))
+    return _bonds.calculateBonds(NVisible, CPtrToInt(visibleAtoms), CPtrToDouble(pos), CPtrToInt(specie), NSpecies, 
+                                 CPtrToDouble(bondMinArray), CPtrToDouble(bondMaxArray), approxBoxWidth, maxBondsPerAtom,
+                                 CPtrToDouble(cellDims), CPtrToInt(PBC), CPtrToDouble(minPos), CPtrToDouble(maxPos),
+                                 CPtrToInt(bondArray), CPtrToInt(NBondsArray))

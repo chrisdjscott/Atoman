@@ -5,3 +5,4 @@
 .pydevproject
 .project
 .DS_Store
+*.dylib
