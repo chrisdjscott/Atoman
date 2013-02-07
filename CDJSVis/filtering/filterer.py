@@ -273,7 +273,7 @@ class Filterer(object):
             
             if self.bondsOptions.drawBonds:
                 # find bonds
-                status = self.calculateBonds()
+                self.calculateBonds()
         
         if self.parent.visible:
             self.addActors()
@@ -283,6 +283,9 @@ class Filterer(object):
         Calculate and render bonds.
         
         """
+        if not len(self.visibleAtoms):
+            return 1
+        
         self.log("Calculating bonds", 0, 2)
                 
         inputState = self.mainWindow.inputState
