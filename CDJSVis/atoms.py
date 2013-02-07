@@ -102,8 +102,7 @@ class Elements:
                 self.bondDict[keyb] = {}
             
             self.bondDict[keya][keyb] = (bondMin, bondMax)
-            if keya != keyb:
-                self.bondDict[keyb][keya] = (bondMin, bondMax)
+            self.bondDict[keyb][keya] = (bondMin, bondMax)
         
         f.close()
         
@@ -130,6 +129,34 @@ class Elements:
                                                                            self.RGBDict[key][1], self.RGBDict[key][2])
             
             f.write(string)
+        
+        f.close()
+    
+    def writeBonds(self, filename):
+        """
+        Write new bonds file.
+        
+        """
+        f = open(filename, "w")
+        
+        for syma, d in self.bondDict.items():
+            if syma[1] == "_":
+                syma = syma[0]
+            else:
+                syma = syma
+            
+            for symb, range in d.items():
+                if symb[1] == "_":
+                    symb = symb[0]
+                else:
+                    symb = symb
+                
+                if syma > symb:
+                    continue
+                
+                string = "%-2s  %-2s  %-6f  %-6f\n" % (syma, symb, range[0], range[1])
+                
+                f.write(string)
         
         f.close()
     

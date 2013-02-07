@@ -291,10 +291,12 @@ class Filterer(object):
         
         bondMinArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
         bondMaxArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
+        bondSpecieCounter = np.zeros((NSpecies, NSpecies), dtype=np.int32)
         
         # construct bonds array
         calcBonds = False
         maxBond = -1
+        drawList = []
         for i in xrange(self.bondsOptions.NBondPairs):
             pair = self.bondsOptions.bondPairsList[i]
             drawPair = self.bondsOptions.bondPairDrawStatus[i]
@@ -330,8 +332,11 @@ class Filterer(object):
                         if bondMax > maxBond:
                             maxBond = bondMax
                         
-                        calcBonds = True
-                
+                        if bondMax > 0:
+                            calcBonds = True
+                        
+                        drawList.append("%s-%s" % (syma, symb))
+                        
                         self.log("PAIR: %s - %s; bond range: %f -> %f" % (pair[0], pair[1], bondMin, bondMax), 0, 3)
         
         if not calcBonds:
@@ -347,7 +352,7 @@ class Filterer(object):
         
         status = bonds_c.calculateBonds(self.NVis, self.visibleAtoms, inputState.pos, inputState.specie, len(specieList), bondMinArray, bondMaxArray, 
                                         maxBond, maxBondsPerAtom, inputState.cellDims, self.mainWindow.PBC, inputState.minPos, inputState.maxPos, 
-                                        bondArray, NBondsArray, bondVectorArray)
+                                        bondArray, NBondsArray, bondVectorArray, bondSpecieCounter)
         
         if status:
             self.log("ERROR IN BONDS LIB (%d)" % (status,), 0, 3)
@@ -361,12 +366,31 @@ class Filterer(object):
         bondArray.resize(NBondsTotal)
         bondVectorArray.resize(NBondsTotal * 3)
         
-        # now render bonds
-        povfile = "bonds%d.pov" % (self.parent.tab,)
+        # specie counters
+        for i in xrange(NSpecies):
+            syma = specieList[i]
+            
+            for j in xrange(i, NSpecies):
+                symb = specieList[j]
+                
+                # check if selected
+                pairStr = "%s-%s" % (syma, symb)
+                pairStr2 = "%s-%s" % (symb, syma)
+                
+                if pairStr in drawList or pairStr2 in drawList:
+                    NBondsPair = bondSpecieCounter[i][j]
+                    if i != j:
+                        NBondsPair += bondSpecieCounter[j][i]
+                    
+                    self.log("%d %s - %s bonds" % (NBondsPair, syma, symb), 0, 4)
         
         # draw bonds
-        renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.actorsCollection, self.colouringOptions, povfile, 
-                                self.scalars, bondArray, NBondsArray, bondVectorArray, self.bondsOptions)
+        if NBondsTotal > 0:
+            # pov file for bonds
+            povfile = "bonds%d.pov" % (self.parent.tab,)
+            
+            renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.actorsCollection, self.colouringOptions, povfile, 
+                                    self.scalars, bondArray, NBondsArray, bondVectorArray, self.bondsOptions)
         
         return 0
     

@@ -35,11 +35,11 @@ elif osname == "Linux":
 _bonds.calculateBonds.restype = C.c_int
 _bonds.calculateBonds.argtypes = [C.c_int, C.POINTER(C.c_int), C.POINTER(C.c_double), C.POINTER(C.c_int), C.c_int, C.POINTER(C.c_double), 
                                   C.POINTER(C.c_double), C.c_double, C.c_int, C.POINTER(C.c_double), C.POINTER(C.c_int), C.POINTER(C.c_double), 
-                                  C.POINTER(C.c_double), C.POINTER(C.c_int), C.POINTER(C.c_int), C.POINTER(C.c_double)]
+                                  C.POINTER(C.c_double), C.POINTER(C.c_int), C.POINTER(C.c_int), C.POINTER(C.c_double), C.POINTER(C.c_int)]
 
 # calculate bonds function
 def calculateBonds(NVisible, visibleAtoms, pos, specie, NSpecies, bondMinArray, bondMaxArray, approxBoxWidth, maxBondsPerAtom, cellDims, 
-                   PBC, minPos, maxPos, bondArray, NBondsArray, bondVectorArray):
+                   PBC, minPos, maxPos, bondArray, NBondsArray, bondVectorArray, bondSpecieCounter):
     """
     Calculate bonds between visible atoms.
     
@@ -47,4 +47,4 @@ def calculateBonds(NVisible, visibleAtoms, pos, specie, NSpecies, bondMinArray, 
     return _bonds.calculateBonds(NVisible, CPtrToInt(visibleAtoms), CPtrToDouble(pos), CPtrToInt(specie), NSpecies, 
                                  CPtrToDouble(bondMinArray), CPtrToDouble(bondMaxArray), approxBoxWidth, maxBondsPerAtom,
                                  CPtrToDouble(cellDims), CPtrToInt(PBC), CPtrToDouble(minPos), CPtrToDouble(maxPos),
-                                 CPtrToInt(bondArray), CPtrToInt(NBondsArray), CPtrToDouble(bondVectorArray))
+                                 CPtrToInt(bondArray), CPtrToInt(NBondsArray), CPtrToDouble(bondVectorArray), CPtrToInt(bondSpecieCounter))

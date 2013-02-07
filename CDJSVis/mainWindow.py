@@ -129,6 +129,10 @@ class MainWindow(QtGui.QMainWindow):
                                                  icon="file-export-icon.png", tip="Export element properties")
         importElementsAction = self.createAction("Import elements", slot=self.importElements,
                                                  icon="file-import-icon.png", tip="Import element properties")
+        exportBondsAction = self.createAction("Export bonds", slot=self.exportBonds,
+                                                 icon="file-export-icon.png", tip="Export bonds file")
+        importBondsAction = self.createAction("Import bonds", slot=self.importBonds,
+                                                 icon="file-import-icon.png", tip="Import bonds file")
         showImageViewerAction = self.createAction("Image viewer", slot=self.showImageViewer, 
                                                   icon="applications-graphics.svg", tip="Show image viewer")
         showPreferencesAction = self.createAction("Preferences", slot=self.showPreferences, 
@@ -137,7 +141,7 @@ class MainWindow(QtGui.QMainWindow):
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
         self.addActions(fileMenu, (newWindowAction, openCWDAction, showImageViewerAction, importElementsAction, 
-                                   exportElementsAction, None, exitAction))
+                                   exportElementsAction, importBondsAction, exportBondsAction, None, exitAction))
         
         # add edit menu
         editMenu = self.menuBar().addMenu("&Edit")
@@ -359,6 +363,45 @@ class MainWindow(QtGui.QMainWindow):
             elements.write(fname)
             
             self.setStatus("Element properties exported")
+    
+    def importBonds(self):
+        """
+        Import bonds file.
+        
+        """
+        reply = QtGui.QMessageBox.question(self, "Message", 
+                                           "This will overwrite the current bonds file. You should create a backup first!\n\nDo you wish to continue?",
+                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        
+        if reply == QtGui.QMessageBox.Yes:
+            # open file dialog
+            fname = QtGui.QFileDialog.getOpenFileName(self, "CDJSVis - Import bonds file", ".", "IN files (*.IN)")
+            
+            if fname:
+                # read in new file
+                elements.readBonds(fname)
+                
+                # overwrite current file
+                elements.writeBonds(resourcePath("bonds.IN"))
+                
+                self.setStatus("Imported bonds file")
+    
+    def exportBonds(self):
+        """
+        Export bonds file.
+        
+        """
+        fname = os.path.join(".", "bonds-exported.IN")
+        
+        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export bonds file", fname, "IN files (*.IN)")
+        
+        if fname:
+            if not "." in fname or fname[-3:] != ".IN":
+                fname += ".IN"
+            
+            elements.writeBonds(fname)
+            
+            self.setStatus("Bonds file exported")
     
     def openCWD(self):
         """

@@ -18,7 +18,7 @@
  *******************************************************************************/
 int calculateBonds(int NVisible, int *visibleAtoms, double *pos, int *specie, int NSpecies, double *bondMinArray, double *bondMaxArray, 
                    double approxBoxWidth, int maxBondsPerAtom, double *cellDims, int *PBC, double *minPos, double *maxPos,
-                   int *bondArray, int *NBondsArray, double *bondVectorArray)
+                   int *bondArray, int *NBondsArray, double *bondVectorArray, int *bondSpecieCounter)
 {
     int i, j, k, index, index2, visIndex;
     int speca, specb, count;
@@ -125,6 +125,8 @@ int calculateBonds(int NVisible, int *visibleAtoms, double *pos, int *specie, in
                     bondVectorArray[3*count] = sepVec[0] / 2.0;
                     bondVectorArray[3*count+1] = sepVec[1] / 2.0;
                     bondVectorArray[3*count+2] = sepVec[2] / 2.0;
+                    
+                    bondSpecieCounter[speca*NSpecies+specb]++;
                     
                     count++;
                 }
