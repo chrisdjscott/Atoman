@@ -19,7 +19,7 @@ from ..visutils.utilities import iconPath
 from . import dialogs
 from . import genericForm
 from ..visclibs import output_c
-from ..visclibs import rdf as rdf_c
+from ..visclibs_ctypes import rdf as rdf_c
 from . import plotDialog
 
 try:

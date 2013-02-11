@@ -7,26 +7,21 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include "boxeslib.h"
-#include "utilities.h"
+#include "../visclibs/boxeslib.h"
+#include "../visclibs/utilities.h"
+#include "rdf.h"
 
 
-
-int calculateRDF(int NVisible, int *visibleAtoms, int specieDim, int *specie, int posDim, double *pos, int specieID1, int specieID2, 
-                 int minPosDim, double *minPos, int maxPosDim, double *maxPos, int cellDimsDim, double *cellDims, int PBCDim, int *PBC,
-                 double start, double finish, int num, int rdfDim, double *rdf)
+int calculateRDF(int NVisible, int *visibleAtoms, int NAtoms, int *specie, double *pos, int specieID1, int specieID2, 
+                 double *minPos, double *maxPos, double *cellDims, int *PBC, double start, double finish, int num, double *rdf)
 {
-    int i, j, k, m, index, index2, boxIndex;
-    int boxNebList[27], fullShellCount, NAtoms;
+    int i, j, k,index, index2, boxIndex;
+    int boxNebList[27], fullShellCount, binIndex;
     double approxBoxWidth, sep2, sep;
     double avgAtomDensity, shellVolume;
-    double current, interval, nextCurrent;
-    double ini, fin;
+    double ini, fin, interval;
     struct Boxes *boxes;
     
-    
-    /* num atoms */
-    NAtoms = posDim / 3;
     
     /* approx box width??? */
     approxBoxWidth = 5.0; // must be at least interval I guess?
@@ -77,18 +72,12 @@ int calculateRDF(int NVisible, int *visibleAtoms, int specieDim, int *specie, in
                 
                 sep = sqrt(sep2);
                 
-                /* find if this fits in rdf array */
-                current = start;
-                for (m=0; m<num; m++)
+                /* put in bin */
+                if (sep >= start && sep < finish)
                 {
-                    nextCurrent = current + interval;
-                    if (sep >= current && sep < nextCurrent)
-                    {
-                        rdf[m]++;
-                        break;
-                    }
+                    binIndex = (int) ((sep - start) / interval);
                     
-                    current = nextCurrent;
+                    rdf[binIndex]++;
                 }
             }
         }

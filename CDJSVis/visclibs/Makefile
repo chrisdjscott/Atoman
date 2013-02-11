@@ -51,9 +51,9 @@ SWIG := swig -python
 SHOBJECTS = *.o=.so
 OBJECTS = ${COBJECTS:.c=.o}
 COBJECTS = *.c
-SWIGSOURCE = input_c.i filtering_c.i defects_c.i clusters_c.i output_c.i vectors.i picker_c.i rdf.i
+SWIGSOURCE = input_c.i filtering_c.i defects_c.i clusters_c.i output_c.i vectors.i picker_c.i
 
-all : _input_c.so _filtering_c.so _defects_c.so _clusters_c.so _output_c.so _vectors.so _picker_c.so _rdf.so
+all : _input_c.so _filtering_c.so _defects_c.so _clusters_c.so _output_c.so _vectors.so _picker_c.so
 
 # create object file
 _input_c.so : input_c_wrap.o input_c.o
@@ -76,9 +76,6 @@ _vectors.so : vectors_wrap.o vectors.o utilities.o
 
 _picker_c.so : picker_c_wrap.o picker_c.o utilities.o boxeslib.o
 	$(CC) $(CCLINKFLAGS) picker_c.o picker_c_wrap.o utilities.o boxeslib.o -o _picker_c.so
-
-_rdf.so : rdf_wrap.o rdf.o boxeslib.o utilities.o
-	$(CC) $(CCLINKFLAGS) rdf.o rdf_wrap.o boxeslib.o utilities.o -o _rdf.so
 
 # compile module
 input_c.o : input_c.c 
@@ -108,9 +105,6 @@ vectors.o : vectors.c
 picker_c.o : picker_c.c
 	$(CC) $(CCFLAGS) $(INCLUDES) picker_c.c
 
-rdf.o : rdf.c
-	$(CC) $(CCFLAGS) $(INCLUDES) rdf.c 
-
 # generate and compile swig wrapper
 input_c_wrap.o : input_c.i 
 	$(SWIG) input_c.i
@@ -139,10 +133,6 @@ vectors_wrap.o : vectors.i
 picker_c_wrap.o : picker_c.i
 	$(SWIG) picker_c.i
 	$(CC) $(CCFLAGS) $(INCLUDES) picker_c_wrap.c
-
-rdf_wrap.o : rdf.i
-	$(SWIG) rdf.i
-	$(CC) $(CCFLAGS) $(INCLUDES) rdf_wrap.c 
 
 # clean
 clean:
