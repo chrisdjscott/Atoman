@@ -86,6 +86,8 @@ class GenericLatticeReader(object):
 #            print "ALREADY LOADED"
 #            return -4, None
         
+        self.log("Reading file: %s" % (filename,), 0, 0)
+        
         filepath, zipFlag = self.checkForZipped(filename)
         if zipFlag == -1:
             self.displayWarning("Could not find file: "+filename)
