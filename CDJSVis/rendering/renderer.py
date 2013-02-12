@@ -24,13 +24,14 @@ from .utils import setRes, setupLUT
 
 ################################################################################
 class Renderer(object):
-    def __init__(self, mainWindow):
+    def __init__(self, parent):
         
-        self.mainWindow = mainWindow
-        self.ren = self.mainWindow.VTKRen
-        self.renWinInteract = self.mainWindow.VTKWidget
+        self.parent = parent
+        self.mainWindow = self.parent.mainWindow
+        self.ren = self.parent.vtkRen
+        self.renWinInteract = self.parent.vtkRenWinInteract
         
-        self.log = self.mainWindow.console.write
+        self.log = self.parent.mainWindow.console.write
         
         # is the interactor initialised
         self.init = 0

@@ -27,7 +27,7 @@ from .rendering import renderer
 from .gui import helpForm
 from .gui import dialogs
 from .visclibs import picker_c
-
+from .gui import renderMdiSubWindow
 try:
     from . import resources
 except ImportError:
@@ -87,8 +87,8 @@ class MainWindow(QtGui.QMainWindow):
             os.chdir(os.environ.get("HOME"))
         
         # window size and location
-        self.renderWindowWidth = 760 #760 #650
-        self.renderWindowHeight = 715 #570 # 715 #650
+        self.renderWindowWidth = 760 * 1.2 #760 #650
+        self.renderWindowHeight = 715 * 1.2 #570 # 715 #650
         self.mainToolbarWidth = 350 #315
         self.mainToolbarHeight = 460 #420
         self.resize(self.renderWindowWidth+self.mainToolbarWidth, self.renderWindowHeight)
@@ -178,9 +178,9 @@ class MainWindow(QtGui.QMainWindow):
                                            tip="Reset camera to cell")
         
         visualisationToolbar = self.addToolBar("Visualisation")
-        visualisationToolbar.addAction(showCellAction)
-        visualisationToolbar.addAction(showAxesAction)
-        visualisationToolbar.addAction(setCamToCellAction)
+#        visualisationToolbar.addAction(showCellAction)
+#        visualisationToolbar.addAction(showAxesAction)
+#        visualisationToolbar.addAction(setCamToCellAction)
         visualisationToolbar.addAction(openElementEditorAction)
         visualisationToolbar.addSeparator()
         
@@ -228,35 +228,35 @@ class MainWindow(QtGui.QMainWindow):
         self.setStatusBar(self.statusBar)
         
         # initialise the VTK container
-        self.VTKContainer = QtGui.QWidget(self)
-        VTKlayout = QtGui.QVBoxLayout(self.VTKContainer)
-        self.VTKWidget = QVTKRenderWindowInteractor(self.VTKContainer)
-        VTKlayout.addWidget(self.VTKWidget)
-        VTKlayout.setContentsMargins(0,0,0,0)
+#        self.VTKContainer = QtGui.QWidget(self)
+#        VTKlayout = QtGui.QVBoxLayout(self.VTKContainer)
+#        self.VTKWidget = QVTKRenderWindowInteractor(self.VTKContainer)
+#        VTKlayout.addWidget(self.VTKWidget)
+#        VTKlayout.setContentsMargins(0,0,0,0)
         
 #        self.VTKWidget.Initialize()
-        self.VTKWidget.Start()
+#        self.VTKWidget.Start()
         
-        self.VTKRen = vtk.vtkRenderer()
-        self.VTKRen.SetBackground(1,1,1)
-        self.VTKWidget.GetRenderWindow().AddRenderer(self.VTKRen)
+#        self.VTKRen = vtk.vtkRenderer()
+#        self.VTKRen.SetBackground(1,1,1)
+#        self.VTKWidget.GetRenderWindow().AddRenderer(self.VTKRen)
         
-        self.VTKWidget._Iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+#        self.VTKWidget._Iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
         
         # add observers
-        self.VTKWidget._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
-        self.VTKWidget._Iren.AddObserver("MouseMoveEvent", self.mouseMoved)
-        self.VTKWidget._Iren.AddObserver("LeftButtonReleaseEvent", self.leftButtonReleased)
+#        self.VTKWidget._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
+#        self.VTKWidget._Iren.AddObserver("MouseMoveEvent", self.mouseMoved)
+#        self.VTKWidget._Iren.AddObserver("LeftButtonReleaseEvent", self.leftButtonReleased)
         
 #        self.VTKWidget.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
 #        self.VTKWidget.AddObserver("MouseMoveEvent", self.mouseMoved)
 #        self.VTKWidget.AddObserver("LeftButtonReleaseEvent", self.leftButtonReleased)
         
         # add picker
-        self.VTKPicker = vtk.vtkCellPicker()
-        self.VTKPicker.SetTolerance(0.000001)
-        self.VTKPicker.AddObserver("EndPickEvent", self.endPickEvent)
-        self.VTKWidget.SetPicker(self.VTKPicker)
+#        self.VTKPicker = vtk.vtkCellPicker()
+#        self.VTKPicker.SetTolerance(0.000001)
+#        self.VTKPicker.AddObserver("EndPickEvent", self.endPickEvent)
+#        self.VTKWidget.SetPicker(self.VTKPicker)
         
         # distance representation
 #        self.distanceWidget = vtk.vtkDistanceWidget()
@@ -265,9 +265,27 @@ class MainWindow(QtGui.QMainWindow):
 ##        self.distanceWidget.GetRepresentation().SetLabelFormat()
 #        self.distanceWidget.On()
         
-        self.setCentralWidget(self.VTKContainer)
+        self.mdiArea = QtGui.QMdiArea()
+        self.mdiArea.subWindowActivated.connect(self.rendererWindowActivated)
+        self.setCentralWidget(self.mdiArea)
+        
+        self.rendererWindows = []
+        self.subWinCount = 0
+        
+        self.addRendererWindow()
+        
+#        self.rendererWindow = renderMdiSubWindow.RendererWindow(self, self)
+#        self.mdiArea.addSubWindow(self.rendererWindow)
+        
+#        self.VTKRen = self.rendererWindow.vtkRen
+#        self.VTKWidget = self.rendererWindow.vtkRenWinInteract
+        
+        self.mdiArea.tileSubWindows()
+        
+#        self.setCentralWidget(self.VTKContainer)
                 
-        self.renderer = renderer.Renderer(self)
+#        self.renderer = renderer.Renderer(self)
+#        self.renderer = self.rendererWindow.renderer
         
         # connect window destroyed to updateInstances
         self.connect(self, QtCore.SIGNAL("destroyed(QObject*)"), MainWindow.updateInstances)
@@ -282,6 +300,30 @@ class MainWindow(QtGui.QMainWindow):
         
         # give focus
         self.raise_()
+    
+    def rendererWindowActivated(self, sw):
+        """
+        Sub window activated. (TEMPORARY)
+        
+        """
+        if sw is None:
+            return
+        
+        w = sw.widget()
+        
+        self.VTKRen = w.vtkRen
+        self.VTKWidget = w.vtkRenWinInteract
+        self.renderer = w.renderer
+    
+    def addRendererWindow(self):
+        """
+        Add renderer window to mdi area.
+        
+        """
+        rendererWindow = renderMdiSubWindow.RendererWindow(self, self.subWinCount, parent=self)
+        self.mdiArea.addSubWindow(rendererWindow)
+        
+        
     
     def showPreferences(self):
         """
