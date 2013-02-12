@@ -51,9 +51,9 @@ SWIG := swig -python
 SHOBJECTS = *.o=.so
 OBJECTS = ${COBJECTS:.c=.o}
 COBJECTS = *.c
-SWIGSOURCE = input_c.i filtering_c.i defects_c.i clusters_c.i output_c.i vectors.i picker_c.i
+SWIGSOURCE = input_c.i defects_c.i clusters_c.i output_c.i vectors.i picker_c.i
 
-all : _input_c.so _filtering_c.so _defects_c.so _clusters_c.so _output_c.so _vectors.so _picker_c.so
+all : _input_c.so _defects_c.so _clusters_c.so _output_c.so _vectors.so _picker_c.so
 
 # create object file
 _input_c.so : input_c_wrap.o input_c.o
@@ -61,9 +61,6 @@ _input_c.so : input_c_wrap.o input_c.o
 
 _output_c.so : output_c_wrap.o output_c.o
 	$(CC) $(CCLINKFLAGS) output_c_wrap.o output_c.o -o _output_c.so
-
-_filtering_c.so : filtering_c_wrap.o filtering_c.o utilities.o
-	$(CC) $(CCLINKFLAGS) filtering_c_wrap.o filtering_c.o utilities.o -o _filtering_c.so
 
 _defects_c.so : defects_c_wrap.o defects_c.o boxeslib.o utilities.o
 	$(CC) $(CCLINKFLAGS) defects_c.o defects_c_wrap.o boxeslib.o utilities.o -o _defects_c.so
@@ -113,10 +110,6 @@ input_c_wrap.o : input_c.i
 output_c_wrap.o : output_c.i 
 	$(SWIG) output_c.i
 	$(CC) $(CCFLAGS) $(INCLUDES) output_c_wrap.c 
-
-filtering_c_wrap.o : filtering_c.i 
-	$(SWIG) filtering_c.i
-	$(CC) $(CCFLAGS) $(INCLUDES) filtering_c_wrap.c 
 
 defects_c_wrap.o : defects_c.i
 	$(SWIG) defects_c.i

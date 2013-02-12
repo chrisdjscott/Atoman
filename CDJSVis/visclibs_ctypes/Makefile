@@ -49,7 +49,7 @@ ifeq (Linux, $(shell uname -s))
 	LIBSUFFIX = so
 endif
 
-LIBFILES = _bonds.$(LIBSUFFIX) _rdf.$(LIBSUFFIX)
+LIBFILES = _bonds.$(LIBSUFFIX) _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX)
 
 # target
 all : $(LIBFILES)
@@ -61,12 +61,18 @@ _bonds.$(LIBSUFFIX) : bonds.o
 _rdf.$(LIBSUFFIX) : rdf.o
 	$(CC) $(CCLINKFLAGS) rdf.o ../visclibs/boxeslib.o ../visclibs/utilities.o -o _rdf.$(LIBSUFFIX)
 
+_filtering.$(LIBSUFFIX) : filtering.o
+	$(CC) $(CCLINKFLAGS) filtering.o ../visclibs/utilities.o -o _filtering.$(LIBSUFFIX)
+
 # compile module
 bonds.o : bonds.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) bonds.c
 
 rdf.o : rdf.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) rdf.c
+
+filtering.o : filtering.c 
+	$(CC) $(CCFLAGS) $(INCLUDES) filtering.c 
 
 # clean
 clean:
