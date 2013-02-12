@@ -35,6 +35,8 @@ class Filterer(object):
         self.parent = parent
         self.filterTab = parent.filterTab
         self.mainWindow = self.parent.mainWindow
+        self.rendererWindows = self.mainWindow.rendererWindows
+        self.mainToolbar = self.parent.mainToolbar
         
         self.log = self.mainWindow.console.write
         
@@ -80,14 +82,18 @@ class Filterer(object):
         self.actorsCollection.InitTraversal()
         actor = self.actorsCollection.GetNextItem()
         while actor is not None:
-            try:
-                self.mainWindow.VTKRen.RemoveActor(actor)
-            except:
-                pass
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                    try:
+                        rw.vtkRen.RemoveActor(actor)
+                    except:
+                        pass
             
             actor = self.actorsCollection.GetNextItem()
         
-        self.mainWindow.VTKWidget.ReInitialize()
+        for rw in self.rendererWindows:
+            if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                rw.vtkRenWinInteract.ReInitialize()
         
         self.hideScalarBar()
     
@@ -99,14 +105,18 @@ class Filterer(object):
         self.actorsCollection.InitTraversal()
         actor = self.actorsCollection.GetNextItem()
         while actor is not None:
-            try:
-                self.mainWindow.VTKRen.AddActor(actor)
-            except:
-                pass
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                    try:
+                        rw.vtkRen.AddActor(actor)
+                    except:
+                        pass
             
             actor = self.actorsCollection.GetNextItem()
         
-        self.mainWindow.VTKWidget.ReInitialize()
+        for rw in self.rendererWindows:
+            if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                    rw.vtkRenWinInteract.ReInitialize()
         
         self.addScalarBar()
     
@@ -402,8 +412,10 @@ class Filterer(object):
         
         """
         if self.scalarBar is not None and self.parent.scalarBarButton.isChecked() and not self.parent.filterTab.scalarBarAdded:
-            self.mainWindow.VTKRen.AddActor2D(self.scalarBar)
-            self.mainWindow.VTKWidget.ReInitialize()
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                    rw.vtkRen.AddActor2D(self.scalarBar)
+                    rw.vtkRenWinInteract.ReInitialize()
             
             self.parent.filterTab.scalarBarAdded = True
             self.scalarBarAdded = True
@@ -416,8 +428,10 @@ class Filterer(object):
         
         """
         if self.scalarBarAdded:
-            self.mainWindow.VTKRen.RemoveActor2D(self.scalarBar)
-            self.mainWindow.VTKWidget.ReInitialize()
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                    rw.vtkRen.RemoveActor2D(self.scalarBar)
+                    rw.vtkRenWinInteract.ReInitialize()
             
             self.parent.filterTab.scalarBarAdded = False
             self.scalarBarAdded = False

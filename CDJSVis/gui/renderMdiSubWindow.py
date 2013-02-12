@@ -7,9 +7,6 @@ Mdi sub window for displaying VTK render window.
 """
 import os
 import sys
-import shutil
-import platform
-import tempfile
 
 from PyQt4 import QtGui, QtCore
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -17,9 +14,12 @@ import vtk
 import numpy as np
 
 from ..visutils.utilities import iconPath, resourcePath
+from ..visutils import utilities
 from . import dialogs
 from ..visclibs import picker_c
 from ..rendering import renderer
+from .outputDialog import OutputDialog
+from ..rendering.text import vtkRenderWindowText
 try:
     from .. import resources
 except ImportError:
@@ -49,6 +49,10 @@ class RendererWindow(QtGui.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
         
+        self.currentPipelineIndex = 0
+        self.currentPipelineString = "Pipeline 0"
+        self.onScreenInfoActors = vtk.vtkActor2DCollection()
+        
         # toolbar
         toolbar = QtGui.QToolBar()
         layout.addWidget(toolbar)
@@ -65,7 +69,17 @@ class RendererWindow(QtGui.QWidget):
         setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="set_cam_cell.svg", 
                                            tip="Reset camera to cell")
         
-        self.addActions(toolbar, (showCellAction, showAxesAction, setCamToCellAction))
+        # text selector
+        openTextSelectorAction = self.createAction("On-screen info", self.showTextSelector, 
+                                                   icon="preferences-desktop-font.svg", 
+                                                   tip="Show on-screen text selector")
+        
+        # output dialog
+        showOutputDialogAction = self.createAction("Output dialog", slot=self.showOutputDialog, icon="loadandsave-icon.svg",
+                                                   tip="Open output dialog")
+        
+        self.addActions(toolbar, (showCellAction, showAxesAction, setCamToCellAction, None, 
+                                  openTextSelectorAction, None, showOutputDialogAction))
         
         # VTK render window
         self.vtkRenWin = vtk.vtkRenderWindow()
@@ -105,6 +119,7 @@ class RendererWindow(QtGui.QWidget):
         # which filter list is it associated with
         label = QtGui.QLabel("Analysis pipeline:")
         self.analysisPipelineCombo = QtGui.QComboBox()
+        self.analysisPipelineCombo.currentIndexChanged.connect(self.pipelineChanged)
         
         row = QtGui.QHBoxLayout()
         row.setContentsMargins(0, 0, 0, 0)
@@ -114,8 +129,122 @@ class RendererWindow(QtGui.QWidget):
         
         layout.addLayout(row)
         
+        # output dialog
+        self.outputDialog = OutputDialog(self, self.mainWindow, None, index)
         
+        # text selector
+        self.textSelector = dialogs.OnScreenInfoDialog(self.mainWindow, index, parent=self)
+    
+    def getCurrentPipelinePage(self):
+        """
+        Return current pipeline page.
         
+        """
+        return self.mainWindow.mainToolbar.pipelineList[self.currentPipelineIndex]
+    
+    def getFilterLists(self):
+        """
+        Returns the filter lists for given pipeline.
+        
+        """
+        if hasattr(self.mainWindow, "mainToolbar"):
+            filterLists = self.getCurrentPipelinePage().filterLists
+        else:
+            filterLists = []
+        
+        return filterLists
+    
+    def gatherVisibleAtoms(self):
+        """
+        Gather visible atoms array.
+        
+        """
+        return self.getCurrentPipelinePage().gatherVisibleAtoms()
+    
+    def removeActors(self):
+        """
+        Remove current actors.
+        
+        """
+        filterLists = self.getFilterLists()
+        
+        for filterList in filterLists:
+            filterer = filterList.filterer
+            actorsCollection = filterer.actorsCollection
+            
+            actorsCollection.InitTraversal()
+            actor = actorsCollection.GetNextItem()
+            while actor is not None:
+                try:
+                    self.vtkRen.RemoveActor(actor)
+                except:
+                    pass
+                
+                actor = actorsCollection.GetNextItem()
+            
+            if filterer.scalarBarAdded:
+                self.vtkRen.RemoveActor2D(filterer.scalarBar)
+            
+            self.vtkRenWinInteract.ReInitialize()
+    
+    def addActors(self):
+        """
+        Add current actors.
+        
+        """
+        filterLists = self.getFilterLists()
+        
+        for filterList in filterLists:
+            filterer = filterList.filterer
+            actorsCollection = filterer.actorsCollection
+            
+            actorsCollection.InitTraversal()
+            actor = actorsCollection.GetNextItem()
+            while actor is not None:
+                try:
+                    self.vtkRen.AddActor(actor)
+                except:
+                    pass
+                
+                actor = actorsCollection.GetNextItem()
+            
+            if filterer.scalarBarAdded:
+                self.vtkRen.AddActor2D(filterer.scalarBar)
+            
+            self.vtkRenWinInteract.ReInitialize()
+    
+    def pipelineChanged(self, index):
+        """
+        Current pipeline changed.
+        
+        """
+        # remove actors!
+        self.removeActors()
+        
+        # update vars
+        self.currentPipelineString = str(self.analysisPipelineCombo.currentText())
+        self.currentPipelineIndex = index
+        
+        # get new actors!
+        self.addActors()
+        
+        # refresh text
+        
+    
+    def showOutputDialog(self):
+        """
+        Show output dialog.
+        
+        """
+        self.outputDialog.hide()
+        self.outputDialog.show()
+    
+    def newPipeline(self, name):
+        """
+        Add new pipeline to the combo.
+        
+        """
+        self.analysisPipelineCombo.addItem(name)
     
     def endPickEvent(self, obj, event):
         """
@@ -132,7 +261,7 @@ class RendererWindow(QtGui.QWidget):
             # find which atom was picked...
             
             # loop over filter lists
-            filterLists = self.mainWindow.mainToolbar.filterPage.filterLists
+            filterLists = self.getFilterLists()
             
             minSepIndex = -1
             minSep = 9999999.0
@@ -186,15 +315,15 @@ class RendererWindow(QtGui.QWidget):
                         minSepScalar = None
                         minSepScalarType = None
             
-#            print "MIN SEP", minSep, "TYPE", minSepType, "INDEX", minSepIndex
+            print "MIN SEP", minSep, "TYPE", minSepType, "INDEX", minSepIndex
             
             if minSep < 0.1:
                 if minSepType == 0:
-                    atomInfoWindow = dialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, parent=self)
+                    atomInfoWindow = dialogs.AtomInfoWindow(self.mainWindow, minSepIndex, minSepScalar, minSepScalarType, parent=self)
                     atomInfoWindow.show()
                 
                 else:
-                    defectInfoWindow = dialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, parent=self)
+                    defectInfoWindow = dialogs.DefectInfoWindow(self.mainWindow, minSepIndex, minSepType, defList, parent=self)
                     defectInfoWindow.show()
     
     def leftButtonPressed(self, obj, event):
@@ -281,7 +410,292 @@ class RendererWindow(QtGui.QWidget):
             
             else:
                 target.addAction(action)
-
+    
+    def showTextSelector(self):
+        """
+        Show the text selector.
+        
+        """
+        if not self.refLoaded:
+            return
+        
+        self.textSelector.hide()
+        self.textSelector.show()
+    
+    def removeOnScreenInfo(self):
+        """
+        Remove on screen info.
+        
+        """
+        self.onScreenInfoActors.InitTraversal()
+        actor = self.onScreenInfoActors.GetNextItem()
+        while actor is not None:
+            try:
+                self.vtkRen.RemoveActor(actor)
+            except:
+                pass
+            
+            actor = self.onScreenInfoActors.GetNextItem()
+        
+        self.vtkRenWinInteract.ReInitialize()
+        
+        self.onScreenInfoActors = vtk.vtkActor2DCollection()
+    
+    def refreshOnScreenInfo(self):
+        """
+        Refresh the on-screen information.
+        
+        """
+        textSel = self.textSelector
+        selectedText = textSel.selectedText
+        textSettings = textSel.textSettings
+        
+        self.onScreenInfo = {}
+        self.removeOnScreenInfo()
+        
+        if not selectedText.count():
+            return
+        
+        # atom count doesn't change
+        if "Atom count" not in self.onScreenInfo:
+            self.onScreenInfo["Atom count"] = "%d atoms" % self.mainWindow.inputState.NAtoms
+        
+        # sim time doesn't change
+        if "Simulation time" not in self.onScreenInfo:
+            self.onScreenInfo["Simulation time"] = utilities.simulationTimeLine(self.mainWindow.inputState.simTime)
+        
+        # barrier doesn't change
+        if "Energy barrier" not in self.onScreenInfo and self.mainWindow.inputState.barrier is not None:
+            self.onScreenInfo["Energy barrier"] = "Barrier: %f eV" % self.mainWindow.inputState.barrier
+        
+        # filter lists
+        filterLists = self.getFilterLists()
+        
+        # visible counts always recalculated
+        visCountActive = False
+        visCount = 0
+        for filterList in filterLists:
+            if filterList.visible and not filterList.defectFilterSelected:
+                visCountActive = True
+                visCount += filterList.filterer.NVis
+        
+        if visCountActive:
+            self.onScreenInfo["Visible count"] = "%d visible" % visCount
+        
+            visSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
+            for filterList in filterLists:
+                if filterList.visible and not filterList.defectFilterSelected and filterList.filterer.NVis:
+                    if len(visSpecCount) == len(filterList.filterer.visibleSpecieCount):
+                        visSpecCount = np.add(visSpecCount, filterList.filterer.visibleSpecieCount)
+        
+            specieList = self.mainWindow.inputState.specieList
+            self.onScreenInfo["Visible specie count"] = []
+            for i, cnt in enumerate(visSpecCount):
+                self.onScreenInfo["Visible specie count"].append("%d %s" % (cnt, specieList[i]))
+        
+        # defects counts
+        defectFilterActive = False
+        NVac = 0
+        NInt = 0
+        NAnt = 0
+        showVacs = False
+        showInts = False
+        showAnts = False
+        for filterList in filterLists:
+            if filterList.visible and filterList.defectFilterSelected:
+                defectFilterActive = True
+                
+                NVac += filterList.filterer.NVac
+                NInt += filterList.filterer.NInt
+                NAnt += filterList.filterer.NAnt
+                
+                # defects settings
+                defectsSettings = filterList.currentSettings[0]
+                
+                if defectsSettings.showVacancies:
+                    showVacs = True
+                
+                if defectsSettings.showInterstitials:
+                    showInts = True
+                
+                if defectsSettings.showAntisites:
+                    showAnts = True
+        
+        if defectFilterActive:
+            # defect specie counters
+            vacSpecCount = np.zeros(len(self.mainWindow.refState.specieList), np.int32)
+            intSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
+            antSpecCount = np.zeros((len(self.mainWindow.refState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
+            splitSpecCount = np.zeros((len(self.mainWindow.inputState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
+            for filterList in filterLists:
+                if filterList.visible and filterList.defectFilterSelected and filterList.filterer.NVis:
+                    if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
+                        vacSpecCount = np.add(vacSpecCount, filterList.filterer.vacancySpecieCount)
+                        intSpecCount = np.add(intSpecCount, filterList.filterer.interstitialSpecieCount)
+                        antSpecCount = np.add(antSpecCount, filterList.filterer.antisiteSpecieCount)
+                        splitSpecCount = np.add(splitSpecCount, filterList.filterer.splitIntSpecieCount)
+            
+            # now add to dict
+            self.onScreenInfo["Defect count"] = []
+            
+            if showVacs:
+                self.onScreenInfo["Defect count"].append("%d vacancies" % (NVac,))
+            
+            if showInts:
+                self.onScreenInfo["Defect count"].append("%d interstitials" % (NInt,))
+            
+            if showAnts:
+                self.onScreenInfo["Defect count"].append("%d antisites" % (NAnt,))
+            
+            specListInput = self.mainWindow.inputState.specieList
+            specListRef = self.mainWindow.refState.specieList
+            specRGBInput = self.mainWindow.inputState.specieRGB
+            specRGBRef = self.mainWindow.refState.specieRGB
+            
+            self.onScreenInfo["Defect specie count"] = []
+            
+            if showVacs:
+                for i, cnt in enumerate(vacSpecCount):
+                    self.onScreenInfo["Defect specie count"].append(["%d %s vacancies" % (cnt, specListRef[i]), specRGBRef[i]])
+            
+            if showInts:
+                for i, cnt in enumerate(intSpecCount):
+                    self.onScreenInfo["Defect specie count"].append(["%d %s interstitials" % (cnt, specListInput[i]), specRGBInput[i]])
+                
+                if defectsSettings.identifySplitInts:
+                    for i in xrange(len(specListInput)):
+                        for j in xrange(i, len(specListInput)):
+                            if j == i:
+                                N = splitSpecCount[i][j]
+                                rgb = specRGBInput[i]
+                            else:
+                                N = splitSpecCount[i][j] + splitSpecCount[j][i]
+                                rgb = (specRGBInput[i] + specRGBInput[j]) / 2.0
+                            
+                            self.onScreenInfo["Defect specie count"].append(["%d %s-%s split ints" % (N, specListInput[i], specListInput[j]), rgb])
+            
+            if showAnts:
+                for i in xrange(len(specListRef)):
+                    for j in xrange(len(specListInput)):
+                        if i == j:
+                            continue
+                        self.onScreenInfo["Defect specie count"].append(["%d %s on %s antisites" % (antSpecCount[i][j], specListInput[j], specListRef[i]), specRGBRef[i]])
+        
+        # alignment/position stuff
+        topyLeft = self.vtkRenWinInteract.height() - 5
+        topxLeft = 5
+        topyRight = self.vtkRenWinInteract.height() - 5
+        topxRight = self.vtkRenWinInteract.width() - 220
+        
+        # loop over selected text
+        for i in xrange(selectedText.count()):
+            item = selectedText.item(i)
+            item = str(item.text())
+            settings = textSettings[item]
+            
+            try:
+                line = self.onScreenInfo[item]
+                
+                if item == "Visible specie count":
+                    for j, specline in enumerate(line):
+                        r, g, b = self.mainWindow.inputState.specieRGB[j]
+                        
+                        if settings.textPosition == "Top left":
+                            xpos = topxLeft
+                            ypos = topyLeft
+                        else:
+                            xpos = topxRight
+                            ypos = topyRight
+                        
+                        # add actor
+                        actor = vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
+                        
+                        if settings.textPosition == "Top left":
+                            topyLeft -= 20
+                        else:
+                            topyRight -= 20
+                        
+                        self.onScreenInfoActors.AddItem(actor)
+                
+                elif item == "Defect count":
+                    for specline in line:
+                        r = g = b = 0
+                        
+                        if settings.textPosition == "Top left":
+                            xpos = topxLeft
+                            ypos = topyLeft
+                        else:
+                            xpos = topxRight
+                            ypos = topyRight
+                        
+                        # add actor
+                        actor = vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
+                        
+                        if settings.textPosition == "Top left":
+                            topyLeft -= 20
+                        else:
+                            topyRight -= 20
+                        
+                        self.onScreenInfoActors.AddItem(actor)
+                
+                elif item == "Defect specie count":
+                    for array in line:
+                        lineToAdd = array[0]
+                        r, g, b = array[1]
+                        
+                        if settings.textPosition == "Top left":
+                            xpos = topxLeft
+                            ypos = topyLeft
+                        else:
+                            xpos = topxRight
+                            ypos = topyRight
+                        
+                        # add actor
+                        actor = vtkRenderWindowText(lineToAdd, 20, xpos, ypos, r, g, b)
+                        
+                        if settings.textPosition == "Top left":
+                            topyLeft -= 20
+                        else:
+                            topyRight -= 20
+                        
+                        self.onScreenInfoActors.AddItem(actor)
+                
+                else:
+                    r = g = b = 0
+                    
+                    if settings.textPosition == "Top left":
+                        xpos = topxLeft
+                        ypos = topyLeft
+                    else:
+                        xpos = topxRight
+                        ypos = topyRight
+                    
+                    # add actor
+                    actor = vtkRenderWindowText(line, 20, xpos, ypos, r, g, b)
+                    
+                    if settings.textPosition == "Top left":
+                        topyLeft -= 20
+                    else:
+                        topyRight -= 20
+                    
+                    self.onScreenInfoActors.AddItem(actor)
+            
+            except KeyError:
+                pass
+#                print "WARNING: '%s' not in onScreenInfo dict" % item
+        
+        # add to render window
+        self.onScreenInfoActors.InitTraversal()
+        actor = self.onScreenInfoActors.GetNextItem()
+        while actor is not None:
+            try:
+                self.vtkRen.AddActor(actor)
+            except:
+                pass
+            
+            actor = self.onScreenInfoActors.GetNextItem()
+        
+        self.vtkRenWinInteract.ReInitialize()
 
 
 

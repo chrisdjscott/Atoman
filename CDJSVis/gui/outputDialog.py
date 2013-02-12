@@ -30,13 +30,18 @@ except ImportError:
 
 
 ################################################################################
-class OutputTab(QtGui.QWidget):
-    def __init__(self, parent, mainWindow, width):
-        super(OutputTab, self).__init__(parent)
+class OutputDialog(QtGui.QDialog):
+    def __init__(self, parent, mainWindow, width, index):
+        super(OutputDialog, self).__init__(parent)
         
+        self.parent = parent
+        self.rendererWindow = parent
         self.mainToolbar = parent
         self.mainWindow = mainWindow
         self.width = width
+        
+        self.setWindowTitle("Output - Render window %d" % index)
+        self.setModal(0)
         
         # layout
         outputTabLayout = QtGui.QVBoxLayout(self)
@@ -101,6 +106,7 @@ class RDFTab(QtGui.QWidget):
         self.parent = parent
         self.mainWindow = mainWindow
         self.tabWidth = tabWidth
+        self.rendererWindow = self.parent.rendererWindow
         
         # defaults
         self.spec1 = "ALL"
@@ -230,7 +236,7 @@ class RDFTab(QtGui.QWidget):
         
         """
         # first gather vis atoms
-        visibleAtoms = self.mainWindow.mainToolbar.filterPage.gatherVisibleAtoms()
+        visibleAtoms = self.rendererWindow.gatherVisibleAtoms()
                     
         if not len(visibleAtoms):
             self.mainWindow.displayWarning("No visible atoms: cannot calculate RDF")
@@ -323,6 +329,7 @@ class FileTab(QtGui.QWidget):
         super(FileTab, self).__init__(parent)
         
         self.parent = parent
+        self.rendererWindow = parent
         self.mainWindow = mainWindow
         self.width = width
         
@@ -402,7 +409,7 @@ class FileTab(QtGui.QWidget):
         lattice = self.mainWindow.inputState
         
         # gather vis atoms
-        visibleAtoms = self.mainWindow.mainToolbar.filterPage.gatherVisibleAtoms()
+        visibleAtoms = self.rendererWindow.gatherVisibleAtoms()
         
         #TODO: this should write visible atoms only, not whole lattice!
         

@@ -554,13 +554,13 @@ class OnScreenInfoDialog(QtGui.QDialog):
     On screen info selector.
     
     """
-    def __init__(self, mainWindow, parent=None):
+    def __init__(self, mainWindow, index, parent=None):
         super(OnScreenInfoDialog, self).__init__(parent)
         
         self.parent = parent
         self.mainWindow = mainWindow
         
-        self.setWindowTitle("Set on screen info")
+        self.setWindowTitle("On screen info - Render window %d" % index)
         self.setWindowIcon(QtGui.QIcon(iconPath("preferences-desktop-font.svg")))
         
         dialogLayout = QtGui.QVBoxLayout()
@@ -676,7 +676,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         Refresh on screen info.
         
         """
-        self.mainWindow.mainToolbar.filterPage.refreshOnScreenInfo()
+        self.parent.refreshOnScreenInfo()
     
     def selectButtonClicked(self):
         """

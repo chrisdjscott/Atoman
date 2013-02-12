@@ -23,13 +23,16 @@ except ImportError:
 
 ################################################################################
 
-class InputTab(QtGui.QWidget):
+class InputDialog(QtGui.QDialog):
     """
-    Input tab for toolbar.
+    Input dialog for toolbar.
     
     """
     def __init__(self, parent, mainWindow, width):
-        super(InputTab, self).__init__(parent)
+        super(InputDialog, self).__init__(parent)
+        
+        self.setWindowTitle("Load input")
+        self.setModal(True)
         
         self.mainToolbar = parent
         self.mainWindow = mainWindow
@@ -145,6 +148,15 @@ class InputTab(QtGui.QWidget):
         groupLayout.addWidget(row)
         
         inputTabLayout.addWidget(group)
+        
+        closeButton = QtGui.QPushButton("Close")
+        closeButton.clicked.connect(self.hide)
+        
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignRight)
+        row.addWidget(closeButton)
+        inputTabLayout.addLayout(row)
+        
         inputTabLayout.addStretch(1)
     
     def openFileDialog(self, fileFormatString):
@@ -250,7 +262,13 @@ class InputTab(QtGui.QWidget):
         
         """
         QtGui.QMessageBox.warning(self, "Warning", "Reference must be cleared before changing file type!")
-
+    
+#    def closeEvent(self, event):
+#        """
+#        Close.
+#        
+#        """
+#        self.hide()
 
 
 ################################################################################

@@ -28,6 +28,7 @@ from .gui import helpForm
 from .gui import dialogs
 from .visclibs import picker_c
 from .gui import renderMdiSubWindow
+from .gui import inputDialog
 try:
     from . import resources
 except ImportError:
@@ -111,19 +112,14 @@ class MainWindow(QtGui.QMainWindow):
         # preferences dialog
         self.preferences = dialogs.PreferencesDialog(parent=self)
         
-        # add the main tool bar
-        self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
-        
-        # text selector
-        self.textSelector = dialogs.OnScreenInfoDialog(self, parent=self)
-        
         # add file actions
         exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "system-log-out.svg", 
                                        "Exit application")
         newWindowAction = self.createAction("&New window", self.openNewWindow, "Ctrl-N", 
                                             "document-new.svg", "Open new window")
-        openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="document-open.svg", 
+        loadInputAction = self.createAction("Load input", slot=self.showLoadInputDialog, icon="document-open.svg",
+                                            tip="Open load input dialog")
+        openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="folder.svg", 
                                           tip="Open current working directory")
         exportElementsAction = self.createAction("Export elements", slot=self.exportElements,
                                                  icon="file-export-icon.png", tip="Export element properties")
@@ -140,7 +136,7 @@ class MainWindow(QtGui.QMainWindow):
         
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, openCWDAction, showImageViewerAction, importElementsAction, 
+        self.addActions(fileMenu, (newWindowAction, loadInputAction, openCWDAction, showImageViewerAction, importElementsAction, 
                                    exportElementsAction, importBondsAction, exportBondsAction, None, exitAction))
         
         # add edit menu
@@ -151,6 +147,8 @@ class MainWindow(QtGui.QMainWindow):
         fileToolbar = self.addToolBar("File")
         fileToolbar.addAction(exitAction)
         fileToolbar.addAction(newWindowAction)
+        fileToolbar.addSeparator()
+        fileToolbar.addAction(loadInputAction)
         fileToolbar.addAction(openCWDAction)
         fileToolbar.addAction(showImageViewerAction)
         fileToolbar.addSeparator()
@@ -194,17 +192,17 @@ class MainWindow(QtGui.QMainWindow):
         showFilterSummaryAction = self.createAction("Show summary", self.showFilterSummary, 
                                                     icon="document-properties.svg", 
                                                     tip="Show filter summary")
-        openTextSelectorAction = self.createAction("On-screen info", self.showTextSelector, 
-                                                   icon="preferences-desktop-font.svg", 
-                                                   tip="Show on-screen text selector")
+#        openTextSelectorAction = self.createAction("On-screen info", self.showTextSelector, 
+#                                                   icon="preferences-desktop-font.svg", 
+#                                                   tip="Show on-screen text selector")
         
         filteringToolbar = self.addToolBar("Filtering")
         filteringToolbar.addAction(showFilterSummaryAction)
-        filteringToolbar.addAction(openTextSelectorAction)
+#        filteringToolbar.addAction(openTextSelectorAction)
         filteringToolbar.addSeparator()
         
         filteringMenu = self.menuBar().addMenu("&Filtering")
-        self.addActions(filteringMenu, (showFilterSummaryAction,openTextSelectorAction))
+#        self.addActions(filteringMenu, (showFilterSummaryAction,openTextSelectorAction))
         
         # add about action
         aboutAction = self.createAction("About CDJSVis", slot=self.aboutMe, icon="Information-icon.png", 
@@ -265,6 +263,9 @@ class MainWindow(QtGui.QMainWindow):
 ##        self.distanceWidget.GetRepresentation().SetLabelFormat()
 #        self.distanceWidget.On()
         
+        # load input dialog
+        self.loadInputDialog = inputDialog.InputDialog(self, self, None)
+        
         self.mdiArea = QtGui.QMdiArea()
         self.mdiArea.subWindowActivated.connect(self.rendererWindowActivated)
         self.setCentralWidget(self.mdiArea)
@@ -287,6 +288,13 @@ class MainWindow(QtGui.QMainWindow):
 #        self.renderer = renderer.Renderer(self)
 #        self.renderer = self.rendererWindow.renderer
         
+        # add the main tool bar
+        self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
+        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
+        
+        # text selector
+#        self.textSelector = dialogs.OnScreenInfoDialog(self, parent=self)
+        
         # connect window destroyed to updateInstances
         self.connect(self, QtCore.SIGNAL("destroyed(QObject*)"), MainWindow.updateInstances)
         
@@ -301,6 +309,14 @@ class MainWindow(QtGui.QMainWindow):
         # give focus
         self.raise_()
     
+    def showLoadInputDialog(self):
+        """
+        Show load input dialog.
+        
+        """
+        self.loadInputDialog.hide()
+        self.loadInputDialog.show()
+    
     def rendererWindowActivated(self, sw):
         """
         Sub window activated. (TEMPORARY)
@@ -311,9 +327,9 @@ class MainWindow(QtGui.QMainWindow):
         
         w = sw.widget()
         
-        self.VTKRen = w.vtkRen
-        self.VTKWidget = w.vtkRenWinInteract
-        self.renderer = w.renderer
+#        self.VTKRen = w.vtkRen
+#        self.VTKWidget = w.vtkRenWinInteract
+#        self.renderer = w.renderer
     
     def addRendererWindow(self):
         """
@@ -323,6 +339,7 @@ class MainWindow(QtGui.QMainWindow):
         rendererWindow = renderMdiSubWindow.RendererWindow(self, self.subWinCount, parent=self)
         self.mdiArea.addSubWindow(rendererWindow)
         
+        self.rendererWindows.append(rendererWindow)
         
     
     def showPreferences(self):
@@ -885,17 +902,17 @@ class MainWindow(QtGui.QMainWindow):
         self.setCurrentRefFile(filename)
         self.refLoaded = 1
         
-#        self.mainToolbar.inputTab.clearRefButton.setCheckable(1)
-        
         self.inputState.clone(self.refState)
         
-        self.renderer.postRefRender()
+        for rw in self.rendererWindows:
+            rw.renderer.postRefRender()
         
-        self.mainToolbar.inputTab.loadRefBox.hide()
-        self.mainToolbar.inputTab.clearRefBox.show()
-        self.mainToolbar.inputTab.loadInputBox.show()
+        self.loadInputDialog.loadRefBox.hide()
+        self.loadInputDialog.clearRefBox.show()
+        self.loadInputDialog.loadInputBox.show()
         
-        self.textSelector.refresh()
+        for rw in self.rendererWindows:
+            rw.textSelector.refresh()
     
     def postInputLoaded(self, filename):
         """
@@ -904,6 +921,17 @@ class MainWindow(QtGui.QMainWindow):
         """
         self.setCurrentInputFile(filename)
         self.inputLoaded = 1
+        
+        self.mainToolbar.loadInputForm.hide()
+        self.mainToolbar.analysisPipelinesForm.show()
+        
+        for filterPage in self.mainToolbar.pipelineList:
+            filterPage.refreshAllFilters()
+        
+        for rw in self.rendererWindows:
+            rw.outputDialog.rdfTab.refresh()
+        
+        return
         
         self.mainToolbar.tabBar.setTabEnabled(1, True)
         self.mainToolbar.tabBar.setTabEnabled(2, True)
@@ -923,16 +951,19 @@ class MainWindow(QtGui.QMainWindow):
         self.inputLoaded = 0
         self.setCurrentRefFile("")
         self.setCurrentInputFile("")
-        self.mainToolbar.tabBar.setTabEnabled(1, False)
-        self.mainToolbar.tabBar.setTabEnabled(2, False)
-        self.mainToolbar.filterPage.clearAllFilterLists()
+#        self.mainToolbar.tabBar.setTabEnabled(1, False)
+#        self.mainToolbar.tabBar.setTabEnabled(2, False)
+#        self.mainToolbar.filterPage.clearAllFilterLists()
         
-        self.mainToolbar.inputTab.loadInputBox.hide()
-        self.mainToolbar.inputTab.clearRefBox.hide()
-        self.mainToolbar.inputTab.loadRefBox.show()
+        self.mainToolbar.analysisPipelinesForm.hide()
+        self.mainToolbar.loadInputForm.show()
         
-        self.mainToolbar.inputTab.lbomdXyzWidget_ref.refLoaded = False
-        self.mainToolbar.inputTab.lbomdXyzWidget_input.refLoaded = False
+        self.loadInputDialog.loadInputBox.hide()
+        self.loadInputDialog.clearRefBox.hide()
+        self.loadInputDialog.loadRefBox.show()
+        
+        self.loadInputDialog.lbomdXyzWidget_ref.refLoaded = False
+        self.loadInputDialog.lbomdXyzWidget_input.refLoaded = False
     
     def displayWarning(self, message):
         """

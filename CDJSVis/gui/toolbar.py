@@ -10,10 +10,10 @@ import sys
 from PyQt4 import QtGui, QtCore
 
 from .genericForm import GenericForm
-from .inputTab import InputTab
+#from .inputTab import InputTab
 from .filterTab import FilterTab
-from .outputTab import OutputTab
-
+#from .outputTab import OutputTab
+from ..visutils.utilities import iconPath
 try:
     from .. import resources
 except ImportError:
@@ -47,6 +47,7 @@ class MainToolbar(QtGui.QDockWidget):
         containerLayout.setContentsMargins(0,0,0,0)
         containerLayout.setAlignment(QtCore.Qt.AlignTop)
         
+        self.currentPipelineString = "Pipeline 0"
         
         # display current file info
         self.currentFileBox = GenericForm(self, self.toolbarWidth, "Current file")
@@ -61,31 +62,110 @@ class MainToolbar(QtGui.QDockWidget):
         row.addWidget(self.currentInputLabel)
         
         containerLayout.addWidget(self.currentFileBox)
-                
+        
+        # load input form
+        self.loadInputForm = GenericForm(self, 0, "Load input")
+        self.loadInputForm.show()
+        
+        loadInputButton = QtGui.QPushButton(QtGui.QIcon(iconPath("document-open.svg")), "Open input")
+        loadInputButton.clicked.connect(self.mainWindow.showLoadInputDialog)
+        
+        row = self.loadInputForm.newRow()
+        row.addWidget(loadInputButton)
+        
+        containerLayout.addWidget(self.loadInputForm)
+        
+        # analysis pipelines form
+        self.analysisPipelinesForm = GenericForm(self, 0, "Analysis pipelines")
+        
+        row = self.analysisPipelinesForm.newRow()
+        
+        self.pipelineCombo = QtGui.QComboBox()
+        self.pipelineCombo.currentIndexChanged.connect(self.currentPipelineChanged)
+        row.addWidget(self.pipelineCombo)
+        
+        addPipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
+        addPipelineButton.setStatusTip("Add analysis pipeline")
+        
+        row.addWidget(addPipelineButton)
+        
+        removePipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
+        removePipelineButton.setStatusTip("Remove analysis pipeline")
+        
+        row.addWidget(removePipelineButton)
+        
+        # stacked widget (for pipelines)
+        self.stackedWidget = QtGui.QStackedWidget()
+        row = self.analysisPipelinesForm.newRow()
+        row.addWidget(self.stackedWidget)
+        
+        # list for holding pipeline
+        self.pipelineList = []
+        
+        # add first pipeline
+        self.addPipeline()
+        
+        
+        
+        containerLayout.addWidget(self.analysisPipelinesForm)
+        
         # create the tab bar
-        row = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setContentsMargins(0, 0, 0, 0)
-        rowLayout.setAlignment(QtCore.Qt.AlignTop)
-        self.tabBar = QtGui.QTabWidget(row)
-        self.tabBar.setSizePolicy(QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.Minimum)
-        
-        # add tabs
-        self.inputTab = InputTab(self, self.mainWindow, self.toolbarWidth)
-        self.tabBar.addTab(self.inputTab, "Input")
-        
-        self.filterPage = FilterTab(self, self.mainWindow, self.toolbarWidth)
-        self.tabBar.addTab(self.filterPage, "Filter")
-        self.tabBar.setTabEnabled(1, False)
-        
-        self.outputPage = OutputTab(self, self.mainWindow, self.toolbarWidth)
-        self.tabBar.addTab(self.outputPage, "Output")
-        self.tabBar.setTabEnabled(2, False)
-        
-        rowLayout.addWidget(self.tabBar)
-        
-        containerLayout.addWidget(row)
+#        row = QtGui.QWidget()
+#        rowLayout = QtGui.QHBoxLayout(row)
+#        rowLayout.setContentsMargins(0, 0, 0, 0)
+#        rowLayout.setAlignment(QtCore.Qt.AlignTop)
+#        self.tabBar = QtGui.QTabWidget(row)
+#        self.tabBar.setSizePolicy(QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.Minimum)
+#        
+#        # add tabs
+#        self.inputTab = InputTab(self, self.mainWindow, self.toolbarWidth)
+#        self.tabBar.addTab(self.inputTab, "Input")
+#        
+#        self.filterPage = FilterTab(self, self.mainWindow, self.toolbarWidth)
+#        self.tabBar.addTab(self.filterPage, "Filter")
+#        self.tabBar.setTabEnabled(1, False)
+#        
+#        self.outputPage = OutputTab(self, self.mainWindow, self.toolbarWidth)
+#        self.tabBar.addTab(self.outputPage, "Output")
+#        self.tabBar.setTabEnabled(2, False)
+#        
+#        rowLayout.addWidget(self.tabBar)
+#        
+#        containerLayout.addWidget(row)
         
         # set the main widget
         self.setWidget(self.container)
     
+    def addPipeline(self):
+        """
+        Add a new analysis pipeline
+        
+        """
+        form = FilterTab(self, self.mainWindow, self.toolbarWidth)
+        
+        # add to pipeline combos
+        name = "Pipeline %d" % len(self.pipelineList)
+        self.pipelineCombo.addItem(name)
+        for rw in self.mainWindow.rendererWindows:
+            rw.newPipeline(name)
+        
+        self.pipelineList.append(form)
+        self.stackedWidget.addWidget(form)
+        
+        self.stackedWidget.setCurrentIndex(len(self.pipelineList))
+    
+    def currentPipelineChanged(self, index):
+        """
+        Current pipeline changed.
+        
+        """
+        # Update stacked widget
+        self.stackedWidget.setCurrentIndex(index)
+        
+        # update variable
+        self.currentPipelineString = str(self.pipelineCombo.currentText())
+        
+        
+
+
+
