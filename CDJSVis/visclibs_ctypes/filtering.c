@@ -8,7 +8,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include "utilities.h"
+#include "../visclibs/utilities.h"
+#include "filtering.h"
 
 
 /*******************************************************************************
@@ -87,8 +88,8 @@ int sliceFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, doub
  ** Crop sphere filter
  *******************************************************************************/
 int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double xCentre, 
-                     double yCentre, double zCentre, double radius, int cellDimsDim, double *cellDims, 
-                     int PBCDim, int *PBC, int invertSelection)
+                     double yCentre, double zCentre, double radius, double *cellDims, 
+                     int *PBC, int invertSelection)
 {
     int i, NVisible, index;
     double radius2, sep2;
@@ -178,7 +179,7 @@ int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, doubl
  ** Displacement filter
  *******************************************************************************/
 int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int posDim, double *pos, int refPosDim, double *refPos, 
-                       int cellDimsDim, double *cellDims, int PBCDim, int *PBC, double minDisp, double maxDisp)
+                       double *cellDims, int *PBC, double minDisp, double maxDisp)
 {
     int i, NVisible, index;
     double sep2, maxDisp2, minDisp2;

@@ -11,7 +11,7 @@ import copy
 import numpy as np
 import vtk
 
-from ..visclibs import filtering_c
+from ..visclibs_ctypes import filtering as filtering_c
 from ..visclibs import defects_c
 from ..visclibs import clusters_c
 from ..rendering import renderer
@@ -20,7 +20,6 @@ from ..visutils import vectors
 from . import clusters
 from ..atoms import elements
 from ..visclibs_ctypes import bonds as bonds_c
-from ..visclibs_ctypes import numpy_utils as nputils
 
 
 ################################################################################
