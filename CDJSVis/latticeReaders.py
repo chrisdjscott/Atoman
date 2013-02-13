@@ -7,6 +7,7 @@ Lattice reader objects.
 """
 import os
 import copy
+import re
 
 import numpy as np
 
@@ -326,6 +327,8 @@ class LbomdDatReader(GenericLatticeReader):
     """
     def __init__(self, tmpLocation, log, displayWarning):
         super(LbomdDatReader, self).__init__(tmpLocation, log, displayWarning)
+        
+        self.intRegex = re.compile(r'[0-9]+')
     
     def readFileMain(self, filename, rouletteIndex):
         """
@@ -395,9 +398,29 @@ class LbomdDatReader(GenericLatticeReader):
             
             self.log("%d %s (%s) atoms" % (specieCountTemp[i], specieListTemp[i], elements.atomName(specieListTemp[i])), 0, 2)
         
+        # guess roulette
+        if rouletteIndex is None:
+            print "FNAME", filename
+            
+            basename = os.path.basename(filename)
+            print "BNAME", basename
+            
+            # look for integers in the name
+            result = self.intRegex.findall(basename)
+            print "RES", result
+            
+            if len(result):
+                try:
+                    rouletteIndex = int(result[0]) - 1
+                    print "ROULETTE INDEX", rouletteIndex
+                except ValueError:
+                    rouletteIndex = None
+        
         # attempt to read time from roulette
         if rouletteIndex is not None:
             simTime = utilities.getTimeFromRoulette(rouletteIndex)
+            
+            print "SIMTIME", simTime
             
             if simTime is not None:
                 state.simTime = simTime
