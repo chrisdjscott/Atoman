@@ -24,7 +24,6 @@ from . import lattice
 from .rendering import renderer
 from .gui import helpForm
 from .gui import dialogs
-from .visclibs import picker_c
 from .gui import renderMdiSubWindow
 from .gui import inputDialog
 try:

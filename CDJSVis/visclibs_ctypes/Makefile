@@ -49,7 +49,7 @@ ifeq (Linux, $(shell uname -s))
 	LIBSUFFIX = so
 endif
 
-LIBFILES = _bonds.$(LIBSUFFIX) _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX) _output.$(LIBSUFFIX)
+LIBFILES = _bonds.$(LIBSUFFIX) _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX) _output.$(LIBSUFFIX) _picker.$(LIBSUFFIX)
 
 # target
 all : $(LIBFILES)
@@ -70,6 +70,9 @@ _input.$(LIBSUFFIX) : input.o
 _output.$(LIBSUFFIX) : output.o
 	$(CC) $(CCLINKFLAGS) output.o -o _output.$(LIBSUFFIX)
 
+_picker.$(LIBSUFFIX) : picker.o
+	$(CC) $(CCLINKFLAGS) picker.o ../visclibs/utilities.o ../visclibs/boxeslib.o -o _picker.$(LIBSUFFIX)
+
 # compile module
 bonds.o : bonds.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) bonds.c
@@ -85,6 +88,9 @@ input.o : input.c
 
 output.o : output.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) output.c
+
+picker.o : picker.c 
+	$(CC) $(CCFLAGS) $(INCLUDES) picker.c
 
 # clean
 clean:

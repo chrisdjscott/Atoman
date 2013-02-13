@@ -1,6 +1,6 @@
 
 """
-Wrapper to input.c
+Wrapper to output.c
 
 @author: Chris Scott
 

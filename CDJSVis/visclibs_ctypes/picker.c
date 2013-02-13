@@ -7,8 +7,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include "boxeslib.h"
-#include "utilities.h"
+#include "../visclibs/boxeslib.h"
+#include "../visclibs/utilities.h"
+#include "picker.h"
 
 
 int pickObject(int visibleAtomsDim, int *visibleAtoms, int vacsDim, int *vacs, int intsDim, int *ints, 
