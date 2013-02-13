@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <errno.h>
+#include "input.h"
 
 
 int specieIndex(char*, int, char*);
@@ -41,10 +42,8 @@ int specieIndex(char* sym, int NSpecies, char* specieList)
 /*******************************************************************************
 ** read animation-reference file
 *******************************************************************************/
-void readRef( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, 
-              int KEDim, double* KE, int PEDim, double* PE, int forceDim, double* force, int speclistDim, 
-              char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, double* maxPos, int minPosDim, 
-              double* minPos )
+int readRef(char* file, int* specie, double* pos, double* charge, double* KE, double* PE, double* force, 
+            char* specieList_c, int* specieCount_c, double* maxPos, double* minPos)
 {
     int i, j, NAtoms, specInd;
     FILE *INFILE;
@@ -156,15 +155,16 @@ void readRef( char* file, int specieDim, int* specie, int posDim, double* pos, i
     specieList_c[2*NSpecies+1] = 'X';
     
     free(specieList);
+    
+    return 0;
 }
 
 
 /*******************************************************************************
 ** read xyz input file
 *******************************************************************************/
-void readLBOMDXYZ( char* file, int posDim, double* pos, int chargeDim, double* charge, 
-                   int KEDim, double* KE, int PEDim, double* PE, int forceDim, double* force, 
-                   int maxPosDim, double* maxPos, int minPosDim, double* minPos, int xyzformat )
+int readLBOMDXYZ(char* file, double* pos, double* charge, double* KE, double* PE, 
+                 double* force, double* maxPos, double* minPos, int xyzformat)
 {
     FILE *INFILE;
     int i, index, id, NAtoms;
@@ -247,15 +247,16 @@ void readLBOMDXYZ( char* file, int posDim, double* pos, int chargeDim, double* c
     }
     
     fclose(INFILE);
+    
+    return 0;
 }
 
 
 /*******************************************************************************
  * Read LBOMD lattice file
  *******************************************************************************/
-void readLatticeLBOMD( char* file, int specieDim, int* specie, int posDim, double* pos, int chargeDim, double* charge, 
-                       int speclistDim, char* specieList_c, int specCountDim, int* specieCount_c, int maxPosDim, 
-                       double* maxPos, int minPosDim, double* minPos )
+int readLatticeLBOMD(char* file, int* specie, double* pos, double* charge, char* specieList_c, 
+                     int* specieCount_c, double* maxPos, double* minPos)
 {
     FILE *INFILE;
     int i, j, NAtoms, specInd;
@@ -358,5 +359,7 @@ void readLatticeLBOMD( char* file, int specieDim, int* specie, int posDim, doubl
     specieList_c[2*NSpecies+1] = 'X';
         
     free(specieList);
+    
+    return 0;
 }
 

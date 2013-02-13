@@ -21,7 +21,7 @@ from .visutils.utilities import iconPath, resourcePath
 from .atoms import elements
 from .gui import toolbar as toolbarModule
 from . import lattice
-from . import inputModule
+# from . import inputModule
 from .rendering import renderer
 from .gui import helpForm
 from .gui import dialogs
@@ -750,107 +750,107 @@ class MainWindow(QtGui.QMainWindow):
         self.currentDirectoryLabel.setText(dirname)
         self.imageViewer.changeDir(dirname)
     
-    def openFileDialog(self, state):
-        """
-        Open file dialog
+#     def openFileDialog(self, state):
+#         """
+#         Open file dialog
+#         
+#         """
+#         fdiag = QtGui.QFileDialog()
+#         
+#         if self.fileType == "LBOMD":
+#             filesString = "LBOMD files (*.xyz *.xyz.bz2 *.xyz.gz)"
+#         elif self.fileType == "DAT":
+#             filesString = "Lattice files (*.dat *.dat.bz2 *.dat.gz)"
+#         else:
+#             self.displayError("openFileDialog: Unrecognised file type: "+self.fileType)
+#             return None
+#         
+#         filename = fdiag.getOpenFileName(self, "CDJSVis - Open file", os.getcwd(), filesString)
+#         filename = str(filename)
+#         
+#         if not len(filename):
+#             return None
+#         
+#         (nwd, filename) = os.path.split(filename)        
+#         
+#         # change to new working directory
+#         if nwd != os.getcwd():
+#             self.console.write("Changing to dir "+nwd)
+#             os.chdir(nwd)
+#             self.updateCWD()
+#         
+#         # open file
+#         result = self.openFile(filename, state)
+#         
+#         return result
         
-        """
-        fdiag = QtGui.QFileDialog()
-        
-        if self.fileType == "LBOMD":
-            filesString = "LBOMD files (*.xyz *.xyz.bz2 *.xyz.gz)"
-        elif self.fileType == "DAT":
-            filesString = "Lattice files (*.dat *.dat.bz2 *.dat.gz)"
-        else:
-            self.displayError("openFileDialog: Unrecognised file type: "+self.fileType)
-            return None
-        
-        filename = fdiag.getOpenFileName(self, "CDJSVis - Open file", os.getcwd(), filesString)
-        filename = str(filename)
-        
-        if not len(filename):
-            return None
-        
-        (nwd, filename) = os.path.split(filename)        
-        
-        # change to new working directory
-        if nwd != os.getcwd():
-            self.console.write("Changing to dir "+nwd)
-            os.chdir(nwd)
-            self.updateCWD()
-        
-        # open file
-        result = self.openFile(filename, state)
-        
-        return result
-        
-    def openFile(self, filename, state, rouletteIndex=None):
-        """
-        Open file
-        
-        """
-        # remove zip extensions
-        if filename[-3:] == ".gz":
-            filename = filename[:-3]
-        elif filename[-4:] == ".bz2":
-            filename = filename[:-4]
-        
-        if state == "input" and not self.refLoaded:
-            self.displayWarning("Must load reference before input")
-            return None
-        
-        #TODO: split path to check in directory of file already
-        
-        self.setStatus("Reading " + filename)
-        
-        # need to handle different states differently depending on fileType.
-        # eg LBOMD input does not have sym, may have charge, etc
-        #    DAT input will have both
-        if self.fileType == "LBOMD":
-            if state == "ref":
-                status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
-                
-                self.readLBOMDIN()
-                
-            else:
-                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write, self.refState)
-        
-        elif self.fileType == "DAT":
-            if state == "ref":
-                status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
-                
-                self.readLBOMDIN()
-                
-            else:
-                status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write, rouletteIndex=rouletteIndex)
-        
-        else:
-            self.displayError("openFile: Unrecognised file type: "+self.fileType)
-            return None
-        
-        if status:
-            if status == -1:
-                self.displayWarning("Could not find file: %s" % filename)
-            
-            elif status == -2:
-                self.displayWarning("LBOMD XYZ input NAtoms does not match reference!")
-            
-            elif status == -3:
-                self.displayWarning("Unrecognised format for LBOMD XYZ input file!")
-            
-            return None
-        
-        if state == "ref":
-            self.inputState.clone(self.refState)
-            
-            self.postRefLoaded(filename)
-            self.renderer.postRefRender()
-        
-        self.postInputLoaded(filename)
-        
-        self.setStatus("Ready")
-        
-        return filename
+#     def openFile(self, filename, state, rouletteIndex=None):
+#         """
+#         Open file
+#         
+#         """
+#         # remove zip extensions
+#         if filename[-3:] == ".gz":
+#             filename = filename[:-3]
+#         elif filename[-4:] == ".bz2":
+#             filename = filename[:-4]
+#         
+#         if state == "input" and not self.refLoaded:
+#             self.displayWarning("Must load reference before input")
+#             return None
+#         
+#         #TODO: split path to check in directory of file already
+#         
+#         self.setStatus("Reading " + filename)
+#         
+#         # need to handle different states differently depending on fileType.
+#         # eg LBOMD input does not have sym, may have charge, etc
+#         #    DAT input will have both
+#         if self.fileType == "LBOMD":
+#             if state == "ref":
+#                 status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
+#                 
+#                 self.readLBOMDIN()
+#                 
+#             else:
+#                 status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write, self.refState)
+#         
+#         elif self.fileType == "DAT":
+#             if state == "ref":
+#                 status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
+#                 
+#                 self.readLBOMDIN()
+#                 
+#             else:
+#                 status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write, rouletteIndex=rouletteIndex)
+#         
+#         else:
+#             self.displayError("openFile: Unrecognised file type: "+self.fileType)
+#             return None
+#         
+#         if status:
+#             if status == -1:
+#                 self.displayWarning("Could not find file: %s" % filename)
+#             
+#             elif status == -2:
+#                 self.displayWarning("LBOMD XYZ input NAtoms does not match reference!")
+#             
+#             elif status == -3:
+#                 self.displayWarning("Unrecognised format for LBOMD XYZ input file!")
+#             
+#             return None
+#         
+#         if state == "ref":
+#             self.inputState.clone(self.refState)
+#             
+#             self.postRefLoaded(filename)
+#             self.renderer.postRefRender()
+#         
+#         self.postInputLoaded(filename)
+#         
+#         self.setStatus("Ready")
+#         
+#         return filename
     
     def readLBOMDIN(self):
         """
