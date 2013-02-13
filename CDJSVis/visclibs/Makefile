@@ -51,14 +51,11 @@ SWIG := swig -python
 SHOBJECTS = *.o=.so
 OBJECTS = ${COBJECTS:.c=.o}
 COBJECTS = *.c
-SWIGSOURCE = defects_c.i clusters_c.i output_c.i vectors.i picker_c.i
+SWIGSOURCE = defects_c.i clusters_c.i vectors.i picker_c.i
 
-all : _defects_c.so _clusters_c.so _output_c.so _vectors.so _picker_c.so
+all : _defects_c.so _clusters_c.so _vectors.so _picker_c.so
 
 # create object file
-_output_c.so : output_c_wrap.o output_c.o
-	$(CC) $(CCLINKFLAGS) output_c_wrap.o output_c.o -o _output_c.so
-
 _defects_c.so : defects_c_wrap.o defects_c.o boxeslib.o utilities.o
 	$(CC) $(CCLINKFLAGS) defects_c.o defects_c_wrap.o boxeslib.o utilities.o -o _defects_c.so
 
@@ -72,9 +69,6 @@ _picker_c.so : picker_c_wrap.o picker_c.o utilities.o boxeslib.o
 	$(CC) $(CCLINKFLAGS) picker_c.o picker_c_wrap.o utilities.o boxeslib.o -o _picker_c.so
 
 # compile module
-output_c.o : output_c.c 
-	$(CC) $(CCFLAGS) $(INCLUDES) output_c.c 
-
 filtering_c.o : filtering_c.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) filtering_c.c 
 
@@ -97,10 +91,6 @@ picker_c.o : picker_c.c
 	$(CC) $(CCFLAGS) $(INCLUDES) picker_c.c
 
 # generate and compile swig wrapper
-output_c_wrap.o : output_c.i 
-	$(SWIG) output_c.i
-	$(CC) $(CCFLAGS) $(INCLUDES) output_c_wrap.c 
-
 defects_c_wrap.o : defects_c.i
 	$(SWIG) defects_c.i
 	$(CC) $(CCFLAGS) $(INCLUDES) defects_c_wrap.c 

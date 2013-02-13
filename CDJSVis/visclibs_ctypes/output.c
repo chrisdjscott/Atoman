@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include "output.h"
 
 
 void addPOVRAYSphere(FILE *, double, double, double, double, double, double, double);
@@ -181,9 +182,8 @@ void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int
 /*******************************************************************************
 ** write lattice file
 *******************************************************************************/
-void writeLattice(char* file, int visibleAtomsDim, int *visibleAtoms, double xdim, double ydim, double zdim, int speclistDim, 
-                  char* specieList_c, int specieDim, int* specie, int posDim, double* pos, int chargeDim, 
-                  double* charge)
+int writeLattice(char* file, int NVisible, int *visibleAtoms, double *cellDims, 
+                 char* specieList, int* specie, double* pos, double* charge)
 {
     int i, index;
     FILE *OUTFILE;
@@ -198,21 +198,23 @@ void writeLattice(char* file, int visibleAtomsDim, int *visibleAtoms, double xdi
         exit(35);
     } 
     
-    fprintf(OUTFILE, "%d\n", visibleAtomsDim);
-    fprintf(OUTFILE, "%f %f %f\n", xdim, ydim, zdim);
+    fprintf(OUTFILE, "%d\n", NVisible);
+    fprintf(OUTFILE, "%f %f %f\n", cellDims[0], cellDims[1], cellDims[2]);
     
-    for (i=0; i<visibleAtomsDim; i++)
+    for (i=0; i<NVisible; i++)
     {
         index = visibleAtoms[i];
         
-        symtemp[0] = specieList_c[2*specie[index]];
-        symtemp[1] = specieList_c[2*specie[index]+1];
+        symtemp[0] = specieList[2*specie[index]];
+        symtemp[1] = specieList[2*specie[index]+1];
         symtemp[2] = '\0';
         
         fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*index], pos[3*index+1], pos[3*index+2], charge[index]);
     }
     
     fclose(OUTFILE);
+    
+    return 0;
 }
 
 

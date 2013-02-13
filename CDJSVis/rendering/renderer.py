@@ -12,7 +12,6 @@ import numpy as np
 import vtk
 from PIL import Image
 
-from ..visclibs import output_c
 from ..visutils import utilities
 from . import axes
 from . import cell
@@ -824,35 +823,35 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
 
 
 ################################################################################
-def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 
-                       settings, mainWindow):
-    """
-    Write defects to povray file.
-    
-    """
-    povfile = os.path.join(mainWindow.tmpDirectory, filename)
-    
-    inputLattice = mainWindow.inputState
-    refLattice = mainWindow.refState
-    
-    output_c.writePOVRAYDefects(povfile, vacancies, interstitials, antisites, onAntisites, inputLattice.specie, inputLattice.pos,
-                                refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius,
-                                refLattice.specieRGB, refLattice.specieCovalentRadius)
+# def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 
+#                        settings, mainWindow):
+#     """
+#     Write defects to povray file.
+#     
+#     """
+#     povfile = os.path.join(mainWindow.tmpDirectory, filename)
+#     
+#     inputLattice = mainWindow.inputState
+#     refLattice = mainWindow.refState
+#     
+#     output_c.writePOVRAYDefects(povfile, vacancies, interstitials, antisites, onAntisites, inputLattice.specie, inputLattice.pos,
+#                                 refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius,
+#                                 refLattice.specieRGB, refLattice.specieCovalentRadius)
 
 
 ################################################################################
-def writePovrayAtoms(filename, visibleAtoms, mainWindow):
-    """
-    Write pov-ray atoms to file.
-    
-    """
-    povfile = os.path.join(mainWindow.tmpDirectory, filename)
-    
-    lattice = mainWindow.inputState
-    
-    # call C routine to write atoms to file
-    output_c.writePOVRAYAtoms(povfile, lattice.specie, lattice.pos, visibleAtoms, 
-                              lattice.specieRGB, lattice.specieCovalentRadius)
+# def writePovrayAtoms(filename, visibleAtoms, mainWindow):
+#     """
+#     Write pov-ray atoms to file.
+#     
+#     """
+#     povfile = os.path.join(mainWindow.tmpDirectory, filename)
+#     
+#     lattice = mainWindow.inputState
+#     
+#     # call C routine to write atoms to file
+#     output_c.writePOVRAYAtoms(povfile, lattice.specie, lattice.pos, visibleAtoms, 
+#                               lattice.specieRGB, lattice.specieCovalentRadius)
 
 
 ################################################################################

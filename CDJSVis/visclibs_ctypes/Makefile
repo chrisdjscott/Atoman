@@ -49,7 +49,7 @@ ifeq (Linux, $(shell uname -s))
 	LIBSUFFIX = so
 endif
 
-LIBFILES = _bonds.$(LIBSUFFIX) _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX)
+LIBFILES = _bonds.$(LIBSUFFIX) _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX) _output.$(LIBSUFFIX)
 
 # target
 all : $(LIBFILES)
@@ -67,6 +67,9 @@ _filtering.$(LIBSUFFIX) : filtering.o
 _input.$(LIBSUFFIX) : input.o
 	$(CC) $(CCLINKFLAGS) input.o -o _input.$(LIBSUFFIX)
 
+_output.$(LIBSUFFIX) : output.o
+	$(CC) $(CCLINKFLAGS) output.o -o _output.$(LIBSUFFIX)
+
 # compile module
 bonds.o : bonds.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) bonds.c
@@ -79,6 +82,9 @@ filtering.o : filtering.c
 
 input.o : input.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) input.c
+
+output.o : output.c 
+	$(CC) $(CCFLAGS) $(INCLUDES) output.c
 
 # clean
 clean:

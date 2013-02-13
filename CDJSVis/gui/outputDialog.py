@@ -18,7 +18,7 @@ from ..visutils import utilities
 from ..visutils.utilities import iconPath
 from . import dialogs
 from . import genericForm
-from ..visclibs import output_c
+from ..visclibs_ctypes import output as output_c
 from ..visclibs_ctypes import rdf as rdf_c
 from . import plotDialog
 
@@ -329,7 +329,7 @@ class FileTab(QtGui.QWidget):
         super(FileTab, self).__init__(parent)
         
         self.parent = parent
-        self.rendererWindow = parent
+        self.rendererWindow = parent.rendererWindow
         self.mainWindow = mainWindow
         self.width = width
         
@@ -413,8 +413,7 @@ class FileTab(QtGui.QWidget):
         
         #TODO: this should write visible atoms only, not whole lattice!
         
-        output_c.writeLattice(filename, visibleAtoms, lattice.cellDims[0], lattice.cellDims[1], lattice.cellDims[2],
-                              lattice.specieList, lattice.specie, lattice.pos, lattice.charge)
+        output_c.writeLattice(filename, visibleAtoms, lattice.cellDims, lattice.specieList, lattice.specie, lattice.pos, lattice.charge)
     
     def saveToFileDialog(self):
         """
