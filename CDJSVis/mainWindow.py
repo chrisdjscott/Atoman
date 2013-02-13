@@ -121,6 +121,8 @@ class MainWindow(QtGui.QMainWindow):
                                        "Exit application")
         newWindowAction = self.createAction("&New window", self.openNewWindow, "Ctrl-N", 
                                             "document-new.svg", "Open new window")
+        newRenWindowAction = self.createAction("New renderer window", slot=self.addRendererWindow,
+                                            icon="window-new.svg", tip="Open new renderer window")
         loadInputAction = self.createAction("Load input", slot=self.showLoadInputDialog, icon="document-open.svg",
                                             tip="Open load input dialog")
         openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="folder.svg", 
@@ -151,6 +153,7 @@ class MainWindow(QtGui.QMainWindow):
         fileToolbar = self.addToolBar("File")
         fileToolbar.addAction(exitAction)
         fileToolbar.addAction(newWindowAction)
+        fileToolbar.addAction(newRenWindowAction)
         fileToolbar.addSeparator()
         fileToolbar.addAction(loadInputAction)
         fileToolbar.addAction(openCWDAction)
@@ -332,6 +335,8 @@ class MainWindow(QtGui.QMainWindow):
         Add renderer window to mdi area.
         
         """
+        print "ADD RENDERER WINDOW", self.subWinCount
+        
         rendererWindow = renderMdiSubWindow.RendererWindow(self, self.subWinCount, parent=self)
         self.mdiArea.addSubWindow(rendererWindow)
         

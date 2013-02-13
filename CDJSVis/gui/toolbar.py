@@ -10,9 +10,7 @@ import sys
 from PyQt4 import QtGui, QtCore
 
 from .genericForm import GenericForm
-#from .inputTab import InputTab
 from .filterTab import FilterTab
-#from .outputTab import OutputTab
 from ..visutils.utilities import iconPath
 try:
     from .. import resources
@@ -140,8 +138,6 @@ class MainToolbar(QtGui.QDockWidget):
         Remove pipeline.
         
         """
-        print "REMOVE PIPELINE"
-        
         remIndex = self.currentPipelineIndex
         
         # not allowed to remove last one
