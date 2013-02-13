@@ -986,6 +986,9 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
         self.layout.addWidget(row)
         
         return rowLayout
+    
+    def init(self):
+        self.layout.addStretch(1)
 
 ################################################################################
 
@@ -1059,6 +1062,8 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
 #        containerCombo.addItem("mov")
         containerCombo.currentIndexChanged[QtCore.QString].connect(self.suffixChanged)
         rowLayout.addWidget(containerCombo)
+        
+        self.init()
     
     def suffixChanged(self, text):
         """
@@ -1159,6 +1164,8 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         
         label = QtGui.QLabel(" degrees")
         rowLayout.addWidget(label)
+        
+        self.init()
         
     def viewAngleChanged(self, val):
         """
@@ -1313,6 +1320,8 @@ class MatplotlibSettingsForm(GenericPreferencesSettingsForm):
         row = fontSizeGroup.newRow()
         row.addWidget(label)
         row.addWidget(tickFontSizeSpin)
+        
+        self.init()
     
     def legendFontSizeChanged(self, val):
         """
@@ -1382,7 +1391,7 @@ class PreferencesDialog(QtGui.QDialog):
         
         self.setWindowTitle("Preferences")
         self.setWindowIcon(QtGui.QIcon(iconPath("applications-system.svg")))
-#        self.resize(500,300)
+        self.resize(320, 380)
         
         self.buttonCount = 0
         
@@ -1406,45 +1415,4 @@ class PreferencesDialog(QtGui.QDialog):
         # matplotlib tab
         self.matplotlibForm = MatplotlibSettingsForm(self)
         self.toolbox.addItem(self.matplotlibForm, QtGui.QIcon(iconPath("Plotter.png")), "Matplotlib")
-
-################################################################################
-
-class PreferencesDialog2(QtGui.QDialog):
-    """
-    Preferences dialog.
-    
-    """
-    def __init__(self, parent=None):
-        super(PreferencesDialog, self).__init__(parent)
-        
-        self.parent = parent
-#        self.setModal(0)
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-        
-        self.setWindowTitle("Preferences")
-        self.setWindowIcon(QtGui.QIcon(iconPath("applications-system.svg")))
-#        self.resize(500,300)
-        
-        self.buttonCount = 0
-        
-        # layout
-        dlgLayout = QtGui.QVBoxLayout(self)
-                
-        # tab widget
-        self.tabWidget = QtGui.QTabWidget()
-        
-        # add tab widget to dialog layout
-        dlgLayout.addWidget(self.tabWidget)
-        
-        # povray tab
-        self.povrayForm = PovraySettingsForm(self)
-        self.tabWidget.addTab(self.povrayForm, QtGui.QIcon(iconPath("pov-icon.svg")), "POV-Ray")
-        
-        # ffmpeg tab
-        self.ffmpegForm = FfmpegSettingsForm(self)
-        self.tabWidget.addTab(self.ffmpegForm, QtGui.QIcon(iconPath("ffmpeg.png")), "FFmpeg")
-        
-        # matplotlib tab
-        self.matplotlibForm = MatplotlibSettingsForm(self)
-        self.tabWidget.addTab(self.matplotlibForm, QtGui.QIcon(iconPath("Plotter.png")), "Matplotlib")
 

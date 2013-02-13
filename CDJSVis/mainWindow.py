@@ -21,7 +21,6 @@ from .visutils.utilities import iconPath, resourcePath
 from .atoms import elements
 from .gui import toolbar as toolbarModule
 from . import lattice
-# from . import inputModule
 from .rendering import renderer
 from .gui import helpForm
 from .gui import dialogs
@@ -230,45 +229,7 @@ class MainWindow(QtGui.QMainWindow):
         self.statusBar = QtGui.QStatusBar()
         self.statusBar.addPermanentWidget(self.currentDirectoryLabel)
         self.setStatusBar(self.statusBar)
-        
-        # initialise the VTK container
-#        self.VTKContainer = QtGui.QWidget(self)
-#        VTKlayout = QtGui.QVBoxLayout(self.VTKContainer)
-#        self.VTKWidget = QVTKRenderWindowInteractor(self.VTKContainer)
-#        VTKlayout.addWidget(self.VTKWidget)
-#        VTKlayout.setContentsMargins(0,0,0,0)
-        
-#        self.VTKWidget.Initialize()
-#        self.VTKWidget.Start()
-        
-#        self.VTKRen = vtk.vtkRenderer()
-#        self.VTKRen.SetBackground(1,1,1)
-#        self.VTKWidget.GetRenderWindow().AddRenderer(self.VTKRen)
-        
-#        self.VTKWidget._Iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
-        
-        # add observers
-#        self.VTKWidget._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
-#        self.VTKWidget._Iren.AddObserver("MouseMoveEvent", self.mouseMoved)
-#        self.VTKWidget._Iren.AddObserver("LeftButtonReleaseEvent", self.leftButtonReleased)
-        
-#        self.VTKWidget.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
-#        self.VTKWidget.AddObserver("MouseMoveEvent", self.mouseMoved)
-#        self.VTKWidget.AddObserver("LeftButtonReleaseEvent", self.leftButtonReleased)
-        
-        # add picker
-#        self.VTKPicker = vtk.vtkCellPicker()
-#        self.VTKPicker.SetTolerance(0.000001)
-#        self.VTKPicker.AddObserver("EndPickEvent", self.endPickEvent)
-#        self.VTKWidget.SetPicker(self.VTKPicker)
-        
-        # distance representation
-#        self.distanceWidget = vtk.vtkDistanceWidget()
-#        self.distanceWidget.SetInteractor(self.VTKWidget)
-#        self.distanceWidget.CreateDefaultRepresentation()
-##        self.distanceWidget.GetRepresentation().SetLabelFormat()
-#        self.distanceWidget.On()
-        
+                
         # load input dialog
         self.loadInputDialog = inputDialog.InputDialog(self, self, None)
         
@@ -282,26 +243,12 @@ class MainWindow(QtGui.QMainWindow):
         
         self.addRendererWindow()
         
-#        self.rendererWindow = renderMdiSubWindow.RendererWindow(self, self)
-#        self.mdiArea.addSubWindow(self.rendererWindow)
-        
-#        self.VTKRen = self.rendererWindow.vtkRen
-#        self.VTKWidget = self.rendererWindow.vtkRenWinInteract
-        
         self.mdiArea.tileSubWindows()
 #        self.mdiArea.cascadeSubWindows()
-        
-#        self.setCentralWidget(self.VTKContainer)
-                
-#        self.renderer = renderer.Renderer(self)
-#        self.renderer = self.rendererWindow.renderer
         
         # add the main tool bar
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
-        
-        # text selector
-#        self.textSelector = dialogs.OnScreenInfoDialog(self, parent=self)
         
         # connect window destroyed to updateInstances
         self.connect(self, QtCore.SIGNAL("destroyed(QObject*)"), MainWindow.updateInstances)
@@ -314,7 +261,7 @@ class MainWindow(QtGui.QMainWindow):
         self.raise_()
         
         # show input dialog
-        self.showLoadInputDialog()
+#        self.showLoadInputDialog()
     
     def showLoadInputDialog(self):
         """
@@ -358,17 +305,6 @@ class MainWindow(QtGui.QMainWindow):
         """
         self.preferences.hide()
         self.preferences.show()
-    
-#    def showTextSelector(self):
-#        """
-#        Show the text selector.
-#        
-#        """
-#        if not self.refLoaded:
-#            return
-#        
-#        self.textSelector.hide()
-#        self.textSelector.show()
     
     def showImageViewer(self):
         """
@@ -486,112 +422,6 @@ class MainWindow(QtGui.QMainWindow):
         
 #        elif osname == "Windows":
 #            os.startfile(dirname)
-    
-#    def endPickEvent(self, obj, event):
-#        """
-#        End of vtk pick event.
-#        
-#        """
-#        if self.VTKPicker.GetCellId() < 0:
-#            pass
-#        
-#        else:
-#            pickPos = self.VTKPicker.GetPickPosition()
-#            pickPos_np = np.asarray(pickPos, dtype=np.float64)
-#            
-#            # find which atom was picked...
-#            
-#            # loop over filter lists
-#            filterLists = self.mainToolbar.filterPage.filterLists
-#            
-#            minSepIndex = -1
-#            minSep = 9999999.0
-#            minSepType = None
-#            minSepScalarType = None
-#            minSepScalar = None
-#            for filterList in filterLists:
-#                filterer = filterList.filterer
-#                
-#                visibleAtoms = filterer.visibleAtoms
-#                interstitials = filterer.interstitials
-#                vacancies = filterer.vacancies
-#                antisites = filterer.antisites
-#                onAntisites = filterer.onAntisites
-#                splitInts = filterer.splitInterstitials
-#                scalars = filterer.scalars
-#                scalarsType = filterer.scalarsType
-#                
-#                result = np.empty(3, np.float64)
-#                
-#                status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, antisites, splitInts, pickPos_np, 
-#                                             self.inputState.pos, self.refState.pos, self.PBC, self.inputState.cellDims,
-#                                             self.refState.minPos, self.refState.maxPos, self.inputState.specie, 
-#                                             self.refState.specie, self.inputState.specieCovalentRadius, 
-#                                             self.refState.specieCovalentRadius, result)
-#                
-#                tmp_type, tmp_index, tmp_sep = result
-#                
-#                if tmp_index >= 0 and tmp_sep < minSep:
-#                    minSep = tmp_sep
-#                    minSepType = int(tmp_type)
-#                    
-#                    if minSepType == 0:
-#                        minSepIndex = visibleAtoms[int(tmp_index)]
-#                    else:
-#                        minSepIndex = int(tmp_index)
-#                        
-#                        if minSepType == 1:
-#                            defList = (vacancies,)
-#                        elif minSepType == 2:
-#                            defList = (interstitials,)
-#                        elif minSepType == 3:
-#                            defList = (antisites, onAntisites)
-#                        else:
-#                            defList = (splitInts,)
-#                    
-#                    if len(scalarsType):
-#                        minSepScalar = scalars[tmp_index]
-#                        minSepScalarType = scalarsType
-#                    else:
-#                        minSepScalar = None
-#                        minSepScalarType = None
-#            
-##            print "MIN SEP", minSep, "TYPE", minSepType, "INDEX", minSepIndex
-#            
-#            if minSep < 0.1:
-#                if minSepType == 0:
-#                    atomInfoWindow = dialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, parent=self)
-#                    atomInfoWindow.show()
-#                
-#                else:
-#                    defectInfoWindow = dialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, parent=self)
-#                    defectInfoWindow.show()
-#    
-#    def leftButtonPressed(self, obj, event):
-#        """
-#        Left mouse button pressed
-#        
-#        """
-#        self.mouseMotion = 0
-#        
-#        # left release event isn't working so have to pick by double click
-#        if self.VTKWidget.GetRepeatCount() == 1:
-#            pos = self.VTKWidget.GetEventPosition()
-#            self.VTKPicker.Pick(pos[0], pos[1], 0, self.VTKRen)
-#    
-#    def mouseMoved(self, obj, event):
-#        """
-#        Mouse moved
-#        
-#        """
-#        self.mouseMotion = 1
-#    
-#    def leftButtonReleased(self, obj, event):
-#        """
-#        Left button released.
-#        
-#        """
-#        print "LEFT RELEASE", self.mouseMotion
     
     def showFilterSummary(self):
         """
@@ -750,108 +580,6 @@ class MainWindow(QtGui.QMainWindow):
         self.currentDirectoryLabel.setText(dirname)
         self.imageViewer.changeDir(dirname)
     
-#     def openFileDialog(self, state):
-#         """
-#         Open file dialog
-#         
-#         """
-#         fdiag = QtGui.QFileDialog()
-#         
-#         if self.fileType == "LBOMD":
-#             filesString = "LBOMD files (*.xyz *.xyz.bz2 *.xyz.gz)"
-#         elif self.fileType == "DAT":
-#             filesString = "Lattice files (*.dat *.dat.bz2 *.dat.gz)"
-#         else:
-#             self.displayError("openFileDialog: Unrecognised file type: "+self.fileType)
-#             return None
-#         
-#         filename = fdiag.getOpenFileName(self, "CDJSVis - Open file", os.getcwd(), filesString)
-#         filename = str(filename)
-#         
-#         if not len(filename):
-#             return None
-#         
-#         (nwd, filename) = os.path.split(filename)        
-#         
-#         # change to new working directory
-#         if nwd != os.getcwd():
-#             self.console.write("Changing to dir "+nwd)
-#             os.chdir(nwd)
-#             self.updateCWD()
-#         
-#         # open file
-#         result = self.openFile(filename, state)
-#         
-#         return result
-        
-#     def openFile(self, filename, state, rouletteIndex=None):
-#         """
-#         Open file
-#         
-#         """
-#         # remove zip extensions
-#         if filename[-3:] == ".gz":
-#             filename = filename[:-3]
-#         elif filename[-4:] == ".bz2":
-#             filename = filename[:-4]
-#         
-#         if state == "input" and not self.refLoaded:
-#             self.displayWarning("Must load reference before input")
-#             return None
-#         
-#         #TODO: split path to check in directory of file already
-#         
-#         self.setStatus("Reading " + filename)
-#         
-#         # need to handle different states differently depending on fileType.
-#         # eg LBOMD input does not have sym, may have charge, etc
-#         #    DAT input will have both
-#         if self.fileType == "LBOMD":
-#             if state == "ref":
-#                 status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
-#                 
-#                 self.readLBOMDIN()
-#                 
-#             else:
-#                 status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write, self.refState)
-#         
-#         elif self.fileType == "DAT":
-#             if state == "ref":
-#                 status = inputModule.readFile(filename, self.tmpDirectory, self.refState, self.fileType, state, self.console.write)
-#                 
-#                 self.readLBOMDIN()
-#                 
-#             else:
-#                 status = inputModule.readFile(filename, self.tmpDirectory, self.inputState, self.fileType, state, self.console.write, rouletteIndex=rouletteIndex)
-#         
-#         else:
-#             self.displayError("openFile: Unrecognised file type: "+self.fileType)
-#             return None
-#         
-#         if status:
-#             if status == -1:
-#                 self.displayWarning("Could not find file: %s" % filename)
-#             
-#             elif status == -2:
-#                 self.displayWarning("LBOMD XYZ input NAtoms does not match reference!")
-#             
-#             elif status == -3:
-#                 self.displayWarning("Unrecognised format for LBOMD XYZ input file!")
-#             
-#             return None
-#         
-#         if state == "ref":
-#             self.inputState.clone(self.refState)
-#             
-#             self.postRefLoaded(filename)
-#             self.renderer.postRefRender()
-#         
-#         self.postInputLoaded(filename)
-#         
-#         self.setStatus("Ready")
-#         
-#         return filename
-    
     def readLBOMDIN(self):
         """
         Try to read sim identity and PBCs from lbomd.IN
@@ -976,9 +704,6 @@ class MainWindow(QtGui.QMainWindow):
         self.inputLoaded = 0
         self.setCurrentRefFile("")
         self.setCurrentInputFile("")
-#        self.mainToolbar.tabBar.setTabEnabled(1, False)
-#        self.mainToolbar.tabBar.setTabEnabled(2, False)
-#        self.mainToolbar.filterPage.clearAllFilterLists()
         
         # close any open output dialogs!
         for rw in self.rendererWindows:
