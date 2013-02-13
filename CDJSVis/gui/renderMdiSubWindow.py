@@ -41,8 +41,11 @@ class RendererWindow(QtGui.QWidget):
         
         self.parent = parent
         self.mainWindow = mainWindow
+        self.rendererIndex = index
         
         self.setWindowTitle("Render window %d" % index)
+        
+        self.closed = False
         
         # layout
         layout = QtGui.QVBoxLayout()
@@ -218,18 +221,18 @@ class RendererWindow(QtGui.QWidget):
         Current pipeline changed.
         
         """
-        # remove actors!
+        # remove actors
         self.removeActors()
         
         # update vars
         self.currentPipelineString = str(self.analysisPipelineCombo.currentText())
         self.currentPipelineIndex = index
         
-        # get new actors!
+        # get new actors
         self.addActors()
         
         # refresh text
-        
+        self.refreshOnScreenInfo()
     
     def showOutputDialog(self):
         """
@@ -416,7 +419,7 @@ class RendererWindow(QtGui.QWidget):
         Show the text selector.
         
         """
-        if not self.refLoaded:
+        if not self.mainWindow.refLoaded:
             return
         
         self.textSelector.hide()
@@ -446,6 +449,9 @@ class RendererWindow(QtGui.QWidget):
         Refresh the on-screen information.
         
         """
+        if not self.mainWindow.refLoaded:
+            return
+        
         textSel = self.textSelector
         selectedText = textSel.selectedText
         textSettings = textSel.textSettings
@@ -696,7 +702,21 @@ class RendererWindow(QtGui.QWidget):
             actor = self.onScreenInfoActors.GetNextItem()
         
         self.vtkRenWinInteract.ReInitialize()
-
+    
+    def closeEvent(self, event):
+        """
+        Override close event.
+        
+        """
+        reply = QtGui.QMessageBox.question(self, 'Message', "Are you sure you want to close this window", 
+                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        
+        if reply == QtGui.QMessageBox.Yes:
+            self.closed = True
+            self.mainWindow.renderWindowClosed()
+            event.accept()
+        else:
+            event.ignore()
 
 
 

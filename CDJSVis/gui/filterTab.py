@@ -26,12 +26,13 @@ except ImportError:
 
 ################################################################################
 class FilterTab(QtGui.QWidget):
-    def __init__(self, parent, mainWindow, width):
+    def __init__(self, parent, mainWindow, width, pipelineIndex):
         super(FilterTab, self).__init__(parent)
         
         self.mainToolbar = parent
         self.mainWindow = mainWindow
         self.toolbarWidth = width
+        self.pipelineIndex = pipelineIndex
         
         self.log = self.mainWindow.console.write
         

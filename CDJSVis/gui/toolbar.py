@@ -40,6 +40,8 @@ class MainToolbar(QtGui.QDockWidget):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         
+        self.NPipelines = 0
+        
         # create container for widgets
         self.container = QtGui.QWidget(self)
         containerLayout = QtGui.QVBoxLayout(self.container)
@@ -86,12 +88,12 @@ class MainToolbar(QtGui.QDockWidget):
         
         addPipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
         addPipelineButton.setStatusTip("Add analysis pipeline")
-        
+        addPipelineButton.clicked.connect(self.addPipeline)
         row.addWidget(addPipelineButton)
         
         removePipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
         removePipelineButton.setStatusTip("Remove analysis pipeline")
-        
+        removePipelineButton.clicked.connect(self.removePipeline)
         row.addWidget(removePipelineButton)
         
         # stacked widget (for pipelines)
@@ -105,33 +107,8 @@ class MainToolbar(QtGui.QDockWidget):
         # add first pipeline
         self.addPipeline()
         
-        
-        
+        # add to layout
         containerLayout.addWidget(self.analysisPipelinesForm)
-        
-        # create the tab bar
-#        row = QtGui.QWidget()
-#        rowLayout = QtGui.QHBoxLayout(row)
-#        rowLayout.setContentsMargins(0, 0, 0, 0)
-#        rowLayout.setAlignment(QtCore.Qt.AlignTop)
-#        self.tabBar = QtGui.QTabWidget(row)
-#        self.tabBar.setSizePolicy(QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.Minimum)
-#        
-#        # add tabs
-#        self.inputTab = InputTab(self, self.mainWindow, self.toolbarWidth)
-#        self.tabBar.addTab(self.inputTab, "Input")
-#        
-#        self.filterPage = FilterTab(self, self.mainWindow, self.toolbarWidth)
-#        self.tabBar.addTab(self.filterPage, "Filter")
-#        self.tabBar.setTabEnabled(1, False)
-#        
-#        self.outputPage = OutputTab(self, self.mainWindow, self.toolbarWidth)
-#        self.tabBar.addTab(self.outputPage, "Output")
-#        self.tabBar.setTabEnabled(2, False)
-#        
-#        rowLayout.addWidget(self.tabBar)
-#        
-#        containerLayout.addWidget(row)
         
         # set the main widget
         self.setWidget(self.container)
@@ -141,18 +118,36 @@ class MainToolbar(QtGui.QDockWidget):
         Add a new analysis pipeline
         
         """
-        form = FilterTab(self, self.mainWindow, self.toolbarWidth)
-        
         # add to pipeline combos
-        name = "Pipeline %d" % len(self.pipelineList)
+        name = "Pipeline %d" % self.NPipelines
         self.pipelineCombo.addItem(name)
         for rw in self.mainWindow.rendererWindows:
             rw.newPipeline(name)
+        
+        # form
+        form = FilterTab(self, self.mainWindow, self.toolbarWidth, self.NPipelines)
         
         self.pipelineList.append(form)
         self.stackedWidget.addWidget(form)
         
         self.stackedWidget.setCurrentIndex(len(self.pipelineList))
+        
+        self.NPipelines += 1
+    
+    def removePipeline(self):
+        """
+        Remove pipeline.
+        
+        """
+        print "REMOVE PIPELINE"
+        
+        # not allowed to remove last one
+        
+        
+        # clear all actors from any windows and select diff pipeline for them (or close them?)
+        
+        
+        
     
     def currentPipelineChanged(self, index):
         """

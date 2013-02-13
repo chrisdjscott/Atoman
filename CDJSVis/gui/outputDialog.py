@@ -444,6 +444,7 @@ class ImageTab(QtGui.QWidget):
         self.parent = parent
         self.mainWindow = mainWindow
         self.width = width
+        self.rendererWindow = self.parent.rendererWindow
         
         # initial values
         self.renderType = "VTK"
@@ -653,6 +654,7 @@ class SingleImageTab(QtGui.QWidget):
         self.parent = parent
         self.mainWindow = mainWindow
         self.width = width
+        self.rendererWindow = self.parent.rendererWindow
         
         # initial values
         self.overwriteImage = 0
@@ -760,8 +762,8 @@ class SingleImageTab(QtGui.QWidget):
             QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
             progress.show()
         
-        filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                      filename, self.overwriteImage, povray=self.parent.povray)
+        filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
+                                                          filename, self.overwriteImage, povray=self.parent.povray)
         
         # hide progress dialog
         if showProgress and self.parent.renderType == "POV":
@@ -819,6 +821,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.parent = parent
         self.mainWindow = mainWindow
         self.width = width
+        self.rendererWindow = self.parent.rendererWindow
         
         # initial values
         self.numberFormat = "%04d"
@@ -1104,7 +1107,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 log("Current file: %s" % (currentFile,), 0, 1)
                 
                 # first open the file
-                form = self.mainWindow.mainToolbar.inputTab.loadInputStack.widget(self.mainWindow.mainToolbar.inputTab.inputTypeCurrentIndex)
+                form = self.mainWindow.loadInputDialog.loadInputStack.widget(self.mainWindow.loadInputDialog.inputTypeCurrentIndex)
                 status = form.openFile(filename=currentFile, rouletteIndex=i-1)
                 
                 # exit if cancelled
@@ -1116,7 +1119,8 @@ class ImageSequenceTab(QtGui.QWidget):
                     return
                 
                 # now apply all filters
-                self.mainWindow.mainToolbar.filterPage.runAllFilterLists()
+                pipelinePage = self.rendererWindow.getCurrentPipelinePage()
+                pipelinePage.runAllFilterLists()
                 
                 # exit if cancelled
                 if progDialog.wasCanceled():
@@ -1126,8 +1130,8 @@ class ImageSequenceTab(QtGui.QWidget):
                 log("Saving image: %s" % (saveName,), 0, 2)
                 
                 # now save image
-                filename = self.mainWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                              saveName, 1, povray=self.parent.povray)
+                filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
+                                                                  saveName, 1, povray=self.parent.povray)
                 
                 count += 1
                 
@@ -1233,6 +1237,7 @@ class ImageRotateTab(QtGui.QWidget):
         self.parent = parent
         self.mainWindow = mainWindow
         self.width = width
+        self.rendererWindow = self.parent.rendererWindow
         
         # initial values
         self.fileprefixText = "rotate"
@@ -1374,8 +1379,8 @@ class ImageRotateTab(QtGui.QWidget):
         fileprefix = os.path.join(saveDir, str(self.fileprefix.text()))
         
         # send to renderer
-        status = self.mainWindow.renderer.rotateAndSaveImage(self.parent.renderType, self.parent.imageFormat, fileprefix, 
-                                                             1, self.degreesPerRotation, povray=self.parent.povray)
+        status = self.rendererWindow.renderer.rotateAndSaveImage(self.parent.renderType, self.parent.imageFormat, fileprefix, 
+                                                                 1, self.degreesPerRotation, povray=self.parent.povray)
         
         # movie?
         if status:

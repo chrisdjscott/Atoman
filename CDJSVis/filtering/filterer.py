@@ -37,6 +37,7 @@ class Filterer(object):
         self.mainWindow = self.parent.mainWindow
         self.rendererWindows = self.mainWindow.rendererWindows
         self.mainToolbar = self.parent.mainToolbar
+        self.pipelineIndex = self.filterTab.pipelineIndex
         
         self.log = self.mainWindow.console.write
         
@@ -149,7 +150,7 @@ class Filterer(object):
         
         self.availableScreenInfo = {}
         
-        hullFile = os.path.join(self.mainWindow.tmpDirectory, "hulls%d.pov" % self.parent.tab)
+        hullFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_hulls%d.pov" % (self.pipelineIndex, self.parent.tab))
         if os.path.exists(hullFile):
             os.unlink(hullFile)
         
@@ -231,7 +232,7 @@ class Filterer(object):
         self.parent.colouringOptions.refreshScalarColourOption(self.scalarsType)
         
         # render
-        povfile = "atoms%d.pov" % (self.parent.tab,)
+        povfile = "pipeline%d_atoms%d.pov" % (self.pipelineIndex, self.parent.tab)
         if self.parent.defectFilterSelected:
             colourBy = self.colouringOptions.colourBy
             self.colouringOptions.colourBy = "Specie"
@@ -252,7 +253,7 @@ class Filterer(object):
                 self.splitIntSpecieCount = counters[3]
                 
                 # write pov-ray file too
-                povfile = "defects%d.pov" % self.parent.tab
+                povfile = "pipeline%d_defects%d.pov" % (self.pipelineIndex, self.parent.tab)
                 renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow)
             
             self.colouringOptions.colourBy = colourBy
@@ -399,7 +400,7 @@ class Filterer(object):
         # draw bonds
         if NBondsTotal > 0:
             # pov file for bonds
-            povfile = "bonds%d.pov" % (self.parent.tab,)
+            povfile = "pipeline%d_bonds%d.pov" % (self.pipelineIndex, self.parent.tab)
             
             renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.actorsCollection, self.colouringOptions, povfile, 
                                     self.scalars, bondArray, NBondsArray, bondVectorArray, self.bondsOptions)

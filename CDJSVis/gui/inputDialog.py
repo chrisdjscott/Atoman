@@ -32,7 +32,7 @@ class InputDialog(QtGui.QDialog):
         super(InputDialog, self).__init__(parent)
         
         self.setWindowTitle("Load input")
-        self.setModal(True)
+        self.setModal(False)
         
         self.mainToolbar = parent
         self.mainWindow = mainWindow

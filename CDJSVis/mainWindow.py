@@ -83,6 +83,10 @@ class MainWindow(QtGui.QMainWindow):
         self.PBC[2] = 1
         self.mouseMotion = 0
         
+        # initiate lattice objects for storing reference and input states
+        self.inputState = lattice.Lattice()
+        self.refState = lattice.Lattice()  
+        
         # change to home directory if running from pyinstaller bundle
         if hasattr(sys, "_MEIPASS"):
             os.chdir(os.environ.get("HOME"))
@@ -298,10 +302,6 @@ class MainWindow(QtGui.QMainWindow):
         # connect window destroyed to updateInstances
         self.connect(self, QtCore.SIGNAL("destroyed(QObject*)"), MainWindow.updateInstances)
         
-        # initiate lattice objects for storing reference and input states
-        self.inputState = lattice.Lattice()
-        self.refState = lattice.Lattice()        
-        
         self.setStatus('Ready')
         
         self.show()
@@ -322,14 +322,7 @@ class MainWindow(QtGui.QMainWindow):
         Sub window activated. (TEMPORARY)
         
         """
-        if sw is None:
-            return
-        
-        w = sw.widget()
-        
-#        self.VTKRen = w.vtkRen
-#        self.VTKWidget = w.vtkRenWinInteract
-#        self.renderer = w.renderer
+        pass
     
     def addRendererWindow(self):
         """
@@ -341,6 +334,7 @@ class MainWindow(QtGui.QMainWindow):
         
         self.rendererWindows.append(rendererWindow)
         
+        self.subWinCount += 1
     
     def showPreferences(self):
         """
@@ -350,16 +344,16 @@ class MainWindow(QtGui.QMainWindow):
         self.preferences.hide()
         self.preferences.show()
     
-    def showTextSelector(self):
-        """
-        Show the text selector.
-        
-        """
-        if not self.refLoaded:
-            return
-        
-        self.textSelector.hide()
-        self.textSelector.show()
+#    def showTextSelector(self):
+#        """
+#        Show the text selector.
+#        
+#        """
+#        if not self.refLoaded:
+#            return
+#        
+#        self.textSelector.hide()
+#        self.textSelector.show()
     
     def showImageViewer(self):
         """
@@ -478,111 +472,111 @@ class MainWindow(QtGui.QMainWindow):
 #        elif osname == "Windows":
 #            os.startfile(dirname)
     
-    def endPickEvent(self, obj, event):
-        """
-        End of vtk pick event.
-        
-        """
-        if self.VTKPicker.GetCellId() < 0:
-            pass
-        
-        else:
-            pickPos = self.VTKPicker.GetPickPosition()
-            pickPos_np = np.asarray(pickPos, dtype=np.float64)
-            
-            # find which atom was picked...
-            
-            # loop over filter lists
-            filterLists = self.mainToolbar.filterPage.filterLists
-            
-            minSepIndex = -1
-            minSep = 9999999.0
-            minSepType = None
-            minSepScalarType = None
-            minSepScalar = None
-            for filterList in filterLists:
-                filterer = filterList.filterer
-                
-                visibleAtoms = filterer.visibleAtoms
-                interstitials = filterer.interstitials
-                vacancies = filterer.vacancies
-                antisites = filterer.antisites
-                onAntisites = filterer.onAntisites
-                splitInts = filterer.splitInterstitials
-                scalars = filterer.scalars
-                scalarsType = filterer.scalarsType
-                
-                result = np.empty(3, np.float64)
-                
-                status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, antisites, splitInts, pickPos_np, 
-                                             self.inputState.pos, self.refState.pos, self.PBC, self.inputState.cellDims,
-                                             self.refState.minPos, self.refState.maxPos, self.inputState.specie, 
-                                             self.refState.specie, self.inputState.specieCovalentRadius, 
-                                             self.refState.specieCovalentRadius, result)
-                
-                tmp_type, tmp_index, tmp_sep = result
-                
-                if tmp_index >= 0 and tmp_sep < minSep:
-                    minSep = tmp_sep
-                    minSepType = int(tmp_type)
-                    
-                    if minSepType == 0:
-                        minSepIndex = visibleAtoms[int(tmp_index)]
-                    else:
-                        minSepIndex = int(tmp_index)
-                        
-                        if minSepType == 1:
-                            defList = (vacancies,)
-                        elif minSepType == 2:
-                            defList = (interstitials,)
-                        elif minSepType == 3:
-                            defList = (antisites, onAntisites)
-                        else:
-                            defList = (splitInts,)
-                    
-                    if len(scalarsType):
-                        minSepScalar = scalars[tmp_index]
-                        minSepScalarType = scalarsType
-                    else:
-                        minSepScalar = None
-                        minSepScalarType = None
-            
-#            print "MIN SEP", minSep, "TYPE", minSepType, "INDEX", minSepIndex
-            
-            if minSep < 0.1:
-                if minSepType == 0:
-                    atomInfoWindow = dialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, parent=self)
-                    atomInfoWindow.show()
-                
-                else:
-                    defectInfoWindow = dialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, parent=self)
-                    defectInfoWindow.show()
-    
-    def leftButtonPressed(self, obj, event):
-        """
-        Left mouse button pressed
-        
-        """
-        self.mouseMotion = 0
-        
-        # left release event isn't working so have to pick by double click
-        if self.VTKWidget.GetRepeatCount() == 1:
-            pos = self.VTKWidget.GetEventPosition()
-            self.VTKPicker.Pick(pos[0], pos[1], 0, self.VTKRen)
-    
-    def mouseMoved(self, obj, event):
-        """
-        Mouse moved
-        
-        """
-        self.mouseMotion = 1
-    
-    def leftButtonReleased(self, obj, event):
-        """
-        Left button released.
-        
-        """
-        print "LEFT RELEASE", self.mouseMotion
+#    def endPickEvent(self, obj, event):
+#        """
+#        End of vtk pick event.
+#        
+#        """
+#        if self.VTKPicker.GetCellId() < 0:
+#            pass
+#        
+#        else:
+#            pickPos = self.VTKPicker.GetPickPosition()
+#            pickPos_np = np.asarray(pickPos, dtype=np.float64)
+#            
+#            # find which atom was picked...
+#            
+#            # loop over filter lists
+#            filterLists = self.mainToolbar.filterPage.filterLists
+#            
+#            minSepIndex = -1
+#            minSep = 9999999.0
+#            minSepType = None
+#            minSepScalarType = None
+#            minSepScalar = None
+#            for filterList in filterLists:
+#                filterer = filterList.filterer
+#                
+#                visibleAtoms = filterer.visibleAtoms
+#                interstitials = filterer.interstitials
+#                vacancies = filterer.vacancies
+#                antisites = filterer.antisites
+#                onAntisites = filterer.onAntisites
+#                splitInts = filterer.splitInterstitials
+#                scalars = filterer.scalars
+#                scalarsType = filterer.scalarsType
+#                
+#                result = np.empty(3, np.float64)
+#                
+#                status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, antisites, splitInts, pickPos_np, 
+#                                             self.inputState.pos, self.refState.pos, self.PBC, self.inputState.cellDims,
+#                                             self.refState.minPos, self.refState.maxPos, self.inputState.specie, 
+#                                             self.refState.specie, self.inputState.specieCovalentRadius, 
+#                                             self.refState.specieCovalentRadius, result)
+#                
+#                tmp_type, tmp_index, tmp_sep = result
+#                
+#                if tmp_index >= 0 and tmp_sep < minSep:
+#                    minSep = tmp_sep
+#                    minSepType = int(tmp_type)
+#                    
+#                    if minSepType == 0:
+#                        minSepIndex = visibleAtoms[int(tmp_index)]
+#                    else:
+#                        minSepIndex = int(tmp_index)
+#                        
+#                        if minSepType == 1:
+#                            defList = (vacancies,)
+#                        elif minSepType == 2:
+#                            defList = (interstitials,)
+#                        elif minSepType == 3:
+#                            defList = (antisites, onAntisites)
+#                        else:
+#                            defList = (splitInts,)
+#                    
+#                    if len(scalarsType):
+#                        minSepScalar = scalars[tmp_index]
+#                        minSepScalarType = scalarsType
+#                    else:
+#                        minSepScalar = None
+#                        minSepScalarType = None
+#            
+##            print "MIN SEP", minSep, "TYPE", minSepType, "INDEX", minSepIndex
+#            
+#            if minSep < 0.1:
+#                if minSepType == 0:
+#                    atomInfoWindow = dialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, parent=self)
+#                    atomInfoWindow.show()
+#                
+#                else:
+#                    defectInfoWindow = dialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, parent=self)
+#                    defectInfoWindow.show()
+#    
+#    def leftButtonPressed(self, obj, event):
+#        """
+#        Left mouse button pressed
+#        
+#        """
+#        self.mouseMotion = 0
+#        
+#        # left release event isn't working so have to pick by double click
+#        if self.VTKWidget.GetRepeatCount() == 1:
+#            pos = self.VTKWidget.GetEventPosition()
+#            self.VTKPicker.Pick(pos[0], pos[1], 0, self.VTKRen)
+#    
+#    def mouseMoved(self, obj, event):
+#        """
+#        Mouse moved
+#        
+#        """
+#        self.mouseMotion = 1
+#    
+#    def leftButtonReleased(self, obj, event):
+#        """
+#        Left button released.
+#        
+#        """
+#        print "LEFT RELEASE", self.mouseMotion
     
     def showFilterSummary(self):
         """
@@ -656,6 +650,21 @@ class MainWindow(QtGui.QMainWindow):
         else:
             self.helpWindow.show()
             self.helpOpen = 1
+    
+    def renderWindowClosed(self):
+        """
+        A render window has been closed.
+        
+        """
+        i = 0
+        while i < len(self.rendererWindows):
+            rw = self.rendererWindows[i]
+            
+            if rw.closed:
+                self.rendererWindows.pop(i)
+                print "POP", i
+            else:
+                i += 1 
     
     def closeEvent(self, event):
         """

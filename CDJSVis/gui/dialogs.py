@@ -967,6 +967,7 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
         
         # tab layout
         self.layout = QtGui.QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
         
         self.show()
@@ -979,6 +980,7 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
         row = QtGui.QWidget()
         
         rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         self.layout.addWidget(row)
@@ -1368,6 +1370,46 @@ class MatplotlibSettingsForm(GenericPreferencesSettingsForm):
 ################################################################################
 
 class PreferencesDialog(QtGui.QDialog):
+    """
+    Preferences dialog.
+    
+    """
+    def __init__(self, parent=None):
+        super(PreferencesDialog, self).__init__(parent)
+        
+        self.parent = parent
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.setWindowTitle("Preferences")
+        self.setWindowIcon(QtGui.QIcon(iconPath("applications-system.svg")))
+#        self.resize(500,300)
+        
+        self.buttonCount = 0
+        
+        # layout
+        dlgLayout = QtGui.QVBoxLayout(self)
+        
+        # toolbox
+        self.toolbox = QtGui.QToolBox()
+        
+        # add toolbox to layout
+        dlgLayout.addWidget(self.toolbox)
+        
+        # povray tab
+        self.povrayForm = PovraySettingsForm(self)
+        self.toolbox.addItem(self.povrayForm, QtGui.QIcon(iconPath("pov-icon.svg")), "POV-Ray")
+        
+        # ffmpeg tab
+        self.ffmpegForm = FfmpegSettingsForm(self)
+        self.toolbox.addItem(self.ffmpegForm, QtGui.QIcon(iconPath("ffmpeg.png")), "FFmpeg")
+        
+        # matplotlib tab
+        self.matplotlibForm = MatplotlibSettingsForm(self)
+        self.toolbox.addItem(self.matplotlibForm, QtGui.QIcon(iconPath("Plotter.png")), "Matplotlib")
+
+################################################################################
+
+class PreferencesDialog2(QtGui.QDialog):
     """
     Preferences dialog.
     

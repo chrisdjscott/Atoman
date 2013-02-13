@@ -30,6 +30,7 @@ class Renderer(object):
         self.mainWindow = self.parent.mainWindow
         self.ren = self.parent.vtkRen
         self.renWinInteract = self.parent.vtkRenWinInteract
+        self.renWin = self.parent.vtkRenWin
         
         self.log = self.parent.mainWindow.console.write
         
@@ -269,7 +270,7 @@ class Renderer(object):
         if renderType == "VTK":
             filename = "%s.%s" % (fileprefix, imageFormat)
             
-            renWin = self.getRenWin()
+            renWin = self.renWin
             
             w2if = vtk.vtkWindowToImageFilter()
             w2if.SetInput(renWin)
@@ -302,8 +303,13 @@ class Renderer(object):
 #            print "WRITTEN"
 #            return None
             
+            renIndex = self.parent.rendererIndex
+            pipelineIndex = self.parent.currentPipelineIndex
+            
+            print "REN %d; PIPE %d" % (renIndex, pipelineIndex)
+            
             # header file
-            povfile = os.path.join(self.mainWindow.tmpDirectory, "header.pov")
+            povfile = os.path.join(self.mainWindow.tmpDirectory, "renderer%d_header.pov" % renIndex)
             fh = open(povfile, "w")
             
             # first write the header (camera info etc.)
@@ -323,39 +329,41 @@ class Renderer(object):
             overlay = settings.overlayImage
             
             # then join filter list files
-            filterLists = self.mainWindow.mainToolbar.filterPage.filterLists
+            filterLists = self.parent.getFilterLists()
             CWD = os.getcwd()
             try:
                 os.chdir(self.mainWindow.tmpDirectory)
-                command = "cat header.pov"
+                command = "cat renderer%d_header.pov" % renIndex
                 for filterList in filterLists:
                     if filterList.visible:
-                        if os.path.exists("atoms%d.pov" % filterList.tab):
-                            command += " atoms%d.pov" % filterList.tab
+                        if os.path.exists("pipeline%d_atoms%d.pov" % (pipelineIndex, filterList.tab)):
+                            command += " pipeline%d_atoms%d.pov" % (pipelineIndex, filterList.tab)
                         
-                        if os.path.exists("hulls%d.pov" % filterList.tab):
-                            command += " hulls%d.pov" % filterList.tab
+                        if os.path.exists("pipeline%d_hulls%d.pov" % (pipelineIndex, filterList.tab)):
+                            command += " pipeline%d_hulls%d.pov" % (pipelineIndex, filterList.tab)
                         
-                        if os.path.exists("defects%d.pov" % filterList.tab):
-                            command += " defects%d.pov" % filterList.tab
+                        if os.path.exists("pipeline%d_defects%d.pov" % (pipelineIndex, filterList.tab)):
+                            command += " pipeline%d_defects%d.pov" % (pipelineIndex, filterList.tab)
                         
-                        if os.path.exists("bonds%d.pov" % filterList.tab):
-                            command += " bonds%d.pov" % filterList.tab
-                        
-                command += " > image.pov"
+                        if os.path.exists("pipeline%d_bonds%d.pov" % (pipelineIndex, filterList.tab)):
+                            command += " pipeline%d_bonds%d.pov" % (pipelineIndex, filterList.tab)
+                
+                fullPovFile = "renderer%d_image.pov" % renIndex
+                
+                command += " > %s" % fullPovFile
                 output, stderr, status = utilities.runSubProcess(command)
                 if status:
                     return None
                 
                 # create povray ini file
-                povIniFile = "image.ini"
+                povIniFile = "renderer%d_image.ini" % renIndex
                 
-                tmpPovOutputFile = "image.%s" % imageFormat
+                tmpPovOutputFile = "renderer%d_image.%s" % (renIndex, imageFormat)
                 
                 lines = []
                 nl = lines.append
                 nl("; CDJSVis auto-generated POV-Ray INI file")
-                nl("Input_File_Name='%s'" % "image.pov")
+                nl("Input_File_Name='%s'" % fullPovFile)
                 nl("Width=%d" % settings.HRes)
                 nl("Height=%d" % settings.VRes)
                 nl("Display=off")
@@ -391,9 +399,9 @@ class Renderer(object):
                 print "ERROR COPYING POV FILE"
                         
             # remove image files
-            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "image.pov"))
-            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "header.pov"))
-            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "image.ini"))
+            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.pov" % renIndex))
+            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_header.pov" % renIndex))
+            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.ini" % renIndex))
         
         if not os.path.exists(filename):
             print "WARNING: SOMETHING WENT WRONG WITH SAVEIMAGE"
@@ -415,6 +423,7 @@ class Renderer(object):
         # local refs
         ren = self.ren
         renWinInteract = self.renWinInteract
+        renIndex = self.parent.rendererIndex
         
         # to do this we change cam pos to far away and
         # save temp image with just text in
@@ -432,7 +441,7 @@ class Renderer(object):
         
         try:
             # save image
-            overlayFilePrefix = os.path.join(self.mainWindow.tmpDirectory, "overlay")
+            overlayFilePrefix = os.path.join(self.mainWindow.tmpDirectory, "renderer%d_overlay" % renIndex)
             
             overlayFile = self.saveImage("VTK", "jpg", overlayFilePrefix, False)
             
