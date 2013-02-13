@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "../visclibs/utilities.h"
+#include "../visclibs/boxeslib.h"
 #include "filtering.h"
 
 
@@ -291,5 +292,131 @@ int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charg
     }
     
     return NVisible;
+}
+
+
+/*******************************************************************************
+ * Calculate coordination number
+ *******************************************************************************/
+int coordNumFilter(int NVisible, int *visibleAtoms, double *pos, int *specie, int NSpecies, double *bondMinArray, double *bondMaxArray, 
+                   double approxBoxWidth, double *cellDims, int *PBC, double *minPos, double *maxPos,
+                   int *coordArray, int minCoordNum, int maxCoordNum)
+{
+    int i, j, k, index, index2, visIndex;
+    int speca, specb, count, NVisibleNew;
+    int boxIndex, boxNebList[27];
+    double *visiblePos, sep2, sep;
+    double sepVec[3];
+    struct Boxes *boxes;
+    
+    
+//    printf("BONDS CLIB\n");
+//    printf("N VIS: %d\n", NVisible);
+//    
+//    for (i=0; i<NSpecies; i++)
+//    {
+//        for (j=i; j<NSpecies; j++)
+//        {
+//            printf("%d - %d: %lf -> %lf\n", i, j, bondMinArray[i*NSpecies+j], bondMaxArray[i*NSpecies+j]);
+//        }
+//    }
+    
+    /* construct visible pos array */
+    visiblePos = malloc(3 * NVisible * sizeof(double));
+    if (visiblePos == NULL)
+    {
+        printf("ERROR: could not allocate visiblePos\n");
+        exit(50);
+    }
+    
+    for (i=0; i<NVisible; i++)
+    {
+        index = visibleAtoms[i];
+        
+        visiblePos[3*i] = pos[3*index];
+        visiblePos[3*i+1] = pos[3*index+1];
+        visiblePos[3*i+2] = pos[3*index+2];
+    }
+    
+    /* box visible atoms */
+    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
+    putAtomsInBoxes(NVisible, visiblePos, boxes);
+    
+    /* free visible pos */
+    free(visiblePos);
+    
+    /* loop over visible atoms */
+    count = 0;
+    for (i=0; i<NVisible; i++)
+    {
+        index = visibleAtoms[i];
+        
+        speca = specie[index];
+        
+        /* get box index of this atom */
+        boxIndex = boxIndexOfAtom(pos[3*index], pos[3*index+1], pos[3*index+2], boxes);
+        
+        /* find neighbouring boxes */
+        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        
+        /* loop over box neighbourhood */
+        for (j=0; j<27; j++)
+        {
+            boxIndex = boxNebList[j];
+            
+            for (k=0; k<boxes->boxNAtoms[boxIndex]; k++)
+            {
+                visIndex = boxes->boxAtoms[boxIndex][k];
+                index2 = visibleAtoms[visIndex];
+                
+                if (index >= index2)
+                {
+                    continue;
+                }
+                
+                specb = specie[index2];
+                
+                if (bondMinArray[speca*NSpecies+specb] == 0.0 && bondMaxArray[speca*NSpecies+specb] == 0.0)
+                {
+                    continue;
+                }
+                
+                /* atomic separation */
+                sep2 = atomicSeparation2(pos[3*index], pos[3*index+1], pos[3*index+2], 
+                                         pos[3*index2], pos[3*index2+1], pos[3*index2+2], 
+                                         cellDims[0], cellDims[1], cellDims[2], 
+                                         PBC[0], PBC[1], PBC[2]);
+                
+                sep = sqrt(sep2);
+                
+                /* check if these atoms are bonded */
+                if (sep >= bondMinArray[speca*NSpecies+specb] && sep <= bondMaxArray[speca*NSpecies+specb])
+                {
+                    coordArray[i]++;
+                    coordArray[visIndex]++;
+                    
+                    count++;
+                }
+            }
+        }
+    }
+    
+    /* filter */
+    NVisibleNew = 0;
+    for (i=0; i<NVisible; i++)
+    {
+        if (coordArray[i] >= minCoordNum && coordArray[i] <= maxCoordNum)
+        {
+            visibleAtoms[NVisibleNew] = visibleAtoms[i];
+            coordArray[NVisibleNew] = coordArray[i];
+            
+            NVisibleNew++;
+        }
+    }
+    
+    /* free */
+    freeBoxes(boxes);
+    
+    return NVisibleNew;
 }
 

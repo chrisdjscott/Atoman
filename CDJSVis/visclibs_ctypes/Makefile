@@ -62,7 +62,7 @@ _rdf.$(LIBSUFFIX) : rdf.o
 	$(CC) $(CCLINKFLAGS) rdf.o ../visclibs/boxeslib.o ../visclibs/utilities.o -o _rdf.$(LIBSUFFIX)
 
 _filtering.$(LIBSUFFIX) : filtering.o
-	$(CC) $(CCLINKFLAGS) filtering.o ../visclibs/utilities.o -o _filtering.$(LIBSUFFIX)
+	$(CC) $(CCLINKFLAGS) filtering.o ../visclibs/utilities.o ../visclibs/boxeslib.o -o _filtering.$(LIBSUFFIX)
 
 # compile module
 bonds.o : bonds.c 

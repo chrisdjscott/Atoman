@@ -14,3 +14,5 @@ int KEFilter(int, int *, int, double *, double, double);
 int PEFilter(int, int *, int, double *, double, double);
 
 int chargeFilter(int, int *, int, double *, double, double);
+
+int coordNumFilter(int, int *, double *, int *, int, double *, double *, double, double *, int *, double *, double *, int *, int, int);
