@@ -50,6 +50,7 @@ class MainToolbar(QtGui.QDockWidget):
         containerLayout.setAlignment(QtCore.Qt.AlignTop)
         
         self.currentPipelineString = "Pipeline 0"
+        self.currentPipelineIndex = 0
         
         # display current file info
         self.currentFileBox = GenericForm(self, self.toolbarWidth, "Current file")
@@ -130,7 +131,7 @@ class MainToolbar(QtGui.QDockWidget):
         self.pipelineList.append(form)
         self.stackedWidget.addWidget(form)
         
-        self.stackedWidget.setCurrentIndex(len(self.pipelineList))
+        self.pipelineCombo.setCurrentIndex(len(self.pipelineList) - 1)
         
         self.NPipelines += 1
     
@@ -141,12 +142,35 @@ class MainToolbar(QtGui.QDockWidget):
         """
         print "REMOVE PIPELINE"
         
-        # not allowed to remove last one
+        remIndex = self.currentPipelineIndex
         
+        # not allowed to remove last one
+        if len(self.pipelineList) == 1:
+            self.mainWindow.displayWarning("Cannot remove last pipeline")
+            return
         
         # clear all actors from any windows and select diff pipeline for them (or close them?)
+        pipeline = self.pipelineList[remIndex]
         
+        # remove actors
+        for filterList in pipeline.filterLists:
+            filterList.filterer.removeActors()
         
+        # remove pipeline
+        form = self.pipelineList.pop(remIndex)
+        
+        # remove from stacked widget
+        self.stackedWidget.removeWidget(form)
+        
+        # remove from combo boxes
+        self.pipelineCombo.removeItem(remIndex)
+        
+        for rw in self.mainWindow.rendererWindows:
+            rw.removePipeline(remIndex)
+        
+        # update current pipeline indexes and strings
+        self.currentPipelineString = str(self.pipelineCombo.currentText())
+        self.currentPipelineIndex = self.pipelineCombo.currentIndex()
         
     
     def currentPipelineChanged(self, index):
@@ -159,6 +183,7 @@ class MainToolbar(QtGui.QDockWidget):
         
         # update variable
         self.currentPipelineString = str(self.pipelineCombo.currentText())
+        self.currentPipelineIndex = index
         
         
 

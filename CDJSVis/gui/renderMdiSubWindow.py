@@ -239,8 +239,23 @@ class RendererWindow(QtGui.QWidget):
         Show output dialog.
         
         """
+        if not self.mainWindow.refLoaded:
+            return
+        
         self.outputDialog.hide()
         self.outputDialog.show()
+    
+    def removePipeline(self, index):
+        """
+        Remove given pipeline.
+        
+        """
+        self.analysisPipelineCombo.removeItem(index)
+        
+        # update index and string
+        self.currentPipelineString = str(self.analysisPipelineCombo.currentText())
+        self.currentPipelineIndex = self.analysisPipelineCombo.currentIndex()
+        
     
     def newPipeline(self, name):
         """

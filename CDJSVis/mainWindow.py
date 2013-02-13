@@ -308,6 +308,9 @@ class MainWindow(QtGui.QMainWindow):
         
         # give focus
         self.raise_()
+        
+        # show input dialog
+        self.showLoadInputDialog()
     
     def showLoadInputDialog(self):
         """
@@ -963,6 +966,21 @@ class MainWindow(QtGui.QMainWindow):
 #        self.mainToolbar.tabBar.setTabEnabled(1, False)
 #        self.mainToolbar.tabBar.setTabEnabled(2, False)
 #        self.mainToolbar.filterPage.clearAllFilterLists()
+        
+        # close any open output dialogs!
+        for rw in self.rendererWindows:
+            rw.outputDialog.hide()
+            rw.textSelector.hide()
+        
+        # should probably hide stuff like elements form too!
+        
+        
+        # clear rdf tab
+        
+        
+        # clear pipelines
+        for pipeline in self.mainToolbar.pipelineList:
+            pipeline.clearAllFilterLists()
         
         self.mainToolbar.analysisPipelinesForm.hide()
         self.mainToolbar.loadInputForm.show()
