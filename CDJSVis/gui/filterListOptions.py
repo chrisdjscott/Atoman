@@ -168,7 +168,6 @@ class BondsOptionsWindow(QtGui.QDialog):
         """
         # first test if already added
         if sym in self.currentSpecies:
-            print "SPEC ALREADY ADDED", sym, self.currentSpecies
             return
         
         # add to set
@@ -499,8 +498,6 @@ class ColouringOptionsWindow(QtGui.QDialog):
             maxVal = max(scalars)
             if minVal == maxVal:
                 maxVal += 1
-            
-            print "MIN,MAX", minVal, maxVal
             
             self.scalarMinSpin.setValue(minVal)
             self.scalarMaxSpin.setValue(maxVal)

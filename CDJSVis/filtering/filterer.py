@@ -213,6 +213,10 @@ class Filterer(object):
             elif filterName == "Slice":
                 self.sliceFilter(filterSettings)
             
+            elif filterName == "Coordination number":
+                self.coordinationNumberFilter(filterSettings)
+                self.scalarsType = filterName
+            
             # write to log
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites) + len(splitInterstitials)
@@ -483,7 +487,7 @@ class Filterer(object):
         else:
             # scalars array
             if len(self.scalars) != len(self.visibleAtoms):
-                self.scalars = np.empty(len(self.visibleAtoms), dtype=np.float64)
+                self.scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
             
             # run displacement filter
             NVisible = filtering_c.displacementFilter(self.visibleAtoms, self.scalars, inputState.pos, refState.pos, refState.cellDims, 
@@ -1046,7 +1050,6 @@ class Filterer(object):
                         
                         # write povray file too
                         renderer.writePovrayHull(facets, tmpClusterPos, self.mainWindow, hullPovFile, settings)
-                
     
     def clusterFilterCalculateVolumes(self, clusterList, filterSettings):
         """
@@ -1085,5 +1088,64 @@ class Filterer(object):
             self.log("volume is %f; facet area is %f" % (volume, area), 0, 5)
             
             count += 1
+    
+    def coordinationNumberFilter(self, filterSettings):
+        """
+        Coordination number filter.
+        
+        """
+        inputState = self.mainWindow.inputState
+        specieList = inputState.specieList
+        NSpecies = len(specieList)
+        bondDict = elements.bondDict
+        
+        bondMinArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
+        bondMaxArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
+        
+        # construct bonds array
+        calcBonds = False
+        maxBond = -1
+        
+        # populate bond arrays
+        for i in xrange(NSpecies):
+            symi = specieList[i]
+            
+            if symi in bondDict:
+                d = bondDict[symi]
+                
+                for j in xrange(NSpecies):
+                    symj = specieList[j]
+                    
+                    if symj in d:
+                        bondMin, bondMax = d[symj]
+                        
+                        bondMinArray[i][j] = bondMin
+                        bondMinArray[j][i] = bondMin
+                        
+                        bondMaxArray[i][j] = bondMax
+                        bondMaxArray[j][i] = bondMax
+                        
+                        if bondMax > maxBond:
+                            maxBond = bondMax
+                        
+                        if bondMax > 0:
+                            calcBonds = True
+                        
+                        self.log("%s - %s; bond range: %f -> %f" % (symi, symj, bondMin, bondMax), 0, 3)
+        
+        if not calcBonds:
+            self.log("No bonds defined: all coordination numbers will be zero", 0, 3)
+        
+        # scalars array
+        if len(self.scalars) != len(self.visibleAtoms):
+            self.scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        
+        # run displacement filter
+        NVisible = filtering_c.coordNumFilter(self.visibleAtoms, inputState.pos, inputState.specie, NSpecies, bondMinArray, bondMaxArray, 
+                                              maxBond, inputState.cellDims, self.mainWindow.PBC, inputState.minPos, inputState.maxPos, 
+                                              self.scalars, filterSettings.minCoordNum, filterSettings.maxCoordNum)
+        
+        self.visibleAtoms.resize(NVisible, refcheck=False)
+        self.scalars.resize(NVisible, refcheck=False)
 
 

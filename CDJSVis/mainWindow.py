@@ -1,4 +1,3 @@
-
 """
 The main window class
 
@@ -121,8 +120,8 @@ class MainWindow(QtGui.QMainWindow):
                                        "Exit application")
         newWindowAction = self.createAction("&New window", self.openNewWindow, "Ctrl-N", 
                                             "document-new.svg", "Open new window")
-        newRenWindowAction = self.createAction("New renderer window", slot=self.addRendererWindow,
-                                            icon="window-new.svg", tip="Open new renderer window")
+        newRenWindowAction = self.createAction("New render window", slot=self.addRendererWindow,
+                                            icon="window-new.svg", tip="Open new render window")
         loadInputAction = self.createAction("Load input", slot=self.showLoadInputDialog, icon="document-open.svg",
                                             tip="Open load input dialog")
         openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="folder.svg", 
@@ -289,8 +288,8 @@ class MainWindow(QtGui.QMainWindow):
 #        self.VTKRen = self.rendererWindow.vtkRen
 #        self.VTKWidget = self.rendererWindow.vtkRenWinInteract
         
-#        self.mdiArea.tileSubWindows()
-        self.mdiArea.cascadeSubWindows()
+        self.mdiArea.tileSubWindows()
+#        self.mdiArea.cascadeSubWindows()
         
 #        self.setCentralWidget(self.VTKContainer)
                 

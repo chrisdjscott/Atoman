@@ -150,8 +150,24 @@ def chargeFilter(visibleAtoms, PE, minPE, maxPE):
     """
     return _lib.chargeFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(PE), CPtrToDouble(PE), minPE, maxPE)
 
+################################################################################
 
+# coordination number filter prototype
+_lib.coordNumFilter.restype = c_int
+_lib.coordNumFilter.argtypes = [c_int, POINTER(c_int), POINTER(c_double), POINTER(c_int), c_int, POINTER(c_double), 
+                                POINTER(c_double), c_double, POINTER(c_double), POINTER(c_int), POINTER(c_double), POINTER(c_double), 
+                                POINTER(c_double), c_int, c_int]
 
+# coordination number filter
+def coordNumFilter(visibleAtoms, pos, specie, NSpecies, bondMinArray, bondMaxArray, approxBoxWidth, cellDims, PBC, 
+                   minPos, maxPos, coordArray, minCoordNum, maxCoordNum):
+    """
+    Coordination number filter.
+    
+    """
+    return _lib.coordNumFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), CPtrToDouble(pos), CPtrToInt(specie), NSpecies, CPtrToDouble(bondMinArray), 
+                               CPtrToDouble(bondMaxArray), approxBoxWidth, CPtrToDouble(cellDims), CPtrToInt(PBC), CPtrToDouble(minPos), 
+                               CPtrToDouble(maxPos), CPtrToDouble(coordArray), minCoordNum, maxCoordNum)
 
 
 

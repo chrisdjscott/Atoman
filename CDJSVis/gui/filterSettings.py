@@ -1446,14 +1446,14 @@ class ChargeSettingsDialog(GenericSettingsDialog):
         Set the minimum charge.
         
         """
-        self.minPE = val
+        self.minCharge = val
 
     def setMaxCharge(self, val):
         """
         Set the maximum charge.
         
         """
-        self.maxPE = val
+        self.maxCharge = val
 
 ################################################################################
 
@@ -1696,3 +1696,55 @@ class SliceSettingsDialog(GenericSettingsDialog):
             self.showSlicePlaneCheck.setCheckState(0)
         
         self.hide()
+
+################################################################################
+class CoordinationNumberSettingsDialog(GenericSettingsDialog):
+    def __init__(self, mainWindow, title, parent=None):
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        
+        GenericSettingsDialog.__init__(self, title, parent)
+        
+        self.filterType = "Coordination number"
+        
+        self.minCoordNum = 0
+        self.maxCoordNum = 100
+        
+        label = QtGui.QLabel("Min ")
+        self.minCoordNumSpinBox = QtGui.QSpinBox()
+        self.minCoordNumSpinBox.setSingleStep(1)
+        self.minCoordNumSpinBox.setMinimum(0)
+        self.minCoordNumSpinBox.setMaximum(999)
+        self.minCoordNumSpinBox.setValue(self.minCoordNum)
+        self.connect(self.minCoordNumSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMinCoordNum)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.minCoordNumSpinBox)
+        
+        label = QtGui.QLabel("Max ")
+        self.maxCoordNumSpinBox = QtGui.QSpinBox()
+        self.maxCoordNumSpinBox.setSingleStep(1)
+        self.maxCoordNumSpinBox.setMinimum(0)
+        self.maxCoordNumSpinBox.setMaximum(999)
+        self.maxCoordNumSpinBox.setValue(self.maxCoordNum)
+        self.connect(self.maxCoordNumSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMaxCoordNum)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.maxCoordNumSpinBox)
+    
+    def setMinCoordNum(self, val):
+        """
+        Set the minimum coordination number.
+        
+        """
+        self.minCoordNum = val
+
+    def setMaxCoordNum(self, val):
+        """
+        Set the maximum coordination number.
+        
+        """
+        self.maxCoordNum = val

@@ -46,7 +46,8 @@ class FilterList(QtGui.QWidget):
                            "Potential energy",
                            "Charge",
                            "Crop sphere",
-                           "Slice"]
+                           "Slice",
+                           "Coordination number"]
         self.allFilters.sort()
         
         # current selected filters

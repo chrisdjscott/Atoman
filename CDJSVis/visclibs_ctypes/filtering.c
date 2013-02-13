@@ -300,7 +300,7 @@ int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charg
  *******************************************************************************/
 int coordNumFilter(int NVisible, int *visibleAtoms, double *pos, int *specie, int NSpecies, double *bondMinArray, double *bondMaxArray, 
                    double approxBoxWidth, double *cellDims, int *PBC, double *minPos, double *maxPos,
-                   int *coordArray, int minCoordNum, int maxCoordNum)
+                   double *coordArray, int minCoordNum, int maxCoordNum)
 {
     int i, j, k, index, index2, visIndex;
     int speca, specb, count, NVisibleNew;
@@ -344,6 +344,12 @@ int coordNumFilter(int NVisible, int *visibleAtoms, double *pos, int *specie, in
     
     /* free visible pos */
     free(visiblePos);
+    
+    /* zero coord array */
+    for (i=0; i<NVisible; i++)
+    {
+        coordArray[i] = 0;
+    }
     
     /* loop over visible atoms */
     count = 0;
