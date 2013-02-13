@@ -26,13 +26,14 @@ except ImportError:
 
 ################################################################################
 class FilterTab(QtGui.QWidget):
-    def __init__(self, parent, mainWindow, width, pipelineIndex):
+    def __init__(self, parent, mainWindow, width, pipelineIndex, pipelineString):
         super(FilterTab, self).__init__(parent)
         
         self.mainToolbar = parent
         self.mainWindow = mainWindow
         self.toolbarWidth = width
         self.pipelineIndex = pipelineIndex
+        self.pipelineString = pipelineString
         
         self.log = self.mainWindow.console.write
         
@@ -224,7 +225,25 @@ class FilterTab(QtGui.QWidget):
         visibleAtomsFull = np.unique(visibleAtomsFull)
         
         return visibleAtomsFull
+    
+    def broadcastToRenderers(self, method, args=(), kwargs={}, globalBcast=False):
+        """
+        Broadcast command to associated renderers.
         
+        """
+        rwList = []
+        for rw in self.mainWindow.rendererWindows:
+            if globalBcast:
+                rwList.append(rw)
+            
+            elif rw.currentPipelineString == self.pipelineString:
+                rwList.append(rw)
         
+        for rw in rwList:
+            if hasattr(rw, method):
+                call = getattr(rw, method)
+                
+                call(*args, **kwargs)
+
 
 

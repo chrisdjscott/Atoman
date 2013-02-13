@@ -124,7 +124,7 @@ class MainToolbar(QtGui.QDockWidget):
             rw.newPipeline(name)
         
         # form
-        form = FilterTab(self, self.mainWindow, self.toolbarWidth, self.NPipelines)
+        form = FilterTab(self, self.mainWindow, self.toolbarWidth, self.NPipelines, name)
         
         self.pipelineList.append(form)
         self.stackedWidget.addWidget(form)

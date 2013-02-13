@@ -1467,10 +1467,7 @@ class SliceSettingsDialog(GenericSettingsDialog):
         self.parent = parent
         self.mainWindow = mainWindow
         
-        self.ren = self.mainWindow.VTKRen
-        self.renWinInteract = self.mainWindow.VTKWidget
-        
-        self.slicePlane = slicePlane.SlicePlane(self.ren, self.renWinInteract, self.mainWindow)
+        self.slicePlane = slicePlane.SlicePlane(self.mainWindow)
         
         GenericSettingsDialog.__init__(self, title, parent)
         
@@ -1675,17 +1672,26 @@ class SliceSettingsDialog(GenericSettingsDialog):
         if not self.showSlicePlaneChecked:
             return
         
+        # first remove it is already shown
+        
+        
+        # args to pass
         p = (self.x0, self.y0, self.z0)
         n = (self.xn, self.yn, self.zn)
         
-        self.slicePlane.show(p, n)
+        # update actor
+        self.slicePlane.update(p, n)
+        
+        # broadcast to renderers
+        self.parent.filterTab.broadcastToRenderers("showSlicePlane", args=(self.slicePlane,))
     
     def hideSlicePlane(self):
         """
         Hide the slice plane.
         
         """
-        self.slicePlane.hide()
+        # broadcast to renderers
+        self.parent.filterTab.broadcastToRenderers("removeSlicePlane", globalBcast=True)
     
     def closeEvent(self, event):
         """

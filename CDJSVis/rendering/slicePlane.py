@@ -9,31 +9,22 @@ import vtk
 
 
 ################################################################################
-class SlicePlane(object):
+class SlicePlane(vtk.vtkActor):
     """
     Slice plane.
     
     """
-    def __init__(self, ren, renWinInteract, mainWindow):
-        self.ren = ren
-        self.renWinInteract = renWinInteract
-        self.actor = vtk.vtkActor()
+    def __init__(self, mainWindow):
         self.source = vtk.vtkPlaneSource()
         self.mapper = vtk.vtkPolyDataMapper()
         
         self.mainWindow = mainWindow
     
-        self.visible = False
-    
-    def show(self, p, n):
+    def update(self, p, n):
         """
         Show the slice plane in given position.
         
         """
-        if self.visible:
-            self.ren.RemoveActor(self.actor)
-            self.visible = False
-        
         inputState = self.mainWindow.inputState
         
         # source
@@ -49,27 +40,21 @@ class SlicePlane(object):
         self.mapper.SetInputConnection(self.source.GetOutputPort())
         
         # actor
-        self.actor.SetMapper(self.mapper)
-        self.actor.GetProperty().SetDiffuseColor(1, 0, 0)
-        self.actor.GetProperty().SetSpecular(0.4)
-        self.actor.GetProperty().SetSpecularPower(10)
-        self.actor.GetProperty().SetOpacity(0.7)
-        self.actor.GetProperty().SetLineWidth(2.0)
-        self.actor.GetProperty().EdgeVisibilityOn()
-        
-        # add to ren
-        self.ren.AddActor(self.actor)
-        self.renWinInteract.ReInitialize()
-        
-        self.visible = True
+        self.SetMapper(self.mapper)
+        self.GetProperty().SetDiffuseColor(1, 0, 0)
+        self.GetProperty().SetSpecular(0.4)
+        self.GetProperty().SetSpecularPower(10)
+        self.GetProperty().SetOpacity(0.7)
+        self.GetProperty().SetLineWidth(2.0)
+        self.GetProperty().EdgeVisibilityOn()
     
-    def hide(self):
-        """
-        Remove the actor.
-        
-        """
-        if self.visible:
-            self.ren.RemoveActor(self.actor)
-            self.renWinInteract.ReInitialize()
-            self.visible = False
+#    def hide(self):
+#        """
+#        Remove the actor.
+#        
+#        """
+#        if self.visible:
+#            self.ren.RemoveActor(self.actor)
+#            self.renWinInteract.ReInitialize()
+#            self.visible = False
 

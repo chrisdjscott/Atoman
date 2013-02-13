@@ -47,6 +47,8 @@ class RendererWindow(QtGui.QWidget):
         
         self.closed = False
         
+        self.slicePlaneActor = None
+        
         # layout
         layout = QtGui.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -750,6 +752,35 @@ class RendererWindow(QtGui.QWidget):
             event.accept()
         else:
             event.ignore()
-
+    
+    def showSlicePlane(self, actor):
+        """
+        Show the slice plane helper actor.
+        
+        """
+        if self.slicePlaneActor is not None:
+            try:
+                self.vtkRen.RemoveActor(self.slicePlaneActor)
+                self.vtkRenWinInteract.ReInitialize()
+            except:
+                print "REM SLICE ACTOR FAILED"
+            
+        self.slicePlaneActor = actor
+        
+        self.vtkRen.AddActor(self.slicePlaneActor)
+        self.vtkRenWinInteract.ReInitialize()
+    
+    def removeSlicePlane(self):
+        """
+        Remove the slice plane actor.
+        
+        """
+        if self.slicePlaneActor is not None:
+            try:
+                self.vtkRen.RemoveActor(self.slicePlaneActor)
+                self.vtkRenWinInteract.ReInitialize()
+                self.slicePlaneActor = None
+            except:
+                print "REM SLICE ACTOR FAILED"
 
 
