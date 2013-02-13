@@ -119,10 +119,21 @@ class RendererWindow(QtGui.QWidget):
         # renderer
         self.renderer = renderer.Renderer(self)
         
+        # do a post ref render if the ref is already loaded
+        if self.mainWindow.refLoaded:
+            self.renderer.postRefRender()
+        
+        # output dialog
+        self.outputDialog = OutputDialog(self, self.mainWindow, None, index)
+        
+        # text selector
+        self.textSelector = dialogs.OnScreenInfoDialog(self.mainWindow, index, parent=self)
+        
         # which filter list is it associated with
         label = QtGui.QLabel("Analysis pipeline:")
         self.analysisPipelineCombo = QtGui.QComboBox()
         self.analysisPipelineCombo.currentIndexChanged.connect(self.pipelineChanged)
+        self.initPipelines()
         
         row = QtGui.QHBoxLayout()
         row.setContentsMargins(0, 0, 0, 0)
@@ -131,12 +142,19 @@ class RendererWindow(QtGui.QWidget):
         row.addWidget(self.analysisPipelineCombo)
         
         layout.addLayout(row)
+    
+    def initPipelines(self):
+        """
+        Initialise pipeline combo.
         
-        # output dialog
-        self.outputDialog = OutputDialog(self, self.mainWindow, None, index)
+        """
+        if not hasattr(self.mainWindow, "mainToolbar"):
+            return
         
-        # text selector
-        self.textSelector = dialogs.OnScreenInfoDialog(self.mainWindow, index, parent=self)
+        combo = self.mainWindow.mainToolbar.pipelineCombo
+        
+        for i in xrange(combo.count()):
+            self.newPipeline(str(combo.itemText(i)))
     
     def getCurrentPipelinePage(self):
         """

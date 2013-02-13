@@ -18,7 +18,7 @@ class AxesBasic(vtk.vtkActorCollection):
     Modified slightly
     
     """
-    def __init__(self, ren, renWinInteract):
+    def __init__(self, ren, reinit):
         self.Edgesx = vtk.vtkActor()
         self.Edgesy = vtk.vtkActor()
         self.Edgesz = vtk.vtkActor()
@@ -44,7 +44,7 @@ class AxesBasic(vtk.vtkActorCollection):
         self.AddItem(self.zlabelActor)
         
         self.ren = ren
-        self.renWinInteract = renWinInteract
+        self.reinit = reinit
         
         self.visible = 1
     
@@ -60,7 +60,7 @@ class AxesBasic(vtk.vtkActorCollection):
             
             tmpactor = self.GetNextItem()
             
-        self.renWinInteract.ReInitialize()
+        self.reinit()
         
         self.visible = 0
     
@@ -76,7 +76,7 @@ class AxesBasic(vtk.vtkActorCollection):
             
             tmpactor = self.GetNextItem()
             
-        self.renWinInteract.ReInitialize()
+        self.reinit()
         
         self.visible = 1
     

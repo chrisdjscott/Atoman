@@ -278,6 +278,7 @@ class MainWindow(QtGui.QMainWindow):
         self.setCentralWidget(self.mdiArea)
         
         self.rendererWindows = []
+        self.rendererWindowsSubWin = []
         self.subWinCount = 0
         
         self.addRendererWindow()
@@ -288,7 +289,8 @@ class MainWindow(QtGui.QMainWindow):
 #        self.VTKRen = self.rendererWindow.vtkRen
 #        self.VTKWidget = self.rendererWindow.vtkRenWinInteract
         
-        self.mdiArea.tileSubWindows()
+#        self.mdiArea.tileSubWindows()
+        self.mdiArea.cascadeSubWindows()
         
 #        self.setCentralWidget(self.VTKContainer)
                 
@@ -335,14 +337,20 @@ class MainWindow(QtGui.QMainWindow):
         Add renderer window to mdi area.
         
         """
-        print "ADD RENDERER WINDOW", self.subWinCount
-        
         rendererWindow = renderMdiSubWindow.RendererWindow(self, self.subWinCount, parent=self)
-        self.mdiArea.addSubWindow(rendererWindow)
+        rendererWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        
+        subwin = self.mdiArea.addSubWindow(rendererWindow)
+        subwin.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        subwin.show()
+        subwin.activateWindow()
         
         self.rendererWindows.append(rendererWindow)
+        self.rendererWindowsSubWin.append(subwin)
         
         self.subWinCount += 1
+        
+        self.mdiArea.tileSubWindows()
     
     def showPreferences(self):
         """
@@ -670,6 +678,7 @@ class MainWindow(QtGui.QMainWindow):
             
             if rw.closed:
                 self.rendererWindows.pop(i)
+                self.rendererWindowsSubWin.pop(i)
                 print "POP", i
             else:
                 i += 1 

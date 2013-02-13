@@ -45,7 +45,7 @@ class Renderer(object):
         
         # axes
 #        self.axes = Axes(self.ren, self.renWinInteract)
-        self.axes = axes.AxesBasic(self.ren, self.renWinInteract)
+        self.axes = axes.AxesBasic(self.ren, self.reinit)
             
     def reinit(self):
         """
