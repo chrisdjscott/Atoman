@@ -12,7 +12,6 @@ import tempfile
 
 from PyQt4 import QtGui, QtCore
 from PyQt4.pyqtconfig import Configuration as PyQt4Config
-from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import numpy as np
 import matplotlib
@@ -117,9 +116,9 @@ class MainWindow(QtGui.QMainWindow):
         exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "system-log-out.svg", 
                                        "Exit application")
         newWindowAction = self.createAction("&New window", self.openNewWindow, "Ctrl-N", 
-                                            "document-new.svg", "Open new window")
-        newRenWindowAction = self.createAction("New render window", slot=self.addRendererWindow,
-                                            icon="window-new.svg", tip="Open new render window")
+                                            "CDJSVis.ico", "Open new window")
+        newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow,
+                                            icon="window-new.svg", tip="Open new render sub window")
         loadInputAction = self.createAction("Load input", slot=self.showLoadInputDialog, icon="document-open.svg",
                                             tip="Open load input dialog")
         openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="folder.svg", 
@@ -139,12 +138,19 @@ class MainWindow(QtGui.QMainWindow):
         
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, loadInputAction, openCWDAction, showImageViewerAction, importElementsAction, 
+        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, loadInputAction, openCWDAction, importElementsAction, 
                                    exportElementsAction, importBondsAction, exportBondsAction, None, exitAction))
         
-        # add edit menu
-        editMenu = self.menuBar().addMenu("&Edit")
-        self.addActions(editMenu, (showPreferencesAction,))
+        # button to show console window
+        openConsoleAction = self.createAction("Console", self.showConsole, None, "console-icon.png", "Show console window")
+        
+        # element editor action
+        openElementEditorAction = self.createAction("Element editor", slot=self.openElementEditor, icon="periodic-table-icon.png", 
+                                                    tip="Show element editor")
+        
+        # add view menu
+        viewMenu = self.menuBar().addMenu("&View")
+        self.addActions(viewMenu, (openConsoleAction, showImageViewerAction, openElementEditorAction, showPreferencesAction))
         
         # add file toolbar
         fileToolbar = self.addToolBar("File")
@@ -154,59 +160,16 @@ class MainWindow(QtGui.QMainWindow):
         fileToolbar.addSeparator()
         fileToolbar.addAction(loadInputAction)
         fileToolbar.addAction(openCWDAction)
-        fileToolbar.addAction(showImageViewerAction)
         fileToolbar.addSeparator()
         
-        # button to show console window
-        openConsoleAction = self.createAction("Console", self.showConsole, None, "console-icon.png", "Show console window")
+        # util tool bar
+        viewToolbar = self.addToolBar("Utilities")
+        viewToolbar.addAction(openConsoleAction)
+        viewToolbar.addAction(showImageViewerAction)
+        viewToolbar.addAction(openElementEditorAction)
+        viewToolbar.addAction(showPreferencesAction)
+        viewToolbar.addSeparator()
         
-        utilToolbar = self.addToolBar("Utilities")
-        utilToolbar.addAction(openConsoleAction)
-        utilToolbar.addSeparator()
-        
-        # button to displace lattice frame
-        showCellAction = self.createAction("Toggle cell", slot=self.toggleCellFrame, icon="cell_icon.svg", 
-                                           tip="Toggle cell frame visibility")
-        
-        # button to display axes
-        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon2.svg", 
-                                           tip="Toggle axes visiblity")
-        
-        openElementEditorAction = self.createAction("Element editor", slot=self.openElementEditor, icon="periodic-table-icon.png", 
-                                                    tip="Open element editor")
-        
-        # reset camera to cell
-        setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="set_cam_cell.svg", 
-                                           tip="Reset camera to cell")
-        
-        visualisationToolbar = self.addToolBar("Visualisation")
-#        visualisationToolbar.addAction(showCellAction)
-#        visualisationToolbar.addAction(showAxesAction)
-#        visualisationToolbar.addAction(setCamToCellAction)
-        visualisationToolbar.addAction(openElementEditorAction)
-        visualisationToolbar.addSeparator()
-        
-        renderingMenu = self.menuBar().addMenu("&Rendering")
-        self.addActions(renderingMenu, (showCellAction, showAxesAction, openElementEditorAction))
-        
-        cameraMenu = self.menuBar().addMenu("&Camera")
-        self.addActions(cameraMenu, (setCamToCellAction,))
-        
-        # add filtering actions
-        showFilterSummaryAction = self.createAction("Show summary", self.showFilterSummary, 
-                                                    icon="document-properties.svg", 
-                                                    tip="Show filter summary")
-#        openTextSelectorAction = self.createAction("On-screen info", self.showTextSelector, 
-#                                                   icon="preferences-desktop-font.svg", 
-#                                                   tip="Show on-screen text selector")
-        
-        filteringToolbar = self.addToolBar("Filtering")
-        filteringToolbar.addAction(showFilterSummaryAction)
-#        filteringToolbar.addAction(openTextSelectorAction)
-        filteringToolbar.addSeparator()
-        
-        filteringMenu = self.menuBar().addMenu("&Filtering")
-#        self.addActions(filteringMenu, (showFilterSummaryAction,openTextSelectorAction))
         
         # add about action
         aboutAction = self.createAction("About CDJSVis", slot=self.aboutMe, icon="Information-icon.png", 
@@ -216,7 +179,6 @@ class MainWindow(QtGui.QMainWindow):
         
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
-        helpToolbar.addAction(showPreferencesAction)
         helpToolbar.addAction(aboutAction)
         helpToolbar.addAction(helpAction)
         
@@ -282,27 +244,26 @@ class MainWindow(QtGui.QMainWindow):
         Add renderer window to mdi area.
         
         """
-        if ask:
-            dlg = dialogs.NewRendererWindowDialog(parent=self)
-        
-        if not ask or dlg.exec_():
+#         if ask:
+#             dlg = dialogs.NewRendererWindowDialog(parent=self)
+#         
+#         if not ask or dlg.exec_():
             # if ask, get num from dialog
             
-            
-            rendererWindow = renderMdiSubWindow.RendererWindow(self, self.subWinCount, parent=self)
-            rendererWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-            
-            subwin = self.mdiArea.addSubWindow(rendererWindow)
-            subwin.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-            subwin.show()
-            subwin.activateWindow()
-            
-            self.rendererWindows.append(rendererWindow)
-            self.rendererWindowsSubWin.append(subwin)
-            
-            self.subWinCount += 1
-            
-            self.mdiArea.tileSubWindows()
+        rendererWindow = renderMdiSubWindow.RendererWindow(self, self.subWinCount, parent=self)
+        rendererWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        
+        subwin = self.mdiArea.addSubWindow(rendererWindow)
+        subwin.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        subwin.show()
+        subwin.activateWindow()
+        
+        self.rendererWindows.append(rendererWindow)
+        self.rendererWindowsSubWin.append(subwin)
+        
+        self.subWinCount += 1
+        
+        self.mdiArea.tileSubWindows()
     
     def showPreferences(self):
         """

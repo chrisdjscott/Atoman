@@ -243,7 +243,12 @@ class Renderer(object):
         Rotate image.
         
         """
-        NRotations = int(360.0 / degreesPerRotation)
+        NRotations = int(360.0 / degreesPerRotation) + 1
+        
+        # save camera
+        campos = self.camera.GetPosition()
+        camfoc = self.camera.GetFocalPoint()
+        camvup = self.camera.GetViewUp()
         
         # main loop
         for i in xrange(NRotations):
@@ -258,6 +263,13 @@ class Renderer(object):
             
             # apply rotation
             self.camera.Azimuth(degreesPerRotation)
+        
+        # restore camera
+        self.camera.SetFocalPoint(camfoc)
+        self.camera.SetPosition(campos)
+        self.camera.SetViewUp(camvup)
+        
+        self.reinit()
         
         return 0
     
