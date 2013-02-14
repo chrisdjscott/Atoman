@@ -25,6 +25,46 @@ except ImportError:
 
 ################################################################################
 
+class NewRendererWindowDialog(QtGui.QDialog):
+    """
+    Dialog for opening new renderer window.
+    
+    """
+    def __init__(self, parent=None):
+        super(NewRendererWindowDialog, self).__init__(parent)
+        
+        self.parent = parent
+        self.setModal(True)
+        
+        self.setWindowTitle("Open new render window")
+        self.setWindowIcon(QtGui.QIcon(iconPath("window-new.svg")))
+        
+        layout = QtGui.QVBoxLayout(self)
+        layout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        label = QtGui.QLabel("Number of viewports: ")
+        
+        NViewPortsSpin = QtGui.QSpinBox()
+        NViewPortsSpin.setMinimum(1)
+        NViewPortsSpin.setMaximum(2)
+        NViewPortsSpin.setValue(1)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(label)
+        row.addWidget(NViewPortsSpin)
+        
+        layout.addLayout(row)
+        
+        # buttons
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        
+        layout.addWidget(buttonBox)
+        
+
+################################################################################
+
 class ConsoleWindow(QtGui.QDialog):
     """
     Console window for displaying output to the user.

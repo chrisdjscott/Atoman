@@ -27,7 +27,7 @@ class MainToolbar(QtGui.QDockWidget):
         
         self.mainWindow = parent
         
-        self.setWindowTitle("Main Toolbar")
+        self.setWindowTitle("Analysis Toolbar")
         
         self.setFeatures(self.DockWidgetMovable | self.DockWidgetFloatable)
         

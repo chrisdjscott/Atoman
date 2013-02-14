@@ -240,7 +240,7 @@ class MainWindow(QtGui.QMainWindow):
         self.rendererWindowsSubWin = []
         self.subWinCount = 0
         
-        self.addRendererWindow()
+        self.addRendererWindow(ask=False)
         
         self.mdiArea.tileSubWindows()
 #        self.mdiArea.cascadeSubWindows()
@@ -277,25 +277,32 @@ class MainWindow(QtGui.QMainWindow):
         """
         pass
     
-    def addRendererWindow(self):
+    def addRendererWindow(self, ask=True):
         """
         Add renderer window to mdi area.
         
         """
-        rendererWindow = renderMdiSubWindow.RendererWindow(self, self.subWinCount, parent=self)
-        rendererWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        if ask:
+            dlg = dialogs.NewRendererWindowDialog(parent=self)
         
-        subwin = self.mdiArea.addSubWindow(rendererWindow)
-        subwin.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        subwin.show()
-        subwin.activateWindow()
-        
-        self.rendererWindows.append(rendererWindow)
-        self.rendererWindowsSubWin.append(subwin)
-        
-        self.subWinCount += 1
-        
-        self.mdiArea.tileSubWindows()
+        if not ask or dlg.exec_():
+            # if ask, get num from dialog
+            
+            
+            rendererWindow = renderMdiSubWindow.RendererWindow(self, self.subWinCount, parent=self)
+            rendererWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            
+            subwin = self.mdiArea.addSubWindow(rendererWindow)
+            subwin.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            subwin.show()
+            subwin.activateWindow()
+            
+            self.rendererWindows.append(rendererWindow)
+            self.rendererWindowsSubWin.append(subwin)
+            
+            self.subWinCount += 1
+            
+            self.mdiArea.tileSubWindows()
     
     def showPreferences(self):
         """
