@@ -12,7 +12,7 @@ import shutil
 import subprocess
 
 import numpy as np
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 
 from ..visutils import utilities
 from ..visutils.utilities import iconPath
@@ -129,7 +129,7 @@ class RDFTab(QtGui.QWidget):
         
         self.spec1Combo = QtGui.QComboBox()
         self.spec1Combo.addItem("ALL")
-        self.spec1Combo.currentIndexChanged[QtCore.QString].connect(self.spec1Changed)
+        self.spec1Combo.currentIndexChanged[str].connect(self.spec1Changed)
         row.addWidget(self.spec1Combo)
         
         label = QtGui.QLabel(" - ")
@@ -137,7 +137,7 @@ class RDFTab(QtGui.QWidget):
         
         self.spec2Combo = QtGui.QComboBox()
         self.spec2Combo.addItem("ALL")
-        self.spec2Combo.currentIndexChanged[QtCore.QString].connect(self.spec2Changed)
+        self.spec2Combo.currentIndexChanged[str].connect(self.spec2Changed)
         row.addWidget(self.spec2Combo)
         
         # bin range
@@ -349,7 +349,7 @@ class FileTab(QtGui.QWidget):
 #         outputTypeCombo.addItem("LBOMD REF")
 #         outputTypeCombo.addItem("LBOMD XYZ")
 #         outputTypeCombo.addItem("LBOMD FAILSAFE")
-        outputTypeCombo.currentIndexChanged[QtCore.QString].connect(self.outputTypeChanged)
+        outputTypeCombo.currentIndexChanged[str].connect(self.outputTypeChanged)
         
         label = QtGui.QLabel("File type: ")
         
@@ -419,7 +419,7 @@ class FileTab(QtGui.QWidget):
         Open dialog.
         
         """
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')[0]
         
         if len(filename):
             self.outputFileName.setText(str(filename))
@@ -724,7 +724,7 @@ class SingleImageTab(QtGui.QWidget):
         Open dialog to get save file name
         
         """
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')[0]
         
         if len(filename):
             self.imageFileName.setText(str(filename))
@@ -863,7 +863,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 
         self.fileprefix = QtGui.QLineEdit(self.fileprefixText)
         self.fileprefix.setFixedWidth(120)
-        self.connect(self.fileprefix, QtCore.SIGNAL('textChanged(QString)'), self.fileprefixChanged)
+        self.connect(self.fileprefix, QtCore.SIGNAL('textChanged(str)'), self.fileprefixChanged)
         
         resetPrefixButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-paste.svg")), "")
         resetPrefixButton.setStatusTip("Set prefix to input file")
@@ -895,7 +895,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.numberFormatCombo = QtGui.QComboBox()
         self.numberFormatCombo.addItem("%04d")
         self.numberFormatCombo.addItem("%d")
-        self.connect(self.numberFormatCombo, QtCore.SIGNAL("currentIndexChanged(QString)"), self.numberFormatChanged)
+        self.connect(self.numberFormatCombo, QtCore.SIGNAL("currentIndexChanged(str)"), self.numberFormatChanged)
         
 #        rowLayout.addWidget(label)
         rowLayout.addWidget(self.numberFormatCombo)
@@ -1014,7 +1014,7 @@ class ImageSequenceTab(QtGui.QWidget):
         if self.createMovieCheck.isChecked():
             if not self.parent.ffmpeg:
                 utilities.warnExeNotFound(self.parent, "ffmpeg")
-                self.createMovieCheck.setCheckState(0)
+                self.createMovieCheck.setCheckState(QtCore.Qt.Unchecked)
                 return
             
             self.createMovie = True
@@ -1276,7 +1276,7 @@ class ImageRotateTab(QtGui.QWidget):
                 
         self.fileprefix = QtGui.QLineEdit(self.fileprefixText)
         self.fileprefix.setFixedWidth(120)
-        self.connect(self.fileprefix, QtCore.SIGNAL('textChanged(QString)'), self.fileprefixChanged)
+        self.connect(self.fileprefix, QtCore.SIGNAL('textChanged(str)'), self.fileprefixChanged)
         
         rowLayout.addWidget(label)
         rowLayout.addWidget(self.fileprefix)
@@ -1414,7 +1414,7 @@ class ImageRotateTab(QtGui.QWidget):
         if self.createMovieCheck.isChecked():
             if not self.parent.ffmpeg:
                 utilities.warnExeNotFound(self.parent, "ffmpeg")
-                self.createMovieCheck.setCheckState(0)
+                self.createMovieCheck.setCheckState(QtCore.Qt.Unchecked)
                 return
             
             self.createMovie = True

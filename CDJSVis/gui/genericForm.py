@@ -9,7 +9,7 @@ Modified by Chris Scott
 
 import sys
 
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 
 
 ################################################################################

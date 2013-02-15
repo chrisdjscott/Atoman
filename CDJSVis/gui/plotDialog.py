@@ -9,7 +9,7 @@ import os
 import sys
 import traceback
 
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 import numpy as np
 
 import matplotlib

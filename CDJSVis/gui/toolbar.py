@@ -7,7 +7,7 @@ The main toolbar
 """
 import sys
 
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 
 from .genericForm import GenericForm
 from .filterForm import FilterForm

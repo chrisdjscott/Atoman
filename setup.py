@@ -39,11 +39,11 @@ def main():
                     os.system(command)
     
     else:
-        pyrcc4 = utilities.checkForExe("pyrcc4")
+        pyrcc4 = utilities.checkForExe("pyside-rcc")
         
         # on mac it is appended with python version
         if not pyrcc4:
-            pyrcc4 = utilities.checkForExe("pyrcc4-%d.%d" % (sys.version_info[0], sys.version_info[1]))
+            pyrcc4 = utilities.checkForExe("pyside-rcc-%d.%d" % (sys.version_info[0], sys.version_info[1]))
         
         if not pyrcc4:
             sys.exit("ERROR: COULD NOT LOCATE PYRCC4")

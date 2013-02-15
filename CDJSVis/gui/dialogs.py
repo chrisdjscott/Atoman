@@ -8,7 +8,7 @@ Additional dialogs.
 import os
 import sys
 
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 import numpy as np
 
 from . import genericForm
@@ -1070,7 +1070,7 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         
         bitrateSpin = QtGui.QSpinBox()
         bitrateSpin.setMinimum(1)
-        bitrateSpin.setMaximum(10000000000)
+        bitrateSpin.setMaximum(1e8)
         bitrateSpin.setValue(self.bitrate)
         bitrateSpin.valueChanged.connect(self.bitrateChanged)
         rowLayout.addWidget(bitrateSpin)
@@ -1100,7 +1100,7 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
 #        containerCombo.addItem("mp4")
         containerCombo.addItem("avi")
 #        containerCombo.addItem("mov")
-        containerCombo.currentIndexChanged[QtCore.QString].connect(self.suffixChanged)
+        containerCombo.currentIndexChanged[str].connect(self.suffixChanged)
         rowLayout.addWidget(containerCombo)
         
         self.init()

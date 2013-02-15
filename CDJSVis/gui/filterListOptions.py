@@ -8,7 +8,7 @@ Options for filter lists.
 import sys
 import functools
 
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 
 from ..visutils import utilities
 from ..visutils.utilities import iconPath

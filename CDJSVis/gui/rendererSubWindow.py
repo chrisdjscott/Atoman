@@ -7,8 +7,9 @@ Mdi sub window for displaying VTK render window.
 """
 import sys
 
-from PyQt4 import QtGui, QtCore
-from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from PySide import QtGui, QtCore
+#from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from ..QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import numpy as np
 

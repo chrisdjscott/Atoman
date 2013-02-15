@@ -10,8 +10,8 @@ import shutil
 import platform
 import tempfile
 
-from PyQt4 import QtGui, QtCore
-from PyQt4.pyqtconfig import Configuration as PyQt4Config
+from PySide import QtGui, QtCore
+import PySide
 import vtk
 import numpy as np
 import matplotlib
@@ -303,7 +303,7 @@ class MainWindow(QtGui.QMainWindow):
         
         if reply == QtGui.QMessageBox.Yes:
             # open file dialog
-            fname = QtGui.QFileDialog.getOpenFileName(self, "CDJSVis - Import element properties", ".", "IN files (*.IN)")
+            fname = QtGui.QFileDialog.getOpenFileName(self, "CDJSVis - Import element properties", ".", "IN files (*.IN)")[0]
             
             if fname:
                 # read in new file
@@ -325,7 +325,9 @@ class MainWindow(QtGui.QMainWindow):
         """
         fname = os.path.join(".", "atoms-exported.IN")
         
-        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export element properties", fname, "IN files (*.IN)")
+        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export element properties", fname, "IN files (*.IN)")[0]
+        
+        print "FNAME", fname
         
         if fname:
             if not "." in fname or fname[-3:] != ".IN":
@@ -346,7 +348,7 @@ class MainWindow(QtGui.QMainWindow):
         
         if reply == QtGui.QMessageBox.Yes:
             # open file dialog
-            fname = QtGui.QFileDialog.getOpenFileName(self, "CDJSVis - Import bonds file", ".", "IN files (*.IN)")
+            fname = QtGui.QFileDialog.getOpenFileName(self, "CDJSVis - Import bonds file", ".", "IN files (*.IN)")[0]
             
             if fname:
                 # read in new file
@@ -364,7 +366,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         fname = os.path.join(".", "bonds-exported.IN")
         
-        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export bonds file", fname, "IN files (*.IN)")
+        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export bonds file", fname, "IN files (*.IN)")[0]
         
         if fname:
             if not "." in fname or fname[-3:] != ".IN":
@@ -575,22 +577,22 @@ class MainWindow(QtGui.QMainWindow):
             self.mainToolbar.outputPage.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
             
             if PBC[0]:
-                self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(2)
+                self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(QtCore.Qt.Checked)
             
             else:
-                self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(0)
+                self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
             
             if PBC[1]:
-                self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(2)
+                self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(QtCore.Qt.Checked)
             
             else:
-                self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(0)
+                self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
             
             if PBC[2]:
-                self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(2)
+                self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(QtCore.Qt.Checked)
             
             else:
-                self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(0)
+                self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
     
     def postFileLoaded(self, fileType, state, filename, extension):
         """
@@ -716,18 +718,14 @@ class MainWindow(QtGui.QMainWindow):
         Display about message.
         
         """
-        cfg = PyQt4Config()
-        pyqt4_version = cfg.pyqt_version_str
-        sip_version = cfg.sip_version_str
-        
         QtGui.QMessageBox.about(self, "About CDJSVis", 
                                 """<b>CDJSVis</b> %s
                                 <p>Copyright &copy; 2013 Chris Scott</p>
                                 <p>This application can be used to visualise atomistic simulations.</p>
                                 <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
                                    by Marc Robinson.</p>
-                                <p>Python %s - Qt %s - PyQt %s - VTK %s - Matplotlib %s on %s""" % (
-                                __version__, platform.python_version(), QtCore.QT_VERSION_STR, pyqt4_version,
+                                <p>Python %s - Qt %s - PySide %s - VTK %s - Matplotlib %s on %s""" % (
+                                __version__, platform.python_version(), QtCore.__version__, PySide.__version__,
                                 vtk.vtkVersion.GetVTKVersion(), matplotlib.__version__, platform.system()))
     
     def createAction(self, text, slot=None, shortcut=None, icon=None,
@@ -783,6 +781,8 @@ def isAlive(qobj):
     Check a window is alive
     
     """
+    return True
+    
     import sip
     try:
         sip.unwrapinstance(qobj)

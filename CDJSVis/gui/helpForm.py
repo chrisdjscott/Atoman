@@ -5,7 +5,7 @@ Help form
 @author: Chris Scott
 
 """
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 
 
 from ..visutils.utilities import iconPath

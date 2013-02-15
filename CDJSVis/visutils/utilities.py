@@ -13,7 +13,7 @@ import glob
 import subprocess
 import tempfile
 
-from PyQt4 import QtGui
+from PySide import QtGui
 
 from .. import globalsModule
 

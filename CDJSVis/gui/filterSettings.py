@@ -12,7 +12,7 @@ Dialogs must be named like: FilterNameSettingsDialog
 """
 import sys
 
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 
 from ..visutils import utilities
 from ..visutils.utilities import iconPath
@@ -1699,7 +1699,7 @@ class SliceSettingsDialog(GenericSettingsDialog):
         
         """
         if self.showSlicePlaneChecked:
-            self.showSlicePlaneCheck.setCheckState(0)
+            self.showSlicePlaneCheck.setCheckState(QtCore.Qt.Unchecked)
         
         self.hide()
 

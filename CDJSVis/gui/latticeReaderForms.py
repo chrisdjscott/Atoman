@@ -8,7 +8,7 @@ Lattice reader forms for the inputTab.
 import os
 import sys
 
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
@@ -86,7 +86,7 @@ class GenericReaderForm(GenericForm):
         
         filesString = str(self.fileFormatString)
         
-        filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)
+        filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
         filename = str(filename)
         
         if not len(filename):
@@ -416,7 +416,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
         else:
             filesString = str(self.fileFormatString)
         
-        filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)
+        filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
         filename = str(filename)
         
         if not len(filename):

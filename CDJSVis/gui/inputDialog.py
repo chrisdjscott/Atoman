@@ -7,7 +7,7 @@ The input tab for the main toolbar
 """
 import sys
 
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
 from .genericForm import GenericForm

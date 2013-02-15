@@ -8,7 +8,7 @@ The filter tab for the main toolbar
 import os
 import sys
 
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 import vtk
 import numpy as np
 

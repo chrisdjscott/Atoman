@@ -400,10 +400,8 @@ class LbomdDatReader(GenericLatticeReader):
         
         # guess roulette
         if rouletteIndex is None:
-            print "FNAME", filename
-            
+            # file name
             basename = os.path.basename(filename)
-            print "BNAME", basename
             
             # look for integers in the name
             result = self.intRegex.findall(basename)
@@ -412,15 +410,13 @@ class LbomdDatReader(GenericLatticeReader):
             if len(result):
                 try:
                     rouletteIndex = int(result[0]) - 1
-                    print "ROULETTE INDEX", rouletteIndex
                 except ValueError:
                     rouletteIndex = None
         
-        # attempt to read time from roulette
+        # attempt to read roulette file
         if rouletteIndex is not None:
+            # simulation time
             simTime = utilities.getTimeFromRoulette(rouletteIndex)
-            
-            print "SIMTIME", simTime
             
             if simTime is not None:
                 state.simTime = simTime
