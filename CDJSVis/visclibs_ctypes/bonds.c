@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include "../visclibs/boxeslib.h"
+#include "boxeslib.h"
 #include "../visclibs/utilities.h"
 #include "bonds.h"
 

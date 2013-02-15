@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "../visclibs/utilities.h"
-#include "../visclibs/boxeslib.h"
+#include "boxeslib.h"
 #include "filtering.h"
 
 

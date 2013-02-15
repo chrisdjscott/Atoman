@@ -51,27 +51,15 @@ SWIG := swig -python
 SHOBJECTS = *.o=.so
 OBJECTS = ${COBJECTS:.c=.o}
 COBJECTS = *.c
-SWIGSOURCE = defects_c.i clusters_c.i vectors.i
+SWIGSOURCE = vectors.i
 
-all : _defects_c.so _vectors.so
+all : _vectors.so
 
 # create object file
-_defects_c.so : defects_c_wrap.o defects_c.o boxeslib.o utilities.o
-	$(CC) $(CCLINKFLAGS) defects_c.o defects_c_wrap.o boxeslib.o utilities.o -o _defects_c.so
-
 _vectors.so : vectors_wrap.o vectors.o utilities.o
 	$(CC) $(CCLINKFLAGS) vectors.o vectors_wrap.o utilities.o -o _vectors.so
 
 # compile module
-filtering_c.o : filtering_c.c 
-	$(CC) $(CCFLAGS) $(INCLUDES) filtering_c.c 
-
-defects_c.o : defects_c.c
-	$(CC) $(CCFLAGS) $(INCLUDES) defects_c.c 
-
-boxeslib.o : boxeslib.c
-	$(CC) $(CCFLAGS) $(INCLUDES) boxeslib.c 
-
 utilities.o : utilities.c
 	$(CC) $(CCFLAGS) $(INCLUDES) utilities.c
 
@@ -79,10 +67,6 @@ vectors.o : vectors.c
 	$(CC) $(CCFLAGS) $(INCLUDES) vectors.c
 
 # generate and compile swig wrapper
-defects_c_wrap.o : defects_c.i
-	$(SWIG) defects_c.i
-	$(CC) $(CCFLAGS) $(INCLUDES) defects_c_wrap.c 
-
 vectors_wrap.o : vectors.i
 	$(SWIG) vectors.i
 	$(CC) $(CCFLAGS) $(INCLUDES) vectors_wrap.c

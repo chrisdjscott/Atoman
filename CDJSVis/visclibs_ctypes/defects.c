@@ -8,7 +8,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include "boxeslib.h"
-#include "utilities.h"
+#include "../visclibs/utilities.h"
+#include "defects.h"
 
 
 int findDefectClusters(int, double *, int *, int *, struct Boxes *, double, double *, int *);
@@ -19,18 +20,14 @@ int findDefectNeighbours(int, int, int, int *, double *, struct Boxes *, double,
 /*******************************************************************************
  * Search for defects and return the sub-system surrounding them
  *******************************************************************************/
-int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefectsTypeDim, int* NDefectsType, int vacDim, int* vacancies, 
-                 int intDim, int* interstitials, int antDim, int* antisites, int onAntDim, int* onAntisites, int exclSpecInputDim, 
-                 int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, int specieListDim, char* specieList, 
-                 int specieDim, int* specie, int posDim, double* pos, int refNAtoms, int specieListRefDim, char* specieListRef, 
-                 int specieRefDim, int* specieRef, int refPosDim, double* refPos, int cellDimsDim, double *cellDims, int PBCDim, 
-                 int *PBC, double vacancyRadius, int minPosDim, double *minPos, int maxPosDim, double *maxPos, int findClustersFlag,
-                 double clusterRadius, int defectClusterDim, int *defectCluster, int vacSpecCountDim, int *vacSpecCount, 
-                 int intSpecCountDim, int *intSpecCount, int antSpecCountDim, int *antSpecCount, int onAntSpecCntDim1, 
-                 int onAntSpecCntDim2, int *onAntSpecCount, int splitIntSpecCntDim1, int splitIntSpecCntDim2, int* splitIntSpecCount,
-                 int minClusterSize, int maxClusterSize, int splitIntDim, int *splitInterstitials, int identifySplits)
+int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefectsType, int* vacancies, int* interstitials, int* antisites, 
+                int* onAntisites, int exclSpecInputDim, int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, char* specieList, 
+                int* specie, double* pos, int refNAtoms, char* specieListRef, int* specieRef, double* refPos, double *cellDims, int *PBC, 
+                double vacancyRadius, double *minPos, double *maxPos, int findClustersFlag, double clusterRadius, int *defectCluster, int NSpecies, 
+                int *vacSpecCount, int *intSpecCount, int *antSpecCount, int *onAntSpecCount, int* splitIntSpecCount, int minClusterSize, 
+                int maxClusterSize, int *splitInterstitials, int identifySplits)
 {
-    int i, NSpecies, exitLoop, k, j, index;
+    int i, exitLoop, k, j, index;
     double vacRad2;
     int boxNebList[27], specieIndex, index2;
     char symtemp[3], symtemp2[3];
@@ -735,7 +732,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         antSpecCount[specieRef[index]]++;
         
         index2 = onAntisites[i];
-        onAntSpecCount[specieRef[index]*onAntSpecCntDim2+specie[index2]]++;
+        onAntSpecCount[specieRef[index]*NSpecies+specie[index2]]++;
     }
     
     for (i=0; i<NSplitInterstitials; i++)
@@ -743,7 +740,7 @@ int findDefects( int includeVacs, int includeInts, int includeAnts, int NDefects
         index = splitInterstitials[3*i+1];
         index2 = splitInterstitials[3*i+2];
         
-        splitIntSpecCount[specie[index]*splitIntSpecCntDim2+specie[index2]]++;
+        splitIntSpecCount[specie[index]*NSpecies+specie[index2]]++;
     }
     
     return 0;

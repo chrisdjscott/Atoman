@@ -49,20 +49,21 @@ ifeq (Linux, $(shell uname -s))
 	LIBSUFFIX = so
 endif
 
-LIBFILES = _bonds.$(LIBSUFFIX) _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX) _output.$(LIBSUFFIX) _picker.$(LIBSUFFIX) _clusters.$(LIBSUFFIX)
+LIBFILES = _bonds.$(LIBSUFFIX) _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX) _output.$(LIBSUFFIX) \
+		   _picker.$(LIBSUFFIX) _clusters.$(LIBSUFFIX) _defects.$(LIBSUFFIX)
 
 # target
 all : $(LIBFILES)
 
 # create object file
-_bonds.$(LIBSUFFIX) : bonds.o
-	$(CC) $(CCLINKFLAGS) bonds.o ../visclibs/boxeslib.o ../visclibs/utilities.o -o _bonds.$(LIBSUFFIX)
+_bonds.$(LIBSUFFIX) : bonds.o boxeslib.o
+	$(CC) $(CCLINKFLAGS) bonds.o boxeslib.o ../visclibs/utilities.o -o _bonds.$(LIBSUFFIX)
 
-_rdf.$(LIBSUFFIX) : rdf.o
-	$(CC) $(CCLINKFLAGS) rdf.o ../visclibs/boxeslib.o ../visclibs/utilities.o -o _rdf.$(LIBSUFFIX)
+_rdf.$(LIBSUFFIX) : rdf.o boxeslib.o
+	$(CC) $(CCLINKFLAGS) rdf.o boxeslib.o ../visclibs/utilities.o -o _rdf.$(LIBSUFFIX)
 
-_filtering.$(LIBSUFFIX) : filtering.o
-	$(CC) $(CCLINKFLAGS) filtering.o ../visclibs/utilities.o ../visclibs/boxeslib.o -o _filtering.$(LIBSUFFIX)
+_filtering.$(LIBSUFFIX) : filtering.o boxeslib.o
+	$(CC) $(CCLINKFLAGS) filtering.o ../visclibs/utilities.o boxeslib.o -o _filtering.$(LIBSUFFIX)
 
 _input.$(LIBSUFFIX) : input.o
 	$(CC) $(CCLINKFLAGS) input.o -o _input.$(LIBSUFFIX)
@@ -70,13 +71,19 @@ _input.$(LIBSUFFIX) : input.o
 _output.$(LIBSUFFIX) : output.o
 	$(CC) $(CCLINKFLAGS) output.o -o _output.$(LIBSUFFIX)
 
-_picker.$(LIBSUFFIX) : picker.o
-	$(CC) $(CCLINKFLAGS) picker.o ../visclibs/utilities.o ../visclibs/boxeslib.o -o _picker.$(LIBSUFFIX)
+_picker.$(LIBSUFFIX) : picker.o boxeslib.o
+	$(CC) $(CCLINKFLAGS) picker.o ../visclibs/utilities.o boxeslib.o -o _picker.$(LIBSUFFIX)
 
-_clusters.$(LIBSUFFIX) : clusters.o
-	$(CC) $(CCLINKFLAGS) clusters.o ../visclibs/utilities.o ../visclibs/boxeslib.o -o _clusters.$(LIBSUFFIX)
+_clusters.$(LIBSUFFIX) : clusters.o boxeslib.o
+	$(CC) $(CCLINKFLAGS) clusters.o ../visclibs/utilities.o boxeslib.o -o _clusters.$(LIBSUFFIX)
+
+_defects.$(LIBSUFFIX) : defects.o boxeslib.o
+	$(CC) $(CCLINKFLAGS) defects.o ../visclibs/utilities.o boxeslib.o -o _defects.$(LIBSUFFIX)
 
 # compile module
+boxeslib.o : boxeslib.c
+	$(CC) $(CCFLAGS) $(INCLUDES) boxeslib.c 
+
 bonds.o : bonds.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) bonds.c
 
@@ -97,6 +104,9 @@ picker.o : picker.c
 
 clusters.o : clusters.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) clusters.c
+
+defects.o : defects.c 
+	$(CC) $(CCFLAGS) $(INCLUDES) defects.c
 
 # clean
 clean:
