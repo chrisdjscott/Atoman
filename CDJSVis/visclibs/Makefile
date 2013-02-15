@@ -53,14 +53,11 @@ OBJECTS = ${COBJECTS:.c=.o}
 COBJECTS = *.c
 SWIGSOURCE = defects_c.i clusters_c.i vectors.i
 
-all : _defects_c.so _clusters_c.so _vectors.so
+all : _defects_c.so _vectors.so
 
 # create object file
 _defects_c.so : defects_c_wrap.o defects_c.o boxeslib.o utilities.o
 	$(CC) $(CCLINKFLAGS) defects_c.o defects_c_wrap.o boxeslib.o utilities.o -o _defects_c.so
-
-_clusters_c.so : clusters_c_wrap.o clusters_c.o boxeslib.o utilities.o
-	$(CC) $(CCLINKFLAGS) clusters_c.o clusters_c_wrap.o boxeslib.o utilities.o -o _clusters_c.so
 
 _vectors.so : vectors_wrap.o vectors.o utilities.o
 	$(CC) $(CCLINKFLAGS) vectors.o vectors_wrap.o utilities.o -o _vectors.so
@@ -71,9 +68,6 @@ filtering_c.o : filtering_c.c
 
 defects_c.o : defects_c.c
 	$(CC) $(CCFLAGS) $(INCLUDES) defects_c.c 
-
-clusters_c.o : clusters_c.c
-	$(CC) $(CCFLAGS) $(INCLUDES) clusters_c.c 
 
 boxeslib.o : boxeslib.c
 	$(CC) $(CCFLAGS) $(INCLUDES) boxeslib.c 
@@ -88,10 +82,6 @@ vectors.o : vectors.c
 defects_c_wrap.o : defects_c.i
 	$(SWIG) defects_c.i
 	$(CC) $(CCFLAGS) $(INCLUDES) defects_c_wrap.c 
-
-clusters_c_wrap.o : clusters_c.i
-	$(SWIG) clusters_c.i
-	$(CC) $(CCFLAGS) $(INCLUDES) clusters_c_wrap.c
 
 vectors_wrap.o : vectors.i
 	$(SWIG) vectors.i

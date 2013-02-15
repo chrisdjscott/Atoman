@@ -13,7 +13,7 @@ import vtk
 
 from ..visclibs_ctypes import filtering as filtering_c
 from ..visclibs import defects_c
-from ..visclibs import clusters_c
+from ..visclibs_ctypes import clusters as clusters_c
 from ..rendering import renderer
 from ..rendering import renderBonds
 from ..visutils import vectors

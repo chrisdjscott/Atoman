@@ -7,8 +7,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include "boxeslib.h"
-#include "utilities.h"
+#include "../visclibs/boxeslib.h"
+#include "../visclibs/utilities.h"
+#include "clusters.h"
 
 
 int findNeighbours(int, int, int, int *, double *, double, struct Boxes *, double *, int *);
@@ -19,9 +20,8 @@ void setAppliedPBCs(int *, int *);
 /*******************************************************************************
  * Find clusters
  *******************************************************************************/
-void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *pos, int clusterArrayDim, int *clusterArray, double neighbourRad, 
-                 int cellDimsDim, double *cellDims, int PBCDim, int *PBC, int minPosDim, double *minPos, int maxPosDim, double *maxPos, 
-                 int minClusterSize, int maxClusterSize, int resultsDim, int *results)
+int findClusters(int NVisibleIn, int *visibleAtoms, double *pos, int *clusterArray, double neighbourRad, double *cellDims, 
+                 int *PBC, double *minPos, double *maxPos, int minClusterSize, int maxClusterSize, int *results)
 {
     int i, index, NClusters, numInCluster;
     int maxNumInCluster;
@@ -33,14 +33,14 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
     int NVisible, count;
     
     
-    visiblePos = malloc(3 * visibleAtomsDim * sizeof(double));
+    visiblePos = malloc(3 * NVisibleIn * sizeof(double));
     if (visiblePos == NULL)
     {
         printf("ERROR: could not allocate visiblePos\n");
         exit(50);
     }
     
-    for (i=0; i<visibleAtomsDim; i++)
+    for (i=0; i<NVisibleIn; i++)
     {
         index = visibleAtoms[i];
         
@@ -49,7 +49,7 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
         visiblePos[3*i+2] = pos[3*index+2];
     }
     
-    NAtomsCluster = calloc(visibleAtomsDim, sizeof(int));
+    NAtomsCluster = calloc(NVisibleIn, sizeof(int));
     if (NAtomsCluster == NULL)
     {
         printf("ERROR: could not allocate NAtomsCluster\n");
@@ -59,12 +59,12 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
     /* box visible atoms */
     approxBoxWidth = neighbourRad;
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-    putAtomsInBoxes(visibleAtomsDim, visiblePos, boxes);
+    putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
     
     nebRad2 = neighbourRad * neighbourRad;
     
     /* initialise clusters array */
-    for (i=0; i<visibleAtomsDim; i++)
+    for (i=0; i<NVisibleIn; i++)
     {
         clusterArray[i] = -1;
     }
@@ -72,7 +72,7 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
     /* loop over atoms */
     maxNumInCluster = -9999;
     NClusters = 0;
-    for (i=0; i<visibleAtomsDim; i++)
+    for (i=0; i<NVisibleIn; i++)
     {
         /* skip atom if already allocated */
         if (clusterArray[i] == -1)
@@ -101,7 +101,7 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
     
     /* loop over visible atoms to see if their cluster has more than the min number */
     NVisible = 0;
-    for (i=0; i<visibleAtomsDim; i++)
+    for (i=0; i<NVisibleIn; i++)
     {
         clusterIndex = clusterArray[i];
         index = visibleAtoms[i];
@@ -143,6 +143,8 @@ void findClusters(int visibleAtomsDim, int *visibleAtoms, int posDim, double *po
     free(NAtomsCluster);
     freeBoxes(boxes);
     free(visiblePos);
+    
+    return 0;
 }
 
 
@@ -199,9 +201,7 @@ int findNeighbours(int index, int clusterID, int numInCluster, int* atomCluster,
 /*******************************************************************************
  * Prepare cluster to draw hulls (ie unapply PBCs)
  *******************************************************************************/
-void prepareClusterToDrawHulls(int N, int posDim, double *pos, int cellDimsDim, double *cellDims, 
-                               int PBCDim, int *PBC, int appliedPBCsDims, int *appliedPBCs, 
-                               double neighbourRadius)
+int prepareClusterToDrawHulls(int N, double *pos, double *cellDims, int *PBC, int *appliedPBCs, double neighbourRadius)
 {
     int i, numInCluster, NClusters;
     int *clusterArray;
@@ -248,6 +248,8 @@ void prepareClusterToDrawHulls(int N, int posDim, double *pos, int cellDimsDim, 
     }
     
     free(clusterArray);
+    
+    return 0;
 }
 
 
