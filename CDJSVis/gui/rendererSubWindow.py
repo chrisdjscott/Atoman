@@ -15,7 +15,7 @@ import numpy as np
 from ..visutils.utilities import iconPath, resourcePath
 from ..visutils import utilities
 from . import dialogs
-from ..visclibs_ctypes import picker as picker_c
+from ..visclibs import picker as picker_c
 from ..rendering import renderer
 from .outputDialog import OutputDialog
 from ..rendering.text import vtkRenderWindowText

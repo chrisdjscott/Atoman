@@ -1,9 +1,8 @@
 *.pyc
-*.py
 *.o
 *.so
 *.exe
 .pydevproject
 .project
 .DS_Store
-*_wrap.c
+*.dylib

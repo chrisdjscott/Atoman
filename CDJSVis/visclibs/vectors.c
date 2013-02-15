@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "utilities.h"
+#include "vectors.h"
 
 
 
@@ -91,7 +92,7 @@ void maxMovement( int dim1, double* returnVector, int dim4, double* pos1, int di
 /*******************************************************************************
  * Find separation vector between two pos vectors
  *******************************************************************************/
-void separationVector( int dim1, double* returnVector, int length, int dim4, double* pos1, int dim12, double* pos2, int dim2, double* cellDims, int pbcx, int pbcy, int pbcz )
+int separationVector(int length, double* returnVector, double* pos1, double* pos2, double* cellDims, int *PBC)
 {
     int i;
     double atomSepVec[3];
@@ -99,19 +100,22 @@ void separationVector( int dim1, double* returnVector, int length, int dim4, dou
     
     for ( i=0; i<length; i++ )
     {
-        atomSeparationVector( atomSepVec, pos1[3*i], pos1[3*i+1], pos1[3*i+2], pos2[3*i], pos2[3*i+1], pos2[3*i+2], cellDims[0], cellDims[4], cellDims[8], pbcx, pbcy, pbcz );
+        atomSeparationVector(atomSepVec, pos1[3*i], pos1[3*i+1], pos1[3*i+2], pos2[3*i], pos2[3*i+1], pos2[3*i+2], 
+                             cellDims[0], cellDims[4], cellDims[8], PBC[0], PBC[1], PBC[2]);
         
         returnVector[3*i] = atomSepVec[0];
         returnVector[3*i+1] = atomSepVec[1];
         returnVector[3*i+2] = atomSepVec[2];
     }
+    
+    return 0;
 }
 
 
 /*******************************************************************************
  * return magnitude of separation vector between two pos vectors
  *******************************************************************************/
-double separationMagnitude( int length, int dim4, double* pos1, int dim12, double* pos2, int dim2, double* cellDims, int pbcx, int pbcy, int pbcz )
+double separationMagnitude(int length, double* pos1, double* pos2, double* cellDims, int *PBC)
 {
     int i;
     double sum, r2;
@@ -120,7 +124,7 @@ double separationMagnitude( int length, int dim4, double* pos1, int dim12, doubl
     sum = 0;
     for ( i=0; i<length; i++ )
     {
-        r2 = atomicSeparation2( pos1[3*i], pos1[3*i+1], pos1[3*i+2], pos2[3*i], pos2[3*i+1], pos2[3*i+2], cellDims[0], cellDims[4], cellDims[8], pbcx, pbcy, pbcz );
+        r2 = atomicSeparation2( pos1[3*i], pos1[3*i+1], pos1[3*i+2], pos2[3*i], pos2[3*i+1], pos2[3*i+2], cellDims[0], cellDims[4], cellDims[8], PBC[0], PBC[1], PBC[2]);
         
         sum += r2;
     }
@@ -261,14 +265,14 @@ double imageSeparationMagnitude_fixed( int image1, int image2, int imageNAtoms, 
 /*******************************************************************************
  * Return the magnitude of given vector
  *******************************************************************************/
-double magnitude( int dim4, double* pos1 )
+double magnitude(int length, double* pos1)
 {
     int i;
     double sum;
     
     
     sum = 0.0;
-    for ( i=0; i<dim4; i++ )
+    for ( i=0; i<length; i++ )
     {
         sum += pos1[i] * pos1[i];
     }

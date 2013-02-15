@@ -16,10 +16,9 @@ from PyQt4 import QtGui, QtCore
 
 from ..visutils import utilities
 from ..visutils.utilities import iconPath
-from . import dialogs
 from . import genericForm
-from ..visclibs_ctypes import output as output_c
-from ..visclibs_ctypes import rdf as rdf_c
+from ..visclibs import output as output_c
+from ..visclibs import rdf as rdf_c
 from . import plotDialog
 
 try:

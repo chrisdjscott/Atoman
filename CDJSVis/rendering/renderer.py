@@ -12,7 +12,7 @@ import vtk
 from PIL import Image
 
 from ..visutils import utilities
-from ..visclibs_ctypes import output as output_c
+from ..visclibs import output as output_c
 from . import axes
 from . import cell
 from .utils import setRes, setupLUT

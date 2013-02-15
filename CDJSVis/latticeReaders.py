@@ -11,7 +11,7 @@ import re
 
 import numpy as np
 
-from .visclibs_ctypes import input as input_c
+from .visclibs import input as input_c
 from .atoms import elements
 from .visutils import utilities
 from .lattice import Lattice
