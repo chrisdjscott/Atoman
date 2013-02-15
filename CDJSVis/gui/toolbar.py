@@ -10,7 +10,7 @@ import sys
 from PyQt4 import QtGui, QtCore
 
 from .genericForm import GenericForm
-from .filterTab import FilterTab
+from .filterForm import FilterForm
 from ..visutils.utilities import iconPath
 try:
     from .. import resources
@@ -124,7 +124,7 @@ class MainToolbar(QtGui.QDockWidget):
             rw.newPipeline(name)
         
         # form
-        form = FilterTab(self, self.mainWindow, self.toolbarWidth, self.NPipelines, name)
+        form = FilterForm(self, self.mainWindow, self.toolbarWidth, self.NPipelines, name)
         
         self.pipelineList.append(form)
         self.stackedWidget.addWidget(form)

@@ -5,7 +5,6 @@ Mdi sub window for displaying VTK render window.
 @author: Chris Scott
 
 """
-import os
 import sys
 
 from PyQt4 import QtGui, QtCore

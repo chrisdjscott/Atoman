@@ -6,7 +6,6 @@ Module for rendering
 
 """
 import os
-import math
 
 import numpy as np
 import vtk

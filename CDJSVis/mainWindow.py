@@ -23,7 +23,7 @@ from . import lattice
 from .rendering import renderer
 from .gui import helpForm
 from .gui import dialogs
-from .gui import renderMdiSubWindow
+from .gui import rendererSubWindow
 from .gui import inputDialog
 try:
     from . import resources
@@ -115,8 +115,8 @@ class MainWindow(QtGui.QMainWindow):
         # add file actions
         exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "system-log-out.svg", 
                                        "Exit application")
-        newWindowAction = self.createAction("&New window", self.openNewWindow, "Ctrl-N", 
-                                            "CDJSVis.ico", "Open new window")
+        newWindowAction = self.createAction("&New app window", self.openNewWindow, "Ctrl-N", 
+                                            "CDJSVis.ico", "Open new application window")
         newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow,
                                             icon="window-new.svg", tip="Open new render sub window")
         loadInputAction = self.createAction("Load input", slot=self.showLoadInputDialog, icon="document-open.svg",
@@ -250,7 +250,7 @@ class MainWindow(QtGui.QMainWindow):
 #         if not ask or dlg.exec_():
             # if ask, get num from dialog
             
-        rendererWindow = renderMdiSubWindow.RendererWindow(self, self.subWinCount, parent=self)
+        rendererWindow = rendererSubWindow.RendererWindow(self, self.subWinCount, parent=self)
         rendererWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         
         subwin = self.mdiArea.addSubWindow(rendererWindow)

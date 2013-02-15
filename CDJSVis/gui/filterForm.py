@@ -25,9 +25,9 @@ except ImportError:
 
 
 ################################################################################
-class FilterTab(QtGui.QWidget):
+class FilterForm(QtGui.QWidget):
     def __init__(self, parent, mainWindow, width, pipelineIndex, pipelineString):
-        super(FilterTab, self).__init__(parent)
+        super(FilterForm, self).__init__(parent)
         
         self.mainToolbar = parent
         self.mainWindow = mainWindow
