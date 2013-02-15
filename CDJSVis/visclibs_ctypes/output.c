@@ -110,11 +110,9 @@ void writePOVRAYAtoms(char *filename, int specieDim, int *specie, int posDim, do
 /*******************************************************************************
  ** write defects to povray file
  *******************************************************************************/
-void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int *ints, int antsDim, int *ants, int onAntsDim, int *onAnts,
-						int specieDim, int *specie, int posDim, double *pos, int refSpecieDim, int *refSpecie, int refPosDim,
-						double *refPos, int specieRGBDim1, int specieRGBDim2, double *specieRGB, int specieCovRadDim,
-						double *specieCovRad, int refSpecieRGBDim1, int refSpecieRGBDim2, double *refSpecieRGB,
-                        int refSpecieCovRadDim, double* refSpecieCovRad)
+int writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int *ints, int antsDim, int *ants, int onAntsDim, int *onAnts,
+                       int *specie, double *pos, int *refSpecie, double *refPos, double *specieRGB, double *specieCovRad, double *refSpecieRGB,
+                       double* refSpecieCovRad)
 {
 	int i, index, specieIndex;
 	FILE *OUTFILE;
@@ -136,8 +134,8 @@ void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int
 		specieIndex = specie[index];
 
 		addPOVRAYSphere(OUTFILE, - pos[3*index], pos[3*index+1], pos[3*index+2], specieCovRad[specieIndex],
-						specieRGB[specieIndex*specieRGBDim2+0], specieRGB[specieIndex*specieRGBDim2+1],
-						specieRGB[specieIndex*specieRGBDim2+2]);
+						specieRGB[specieIndex*3+0], specieRGB[specieIndex*3+1],
+						specieRGB[specieIndex*3+2]);
 	}
 
 	/* write vacancies */
@@ -147,8 +145,8 @@ void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int
 		specieIndex = refSpecie[index];
 
 		addPOVRAYCube(OUTFILE, - refPos[3*index], refPos[3*index+1], refPos[3*index+2], refSpecieCovRad[specieIndex],
-						refSpecieRGB[specieIndex*refSpecieRGBDim2+0], refSpecieRGB[specieIndex*refSpecieRGBDim2+1],
-						refSpecieRGB[specieIndex*refSpecieRGBDim2+2], 0.2);
+						refSpecieRGB[specieIndex*3+0], refSpecieRGB[specieIndex*3+1],
+						refSpecieRGB[specieIndex*3+2], 0.2);
 	}
 
 	/* write antisites */
@@ -160,8 +158,8 @@ void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int
         addPOVRAYCellFrame(OUTFILE, - refPos[3*index] - specieCovRad[specieIndex], refPos[3*index+1] - specieCovRad[specieIndex],
                            refPos[3*index+2] - specieCovRad[specieIndex], - refPos[3*index] + specieCovRad[specieIndex],
                            refPos[3*index+1] + specieCovRad[specieIndex], refPos[3*index+2] + specieCovRad[specieIndex],
-                           refSpecieRGB[specieIndex*refSpecieRGBDim2+0], refSpecieRGB[specieIndex*refSpecieRGBDim2+1],
-                           refSpecieRGB[specieIndex*refSpecieRGBDim2+2]);
+                           refSpecieRGB[specieIndex*3+0], refSpecieRGB[specieIndex*3+1],
+                           refSpecieRGB[specieIndex*3+2]);
     }
 
 	/* write antisites occupying atom */
@@ -171,8 +169,8 @@ void writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int
 		specieIndex = specie[index];
 
 		addPOVRAYSphere(OUTFILE, - pos[3*index], pos[3*index+1], pos[3*index+2], specieCovRad[specieIndex],
-						specieRGB[specieIndex*specieRGBDim2+0], specieRGB[specieIndex*specieRGBDim2+1],
-						specieRGB[specieIndex*specieRGBDim2+2]);
+						specieRGB[specieIndex*3+0], specieRGB[specieIndex*3+1],
+						specieRGB[specieIndex*3+2]);
 	}
 
 

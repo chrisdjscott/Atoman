@@ -13,6 +13,7 @@ import vtk
 from PIL import Image
 
 from ..visutils import utilities
+from ..visclibs_ctypes import output as output_c
 from . import axes
 from . import cell
 from .utils import setRes, setupLUT
@@ -835,20 +836,20 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
 
 
 ################################################################################
-# def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 
-#                        settings, mainWindow):
-#     """
-#     Write defects to povray file.
-#     
-#     """
-#     povfile = os.path.join(mainWindow.tmpDirectory, filename)
-#     
-#     inputLattice = mainWindow.inputState
-#     refLattice = mainWindow.refState
-#     
-#     output_c.writePOVRAYDefects(povfile, vacancies, interstitials, antisites, onAntisites, inputLattice.specie, inputLattice.pos,
-#                                 refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius,
-#                                 refLattice.specieRGB, refLattice.specieCovalentRadius)
+def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 
+                       settings, mainWindow):
+    """
+    Write defects to povray file.
+    
+    """
+    povfile = os.path.join(mainWindow.tmpDirectory, filename)
+    
+    inputLattice = mainWindow.inputState
+    refLattice = mainWindow.refState
+    
+    output_c.writePOVRAYDefects(povfile, vacancies, interstitials, antisites, onAntisites, inputLattice.specie, inputLattice.pos,
+                                refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius,
+                                refLattice.specieRGB, refLattice.specieCovalentRadius)
 
 
 ################################################################################
