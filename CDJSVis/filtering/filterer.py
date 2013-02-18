@@ -115,9 +115,10 @@ class Filterer(object):
             
             actor = self.actorsCollection.GetNextItem()
         
+        
         for rw in self.rendererWindows:
             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                    rw.vtkRenWinInteract.ReInitialize()
+                rw.vtkRenWinInteract.ReInitialize()
         
         self.addScalarBar()
     

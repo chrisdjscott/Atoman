@@ -1,6 +1,8 @@
 # -*- mode: python -*-
 
 import os
+import platform
+import shutil
 import subprocess
 
 __version__ = subprocess.Popen(["git", "describe"], stdout=subprocess.PIPE).communicate()[0].strip()
@@ -35,3 +37,12 @@ coll = COLLECT( exe,
 app = BUNDLE(coll,
              name=os.path.join('dist', 'CDJSVis.app'),
              version=__version__)
+
+osname = platform.system()
+if osname == "Darwin":
+    # check qtmenu.nib got copied
+    if not os.path.isdir("dist/CDJSVis.app/Contents/Resources/qt_menu.nib"):
+        print "qt_menu.nib not found"
+        
+        shutil.copytree("/opt/local/Library/Frameworks/QtGui.framework/Versions/Current/Resources/qt_menu.nib", "dist/CDJSVis.app/Contents/Resources/qt_menu.nib")
+        

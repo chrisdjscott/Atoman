@@ -364,7 +364,7 @@ class FileTab(QtGui.QWidget):
         self.outputFileName = QtGui.QLineEdit("lattice.dat")
         self.outputFileName.setFixedWidth(120)
         saveFileButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
-        saveFileButton.setStatusTip("Save to file")
+        saveFileButton.setToolTip("Save to file")
         saveFileButton.clicked.connect(self.saveToFile)
         
         row.addWidget(label)
@@ -375,7 +375,7 @@ class FileTab(QtGui.QWidget):
         row = fileNameGroup.newRow()
         
         saveFileDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Save to file")
-        saveFileDialogButton.setStatusTip("Save to file")
+        saveFileDialogButton.setToolTip("Save to file")
         saveFileDialogButton.setCheckable(0)
         saveFileDialogButton.setFixedWidth(150)
         saveFileDialogButton.clicked.connect(self.saveToFileDialog)
@@ -674,7 +674,7 @@ class SingleImageTab(QtGui.QWidget):
         self.imageFileName = QtGui.QLineEdit("image")
         self.imageFileName.setFixedWidth(120)
         saveImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
-        saveImageButton.setStatusTip("Save image")
+        saveImageButton.setToolTip("Save image")
         self.connect(saveImageButton, QtCore.SIGNAL('clicked()'), 
                      lambda showProgress=True: self.saveSingleImage(showProgress))
         
@@ -691,7 +691,7 @@ class SingleImageTab(QtGui.QWidget):
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
         saveImageDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Save image")
-        saveImageDialogButton.setStatusTip("Save image")
+        saveImageDialogButton.setToolTip("Save image")
         saveImageDialogButton.setCheckable(0)
         saveImageDialogButton.setFixedWidth(150)
         self.connect(saveImageDialogButton, QtCore.SIGNAL('clicked()'), self.saveSingleImageDialog)
@@ -867,6 +867,7 @@ class ImageSequenceTab(QtGui.QWidget):
         
         resetPrefixButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-paste.svg")), "")
         resetPrefixButton.setStatusTip("Set prefix to input file")
+        resetPrefixButton.setToolTip("Set prefix to input file")
         self.connect(resetPrefixButton, QtCore.SIGNAL("clicked()"), self.resetPrefix)
         
         rowLayout.addWidget(label)
@@ -1000,6 +1001,7 @@ class ImageSequenceTab(QtGui.QWidget):
         
         startSequencerButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
         startSequencerButton.setStatusTip("Start sequencer")
+        startSequencerButton.setToolTip("Start sequencer")
         self.connect(startSequencerButton, QtCore.SIGNAL('clicked()'), self.startSequencer)
         
         rowLayout.addWidget(startSequencerButton)
@@ -1344,7 +1346,7 @@ class ImageRotateTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         startRotatorButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
-        startRotatorButton.setStatusTip("Start sequencer")
+        startRotatorButton.setToolTip("Start sequencer")
         startRotatorButton.clicked.connect(self.startRotator)
         
         rowLayout.addWidget(startRotatorButton)

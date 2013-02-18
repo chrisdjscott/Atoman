@@ -155,14 +155,14 @@ class LbomdDatReaderForm(GenericReaderForm):
         row.addWidget(self.latticeLabel)
         
         self.loadLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-jump.svg")), '')
-        self.loadLatticeButton.setStatusTip("Load file")
+        self.loadLatticeButton.setToolTip("Load file")
         self.connect(self.loadLatticeButton, QtCore.SIGNAL('clicked()'), self.openFile)
         row.addWidget(self.loadLatticeButton)
         
         # open dialog
         row = self.newRow()
         self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
-        self.openLatticeDialogButton.setStatusTip("Open file")
+        self.openLatticeDialogButton.setToolTip("Open file")
         self.openLatticeDialogButton.setCheckable(0)
         self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), self.openFileDialog)
         row.addWidget(self.openLatticeDialogButton)
@@ -240,14 +240,14 @@ class LbomdRefReaderForm(GenericReaderForm):
         row.addWidget(self.latticeLabel)
         
         self.loadLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-jump.svg")), '')
-        self.loadLatticeButton.setStatusTip("Load file")
+        self.loadLatticeButton.setToolTip("Load file")
         self.connect(self.loadLatticeButton, QtCore.SIGNAL('clicked()'), self.openFile)
         row.addWidget(self.loadLatticeButton)
         
         # open dialog
         row = self.newRow()
         self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
-        self.openLatticeDialogButton.setStatusTip("Open file")
+        self.openLatticeDialogButton.setToolTip("Open file")
         self.openLatticeDialogButton.setCheckable(0)
         self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), self.openFileDialog)
         row.addWidget(self.openLatticeDialogButton)
@@ -332,14 +332,14 @@ class LbomdXYZReaderForm(GenericReaderForm):
         row.addWidget(self.refLabel)
         
         self.loadRefButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-jump.svg")), '')
-        self.loadRefButton.setStatusTip("Load ref")
+        self.loadRefButton.setToolTip("Load ref")
         self.connect(self.loadRefButton, QtCore.SIGNAL('clicked()'), lambda isRef=True: self.openFile(isRef=isRef))
         row.addWidget(self.loadRefButton)
         
         # open dialog
         row = self.newRow()
         self.openRefDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open reference")
-        self.openRefDialogButton.setStatusTip("Open ref")
+        self.openRefDialogButton.setToolTip("Open ref")
         self.openRefDialogButton.setCheckable(0)
         self.connect(self.openRefDialogButton, QtCore.SIGNAL('clicked()'), lambda isRef=True: self.openFileDialog(isRef))
         row.addWidget(self.openRefDialogButton)
@@ -354,14 +354,14 @@ class LbomdXYZReaderForm(GenericReaderForm):
         row.addWidget(self.latticeLabel)
         
         self.loadLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-jump.svg")), '')
-        self.loadLatticeButton.setStatusTip("Load file")
+        self.loadLatticeButton.setToolTip("Load file")
         self.connect(self.loadLatticeButton, QtCore.SIGNAL('clicked()'), lambda isRef=False: self.openFile(isRef=isRef))
         row.addWidget(self.loadLatticeButton)
         
         # open dialog
         row = self.newRow()
         self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
-        self.openLatticeDialogButton.setStatusTip("Open file")
+        self.openLatticeDialogButton.setToolTip("Open file")
         self.openLatticeDialogButton.setCheckable(0)
         self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), lambda isRef=False: self.openFileDialog(isRef))
         row.addWidget(self.openLatticeDialogButton)
