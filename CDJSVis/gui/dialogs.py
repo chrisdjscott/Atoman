@@ -246,14 +246,17 @@ class ElementEditor(QtGui.QDialog):
         # apply button
         applyButton = QtGui.QPushButton(QtGui.QIcon(iconPath("redo_64.png")), "Apply")
         applyButton.setStatusTip("Apply changes to current session")
+        applyButton.setToolTip("Apply changes to current session")
         applyButton.clicked.connect(self.applyChanges)
         
         saveButton = QtGui.QPushButton(QtGui.QIcon(iconPath("save_64.png")), "Save")
-        applyButton.setStatusTip("Save changes for use in future sessions")
+        saveButton.setStatusTip("Save changes for use in future sessions")
+        saveButton.setToolTip("Save changes for use in future sessions")
         saveButton.clicked.connect(self.saveChanges)
         
         resetButton = QtGui.QPushButton(QtGui.QIcon(iconPath("undo_64.png")), "Reset")
-        applyButton.setStatusTip("Reset changes to last applied")
+        resetButton.setStatusTip("Reset changes to last applied")
+        resetButton.setToolTip("Reset changes to last applied")
         resetButton.clicked.connect(self.resetChanges)
         
         buttonLayout.addWidget(applyButton)

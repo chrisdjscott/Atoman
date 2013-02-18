@@ -677,6 +677,13 @@ class MainWindow(QtGui.QMainWindow):
             rw.outputDialog.hide()
             rw.textSelector.hide()
         
+        # close all render windows?
+#        for rw in self.rendererWindows:
+#            rw.close()
+#        
+#        # open new renderer window
+#        self.addRendererWindow(ask=False)
+        
         # should probably hide stuff like elements form too!
         
         
