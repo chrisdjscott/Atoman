@@ -42,7 +42,7 @@ def separationVector(returnVector, pos1, pos2, cellDims, PBC):
     Find separation vector between to vectors.
     
     """
-    return _lib.separationVector(len(pos1), CPtrToDouble(returnVector), CPtrToDouble(pos1), CPtrToDouble(pos2), CPtrToDouble(cellDims), CPtrToInt(PBC))
+    return _lib.separationVector(len(pos1) / 3, CPtrToDouble(returnVector), CPtrToDouble(pos1), CPtrToDouble(pos2), CPtrToDouble(cellDims), CPtrToInt(PBC))
 
 ################################################################################
 
@@ -56,7 +56,7 @@ def separationMagnitude(pos1, pos2, cellDims, PBC):
     Find separation magnitude between to vectors.
     
     """
-    return _lib.separationMagnitude(len(pos1), CPtrToDouble(pos1), CPtrToDouble(pos2), CPtrToDouble(cellDims), CPtrToInt(PBC))
+    return _lib.separationMagnitude(len(pos1) / 3, CPtrToDouble(pos1), CPtrToDouble(pos2), CPtrToDouble(cellDims), CPtrToInt(PBC))
 
 ################################################################################
 
