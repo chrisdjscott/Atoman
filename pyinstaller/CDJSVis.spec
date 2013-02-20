@@ -1,6 +1,7 @@
 # -*- mode: python -*-
 
 import os
+import glob
 import platform
 import shutil
 import subprocess
@@ -37,6 +38,29 @@ coll = COLLECT( exe,
 app = BUNDLE(coll,
              name=os.path.join('dist', 'CDJSVis.app'),
              version=__version__)
+
+so_files = glob.glob("../CDJSVis/visclibs/*.so")
+so_files = [os.path.basename(fn) for fn in so_files]
+dylib_files = glob.glob("../CDJSVis/visclibs/*.dylib")
+dylib_files = [os.path.basename(fn) for fn in dylib_files]
+
+os.chdir(os.path.join("dist", "CDJSVis.app", "Contents", "MacOS"))
+
+for so_file in so_files:
+    if os.path.exists(so_file):
+        fn = so_file[:-3] + ".dylib"
+        if os.path.exists(fn):
+            print "Removing %s (%s exists)" % (fn, so_file)
+            os.unlink(fn)
+
+for dy_file in dylib_files:
+    if os.path.exists(dy_file):
+        fn = dy_file[:-6] + ".so"
+        if os.path.exists(fn):
+            print "Removing %s (%s exists)" % (fn, dy_file)
+            os.unlink(fn)
+
+os.chdir("../../../../")
 
 osname = platform.system()
 if osname == "Darwin":
