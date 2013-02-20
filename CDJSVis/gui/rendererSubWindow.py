@@ -127,6 +127,10 @@ class RendererWindow(QtGui.QWidget):
         # output dialog
         self.outputDialog = OutputDialog(self, self.mainWindow, None, index)
         
+        # refresh rdf tab if ref already loaded
+        if self.mainWindow.refLoaded:
+            self.outputDialog.rdfTab.refresh()
+        
         # text selector
         self.textSelector = dialogs.OnScreenInfoDialog(self.mainWindow, index, parent=self)
         

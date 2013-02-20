@@ -663,17 +663,6 @@ class MainWindow(QtGui.QMainWindow):
         
         for rw in self.rendererWindows:
             rw.outputDialog.rdfTab.refresh()
-        
-        return
-        
-        self.mainToolbar.tabBar.setTabEnabled(1, True)
-        self.mainToolbar.tabBar.setTabEnabled(2, True)
-        
-        # refresh filters eg specie filter
-        self.mainToolbar.filterPage.refreshAllFilters()
-        
-        # refresh rdf page (new specie list)
-        self.mainToolbar.outputPage.rdfTab.refresh()
     
     def clearReference(self):
         """

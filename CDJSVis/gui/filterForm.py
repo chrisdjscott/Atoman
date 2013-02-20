@@ -81,6 +81,10 @@ class FilterForm(QtGui.QWidget):
         
         # add a filter list
         self.addFilterList()
+        
+        # refresh if ref already loaded
+        if self.mainWindow.refLoaded:
+            self.refreshAllFilters()
     
     def showFilterSummary(self):
         """
