@@ -1016,7 +1016,7 @@ class ImageSequenceTab(QtGui.QWidget):
         if self.createMovieCheck.isChecked():
             if not self.parent.ffmpeg:
                 utilities.warnExeNotFound(self.parent, "ffmpeg")
-                self.createMovieCheck.setCheckState(0)
+                self.createMovieCheck.setCheckState(QtCore.Qt.Unchecked)
                 return
             
             self.createMovie = True
@@ -1416,7 +1416,7 @@ class ImageRotateTab(QtGui.QWidget):
         if self.createMovieCheck.isChecked():
             if not self.parent.ffmpeg:
                 utilities.warnExeNotFound(self.parent, "ffmpeg")
-                self.createMovieCheck.setCheckState(0)
+                self.createMovieCheck.setCheckState(QtCore.Qt.Unchecked)
                 return
             
             self.createMovie = True

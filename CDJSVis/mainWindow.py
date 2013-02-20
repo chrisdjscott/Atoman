@@ -555,42 +555,55 @@ class MainWindow(QtGui.QMainWindow):
         if os.path.exists("lbomd.IN"):
             f = open("lbomd.IN")
             
-            f.readline()
-            f.readline()
-            f.readline()
+            try:
+                f.readline()
+                f.readline()
+                f.readline()
+                
+                line = f.readline().strip()
+                array = line.split()
+                try:
+                    # simulation identity
+                    simIdentity = array[0]
+                    
+                    # update labels with simulation identity
+                    self.mainToolbar.inputTab.lbomdXyzWidget_input.updateFileLabelCustom("%s%04d.xyz" % (simIdentity, 0), isRef=False)
+                    self.mainToolbar.outputPage.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
+                
+                except IndexError:
+                    pass
+                
+                line = f.readline().strip()
+                array = line.split()
+                try:
+                    PBC = [0]*3
+                    PBC[0] = int(array[0])
+                    PBC[1] = int(array[1])
+                    PBC[2] = int(array[2])
+                    
+                    if PBC[0]:
+                        self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(QtCore.Qt.Checked)
+                    
+                    else:
+                        self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                    
+                    if PBC[1]:
+                        self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(QtCore.Qt.Checked)
+                    
+                    else:
+                        self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                    
+                    if PBC[2]:
+                        self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(QtCore.Qt.Checked)
+                    
+                    else:
+                        self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                
+                except IndexError:
+                    pass
             
-            line = f.readline().strip()
-            array = line.split()
-            simIdentity = array[0]
-            
-            line = f.readline().strip()
-            array = line.split()
-            PBC = [0]*3
-            PBC[0] = int(array[0])
-            PBC[1] = int(array[1])
-            PBC[2] = int(array[2])
-            
-#            self.mainToolbar.inputTab.LBOMDPage.LBOMDInputLabel.setText("%s%04d.xyz" % (simIdentity, 0))
-            self.mainToolbar.inputTab.lbomdXyzWidget_input.updateFileLabelCustom("%s%04d.xyz" % (simIdentity, 0), isRef=False)
-            self.mainToolbar.outputPage.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
-            
-            if PBC[0]:
-                self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(2)
-            
-            else:
-                self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(0)
-            
-            if PBC[1]:
-                self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(2)
-            
-            else:
-                self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(0)
-            
-            if PBC[2]:
-                self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(2)
-            
-            else:
-                self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(0)
+            finally:
+                f.close()
     
     def postFileLoaded(self, fileType, state, filename, extension):
         """

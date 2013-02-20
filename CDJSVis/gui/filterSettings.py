@@ -1699,7 +1699,7 @@ class SliceSettingsDialog(GenericSettingsDialog):
         
         """
         if self.showSlicePlaneChecked:
-            self.showSlicePlaneCheck.setCheckState(0)
+            self.showSlicePlaneCheck.setCheckState(QtCore.Qt.Unchecked)
         
         self.hide()
 
