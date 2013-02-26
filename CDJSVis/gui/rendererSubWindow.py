@@ -70,7 +70,7 @@ class RendererWindow(QtGui.QWidget):
                                            tip="Toggle axes visiblity")
         
         # reset camera to cell
-        setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="cam.png", 
+        setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="set_cam_cell.svg", 
                                            tip="Reset camera to cell")
         
         # text selector
