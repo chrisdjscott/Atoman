@@ -1189,7 +1189,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intScalarsList.append(vtk.vtkFloatArray())
     
     # make LUT
-    lut = setupLUT(refLattice.specieList, refLattice.specieRGB, colouringOptions)
+    lut = setupLUT(inputLattice.specieList, inputLattice.specieRGB, colouringOptions)
     
     # loop over interstitials, settings points
     pos = refLattice.pos
