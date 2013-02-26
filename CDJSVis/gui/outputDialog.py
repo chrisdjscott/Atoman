@@ -1098,6 +1098,9 @@ class ImageSequenceTab(QtGui.QWidget):
         progDialog.setWindowModality(QtCore.Qt.WindowModal)
         progDialog.setWindowTitle("Progress")
         progDialog.setValue(self.minIndex)
+        progDialog.show()
+        
+        QtGui.QApplication.processEvents()
         
         # loop over files
         try:

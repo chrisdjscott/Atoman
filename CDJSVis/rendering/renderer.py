@@ -10,6 +10,7 @@ import os
 import numpy as np
 import vtk
 from PIL import Image
+from PyQt4 import QtGui, QtCore
 
 from ..visutils import utilities
 from ..visclibs import output as output_c
@@ -250,19 +251,62 @@ class Renderer(object):
         camfoc = self.camera.GetFocalPoint()
         camvup = self.camera.GetViewUp()
         
+        # progress dialog
+        progDialog = QtGui.QProgressDialog("Running rotator...", "Cancel", 0, NRotations)
+        progDialog.setWindowModality(QtCore.Qt.WindowModal)
+        progDialog.setWindowTitle("Progress")
+        progDialog.setValue(0)
+        
+        progDialog.show()
+        QtGui.QApplication.processEvents()
+        
         # main loop
-        for i in xrange(NRotations):
-            # file name
-            fileprefixFull = "%s%d" % (fileprefix, i)
-            
-            # save image
-            savedFile = self.saveImage(renderType, imageFormat, fileprefixFull, overwrite, povray=povray)
-            
-            if savedFile is None:
-                return 1
-            
-            # apply rotation
-            self.camera.Azimuth(degreesPerRotation)
+        try:
+            status = 0
+            for i in xrange(NRotations):
+                # file name
+                fileprefixFull = "%s%d" % (fileprefix, i)
+                
+                # exit if cancelled
+                if progDialog.wasCanceled():
+                    status = 2
+                    break
+                
+                # save image
+                savedFile = self.saveImage(renderType, imageFormat, fileprefixFull, overwrite, povray=povray)
+                
+                if savedFile is None:
+                    status = 1
+                    break
+                
+                # exit if cancelled
+                if progDialog.wasCanceled():
+                    status = 2
+                    break
+                
+                # progress
+                progDialog.setValue(i)
+                
+                QtGui.QApplication.processEvents()
+                
+                # exit if cancelled
+                if progDialog.wasCanceled():
+                    status = 2
+                    break
+                
+                # apply rotation
+                self.camera.Azimuth(degreesPerRotation)
+                
+                # exit if cancelled
+                if progDialog.wasCanceled():
+                    status = 2
+                    break
+                
+                self.reinit()
+        
+        finally:
+            # close progress dialog
+            progDialog.close()
         
         # restore camera
         self.camera.SetFocalPoint(camfoc)
@@ -271,7 +315,7 @@ class Renderer(object):
         
         self.reinit()
         
-        return 0
+        return status
     
     def saveImage(self, renderType, imageFormat, fileprefix, overwrite, povray="povray"):
         """
