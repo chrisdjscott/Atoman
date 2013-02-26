@@ -1459,3 +1459,38 @@ class PreferencesDialog(QtGui.QDialog):
         self.matplotlibForm = MatplotlibSettingsForm(self)
         self.toolbox.addItem(self.matplotlibForm, QtGui.QIcon(iconPath("Plotter.png")), "Matplotlib")
 
+################################################################################
+
+class ConfirmCloseDialog(QtGui.QDialog):
+    """
+    Confirm close dialog.
+    
+    """
+    def __init__(self, parent=None):
+        super(ConfirmCloseDialog, self).__init__(parent)
+        
+        self.setModal(1)
+        self.setWindowTitle("Exit application?")
+        
+        layout = QtGui.QVBoxLayout(self)
+        
+        # label
+        label = QtGui.QLabel("<b>Are you sure you want to exit?</b>")
+        row = QtGui.QHBoxLayout()
+        row.addWidget(label)
+        layout.addLayout(row)
+        
+        # clear settings
+        self.clearSettingsCheck = QtGui.QCheckBox("Clear settings")
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignRight)
+        row.addWidget(self.clearSettingsCheck)
+        layout.addLayout(row)
+        
+        # buttons
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Yes | QtGui.QDialogButtonBox.No)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        
+        layout.addWidget(buttonBox)
+        

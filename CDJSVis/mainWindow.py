@@ -83,16 +83,38 @@ class MainWindow(QtGui.QMainWindow):
         self.inputState = lattice.Lattice()
         self.refState = lattice.Lattice()  
         
-        # change to home directory if running from pyinstaller bundle
-        if hasattr(sys, "_MEIPASS"):
-            os.chdir(os.environ.get("HOME"))
+        # get settings object
+        settings = QtCore.QSettings()
         
-        # window size and location
-        self.renderWindowWidth = 760 * 1.2 #760 #650
-        self.renderWindowHeight = 715 * 1.2 #570 # 715 #650
-        self.mainToolbarWidth = 350 #315
-        self.mainToolbarHeight = 460 #420
-        self.resize(self.renderWindowWidth+self.mainToolbarWidth, self.renderWindowHeight)
+        # initial directory
+        currentDir = settings.value("mainWindow/currentDirectory", os.getcwd()).toString()
+        
+        if not os.path.exists(currentDir):
+            # change to home directory if running from pyinstaller bundle
+            if hasattr(sys, "_MEIPASS"):
+                currentDir = os.environ.get("HOME")
+            
+            else:
+                currentDir = os.getcwd()
+        
+        os.chdir(currentDir)
+        
+        # toolbar size (fixed)
+        self.mainToolbarWidth = 350
+        self.mainToolbarHeight = 460
+        
+        # default window widget size
+        self.renderWindowWidth = 760 * 1.2
+        self.renderWindowHeight = 715 * 1.2
+        
+        # default size
+        windowWidth = self.renderWindowWidth+self.mainToolbarWidth
+        windowHeight = self.renderWindowHeight
+        
+        # resize
+        self.resize(settings.value("mainWindow/size", QtCore.QSize(windowWidth, windowHeight)).toSize())
+        
+        # location
         self.centre()
                 
         self.setWindowTitle("CDJSVis")
@@ -475,24 +497,79 @@ class MainWindow(QtGui.QMainWindow):
             if rw.closed:
                 self.rendererWindows.pop(i)
                 self.rendererWindowsSubWin.pop(i)
-                print "POP", i
+            
             else:
                 i += 1 
+    
+    def confirmCloseEvent(self):
+        """
+        Show a dialog to confirm closeEvent.
+        
+        """
+        dlg = dialogs.ConfirmCloseDialog(self)
+        
+        close = False
+        clearSettings = False
+        
+        reply = dlg.exec_()
+        
+        if reply:
+            close = True
+            
+            if dlg.clearSettingsCheck.isChecked():
+                clearSettings = True
+        
+        return close, clearSettings
     
     def closeEvent(self, event):
         """
         Catch attempt to close
         
         """
-        reply = QtGui.QMessageBox.question(self, 'Message', "Are you sure you want to quit", 
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+#        reply = QtGui.QMessageBox.question(self, 'Message', "Are you sure you want to quit", 
+#                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         
-        if reply == QtGui.QMessageBox.Yes:
+        close, clearSettings = self.confirmCloseEvent()
+        
+#        if reply == QtGui.QMessageBox.Yes:
+        if close:
             self.tidyUp()
+            
+            if clearSettings:
+                self.clearSettings()
+            
+            else:
+                self.saveSettings()
+            
             event.accept()
+        
         else:
             event.ignore()
+    
+    def clearSettings(self):
+        """
+        Clear settings.
         
+        """
+        # settings object
+        settings = QtCore.QSettings()
+        
+        settings.clear()
+    
+    def saveSettings(self):
+        """
+        Save settings before exit.
+        
+        """
+        # settings object
+        settings = QtCore.QSettings()
+        
+        # store current working directory
+        settings.setValue("mainWindow/currentDirectory", os.getcwd())
+        
+        # window size
+        settings.setValue("mainWindow/size", self.size())
+    
     def tidyUp(self):
         """
         Tidy up before close application

@@ -17,6 +17,8 @@ from CDJSVis.visutils.utilities import iconPath
 
 def main():
     app = QtGui.QApplication(sys.argv)
+    app.setOrganizationName("chrisdjscott")
+    app.setApplicationName("CDJSVis")
     
     mw = mainWindow.MainWindow()
     mw.setWindowIcon(QtGui.QIcon(iconPath("CDJSVis.ico")))
