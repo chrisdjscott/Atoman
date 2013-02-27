@@ -450,14 +450,14 @@ class ImageTab(QtGui.QWidget):
 #        self.overlayImage = False
         
         # check ffmpeg/povray installed
-        self.ffmpeg = utilities.checkForExe("ffmpeg")
-        self.povray = utilities.checkForExe("povray")
-        
-        if self.ffmpeg:
-            self.mainWindow.console.write("'ffmpeg' executable located at: %s" % (self.ffmpeg,))
-        
-        if self.povray:
-            self.mainWindow.console.write("'povray' executable located at: %s" % (self.povray,))
+#         self.ffmpeg = utilities.checkForExe("ffmpeg")
+#         self.povray = utilities.checkForExe("povray")
+#         
+#         if self.ffmpeg:
+#             self.mainWindow.console.write("'ffmpeg' executable located at: %s" % (self.ffmpeg,))
+#         
+#         if self.povray:
+#             self.mainWindow.console.write("'povray' executable located at: %s" % (self.povray,))
         
         imageTabLayout = QtGui.QVBoxLayout(self)
 #        imageTabLayout.setContentsMargins(0, 0, 0, 0)
@@ -587,10 +587,12 @@ class ImageTab(QtGui.QWidget):
         
         """
         if self.POVButton.isChecked():
-            if not self.povray:
+            settings = self.mainWindow.preferences.povrayForm
+            
+            if not utilities.checkForExe(settings.pathToPovray):
                 self.POVButton.setChecked(0)
                 self.VTKButton.setChecked(1)
-                utilities.warnExeNotFound(self, "povray")
+                utilities.warnExeNotFound(self, "%s (POV-Ray)" % (settings.pathToPovray,))
             
             else:
                 self.renderType = "POV"
@@ -609,6 +611,12 @@ class ImageTab(QtGui.QWidget):
         """
         log = self.mainWindow.console.write
         
+        settings = self.mainWindow.preferences.ffmpegForm
+        ffmpeg = utilities.checkForExe(settings.pathToFFmpeg)
+        if not ffmpeg:
+            utilities.warnExeNotFound(self, "%s (FFmpeg)" % (settings.pathToFFmpeg,))
+            return 2
+        
         CWD = os.getcwd()
         try:
             os.chdir(saveDir)
@@ -625,7 +633,7 @@ class ImageTab(QtGui.QWidget):
             
             saveText = os.path.basename(saveText)
             
-            command = "%s -r %d -y -i %s.%s -r %d -b %dk %s.%s" % (self.ffmpeg, framerate, saveText, 
+            command = "%s -r %d -y -i %s.%s -r %d -b %dk %s.%s" % (ffmpeg, framerate, saveText, 
                                                                   self.imageFormat, 25, bitrate, 
                                                                   outputprefix, outputsuffix)
             
@@ -735,19 +743,17 @@ class SingleImageTab(QtGui.QWidget):
         Screen capture.
         
         """
+        if self.parent.renderType == "POV":
+            settings = self.mainWindow.preferences.povrayForm
+            povray = utilities.checkForExe(settings.pathToPovray)
+            if not povray:
+                utilities.warnExeNotFound(self, "%s (POV-Ray)" % (settings.pathToPovray,))
+                return
+        
         filename = str(self.imageFileName.text())
         
         if not len(filename):
             return
-        
-        # check if in different dir
-#        head, tail = os.path.split(filename)
-        
-        # change to dir if required (for POV-Ray to work)
-#        if len(head):
-#            OWD = os.getcwd()
-#            os.chdir(head)
-#            filename = tail
         
         # show progress dialog
         if showProgress and self.parent.renderType == "POV":
@@ -761,7 +767,7 @@ class SingleImageTab(QtGui.QWidget):
             progress.show()
         
         filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                          filename, self.overwriteImage, povray=self.parent.povray)
+                                                          filename, self.overwriteImage, povray=povray)
         
         # hide progress dialog
         if showProgress and self.parent.renderType == "POV":
@@ -980,7 +986,8 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         self.createMovieCheck = QtGui.QCheckBox("Create movie")
-        if self.parent.ffmpeg:
+        settings = self.mainWindow.preferences.ffmpegForm
+        if utilities.checkForExe(settings.pathToFFmpeg):
             self.createMovieCheck.setChecked(True)
             self.createMovie = True
         else:
@@ -1014,8 +1021,10 @@ class ImageSequenceTab(QtGui.QWidget):
         
         """
         if self.createMovieCheck.isChecked():
-            if not self.parent.ffmpeg:
-                utilities.warnExeNotFound(self.parent, "ffmpeg")
+            settings = self.mainWindow.preferences.ffmpegForm
+            
+            if not utilities.checkForExe(settings.pathToFFmpeg):
+                utilities.warnExeNotFound(self, "%s (FFmpeg)" % (settings.pathToFFmpeg,))
                 self.createMovieCheck.setCheckState(QtCore.Qt.Unchecked)
                 return
             
@@ -1062,6 +1071,13 @@ class ImageSequenceTab(QtGui.QWidget):
         Run the sequencer
         
         """
+        if self.parent.renderType == "POV":
+            settings = self.mainWindow.preferences.povrayForm
+            povray = utilities.checkForExe(settings.pathToPovray)
+            if not povray:
+                utilities.warnExeNotFound(self, "%s (POV-Ray)" % (settings.pathToPovray,))
+                return
+        
         self.setFirstFileLabel()
         
         # check first file exists
@@ -1134,7 +1150,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 
                 # now save image
                 filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                                  saveName, 1, povray=self.parent.povray)
+                                                                  saveName, 1, povray=povray)
                 
                 count += 1
                 
@@ -1329,7 +1345,8 @@ class ImageRotateTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         self.createMovieCheck = QtGui.QCheckBox("Create movie")
-        if self.parent.ffmpeg:
+        settings = self.mainWindow.preferences.ffmpegForm
+        if utilities.checkForExe(settings.pathToFFmpeg):
             self.createMovieCheck.setChecked(True)
             self.createMovie = True
         else:
@@ -1361,6 +1378,13 @@ class ImageRotateTab(QtGui.QWidget):
         Start the rotator.
         
         """
+        if self.parent.renderType == "POV":
+            settings = self.mainWindow.preferences.povrayForm
+            povray = utilities.checkForExe(settings.pathToPovray)
+            if not povray:
+                utilities.warnExeNotFound(self, "%s (POV-Ray)" % (settings.pathToPovray,))
+                return
+        
         log = self.mainWindow.console.write
         log("Running rotator", 0, 0)
         
@@ -1383,7 +1407,7 @@ class ImageRotateTab(QtGui.QWidget):
         
         # send to renderer
         status = self.rendererWindow.renderer.rotateAndSaveImage(self.parent.renderType, self.parent.imageFormat, fileprefix, 
-                                                                 1, self.degreesPerRotation, povray=self.parent.povray)
+                                                                 1, self.degreesPerRotation, povray=povray)
         
         # movie?
         if status:
@@ -1417,8 +1441,10 @@ class ImageRotateTab(QtGui.QWidget):
         
         """
         if self.createMovieCheck.isChecked():
-            if not self.parent.ffmpeg:
-                utilities.warnExeNotFound(self.parent, "ffmpeg")
+            settings = self.mainWindow.preferences.ffmpegForm
+            
+            if not utilities.checkForExe(settings.pathToFFmpeg):
+                utilities.warnExeNotFound(self, "%s (FFmpeg)" % (settings.pathToFFmpeg,))
                 self.createMovieCheck.setCheckState(QtCore.Qt.Unchecked)
                 return
             

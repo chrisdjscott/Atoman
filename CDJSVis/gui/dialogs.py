@@ -15,6 +15,7 @@ from . import genericForm
 from ..atoms import elements
 from ..visutils.utilities import resourcePath, iconPath
 from ..visutils import vectors
+from ..visutils import utilities
 
 try:
     from .. import resources
@@ -1043,12 +1044,28 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
     def __init__(self, parent):
         super(FfmpegSettingsForm, self).__init__(parent)
         
+        # settings object
+        settings = QtCore.QSettings()
+        
         # default settings
         self.framerate = 10
         self.bitrate = 10000
         self.suffix = "mpg"
         self.prefix = "movie"
-                
+        
+        self.pathToFFmpeg = str(settings.value("ffmpeg/pathToFFmpeg", "ffmpeg").toString())
+        if not os.path.exists(self.pathToFFmpeg):
+            self.pathToFFmpeg = "ffmpeg"
+        
+        # path to povray
+        pathToFFmpegLineEdit = QtGui.QLineEdit(self.pathToFFmpeg)
+        pathToFFmpegLineEdit.textChanged.connect(self.pathToFFmpegChanged)
+        pathToFFmpegLineEdit.editingFinished.connect(self.pathToFFmpegEdited)
+        
+        rowLayout = self.newRow()
+        rowLayout.addWidget(QtGui.QLabel("Path to FFmpeg:"))
+        rowLayout.addWidget(pathToFFmpegLineEdit)
+        
         # framerate
         rowLayout = self.newRow()
         
@@ -1108,6 +1125,25 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         
         self.init()
     
+    def pathToFFmpegEdited(self):
+        """
+        Path to FFmpeg finished being edited.
+        
+        """
+        exe = utilities.checkForExe(self.pathToFFmpeg)
+        
+        if exe:
+            print "STORING FFMPEG PATH IN SETTINGS", exe, self.pathToFFmpeg
+            settings = QtCore.QSettings()
+            settings.setValue("ffmpeg/pathToFFmpeg", exe)
+    
+    def pathToFFmpegChanged(self, text):
+        """
+        Path to FFmpeg changed.
+        
+        """
+        self.pathToFFmpeg = str(text)
+    
     def suffixChanged(self, text):
         """
         Suffix changed
@@ -1146,12 +1182,28 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
     def __init__(self, parent):
         super(PovraySettingsForm, self).__init__(parent)
         
+        # settings object
+        settings = QtCore.QSettings()
+        
         # default settings
         self.overlayImage = True
         self.shadowless = False
         self.HRes = 800
         self.VRes = 600
         self.viewAngle = 45
+        
+        self.pathToPovray = str(settings.value("povray/pathToPovray", "povray").toString())
+        if not os.path.exists(self.pathToPovray):
+            self.pathToPovray = "povray"
+        
+        # path to povray
+        pathToPovrayLineEdit = QtGui.QLineEdit(self.pathToPovray)
+        pathToPovrayLineEdit.textChanged.connect(self.pathToPovrayChanged)
+        pathToPovrayLineEdit.editingFinished.connect(self.pathToPovrayEdited)
+        
+        rowLayout = self.newRow()
+        rowLayout.addWidget(QtGui.QLabel("Path to POV-Ray:"))
+        rowLayout.addWidget(pathToPovrayLineEdit)
         
         # overlay check box
         self.overlayImageCheck = QtGui.QCheckBox("Overlay image")
@@ -1209,7 +1261,26 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         rowLayout.addWidget(label)
         
         self.init()
+    
+    def pathToPovrayEdited(self):
+        """
+        Path to povray finished being edited.
         
+        """
+        exe = utilities.checkForExe(self.pathToPovray)
+        
+        if exe:
+            print "STORING POV PATH IN SETTINGS", exe, self.pathToPovray
+            settings = QtCore.QSettings()
+            settings.setValue("povray/pathToPovray", exe)
+    
+    def pathToPovrayChanged(self, text):
+        """
+        Path to POV-Ray changed.
+        
+        """
+        self.pathToPovray = str(text)
+    
     def viewAngleChanged(self, val):
         """
         View angle changed.
