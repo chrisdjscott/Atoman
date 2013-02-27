@@ -744,7 +744,7 @@ def povrayBond(pos, vector):
     pass
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, NVisibleForRes=None):
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, displayOptions, NVisibleForRes=None):
     """
     Make the actors for the filtered system
     
@@ -814,7 +814,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         lut.GetColor(scalar, rgb)
         
         # povray atom
-        fpov.write(povrayAtom(pos[3*index:3*index+3], lattice.specieCovalentRadius[specInd], rgb))
+        fpov.write(povrayAtom(pos[3*index:3*index+3], lattice.specieCovalentRadius[specInd] * displayOptions.atomScaleFactor, rgb))
         
     # now loop over species, making actors
     for i in xrange(NSpecies):
@@ -824,7 +824,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         atomsPolyData.GetPointData().SetScalars(atomScalarsList[i])
         
         atomsGlyphSource = vtk.vtkSphereSource()
-        atomsGlyphSource.SetRadius(lattice.specieCovalentRadius[i])
+        atomsGlyphSource.SetRadius(lattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         atomsGlyphSource.SetPhiResolution(res)
         atomsGlyphSource.SetThetaResolution(res)
         
@@ -895,7 +895,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
 
 ################################################################################
 def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 
-                       settings, mainWindow):
+                       settings, mainWindow, displayOptions):
     """
     Write defects to povray file.
     
@@ -906,8 +906,8 @@ def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisite
     refLattice = mainWindow.refState
     
     output_c.writePOVRAYDefects(povfile, vacancies, interstitials, antisites, onAntisites, inputLattice.specie, inputLattice.pos,
-                                refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius,
-                                refLattice.specieRGB, refLattice.specieCovalentRadius)
+                                refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius * displayOptions.atomScaleFactor,
+                                refLattice.specieRGB, refLattice.specieCovalentRadius * displayOptions.atomScaleFactor)
 
 
 ################################################################################
@@ -999,7 +999,8 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
 
     
 ################################################################################
-def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, mainWindow, actorsCollection, colouringOptions, filterSettings):
+def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, mainWindow, actorsCollection, 
+                                colouringOptions, filterSettings, displayOptions):
     
     NInt = len(interstitials)
     NVac = len(vacancies)
@@ -1054,7 +1055,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsPolyData.GetPointData().SetScalars(intScalarsList[i])
         
         intsGlyphSource = vtk.vtkSphereSource()
-        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i])
+        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         intsGlyphSource.SetPhiResolution(res)
         intsGlyphSource.SetThetaResolution(res)
         
@@ -1116,7 +1117,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsPolyData.GetPointData().SetScalars(intScalarsList[i])
         
         intsGlyphSource = vtk.vtkSphereSource()
-        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i])
+        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         intsGlyphSource.SetPhiResolution(res)
         intsGlyphSource.SetThetaResolution(res)
         
@@ -1168,9 +1169,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         
         vacsGlyphSource = vtk.vtkCubeSource()
         scaleVacs = 2.0 * filterSettings.vacScaleSize
-        vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         
         vacsGlyph = vtk.vtkGlyph3D()
         vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
@@ -1225,7 +1226,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsPolyData.GetPointData().SetScalars(intScalarsList[i])
         
         intsGlyphSource = vtk.vtkSphereSource()
-        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i])
+        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         intsGlyphSource.SetPhiResolution(res)
         intsGlyphSource.SetThetaResolution(res)
         
@@ -1279,9 +1280,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         
         vacsGlyphSource = vtk.vtkCubeSource()
         scaleVacs = 2.0 * filterSettings.vacScaleSize
-        vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         
         vacsGlyph = vtk.vtkGlyph3D()
         vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
@@ -1335,9 +1336,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsPolyData.GetPointData().SetScalars(intScalarsList[i])
         
         cubeGlyphSource = vtk.vtkCubeSource()
-        cubeGlyphSource.SetXLength(2.0 * refLattice.specieCovalentRadius[i])
-        cubeGlyphSource.SetYLength(2.0 * refLattice.specieCovalentRadius[i])
-        cubeGlyphSource.SetZLength(2.0 * refLattice.specieCovalentRadius[i])
+        cubeGlyphSource.SetXLength(2.0 * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        cubeGlyphSource.SetYLength(2.0 * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        cubeGlyphSource.SetZLength(2.0 * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         edges = vtk.vtkExtractEdges()
         edges.SetInputConnection(cubeGlyphSource.GetOutputPort())
         vacsGlyphSource = vtk.vtkTubeFilter()

@@ -58,6 +58,7 @@ class Filterer(object):
         
         self.colouringOptions = self.parent.colouringOptions
         self.bondsOptions = self.parent.bondsOptions
+        self.displayOptions = self.parent.displayOptions
         self.scalarBarAdded = False
         self.scalarBar = None
         
@@ -260,7 +261,8 @@ class Filterer(object):
                 pass
             
             else:
-                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.mainWindow, self.actorsCollection, self.colouringOptions, filterSettings)
+                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.mainWindow, 
+                                                                self.actorsCollection, self.colouringOptions, filterSettings, self.displayOptions)
                 
                 self.vacancySpecieCount = counters[0]
                 self.interstitialSpecieCount = counters[1]
@@ -269,7 +271,7 @@ class Filterer(object):
                 
                 # write pov-ray file too
                 povfile = "pipeline%d_defects%d.pov" % (self.pipelineIndex, self.parent.tab)
-                renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow)
+                renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow, self.displayOptions)
             
             self.colouringOptions.colourBy = colourBy
             
@@ -289,7 +291,8 @@ class Filterer(object):
                     NVisibleForRes = None
                 
                 self.scalarBar, visSpecCount = renderer.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
-                                                                                    self.colouringOptions, povfile, self.scalars, NVisibleForRes=NVisibleForRes)
+                                                                                    self.colouringOptions, povfile, self.scalars, self.displayOptions, 
+                                                                                    NVisibleForRes=NVisibleForRes)
                 
                 self.visibleSpecieCount = visSpecCount
                 
