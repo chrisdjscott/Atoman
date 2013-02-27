@@ -89,9 +89,10 @@ class MainWindow(QtGui.QMainWindow):
         # initial directory
         currentDir = settings.value("mainWindow/currentDirectory", os.getcwd()).toString()
         
-        if hasattr(sys, "_MEIPASS") and not os.path.exists(currentDir):
-            # change to home directory if running from pyinstaller bundle
-            currentDir = os.environ.get("HOME")
+        if hasattr(sys, "_MEIPASS"):
+            if not os.path.exists(currentDir):
+                # change to home directory if running from pyinstaller bundle
+                currentDir = os.environ.get("HOME")
         
         else:
             currentDir = os.getcwd()
