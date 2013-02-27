@@ -598,6 +598,11 @@ class Renderer(object):
         Find extremes of non-white area.
         
         """
+        if self.parent.blackBackground:
+            R = G = B = 0
+        else:
+            R = G = B = 255
+        
         xmax = 0
         ymax = 0
         xmin = 1000
@@ -606,7 +611,7 @@ class Renderer(object):
             for j in xrange(j0, j1):
                 r,g,b = im.getpixel((i, j))
                 
-                if r != 255 and g != 255 and b != 255:
+                if r != R and g != G and b != B:
                     if i > xmax:
                         xmax = i
                     
@@ -634,6 +639,11 @@ class Renderer(object):
         b[1] = lattice.cellDims[1]
         b[2] = lattice.cellDims[2]
         
+        if self.parent.blackBackground:
+            R = G = B = 1
+        else:
+            R = G = B = 0
+        
         filehandle.write("#declare R = 0.15;\n")
         filehandle.write("#declare myObject = union {\n")
         filehandle.write("    sphere { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
@@ -656,7 +666,7 @@ class Renderer(object):
         filehandle.write("    cylinder { <"+str(a[0])+","+str(b[1])+","+str(a[2])+">, <"+str(a[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
         filehandle.write("    cylinder { <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, <"+str(b[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
         filehandle.write("    cylinder { <"+str(b[0])+","+str(b[1])+","+str(a[2])+">, <"+str(b[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    texture { pigment { color rgb <0,0,0> }\n")
+        filehandle.write("    texture { pigment { color rgb <%f,%f,%f> }\n" % (R, G, B))
         filehandle.write("              finish { diffuse 0.9 phong 1 } } }\n")
         filehandle.write("object{myObject}\n")
     
@@ -676,12 +686,17 @@ class Renderer(object):
         else:
             shadowless = ""
         
+        if self.parent.blackBackground:
+            R = G = B = 0
+        else:
+            R = G = B = 1
+        
         string = "camera { perspective location <%f,%f,%f> look_at <%f,%f,%f> angle %f\n" % (- campos[0], campos[1], campos[2],
                                                                                              - focalPoint[0], focalPoint[1], focalPoint[2],
                                                                                              angle)
         string += "sky <%f,%f,%f> }\n" % (- viewup[0], viewup[1], viewup[2])
         string += "light_source { <%f,%f,%f> color rgb <1,1,1> %s}\n" % (- campos[0], campos[1], campos[2], shadowless)
-        string += "background { color rgb <1,1,1> }\n"
+        string += "background { color rgb <%f,%f,%f> }\n" % (R, G, B)
         
         filehandle.write(string)
         

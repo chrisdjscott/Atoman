@@ -48,6 +48,8 @@ class RendererWindow(QtGui.QWidget):
         
         self.slicePlaneActor = None
         
+        self.blackBackground = False
+        
         # layout
         layout = QtGui.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -82,7 +84,12 @@ class RendererWindow(QtGui.QWidget):
         showOutputDialogAction = self.createAction("Output dialog", slot=self.showOutputDialog, icon="loadandsave-icon.svg",
                                                    tip="Open output dialog")
         
-        self.addActions(toolbar, (showCellAction, showAxesAction, setCamToCellAction, None, 
+        # background colour
+        backgroundColourAction = self.createAction("Toggle background colour", slot=self.toggleBackgroundColour, 
+                                                   icon="preferences-desktop-screensaver.svg",
+                                                   tip="Toggle background colour")
+        
+        self.addActions(toolbar, (showCellAction, showAxesAction, setCamToCellAction, backgroundColourAction, None, 
                                   openTextSelectorAction, None, showOutputDialogAction))
         
         # VTK render window
@@ -147,6 +154,41 @@ class RendererWindow(QtGui.QWidget):
         row.addWidget(self.analysisPipelineCombo)
         
         layout.addLayout(row)
+    
+    def toggleBackgroundColour(self):
+        """
+        Toggle background colour between black and white.
+        
+        """
+        if self.blackBackground:
+            self.blackBackground = False
+            
+            # background
+            self.vtkRen.SetBackground(1, 1, 1)
+            
+            # cell frame
+            self.renderer.latticeFrame.setColour((0, 0, 0))
+            
+            # text
+            self.refreshOnScreenInfo()
+            
+            # reinit
+            self.renderer.reinit()
+        
+        else:
+            self.blackBackground = True
+            
+            # background
+            self.vtkRen.SetBackground(0, 0, 0)
+            
+            # cell frame
+            self.renderer.latticeFrame.setColour((1, 1, 1))
+            
+            # text
+            self.refreshOnScreenInfo()
+            
+            # reinit
+            self.renderer.reinit()
     
     def initPipelines(self):
         """
@@ -643,6 +685,7 @@ class RendererWindow(QtGui.QWidget):
                 if item == "Visible specie count":
                     for j, specline in enumerate(line):
                         r, g, b = self.mainWindow.inputState.specieRGB[j]
+                        r, g, b = self.checkTextRGB(r, g, b)
                         
                         if settings.textPosition == "Top left":
                             xpos = topxLeft
@@ -664,6 +707,7 @@ class RendererWindow(QtGui.QWidget):
                 elif item == "Defect count":
                     for specline in line:
                         r = g = b = 0
+                        r, g, b = self.checkTextRGB(r, g, b)
                         
                         if settings.textPosition == "Top left":
                             xpos = topxLeft
@@ -686,6 +730,7 @@ class RendererWindow(QtGui.QWidget):
                     for array in line:
                         lineToAdd = array[0]
                         r, g, b = array[1]
+                        r, g, b = self.checkTextRGB(r, g, b)
                         
                         if settings.textPosition == "Top left":
                             xpos = topxLeft
@@ -706,6 +751,7 @@ class RendererWindow(QtGui.QWidget):
                 
                 else:
                     r = g = b = 0
+                    r, g, b = self.checkTextRGB(r, g, b)
                     
                     if settings.textPosition == "Top left":
                         xpos = topxLeft
@@ -740,6 +786,21 @@ class RendererWindow(QtGui.QWidget):
             actor = self.onScreenInfoActors.GetNextItem()
         
         self.vtkRenWinInteract.ReInitialize()
+    
+    def checkTextRGB(self, r, g, b):
+        """
+        Check rgb values.
+        
+        """
+        if self.blackBackground:
+            if r == g == b == 0:
+                r = b = g = 1
+        
+        else:
+            if r == g == b == 1:
+                r = b = g = 0
+        
+        return r, g, b
     
     def closeEvent(self, event):
         """
