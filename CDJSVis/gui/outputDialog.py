@@ -750,6 +750,9 @@ class SingleImageTab(QtGui.QWidget):
                 utilities.warnExeNotFound(self, "%s (POV-Ray)" % (settings.pathToPovray,))
                 return
         
+        else:
+            povray = ""
+        
         filename = str(self.imageFileName.text())
         
         if not len(filename):
@@ -1078,6 +1081,9 @@ class ImageSequenceTab(QtGui.QWidget):
                 utilities.warnExeNotFound(self, "%s (POV-Ray)" % (settings.pathToPovray,))
                 return
         
+        else:
+            povray = ""
+        
         self.setFirstFileLabel()
         
         # check first file exists
@@ -1384,6 +1390,9 @@ class ImageRotateTab(QtGui.QWidget):
             if not povray:
                 utilities.warnExeNotFound(self, "%s (POV-Ray)" % (settings.pathToPovray,))
                 return
+        
+        else:
+            povray = ""
         
         log = self.mainWindow.console.write
         log("Running rotator", 0, 0)

@@ -9,6 +9,7 @@ import sys
 import shutil
 import platform
 import tempfile
+import traceback
 
 from PyQt4 import QtGui, QtCore
 from PyQt4.pyqtconfig import Configuration as PyQt4Config
@@ -87,10 +88,10 @@ class MainWindow(QtGui.QMainWindow):
         settings = QtCore.QSettings()
         
         # initial directory
-        currentDir = settings.value("mainWindow/currentDirectory", os.getcwd()).toString()
+        currentDir = settings.value("mainWindow/currentDirectory", "").toString()
         
         if hasattr(sys, "_MEIPASS"):
-            if not os.path.exists(currentDir):
+            if not len(currentDir) or not os.path.exists(currentDir):
                 # change to home directory if running from pyinstaller bundle
                 currentDir = os.environ.get("HOME")
         
@@ -644,10 +645,12 @@ class MainWindow(QtGui.QMainWindow):
                     simIdentity = array[0]
                     
                     # update labels with simulation identity
-                    self.mainToolbar.inputTab.lbomdXyzWidget_input.updateFileLabelCustom("%s%04d.xyz" % (simIdentity, 0), isRef=False)
-                    self.mainToolbar.outputPage.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
+                    self.loadInputDialog.lbomdXyzWidget_input.updateFileLabelCustom("%s%04d.xyz" % (simIdentity, 0), isRef=False)
+                    for rw in self.rendererWindows:
+                        rw.outputDialog.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
                 
                 except IndexError:
+                    self.console.write("WARNING: INDEX ERROR 1 (check lbomd.IN format)")
                     pass
                 
                 line = f.readline().strip()
@@ -659,25 +662,28 @@ class MainWindow(QtGui.QMainWindow):
                     PBC[2] = int(array[2])
                     
                     if PBC[0]:
-                        self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(QtCore.Qt.Checked)
+                        self.loadInputDialog.PBCXCheckBox.setCheckState(QtCore.Qt.Checked)
                     
                     else:
-                        self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                        self.loadInputDialog.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
                     
                     if PBC[1]:
-                        self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(QtCore.Qt.Checked)
+                        self.loadInputDialog.PBCYCheckBox.setCheckState(QtCore.Qt.Checked)
                     
                     else:
-                        self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                        self.loadInputDialog.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
                     
                     if PBC[2]:
-                        self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(QtCore.Qt.Checked)
+                        self.loadInputDialog.PBCZCheckBox.setCheckState(QtCore.Qt.Checked)
                     
                     else:
-                        self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                        self.loadInputDialog.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
                 
                 except IndexError:
-                    pass
+                    self.console.write("WARNING: INDEX ERROR 2 (check lbomd.IN format)")
+            
+            except Exception as e:
+                self.displayError("Read lbomd.IN failed with error:\n\n%s" % "".join(traceback.format_exception(*sys.exc_info())))
             
             finally:
                 f.close()

@@ -82,15 +82,16 @@ class RendererWindow(QtGui.QWidget):
         
         # output dialog
         showOutputDialogAction = self.createAction("Output dialog", slot=self.showOutputDialog, icon="loadandsave-icon.svg",
-                                                   tip="Open output dialog")
+                                                   tip="Show output dialog")
         
         # background colour
         backgroundColourAction = self.createAction("Toggle background colour", slot=self.toggleBackgroundColour, 
                                                    icon="preferences-desktop-screensaver.svg",
                                                    tip="Toggle background colour")
         
-        self.addActions(toolbar, (showCellAction, showAxesAction, setCamToCellAction, backgroundColourAction, None, 
-                                  openTextSelectorAction, None, showOutputDialogAction))
+        self.addActions(toolbar, (showCellAction, showAxesAction, backgroundColourAction, None, 
+                                  setCamToCellAction, None, 
+                                  openTextSelectorAction, showOutputDialogAction))
         
         # VTK render window
         self.vtkRenWin = vtk.vtkRenderWindow()
