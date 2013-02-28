@@ -27,11 +27,12 @@ class GenericLatticeReader(object):
     Base lattice reader object.
     
     """
-    def __init__(self, tmpLocation, log, displayWarning):
+    def __init__(self, tmpLocation, log, displayWarning, displayError):
         self.tmpLocation = tmpLocation
         self.log = log
         self.currentFile = None
         self.displayWarning = displayWarning
+        self.displayError = displayError
     
     def checkForZipped(self, filename):
         """
@@ -131,8 +132,8 @@ class LbomdXYZReader(GenericLatticeReader):
     This is harder since they must be linked with a reference!
     
     """
-    def __init__(self, tmpLocation, log, displayWarning):
-        super(LbomdXYZReader, self).__init__(tmpLocation, log, displayWarning)
+    def __init__(self, tmpLocation, log, displayWarning, displayError):
+        super(LbomdXYZReader, self).__init__(tmpLocation, log, displayWarning, displayError)
     
     def readFile(self, xyzfilename, refState, rouletteIndex=None):
         """
@@ -242,8 +243,8 @@ class LbomdRefReader(GenericLatticeReader):
     Read LBOMD animation reference files.
     
     """
-    def __init__(self, tmpLocation, log, displayWarning):
-        super(LbomdRefReader, self).__init__(tmpLocation, log, displayWarning)
+    def __init__(self, tmpLocation, log, displayWarning, displayError):
+        super(LbomdRefReader, self).__init__(tmpLocation, log, displayWarning, displayError)
     
     def readFileMain(self, filename, rouletteIndex):
         """
@@ -325,8 +326,8 @@ class LbomdDatReader(GenericLatticeReader):
     Reads LBOMD lattice files.
     
     """
-    def __init__(self, tmpLocation, log, displayWarning):
-        super(LbomdDatReader, self).__init__(tmpLocation, log, displayWarning)
+    def __init__(self, tmpLocation, log, displayWarning, displayError):
+        super(LbomdDatReader, self).__init__(tmpLocation, log, displayWarning, displayError)
         
         self.intRegex = re.compile(r'[0-9]+')
     

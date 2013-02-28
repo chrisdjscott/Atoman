@@ -134,7 +134,8 @@ class LbomdDatReaderForm(GenericReaderForm):
         self.fileFormatString = "Lattice files (*.dat *.dat.bz2 *.dat.gz)"
         
         # reader
-        self.latticeReader = latticeReaders.LbomdDatReader(self.mainWindow.tmpDirectory, self.mainWindow.console.write, self.mainWindow.displayWarning)
+        self.latticeReader = latticeReaders.LbomdDatReader(self.mainWindow.tmpDirectory, self.mainWindow.console.write, self.mainWindow.displayWarning, 
+                                                           self.mainWindow.displayError)
         
         self.show()
         
@@ -226,7 +227,8 @@ class LbomdRefReaderForm(GenericReaderForm):
         
         self.fileFormatString = "REF files (*.xyz *.xyz.bz2 *.xyz.gz)"
         
-        self.latticeReader = latticeReaders.LbomdRefReader(self.mainWindow.tmpDirectory, self.mainWindow.console.write, self.mainWindow.displayWarning)
+        self.latticeReader = latticeReaders.LbomdRefReader(self.mainWindow.tmpDirectory, self.mainWindow.console.write, self.mainWindow.displayWarning, 
+                                                           self.mainWindow.displayError)
         
         self.show()
         
@@ -317,8 +319,10 @@ class LbomdXYZReaderForm(GenericReaderForm):
         self.fileFormatString = "XYZ files (*.xyz *.xyz.bz2 *.xyz.gz)"
         self.fileFormatStringRef = "XYZ files (*.xyz *.xyz.bz2 *.xyz.gz)"
         
-        self.latticeReader = latticeReaders.LbomdXYZReader(self.mainWindow.tmpDirectory, self.mainWindow.console.write, self.mainWindow.displayWarning)
-        self.refReader = latticeReaders.LbomdRefReader(self.mainWindow.tmpDirectory, self.mainWindow.console.write, self.mainWindow.displayWarning)
+        self.latticeReader = latticeReaders.LbomdXYZReader(self.mainWindow.tmpDirectory, self.mainWindow.console.write, self.mainWindow.displayWarning, 
+                                                           self.mainWindow.displayError)
+        self.refReader = latticeReaders.LbomdRefReader(self.mainWindow.tmpDirectory, self.mainWindow.console.write, self.mainWindow.displayWarning, 
+                                                       self.mainWindow.displayError)
         
         self.show()
         

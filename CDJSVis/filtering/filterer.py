@@ -1,6 +1,6 @@
 
 """
-The filter tab for the main toolbar
+The filterer object.
 
 @author: Chris Scott
 
