@@ -41,6 +41,14 @@ def resourcePath(relative):
     return path
 
 ################################################################################
+def imagePath(image):
+    """
+    Return full path to given image.
+    
+    """
+    return os.path.join(":/images", image)
+
+################################################################################
 def iconPath(icon):
     """
     Return full path to given icon.
