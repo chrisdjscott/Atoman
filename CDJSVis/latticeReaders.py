@@ -145,6 +145,8 @@ class LbomdXYZReader(GenericLatticeReader):
 #            print "ALREADY LOADED"
 #            return -4, None
         
+        self.log("Reading file: %s" % (xyzfilename,), 0, 0)
+        
         # check input exists, unzip if necessary
         filepath, zipFlag = self.checkForZipped(xyzfilename)
         if zipFlag == -1:
@@ -209,6 +211,8 @@ class LbomdXYZReader(GenericLatticeReader):
         state.reset(NAtoms)
         state.simTime = simTime
         
+        self.log("%d atoms" % (NAtoms,), 0, 1)
+        
         tmpForceArray = np.empty(3, np.float64)
         
         # call clib
@@ -232,6 +236,9 @@ class LbomdXYZReader(GenericLatticeReader):
         state.specieCovalentRadius = copy.deepcopy(refLattice.specieCovalentRadius)
         state.specieRGB = copy.deepcopy(refLattice.specieRGB)
         state.specieAtomicNumber = copy.deepcopy(refLattice.specieAtomicNumber)
+        
+        for i in xrange(len(state.specieList)):
+            self.log("%d %s (%s) atoms" % (state.specieCount[i], state.specieList[i], elements.atomName(state.specieList[i])), 0, 2)
         
         return 0, state
         
