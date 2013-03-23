@@ -1053,7 +1053,7 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         self.suffix = "mpg"
         self.prefix = "movie"
         
-        self.pathToFFmpeg = str(settings.value("ffmpeg/pathToFFmpeg", "ffmpeg").toString())
+        self.pathToFFmpeg = str(settings.value("ffmpeg/pathToFFmpeg", "ffmpeg"))
         if not os.path.exists(self.pathToFFmpeg):
             self.pathToFFmpeg = "ffmpeg"
         
@@ -1192,7 +1192,7 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         self.VRes = 600
         self.viewAngle = 45
         
-        self.pathToPovray = str(settings.value("povray/pathToPovray", "povray").toString())
+        self.pathToPovray = str(settings.value("povray/pathToPovray", "povray"))
         if not os.path.exists(self.pathToPovray):
             self.pathToPovray = "povray"
         

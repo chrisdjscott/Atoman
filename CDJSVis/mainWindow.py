@@ -88,7 +88,7 @@ class MainWindow(QtGui.QMainWindow):
         settings = QtCore.QSettings()
         
         # initial directory
-        currentDir = settings.value("mainWindow/currentDirectory", "").toString()
+        currentDir = str(settings.value("mainWindow/currentDirectory", ""))
         
         if hasattr(sys, "_MEIPASS"):
             if not len(currentDir) or not os.path.exists(currentDir):
@@ -113,7 +113,7 @@ class MainWindow(QtGui.QMainWindow):
         windowHeight = self.renderWindowHeight
         
         # resize
-        self.resize(settings.value("mainWindow/size", QtCore.QSize(windowWidth, windowHeight)).toSize())
+        self.resize(settings.value("mainWindow/size", QtCore.QSize(windowWidth, windowHeight)))
         
         # location
         self.centre()
