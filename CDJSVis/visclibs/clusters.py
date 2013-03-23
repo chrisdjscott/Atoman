@@ -28,7 +28,14 @@ if osname == "Darwin":
         _lib = CDLL(os.path.join(os.path.dirname(__file__), "_clusters.dylib"))
 
 elif osname == "Linux":
-    _lib = CDLL("_clusters.so")
+    try:
+        if hasattr(sys, "_MEIPASS"):
+            _lib = CDLL(os.path.join(sys._MEIPASS, "_clusters.so"))
+        else:
+            _lib = CDLL("_cluster.so")
+    except OSError:
+        _lib = CDLL(os.path.join(os.path.dirname(__file__), "_clusters.so"))
+
 
 ################################################################################
 

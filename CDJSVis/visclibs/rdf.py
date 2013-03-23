@@ -28,7 +28,13 @@ if osname == "Darwin":
         _lib = CDLL(os.path.join(os.path.dirname(__file__), "_rdf.dylib"))
 
 elif osname == "Linux":
-    _lib = CDLL("_rdf.so")
+    try:
+        if hasattr(sys, "_MEIPASS"):
+            _lib = CDLL(os.path.join(sys._MEIPASS, "_rdf.so"))
+        else:
+            _lib = CDLL("_rdf.so")
+    except OSError:
+        _lib = CDLL(os.path.join(os.path.dirname(__file__), "_rdf.so"))
 
 
 # calculate bonds prototype

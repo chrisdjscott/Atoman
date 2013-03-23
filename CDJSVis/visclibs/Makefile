@@ -20,7 +20,7 @@ endif
 # linux - ubuntu or hydra
 ifeq (Linux, $(shell uname -s))
     # compiler flags
-    CCLINKFLAGS =   -shared -flat_namespace
+    CCLINKFLAGS =   -shared # -flat_namespace
 	CCFLAGS = -c -O3 -fPIC
 	CC = gcc
 	
