@@ -332,11 +332,11 @@ class FilterList(QtGui.QWidget):
         # find which one is selected
         row = self.listItems.currentRow()
         
-        if not len(self.listItems) or row < 0:
+        if not self.listItems.count() or row < 0:
             return
         
         newRow = row + 1
-        if newRow == len(self.listItems):
+        if newRow == self.listItems.count():
             return
         
         self.listItems.insertItem(newRow, self.listItems.takeItem(row))
@@ -355,7 +355,7 @@ class FilterList(QtGui.QWidget):
         # find which one is selected
         row = self.listItems.currentRow()
         
-        if not len(self.listItems) or row < 0:
+        if not self.listItems.count() or row < 0:
             return
         
         newRow = row - 1
@@ -420,7 +420,9 @@ class FilterList(QtGui.QWidget):
         # find which one is selected
         row = self.listItems.currentRow()
         
-        if not len(self.listItems) or row < 0:
+        print self.listItems.count(), type(self.listItems.count())
+        
+        if not self.listItems.count() or row < 0:
             return
                 
         # remove it from lists
