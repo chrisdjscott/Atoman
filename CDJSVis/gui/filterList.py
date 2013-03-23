@@ -420,8 +420,6 @@ class FilterList(QtGui.QWidget):
         # find which one is selected
         row = self.listItems.currentRow()
         
-        print self.listItems.count(), type(self.listItems.count())
-        
         if not self.listItems.count() or row < 0:
             return
                 
