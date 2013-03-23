@@ -6,6 +6,8 @@ Module for rendering
 
 """
 import os
+import sys
+import shutil
 
 import numpy as np
 import vtk
@@ -433,6 +435,7 @@ class Renderer(object):
                 command = "%s %s" % (povray, povIniFile)
                 output, stderr, status = utilities.runSubProcess(command)
                 if status:
+                    print "STDOUT:", output
                     print "STDERR:", stderr
                     return None
                 
@@ -449,9 +452,9 @@ class Renderer(object):
             
             # rename tmp image file to where it should be
             try:
-                os.rename(os.path.join(self.mainWindow.tmpDirectory, tmpPovOutputFile), filename)
-            except OSError:
-                print "ERROR COPYING POV FILE"
+                shutil.move(os.path.join(self.mainWindow.tmpDirectory, tmpPovOutputFile), filename)
+            except:
+                print "ERROR COPYING POV FILE", sys.exc_info() 
                         
             # remove image files
             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.pov" % renIndex))
@@ -895,7 +898,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
 
 ################################################################################
 def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 
-                       settings, mainWindow, displayOptions):
+                       settings, mainWindow, displayOptions, splitInterstitials):
     """
     Write defects to povray file.
     
@@ -907,7 +910,7 @@ def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisite
     
     output_c.writePOVRAYDefects(povfile, vacancies, interstitials, antisites, onAntisites, inputLattice.specie, inputLattice.pos,
                                 refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius * displayOptions.atomScaleFactor,
-                                refLattice.specieRGB, refLattice.specieCovalentRadius * displayOptions.atomScaleFactor)
+                                refLattice.specieRGB, refLattice.specieCovalentRadius * displayOptions.atomScaleFactor, splitInterstitials)
 
 
 ################################################################################

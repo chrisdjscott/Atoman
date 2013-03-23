@@ -112,7 +112,7 @@ void writePOVRAYAtoms(char *filename, int specieDim, int *specie, int posDim, do
  *******************************************************************************/
 int writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int *ints, int antsDim, int *ants, int onAntsDim, int *onAnts,
                        int *specie, double *pos, int *refSpecie, double *refPos, double *specieRGB, double *specieCovRad, double *refSpecieRGB,
-                       double* refSpecieCovRad)
+                       double* refSpecieCovRad, int splitIntsDim, int *splitInts)
 {
 	int i, index, specieIndex;
 	FILE *OUTFILE;
@@ -173,6 +173,33 @@ int writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int 
 						specieRGB[specieIndex*3+2]);
 	}
 
+	/* write split interstitials */
+	for (i=0; i<splitIntsDim; i++)
+	{
+		/* vacancy/bond */
+		index = splitInts[3*i];
+		specieIndex = refSpecie[index];
+		
+		addPOVRAYCube(OUTFILE, - refPos[3*index], refPos[3*index+1], refPos[3*index+2], refSpecieCovRad[specieIndex],
+								refSpecieRGB[specieIndex*3+0], refSpecieRGB[specieIndex*3+1],
+								refSpecieRGB[specieIndex*3+2], 0.2);
+		
+		/* first interstitial atom */
+		index = splitInts[3*i+1];
+		specieIndex = specie[index];
+		
+		addPOVRAYSphere(OUTFILE, - pos[3*index], pos[3*index+1], pos[3*index+2], specieCovRad[specieIndex],
+								specieRGB[specieIndex*3+0], specieRGB[specieIndex*3+1],
+								specieRGB[specieIndex*3+2]);
+		
+		/* second interstitial atom */
+		index = splitInts[3*i+2];
+		specieIndex = specie[index];
+		
+		addPOVRAYSphere(OUTFILE, - pos[3*index], pos[3*index+1], pos[3*index+2], specieCovRad[specieIndex],
+								specieRGB[specieIndex*3+0], specieRGB[specieIndex*3+1],
+								specieRGB[specieIndex*3+2]);
+	}
 
 	fclose(OUTFILE);
 }

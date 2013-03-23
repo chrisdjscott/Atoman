@@ -271,7 +271,8 @@ class Filterer(object):
                 
                 # write pov-ray file too
                 povfile = "pipeline%d_defects%d.pov" % (self.pipelineIndex, self.parent.tab)
-                renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow, self.displayOptions)
+                renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow, 
+                                            self.displayOptions, splitInterstitials)
             
             self.colouringOptions.colourBy = colourBy
             
