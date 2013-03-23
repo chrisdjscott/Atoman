@@ -28,7 +28,13 @@ if osname == "Darwin":
         _bonds = CDLL(os.path.join(os.path.dirname(__file__), "_bonds.dylib"))
 
 elif osname == "Linux":
-    _bonds = CDLL("_bonds.so")
+    try:
+        if hasattr(sys, "_MEIPASS"):
+            _bonds = CDLL(os.path.join(sys._MEIPASS, "_bonds.so"))
+        else:
+            _bonds = CDLL("_bonds.so")
+    except OSError:
+        _bonds = CDLL(os.path.join(os.path.dirname(__file__), "_bonds.so"))
 
 
 # calculate bonds prototype

@@ -28,7 +28,13 @@ if osname == "Darwin":
         _lib = CDLL(os.path.join(os.path.dirname(__file__), "_vectors.dylib"))
 
 elif osname == "Linux":
-    _lib = CDLL("_vectors.so")
+    try:
+        if hasattr(sys, "_MEIPASS"):
+            _lib = CDLL(os.path.join(sys._MEIPASS, "_vectors.so"))
+        else:
+            _lib = CDLL("_vectors.so")
+    except OSError:
+        _lib = CDLL(os.path.join(os.path.dirname(__file__), "_vectors.so"))
 
 ################################################################################
 

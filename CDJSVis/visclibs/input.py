@@ -28,7 +28,13 @@ if osname == "Darwin":
         _lib = CDLL(os.path.join(os.path.dirname(__file__), "_input.dylib"))
 
 elif osname == "Linux":
-    _lib = CDLL("_input.so")
+    try:
+        if hasattr(sys, "_MEIPASS"):
+            _lib = CDLL(os.path.join(sys._MEIPASS, "_input.so"))
+        else:
+            _lib = CDLL("_input.so")
+    except OSError:
+        _lib = CDLL(os.path.join(os.path.dirname(__file__), "_input.so"))
 
 ################################################################################
 
