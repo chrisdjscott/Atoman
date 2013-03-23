@@ -74,5 +74,7 @@
     <file>help/output.html</file>
     <file>help/installation.html</file>
     <file>help/changelog.html</file>
+    
+    <file>images/splash_loading.png</file>
 </qresource>
 </RCC>

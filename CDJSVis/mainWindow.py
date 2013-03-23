@@ -9,6 +9,7 @@ import sys
 import shutil
 import platform
 import tempfile
+import traceback
 
 from PySide import QtGui, QtCore
 import PySide
@@ -83,16 +84,38 @@ class MainWindow(QtGui.QMainWindow):
         self.inputState = lattice.Lattice()
         self.refState = lattice.Lattice()  
         
-        # change to home directory if running from pyinstaller bundle
-        if hasattr(sys, "_MEIPASS"):
-            os.chdir(os.environ.get("HOME"))
+        # get settings object
+        settings = QtCore.QSettings()
         
-        # window size and location
-        self.renderWindowWidth = 760 * 1.2 #760 #650
-        self.renderWindowHeight = 715 * 1.2 #570 # 715 #650
-        self.mainToolbarWidth = 350 #315
-        self.mainToolbarHeight = 460 #420
-        self.resize(self.renderWindowWidth+self.mainToolbarWidth, self.renderWindowHeight)
+        # initial directory
+        currentDir = settings.value("mainWindow/currentDirectory", "").toString()
+        
+        if hasattr(sys, "_MEIPASS"):
+            if not len(currentDir) or not os.path.exists(currentDir):
+                # change to home directory if running from pyinstaller bundle
+                currentDir = os.environ.get("HOME")
+        
+        else:
+            currentDir = os.getcwd()
+        
+        os.chdir(currentDir)
+        
+        # toolbar size (fixed)
+        self.mainToolbarWidth = 350
+        self.mainToolbarHeight = 460
+        
+        # default window widget size
+        self.renderWindowWidth = 760 * 1.2
+        self.renderWindowHeight = 715 * 1.2
+        
+        # default size
+        windowWidth = self.renderWindowWidth+self.mainToolbarWidth
+        windowHeight = self.renderWindowHeight
+        
+        # resize
+        self.resize(settings.value("mainWindow/size", QtCore.QSize(windowWidth, windowHeight)).toSize())
+        
+        # location
         self.centre()
                 
         self.setWindowTitle("CDJSVis")
@@ -477,24 +500,79 @@ class MainWindow(QtGui.QMainWindow):
             if rw.closed:
                 self.rendererWindows.pop(i)
                 self.rendererWindowsSubWin.pop(i)
-                print "POP", i
+            
             else:
                 i += 1 
+    
+    def confirmCloseEvent(self):
+        """
+        Show a dialog to confirm closeEvent.
+        
+        """
+        dlg = dialogs.ConfirmCloseDialog(self)
+        
+        close = False
+        clearSettings = False
+        
+        reply = dlg.exec_()
+        
+        if reply:
+            close = True
+            
+            if dlg.clearSettingsCheck.isChecked():
+                clearSettings = True
+        
+        return close, clearSettings
     
     def closeEvent(self, event):
         """
         Catch attempt to close
         
         """
-        reply = QtGui.QMessageBox.question(self, 'Message', "Are you sure you want to quit", 
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+#        reply = QtGui.QMessageBox.question(self, 'Message', "Are you sure you want to quit", 
+#                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         
-        if reply == QtGui.QMessageBox.Yes:
+        close, clearSettings = self.confirmCloseEvent()
+        
+#        if reply == QtGui.QMessageBox.Yes:
+        if close:
             self.tidyUp()
+            
+            if clearSettings:
+                self.clearSettings()
+            
+            else:
+                self.saveSettings()
+            
             event.accept()
+        
         else:
             event.ignore()
+    
+    def clearSettings(self):
+        """
+        Clear settings.
         
+        """
+        # settings object
+        settings = QtCore.QSettings()
+        
+        settings.clear()
+    
+    def saveSettings(self):
+        """
+        Save settings before exit.
+        
+        """
+        # settings object
+        settings = QtCore.QSettings()
+        
+        # store current working directory
+        settings.setValue("mainWindow/currentDirectory", os.getcwd())
+        
+        # window size
+        settings.setValue("mainWindow/size", self.size())
+    
     def tidyUp(self):
         """
         Tidy up before close application
@@ -557,42 +635,60 @@ class MainWindow(QtGui.QMainWindow):
         if os.path.exists("lbomd.IN"):
             f = open("lbomd.IN")
             
-            f.readline()
-            f.readline()
-            f.readline()
+            try:
+                f.readline()
+                f.readline()
+                f.readline()
+                
+                line = f.readline().strip()
+                array = line.split()
+                try:
+                    # simulation identity
+                    simIdentity = array[0]
+                    
+                    # update labels with simulation identity
+                    self.loadInputDialog.lbomdXyzWidget_input.updateFileLabelCustom("%s%04d.xyz" % (simIdentity, 0), isRef=False)
+                    for rw in self.rendererWindows:
+                        rw.outputDialog.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
+                
+                except IndexError:
+                    self.console.write("WARNING: INDEX ERROR 1 (check lbomd.IN format)")
+                    pass
+                
+                line = f.readline().strip()
+                array = line.split()
+                try:
+                    PBC = [0]*3
+                    PBC[0] = int(array[0])
+                    PBC[1] = int(array[1])
+                    PBC[2] = int(array[2])
+                    
+                    if PBC[0]:
+                        self.loadInputDialog.PBCXCheckBox.setCheckState(QtCore.Qt.Checked)
+                    
+                    else:
+                        self.loadInputDialog.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                    
+                    if PBC[1]:
+                        self.loadInputDialog.PBCYCheckBox.setCheckState(QtCore.Qt.Checked)
+                    
+                    else:
+                        self.loadInputDialog.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                    
+                    if PBC[2]:
+                        self.loadInputDialog.PBCZCheckBox.setCheckState(QtCore.Qt.Checked)
+                    
+                    else:
+                        self.loadInputDialog.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
+                
+                except IndexError:
+                    self.console.write("WARNING: INDEX ERROR 2 (check lbomd.IN format)")
             
-            line = f.readline().strip()
-            array = line.split()
-            simIdentity = array[0]
+            except Exception as e:
+                self.displayError("Read lbomd.IN failed with error:\n\n%s" % "".join(traceback.format_exception(*sys.exc_info())))
             
-            line = f.readline().strip()
-            array = line.split()
-            PBC = [0]*3
-            PBC[0] = int(array[0])
-            PBC[1] = int(array[1])
-            PBC[2] = int(array[2])
-            
-#            self.mainToolbar.inputTab.LBOMDPage.LBOMDInputLabel.setText("%s%04d.xyz" % (simIdentity, 0))
-            self.mainToolbar.inputTab.lbomdXyzWidget_input.updateFileLabelCustom("%s%04d.xyz" % (simIdentity, 0), isRef=False)
-            self.mainToolbar.outputPage.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
-            
-            if PBC[0]:
-                self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(QtCore.Qt.Checked)
-            
-            else:
-                self.mainToolbar.inputTab.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            
-            if PBC[1]:
-                self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(QtCore.Qt.Checked)
-            
-            else:
-                self.mainToolbar.inputTab.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
-            
-            if PBC[2]:
-                self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(QtCore.Qt.Checked)
-            
-            else:
-                self.mainToolbar.inputTab.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
+            finally:
+                f.close()
     
     def postFileLoaded(self, fileType, state, filename, extension):
         """
@@ -652,17 +748,6 @@ class MainWindow(QtGui.QMainWindow):
         
         for rw in self.rendererWindows:
             rw.outputDialog.rdfTab.refresh()
-        
-        return
-        
-        self.mainToolbar.tabBar.setTabEnabled(1, True)
-        self.mainToolbar.tabBar.setTabEnabled(2, True)
-        
-        # refresh filters eg specie filter
-        self.mainToolbar.filterPage.refreshAllFilters()
-        
-        # refresh rdf page (new specie list)
-        self.mainToolbar.outputPage.rdfTab.refresh()
     
     def clearReference(self):
         """
@@ -678,6 +763,13 @@ class MainWindow(QtGui.QMainWindow):
         for rw in self.rendererWindows:
             rw.outputDialog.hide()
             rw.textSelector.hide()
+        
+        # close all render windows?
+#        for rw in self.rendererWindows:
+#            rw.close()
+#        
+#        # open new renderer window
+#        self.addRendererWindow(ask=False)
         
         # should probably hide stuff like elements form too!
         

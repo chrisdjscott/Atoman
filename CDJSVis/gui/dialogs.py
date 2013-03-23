@@ -15,6 +15,7 @@ from . import genericForm
 from ..atoms import elements
 from ..visutils.utilities import resourcePath, iconPath
 from ..visutils import vectors
+from ..visutils import utilities
 
 try:
     from .. import resources
@@ -246,14 +247,17 @@ class ElementEditor(QtGui.QDialog):
         # apply button
         applyButton = QtGui.QPushButton(QtGui.QIcon(iconPath("redo_64.png")), "Apply")
         applyButton.setStatusTip("Apply changes to current session")
+        applyButton.setToolTip("Apply changes to current session")
         applyButton.clicked.connect(self.applyChanges)
         
         saveButton = QtGui.QPushButton(QtGui.QIcon(iconPath("save_64.png")), "Save")
-        applyButton.setStatusTip("Save changes for use in future sessions")
+        saveButton.setStatusTip("Save changes for use in future sessions")
+        saveButton.setToolTip("Save changes for use in future sessions")
         saveButton.clicked.connect(self.saveChanges)
         
         resetButton = QtGui.QPushButton(QtGui.QIcon(iconPath("undo_64.png")), "Reset")
-        applyButton.setStatusTip("Reset changes to last applied")
+        resetButton.setStatusTip("Reset changes to last applied")
+        resetButton.setToolTip("Reset changes to last applied")
         resetButton.clicked.connect(self.resetChanges)
         
         buttonLayout.addWidget(applyButton)
@@ -1040,12 +1044,28 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
     def __init__(self, parent):
         super(FfmpegSettingsForm, self).__init__(parent)
         
+        # settings object
+        settings = QtCore.QSettings()
+        
         # default settings
         self.framerate = 10
         self.bitrate = 10000
         self.suffix = "mpg"
         self.prefix = "movie"
-                
+        
+        self.pathToFFmpeg = str(settings.value("ffmpeg/pathToFFmpeg", "ffmpeg").toString())
+        if not os.path.exists(self.pathToFFmpeg):
+            self.pathToFFmpeg = "ffmpeg"
+        
+        # path to povray
+        pathToFFmpegLineEdit = QtGui.QLineEdit(self.pathToFFmpeg)
+        pathToFFmpegLineEdit.textChanged.connect(self.pathToFFmpegChanged)
+        pathToFFmpegLineEdit.editingFinished.connect(self.pathToFFmpegEdited)
+        
+        rowLayout = self.newRow()
+        rowLayout.addWidget(QtGui.QLabel("Path to FFmpeg:"))
+        rowLayout.addWidget(pathToFFmpegLineEdit)
+        
         # framerate
         rowLayout = self.newRow()
         
@@ -1105,6 +1125,25 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         
         self.init()
     
+    def pathToFFmpegEdited(self):
+        """
+        Path to FFmpeg finished being edited.
+        
+        """
+        exe = utilities.checkForExe(self.pathToFFmpeg)
+        
+        if exe:
+            print "STORING FFMPEG PATH IN SETTINGS", exe, self.pathToFFmpeg
+            settings = QtCore.QSettings()
+            settings.setValue("ffmpeg/pathToFFmpeg", exe)
+    
+    def pathToFFmpegChanged(self, text):
+        """
+        Path to FFmpeg changed.
+        
+        """
+        self.pathToFFmpeg = str(text)
+    
     def suffixChanged(self, text):
         """
         Suffix changed
@@ -1143,12 +1182,28 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
     def __init__(self, parent):
         super(PovraySettingsForm, self).__init__(parent)
         
+        # settings object
+        settings = QtCore.QSettings()
+        
         # default settings
         self.overlayImage = True
         self.shadowless = False
         self.HRes = 800
         self.VRes = 600
         self.viewAngle = 45
+        
+        self.pathToPovray = str(settings.value("povray/pathToPovray", "povray").toString())
+        if not os.path.exists(self.pathToPovray):
+            self.pathToPovray = "povray"
+        
+        # path to povray
+        pathToPovrayLineEdit = QtGui.QLineEdit(self.pathToPovray)
+        pathToPovrayLineEdit.textChanged.connect(self.pathToPovrayChanged)
+        pathToPovrayLineEdit.editingFinished.connect(self.pathToPovrayEdited)
+        
+        rowLayout = self.newRow()
+        rowLayout.addWidget(QtGui.QLabel("Path to POV-Ray:"))
+        rowLayout.addWidget(pathToPovrayLineEdit)
         
         # overlay check box
         self.overlayImageCheck = QtGui.QCheckBox("Overlay image")
@@ -1206,7 +1261,26 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         rowLayout.addWidget(label)
         
         self.init()
+    
+    def pathToPovrayEdited(self):
+        """
+        Path to povray finished being edited.
         
+        """
+        exe = utilities.checkForExe(self.pathToPovray)
+        
+        if exe:
+            print "STORING POV PATH IN SETTINGS", exe, self.pathToPovray
+            settings = QtCore.QSettings()
+            settings.setValue("povray/pathToPovray", exe)
+    
+    def pathToPovrayChanged(self, text):
+        """
+        Path to POV-Ray changed.
+        
+        """
+        self.pathToPovray = str(text)
+    
     def viewAngleChanged(self, val):
         """
         View angle changed.
@@ -1456,3 +1530,38 @@ class PreferencesDialog(QtGui.QDialog):
         self.matplotlibForm = MatplotlibSettingsForm(self)
         self.toolbox.addItem(self.matplotlibForm, QtGui.QIcon(iconPath("Plotter.png")), "Matplotlib")
 
+################################################################################
+
+class ConfirmCloseDialog(QtGui.QDialog):
+    """
+    Confirm close dialog.
+    
+    """
+    def __init__(self, parent=None):
+        super(ConfirmCloseDialog, self).__init__(parent)
+        
+        self.setModal(1)
+        self.setWindowTitle("Exit application?")
+        
+        layout = QtGui.QVBoxLayout(self)
+        
+        # label
+        label = QtGui.QLabel("<b>Are you sure you want to exit?</b>")
+        row = QtGui.QHBoxLayout()
+        row.addWidget(label)
+        layout.addLayout(row)
+        
+        # clear settings
+        self.clearSettingsCheck = QtGui.QCheckBox("Clear settings")
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignRight)
+        row.addWidget(self.clearSettingsCheck)
+        layout.addLayout(row)
+        
+        # buttons
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Yes | QtGui.QDialogButtonBox.No)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        
+        layout.addWidget(buttonBox)
+        

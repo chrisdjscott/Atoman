@@ -6,10 +6,13 @@ Module for rendering
 
 """
 import os
+import sys
+import shutil
 
 import numpy as np
 import vtk
 from PIL import Image
+from PyQt4 import QtGui, QtCore
 
 from ..visutils import utilities
 from ..visclibs import output as output_c
@@ -250,19 +253,62 @@ class Renderer(object):
         camfoc = self.camera.GetFocalPoint()
         camvup = self.camera.GetViewUp()
         
+        # progress dialog
+        progDialog = QtGui.QProgressDialog("Running rotator...", "Cancel", 0, NRotations)
+        progDialog.setWindowModality(QtCore.Qt.WindowModal)
+        progDialog.setWindowTitle("Progress")
+        progDialog.setValue(0)
+        
+        progDialog.show()
+        QtGui.QApplication.processEvents()
+        
         # main loop
-        for i in xrange(NRotations):
-            # file name
-            fileprefixFull = "%s%d" % (fileprefix, i)
-            
-            # save image
-            savedFile = self.saveImage(renderType, imageFormat, fileprefixFull, overwrite, povray=povray)
-            
-            if savedFile is None:
-                return 1
-            
-            # apply rotation
-            self.camera.Azimuth(degreesPerRotation)
+        try:
+            status = 0
+            for i in xrange(NRotations):
+                # file name
+                fileprefixFull = "%s%d" % (fileprefix, i)
+                
+                # exit if cancelled
+                if progDialog.wasCanceled():
+                    status = 2
+                    break
+                
+                # save image
+                savedFile = self.saveImage(renderType, imageFormat, fileprefixFull, overwrite, povray=povray)
+                
+                if savedFile is None:
+                    status = 1
+                    break
+                
+                # exit if cancelled
+                if progDialog.wasCanceled():
+                    status = 2
+                    break
+                
+                # progress
+                progDialog.setValue(i)
+                
+                QtGui.QApplication.processEvents()
+                
+                # exit if cancelled
+                if progDialog.wasCanceled():
+                    status = 2
+                    break
+                
+                # apply rotation
+                self.camera.Azimuth(degreesPerRotation)
+                
+                # exit if cancelled
+                if progDialog.wasCanceled():
+                    status = 2
+                    break
+                
+                self.reinit()
+        
+        finally:
+            # close progress dialog
+            progDialog.close()
         
         # restore camera
         self.camera.SetFocalPoint(camfoc)
@@ -271,7 +317,7 @@ class Renderer(object):
         
         self.reinit()
         
-        return 0
+        return status
     
     def saveImage(self, renderType, imageFormat, fileprefix, overwrite, povray="povray"):
         """
@@ -389,6 +435,7 @@ class Renderer(object):
                 command = "%s %s" % (povray, povIniFile)
                 output, stderr, status = utilities.runSubProcess(command)
                 if status:
+                    print "STDOUT:", output
                     print "STDERR:", stderr
                     return None
                 
@@ -405,9 +452,9 @@ class Renderer(object):
             
             # rename tmp image file to where it should be
             try:
-                os.rename(os.path.join(self.mainWindow.tmpDirectory, tmpPovOutputFile), filename)
-            except OSError:
-                print "ERROR COPYING POV FILE"
+                shutil.move(os.path.join(self.mainWindow.tmpDirectory, tmpPovOutputFile), filename)
+            except:
+                print "ERROR COPYING POV FILE", sys.exc_info() 
                         
             # remove image files
             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.pov" % renIndex))
@@ -554,6 +601,11 @@ class Renderer(object):
         Find extremes of non-white area.
         
         """
+        if self.parent.blackBackground:
+            R = G = B = 0
+        else:
+            R = G = B = 255
+        
         xmax = 0
         ymax = 0
         xmin = 1000
@@ -562,7 +614,7 @@ class Renderer(object):
             for j in xrange(j0, j1):
                 r,g,b = im.getpixel((i, j))
                 
-                if r != 255 and g != 255 and b != 255:
+                if r != R and g != G and b != B:
                     if i > xmax:
                         xmax = i
                     
@@ -590,6 +642,11 @@ class Renderer(object):
         b[1] = lattice.cellDims[1]
         b[2] = lattice.cellDims[2]
         
+        if self.parent.blackBackground:
+            R = G = B = 1
+        else:
+            R = G = B = 0
+        
         filehandle.write("#declare R = 0.15;\n")
         filehandle.write("#declare myObject = union {\n")
         filehandle.write("    sphere { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
@@ -612,7 +669,7 @@ class Renderer(object):
         filehandle.write("    cylinder { <"+str(a[0])+","+str(b[1])+","+str(a[2])+">, <"+str(a[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
         filehandle.write("    cylinder { <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, <"+str(b[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
         filehandle.write("    cylinder { <"+str(b[0])+","+str(b[1])+","+str(a[2])+">, <"+str(b[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    texture { pigment { color rgb <0,0,0> }\n")
+        filehandle.write("    texture { pigment { color rgb <%f,%f,%f> }\n" % (R, G, B))
         filehandle.write("              finish { diffuse 0.9 phong 1 } } }\n")
         filehandle.write("object{myObject}\n")
     
@@ -632,12 +689,17 @@ class Renderer(object):
         else:
             shadowless = ""
         
+        if self.parent.blackBackground:
+            R = G = B = 0
+        else:
+            R = G = B = 1
+        
         string = "camera { perspective location <%f,%f,%f> look_at <%f,%f,%f> angle %f\n" % (- campos[0], campos[1], campos[2],
                                                                                              - focalPoint[0], focalPoint[1], focalPoint[2],
                                                                                              angle)
         string += "sky <%f,%f,%f> }\n" % (- viewup[0], viewup[1], viewup[2])
         string += "light_source { <%f,%f,%f> color rgb <1,1,1> %s}\n" % (- campos[0], campos[1], campos[2], shadowless)
-        string += "background { color rgb <1,1,1> }\n"
+        string += "background { color rgb <%f,%f,%f> }\n" % (R, G, B)
         
         filehandle.write(string)
         
@@ -685,7 +747,7 @@ def povrayBond(pos, vector):
     pass
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, NVisibleForRes=None):
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, displayOptions, NVisibleForRes=None):
     """
     Make the actors for the filtered system
     
@@ -755,7 +817,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         lut.GetColor(scalar, rgb)
         
         # povray atom
-        fpov.write(povrayAtom(pos[3*index:3*index+3], lattice.specieCovalentRadius[specInd], rgb))
+        fpov.write(povrayAtom(pos[3*index:3*index+3], lattice.specieCovalentRadius[specInd] * displayOptions.atomScaleFactor, rgb))
         
     # now loop over species, making actors
     for i in xrange(NSpecies):
@@ -765,7 +827,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         atomsPolyData.GetPointData().SetScalars(atomScalarsList[i])
         
         atomsGlyphSource = vtk.vtkSphereSource()
-        atomsGlyphSource.SetRadius(lattice.specieCovalentRadius[i])
+        atomsGlyphSource.SetRadius(lattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         atomsGlyphSource.SetPhiResolution(res)
         atomsGlyphSource.SetThetaResolution(res)
         
@@ -836,7 +898,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
 
 ################################################################################
 def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 
-                       settings, mainWindow):
+                       settings, mainWindow, displayOptions, splitInterstitials):
     """
     Write defects to povray file.
     
@@ -847,8 +909,8 @@ def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisite
     refLattice = mainWindow.refState
     
     output_c.writePOVRAYDefects(povfile, vacancies, interstitials, antisites, onAntisites, inputLattice.specie, inputLattice.pos,
-                                refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius,
-                                refLattice.specieRGB, refLattice.specieCovalentRadius)
+                                refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius * displayOptions.atomScaleFactor,
+                                refLattice.specieRGB, refLattice.specieCovalentRadius * displayOptions.atomScaleFactor, splitInterstitials)
 
 
 ################################################################################
@@ -940,7 +1002,8 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
 
     
 ################################################################################
-def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, mainWindow, actorsCollection, colouringOptions, filterSettings):
+def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, mainWindow, actorsCollection, 
+                                colouringOptions, filterSettings, displayOptions):
     
     NInt = len(interstitials)
     NVac = len(vacancies)
@@ -995,7 +1058,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsPolyData.GetPointData().SetScalars(intScalarsList[i])
         
         intsGlyphSource = vtk.vtkSphereSource()
-        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i])
+        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         intsGlyphSource.SetPhiResolution(res)
         intsGlyphSource.SetThetaResolution(res)
         
@@ -1057,7 +1120,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsPolyData.GetPointData().SetScalars(intScalarsList[i])
         
         intsGlyphSource = vtk.vtkSphereSource()
-        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i])
+        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         intsGlyphSource.SetPhiResolution(res)
         intsGlyphSource.SetThetaResolution(res)
         
@@ -1109,9 +1172,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         
         vacsGlyphSource = vtk.vtkCubeSource()
         scaleVacs = 2.0 * filterSettings.vacScaleSize
-        vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         
         vacsGlyph = vtk.vtkGlyph3D()
         vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
@@ -1145,7 +1208,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intScalarsList.append(vtk.vtkFloatArray())
     
     # make LUT
-    lut = setupLUT(refLattice.specieList, refLattice.specieRGB, colouringOptions)
+    lut = setupLUT(inputLattice.specieList, inputLattice.specieRGB, colouringOptions)
     
     # loop over interstitials, settings points
     pos = refLattice.pos
@@ -1166,7 +1229,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsPolyData.GetPointData().SetScalars(intScalarsList[i])
         
         intsGlyphSource = vtk.vtkSphereSource()
-        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i])
+        intsGlyphSource.SetRadius(inputLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         intsGlyphSource.SetPhiResolution(res)
         intsGlyphSource.SetThetaResolution(res)
         
@@ -1220,9 +1283,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         
         vacsGlyphSource = vtk.vtkCubeSource()
         scaleVacs = 2.0 * filterSettings.vacScaleSize
-        vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i])
-        vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i])
+        vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         
         vacsGlyph = vtk.vtkGlyph3D()
         vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
@@ -1276,9 +1339,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsPolyData.GetPointData().SetScalars(intScalarsList[i])
         
         cubeGlyphSource = vtk.vtkCubeSource()
-        cubeGlyphSource.SetXLength(2.0 * refLattice.specieCovalentRadius[i])
-        cubeGlyphSource.SetYLength(2.0 * refLattice.specieCovalentRadius[i])
-        cubeGlyphSource.SetZLength(2.0 * refLattice.specieCovalentRadius[i])
+        cubeGlyphSource.SetXLength(2.0 * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        cubeGlyphSource.SetYLength(2.0 * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
+        cubeGlyphSource.SetZLength(2.0 * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         edges = vtk.vtkExtractEdges()
         edges.SetInputConnection(cubeGlyphSource.GetOutputPort())
         vacsGlyphSource = vtk.vtkTubeFilter()

@@ -23,6 +23,76 @@ except ImportError:
 
 ################################################################################
 
+class DisplayOptionsWindow(QtGui.QDialog):
+    """
+    Display options for filter list.
+    
+    """
+    def __init__(self, mainWindow, parent=None):
+        super(DisplayOptionsWindow, self).__init__(parent)
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.setWindowTitle("Filter list display options") # filter list id should be in here
+#        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        
+        # default options
+        self.atomScaleFactor = 1.0
+        
+        # layout 
+        layout = QtGui.QVBoxLayout(self)
+        
+        # group box
+        scaleFactorGroup = genericForm.GenericForm(self, None, "Atom size scale factor")
+        scaleFactorGroup.show()
+        
+        # scale factor
+        self.atomScaleFactorSpin = QtGui.QDoubleSpinBox()
+        self.atomScaleFactorSpin.setMinimum(0.1)
+        self.atomScaleFactorSpin.setMaximum(2.0)
+        self.atomScaleFactorSpin.setSingleStep(0.1)
+        self.atomScaleFactorSpin.setValue(self.atomScaleFactor)
+        
+        row = scaleFactorGroup.newRow()
+        row.addWidget(self.atomScaleFactorSpin)
+        
+        self.atomScaleFactorSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.atomScaleFactorSlider.setMinimum(1)
+        self.atomScaleFactorSlider.setMaximum(20)
+        self.atomScaleFactorSlider.setSingleStep(1)
+        self.atomScaleFactorSlider.setValue(int(self.atomScaleFactor * 10))
+        
+        self.atomScaleFactorSpin.valueChanged.connect(self.atomScaleSpinChanged)
+        self.atomScaleFactorSlider.valueChanged.connect(self.atomScaleSliderChanged)
+        
+        row = scaleFactorGroup.newRow()
+        row.addWidget(self.atomScaleFactorSlider)
+        
+        layout.addWidget(scaleFactorGroup)
+        
+    
+    def atomScaleSpinChanged(self, val):
+        """
+        Atom scale factor spin box changed.
+        
+        """
+        self.atomScaleFactor = val
+        self.atomScaleFactorSlider.setValue(int(val * 10))
+    
+    def atomScaleSliderChanged(self, val):
+        """
+        Atom scale factor slider changed.
+        
+        """
+        self.atomScaleFactor = float(val) / 10.0
+        self.atomScaleFactorSpin.setValue(self.atomScaleFactor)
+        
+
+################################################################################
+
 class BondsOptionsWindow(QtGui.QDialog):
     """
     Bond options for filter list.

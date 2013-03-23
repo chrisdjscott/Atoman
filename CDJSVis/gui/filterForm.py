@@ -7,6 +7,7 @@ The filter tab for the main toolbar
 """
 import os
 import sys
+import glob
 
 from PySide import QtGui, QtCore
 import vtk
@@ -80,6 +81,10 @@ class FilterForm(QtGui.QWidget):
         
         # add a filter list
         self.addFilterList()
+        
+        # refresh if ref already loaded
+        if self.mainWindow.refLoaded:
+            self.refreshAllFilters()
     
     def showFilterSummary(self):
         """
@@ -105,7 +110,9 @@ class FilterForm(QtGui.QWidget):
         self.log("Running all filter lists")
         
         # first remove all old povray files
-        os.system("rm -f %s/*.pov" % self.mainWindow.tmpDirectory)
+        oldpovfiles = glob.glob(os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_*.pov" % self.pipelineIndex))
+        for fn in oldpovfiles:
+            os.unlink(fn)
         
         self.scalarBarAdded = False
         

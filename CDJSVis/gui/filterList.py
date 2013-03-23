@@ -198,7 +198,14 @@ class FilterList(QtGui.QWidget):
         
         self.bondsOptions = filterListOptions.BondsOptionsWindow(self.mainWindow, parent=self)
         
+        # display options
+        self.displayOptionsButton = QtGui.QPushButton("Display options")
+        self.displayOptionsButton.clicked.connect(self.showDisplayOptions)
+        
+        self.displayOptions = filterListOptions.DisplayOptionsWindow(self.mainWindow, parent=self)
+        
         groupLayout.addWidget(self.bondsOptionsButton)
+        groupLayout.addWidget(self.displayOptionsButton)
         
         self.filterListLayout.addWidget(extraOptionsGroupBox)
         
@@ -218,6 +225,14 @@ class FilterList(QtGui.QWidget):
         
         else:
             self.filterer.hideScalarBar()
+    
+    def showDisplayOptions(self):
+        """
+        Show the display options window.
+        
+        """
+        self.displayOptions.hide()
+        self.displayOptions.show()
     
     def showBondsOptions(self):
         """

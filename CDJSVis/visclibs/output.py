@@ -52,11 +52,11 @@ def writeLattice(filename, visibleAtoms, cellDims, specieList, specie, pos, char
 _lib.writePOVRAYDefects.restype = c_int
 _lib.writePOVRAYDefects.argtypes = [c_char_p, c_int, POINTER(c_int), c_int, POINTER(c_int), c_int, POINTER(c_int), c_int, POINTER(c_int), 
                                     POINTER(c_int), POINTER(c_double), POINTER(c_int), POINTER(c_double), POINTER(c_double), POINTER(c_double), 
-                                    POINTER(c_double), POINTER(c_double)]
+                                    POINTER(c_double), POINTER(c_double), c_int, POINTER(c_int)]
 
 # write pov defects
 def writePOVRAYDefects(filename, vacs, ints, ants, onAnts, specie, pos, refSpecie, refPos, specieRGB, specieCovalentRadius,
-                       refSpecieRGB, refSpecieCovalentRadius):
+                       refSpecieRGB, refSpecieCovalentRadius, splitInterstitials):
     """
     Read LBOMD ref file.
     
@@ -64,5 +64,6 @@ def writePOVRAYDefects(filename, vacs, ints, ants, onAnts, specie, pos, refSpeci
     return _lib.writePOVRAYDefects(filename, len(vacs), CPtrToInt(vacs), len(ints), CPtrToInt(ints), len(ants), CPtrToInt(ants), 
                                    len(onAnts), CPtrToInt(onAnts), CPtrToInt(specie), CPtrToDouble(pos), CPtrToInt(refSpecie), 
                                    CPtrToDouble(refPos), CPtrToDouble(specieRGB), CPtrToDouble(specieCovalentRadius), 
-                                   CPtrToDouble(refSpecieRGB), CPtrToDouble(refSpecieCovalentRadius))
+                                   CPtrToDouble(refSpecieRGB), CPtrToDouble(refSpecieCovalentRadius), len(splitInterstitials) / 3, 
+                                   CPtrToInt(splitInterstitials))
 

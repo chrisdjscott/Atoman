@@ -364,7 +364,7 @@ class FileTab(QtGui.QWidget):
         self.outputFileName = QtGui.QLineEdit("lattice.dat")
         self.outputFileName.setFixedWidth(120)
         saveFileButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
-        saveFileButton.setStatusTip("Save to file")
+        saveFileButton.setToolTip("Save to file")
         saveFileButton.clicked.connect(self.saveToFile)
         
         row.addWidget(label)
@@ -375,7 +375,7 @@ class FileTab(QtGui.QWidget):
         row = fileNameGroup.newRow()
         
         saveFileDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Save to file")
-        saveFileDialogButton.setStatusTip("Save to file")
+        saveFileDialogButton.setToolTip("Save to file")
         saveFileDialogButton.setCheckable(0)
         saveFileDialogButton.setFixedWidth(150)
         saveFileDialogButton.clicked.connect(self.saveToFileDialog)
@@ -450,14 +450,14 @@ class ImageTab(QtGui.QWidget):
 #        self.overlayImage = False
         
         # check ffmpeg/povray installed
-        self.ffmpeg = utilities.checkForExe("ffmpeg")
-        self.povray = utilities.checkForExe("povray")
-        
-        if self.ffmpeg:
-            self.mainWindow.console.write("'ffmpeg' executable located at: %s" % (self.ffmpeg,))
-        
-        if self.povray:
-            self.mainWindow.console.write("'povray' executable located at: %s" % (self.povray,))
+#         self.ffmpeg = utilities.checkForExe("ffmpeg")
+#         self.povray = utilities.checkForExe("povray")
+#         
+#         if self.ffmpeg:
+#             self.mainWindow.console.write("'ffmpeg' executable located at: %s" % (self.ffmpeg,))
+#         
+#         if self.povray:
+#             self.mainWindow.console.write("'povray' executable located at: %s" % (self.povray,))
         
         imageTabLayout = QtGui.QVBoxLayout(self)
 #        imageTabLayout.setContentsMargins(0, 0, 0, 0)
@@ -587,10 +587,12 @@ class ImageTab(QtGui.QWidget):
         
         """
         if self.POVButton.isChecked():
-            if not self.povray:
+            settings = self.mainWindow.preferences.povrayForm
+            
+            if not utilities.checkForExe(settings.pathToPovray):
                 self.POVButton.setChecked(0)
                 self.VTKButton.setChecked(1)
-                utilities.warnExeNotFound(self, "povray")
+                utilities.warnExeNotFound(self, "%s (POV-Ray)" % (settings.pathToPovray,))
             
             else:
                 self.renderType = "POV"
@@ -609,6 +611,12 @@ class ImageTab(QtGui.QWidget):
         """
         log = self.mainWindow.console.write
         
+        settings = self.mainWindow.preferences.ffmpegForm
+        ffmpeg = utilities.checkForExe(settings.pathToFFmpeg)
+        if not ffmpeg:
+            utilities.warnExeNotFound(self, "%s (FFmpeg)" % (settings.pathToFFmpeg,))
+            return 2
+        
         CWD = os.getcwd()
         try:
             os.chdir(saveDir)
@@ -625,7 +633,7 @@ class ImageTab(QtGui.QWidget):
             
             saveText = os.path.basename(saveText)
             
-            command = "%s -r %d -y -i %s.%s -r %d -b %dk %s.%s" % (self.ffmpeg, framerate, saveText, 
+            command = "%s -r %d -y -i %s.%s -r %d -b %dk %s.%s" % (ffmpeg, framerate, saveText, 
                                                                   self.imageFormat, 25, bitrate, 
                                                                   outputprefix, outputsuffix)
             
@@ -674,7 +682,7 @@ class SingleImageTab(QtGui.QWidget):
         self.imageFileName = QtGui.QLineEdit("image")
         self.imageFileName.setFixedWidth(120)
         saveImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
-        saveImageButton.setStatusTip("Save image")
+        saveImageButton.setToolTip("Save image")
         self.connect(saveImageButton, QtCore.SIGNAL('clicked()'), 
                      lambda showProgress=True: self.saveSingleImage(showProgress))
         
@@ -691,7 +699,7 @@ class SingleImageTab(QtGui.QWidget):
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
         saveImageDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Save image")
-        saveImageDialogButton.setStatusTip("Save image")
+        saveImageDialogButton.setToolTip("Save image")
         saveImageDialogButton.setCheckable(0)
         saveImageDialogButton.setFixedWidth(150)
         self.connect(saveImageDialogButton, QtCore.SIGNAL('clicked()'), self.saveSingleImageDialog)
@@ -735,19 +743,20 @@ class SingleImageTab(QtGui.QWidget):
         Screen capture.
         
         """
+        if self.parent.renderType == "POV":
+            settings = self.mainWindow.preferences.povrayForm
+            povray = utilities.checkForExe(settings.pathToPovray)
+            if not povray:
+                utilities.warnExeNotFound(self, "%s (POV-Ray)" % (settings.pathToPovray,))
+                return
+        
+        else:
+            povray = ""
+        
         filename = str(self.imageFileName.text())
         
         if not len(filename):
             return
-        
-        # check if in different dir
-#        head, tail = os.path.split(filename)
-        
-        # change to dir if required (for POV-Ray to work)
-#        if len(head):
-#            OWD = os.getcwd()
-#            os.chdir(head)
-#            filename = tail
         
         # show progress dialog
         if showProgress and self.parent.renderType == "POV":
@@ -761,7 +770,7 @@ class SingleImageTab(QtGui.QWidget):
             progress.show()
         
         filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                          filename, self.overwriteImage, povray=self.parent.povray)
+                                                          filename, self.overwriteImage, povray=povray)
         
         # hide progress dialog
         if showProgress and self.parent.renderType == "POV":
@@ -867,6 +876,7 @@ class ImageSequenceTab(QtGui.QWidget):
         
         resetPrefixButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-paste.svg")), "")
         resetPrefixButton.setStatusTip("Set prefix to input file")
+        resetPrefixButton.setToolTip("Set prefix to input file")
         self.connect(resetPrefixButton, QtCore.SIGNAL("clicked()"), self.resetPrefix)
         
         rowLayout.addWidget(label)
@@ -979,7 +989,8 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         self.createMovieCheck = QtGui.QCheckBox("Create movie")
-        if self.parent.ffmpeg:
+        settings = self.mainWindow.preferences.ffmpegForm
+        if utilities.checkForExe(settings.pathToFFmpeg):
             self.createMovieCheck.setChecked(True)
             self.createMovie = True
         else:
@@ -1000,6 +1011,7 @@ class ImageSequenceTab(QtGui.QWidget):
         
         startSequencerButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
         startSequencerButton.setStatusTip("Start sequencer")
+        startSequencerButton.setToolTip("Start sequencer")
         self.connect(startSequencerButton, QtCore.SIGNAL('clicked()'), self.startSequencer)
         
         rowLayout.addWidget(startSequencerButton)
@@ -1012,8 +1024,10 @@ class ImageSequenceTab(QtGui.QWidget):
         
         """
         if self.createMovieCheck.isChecked():
-            if not self.parent.ffmpeg:
-                utilities.warnExeNotFound(self.parent, "ffmpeg")
+            settings = self.mainWindow.preferences.ffmpegForm
+            
+            if not utilities.checkForExe(settings.pathToFFmpeg):
+                utilities.warnExeNotFound(self, "%s (FFmpeg)" % (settings.pathToFFmpeg,))
                 self.createMovieCheck.setCheckState(QtCore.Qt.Unchecked)
                 return
             
@@ -1060,6 +1074,16 @@ class ImageSequenceTab(QtGui.QWidget):
         Run the sequencer
         
         """
+        if self.parent.renderType == "POV":
+            settings = self.mainWindow.preferences.povrayForm
+            povray = utilities.checkForExe(settings.pathToPovray)
+            if not povray:
+                utilities.warnExeNotFound(self, "%s (POV-Ray)" % (settings.pathToPovray,))
+                return
+        
+        else:
+            povray = ""
+        
         self.setFirstFileLabel()
         
         # check first file exists
@@ -1096,6 +1120,9 @@ class ImageSequenceTab(QtGui.QWidget):
         progDialog.setWindowModality(QtCore.Qt.WindowModal)
         progDialog.setWindowTitle("Progress")
         progDialog.setValue(self.minIndex)
+        progDialog.show()
+        
+        QtGui.QApplication.processEvents()
         
         # loop over files
         try:
@@ -1129,7 +1156,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 
                 # now save image
                 filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                                  saveName, 1, povray=self.parent.povray)
+                                                                  saveName, 1, povray=povray)
                 
                 count += 1
                 
@@ -1324,7 +1351,8 @@ class ImageRotateTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         self.createMovieCheck = QtGui.QCheckBox("Create movie")
-        if self.parent.ffmpeg:
+        settings = self.mainWindow.preferences.ffmpegForm
+        if utilities.checkForExe(settings.pathToFFmpeg):
             self.createMovieCheck.setChecked(True)
             self.createMovie = True
         else:
@@ -1344,7 +1372,7 @@ class ImageRotateTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         startRotatorButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
-        startRotatorButton.setStatusTip("Start sequencer")
+        startRotatorButton.setToolTip("Start sequencer")
         startRotatorButton.clicked.connect(self.startRotator)
         
         rowLayout.addWidget(startRotatorButton)
@@ -1356,6 +1384,16 @@ class ImageRotateTab(QtGui.QWidget):
         Start the rotator.
         
         """
+        if self.parent.renderType == "POV":
+            settings = self.mainWindow.preferences.povrayForm
+            povray = utilities.checkForExe(settings.pathToPovray)
+            if not povray:
+                utilities.warnExeNotFound(self, "%s (POV-Ray)" % (settings.pathToPovray,))
+                return
+        
+        else:
+            povray = ""
+        
         log = self.mainWindow.console.write
         log("Running rotator", 0, 0)
         
@@ -1378,7 +1416,7 @@ class ImageRotateTab(QtGui.QWidget):
         
         # send to renderer
         status = self.rendererWindow.renderer.rotateAndSaveImage(self.parent.renderType, self.parent.imageFormat, fileprefix, 
-                                                                 1, self.degreesPerRotation, povray=self.parent.povray)
+                                                                 1, self.degreesPerRotation, povray=povray)
         
         # movie?
         if status:
@@ -1412,8 +1450,10 @@ class ImageRotateTab(QtGui.QWidget):
         
         """
         if self.createMovieCheck.isChecked():
-            if not self.parent.ffmpeg:
-                utilities.warnExeNotFound(self.parent, "ffmpeg")
+            settings = self.mainWindow.preferences.ffmpegForm
+            
+            if not utilities.checkForExe(settings.pathToFFmpeg):
+                utilities.warnExeNotFound(self, "%s (FFmpeg)" % (settings.pathToFFmpeg,))
                 self.createMovieCheck.setCheckState(QtCore.Qt.Unchecked)
                 return
             

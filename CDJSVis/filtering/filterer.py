@@ -1,12 +1,13 @@
 
 """
-The filter tab for the main toolbar
+The filterer object.
 
 @author: Chris Scott
 
 """
 import os
 import copy
+import time
 
 import numpy as np
 import vtk
@@ -31,7 +32,6 @@ class Filterer(object):
     
     """
     def __init__(self, parent):
-        
         self.parent = parent
         self.filterTab = parent.filterTab
         self.mainWindow = self.parent.mainWindow
@@ -58,6 +58,7 @@ class Filterer(object):
         
         self.colouringOptions = self.parent.colouringOptions
         self.bondsOptions = self.parent.bondsOptions
+        self.displayOptions = self.parent.displayOptions
         self.scalarBarAdded = False
         self.scalarBar = None
         
@@ -115,9 +116,10 @@ class Filterer(object):
             
             actor = self.actorsCollection.GetNextItem()
         
+        
         for rw in self.rendererWindows:
             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                    rw.vtkRenWinInteract.ReInitialize()
+                rw.vtkRenWinInteract.ReInitialize()
         
         self.addScalarBar()
     
@@ -126,6 +128,10 @@ class Filterer(object):
         Run the filters.
         
         """
+        # time
+        runFiltersTime = time.time()
+        
+        # remove actors
         if not self.parent.isPersistentList():
             self.removeActors()
         
@@ -155,6 +161,7 @@ class Filterer(object):
             os.unlink(hullFile)
         
         # run filters
+        applyFiltersTime = time.time()
         filterName = ""
         self.scalarsType = ""
         currentFilters = self.parent.currentFilters
@@ -232,10 +239,15 @@ class Filterer(object):
             self.log("%d visible atoms" % (NVis,), 0, 3)
             self.availableScreenInfo["visible"] = NVis
         
+        # time to apply filters
+        applyFiltersTime = time.time() - applyFiltersTime
+        self.log("Apply filters time time: %f s" % (applyFiltersTime,), 0, 0)
+        
         # refresh available scalars in extra options dialog
         self.parent.colouringOptions.refreshScalarColourOption(self.scalarsType)
         
         # render
+        renderTime = time.time()
         povfile = "pipeline%d_atoms%d.pov" % (self.pipelineIndex, self.parent.tab)
         if self.parent.defectFilterSelected:
             colourBy = self.colouringOptions.colourBy
@@ -249,7 +261,8 @@ class Filterer(object):
                 pass
             
             else:
-                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.mainWindow, self.actorsCollection, self.colouringOptions, filterSettings)
+                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.mainWindow, 
+                                                                self.actorsCollection, self.colouringOptions, filterSettings, self.displayOptions)
                 
                 self.vacancySpecieCount = counters[0]
                 self.interstitialSpecieCount = counters[1]
@@ -258,7 +271,8 @@ class Filterer(object):
                 
                 # write pov-ray file too
                 povfile = "pipeline%d_defects%d.pov" % (self.pipelineIndex, self.parent.tab)
-                renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow)
+                renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow, 
+                                            self.displayOptions, splitInterstitials)
             
             self.colouringOptions.colourBy = colourBy
             
@@ -278,7 +292,8 @@ class Filterer(object):
                     NVisibleForRes = None
                 
                 self.scalarBar, visSpecCount = renderer.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
-                                                                                    self.colouringOptions, povfile, self.scalars, NVisibleForRes=NVisibleForRes)
+                                                                                    self.colouringOptions, povfile, self.scalars, self.displayOptions, 
+                                                                                    NVisibleForRes=NVisibleForRes)
                 
                 self.visibleSpecieCount = visSpecCount
                 
@@ -289,8 +304,22 @@ class Filterer(object):
                 # find bonds
                 self.calculateBonds()
         
+        # time to render
+        renderTime = time.time() - renderTime
+        self.log("Create actors time: %f s" % (renderTime,), 0, 0)
+        
         if self.parent.visible:
+            addActorsTime = time.time()
+            
             self.addActors()
+            
+            addActorsTime = time.time() - addActorsTime
+            self.log("Add actors time: %f s" % (addActorsTime,), 0, 0)
+        
+        # time
+        runFiltersTime = time.time() - runFiltersTime
+        
+        self.log("Apply list total time: %f s" % (runFiltersTime,), 0, 0)
     
     def calculateBonds(self):
         """

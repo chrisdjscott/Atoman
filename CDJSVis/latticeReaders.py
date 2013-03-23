@@ -27,11 +27,12 @@ class GenericLatticeReader(object):
     Base lattice reader object.
     
     """
-    def __init__(self, tmpLocation, log, displayWarning):
+    def __init__(self, tmpLocation, log, displayWarning, displayError):
         self.tmpLocation = tmpLocation
         self.log = log
         self.currentFile = None
         self.displayWarning = displayWarning
+        self.displayError = displayError
     
     def checkForZipped(self, filename):
         """
@@ -131,8 +132,8 @@ class LbomdXYZReader(GenericLatticeReader):
     This is harder since they must be linked with a reference!
     
     """
-    def __init__(self, tmpLocation, log, displayWarning):
-        super(LbomdXYZReader, self).__init__(tmpLocation, log, displayWarning)
+    def __init__(self, tmpLocation, log, displayWarning, displayError):
+        super(LbomdXYZReader, self).__init__(tmpLocation, log, displayWarning, displayError)
     
     def readFile(self, xyzfilename, refState, rouletteIndex=None):
         """
@@ -143,6 +144,8 @@ class LbomdXYZReader(GenericLatticeReader):
 #        if os.path.abspath(xyzfilename) == self.currentFile:
 #            print "ALREADY LOADED"
 #            return -4, None
+        
+        self.log("Reading file: %s" % (xyzfilename,), 0, 0)
         
         # check input exists, unzip if necessary
         filepath, zipFlag = self.checkForZipped(xyzfilename)
@@ -208,6 +211,8 @@ class LbomdXYZReader(GenericLatticeReader):
         state.reset(NAtoms)
         state.simTime = simTime
         
+        self.log("%d atoms" % (NAtoms,), 0, 1)
+        
         tmpForceArray = np.empty(3, np.float64)
         
         # call clib
@@ -232,6 +237,9 @@ class LbomdXYZReader(GenericLatticeReader):
         state.specieRGB = copy.deepcopy(refLattice.specieRGB)
         state.specieAtomicNumber = copy.deepcopy(refLattice.specieAtomicNumber)
         
+        for i in xrange(len(state.specieList)):
+            self.log("%d %s (%s) atoms" % (state.specieCount[i], state.specieList[i], elements.atomName(state.specieList[i])), 0, 2)
+        
         return 0, state
         
 
@@ -242,8 +250,8 @@ class LbomdRefReader(GenericLatticeReader):
     Read LBOMD animation reference files.
     
     """
-    def __init__(self, tmpLocation, log, displayWarning):
-        super(LbomdRefReader, self).__init__(tmpLocation, log, displayWarning)
+    def __init__(self, tmpLocation, log, displayWarning, displayError):
+        super(LbomdRefReader, self).__init__(tmpLocation, log, displayWarning, displayError)
     
     def readFileMain(self, filename, rouletteIndex):
         """
@@ -325,8 +333,8 @@ class LbomdDatReader(GenericLatticeReader):
     Reads LBOMD lattice files.
     
     """
-    def __init__(self, tmpLocation, log, displayWarning):
-        super(LbomdDatReader, self).__init__(tmpLocation, log, displayWarning)
+    def __init__(self, tmpLocation, log, displayWarning, displayError):
+        super(LbomdDatReader, self).__init__(tmpLocation, log, displayWarning, displayError)
         
         self.intRegex = re.compile(r'[0-9]+')
     
@@ -405,7 +413,6 @@ class LbomdDatReader(GenericLatticeReader):
             
             # look for integers in the name
             result = self.intRegex.findall(basename)
-            print "RES", result
             
             if len(result):
                 try:
@@ -415,7 +422,7 @@ class LbomdDatReader(GenericLatticeReader):
         
         # attempt to read roulette file
         if rouletteIndex is not None:
-            # simulation time
+            # read simulation time
             simTime = utilities.getTimeFromRoulette(rouletteIndex)
             
             if simTime is not None:
@@ -425,9 +432,5 @@ class LbomdDatReader(GenericLatticeReader):
             state.barrier = utilities.getBarrierFromRoulette(rouletteIndex)
         
         return 0, state
-    
-    
-    
-
 
 

@@ -65,6 +65,24 @@ class Lattice(object):
         self.simTime = 0.0
         self.barrier = None
     
+    def atomPos(self, index):
+        """
+        Return pointer to atom position within pos array: [xpos, ypos, zpos].
+        
+        """
+        atomPos = None
+        if index < self.NAtoms:
+            atomPos = self.pos[3*index:3*index+3]
+        
+        return atomPos
+    
+    def atomSym(self, index):
+        """
+        Returns symbol of given atom.
+        
+        """
+        return self.specieList[self.specie[index]]
+    
     def getSpecieIndex(self, sym):
         """
         Return index of specie in specie list.

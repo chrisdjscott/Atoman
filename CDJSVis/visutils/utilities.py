@@ -41,6 +41,14 @@ def resourcePath(relative):
     return path
 
 ################################################################################
+def imagePath(image):
+    """
+    Return full path to given image.
+    
+    """
+    return os.path.join(":/images", image)
+
+################################################################################
 def iconPath(icon):
     """
     Return full path to given icon.
@@ -116,29 +124,44 @@ def checkForExe(exe):
     Check if executable can be located 
     
     """
-    # check if exe programme located
-    syspath = os.getenv("PATH", "")
-    syspatharray = syspath.split(":")
-    found = 0
-    for syspath in syspatharray:
-        if os.path.exists(os.path.join(syspath, exe)):
-            found = 1
-            break
+    exepath = None
     
-    if found:
-        exepath = exe
+    # first check if we've been given an absolute path
+    if len(os.path.split(exe)[0]):
+#         print "CHECK FOR EXE ABS PATH", exe
+        
+        if os.path.exists(exe):
+            exepath = exe
+        
+        else:
+            # basename
+            exe = os.path.basename(exe)
+#             print "SEARCHING FOR BASENAME IN SYS PATH", exe
     
-    else:
-        for syspath in globalsModule.PATH:
+    if exepath is None:
+        # check if exe programme located
+        syspath = os.getenv("PATH", "")
+        syspatharray = syspath.split(":")
+        found = 0
+        for syspath in syspatharray:
             if os.path.exists(os.path.join(syspath, exe)):
                 found = 1
                 break
-        
+    
         if found:
-            exepath = os.path.join(syspath, exe)
-        
+            exepath = exe
+    
         else:
-            exepath = 0
+            for syspath in globalsModule.PATH:
+                if os.path.exists(os.path.join(syspath, exe)):
+                    found = 1
+                    break
+        
+            if found:
+                exepath = os.path.join(syspath, exe)
+        
+            else:
+                exepath = 0
     
     return exepath
 

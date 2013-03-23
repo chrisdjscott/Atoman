@@ -95,6 +95,11 @@ class MainToolbar(QtGui.QDockWidget):
         removePipelineButton.clicked.connect(self.removePipeline)
         row.addWidget(removePipelineButton)
         
+        applyAllButton = QtGui.QPushButton(QtGui.QIcon(iconPath("view-refresh-all.svg")), "")
+        applyAllButton.setStatusTip("Run all pipelines")
+        applyAllButton.clicked.connect(self.runAllPipelines)
+        row.addWidget(applyAllButton)
+        
         # stacked widget (for pipelines)
         self.stackedWidget = QtGui.QStackedWidget()
         row = self.analysisPipelinesForm.newRow()
@@ -111,6 +116,19 @@ class MainToolbar(QtGui.QDockWidget):
         
         # set the main widget
         self.setWidget(self.container)
+    
+    def runAllPipelines(self):
+        """
+        Run all pipelines.
+        
+        """
+        iniIndex = self.currentPipelineIndex
+        
+        for count, p in enumerate(self.pipelineList):
+            self.pipelineCombo.setCurrentIndex(count)
+            p.runAllFilterLists()
+        
+        self.pipelineCombo.setCurrentIndex(iniIndex)
     
     def addPipeline(self):
         """

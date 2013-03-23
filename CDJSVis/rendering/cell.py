@@ -18,6 +18,7 @@ class CellOutline(object):
         self.mapper = vtk.vtkPolyDataMapper()
         self.actor = vtk.vtkActor()
         self.visible = 0
+        self.currentColour = (0, 0, 0)
     
     def add(self, a, b):
         """
@@ -34,7 +35,7 @@ class CellOutline(object):
         self.mapper.SetInput(self.source.GetOutput())
         
         self.actor.SetMapper(self.mapper)
-        self.actor.GetProperty().SetColor(0, 0, 0)
+        self.setColour(self.currentColour)
         
         self.ren.AddActor(self.actor)
         
@@ -48,3 +49,13 @@ class CellOutline(object):
         self.ren.RemoveActor(self.actor)
         
         self.visible = 0
+    
+    def setColour(self, colour):
+        """
+        Set colour.
+        
+        """
+        self.actor.GetProperty().SetColor(colour)
+        
+        self.currentColour = colour
+
