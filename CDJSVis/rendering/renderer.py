@@ -12,7 +12,7 @@ import shutil
 import numpy as np
 import vtk
 from PIL import Image
-from PyQt4 import QtGui, QtCore
+from PySide import QtGui, QtCore
 
 from ..visutils import utilities
 from ..visclibs import output as output_c
