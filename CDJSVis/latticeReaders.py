@@ -107,7 +107,10 @@ class GenericLatticeReader(object):
                 self.displayWarning("LBOMD XYZ input NAtoms does not match reference!")
             
             elif status == -3:
-                self.displayWarning("Unrecognised format for LBOMD XYZ input file!")
+                self.displayWarning("Unrecognised format for input file!")
+            
+            else:
+                self.displayWarning("Input file read failed with error code: %s" % str(status))
             
             return None, None
         
@@ -216,9 +219,11 @@ class LbomdXYZReader(GenericLatticeReader):
         tmpForceArray = np.empty(3, np.float64)
         
         # call clib
-        input_c.readLBOMDXYZ(filename, state.pos, state.charge, state.KE, state.PE, tmpForceArray, 
-                             state.maxPos, state.minPos, xyzformat)
+        status = input_c.readLBOMDXYZ(filename, state.pos, state.charge, state.KE, state.PE, tmpForceArray, 
+                                      state.maxPos, state.minPos, xyzformat)
         
+        if status:
+            return status, None
         
         # copy charge if not included in xyz
         for i in xrange(refLattice.NAtoms):
@@ -290,8 +295,11 @@ class LbomdRefReader(GenericLatticeReader):
         tmpForceArray = np.empty(3, np.float64)
         
         # call c lib
-        input_c.readRef( filename, state.specie, state.pos, state.charge, state.KE, state.PE, tmpForceArray, 
-                         specieListTemp, specieCountTemp, state.maxPos, state.minPos )
+        status = input_c.readRef(filename, state.specie, state.pos, state.charge, state.KE, state.PE, tmpForceArray, 
+                                 specieListTemp, specieCountTemp, state.maxPos, state.minPos)
+        
+        if status:
+            return -3, None
         
         # build specie list and counter in lattice object
         NSpecies = 0
@@ -373,8 +381,11 @@ class LbomdDatReader(GenericLatticeReader):
         specieCountTemp = np.zeros( maxNumSpecies+1, np.int32 )
         
         # call c lib
-        input_c.readLatticeLBOMD( filename, state.specie, state.pos, state.charge, specieListTemp, 
-                                  specieCountTemp, state.maxPos, state.minPos )
+        status = input_c.readLatticeLBOMD(filename, state.specie, state.pos, state.charge, specieListTemp, 
+                                          specieCountTemp, state.maxPos, state.minPos)
+        
+        if status:
+            return status, None
         
         # build specie list and counter in lattice object
         NSpecies = 0

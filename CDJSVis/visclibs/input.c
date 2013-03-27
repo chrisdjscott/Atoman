@@ -45,7 +45,7 @@ int specieIndex(char* sym, int NSpecies, char* specieList)
 int readRef(char* file, int* specie, double* pos, double* charge, double* KE, double* PE, double* force, 
             char* specieList_c, int* specieCount_c, double* maxPos, double* minPos)
 {
-    int i, j, NAtoms, specInd;
+    int i, j, NAtoms, specInd, stat;
     FILE *INFILE;
     double xdim, ydim, zdim;
     char symtemp[3];
@@ -65,11 +65,15 @@ int readRef(char* file, int* specie, double* pos, double* charge, double* KE, do
         exit(35);
     }
     
-    fscanf( INFILE, "%d", &NAtoms );
+    stat = fscanf(INFILE, "%d", &NAtoms);
+    if (stat != 1)
+        return -3;
     
-    fscanf(INFILE, "%lf%lf%lf", &xdim, &ydim, &zdim);
+    stat = fscanf(INFILE, "%lf%lf%lf", &xdim, &ydim, &zdim);
+    if (stat != 3)
+        return -3;
     
-    specieList = malloc( 3 * sizeof(char) );
+    specieList = malloc(3 * sizeof(char));
     
     minPos[0] = 1000000;
     minPos[1] = 1000000;
@@ -80,7 +84,9 @@ int readRef(char* file, int* specie, double* pos, double* charge, double* KE, do
     NSpecies = 0;
     for (i=0; i<NAtoms; i++)
     {
-        fscanf(INFILE, "%d%s%lf%lf%lf%lf%lf%lf%lf%lf%lf", &id, symtemp, &xpos, &ypos, &zpos, &ketemp, &petemp, &xforce, &yforce, &zforce, &chargetemp);
+        stat = fscanf(INFILE, "%d%s%lf%lf%lf%lf%lf%lf%lf%lf%lf", &id, symtemp, &xpos, &ypos, &zpos, &ketemp, &petemp, &xforce, &yforce, &zforce, &chargetemp);
+        if (stat != 11)
+            return -3;
         
         /* index for storage is (id-1) */
         index = id - 1;
@@ -167,7 +173,7 @@ int readLBOMDXYZ(char* file, double* pos, double* charge, double* KE, double* PE
                  double* force, double* maxPos, double* minPos, int xyzformat)
 {
     FILE *INFILE;
-    int i, index, id, NAtoms;
+    int i, index, id, NAtoms, stat;
     double simTime, xpos, ypos, zpos;
     double chargetmp, KEtmp, PEtmp;
     double xfor, yfor, zfor;
@@ -183,8 +189,13 @@ int readLBOMDXYZ(char* file, double* pos, double* charge, double* KE, double* PE
     }
     
     /* read header */
-    fscanf(INFILE, "%d", &NAtoms);
-    fscanf(INFILE, "%lf", &simTime);
+    stat = fscanf(INFILE, "%d", &NAtoms);
+    if (stat != 1)
+        return -3;
+    
+    stat = fscanf(INFILE, "%lf", &simTime);
+    if (stat != 1)
+        return -3;
         
     /* read atoms */
     minPos[0] = 1000000;
@@ -197,11 +208,15 @@ int readLBOMDXYZ(char* file, double* pos, double* charge, double* KE, double* PE
     {
         if (xyzformat == 0)
         {
-            fscanf(INFILE, "%d%lf%lf%lf%lf%lf", &id, &xpos, &ypos, &zpos, &KEtmp, &PEtmp);
+            stat = fscanf(INFILE, "%d %lf %lf %lf %lf %lf", &id, &xpos, &ypos, &zpos, &KEtmp, &PEtmp);
+            if (stat != 6)
+                return -3;
         }
         else if (xyzformat == 1)
         {
-            fscanf(INFILE, "%d%lf%lf%lf%lf%lf%lf", &id, &xpos, &ypos, &zpos, &KEtmp, &PEtmp, &chargetmp);
+            stat = fscanf(INFILE, "%d%lf%lf%lf%lf%lf%lf", &id, &xpos, &ypos, &zpos, &KEtmp, &PEtmp, &chargetmp);
+            if (stat != 7)
+                return -3;
         }
         
         index = id - 1;
@@ -264,7 +279,7 @@ int readLatticeLBOMD(char* file, int* specie, double* pos, double* charge, char*
     char symtemp[3];
     char* specieList;
     double xpos, ypos, zpos, chargetemp;
-    int NSpecies, comp, specieMatch;
+    int NSpecies, comp, specieMatch, stat;
     
     
     /* open file */
@@ -277,8 +292,13 @@ int readLatticeLBOMD(char* file, int* specie, double* pos, double* charge, char*
     }
     
     /* read header */
-    fscanf( INFILE, "%d", &NAtoms );
-    fscanf(INFILE, "%lf%lf%lf", &xdim, &ydim, &zdim);
+    stat = fscanf( INFILE, "%d", &NAtoms );
+    if (stat != 1)
+        return -3;
+    
+    stat = fscanf(INFILE, "%lf %lf %lf", &xdim, &ydim, &zdim);
+    if (stat != 3)
+        return -3;
     
     /* allocate specieList */
     specieList = malloc( 3 * sizeof(char) );
@@ -293,7 +313,9 @@ int readLatticeLBOMD(char* file, int* specie, double* pos, double* charge, char*
     NSpecies = 0;
     for (i=0; i<NAtoms; i++)
     {
-        fscanf(INFILE, "%s%lf%lf%lf%lf", symtemp, &xpos, &ypos, &zpos, &chargetemp);
+        stat = fscanf(INFILE, "%s %lf %lf %lf %lf", symtemp, &xpos, &ypos, &zpos, &chargetemp);
+        if (stat != 5)
+            return -3;
         
         /* store position and charge */
         pos[3*i] = xpos;
