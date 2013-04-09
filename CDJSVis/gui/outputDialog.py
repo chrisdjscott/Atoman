@@ -872,12 +872,12 @@ class ImageSequenceTab(QtGui.QWidget):
                 
         self.fileprefix = QtGui.QLineEdit(self.fileprefixText)
         self.fileprefix.setFixedWidth(120)
-        self.connect(self.fileprefix, QtCore.SIGNAL('textChanged(str)'), self.fileprefixChanged)
+        self.fileprefix.textChanged[str].connect(self.fileprefixChanged)
         
         resetPrefixButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-paste.svg")), "")
         resetPrefixButton.setStatusTip("Set prefix to input file")
         resetPrefixButton.setToolTip("Set prefix to input file")
-        self.connect(resetPrefixButton, QtCore.SIGNAL("clicked()"), self.resetPrefix)
+        resetPrefixButton.clicked.connect(self.resetPrefix)
         
         rowLayout.addWidget(label)
         rowLayout.addWidget(self.fileprefix)
@@ -892,8 +892,6 @@ class ImageSequenceTab(QtGui.QWidget):
         groupLayout.setContentsMargins(0, 0, 0, 0)
         groupLayout.setSpacing(0)
         
-        
-        
         # numbering format
         row = QtGui.QWidget(self)
         rowLayout = QtGui.QHBoxLayout(row)
@@ -905,7 +903,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.numberFormatCombo = QtGui.QComboBox()
         self.numberFormatCombo.addItem("%04d")
         self.numberFormatCombo.addItem("%d")
-        self.connect(self.numberFormatCombo, QtCore.SIGNAL("currentIndexChanged(str)"), self.numberFormatChanged)
+        self.numberFormatCombo.currentIndexChanged[str].connect(self.numberFormatChanged)
         
 #        rowLayout.addWidget(label)
         rowLayout.addWidget(self.numberFormatCombo)
@@ -922,7 +920,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.minIndexSpinBox.setMinimum(0)
         self.minIndexSpinBox.setMaximum(99999)
         self.minIndexSpinBox.setValue(self.minIndex)
-        self.connect(self.minIndexSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.minIndexChanged)
+        self.minIndexSpinBox.valueChanged[int].connect(self.minIndexChanged)
         
         label = QtGui.QLabel("to")
         
@@ -930,7 +928,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.maxIndexSpinBox.setMinimum(1)
         self.maxIndexSpinBox.setMaximum(99999)
         self.maxIndexSpinBox.setValue(self.maxIndex)
-        self.connect(self.maxIndexSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.maxIndexChanged)
+        self.maxIndexSpinBox.valueChanged[int].connect(self.maxIndexChanged)
         
         label2 = QtGui.QLabel("by")
         
@@ -938,7 +936,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.intervalSpinBox.setMinimum(1)
         self.intervalSpinBox.setMaximum(99999)
         self.intervalSpinBox.setValue(self.interval)
-        self.connect(self.intervalSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.intervalChanged)
+        self.intervalSpinBox.valueChanged[int].connect(self.intervalChanged)
         
         rowLayout.addWidget(self.minIndexSpinBox)
         rowLayout.addWidget(label)
@@ -975,7 +973,7 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         self.overwriteCheck = QtGui.QCheckBox("Overwrite")
-        self.connect(self.overwriteCheck, QtCore.SIGNAL('stateChanged(int)'), self.overwriteCheckChanged)
+        self.overwriteCheck.stateChanged[int].connect(self.overwriteCheckChanged)
         
         rowLayout.addWidget(self.overwriteCheck)
         
@@ -996,7 +994,7 @@ class ImageSequenceTab(QtGui.QWidget):
         else:
             self.createMovieCheck.setChecked(False)
             self.createMovie = False
-        self.connect(self.createMovieCheck, QtCore.SIGNAL('stateChanged(int)'), self.createMovieCheckChanged)
+        self.createMovieCheck.stateChanged[int].connect(self.createMovieCheckChanged)
         
         rowLayout.addWidget(self.createMovieCheck)
         
@@ -1012,7 +1010,7 @@ class ImageSequenceTab(QtGui.QWidget):
         startSequencerButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
         startSequencerButton.setStatusTip("Start sequencer")
         startSequencerButton.setToolTip("Start sequencer")
-        self.connect(startSequencerButton, QtCore.SIGNAL('clicked()'), self.startSequencer)
+        startSequencerButton.clicked.connect(self.startSequencer)
         
         rowLayout.addWidget(startSequencerButton)
         
