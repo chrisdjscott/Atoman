@@ -633,7 +633,7 @@ class ImageTab(QtGui.QWidget):
             
             saveText = os.path.basename(saveText)
             
-            command = "%s -r %d -y -i %s.%s -r %d -b %dk %s.%s" % (ffmpeg, framerate, saveText, 
+            command = "'%s' -r %d -y -i %s.%s -r %d -b %dk '%s.%s'" % (ffmpeg, framerate, saveText, 
                                                                   self.imageFormat, 25, bitrate, 
                                                                   outputprefix, outputsuffix)
             

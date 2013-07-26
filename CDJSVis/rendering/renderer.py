@@ -390,24 +390,24 @@ class Renderer(object):
             CWD = os.getcwd()
             try:
                 os.chdir(self.mainWindow.tmpDirectory)
-                command = "cat renderer%d_header.pov" % renIndex
+                command = "cat 'renderer%d_header.pov'" % renIndex
                 for filterList in filterLists:
                     if filterList.visible:
                         if os.path.exists("pipeline%d_atoms%d.pov" % (pipelineIndex, filterList.tab)):
-                            command += " pipeline%d_atoms%d.pov" % (pipelineIndex, filterList.tab)
+                            command += " 'pipeline%d_atoms%d.pov'" % (pipelineIndex, filterList.tab)
                         
                         if os.path.exists("pipeline%d_hulls%d.pov" % (pipelineIndex, filterList.tab)):
-                            command += " pipeline%d_hulls%d.pov" % (pipelineIndex, filterList.tab)
+                            command += " 'pipeline%d_hulls%d.pov'" % (pipelineIndex, filterList.tab)
                         
                         if os.path.exists("pipeline%d_defects%d.pov" % (pipelineIndex, filterList.tab)):
-                            command += " pipeline%d_defects%d.pov" % (pipelineIndex, filterList.tab)
+                            command += " 'pipeline%d_defects%d.pov'" % (pipelineIndex, filterList.tab)
                         
                         if os.path.exists("pipeline%d_bonds%d.pov" % (pipelineIndex, filterList.tab)):
-                            command += " pipeline%d_bonds%d.pov" % (pipelineIndex, filterList.tab)
+                            command += " 'pipeline%d_bonds%d.pov'" % (pipelineIndex, filterList.tab)
                 
                 fullPovFile = "renderer%d_image.pov" % renIndex
                 
-                command += " > %s" % fullPovFile
+                command += " > '%s'" % fullPovFile
                 output, stderr, status = utilities.runSubProcess(command)
                 if status:
                     return None
@@ -432,7 +432,7 @@ class Renderer(object):
                 fh.close()
                 
                 # run povray
-                command = "%s %s" % (povray, povIniFile)
+                command = "%s '%s'" % (povray, povIniFile)
                 output, stderr, status = utilities.runSubProcess(command)
                 if status:
                     print "STDOUT:", output
