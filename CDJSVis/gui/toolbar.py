@@ -65,16 +65,16 @@ class MainToolbar(QtGui.QDockWidget):
         containerLayout.addWidget(self.currentFileBox)
         
         # load input form
-        self.loadInputForm = GenericForm(self, 0, "Load input")
-        self.loadInputForm.show()
-        
-        loadInputButton = QtGui.QPushButton(QtGui.QIcon(iconPath("document-open.svg")), "Open input")
-        loadInputButton.clicked.connect(self.mainWindow.showLoadInputDialog)
-        
-        row = self.loadInputForm.newRow()
-        row.addWidget(loadInputButton)
-        
-        containerLayout.addWidget(self.loadInputForm)
+#         self.loadInputForm = GenericForm(self, 0, "Load input")
+#         self.loadInputForm.show()
+#         
+#         loadInputButton = QtGui.QPushButton(QtGui.QIcon(iconPath("document-open.svg")), "Open input")
+#         loadInputButton.clicked.connect(self.mainWindow.showLoadInputDialog)
+#         
+#         row = self.loadInputForm.newRow()
+#         row.addWidget(loadInputButton)
+#         
+#         containerLayout.addWidget(self.loadInputForm)
         
         # analysis pipelines form
         self.analysisPipelinesForm = GenericForm(self, 0, "Analysis pipelines")

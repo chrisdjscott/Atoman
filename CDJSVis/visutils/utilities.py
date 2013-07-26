@@ -17,6 +17,15 @@ from PySide import QtGui
 
 from .. import globalsModule
 
+################################################################################
+
+def log_error(message):
+    """
+    Write an error message to stderr
+    
+    """
+    sys.stderr.write(message)
+    sys.stderr.flush()
 
 ################################################################################
 def resourcePath(relative):

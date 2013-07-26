@@ -16,6 +16,7 @@ import PySide
 import vtk
 import numpy as np
 import matplotlib
+import scipy
 
 from .visutils.utilities import iconPath, resourcePath
 from .atoms import elements
@@ -26,6 +27,7 @@ from .gui import helpForm
 from .gui import dialogs
 from .gui import rendererSubWindow
 from .gui import inputDialog
+from .gui import systemsDialog
 try:
     from . import resources
 except ImportError:
@@ -121,7 +123,7 @@ class MainWindow(QtGui.QMainWindow):
         self.setWindowTitle("CDJSVis")
         
         # create temporary directory for working in
-        self.tmpDirectory = tempfile.mkdtemp(prefix="CDJSVisTemp-", dir="/tmp")
+        self.tmpDirectory = tempfile.mkdtemp(prefix="VisTemp-", dir="/tmp")
         
         # console window for logging output to
         self.console = dialogs.ConsoleWindow(self)
@@ -142,8 +144,10 @@ class MainWindow(QtGui.QMainWindow):
                                             "CDJSVis.ico", "Open new application window")
         newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow,
                                             icon="window-new.svg", tip="Open new render sub window")
-        loadInputAction = self.createAction("Load input", slot=self.showLoadInputDialog, icon="document-open.svg",
-                                            tip="Open load input dialog")
+#         loadInputAction = self.createAction("Load input", slot=self.showLoadInputDialog, icon="document-open.svg",
+#                                             tip="Open load input dialog")
+        systems_action = self.createAction("Systems dialog", slot=self.show_systems_dialog, icon="document-open.svg",
+                                           tip="Show systems dialog")
         openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="folder.svg", 
                                           tip="Open current working directory")
         exportElementsAction = self.createAction("Export elements", slot=self.exportElements,
@@ -161,7 +165,7 @@ class MainWindow(QtGui.QMainWindow):
         
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, loadInputAction, openCWDAction, importElementsAction, 
+        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, systems_action, openCWDAction, importElementsAction, 
                                    exportElementsAction, importBondsAction, exportBondsAction, None, exitAction))
         
         # button to show console window
@@ -181,7 +185,8 @@ class MainWindow(QtGui.QMainWindow):
         fileToolbar.addAction(newWindowAction)
         fileToolbar.addAction(newRenWindowAction)
         fileToolbar.addSeparator()
-        fileToolbar.addAction(loadInputAction)
+#         fileToolbar.addAction(loadInputAction)
+        fileToolbar.addAction(systems_action)
         fileToolbar.addAction(openCWDAction)
         fileToolbar.addSeparator()
         
@@ -213,7 +218,13 @@ class MainWindow(QtGui.QMainWindow):
         self.statusBar = QtGui.QStatusBar()
         self.statusBar.addPermanentWidget(self.currentDirectoryLabel)
         self.setStatusBar(self.statusBar)
-                
+        
+        # dict of currently loaded systems
+        self.loaded_systems = {}
+        
+        # systems dialog
+        self.systems_dialog = systemsDialog.SystemsDialog(self, self)
+        
         # load input dialog
         self.loadInputDialog = inputDialog.InputDialog(self, self, None)
         
@@ -244,8 +255,19 @@ class MainWindow(QtGui.QMainWindow):
         # give focus
         self.raise_()
         
+        # show system dialog
+        self.show_systems_dialog()
+        
         # show input dialog
 #        self.showLoadInputDialog()
+    
+    def show_systems_dialog(self):
+        """
+        Show systems dialog.
+        
+        """
+        self.systems_dialog.hide()
+        self.systems_dialog.show()
     
     def showLoadInputDialog(self):
         """
@@ -699,6 +721,9 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         if fileType == "ref":
+            # if a ref is already loaded, we need to 
+            
+            
             self.refState = state
             
             self.readLBOMDIN()
@@ -710,24 +735,36 @@ class MainWindow(QtGui.QMainWindow):
         
         self.postInputLoaded(filename)
         
-        self.fileExtension = extension
+        if self.fileExtension is not None:
+            self.fileExtension = extension
     
     def postRefLoaded(self, filename):
         """
         Do stuff after the ref has been loaded.
         
         """
+        if self.refLoaded:
+            for filterPage in self.mainToolbar.pipelineList:
+                filterPage.clearAllActors()
+                filterPage.refreshAllFilters()
+                
+            for rw in self.rendererWindows:
+                rw.textSelector.refresh()
+            
+            for rw in self.rendererWindows:
+                rw.outputDialog.rdfTab.refresh()
+        
         self.setCurrentRefFile(filename)
         self.refLoaded = 1
         
-        self.inputState.clone(self.refState)
+#         self.inputState.clone(self.refState)
         
         for rw in self.rendererWindows:
             rw.renderer.postRefRender()
         
-        self.loadInputDialog.loadRefBox.hide()
-        self.loadInputDialog.clearRefBox.show()
-        self.loadInputDialog.loadInputBox.show()
+#         self.loadInputDialog.loadRefBox.hide()
+#         self.loadInputDialog.clearRefBox.show()
+#         self.loadInputDialog.loadInputBox.show()
         
         for rw in self.rendererWindows:
             rw.textSelector.refresh()
@@ -740,11 +777,14 @@ class MainWindow(QtGui.QMainWindow):
         self.setCurrentInputFile(filename)
         self.inputLoaded = 1
         
-        self.mainToolbar.loadInputForm.hide()
+#         self.mainToolbar.loadInputForm.hide()
         self.mainToolbar.analysisPipelinesForm.show()
         
         for filterPage in self.mainToolbar.pipelineList:
             filterPage.refreshAllFilters()
+        
+        for rw in self.rendererWindows:
+            rw.textSelector.refresh()
         
         for rw in self.rendererWindows:
             rw.outputDialog.rdfTab.refresh()
@@ -816,9 +856,9 @@ class MainWindow(QtGui.QMainWindow):
                                 <p>This application can be used to visualise atomistic simulations.</p>
                                 <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
                                    by Marc Robinson.</p>
-                                <p>Python %s - Qt %s - PySide %s - VTK %s - Matplotlib %s on %s""" % (
+                                <p>Python %s - Qt %s - PySide %s - VTK %s - SciPy %s - Matplotlib %s on %s""" % (
                                 __version__, platform.python_version(), QtCore.__version__, PySide.__version__,
-                                vtk.vtkVersion.GetVTKVersion(), matplotlib.__version__, platform.system()))
+                                vtk.vtkVersion.GetVTKVersion(), scipy.__version__, matplotlib.__version__, platform.system()))
     
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):

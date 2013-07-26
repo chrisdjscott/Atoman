@@ -102,6 +102,16 @@ class FilterForm(QtGui.QWidget):
             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
                 rw.removeOnScreenInfo()
     
+    def clearAllActors(self):
+        """
+        Clear all actors.
+        
+        """
+        self.log("Clearing all actors")
+        
+        for filterList in self.filterLists:
+            filterList.filterer.removeActors()
+    
     def runAllFilterLists(self):
         """
         Run all the filter lists.

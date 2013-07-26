@@ -7,6 +7,7 @@ Initialise application.
 
 """
 import sys
+import multiprocessing
 
 from PySide import QtGui, QtCore
 
@@ -37,4 +38,5 @@ def main():
 ################################################################################
 
 if __name__ == '__main__':
+    multiprocessing.freeze_support()
     main()

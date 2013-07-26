@@ -7,7 +7,9 @@ Stores positions etc
 
 """
 import numpy as np
-from atoms import elements
+
+from .atoms import elements
+from .md import forces
 
 
 ################################################################################
@@ -21,21 +23,22 @@ class Lattice(object):
         
         self.cellDims = np.empty(3, np.float64)
         
-        self.specieList = []
-        self.specieCount = []
-        self.specieMass = []
-        self.specieCovalentRadius = []
-        self.specieRGB = []
-        self.specieAtomicNumber = []
+        dt = np.dtype((str, 2))
+        self.specieList = np.empty(0, dt)
+        self.specieCount = np.empty(0, np.int32)
+        self.specieMass = np.empty(0, np.float64)
+        self.specieCovalentRadius = np.empty(0, np.float64)
+        self.specieRGB = np.empty((0,3), np.float64)
+        self.specieAtomicNumber = np.empty(0, np.int32)
         
         self.minPos = np.empty(3, np.float64)
         self.maxPos = np.empty(3, np.float64)
         
-        self.specie = []
-        self.pos = []
-        self.KE = []
-        self.PE = []
-        self.charge = []
+        self.specie = np.empty(0, np.int32)
+        self.pos = np.empty(0, np.float64)
+        self.KE = np.empty(0, np.float64)
+        self.PE = np.empty(0, np.float64)
+        self.charge = np.empty(0, np.float64)
     
     def reset(self, NAtoms):
         """
@@ -50,20 +53,101 @@ class Lattice(object):
         self.PE = np.zeros(NAtoms, np.float64)
         self.charge = np.zeros(NAtoms, np.float64)
         
-        self.specieList = []
-        self.specieCount = []
-        self.specieMass = []
-        self.specieCovalentRadius = []
-        self.specieRGB = []
-        self.specieAtomicNumber = []
+        dt = np.dtype((str, 2))
+        self.specieList = np.empty(0, dt)
+        self.specieCount = np.empty(0, np.int32)
+        self.specieMass = np.empty(0, np.float64)
+        self.specieCovalentRadius = np.empty(0, np.float64)
+        self.specieRGB = np.empty((0,3), np.float64)
+        self.specieAtomicNumber = np.empty(0, np.int32)
         
-#         self.minPos = np.empty(3, np.float64)
-#         self.maxPos = np.empty(3, np.float64)
-#         
-#         self.cellDims = np.zeros(3, np.float64)
+        self.minPos = np.empty(3, np.float64)
+        self.maxPos = np.empty(3, np.float64)
+         
+        self.cellDims = np.zeros(3, np.float64)
         
         self.simTime = 0.0
         self.barrier = None
+    
+    def addAtom(self, sym, pos, charge):
+        """
+        Add an atom to the lattice
+        
+        """
+        if sym not in self.specieList:
+            self.specieList = np.append(self.specieList, sym)
+            self.specieCount = np.append(self.specieCount, 0)
+            
+            self.specieMass = np.append(self.specieMass, elements.atomicMass(sym))
+#                 self.specieMassAMU = np.append(self.specieMassAMU, Atoms.atomicMassAMU(sym))
+            self.specieCovalentRadius = np.append(self.specieCovalentRadius, elements.covalentRadius(sym))
+            rgbtemp = elements.RGB(sym)
+            rgbnew = np.empty((1,3), np.float64)
+            rgbnew[0][0] = rgbtemp[0]
+            rgbnew[0][1] = rgbtemp[1]
+            rgbnew[0][2] = rgbtemp[2]
+            self.specieRGB = np.append(self.specieRGB, rgbnew, axis=0)
+        
+        specInd = self.getSpecieIndex(sym)
+        
+        self.specieCount[specInd] += 1
+        
+        pos = np.asarray(pos, dtype=np.float64)
+        
+        self.specie = np.append(self.specie, specInd)
+        self.pos = np.append(self.pos, pos)
+        self.charge = np.append(self.charge, charge)
+#         self.force = np.append(self.force, np.zeros(3, np.float64))
+        self.KE = np.append(self.KE, 0.0)
+        self.PE = np.append(self.PE, 0.0)
+        
+        # min/max pos!!??
+        
+        
+        self.NAtoms += 1
+    
+    def removeAtom(self, index):
+        """
+        Remove an atom
+        
+        """
+        specInd = self.specie[index]
+        self.specie = np.delete(self.specie, index)
+        self.pos = np.delete(self.pos, [3*index,3*index+1,3*index+2])
+        self.charge = np.delete(self.charge, index)
+        self.force = np.delete(self.force, [3*index,3*index+1,3*index+2])
+        self.NAtoms -= 1
+        
+        # modify specie list / counter if required
+        self.specieCount[specInd] -= 1
+        if self.specieCount[specInd] == 0:
+            self.removeSpecie(specInd)
+        
+        self.KE = np.delete(self.KE, index)
+        self.PE = np.delete(self.PE, index)
+    
+    def removeSpecie(self, index):
+        """
+        Remove a specie from the specie list.
+        
+        """
+        self.specieCount = np.delete(self.specieCount, index)
+        self.specieList = np.delete(self.specieList, index)
+        self.specieCovalentRadius = np.delete(self.specieCovalentRadius, index)
+        self.specieMass = np.delete(self.specieMass, index)
+#         self.specieMassAMU = np.delete(self.specieMassAMU, index)
+        self.specieRGB = np.delete(self.specieRGB, index, axis=0)
+        
+        for i in xrange(self.NAtoms):
+            if self.specie[i] > index:
+                self.specie[i] -= 1
+    
+    def calc_force(self, md_dir):
+        """
+        Calculate force on lattice.
+        
+        """
+        return forces.calc_force(self, md_dir)
     
     def atomPos(self, index):
         """
@@ -81,14 +165,18 @@ class Lattice(object):
         Returns symbol of given atom.
         
         """
-        return self.specieList[self.specie[index]]
+        atomSym = None
+        if index < self.NAtoms:
+            atomSym = self.specieList[self.specie[index]]
+        
+        return atomSym
     
     def getSpecieIndex(self, sym):
         """
         Return index of specie in specie list.
         
         """
-        index = -1
+        index = None
         for i in xrange(len(self.specieList)):
             if self.specieList[i] == sym:
                 index = i

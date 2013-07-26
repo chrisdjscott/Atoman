@@ -293,7 +293,7 @@ class LbomdRefReaderForm(GenericReaderForm):
             GenericReaderForm.postOpenFile(self, self.stateType, state, filename)
             
             # set xyz input form to use this as ref
-            self.parent.lbomdXyzWidget_input.setRefState(state, filename)
+            self.parent.lbomdXyzWidget.setRefState(state, filename)
         
         return status
 
