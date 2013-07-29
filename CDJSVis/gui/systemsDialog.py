@@ -290,6 +290,34 @@ class SystemsDialog(QtGui.QDialog):
         self.ref_index = index
         
         self.refresh_type_text()
+        
+        self.check_ref_change_ok()
+    
+    def check_ref_change_ok(self):
+        """
+        Check it was ok to change the ref.
+        
+        """
+        ref = self.lattice_list[self.ref_index]
+        inp = self.lattice_list[self.input_index]
+        
+        if inp.cellDims != ref.cellDims:
+            self.mainWindow.console.write("WARNING: new ref has different cellDims: setting input = ref")
+            
+            self.set_input(self.ref_index)
+    
+    def check_input_change_ok(self):
+        """
+        Check it was ok to change the input.
+        
+        """
+        ref = self.lattice_list[self.ref_index]
+        inp = self.lattice_list[self.input_index]
+        
+        if inp.cellDims != ref.cellDims:
+            self.mainWindow.console.write("WARNING: new input has different cellDims: setting ref = input")
+            
+            self.set_ref(self.input_index)
     
     def set_input(self, index=None):
         """
@@ -318,6 +346,8 @@ class SystemsDialog(QtGui.QDialog):
         self.input_index = index
         
         self.refresh_type_text()
+        
+        self.check_input_change_ok()
     
     def file_generated(self, lattice):
         """

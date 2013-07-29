@@ -404,8 +404,12 @@ class RendererWindow(QtGui.QWidget):
             
             if minSep < 0.1:
                 if minSepType == 0:
+                    # show window
                     atomInfoWindow = dialogs.AtomInfoWindow(self.mainWindow, minSepIndex, minSepScalar, minSepScalarType, parent=self)
                     atomInfoWindow.show()
+                    
+                    # highlight atom
+                    
                 
                 else:
                     defectInfoWindow = dialogs.DefectInfoWindow(self.mainWindow, minSepIndex, minSepType, defList, parent=self)

@@ -747,6 +747,22 @@ def povrayBond(pos, vector):
     pass
 
 ################################################################################
+class AtomHighlighter(object):
+    """
+    Atom highlighter
+    
+    """
+    def __init__(self, parent):
+        self.parent = parent
+        
+        self.source = vtk.vtkSphereSource()
+        self.mapper = vtk.vtkPolyDataMapper()
+        self.actor = vtk.vtkActor()
+    
+    def addHighlight(self, ):
+        pass
+
+################################################################################
 def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, displayOptions, NVisibleForRes=None):
     """
     Make the actors for the filtered system

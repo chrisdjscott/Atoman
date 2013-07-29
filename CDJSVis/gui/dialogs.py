@@ -966,6 +966,8 @@ class AtomInfoWindow(QtGui.QDialog):
         
         self.setWindowTitle("Atom info")
         
+        
+        
         layout = QtGui.QVBoxLayout()
         
         row = QtGui.QHBoxLayout()
