@@ -298,10 +298,19 @@ class SystemsDialog(QtGui.QDialog):
         Check it was ok to change the ref.
         
         """
+        if self.input_index is None or self.ref_index is None:
+            return
+        
         ref = self.lattice_list[self.ref_index]
         inp = self.lattice_list[self.input_index]
         
-        if inp.cellDims != ref.cellDims:
+        diff = False
+        for i in xrange(3):
+            if inp.cellDims[i] != ref.cellDims[i]:
+                diff = True
+                break
+        
+        if diff:
             self.mainWindow.console.write("WARNING: new ref has different cellDims: setting input = ref")
             
             self.set_input(self.ref_index)
@@ -311,10 +320,19 @@ class SystemsDialog(QtGui.QDialog):
         Check it was ok to change the input.
         
         """
+        if self.input_index is None or self.ref_index is None:
+            return
+        
         ref = self.lattice_list[self.ref_index]
         inp = self.lattice_list[self.input_index]
         
-        if inp.cellDims != ref.cellDims:
+        diff = False
+        for i in xrange(3):
+            if inp.cellDims[i] != ref.cellDims[i]:
+                diff = True
+                break
+        
+        if diff:
             self.mainWindow.console.write("WARNING: new input has different cellDims: setting ref = input")
             
             self.set_ref(self.input_index)

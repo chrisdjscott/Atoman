@@ -277,12 +277,13 @@ class LbomdRefReader(GenericLatticeReader):
         NAtoms = int(line)
         
         line = f.readline().strip()
-        array = line.split()
-        state.setDims(array)
+        dims_array = line.split()
         
         f.close()
         
         state.reset(NAtoms)
+        
+        state.setDims(dims_array)
         
         self.log("%d atoms" % (NAtoms,), 0, 1)
         
@@ -365,12 +366,13 @@ class LbomdDatReader(GenericLatticeReader):
         NAtoms = int(line)
         
         line = f.readline().strip()
-        array = line.split()
-        state.setDims(array)
+        dims_array = line.split()
         
         f.close()
         
         state.reset(NAtoms)
+        
+        state.setDims(dims_array)
         
         self.log("%d atoms" % (NAtoms,), 0, 1)
         
