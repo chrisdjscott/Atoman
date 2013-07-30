@@ -170,12 +170,6 @@ class RendererWindow(QtGui.QWidget):
             
             # cell frame
             self.renderer.latticeFrame.setColour((0, 0, 0))
-            
-            # text
-            self.refreshOnScreenInfo()
-            
-            # reinit
-            self.renderer.reinit()
         
         else:
             self.blackBackground = True
@@ -185,12 +179,52 @@ class RendererWindow(QtGui.QWidget):
             
             # cell frame
             self.renderer.latticeFrame.setColour((1, 1, 1))
+        
+        # text
+        self.refreshOnScreenInfo()
+        
+        # toggle scalar bar
+        self.toggleScalarBar()
+        
+        # reinit
+        self.renderer.reinit()
+    
+    def toggleScalarBar(self):
+        """
+        Toggle colour of scalar bar
+        
+        """
+        # assume self.blackBackground has already been changed
+        
+        black_bg_now = self.blackBackground
+        if black_bg_now:
+            black_bg = False
+        else:
+            black_bg = True
+        
+        filterLists = self.getFilterLists()
+        
+        for filterList in filterLists:
+            filterer = filterList.filterer
             
-            # text
-            self.refreshOnScreenInfo()
-            
-            # reinit
-            self.renderer.reinit()
+            if filterer.scalarBarAdded:
+                # which scalar bar
+                if black_bg:
+                    scalarBar = filterer.scalarBar_black_bg
+                    scalarBarAdd = filterer.scalarBar_white_bg
+                else:
+                    scalarBar = filterer.scalarBar_white_bg
+                    scalarBarAdd = filterer.scalarBar_black_bg
+                
+                # remove it
+                self.vtkRen.RemoveActor2D(scalarBar)
+                
+                # add other one
+                self.vtkRen.AddActor2D(scalarBarAdd)
+                
+                self.vtkRenWinInteract.ReInitialize()
+        
+        
     
     def initPipelines(self):
         """
@@ -253,7 +287,13 @@ class RendererWindow(QtGui.QWidget):
                 actor = actorsCollection.GetNextItem()
             
             if filterer.scalarBarAdded:
-                self.vtkRen.RemoveActor2D(filterer.scalarBar)
+                # which scalar bar
+                if self.blackBackground:
+                    scalarBar = filterer.scalarBar_black_bg
+                else:
+                    scalarBar = filterer.scalarBar_white_bg
+                
+                self.vtkRen.RemoveActor2D(scalarBar)
             
             self.vtkRenWinInteract.ReInitialize()
     
@@ -279,7 +319,13 @@ class RendererWindow(QtGui.QWidget):
                 actor = actorsCollection.GetNextItem()
             
             if filterer.scalarBarAdded:
-                self.vtkRen.AddActor2D(filterer.scalarBar)
+                # which scalar bar
+                if self.blackBackground:
+                    scalarBar = filterer.scalarBar_black_bg
+                else:
+                    scalarBar = filterer.scalarBar_white_bg
+                
+                self.vtkRen.AddActor2D(scalarBar)
             
             self.vtkRenWinInteract.ReInitialize()
     

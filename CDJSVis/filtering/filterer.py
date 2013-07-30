@@ -60,7 +60,9 @@ class Filterer(object):
         self.bondsOptions = self.parent.bondsOptions
         self.displayOptions = self.parent.displayOptions
         self.scalarBarAdded = False
-        self.scalarBar = None
+#         self.scalarBar = None
+        self.scalarBar_white_bg = None
+        self.scalarBar_black_bg = None
         
         self.scalars = np.asarray([], dtype=np.float64)
         self.scalarsType = ""
@@ -75,6 +77,8 @@ class Filterer(object):
         self.actorsCollection = vtk.vtkActorCollection()
         
         self.scalarBar = None
+        self.scalarBar_white_bg = None
+        self.scalarBar_black_bg = None
     
     def hideActors(self):
         """
@@ -291,9 +295,10 @@ class Filterer(object):
                 else:
                     NVisibleForRes = None
                 
-                self.scalarBar, visSpecCount = renderer.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, self.actorsCollection, 
-                                                                                    self.colouringOptions, povfile, self.scalars, self.displayOptions, 
-                                                                                    NVisibleForRes=NVisibleForRes)
+                self.scalarBar_white_bg, self.scalarBar_black_bg, visSpecCount = renderer.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, 
+                                                                                                                     self.actorsCollection, self.colouringOptions, 
+                                                                                                                     povfile, self.scalars, self.displayOptions, 
+                                                                                                                     NVisibleForRes=NVisibleForRes)
                 
                 self.visibleSpecieCount = visSpecCount
                 
@@ -445,10 +450,16 @@ class Filterer(object):
         Add scalar bar.
         
         """
-        if self.scalarBar is not None and self.parent.scalarBarButton.isChecked() and not self.parent.filterTab.scalarBarAdded:
+        if self.scalarBar_white_bg is not None and self.parent.scalarBarButton.isChecked() and not self.parent.filterTab.scalarBarAdded:
             for rw in self.rendererWindows:
                 if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                    rw.vtkRen.AddActor2D(self.scalarBar)
+                    # which scalar bar to add
+                    if rw.blackBackground:
+                        scalarBar = self.scalarBar_black_bg
+                    else:
+                        scalarBar = self.scalarBar_white_bg
+                    
+                    rw.vtkRen.AddActor2D(scalarBar)
                     rw.vtkRenWinInteract.ReInitialize()
             
             self.parent.filterTab.scalarBarAdded = True
@@ -464,7 +475,13 @@ class Filterer(object):
         if self.scalarBarAdded:
             for rw in self.rendererWindows:
                 if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                    rw.vtkRen.RemoveActor2D(self.scalarBar)
+                    # which scalar bar was added
+                    if rw.blackBackground:
+                        scalarBar = self.scalarBar_black_bg
+                    else:
+                        scalarBar = self.scalarBar_white_bg
+                    
+                    rw.vtkRen.RemoveActor2D(scalarBar)
                     rw.vtkRenWinInteract.ReInitialize()
             
             self.parent.filterTab.scalarBarAdded = False

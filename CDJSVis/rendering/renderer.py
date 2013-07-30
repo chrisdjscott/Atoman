@@ -877,39 +877,53 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     
     # scalar bar
     scalarBar = None
+    scalarBar_white = None
+    scalarBar_black = None
     if colouringOptions.colourBy != "Specie" and colouringOptions.colourBy != "Solid colour":
-        scalarBar = vtk.vtkScalarBarActor()
-        scalarBar.SetLookupTable(lut)
-        
-        if colouringOptions.colourBy == "Height":
-            title = colouringOptions.scalarBarText
-        elif colouringOptions.colourBy == "Atom property":
-            title = str(colouringOptions.scalarBarTextEdit3.text())
-        else:
-            title = str(colouringOptions.scalarBarTextEdit2.text())
-        
-        scalarBar.SetTitle(title)
-        scalarBar.SetOrientationToHorizontal()
-        
-        lprop = scalarBar.GetTitleTextProperty()
-        lprop.SetColor((0, 0, 0))
-        lprop.ItalicOff()
-        lprop.BoldOn()
-        lprop.SetFontSize(20)
-        lprop.SetFontFamilyToArial()
-        
-        lprop = scalarBar.GetLabelTextProperty()
-        lprop.SetColor((0, 0, 0))
-        lprop.ItalicOff()
-        lprop.BoldOn()
-        lprop.SetFontSize(10)
-        lprop.SetFontFamilyToArial()
-        
-        scalarBar.SetWidth(0.85)
-        scalarBar.GetPositionCoordinate().SetValue(0.1, 0.01)
-        scalarBar.SetHeight(0.12)
+        scalarBar_white = makeScalarBar(lut, colouringOptions, (0, 0, 0))
+        scalarBar_black = makeScalarBar(lut, colouringOptions, (1, 1, 1))
     
-    return scalarBar, specieCount
+    return scalarBar_white, scalarBar_black, specieCount
+
+################################################################################
+
+def makeScalarBar(lut, colouringOptions, text_colour):
+    """
+    Make a scalar bar
+    
+    """
+    scalarBar = vtk.vtkScalarBarActor()
+    scalarBar.SetLookupTable(lut)
+    
+    if colouringOptions.colourBy == "Height":
+        title = colouringOptions.scalarBarText
+    elif colouringOptions.colourBy == "Atom property":
+        title = str(colouringOptions.scalarBarTextEdit3.text())
+    else:
+        title = str(colouringOptions.scalarBarTextEdit2.text())
+    
+    scalarBar.SetTitle(title)
+    scalarBar.SetOrientationToHorizontal()
+    
+    lprop = scalarBar.GetTitleTextProperty()
+    lprop.SetColor(text_colour)
+    lprop.ItalicOff()
+    lprop.BoldOn()
+    lprop.SetFontSize(20)
+    lprop.SetFontFamilyToArial()
+    
+    lprop = scalarBar.GetLabelTextProperty()
+    lprop.SetColor(text_colour)
+    lprop.ItalicOff()
+    lprop.BoldOn()
+    lprop.SetFontSize(10)
+    lprop.SetFontFamilyToArial()
+    
+    scalarBar.SetWidth(0.85)
+    scalarBar.GetPositionCoordinate().SetValue(0.1, 0.01)
+    scalarBar.SetHeight(0.12)
+    
+    return scalarBar
 
 
 ################################################################################
