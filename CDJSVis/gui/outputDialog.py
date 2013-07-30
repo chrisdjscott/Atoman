@@ -334,6 +334,7 @@ class FileTab(QtGui.QWidget):
         
         # initial values
         self.outputFileType = "LATTICE"
+        self.writeFullLattice = True
         
         # layout
         mainLayout = QtGui.QVBoxLayout(self)
@@ -356,6 +357,14 @@ class FileTab(QtGui.QWidget):
         row = fileNameGroup.newRow()
         row.addWidget(label)
         row.addWidget(outputTypeCombo)
+        
+        # option to write full lattice
+        fullLatticeCheck = QtGui.QCheckBox("Write full lattice (not just visible)")
+        fullLatticeCheck.setCheckState(QtCore.Qt.Checked)
+        fullLatticeCheck.stateChanged.connect(self.fullLatticeCheckChanged)
+        
+        row = fileNameGroup.newRow()
+        row.addWidget(fullLatticeCheck)
         
         # file name, save image button
         row = fileNameGroup.newRow()
@@ -390,6 +399,17 @@ class FileTab(QtGui.QWidget):
         
         mainLayout.addWidget(fileNameGroup)
     
+    def fullLatticeCheckChanged(self, val):
+        """
+        Full lattice check changed.
+        
+        """
+        if val == QtCore.Qt.Checked:
+            self.writeFullLattice = True
+        
+        else:
+            self.writeFullLattice = False
+    
     def saveToFile(self):
         """
         Save current system to file.
@@ -412,7 +432,7 @@ class FileTab(QtGui.QWidget):
         
         #TODO: this should write visible atoms only, not whole lattice!
         
-        output_c.writeLattice(filename, visibleAtoms, lattice.cellDims, lattice.specieList, lattice.specie, lattice.pos, lattice.charge)
+        output_c.writeLattice(filename, visibleAtoms, lattice.cellDims, lattice.specieList, lattice.specie, lattice.pos, lattice.charge, self.writeFullLattice)
     
     def saveToFileDialog(self):
         """

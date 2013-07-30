@@ -207,10 +207,10 @@ int writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int 
 /*******************************************************************************
 ** write lattice file
 *******************************************************************************/
-int writeLattice(char* file, int NVisible, int *visibleAtoms, double *cellDims, 
-                 char* specieList, int* specie, double* pos, double* charge)
+int writeLattice(char* file, int NAtoms, int NVisible, int *visibleAtoms, double *cellDims, 
+                 char* specieList, int* specie, double* pos, double* charge, int writeFullLattice)
 {
-    int i, index;
+    int i, index, NAtomsWrite;
     FILE *OUTFILE;
     char symtemp[3];
     
@@ -223,20 +223,36 @@ int writeLattice(char* file, int NVisible, int *visibleAtoms, double *cellDims,
         exit(35);
     } 
     
-    fprintf(OUTFILE, "%d\n", NVisible);
+    NAtomsWrite = (writeFullLattice) ? NAtoms : NVisible;
+    
+    fprintf(OUTFILE, "%d\n", NAtomsWrite);
     fprintf(OUTFILE, "%f %f %f\n", cellDims[0], cellDims[1], cellDims[2]);
     
-    for (i=0; i<NVisible; i++)
+    if (writeFullLattice)
     {
-        index = visibleAtoms[i];
-        
-        symtemp[0] = specieList[2*specie[index]];
-        symtemp[1] = specieList[2*specie[index]+1];
-        symtemp[2] = '\0';
-        
-        fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*index], pos[3*index+1], pos[3*index+2], charge[index]);
+    	for (i=0; i<NAtoms; i++)
+    	{
+    		symtemp[0] = specieList[2*specie[i]];
+			symtemp[1] = specieList[2*specie[i]+1];
+			symtemp[2] = '\0';
+			
+			fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*i], pos[3*i+1], pos[3*i+2], charge[i]);
+    	}
     }
-    
+    else
+    {
+		for (i=0; i<NVisible; i++)
+		{
+			index = visibleAtoms[i];
+			
+			symtemp[0] = specieList[2*specie[index]];
+			symtemp[1] = specieList[2*specie[index]+1];
+			symtemp[2] = '\0';
+			
+			fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*index], pos[3*index+1], pos[3*index+2], charge[index]);
+		}
+    }
+		
     fclose(OUTFILE);
     
     return 0;

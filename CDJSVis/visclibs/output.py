@@ -40,17 +40,17 @@ elif osname == "Linux":
 
 # read ref prototype
 _lib.writeLattice.restype = c_int
-_lib.writeLattice.argtypes = [c_char_p, c_int, POINTER(c_int), POINTER(c_double), POINTER(c_char), 
-                              POINTER(c_int), POINTER(c_double), POINTER(c_double)]
+_lib.writeLattice.argtypes = [c_char_p, c_int, c_int, POINTER(c_int), POINTER(c_double), POINTER(c_char), 
+                              POINTER(c_int), POINTER(c_double), POINTER(c_double), c_int]
 
 # read ref
-def writeLattice(filename, visibleAtoms, cellDims, specieList, specie, pos, charge):
+def writeLattice(filename, visibleAtoms, cellDims, specieList, specie, pos, charge, writeFullLattice):
     """
     Read LBOMD ref file.
     
     """
-    return _lib.writeLattice(filename, len(visibleAtoms), CPtrToInt(visibleAtoms), CPtrToDouble(cellDims), CPtrToChar(specieList), 
-                             CPtrToInt(specie), CPtrToDouble(pos), CPtrToDouble(charge))
+    return _lib.writeLattice(filename, len(specie), len(visibleAtoms), CPtrToInt(visibleAtoms), CPtrToDouble(cellDims), CPtrToChar(specieList), 
+                             CPtrToInt(specie), CPtrToDouble(pos), CPtrToDouble(charge), int(writeFullLattice))
 
 ################################################################################
 
