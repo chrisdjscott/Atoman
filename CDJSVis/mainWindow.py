@@ -82,6 +82,10 @@ class MainWindow(QtGui.QMainWindow):
         self.PBC[2] = 1
         self.mouseMotion = 0
         
+        print "*"*40 + "DEBUG" + "*"*40
+        print "RESOURCE PATH", resourcePath("lbomd.IN", dirname="md_input"), os.path.exists(resourcePath("lbomd.IN", dirname="md_input"))
+        print "*"*38 + "END DEBUG" + "*"*38
+        
         # initiate lattice objects for storing reference and input states
         self.inputState = lattice.Lattice()
         self.refState = lattice.Lattice()  

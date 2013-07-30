@@ -15,6 +15,7 @@ a = Analysis(['../CDJSVis.py'],
 
 a.datas += [('data/atoms.IN', '../CDJSVis/data/atoms.IN', 'DATA'),
             ('data/bonds.IN', '../CDJSVis/data/bonds.IN', 'DATA')]
+#            ('md_input/lbomd.IN', '../CDJSVis/md_input/lbomd.IN', 'DATA')]
 
 pyz = PYZ(a.pure)
 

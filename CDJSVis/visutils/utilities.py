@@ -28,7 +28,7 @@ def log_error(message):
     sys.stderr.flush()
 
 ################################################################################
-def resourcePath(relative):
+def resourcePath(relative, dirname="data"):
     """
     Find path to given resource regardless of when running from within
     PyInstaller bundle or from command line.
@@ -36,14 +36,14 @@ def resourcePath(relative):
     """
     # first look in pyinstaller bundle
     if hasattr(sys, "_MEIPASS"):
-        path = os.path.join(sys._MEIPASS, "data")
+        path = os.path.join(sys._MEIPASS, dirname)
     
     else:
         # then look in py2app bundle
         path = os.environ.get("RESOURCEPATH", None)
         if path is None:
             # then look in source code directory
-            path = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), "data")
+            path = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), dirname)
     
     path = os.path.join(path, relative)
     
