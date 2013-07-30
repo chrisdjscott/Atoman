@@ -13,6 +13,7 @@ from PySide import QtGui, QtCore
 from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
 from ..lattice_gen import lattice_gen_pu3ga
+from ..lattice_gen import lattice_gen_fcc
 
 try:
     from .. import resources
@@ -25,13 +26,13 @@ except ImportError:
 
 ################################################################################
 
-class GenericLatticeGenerator(GenericForm):
+class GenericLatticeGeneratorForm(GenericForm):
     """
     Generic reader widget.
     
     """
     def __init__(self, parent, mainWindow, title):
-        super(GenericLatticeGenerator, self).__init__(parent, None, title)
+        super(GenericLatticeGeneratorForm, self).__init__(parent, None, title)
         
         self.parent = parent
         self.mainWindow = mainWindow
@@ -71,6 +72,13 @@ class GenericLatticeGenerator(GenericForm):
         if not status and lattice is not None:
             self.parent.file_generated(lattice)
     
+    def add_specie_options(self, NSpecies):
+        """
+        Add specie options
+        
+        """
+        pass
+    
     def add_a0_option(self):
         """
         Add lattice constant option
@@ -85,6 +93,7 @@ class GenericLatticeGenerator(GenericForm):
         
         # spin
         latticeConstantSpin = QtGui.QDoubleSpinBox()
+        latticeConstantSpin.setDecimals(3)
         latticeConstantSpin.setSingleStep(0.001)
         latticeConstantSpin.setMinimum(0.001)
         latticeConstantSpin.setMaximum(99.999)
@@ -246,13 +255,13 @@ class GenericLatticeGenerator(GenericForm):
 
 ################################################################################
 
-class Pu3GaLatticeGenerator(GenericLatticeGenerator):
+class Pu3GaLatticeGeneratorForm(GenericLatticeGeneratorForm):
     """
     Pu3Ga lattice generator
     
     """
     def __init__(self, parent, mainWindow):
-        super(Pu3GaLatticeGenerator, self).__init__(parent, mainWindow, "Pu3Ga lattice generator")
+        super(Pu3GaLatticeGeneratorForm, self).__init__(parent, mainWindow, "Pu3Ga lattice generator")
         
         self.generatorArgs = lattice_gen_pu3ga.Args()
         
@@ -292,6 +301,62 @@ class Pu3GaLatticeGenerator(GenericLatticeGenerator):
         
         """
         generator = lattice_gen_pu3ga.Pu3GaLatticeGenerator(log=self.mainWindow.console.write)
+        
+        status, lattice = generator.generateLattice(self.generatorArgs)
+        
+        return status, lattice
+
+################################################################################
+
+class FCCLatticeGeneratorForm(GenericLatticeGeneratorForm):
+    """
+    FCC lattice generator
+    
+    """
+    def __init__(self, parent, mainWindow):
+        super(FCCLatticeGeneratorForm, self).__init__(parent, mainWindow, "FCC lattice generator")
+        
+        self.generatorArgs = lattice_gen_fcc.Args()
+        
+        # specie
+        row = self.newRow()
+        
+        label = QtGui.QLabel("Specie:")
+        row.addWidget(label)
+        
+        self.specie_text = QtGui.QLineEdit(self.generatorArgs.sym)
+        self.specie_text.setFixedWidth(30)
+        self.specie_text.textEdited.connect(self.specie_text_edited)
+        row.addWidget(self.specie_text)
+        
+        self.add_unit_cell_options()
+        
+        self.add_a0_option()
+        
+        self.add_pbc_options()
+                
+        # generate button
+        self.add_generate_button()
+    
+    def specie_text_edited(self, text):
+        """
+        Specie text edited
+        
+        """
+        text = str(text)
+        
+        if len(text) > 2:
+            self.specie_text.setText(self.generatorArgs.sym)
+        
+        else:
+            self.generatorArgs.sym = text
+    
+    def generateLatticeMain(self):
+        """
+        Generate lattice
+        
+        """
+        generator = lattice_gen_fcc.FCCLatticeGenerator(log=self.mainWindow.console.write)
         
         status, lattice = generator.generateLattice(self.generatorArgs)
         
