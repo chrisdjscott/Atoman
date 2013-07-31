@@ -1085,6 +1085,9 @@ class ImageSequenceTab(QtGui.QWidget):
         Start the sequencer
         
         """
+        self.mainWindow.displayError("Sequencer not working")
+        return
+        
         self.runSequencer()
         
     def runSequencer(self):

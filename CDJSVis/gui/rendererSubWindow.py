@@ -379,6 +379,10 @@ class RendererWindow(QtGui.QWidget):
         self.currentPipelineString = str(self.analysisPipelineCombo.currentText())
         self.currentPipelineIndex = index
         
+        # post ref render
+        if self.getCurrentRefState() is not None:
+            self.renderer.postRefRender()
+        
         # get new actors
         self.addActors()
         

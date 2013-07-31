@@ -35,6 +35,7 @@ class FilterForm(QtGui.QWidget):
         self.toolbarWidth = width
         self.pipelineIndex = pipelineIndex
         self.pipelineString = pipelineString
+        self.systemsDialog = mainWindow.systemsDialog
         
         self.log = self.mainWindow.console.write
         
@@ -65,7 +66,9 @@ class FilterForm(QtGui.QWidget):
         
         # reference selector
         self.refCombo = QtGui.QComboBox()
-        self.refCombo.currentIndexChanged.connect(self.refChanged)        
+        self.refCombo.currentIndexChanged.connect(self.refChanged)
+        for fn in self.systemsDialog.filenames_list:
+            self.refCombo.addItem(fn)    
         
         # add to row
         rowLayout.addWidget(QtGui.QLabel("Reference:"))
@@ -82,6 +85,8 @@ class FilterForm(QtGui.QWidget):
         # reference selector
         self.inputCombo = QtGui.QComboBox()
         self.inputCombo.currentIndexChanged.connect(self.inputChanged)
+        for fn in self.systemsDialog.filenames_list:
+            self.inputCombo.addItem(fn)
         
         # add to row
         rowLayout.addWidget(QtGui.QLabel("Input:"))
@@ -169,7 +174,6 @@ class FilterForm(QtGui.QWidget):
             for rw in self.rendererWindows:
                 if rw.currentPipelineIndex == self.pipelineIndex:
                     rw.textSelector.refresh()
-                    
                     rw.outputDialog.rdfTab.refresh()
         
         self.mainWindow.readLBOMDIN()
@@ -202,6 +206,8 @@ class FilterForm(QtGui.QWidget):
         Ref changed
         
         """
+        print "REF CHANGED", index
+        
         old_ref = self.refState
         
         self.refState = self.mainWindow.systemsDialog.lattice_list[index]
@@ -217,14 +223,18 @@ class FilterForm(QtGui.QWidget):
         status = self.checkStateChangeOk()
         
         if status:
+            print "MUST CHANGE INPUT TOO"
             # must change input too
-            self.inputChanged(index)
+            self.inputCombo.setCurrentIndex(index)
+#             self.inputChanged(index)
     
     def inputChanged(self, index):
         """
         Input changed
         
         """
+        print "INPUT CHANGED", index
+        
         self.inputState = self.mainWindow.systemsDialog.lattice_list[index]
         self.extension = self.mainWindow.systemsDialog.extensions_list[index]
         
@@ -232,8 +242,10 @@ class FilterForm(QtGui.QWidget):
         status = self.checkStateChangeOk()
         
         if status:
+            print "MUST CHANGE REF TOO"
             # must change ref too
-            self.refChanged(index)
+            self.refCombo.setCurrentIndex(index)
+#             self.refChanged(index)
         
         # post input loaded
         self.postInputLoaded()
