@@ -51,18 +51,18 @@ class MainToolbar(QtGui.QDockWidget):
         self.currentPipelineIndex = 0
         
         # display current file info
-        self.currentFileBox = GenericForm(self, self.toolbarWidth, "Current file")
-        self.currentFileBox.show()
-        
-        row = self.currentFileBox.newRow()
-        self.currentRefLabel = QtGui.QLabel("Reference: " + str(self.mainWindow.refFile))
-        row.addWidget(self.currentRefLabel)
-        
-        row = self.currentFileBox.newRow()
-        self.currentInputLabel = QtGui.QLabel("Input: " + str(self.mainWindow.inputFile))
-        row.addWidget(self.currentInputLabel)
-        
-        containerLayout.addWidget(self.currentFileBox)
+#         self.currentFileBox = GenericForm(self, self.toolbarWidth, "Current file")
+#         self.currentFileBox.show()
+#         
+#         row = self.currentFileBox.newRow()
+#         self.currentRefLabel = QtGui.QLabel("Reference: " + str(self.mainWindow.refFile))
+#         row.addWidget(self.currentRefLabel)
+#         
+#         row = self.currentFileBox.newRow()
+#         self.currentInputLabel = QtGui.QLabel("Input: " + str(self.mainWindow.inputFile))
+#         row.addWidget(self.currentInputLabel)
+#         
+#         containerLayout.addWidget(self.currentFileBox)
         
         # load input form
 #         self.loadInputForm = GenericForm(self, 0, "Load input")
@@ -116,6 +116,14 @@ class MainToolbar(QtGui.QDockWidget):
         
         # set the main widget
         self.setWidget(self.container)
+    
+    def addStateOptionToPipelines(self, filename):
+        """
+        Add state option to pipeline combos
+        
+        """
+        for p in self.pipelineList:
+            p.addStateOption(filename)
     
     def runAllPipelines(self):
         """

@@ -193,7 +193,7 @@ class RDFTab(QtGui.QWidget):
         
         """
         # lattice
-        specieList = self.mainWindow.inputState.specieList
+        specieList = self.rendererWindow.getCurrentInputState().specieList
         
         # store current so can try to reselect
         spec1CurrentText = str(self.spec1Combo.currentText())
@@ -242,7 +242,7 @@ class RDFTab(QtGui.QWidget):
             return
         
         # then determine species
-        inputLattice = self.mainWindow.inputState
+        inputLattice = self.rendererWindow.getCurrentInputState()
         specieList = inputLattice.specieList
         
         if self.spec1 == "ALL":
@@ -425,7 +425,7 @@ class FileTab(QtGui.QWidget):
             return
         
         # lattice object
-        lattice = self.mainWindow.inputState
+        lattice = self.rendererWindow.getCurrentInputState()
         
         # gather vis atoms
         visibleAtoms = self.rendererWindow.gatherVisibleAtoms()

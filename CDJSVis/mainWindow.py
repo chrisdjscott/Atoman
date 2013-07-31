@@ -87,8 +87,8 @@ class MainWindow(QtGui.QMainWindow):
         print "*"*38 + "END DEBUG" + "*"*38
         
         # initiate lattice objects for storing reference and input states
-        self.inputState = lattice.Lattice()
-        self.refState = lattice.Lattice()  
+#         self.inputState = lattice.Lattice()
+#         self.refState = lattice.Lattice()  
         
         # get settings object
         settings = QtCore.QSettings()
@@ -227,7 +227,7 @@ class MainWindow(QtGui.QMainWindow):
         self.loaded_systems = {}
         
         # systems dialog
-        self.systems_dialog = systemsDialog.SystemsDialog(self, self)
+        self.systemsDialog = systemsDialog.SystemsDialog(self, self)
         
         # load input dialog
         self.loadInputDialog = inputDialog.InputDialog(self, self, None)
@@ -270,8 +270,8 @@ class MainWindow(QtGui.QMainWindow):
         Show systems dialog.
         
         """
-        self.systems_dialog.hide()
-        self.systems_dialog.show()
+        self.systemsDialog.hide()
+        self.systemsDialog.show()
     
     def showLoadInputDialog(self):
         """
@@ -625,7 +625,7 @@ class MainWindow(QtGui.QMainWindow):
         Set the current ref file in the main toolbar
         
         """
-        self.mainToolbar.currentRefLabel.setText("Reference: " + filename)
+#         self.mainToolbar.currentRefLabel.setText("Reference: " + filename)
         self.refFile = filename
     
     def setCurrentInputFile(self, filename):
@@ -633,7 +633,7 @@ class MainWindow(QtGui.QMainWindow):
         Set the current input file in the main toolbar
         
         """
-        self.mainToolbar.currentInputLabel.setText("Input: " + filename)
+#         self.mainToolbar.currentInputLabel.setText("Input: " + filename)
         self.inputFile = filename
     
     def setStatus(self, string):

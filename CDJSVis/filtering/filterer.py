@@ -38,6 +38,7 @@ class Filterer(object):
         self.rendererWindows = self.mainWindow.rendererWindows
         self.mainToolbar = self.parent.mainToolbar
         self.pipelineIndex = self.filterTab.pipelineIndex
+        self.pipelinePage = self.filterTab
         
         self.log = self.mainWindow.console.write
         
@@ -149,7 +150,7 @@ class Filterer(object):
         self.scalars = np.asarray([], dtype=np.float64)
         
         # first set up visible atoms arrays
-        NAtoms = self.parent.mainWindow.inputState.NAtoms
+        NAtoms = self.pipelinePage.inputState.NAtoms
         
         if not self.parent.defectFilterSelected:
             self.visibleAtoms = np.arange(NAtoms, dtype=np.int32)
@@ -265,8 +266,8 @@ class Filterer(object):
                 pass
             
             else:
-                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.mainWindow, 
-                                                                self.actorsCollection, self.colouringOptions, filterSettings, self.displayOptions)
+                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.actorsCollection, 
+                                                                self.colouringOptions, filterSettings, self.displayOptions, self.pipelinePage)
                 
                 self.vacancySpecieCount = counters[0]
                 self.interstitialSpecieCount = counters[1]
@@ -276,7 +277,7 @@ class Filterer(object):
                 # write pov-ray file too
                 povfile = "pipeline%d_defects%d.pov" % (self.pipelineIndex, self.parent.tab)
                 renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow, 
-                                            self.displayOptions, splitInterstitials)
+                                            self.displayOptions, splitInterstitials, self.pipelinePage)
             
             self.colouringOptions.colourBy = colourBy
             
@@ -298,7 +299,7 @@ class Filterer(object):
                 self.scalarBar_white_bg, self.scalarBar_black_bg, visSpecCount = renderer.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, 
                                                                                                                      self.actorsCollection, self.colouringOptions, 
                                                                                                                      povfile, self.scalars, self.displayOptions, 
-                                                                                                                     NVisibleForRes=NVisibleForRes)
+                                                                                                                     self.pipelinePage, NVisibleForRes=NVisibleForRes)
                 
                 self.visibleSpecieCount = visSpecCount
                 
@@ -336,7 +337,7 @@ class Filterer(object):
         
         self.log("Calculating bonds", 0, 2)
                 
-        inputState = self.mainWindow.inputState
+        inputState = self.pipelinePage.inputState
         specieList = inputState.specieList
         NSpecies = len(specieList)
         
@@ -440,8 +441,8 @@ class Filterer(object):
             # pov file for bonds
             povfile = "pipeline%d_bonds%d.pov" % (self.pipelineIndex, self.parent.tab)
             
-            renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.actorsCollection, self.colouringOptions, povfile, 
-                                    self.scalars, bondArray, NBondsArray, bondVectorArray, self.bondsOptions)
+            renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsCollection, self.colouringOptions, 
+                                    povfile, self.scalars, bondArray, NBondsArray, bondVectorArray, self.bondsOptions)
         
         return 0
     
@@ -500,20 +501,20 @@ class Filterer(object):
         
         """
         if settings.allSpeciesSelected:
-            visSpecArray = np.arange(len(self.mainWindow.inputState.specieList), dtype=np.int32)
+            visSpecArray = np.arange(len(self.pipelinePage.inputState.specieList), dtype=np.int32)
         
         else:
             visSpecArray = np.empty(len(settings.visibleSpecieList), np.int32)
             count = 0
-            for i in xrange(len(self.mainWindow.inputState.specieList)):
-                if self.mainWindow.inputState.specieList[i] in settings.visibleSpecieList:
+            for i in xrange(len(self.pipelinePage.inputState.specieList)):
+                if self.pipelinePage.inputState.specieList[i] in settings.visibleSpecieList:
                     visSpecArray[count] = i
                     count += 1
         
             if count != len(visSpecArray):
                 visSpecArray.resize(count)
         
-        NVisible = filtering_c.specieFilter(self.visibleAtoms, visSpecArray, self.mainWindow.inputState.specie)
+        NVisible = filtering_c.specieFilter(self.visibleAtoms, visSpecArray, self.pipelinePage.inputState.specie)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
     
@@ -523,8 +524,8 @@ class Filterer(object):
         
         """
         # only run displacement filter if input and reference NAtoms are the same
-        inputState = self.mainWindow.inputState
-        refState = self.mainWindow.refState
+        inputState = self.pipelinePage.inputState
+        refState = self.pipelinePage.refState
         
         if inputState.NAtoms != refState.NAtoms:
             self.log("WARNING: cannot run displacement filter with different numbers of input and reference atoms: skipping this filter list")
@@ -547,7 +548,7 @@ class Filterer(object):
         Crop lattice
         
         """
-        lattice = self.mainWindow.inputState
+        lattice = self.pipelinePage.inputState
         
         NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
                                           settings.ymax, settings.zmin, settings.zmax, settings.xEnabled, 
@@ -560,7 +561,7 @@ class Filterer(object):
         Crop sphere filter.
         
         """
-        lattice = self.mainWindow.inputState
+        lattice = self.pipelinePage.inputState
         
         NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, settings.xCentre, settings.yCentre, settings.zCentre, 
                                                 settings.radius, lattice.cellDims, self.mainWindow.PBC, settings.invertSelection)
@@ -572,7 +573,7 @@ class Filterer(object):
         Slice filter.
         
         """
-        lattice = self.mainWindow.inputState
+        lattice = self.pipelinePage.inputState
         
         NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, settings.x0, settings.y0, settings.z0, 
                                            settings.xn, settings.yn, settings.zn, settings.invert)
@@ -584,7 +585,7 @@ class Filterer(object):
         Charge filter.
         
         """
-        lattice = self.mainWindow.inputState
+        lattice = self.pipelinePage.inputState
         
         NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge)
         
@@ -595,7 +596,7 @@ class Filterer(object):
         Filter kinetic energy.
         
         """
-        lattice = self.mainWindow.inputState
+        lattice = self.pipelinePage.inputState
         
         NVisible = filtering_c.KEFilter(self.visibleAtoms, lattice.KE, settings.minKE, settings.maxKE)
         
@@ -606,7 +607,7 @@ class Filterer(object):
         Filter potential energy.
         
         """
-        lattice = self.mainWindow.inputState
+        lattice = self.pipelinePage.inputState
         
         NVisible = filtering_c.PEFilter(self.visibleAtoms, lattice.PE, settings.minPE, settings.maxPE)
         
@@ -617,8 +618,8 @@ class Filterer(object):
         Point defects filter
         
         """
-        inputLattice = self.mainWindow.inputState
-        refLattice = self.mainWindow.refState
+        inputLattice = self.pipelinePage.inputState
+        refLattice = self.pipelinePage.refState
         
         # set up arrays
         interstitials = np.empty(inputLattice.NAtoms, np.int32)
@@ -827,8 +828,8 @@ class Filterer(object):
         else:
             PBCFlag = False
         
-        inputLattice = self.mainWindow.inputState
-        refLattice = self.mainWindow.refState
+        inputLattice = self.pipelinePage.inputState
+        refLattice = self.pipelinePage.refState
         
         for cluster in clusterList:
             
@@ -921,7 +922,7 @@ class Filterer(object):
         Run the cluster filter
         
         """
-        lattice = self.mainWindow.inputState
+        lattice = self.pipelinePage.inputState
         
         atomCluster = np.empty(len(self.visibleAtoms), np.int32)
         result = np.empty(2, np.int32)
@@ -998,7 +999,7 @@ class Filterer(object):
         SHOULD BE ABLE TO GET RID OF THIS AND JUST USE PBCs ONE
         
         """
-        lattice = self.mainWindow.inputState
+        lattice = self.pipelinePage.inputState
         
         # draw them as they are
         for cluster in clusterList:
@@ -1038,7 +1039,7 @@ class Filterer(object):
         
         
         """
-        lattice = self.mainWindow.inputState
+        lattice = self.pipelinePage.inputState
         
         for cluster in clusterList:
             
@@ -1103,7 +1104,7 @@ class Filterer(object):
         
         """    
         # this will not work properly over PBCs at the moment
-        lattice = self.mainWindow.inputState
+        lattice = self.pipelinePage.inputState
         
         # draw them as they are
         count = 0
@@ -1140,7 +1141,7 @@ class Filterer(object):
         Coordination number filter.
         
         """
-        inputState = self.mainWindow.inputState
+        inputState = self.pipelinePage.inputState
         specieList = inputState.specieList
         NSpecies = len(specieList)
         bondDict = elements.bondDict

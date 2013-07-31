@@ -33,6 +33,7 @@ class FilterList(QtGui.QWidget):
         self.tabWidth = width
         self.tabHeight = height
         self.filterCounter = 0
+        self.pipelinePage = self.filterTab
         
         self.defectFilterSelected = 0
         

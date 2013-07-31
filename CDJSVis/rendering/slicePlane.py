@@ -14,18 +14,18 @@ class SlicePlane(vtk.vtkActor):
     Slice plane.
     
     """
-    def __init__(self, mainWindow):
+    def __init__(self, pipelinePage):
         self.source = vtk.vtkPlaneSource()
         self.mapper = vtk.vtkPolyDataMapper()
         
-        self.mainWindow = mainWindow
+        self.pipelinePage = pipelinePage
     
     def update(self, p, n):
         """
         Show the slice plane in given position.
         
         """
-        inputState = self.mainWindow.inputState
+        inputState = self.pipelinePage.inputState
         
         # source
         self.source.SetOrigin(-50, -50, 0)

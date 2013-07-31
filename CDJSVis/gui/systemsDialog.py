@@ -165,7 +165,7 @@ class SystemsDialog(QtGui.QDialog):
         self.setWindowTitle("Systems dialog")
         self.setModal(False)
         
-        self.mainToolbar = parent
+        self.mainToolbar = mainWindow
         self.mainWindow = mainWindow
         
         self.resize(80, 120)
@@ -199,14 +199,14 @@ class SystemsDialog(QtGui.QDialog):
         row.addWidget(self.systems_list_widget)
         
         # set as ref button?
-        set_ref_button = QtGui.QPushButton("Set as ref")
-        set_ref_button.setToolTip("Set as ref")
-        set_ref_button.clicked.connect(self.set_ref)
-        
-        # set as input button?
-        set_input_button = QtGui.QPushButton("Set as input")
-        set_input_button.setToolTip("Set as input")
-        set_input_button.clicked.connect(self.set_input)
+#         set_ref_button = QtGui.QPushButton("Set as ref")
+#         set_ref_button.setToolTip("Set as ref")
+#         set_ref_button.clicked.connect(self.set_ref)
+#         
+#         # set as input button?
+#         set_input_button = QtGui.QPushButton("Set as input")
+#         set_input_button.setToolTip("Set as input")
+#         set_input_button.clicked.connect(self.set_input)
         
         # remove system button
         remove_system = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
@@ -214,8 +214,8 @@ class SystemsDialog(QtGui.QDialog):
         remove_system.clicked.connect(self.remove_system)
         
         row = list_holder.newRow()
-        row.addWidget(set_ref_button)
-        row.addWidget(set_input_button)
+#         row.addWidget(set_ref_button)
+#         row.addWidget(set_input_button)
         row.addWidget(remove_system)
         
         # box for new system stuff
@@ -380,9 +380,9 @@ class SystemsDialog(QtGui.QDialog):
         
         index = self.add_lattice(lattice, "generated.dat", "dat")
         
-        if not self.ref_selected:
-            self.set_ref(index=index)
-            self.set_input(index=index)
+#         if not self.ref_selected:
+#             self.set_ref(index=index)
+#             self.set_input(index=index)
     
     def file_loaded(self, lattice, filename, extension):
         """
@@ -393,9 +393,9 @@ class SystemsDialog(QtGui.QDialog):
         
         index = self.add_lattice(lattice, filename, extension)
         
-        if not self.ref_selected:
-            self.set_ref(index=index)
-            self.set_input(index=index)
+#         if not self.ref_selected:
+#             self.set_ref(index=index)
+#             self.set_input(index=index)
     
     def add_lattice(self, lattice, filename, extension):
         """
@@ -412,6 +412,9 @@ class SystemsDialog(QtGui.QDialog):
         list_item.setText("%s (%d atoms)" % (filename, lattice.NAtoms))
         
         self.systems_list_widget.addItem(list_item)
+        
+        # also add lattice to pipeline forms
+        self.mainWindow.mainToolbar.addStateOptionToPipelines(filename)
         
         return index
     

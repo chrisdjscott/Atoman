@@ -34,7 +34,8 @@ class GenericSettingsDialog(QtGui.QDialog):
         super(GenericSettingsDialog, self).__init__(parent)
         
         self.parent = parent
-#        self.mainWindow = self.parent.mainWindow
+        self.mainWindow = self.parent.mainWindow
+        self.pipelinePage = self.parent.filterTab
         
         # get tab and filter id's
         array = title.split("(")[1].split(")")[0].split()
@@ -138,11 +139,7 @@ class GenericSettingsDialog(QtGui.QDialog):
 ################################################################################
 class SpecieSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        
-        self.parent = parent
-        self.mainWindow = mainWindow
-        
-        GenericSettingsDialog.__init__(self, title, parent)
+        super(SpecieSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Specie"
         
@@ -183,8 +180,8 @@ class SpecieSettingsDialog(GenericSettingsDialog):
         Refresh the specie list
         
         """
-        inputSpecieList = self.mainWindow.inputState.specieList
-        refSpecieList = self.mainWindow.refState.specieList
+        inputSpecieList = self.pipelinePage.inputState.specieList
+        refSpecieList = self.pipelinePage.refState.specieList
         
         for spec in refSpecieList:
             if spec not in self.specieList:
@@ -234,11 +231,7 @@ class SpecieSettingsDialog(GenericSettingsDialog):
 ################################################################################
 class CropSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        
-        self.parent = parent
-        self.mainWindow = mainWindow
-        
-        GenericSettingsDialog.__init__(self, title, parent)
+        super(CropSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Crop"
         
@@ -342,11 +335,11 @@ class CropSettingsDialog(GenericSettingsDialog):
         
     def setCropToLattice( self ):
         self.xMinRangeSpinBox.setValue( 0.0 )
-        self.xMaxRangeSpinBox.setValue( self.mainWindow.inputState.cellDims[0] )
+        self.xMaxRangeSpinBox.setValue( self.pipelinePage.inputState.cellDims[0] )
         self.yMinRangeSpinBox.setValue( 0.0 )
-        self.yMaxRangeSpinBox.setValue( self.mainWindow.inputState.cellDims[1] )
+        self.yMaxRangeSpinBox.setValue( self.pipelinePage.inputState.cellDims[1] )
         self.zMinRangeSpinBox.setValue( 0.0 )
-        self.zMaxRangeSpinBox.setValue( self.mainWindow.inputState.cellDims[2] )
+        self.zMaxRangeSpinBox.setValue( self.pipelinePage.inputState.cellDims[2] )
     
     def changedXEnabled( self ):
         if self.xCropCheckBox.isChecked():
@@ -411,11 +404,7 @@ class CropSettingsDialog(GenericSettingsDialog):
 ################################################################################
 class CropSphereSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        
-        self.parent = parent
-        self.mainWindow = mainWindow
-        
-        GenericSettingsDialog.__init__(self, title, parent)
+        super(CropSphereSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Crop sphere"
         
@@ -504,9 +493,9 @@ class CropSphereSettingsDialog(GenericSettingsDialog):
         Set centre to lattice centre.
         
         """
-        self.xCentreSpinBox.setValue(self.mainWindow.inputState.cellDims[0] / 2.0)
-        self.yCentreSpinBox.setValue(self.mainWindow.inputState.cellDims[1] / 2.0)
-        self.zCentreSpinBox.setValue(self.mainWindow.inputState.cellDims[2] / 2.0)
+        self.xCentreSpinBox.setValue(self.mainWindow.pipelinePage.cellDims[0] / 2.0)
+        self.yCentreSpinBox.setValue(self.mainWindow.pipelinePage.cellDims[1] / 2.0)
+        self.zCentreSpinBox.setValue(self.mainWindow.pipelinePage.cellDims[2] / 2.0)
     
     def radiusChanged(self, val):
         """
@@ -540,11 +529,7 @@ class CropSphereSettingsDialog(GenericSettingsDialog):
 ################################################################################
 class PointDefectsSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        
-        self.parent = parent
-        self.mainWindow = mainWindow
-        
-        GenericSettingsDialog.__init__(self, title, parent)
+        super(PointDefectsSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Point defects"
         
@@ -961,8 +946,8 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         Refresh the specie list
         
         """
-        refSpecieList = self.mainWindow.refState.specieList
-        inputSpecieList = self.mainWindow.inputState.specieList
+        refSpecieList = self.pipelinePage.refState.specieList
+        inputSpecieList = self.pipelinePage.inputState.specieList
         
         for spec in refSpecieList:
             if spec not in self.specieList:
@@ -1052,11 +1037,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
 ################################################################################
 class ClusterSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        
-        self.parent = parent
-        self.mainWindow = mainWindow
-        
-        GenericSettingsDialog.__init__(self, title, parent)
+        super(ClusterSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Clusters"
         
@@ -1247,11 +1228,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
 ################################################################################
 class DisplacementSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        
-        self.parent = parent
-        self.mainWindow = mainWindow
-        
-        GenericSettingsDialog.__init__(self, title, parent)
+        super(DisplacementSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Displacement"
         
@@ -1300,11 +1277,7 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
 ################################################################################
 class KineticEnergySettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        
-        self.parent = parent
-        self.mainWindow = mainWindow
-        
-        GenericSettingsDialog.__init__(self, title, parent)
+        super(KineticEnergySettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Kinetic energy"
         
@@ -1353,11 +1326,7 @@ class KineticEnergySettingsDialog(GenericSettingsDialog):
 ################################################################################
 class PotentialEnergySettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        
-        self.parent = parent
-        self.mainWindow = mainWindow
-        
-        GenericSettingsDialog.__init__(self, title, parent)
+        super(PotentialEnergySettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Potential energy"
         
@@ -1406,11 +1375,7 @@ class PotentialEnergySettingsDialog(GenericSettingsDialog):
 ################################################################################
 class ChargeSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        
-        self.parent = parent
-        self.mainWindow = mainWindow
-        
-        GenericSettingsDialog.__init__(self, title, parent)
+        super(ChargeSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Charge"
         
@@ -1463,16 +1428,13 @@ class SliceSettingsDialog(GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
+        super(SliceSettingsDialog, self).__init__(title, parent)
         
-        self.parent = parent
-        self.mainWindow = mainWindow
-        
-        self.slicePlane = slicePlane.SlicePlane(self.mainWindow)
-        
-        GenericSettingsDialog.__init__(self, title, parent)
+        # slice plane
+        self.slicePlane = slicePlane.SlicePlane(self.pipelinePage)
         
         # defaults
-        lattice = self.mainWindow.inputState
+        lattice = self.pipelinePage.inputState
         self.x0 = lattice.cellDims[0] / 2.0
         self.y0 = lattice.cellDims[1] / 2.0
         self.z0 = lattice.cellDims[2] / 2.0
@@ -1706,11 +1668,7 @@ class SliceSettingsDialog(GenericSettingsDialog):
 ################################################################################
 class CoordinationNumberSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        
-        self.parent = parent
-        self.mainWindow = mainWindow
-        
-        GenericSettingsDialog.__init__(self, title, parent)
+        super(CoordinationNumberSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Coordination number"
         

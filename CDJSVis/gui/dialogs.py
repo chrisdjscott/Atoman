@@ -602,6 +602,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         super(OnScreenInfoDialog, self).__init__(parent)
         
         self.parent = parent
+        self.rendererWindow = parent
         self.mainWindow = mainWindow
         
         self.setWindowTitle("On screen info - Render window %d" % index)
@@ -763,17 +764,17 @@ class DefectInfoWindow(QtGui.QDialog):
     Atom info window.
     
     """
-    def __init__(self, mainWindow, defectIndex, defectType, defList, parent=None):
+    def __init__(self, rendererWindow, defectIndex, defectType, defList, parent=None):
         super(DefectInfoWindow, self).__init__(parent)
         
         self.parent = parent
-        self.mainWindow = mainWindow
+        self.rendererWindow = rendererWindow
         self.defectIndex = defectIndex
         self.defectType = defectType
         self.defList = defList
         
-        inputState = self.mainWindow.inputState
-        refState = self.mainWindow.refState
+        inputState = self.rendererWindow.getCurrentInputState()
+        refState = self.rendererWindow.getCurrentRefState()
         
         self.setWindowTitle("Defect info")
         
@@ -955,18 +956,16 @@ class AtomInfoWindow(QtGui.QDialog):
     Atom info window.
     
     """
-    def __init__(self, mainWindow, atomIndex, scalar, scalarType, parent=None):
+    def __init__(self, rendererWindow, atomIndex, scalar, scalarType, parent=None):
         super(AtomInfoWindow, self).__init__(parent)
         
         self.parent = parent
-        self.mainWindow = mainWindow
+        self.rendererWindow = rendererWindow
         self.atomIndex = atomIndex
         
-        lattice = self.mainWindow.inputState
+        lattice = self.rendererWindow.getCurrentInputState()
         
         self.setWindowTitle("Atom info")
-        
-        
         
         layout = QtGui.QVBoxLayout()
         

@@ -20,6 +20,7 @@ from ..visclibs import picker as picker_c
 from ..rendering import renderer
 from .outputDialog import OutputDialog
 from ..rendering.text import vtkRenderWindowText
+from ..lattice import Lattice
 try:
     from .. import resources
 except ImportError:
@@ -223,8 +224,6 @@ class RendererWindow(QtGui.QWidget):
                 self.vtkRen.AddActor2D(scalarBarAdd)
                 
                 self.vtkRenWinInteract.ReInitialize()
-        
-        
     
     def initPipelines(self):
         """
@@ -244,7 +243,16 @@ class RendererWindow(QtGui.QWidget):
         Return current pipeline page.
         
         """
-        return self.mainWindow.mainToolbar.pipelineList[self.currentPipelineIndex]
+        try:
+            toolbar = self.mainWindow.mainToolbar
+        
+        except AttributeError:
+            pp = None
+        
+        else:
+            pp = toolbar.pipelineList[self.currentPipelineIndex]
+        
+        return pp
     
     def getFilterLists(self):
         """
@@ -329,6 +337,36 @@ class RendererWindow(QtGui.QWidget):
             
             self.vtkRenWinInteract.ReInitialize()
     
+    def getCurrentRefState(self):
+        """
+        Returns current ref state
+        
+        """
+        pp = self.getCurrentPipelinePage()
+        
+        if pp is None:
+            refState = None
+        
+        else:
+            refState = pp.refState
+        
+        return refState
+    
+    def getCurrentInputState(self):
+        """
+        Returns current input state
+        
+        """
+        pp = self.getCurrentPipelinePage()
+        
+        if pp is None:
+            inputState = None
+        
+        else:
+            inputState = pp.inputState
+        
+        return inputState
+    
     def pipelineChanged(self, index):
         """
         Current pipeline changed.
@@ -352,7 +390,7 @@ class RendererWindow(QtGui.QWidget):
         Show output dialog.
         
         """
-        if not self.mainWindow.refLoaded:
+        if self.getCurrentRefState() is None:
             return
         
         self.outputDialog.hide()
@@ -394,6 +432,10 @@ class RendererWindow(QtGui.QWidget):
             # loop over filter lists
             filterLists = self.getFilterLists()
             
+            # states
+            refState = self.getCurrentRefState()
+            inputState = self.getCurrentInputState()
+            
             minSepIndex = -1
             minSep = 9999999.0
             minSepType = None
@@ -414,10 +456,10 @@ class RendererWindow(QtGui.QWidget):
                 result = np.empty(3, np.float64)
                 
                 status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, antisites, splitInts, pickPos_np, 
-                                             self.mainWindow.inputState.pos, self.mainWindow.refState.pos, self.mainWindow.PBC, self.mainWindow.inputState.cellDims,
-                                             self.mainWindow.refState.minPos, self.mainWindow.refState.maxPos, self.mainWindow.inputState.specie, 
-                                             self.mainWindow.refState.specie, self.mainWindow.inputState.specieCovalentRadius, 
-                                             self.mainWindow.refState.specieCovalentRadius, result)
+                                             inputState.pos, refState.pos, self.mainWindow.PBC, inputState.cellDims,
+                                             refState.minPos, refState.maxPos, inputState.specie, 
+                                             refState.specie, inputState.specieCovalentRadius, 
+                                             refState.specieCovalentRadius, result)
                 
                 tmp_type, tmp_index, tmp_sep = result
                 
@@ -451,14 +493,14 @@ class RendererWindow(QtGui.QWidget):
             if minSep < 0.1:
                 if minSepType == 0:
                     # show window
-                    atomInfoWindow = dialogs.AtomInfoWindow(self.mainWindow, minSepIndex, minSepScalar, minSepScalarType, parent=self)
+                    atomInfoWindow = dialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, parent=self)
                     atomInfoWindow.show()
                     
                     # highlight atom
                     
                 
                 else:
-                    defectInfoWindow = dialogs.DefectInfoWindow(self.mainWindow, minSepIndex, minSepType, defList, parent=self)
+                    defectInfoWindow = dialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, parent=self)
                     defectInfoWindow.show()
     
     def leftButtonPressed(self, obj, event):
@@ -551,7 +593,7 @@ class RendererWindow(QtGui.QWidget):
         Show the text selector.
         
         """
-        if not self.mainWindow.refLoaded:
+        if self.getCurrentRefState() is None:
             return
         
         self.textSelector.hide()
@@ -581,7 +623,7 @@ class RendererWindow(QtGui.QWidget):
         Refresh the on-screen information.
         
         """
-        if not self.mainWindow.refLoaded:
+        if self.getCurrentRefState() is None:
             return
         
         textSel = self.textSelector
@@ -594,17 +636,23 @@ class RendererWindow(QtGui.QWidget):
         if not selectedText.count():
             return
         
+        inputState = self.getCurrentInputState()
+        
+        # if input state not set yet just use empty lattice
+        if inputState is None:
+            inputState = Lattice()
+        
         # atom count doesn't change
         if "Atom count" not in self.onScreenInfo:
-            self.onScreenInfo["Atom count"] = "%d atoms" % self.mainWindow.inputState.NAtoms
+            self.onScreenInfo["Atom count"] = "%d atoms" % inputState.NAtoms
         
         # sim time doesn't change
         if "Simulation time" not in self.onScreenInfo:
-            self.onScreenInfo["Simulation time"] = utilities.simulationTimeLine(self.mainWindow.inputState.simTime)
+            self.onScreenInfo["Simulation time"] = utilities.simulationTimeLine(inputState.simTime)
         
         # barrier doesn't change
-        if "Energy barrier" not in self.onScreenInfo and self.mainWindow.inputState.barrier is not None:
-            self.onScreenInfo["Energy barrier"] = "Barrier: %f eV" % self.mainWindow.inputState.barrier
+        if "Energy barrier" not in self.onScreenInfo and inputState.barrier is not None:
+            self.onScreenInfo["Energy barrier"] = "Barrier: %f eV" % inputState.barrier
         
         # filter lists
         filterLists = self.getFilterLists()
@@ -620,13 +668,13 @@ class RendererWindow(QtGui.QWidget):
         if visCountActive:
             self.onScreenInfo["Visible count"] = "%d visible" % visCount
         
-            visSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
+            visSpecCount = np.zeros(len(inputState.specieList), np.int32)
             for filterList in filterLists:
                 if filterList.visible and not filterList.defectFilterSelected and filterList.filterer.NVis:
                     if len(visSpecCount) == len(filterList.filterer.visibleSpecieCount):
                         visSpecCount = np.add(visSpecCount, filterList.filterer.visibleSpecieCount)
         
-            specieList = self.mainWindow.inputState.specieList
+            specieList = inputState.specieList
             self.onScreenInfo["Visible specie count"] = []
             for i, cnt in enumerate(visSpecCount):
                 self.onScreenInfo["Visible specie count"].append("%d %s" % (cnt, specieList[i]))
@@ -660,11 +708,13 @@ class RendererWindow(QtGui.QWidget):
                     showAnts = True
         
         if defectFilterActive:
+            refState = self.getCurrentRefState()
+            
             # defect specie counters
-            vacSpecCount = np.zeros(len(self.mainWindow.refState.specieList), np.int32)
-            intSpecCount = np.zeros(len(self.mainWindow.inputState.specieList), np.int32)
-            antSpecCount = np.zeros((len(self.mainWindow.refState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
-            splitSpecCount = np.zeros((len(self.mainWindow.inputState.specieList), len(self.mainWindow.inputState.specieList)), np.int32)
+            vacSpecCount = np.zeros(len(refState.specieList), np.int32)
+            intSpecCount = np.zeros(len(inputState.specieList), np.int32)
+            antSpecCount = np.zeros((len(refState.specieList), len(inputState.specieList)), np.int32)
+            splitSpecCount = np.zeros((len(inputState.specieList), len(inputState.specieList)), np.int32)
             for filterList in filterLists:
                 if filterList.visible and filterList.defectFilterSelected and filterList.filterer.NVis:
                     if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
@@ -685,10 +735,10 @@ class RendererWindow(QtGui.QWidget):
             if showAnts:
                 self.onScreenInfo["Defect count"].append("%d antisites" % (NAnt,))
             
-            specListInput = self.mainWindow.inputState.specieList
-            specListRef = self.mainWindow.refState.specieList
-            specRGBInput = self.mainWindow.inputState.specieRGB
-            specRGBRef = self.mainWindow.refState.specieRGB
+            specListInput = inputState.specieList
+            specListRef = refState.specieList
+            specRGBInput = inputState.specieRGB
+            specRGBRef = refState.specieRGB
             
             self.onScreenInfo["Defect specie count"] = []
             
@@ -736,7 +786,7 @@ class RendererWindow(QtGui.QWidget):
                 
                 if item == "Visible specie count":
                     for j, specline in enumerate(line):
-                        r, g, b = self.mainWindow.inputState.specieRGB[j]
+                        r, g, b = inputState.specieRGB[j]
                         r, g, b = self.checkTextRGB(r, g, b)
                         
                         if settings.textPosition == "Top left":

@@ -58,7 +58,7 @@ def bondGlyphMethod(bondGlyph, bondGlyphSource, *args, **kwargs):
 
 ################################################################################
 
-def renderBonds(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povfile, scalars, bondArray, NBondsArray, bondVectorArray, bondsOptions):
+def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colouringOptions, povfile, scalars, bondArray, NBondsArray, bondVectorArray, bondsOptions):
     """
     Render bonds.
     
@@ -78,7 +78,7 @@ def renderBonds(visibleAtoms, mainWindow, actorsCollection, colouringOptions, po
     povFilePath = os.path.join(mainWindow.tmpDirectory, povfile)
     fpov = open(povFilePath, "w")
     
-    lattice = mainWindow.inputState
+    lattice = pipelinePage.inputState
     
     # make LUT
     lut = setupLUT(lattice.specieList, lattice.specieRGB, colouringOptions)

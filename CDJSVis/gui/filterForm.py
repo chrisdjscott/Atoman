@@ -38,11 +38,17 @@ class FilterForm(QtGui.QWidget):
         
         self.log = self.mainWindow.console.write
         
+        self.rendererWindows = self.mainWindow.rendererWindows
+        
         self.filterListCount = 0
         self.filterLists = []
         self.onScreenInfo = {}
         self.onScreenInfoActors = vtk.vtkActor2DCollection()
         self.visAtomsList = []
+        
+        self.refState = None
+        self.inputState = None
+        self.extension = None
         
         # layout
         filterTabLayout = QtGui.QVBoxLayout(self)
@@ -50,6 +56,39 @@ class FilterForm(QtGui.QWidget):
         filterTabLayout.setSpacing(0)
         filterTabLayout.setAlignment(QtCore.Qt.AlignTop)
         
+        # row 
+        row = QtGui.QWidget()
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignTop)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setSpacing(0)
+        
+        # reference selector
+        self.refCombo = QtGui.QComboBox()
+        self.refCombo.currentIndexChanged.connect(self.refChanged)        
+        
+        # add to row
+        rowLayout.addWidget(QtGui.QLabel("Reference:"))
+        rowLayout.addWidget(self.refCombo)
+        filterTabLayout.addWidget(row)
+        
+        # row 
+        row = QtGui.QWidget()
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignTop)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setSpacing(0)
+        
+        # reference selector
+        self.inputCombo = QtGui.QComboBox()
+        self.inputCombo.currentIndexChanged.connect(self.inputChanged)
+        
+        # add to row
+        rowLayout.addWidget(QtGui.QLabel("Input:"))
+        rowLayout.addWidget(self.inputCombo)
+        filterTabLayout.addWidget(row)
+        
+        # row
         row = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignTop)
@@ -85,6 +124,119 @@ class FilterForm(QtGui.QWidget):
         # refresh if ref already loaded
         if self.mainWindow.refLoaded:
             self.refreshAllFilters()
+    
+    def addStateOption(self, filename):
+        """
+        Add state option to combo boxes
+        
+        """
+        print "ADD STATE OPTION", filename
+        
+        self.refCombo.addItem(filename)
+        self.inputCombo.addItem(filename)
+    
+    def checkStateChangeOk(self):
+        """
+        Check it was ok to change the state.
+        
+        """
+        if self.inputState is None:
+            return
+        
+        ref = self.refState
+        inp = self.inputState
+        
+        diff = False
+        for i in xrange(3):
+            if inp.cellDims[i] != ref.cellDims[i]:
+                diff = True
+                break
+        
+        if diff:
+            self.mainWindow.console.write("WARNING: cell dims differ")
+            
+        return diff
+    
+    def postRefLoaded(self, oldRef):
+        """
+        Do stuff after the ref has been loaded.
+        
+        """
+        if oldRef is not None:
+            self.clearAllActors()
+            self.refreshAllFilters()
+                
+            for rw in self.rendererWindows:
+                if rw.currentPipelineIndex == self.pipelineIndex:
+                    rw.textSelector.refresh()
+                    
+                    rw.outputDialog.rdfTab.refresh()
+        
+        self.mainWindow.readLBOMDIN()
+        
+        for rw in self.rendererWindows:
+            if rw.currentPipelineIndex == self.pipelineIndex:
+                rw.renderer.postRefRender()
+                rw.textSelector.refresh()
+    
+    def postInputLoaded(self):
+        """
+        Do stuff after the input has been loaded
+        
+        """
+#         self.setCurrentInputFile(filename)
+#         self.inputLoaded = 1
+        
+#         self.mainToolbar.loadInputForm.hide()
+        self.mainToolbar.analysisPipelinesForm.show()
+        
+        self.refreshAllFilters()
+        
+        for rw in self.rendererWindows:
+            if rw.currentPipelineIndex == self.pipelineIndex:
+                rw.textSelector.refresh()
+                rw.outputDialog.rdfTab.refresh()
+    
+    def refChanged(self, index):
+        """
+        Ref changed
+        
+        """
+        old_ref = self.refState
+        
+        self.refState = self.mainWindow.systemsDialog.lattice_list[index]
+        self.extension = self.mainWindow.systemsDialog.extensions_list[index]
+        
+        # read lbomd in?
+        
+        
+        # post ref loaded
+        self.postRefLoaded(old_ref)
+        
+        # check ok
+        status = self.checkStateChangeOk()
+        
+        if status:
+            # must change input too
+            self.inputChanged(index)
+    
+    def inputChanged(self, index):
+        """
+        Input changed
+        
+        """
+        self.inputState = self.mainWindow.systemsDialog.lattice_list[index]
+        self.extension = self.mainWindow.systemsDialog.extensions_list[index]
+        
+        # check ok
+        status = self.checkStateChangeOk()
+        
+        if status:
+            # must change ref too
+            self.refChanged(index)
+        
+        # post input loaded
+        self.postInputLoaded()
     
     def showFilterSummary(self):
         """

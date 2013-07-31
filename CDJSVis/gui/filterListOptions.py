@@ -288,7 +288,7 @@ class BondsOptionsWindow(QtGui.QDialog):
         If the species are the same don't change anything!?
         
         """
-        inputState = self.mainWindow.inputState
+        inputState = self.parent.filterTab.inputState
         
         for specie in inputState.specieList:
             self.addSpecie(specie)
@@ -536,7 +536,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         Set min/max to scalar range.
         
         """
-        lattice = self.parent.mainWindow.inputState
+        lattice = self.parent.filterTab.inputState
         
         if self.atomPropertyType == "Kinetic energy":
             minVal = min(lattice.KE)
@@ -619,7 +619,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         """
         self.minValSpinBox.setValue(0.0)
-        self.maxValSpinBox.setValue(self.parent.mainWindow.refState.cellDims[self.heightAxis])
+        self.maxValSpinBox.setValue(self.parent.filterTab.refState.cellDims[self.heightAxis])
     
     def maxValChanged(self, val):
         """

@@ -84,12 +84,28 @@ class Renderer(object):
         # reinitialise
         self.reinit()
     
+    def getRefState(self):
+        """
+        Get the current ref state
+        
+        """
+        return self.parent.getCurrentRefState()
+    
+    def getInputState(self):
+        """
+        Get the current input state
+        
+        """
+        return self.parent.getCurrentInputState()
+    
     def setCameraToCell(self):
         """
         Point the camera at the centre of the cell.
         
         """
-        dims = self.mainWindow.refState.cellDims
+        ref = self.getRefState()
+        
+        dims = ref.cellDims
         
         # set camera to lattice
         campos = [0]*3
@@ -132,7 +148,9 @@ class Renderer(object):
         Add the lattice frame
         
         """
-        dims = self.mainWindow.refState.cellDims
+        ref = self.getRefState()
+        
+        dims = ref.cellDims
         
         # add lattice frame
         self.latticeFrame.add([0, 0, 0], dims)
@@ -149,7 +167,7 @@ class Renderer(object):
         Toggle lattice frame visibility
         
         """
-        if self.mainWindow.refLoaded == 0:
+        if self.parent.getCurrentPipelinePage().refState is None:
             return
         
         if self.latticeFrame.visible:
@@ -165,7 +183,7 @@ class Renderer(object):
         Toggle axes visibilty
         
         """
-        if self.mainWindow.refLoaded == 0:
+        if self.parent.getCurrentPipelinePage().refState is None:
             return
         
         if self.axes.visible:
@@ -181,7 +199,8 @@ class Renderer(object):
         Add the axis label
         
         """
-        dims = self.mainWindow.refState.cellDims
+        ref = self.getRefState()
+        dims = ref.cellDims
         
 #        self.axes.add(dims)
         self.axes.refresh(-8, -8, -8, 0.2 * dims[0], 0.2 * dims[1], 0.2 * dims[2], "x", "y", "z")
@@ -634,7 +653,7 @@ class Renderer(object):
         Write cell frame.
         
         """
-        lattice = self.mainWindow.inputState
+        lattice = self.getInputState()
         
         a = [0]*3
         b = [0]*3 
@@ -763,7 +782,7 @@ class AtomHighlighter(object):
         pass
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, displayOptions, NVisibleForRes=None):
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, displayOptions, pipelinePage, NVisibleForRes=None):
     """
     Make the actors for the filtered system
     
@@ -780,7 +799,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     # resolution
     res = setRes(NVisibleForRes)
     
-    lattice = mainWindow.inputState
+    lattice = pipelinePage.inputState
     
     # make LUT
     lut = setupLUT(lattice.specieList, lattice.specieRGB, colouringOptions)
@@ -928,15 +947,15 @@ def makeScalarBar(lut, colouringOptions, text_colour):
 
 ################################################################################
 def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 
-                       settings, mainWindow, displayOptions, splitInterstitials):
+                       settings, mainWindow, displayOptions, splitInterstitials, pipelinePage):
     """
     Write defects to povray file.
     
     """
     povfile = os.path.join(mainWindow.tmpDirectory, filename)
     
-    inputLattice = mainWindow.inputState
-    refLattice = mainWindow.refState
+    inputLattice = pipelinePage.inputState
+    refLattice = pipelinePage.refState
     
     output_c.writePOVRAYDefects(povfile, vacancies, interstitials, antisites, onAntisites, inputLattice.specie, inputLattice.pos,
                                 refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius * displayOptions.atomScaleFactor,
@@ -1032,8 +1051,8 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
 
     
 ################################################################################
-def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, mainWindow, actorsCollection, 
-                                colouringOptions, filterSettings, displayOptions):
+def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, actorsCollection, 
+                                colouringOptions, filterSettings, displayOptions, pipelinePage):
     
     NInt = len(interstitials)
     NVac = len(vacancies)
@@ -1044,8 +1063,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     # resolution
     res = setRes(NDef)
     
-    inputLattice = mainWindow.inputState
-    refLattice = mainWindow.refState
+    inputLattice = pipelinePage.inputState
+    refLattice = pipelinePage.refState
     
     # specie counters
     NSpeciesInput = len(inputLattice.specieList)
