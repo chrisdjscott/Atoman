@@ -669,9 +669,9 @@ class MainWindow(QtGui.QMainWindow):
                     simIdentity = array[0]
                     
                     # update labels with simulation identity
-                    self.loadInputDialog.lbomdXyzWidget_input.updateFileLabelCustom("%s%04d.xyz" % (simIdentity, 0), isRef=False)
-                    for rw in self.rendererWindows:
-                        rw.outputDialog.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
+#                     self.loadInputDialog.lbomdXyzWidget_input.updateFileLabelCustom("%s%04d.xyz" % (simIdentity, 0), isRef=False)
+#                     for rw in self.rendererWindows:
+#                         rw.outputDialog.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
                 
                 except IndexError:
                     self.console.write("WARNING: INDEX ERROR 1 (check lbomd.IN format)")
@@ -824,12 +824,12 @@ class MainWindow(QtGui.QMainWindow):
         self.mainToolbar.analysisPipelinesForm.hide()
         self.mainToolbar.loadInputForm.show()
         
-        self.loadInputDialog.loadInputBox.hide()
-        self.loadInputDialog.clearRefBox.hide()
-        self.loadInputDialog.loadRefBox.show()
-        
-        self.loadInputDialog.lbomdXyzWidget_ref.refLoaded = False
-        self.loadInputDialog.lbomdXyzWidget_input.refLoaded = False
+#         self.loadInputDialog.loadInputBox.hide()
+#         self.loadInputDialog.clearRefBox.hide()
+#         self.loadInputDialog.loadRefBox.show()
+#         
+#         self.loadInputDialog.lbomdXyzWidget_ref.refLoaded = False
+#         self.loadInputDialog.lbomdXyzWidget_input.refLoaded = False
     
     def displayWarning(self, message):
         """
