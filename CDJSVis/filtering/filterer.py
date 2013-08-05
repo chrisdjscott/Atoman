@@ -403,7 +403,7 @@ class Filterer(object):
         bondVectorArray = np.empty(3 * size, np.float64)
         
         status = bonds_c.calculateBonds(self.NVis, self.visibleAtoms, inputState.pos, inputState.specie, len(specieList), bondMinArray, bondMaxArray, 
-                                        maxBond, maxBondsPerAtom, inputState.cellDims, self.mainWindow.PBC, inputState.minPos, inputState.maxPos, 
+                                        maxBond, maxBondsPerAtom, inputState.cellDims, self.pipelinePage.PBC, inputState.minPos, inputState.maxPos, 
                                         bondArray, NBondsArray, bondVectorArray, bondSpecieCounter)
         
         if status:
@@ -538,7 +538,7 @@ class Filterer(object):
             
             # run displacement filter
             NVisible = filtering_c.displacementFilter(self.visibleAtoms, self.scalars, inputState.pos, refState.pos, refState.cellDims, 
-                                                      self.mainWindow.PBC, settings.minDisplacement, settings.maxDisplacement)
+                                                      self.pipelinePage.PBC, settings.minDisplacement, settings.maxDisplacement)
             
             self.visibleAtoms.resize(NVisible, refcheck=False)
             self.scalars.resize(NVisible, refcheck=False)
@@ -564,7 +564,7 @@ class Filterer(object):
         lattice = self.pipelinePage.inputState
         
         NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, settings.xCentre, settings.yCentre, settings.zCentre, 
-                                                settings.radius, lattice.cellDims, self.mainWindow.PBC, settings.invertSelection)
+                                                settings.radius, lattice.cellDims, self.pipelinePage.PBC, settings.invertSelection)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
     
@@ -682,7 +682,7 @@ class Filterer(object):
         status = defects_c.findDefects(settings.showVacancies, settings.showInterstitials, settings.showAntisites, NDefectsByType, vacancies, 
                                        interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
                                        inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
-                                       refLattice.pos, refLattice.cellDims, self.mainWindow.PBC, settings.vacancyRadius, minPos, maxPos, 
+                                       refLattice.pos, refLattice.cellDims, self.pipelinePage.PBC, settings.vacancyRadius, minPos, maxPos, 
                                        settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
                                        onAntSpecCount, splitIntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials, 
                                        settings.identifySplitInts)
@@ -734,7 +734,7 @@ class Filterer(object):
         if settings.identifySplitInts:
             self.log("Split int analysis")
             
-            PBC = self.mainWindow.PBC
+            PBC = self.pipelinePage.PBC
             cellDims = inputLattice.cellDims
             
             for i in xrange(NSplit):
@@ -809,7 +809,7 @@ class Filterer(object):
         Draw convex hulls around defect volumes
         
         """
-#        PBC = self.mainWindow.PBC
+#        PBC = self.pipelinePage.PBC
 #        if PBC[0] or PBC[1] or PBC[2]:
 #            self.pointDefectFilterDrawHullsWithPBCs(clusterList, settings)
 #        
@@ -821,7 +821,7 @@ class Filterer(object):
 #        Draw hulls around defect volumes (PBCs)
 #        
 #        """
-        PBC = self.mainWindow.PBC
+        PBC = self.pipelinePage.PBC
         if PBC[0] or PBC[1] or PBC[2]:
             PBCFlag = True
         
@@ -870,7 +870,7 @@ class Filterer(object):
                 count += 1
             
             clusters_c.prepareClusterToDrawHulls(NDefects, clusterPos, inputLattice.cellDims, 
-                                                 self.mainWindow.PBC, appliedPBCs, settings.neighbourRadius)
+                                                 self.pipelinePage.PBC, appliedPBCs, settings.neighbourRadius)
             
             facets = None
             if NDefects > 3:
@@ -883,7 +883,7 @@ class Filterer(object):
             # now render
             if facets is not None:
                 #TODO: make sure not facets more than neighbour rad from cell
-                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, 
+                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, 
                                                   inputLattice.cellDims)
                 
                 renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
@@ -910,7 +910,7 @@ class Filterer(object):
                     if facets is not None:
                         #TODO: make sure not facets more than neighbour rad from cell
                         facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, 
-                                                          self.mainWindow.PBC, inputLattice.cellDims)
+                                                          self.pipelinePage.PBC, inputLattice.cellDims)
                         
                         renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
                         
@@ -930,7 +930,7 @@ class Filterer(object):
         if PBC is not None and len(PBC) == 3:
             pass
         else:
-            PBC = self.mainWindow.PBC
+            PBC = self.pipelinePage.PBC
         
         if minSize is None:
             minSize = settings.minClusterSize
@@ -987,7 +987,7 @@ class Filterer(object):
         cluster without PBCs.
         
         """
-        PBC = self.mainWindow.PBC
+        PBC = self.pipelinePage.PBC
         if PBC[0] or PBC[1] or PBC[2]:
             self.clusterFilterDrawHullsWithPBCs(clusterList, settings, hullPovFile)
         
@@ -1053,7 +1053,7 @@ class Filterer(object):
                 clusterPos[3*i+2] = lattice.pos[3*index+2]
             
             clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
-                                                 self.mainWindow.PBC, appliedPBCs, settings.neighbourRadius)
+                                                 self.pipelinePage.PBC, appliedPBCs, settings.neighbourRadius)
             
             facets = None
             if len(cluster) > 3:
@@ -1066,7 +1066,7 @@ class Filterer(object):
             # now render
             if facets is not None:
                 #TODO: make sure not facets more than neighbour rad from cell
-                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
+                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
                 
                 renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
                 
@@ -1091,7 +1091,7 @@ class Filterer(object):
                     # render
                     if facets is not None:
                         #TODO: make sure not facets more than neighbour rad from cell
-                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, self.mainWindow.PBC, lattice.cellDims)
+                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
                         
                         renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
                         
@@ -1123,7 +1123,7 @@ class Filterer(object):
                 pass
             
             else:
-                PBC = self.mainWindow.PBC
+                PBC = self.pipelinePage.PBC
                 if PBC[0] or PBC[1] or PBC[2]:
                     appliedPBCs = np.zeros(7, np.int32)
                     clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
@@ -1189,7 +1189,7 @@ class Filterer(object):
         
         # run displacement filter
         NVisible = filtering_c.coordNumFilter(self.visibleAtoms, inputState.pos, inputState.specie, NSpecies, bondMinArray, bondMaxArray, 
-                                              maxBond, inputState.cellDims, self.mainWindow.PBC, inputState.minPos, inputState.maxPos, 
+                                              maxBond, inputState.cellDims, self.pipelinePage.PBC, inputState.minPos, inputState.maxPos, 
                                               self.scalars, filterSettings.minCoordNum, filterSettings.maxCoordNum)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)

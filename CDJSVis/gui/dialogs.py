@@ -940,7 +940,9 @@ class DefectInfoWindow(QtGui.QDialog):
             pos1 = inputState.pos[3*int1Index:3*int1Index+3]
             pos2 = inputState.pos[3*int2Index:3*int2Index+3]
             
-            sepVec = vectors.separationVector(pos1, pos2, inputState.cellDims, self.mainWindow.PBC)
+            pp = rendererWindow.getCurrentPipelinePage()
+            
+            sepVec = vectors.separationVector(pos1, pos2, inputState.cellDims, pp.PBC)
             norm = vectors.normalise(sepVec)
             
             row = QtGui.QHBoxLayout()

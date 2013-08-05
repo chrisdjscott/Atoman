@@ -76,10 +76,6 @@ class MainWindow(QtGui.QMainWindow):
         self.consoleOpen = 0
         self.helpOpen = 0
         self.verboseLevel = 3
-        self.PBC = np.zeros(3, np.int32)
-        self.PBC[0] = 1
-        self.PBC[1] = 1
-        self.PBC[2] = 1
         self.mouseMotion = 0
         
         print "*"*40 + "DEBUG" + "*"*40
@@ -230,7 +226,7 @@ class MainWindow(QtGui.QMainWindow):
         self.systemsDialog = systemsDialog.SystemsDialog(self, self)
         
         # load input dialog
-        self.loadInputDialog = inputDialog.InputDialog(self, self, None)
+#         self.loadInputDialog = inputDialog.InputDialog(self, self, None)
         
         self.mdiArea = QtGui.QMdiArea()
         self.mdiArea.subWindowActivated.connect(self.rendererWindowActivated)
@@ -273,13 +269,13 @@ class MainWindow(QtGui.QMainWindow):
         self.systemsDialog.hide()
         self.systemsDialog.show()
     
-    def showLoadInputDialog(self):
-        """
-        Show load input dialog.
-        
-        """
-        self.loadInputDialog.hide()
-        self.loadInputDialog.show()
+#     def showLoadInputDialog(self):
+#         """
+#         Show load input dialog.
+#         
+#         """
+#         self.loadInputDialog.hide()
+#         self.loadInputDialog.show()
     
     def rendererWindowActivated(self, sw):
         """
@@ -689,23 +685,23 @@ class MainWindow(QtGui.QMainWindow):
                     PBC[1] = int(array[1])
                     PBC[2] = int(array[2])
                     
-                    if PBC[0]:
-                        self.loadInputDialog.PBCXCheckBox.setCheckState(QtCore.Qt.Checked)
-                    
-                    else:
-                        self.loadInputDialog.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
-                    
-                    if PBC[1]:
-                        self.loadInputDialog.PBCYCheckBox.setCheckState(QtCore.Qt.Checked)
-                    
-                    else:
-                        self.loadInputDialog.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
-                    
-                    if PBC[2]:
-                        self.loadInputDialog.PBCZCheckBox.setCheckState(QtCore.Qt.Checked)
-                    
-                    else:
-                        self.loadInputDialog.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
+#                     if PBC[0]:
+#                         self.loadInputDialog.PBCXCheckBox.setCheckState(QtCore.Qt.Checked)
+#                     
+#                     else:
+#                         self.loadInputDialog.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
+#                     
+#                     if PBC[1]:
+#                         self.loadInputDialog.PBCYCheckBox.setCheckState(QtCore.Qt.Checked)
+#                     
+#                     else:
+#                         self.loadInputDialog.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
+#                     
+#                     if PBC[2]:
+#                         self.loadInputDialog.PBCZCheckBox.setCheckState(QtCore.Qt.Checked)
+#                     
+#                     else:
+#                         self.loadInputDialog.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
                 
                 except IndexError:
                     self.console.write("WARNING: INDEX ERROR 2 (check lbomd.IN format)")

@@ -259,9 +259,12 @@ class RDFTab(QtGui.QWidget):
         # prelims
         rdfArray = np.zeros(self.NBins, np.float64)
         
+        # pbcs
+        pp = self.rendererWindow.getCurrentPipelinePage()
+        
         # then calculate
         rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.minPos,
-                           inputLattice.maxPos, inputLattice.cellDims, self.mainWindow.PBC, self.binMin, self.binMax, self.NBins,
+                           inputLattice.maxPos, inputLattice.cellDims, pp.PBC, self.binMin, self.binMax, self.NBins,
                            rdfArray)
                 
         # then plot

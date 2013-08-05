@@ -52,6 +52,7 @@ class FilterForm(QtGui.QWidget):
         self.extension = None
         self.inputStackIndex = None
         self.filename = None
+        self.PBC = np.ones(3, np.int32)
         
         self.analysisPipelineFormHidden = True
         
@@ -130,9 +131,70 @@ class FilterForm(QtGui.QWidget):
         # add a filter list
         self.addFilterList()
         
+        # add pbc options
+        group = QtGui.QGroupBox("Periodic boundaries")
+        group.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        groupLayout = QtGui.QVBoxLayout(group)
+        
+        self.PBCXCheckBox = QtGui.QCheckBox("x")
+        self.PBCXCheckBox.setChecked(1)
+        self.PBCYCheckBox = QtGui.QCheckBox("y")
+        self.PBCYCheckBox.setChecked(1)
+        self.PBCZCheckBox = QtGui.QCheckBox("z")
+        self.PBCZCheckBox.setChecked(1)
+        
+        self.connect(self.PBCXCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.PBCXChanged)
+        self.connect(self.PBCYCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.PBCYChanged)
+        self.connect(self.PBCZCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.PBCZChanged)
+        
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        rowLayout.addWidget(self.PBCXCheckBox)
+        rowLayout.addWidget(self.PBCYCheckBox)
+        rowLayout.addWidget(self.PBCZCheckBox)
+        
+        groupLayout.addWidget(row)
+        
+        filterTabLayout.addWidget(group)
+        
         # refresh if ref already loaded
         if self.mainWindow.refLoaded:
             self.refreshAllFilters()
+    
+    def PBCXChanged(self, val):
+        """
+        PBC changed.
+        
+        """
+        if self.PBCXCheckBox.isChecked():
+            self.PBC[0] = 1
+        
+        else:
+            self.PBC[0] = 0
+    
+    def PBCYChanged(self, val):
+        """
+        PBC changed.
+        
+        """
+        if self.PBCYCheckBox.isChecked():
+            self.PBC[1] = 1
+        
+        else:
+            self.PBC[1] = 0
+    
+    def PBCZChanged(self, val):
+        """
+        PBC changed.
+        
+        """
+        if self.PBCZCheckBox.isChecked():
+            self.PBC[2] = 1
+        
+        else:
+            self.PBC[2] = 0
     
     def addStateOption(self, filename):
         """
