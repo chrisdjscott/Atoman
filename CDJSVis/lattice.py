@@ -9,7 +9,7 @@ Stores positions etc
 import numpy as np
 
 from .atoms import elements
-# from .md import forces
+from .md import forces
 
 
 ################################################################################

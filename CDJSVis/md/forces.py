@@ -10,7 +10,7 @@ import sys
 
 import numpy as np
 
-from .mdlibs import LBOMDInterface as lbomd_interface
+from . import LBOMDInterface as lbomd_interface
 from ..visutils.utilities import log_error
 
 
