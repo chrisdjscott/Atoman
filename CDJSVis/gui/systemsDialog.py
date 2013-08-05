@@ -108,19 +108,19 @@ class LoadSystemForm(GenericForm):
         row.addWidget(self.inputTypeCombo)
         
         # stacked widget
-        self.widgetStack = QtGui.QStackedWidget()
+        self.stackedWidget = QtGui.QStackedWidget()
         
         self.lbomdDatWidget = latticeReaderForms.LbomdDatReaderForm(self, self.mainToolbar, self.mainWindow, None, "ref")
-        self.widgetStack.addWidget(self.lbomdDatWidget)
+        self.stackedWidget.addWidget(self.lbomdDatWidget)
         
         self.lbomdRefWidget = latticeReaderForms.LbomdRefReaderForm(self, self.mainToolbar, self.mainWindow, None, "ref")
-        self.widgetStack.addWidget(self.lbomdRefWidget)
+        self.stackedWidget.addWidget(self.lbomdRefWidget)
         
         self.lbomdXyzWidget = latticeReaderForms.LbomdXYZReaderForm(self, self.mainToolbar, self.mainWindow, None, "ref")
-        self.widgetStack.addWidget(self.lbomdXyzWidget)
+        self.stackedWidget.addWidget(self.lbomdXyzWidget)
         
         row = self.newRow()
-        row.addWidget(self.widgetStack)
+        row.addWidget(self.stackedWidget)
         
         self.show()
     
@@ -133,7 +133,7 @@ class LoadSystemForm(GenericForm):
         ok = True
         
         if ok:
-            self.widgetStack.setCurrentIndex(index)
+            self.stackedWidget.setCurrentIndex(index)
 #             self.refTypeCurrentIndex = index
             
 #             if index == 0:
@@ -176,6 +176,7 @@ class SystemsDialog(QtGui.QDialog):
         self.lattice_list = []
         self.filenames_list = []
         self.extensions_list = []
+        self.stackIndex_list = []
         
         # defaults
         self.ref_selected = False
@@ -392,10 +393,6 @@ class SystemsDialog(QtGui.QDialog):
         print "FILE LOADED", lattice, filename, extension
         
         index = self.add_lattice(lattice, filename, extension)
-        
-#         if not self.ref_selected:
-#             self.set_ref(index=index)
-#             self.set_input(index=index)
     
     def add_lattice(self, lattice, filename, extension):
         """
@@ -407,6 +404,16 @@ class SystemsDialog(QtGui.QDialog):
         self.lattice_list.append(lattice)
         self.filenames_list.append(filename)
         self.extensions_list.append(extension)
+        
+        # stack index
+        ida = self.new_system_stack.currentIndex()
+        
+        page = self.new_system_stack.currentWidget()
+        idb = page.stackedWidget.currentIndex()
+        
+        print "ADD (STACK INDICES)", ida, idb
+        
+        self.stackIndex_list.append((ida, idb))
         
         list_item = QtGui.QListWidgetItem()
         list_item.setText("%s (%d atoms)" % (filename, lattice.NAtoms))

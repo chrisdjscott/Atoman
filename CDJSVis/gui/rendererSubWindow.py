@@ -388,6 +388,9 @@ class RendererWindow(QtGui.QWidget):
         
         # refresh text
         self.refreshOnScreenInfo()
+        
+        # output dialog
+        self.outputDialog.imageTab.imageSequenceTab.resetPrefix()
     
     def showOutputDialog(self):
         """

@@ -10,6 +10,7 @@ import os
 import sys
 import shutil
 import subprocess
+import copy
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -1060,7 +1061,13 @@ class ImageSequenceTab(QtGui.QWidget):
         the input page
         
         """
-        filename = self.mainWindow.inputFile
+        pp = self.rendererWindow.getCurrentPipelinePage()
+        
+        if pp is None:
+            filename = ""
+        
+        else:
+            filename = pp.filename
         
         count = 0
         for i in xrange(len(filename)):
@@ -1070,6 +1077,7 @@ class ImageSequenceTab(QtGui.QWidget):
             error = 0
             try:
                 int(filename[i])
+            
             except ValueError:
                 error = 1
             
@@ -1085,8 +1093,8 @@ class ImageSequenceTab(QtGui.QWidget):
         Start the sequencer
         
         """
-        self.mainWindow.displayError("Sequencer not working")
-        return
+#         self.mainWindow.displayError("Sequencer not working")
+#         return
         
         self.runSequencer()
         
@@ -1113,11 +1121,40 @@ class ImageSequenceTab(QtGui.QWidget):
             self.warnFirstFileNotPresent(str(self.firstFileLabel.text()))
             return
         
-        # formatted string
-        fileText = "%s%s.%s" % (str(self.fileprefix.text()), self.numberFormat, self.mainWindow.fileExtension)
-        
         log = self.mainWindow.console.write
         log("Running sequencer", 0, 0)
+        
+        # store current input state
+        origInput = copy.deepcopy(self.rendererWindow.getCurrentInputState())
+        
+        # get pipeline page
+        pipelinePage = self.rendererWindow.getCurrentPipelinePage()
+        
+        # pipeline index
+        pipelineIndex = self.rendererWindow.currentPipelineIndex
+        
+        # stack index from systems dialog
+        ida, idb = pipelinePage.inputStackIndex
+        
+        if ida != 0:
+            print "CANNOT SEQUENCE A GENERATED LATTICE..."
+            return
+        
+        print "INPUT STACK INDEX", ida, idb
+        
+        systemsDialog = self.mainWindow.systemsDialog
+        
+        systemsDialog.new_system_stack.setCurrentIndex(ida)
+        in_page = systemsDialog.new_system_stack.currentWidget()
+        
+        in_page.stackedWidget.setCurrentIndex(idb)
+        readerForm = in_page.stackedWidget.currentWidget()
+        reader = readerForm.latticeReader
+        
+        print "READER", readerForm, reader
+        
+        # formatted string
+        fileText = "%s%s.%s" % (str(self.fileprefix.text()), self.numberFormat, pipelinePage.extension)
         
         # directory
         saveDir = str(self.outputFolder.text())
@@ -1146,6 +1183,7 @@ class ImageSequenceTab(QtGui.QWidget):
         QtGui.QApplication.processEvents()
         
         # loop over files
+        status = 0
         try:
             count = 0
             for i in xrange(self.minIndex, self.maxIndex + self.interval, self.interval):
@@ -1153,8 +1191,18 @@ class ImageSequenceTab(QtGui.QWidget):
                 log("Current file: %s" % (currentFile,), 0, 1)
                 
                 # first open the file
-                form = self.mainWindow.loadInputDialog.loadInputStack.widget(self.mainWindow.loadInputDialog.inputTypeCurrentIndex)
-                status = form.openFile(filename=currentFile, rouletteIndex=i-1)
+#                 form = self.mainWindow.loadInputDialog.loadInputStack.widget(self.mainWindow.loadInputDialog.inputTypeCurrentIndex)
+#                 status = form.openFile(filename=currentFile, rouletteIndex=i-1)
+                
+                # read in state
+                status, state = reader.readFile(currentFile, rouletteIndex=i-1)
+                
+                if status:
+                    log("Sequencer read file failed with status: %d" % (status,), 0, 2)
+                    break
+                
+                # set input state on current pipeline
+                pipelinePage.inputState = state
                 
                 # exit if cancelled
                 if progDialog.wasCanceled():
@@ -1165,7 +1213,6 @@ class ImageSequenceTab(QtGui.QWidget):
                     return
                 
                 # now apply all filters
-                pipelinePage = self.rendererWindow.getCurrentPipelinePage()
                 pipelinePage.runAllFilterLists()
                 
                 # exit if cancelled
@@ -1191,14 +1238,18 @@ class ImageSequenceTab(QtGui.QWidget):
                 QtGui.QApplication.processEvents()
         
         finally:
+            # reload original input
+            pipelinePage.inputState = origInput
+            pipelinePage.postInputLoaded()
+            pipelinePage.runAllFilterLists()
+            
             # close progress dialog
             progDialog.close()
         
         # create movie
-        if self.createMovie:
+        if not status and self.createMovie:
             # show wait cursor
             QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
-            
             
             try:
                 self.parent.createMovie(saveDir, saveText)
@@ -1239,7 +1290,15 @@ class ImageSequenceTab(QtGui.QWidget):
         Set the first file label
         
         """
-        text = "%s%s.%s" % (self.fileprefix.text(), self.numberFormat, self.mainWindow.fileExtension)
+        pp = self.rendererWindow.getCurrentPipelinePage()
+        
+        if pp is None:
+            ext = ""
+        
+        else:
+            ext = pp.extension
+        
+        text = "%s%s.%s" % (self.fileprefix.text(), self.numberFormat, ext)
         self.firstFileLabel.setText(text % (self.minIndex,))
     
     def minIndexChanged(self, val):

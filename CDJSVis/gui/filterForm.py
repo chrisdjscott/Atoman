@@ -50,6 +50,10 @@ class FilterForm(QtGui.QWidget):
         self.refState = None
         self.inputState = None
         self.extension = None
+        self.inputStackIndex = None
+        self.filename = None
+        
+        self.analysisPipelineFormHidden = True
         
         # layout
         filterTabLayout = QtGui.QVBoxLayout(self)
@@ -188,11 +192,9 @@ class FilterForm(QtGui.QWidget):
         Do stuff after the input has been loaded
         
         """
-#         self.setCurrentInputFile(filename)
-#         self.inputLoaded = 1
-        
-#         self.mainToolbar.loadInputForm.hide()
-        self.mainToolbar.analysisPipelinesForm.show()
+        if self.analysisPipelineFormHidden:
+            self.mainToolbar.analysisPipelinesForm.show()
+            self.analysisPipelineFormHidden = False
         
         self.refreshAllFilters()
         
@@ -200,6 +202,7 @@ class FilterForm(QtGui.QWidget):
             if rw.currentPipelineIndex == self.pipelineIndex:
                 rw.textSelector.refresh()
                 rw.outputDialog.rdfTab.refresh()
+                rw.outputDialog.imageTab.imageSequenceTab.resetPrefix()
     
     def refChanged(self, index):
         """
@@ -237,6 +240,8 @@ class FilterForm(QtGui.QWidget):
         
         self.inputState = self.mainWindow.systemsDialog.lattice_list[index]
         self.extension = self.mainWindow.systemsDialog.extensions_list[index]
+        self.inputStackIndex = self.mainWindow.systemsDialog.stackIndex_list[index]
+        self.filename = self.mainWindow.systemsDialog.filenames_list[index]
         
         # check ok
         status = self.checkStateChangeOk()
