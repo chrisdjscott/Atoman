@@ -52,6 +52,8 @@ class RendererWindow(QtGui.QWidget):
         
         self.blackBackground = False
         
+        self.currentAAFrames = 2
+        
         # layout
         layout = QtGui.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -91,9 +93,18 @@ class RendererWindow(QtGui.QWidget):
                                                    icon="preferences-desktop-screensaver.svg",
                                                    tip="Toggle background colour")
         
+        # aa up
+        aaUpAction = self.createAction("Increase anti-aliasing", slot=self.increaseAA, icon="go-up.svg",
+                                       tip="Increase anti-aliasing")
+        
+        # aa up
+        aaDownAction = self.createAction("Decrease anti-aliasing", slot=self.decreaseAA, icon="go-down.svg",
+                                       tip="Decrease anti-aliasing")
+        
         self.addActions(toolbar, (showCellAction, showAxesAction, backgroundColourAction, None, 
                                   setCamToCellAction, None, 
-                                  openTextSelectorAction, showOutputDialogAction))
+                                  openTextSelectorAction, showOutputDialogAction, None,
+                                  aaUpAction, aaDownAction))
         
         # VTK render window
         self.vtkRenWin = vtk.vtkRenderWindow()
@@ -121,6 +132,8 @@ class RendererWindow(QtGui.QWidget):
         self.vtkRen.SetBackground(1, 1, 1)
         
         self.vtkRenWin.AddRenderer(self.vtkRen)
+        
+        self.vtkRenWin.SetAAFrames(self.currentAAFrames)
         
         self.vtkRenWinInteract.Initialize()
         self.vtkRenWinInteract.Start()
@@ -157,6 +170,35 @@ class RendererWindow(QtGui.QWidget):
         row.addWidget(self.analysisPipelineCombo)
         
         layout.addLayout(row)
+    
+    def increaseAA(self):
+        """
+        Increase AA setting
+        
+        """
+        self.currentAAFrames += 1
+        
+        print "SET AA FRAMES", self.currentAAFrames
+        
+        self.vtkRenWin.SetAAFrames(self.currentAAFrames)
+        
+        self.vtkRenWinInteract.ReInitialize()
+    
+    def decreaseAA(self):
+        """
+        Decrease AA settings
+        
+        """
+        if self.currentAAFrames == 0:
+            return
+        
+        self.currentAAFrames -= 1
+        
+        print "SET AA FRAMES", self.currentAAFrames
+        
+        self.vtkRenWin.SetAAFrames(self.currentAAFrames)
+        
+        self.vtkRenWinInteract.ReInitialize()
     
     def toggleBackgroundColour(self):
         """
