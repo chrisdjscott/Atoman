@@ -16,6 +16,7 @@ from ..atoms import elements
 from ..visutils.utilities import resourcePath, iconPath
 from ..visutils import vectors
 from ..visutils import utilities
+from ..rendering import highlight
 
 try:
     from .. import resources
@@ -967,6 +968,8 @@ class AtomInfoWindow(QtGui.QDialog):
         
         lattice = self.rendererWindow.getCurrentInputState()
         
+        self.highlighter = highlight.AtomHighlighter(self, self.rendererWindow.vtkRen, self.rendererWindow.vtkRenWinInteract)
+        
         self.setWindowTitle("Atom info")
         
         layout = QtGui.QVBoxLayout()
@@ -1000,7 +1003,18 @@ class AtomInfoWindow(QtGui.QDialog):
             row.addWidget(QtGui.QLabel("%s: %f" % (scalarType, scalar)))
             layout.addLayout(row)
         
+        self.highlighter.add(lattice.atomPos(atomIndex), lattice.specieCovalentRadius[lattice.specie[atomIndex]])
+        
         self.setLayout(layout)
+    
+    def closeEvent(self, event):
+        """
+        Override close event
+        
+        """
+        self.highlighter.remove()
+        
+        event.accept()
 
 ################################################################################
 
