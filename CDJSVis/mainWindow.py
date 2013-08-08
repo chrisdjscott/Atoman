@@ -25,6 +25,7 @@ from . import lattice
 from .rendering import renderer
 from .gui import helpForm
 from .gui import dialogs
+from .gui import preferences
 from .gui import rendererSubWindow
 from .gui import inputDialog
 from .gui import systemsDialog
@@ -135,7 +136,7 @@ class MainWindow(QtGui.QMainWindow):
         self.imageViewer = dialogs.ImageViewer(self, parent=self)
         
         # preferences dialog
-        self.preferences = dialogs.PreferencesDialog(parent=self)
+        self.preferences = preferences.PreferencesDialog(parent=self)
         
         # add file actions
         exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "system-log-out.svg", 

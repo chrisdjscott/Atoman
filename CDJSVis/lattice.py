@@ -142,12 +142,16 @@ class Lattice(object):
             if self.specie[i] > index:
                 self.specie[i] -= 1
     
-    def calc_force(self, md_dir):
+    def calcForce(self, forceConfig):
         """
         Calculate force on lattice.
         
         """
-        return forces.calc_force(self, md_dir)
+        if type(forceConfig) is not forces.ForceConfig:
+            print "FORCE CONFIG WRONG TYPE"
+            return 113
+        
+        return forces.calc_force(self, forceConfig)
     
     def atomPos(self, index):
         """
