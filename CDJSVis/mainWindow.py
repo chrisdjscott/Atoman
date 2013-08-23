@@ -335,7 +335,7 @@ class MainWindow(QtGui.QMainWindow):
         Open element editor.
         
         """
-        if not self.refLoaded:
+        if not len(self.systemsDialog.lattice_list):
             return
         
         elementEditor = dialogs.ElementEditor(parent=self)

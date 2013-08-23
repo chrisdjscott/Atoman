@@ -162,16 +162,16 @@ class ElementEditor(QtGui.QDialog):
 #        layout.setSpacing(0)
         
         # lattice objects
-        self.inputLattice = self.parent.inputState
-        self.refLattice = self.parent.refState
+        self.systemsDialog = self.parent.systemsDialog
         
         # list of unique species
         uniqueSpecies = set()
-        for sym in self.inputLattice.specieList:
-            uniqueSpecies.add(sym)
-        
-        for sym in self.refLattice.specieList:
-            uniqueSpecies.add(sym)
+        for latt in self.systemsDialog.lattice_list:
+            for sym in latt.specieList:
+                uniqueSpecies.add(sym)
+            
+            for sym in latt.specieList:
+                uniqueSpecies.add(sym)
         
         # add elements to combo box
         self.fullSpecieList = []
@@ -314,29 +314,18 @@ class ElementEditor(QtGui.QDialog):
             G = RGB[1]
             B = RGB[2]
             
-            # first modify the Lattice objects
-            if sym in self.inputLattice.specieList:
-                index = np.where(self.inputLattice.specieList == sym)[0][0]
-                
-                # radius
-                self.inputLattice.specieCovalentRadius[index] = radius
-                
-                # RGB
-                self.inputLattice.specieRGB[index][0] = R
-                self.inputLattice.specieRGB[index][1] = G
-                self.inputLattice.specieRGB[index][2] = B
-                
-            
-            if sym in self.refLattice.specieList:
-                index = np.where(self.refLattice.specieList == sym)[0][0]
-                
-                # radius
-                self.refLattice.specieCovalentRadius[index] = radius
-                
-                # RGB
-                self.refLattice.specieRGB[index][0] = R
-                self.refLattice.specieRGB[index][1] = G
-                self.refLattice.specieRGB[index][2] = B
+            for latt in self.systemsDialog.lattice_list:
+                # first modify the Lattice objects
+                if sym in latt.specieList:
+                    index = np.where(latt.specieList == sym)[0][0]
+                    
+                    # radius
+                    latt.specieCovalentRadius[index] = radius
+                    
+                    # RGB
+                    latt.specieRGB[index][0] = R
+                    latt.specieRGB[index][1] = G
+                    latt.specieRGB[index][2] = B
             
             # now modify elements structure
             elements.updateCovalentRadius(sym, radius)
