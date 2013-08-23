@@ -45,10 +45,10 @@ class GenericLatticeReader(object):
         
         else:
             if os.path.exists(filename + '.bz2'):
-                command = "bzcat -k '%s.bz2' > " % (filename)
+                command = 'bzcat -k "%s.bz2" > ' % (filename)
             
             elif os.path.exists(filename + '.gz'):
-                command = "gzip -dc '%s.gz' > " % (filename)
+                command = 'gzip -dc "%s.gz" > ' % (filename)
                 
             else:
                 return (None, -1)
