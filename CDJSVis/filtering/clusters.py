@@ -7,6 +7,7 @@ Additional routines to do with clusters (hulls, etc...)
 """
 import pyhull
 import pyhull.convex_hull
+from scipy import spatial
 
 
 
@@ -15,15 +16,15 @@ def findConvexHullFacets(N, pos):
     """
     Find convex hull of given points
     
-    """    
+    """
     # construct pts list
     pts = []
     for i in xrange(N):
         pts.append([pos[3*i], pos[3*i+1], pos[3*i+2]])
     
-    # call pyhull library
-    hull = pyhull.convex_hull.ConvexHull(pts)
-    facets = hull.vertices
+    # call scipy
+    hull = spatial.ConvexHull(pts)
+    facets = hull.simplices
     
     return facets
 
@@ -33,7 +34,7 @@ def findConvexHullVolume(N, pos):
     """
     Find convex hull of given points
     
-    """    
+    """
     # construct pts list
     pts = []
     for i in xrange(N):
