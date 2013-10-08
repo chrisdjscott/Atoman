@@ -44,16 +44,25 @@ def findConvexHullVolume(N, pos):
     output = pyhull.qconvex("Qt FA", pts)
     
     # parse output
-    volume = 0.0
-    facetArea = 0.0
+    volume = -999.0
+    facetArea = -999.0
+    cnt1 = 0
+    cnt2 = 0
     for line in output:
-        if line.startswith("Total facet area"):
+        if "facet area" in line:
             array = line.split(":")
             facetArea = float(array[1])
+            
+            cnt1 += 1
         
-        if line.startswith("Total volume"):
+        if "volume" in line:
             array = line.split(":")
             volume = float(array[1])
+            
+            cnt2 += 1
+    
+    assert cnt1 == 1, "ERROR: 'facet area' found %d times in pyhull output" % cnt1
+    assert cnt2 == 1, "ERROR: 'volume' found %d times in pyhull output" % cnt2
     
     return volume, facetArea
 
