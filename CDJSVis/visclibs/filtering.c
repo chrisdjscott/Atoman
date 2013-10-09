@@ -16,7 +16,8 @@
 /*******************************************************************************
  ** Specie filter
  *******************************************************************************/
-int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie)
+int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie,
+		         int scalarsDim, double *scalars)
 {
     int i, j, index, match, NVisible;
     
@@ -39,6 +40,10 @@ int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec
         if (match)
         {
             visibleAtoms[NVisible] = index;
+            
+            if (scalarsDim == NVisibleIn)
+            	scalars[NVisible] = scalars[i];
+            
             NVisible++;
         }
     }
@@ -51,7 +56,8 @@ int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec
  ** Slice filter
  *******************************************************************************/
 int sliceFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double x0,
-                double y0, double z0, double xn, double yn, double zn, int invert)
+                double y0, double z0, double xn, double yn, double zn, int invert,
+                int scalarsDim, double *scalars)
 {
     int i, NVisible, index;
     double mag, xd, yd, zd, dotProd, distanceToPlane;
@@ -77,6 +83,10 @@ int sliceFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, doub
         if ((invert && distanceToPlane > 0) || (!invert && distanceToPlane < 0))
         {
             visibleAtoms[NVisible] = index;
+            
+            if (scalarsDim == NVisibleIn)
+				scalars[NVisible] = scalars[i];
+            
             NVisible++;
         }
     }
@@ -90,7 +100,7 @@ int sliceFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, doub
  *******************************************************************************/
 int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos, double xCentre, 
                      double yCentre, double zCentre, double radius, double *cellDims, 
-                     int *PBC, int invertSelection)
+                     int *PBC, int invertSelection, int scalarsDim, double *scalars)
 {
     int i, NVisible, index;
     double radius2, sep2;
@@ -113,6 +123,10 @@ int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos,
             if (invertSelection)
             {
                 visibleAtoms[NVisible] = index;
+                
+                if (scalarsDim == NVisibleIn)
+					scalars[NVisible] = scalars[i];
+                
                 NVisible++;
             }
         }
@@ -121,6 +135,10 @@ int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos,
             if (!invertSelection)
             {
                 visibleAtoms[NVisible] = index;
+                
+                if (scalarsDim == NVisibleIn)
+					scalars[NVisible] = scalars[i];
+                
                 NVisible++;
             }
         }
@@ -134,7 +152,8 @@ int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos,
  ** Crop filter
  *******************************************************************************/
 int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, double xmin, double xmax,
-               double ymin, double ymax, double zmin, double zmax, int xEnabled, int yEnabled, int zEnabled)
+               double ymin, double ymax, double zmin, double zmax, int xEnabled, int yEnabled, int zEnabled,
+               int scalarsDim, double *scalars)
 {
     int i, index, NVisible;
     
@@ -169,6 +188,10 @@ int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, doubl
         }
         
         visibleAtoms[NVisible] = index;
+        
+        if (scalarsDim == NVisibleIn)
+			scalars[NVisible] = scalars[i];
+        
         NVisible++;
     }
     
@@ -214,7 +237,8 @@ int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double
 /*******************************************************************************
  ** Kinetic energy filter
  *******************************************************************************/
-int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double minKE, double maxKE)
+int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double minKE, double maxKE,
+		     int scalarsDim, double *scalars)
 {
     int i, NVisible, index;
     
@@ -231,6 +255,10 @@ int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double mi
         else
         {
             visibleAtoms[NVisible] = index;
+            
+            if (scalarsDim == NVisibleIn)
+				scalars[NVisible] = scalars[i];
+            
             NVisible++;
         }
     }
@@ -242,7 +270,8 @@ int KEFilter(int NVisibleIn, int* visibleAtoms, int KEDim, double *KE, double mi
 /*******************************************************************************
  ** Potential energy filter
  *******************************************************************************/
-int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE)
+int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double minPE, double maxPE,
+		     int scalarsDim, double *scalars)
 {
     int i, NVisible, index;
     
@@ -259,6 +288,10 @@ int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double mi
         else
         {
             visibleAtoms[NVisible] = index;
+            
+            if (scalarsDim == NVisibleIn)
+				scalars[NVisible] = scalars[i];
+            
             NVisible++;
         }
     }
@@ -270,7 +303,8 @@ int PEFilter(int NVisibleIn, int* visibleAtoms, int PEDim, double *PE, double mi
 /*******************************************************************************
  ** Charge energy filter
  *******************************************************************************/
-int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge)
+int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charge, double minCharge, double maxCharge,
+		  	     int scalarsDim, double *scalars)
 {
     int i, NVisible, index;
     
@@ -287,6 +321,10 @@ int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charg
         else
         {
             visibleAtoms[NVisible] = index;
+            
+            if (scalarsDim == NVisibleIn)
+				scalars[NVisible] = scalars[i];
+            
             NVisible++;
         }
     }

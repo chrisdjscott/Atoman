@@ -41,63 +41,64 @@ elif osname == "Linux":
 
 # specie filter prototype
 _lib.specieFilter.restype = c_int
-_lib.specieFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_int), c_int, POINTER(c_int)]
+_lib.specieFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_int), c_int, POINTER(c_int), c_int, POINTER(c_double)]
 
 # specie filter
-def specieFilter(visibleAtoms, visibleSpecieArray, specieArray):
+def specieFilter(visibleAtoms, visibleSpecieArray, specieArray, scalars):
     """
     Specie filter.
     
     """
     return _lib.specieFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(visibleSpecieArray), CPtrToInt(visibleSpecieArray),
-                             len(specieArray), CPtrToInt(specieArray))
+                             len(specieArray), CPtrToInt(specieArray), len(scalars), CPtrToDouble(scalars))
 
 ################################################################################
 
 # slice filter prototype
 _lib.sliceFilter.restype = c_int
 _lib.sliceFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_double, 
-                              c_double, c_double, c_double, c_int]
+                             c_double, c_double, c_double, c_int, c_int, POINTER(c_double)]
 
 # slice filter
-def sliceFilter(visibleAtoms, pos, x0, y0, z0, xn, yn, zn, invert):
+def sliceFilter(visibleAtoms, pos, x0, y0, z0, xn, yn, zn, invert, scalars):
     """
     Slice filter.
     
     """
-    return _lib.sliceFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), x0, y0, z0, xn, yn, zn, invert)
+    return _lib.sliceFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), x0, y0, z0, 
+                            xn, yn, zn, invert, len(scalars), CPtrToDouble(scalars))
 
 ################################################################################
 
 # crop sphere filter prototype
 _lib.cropSphereFilter.restype = c_int
 _lib.cropSphereFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_double, c_double, 
-                                  POINTER(c_double), POINTER(c_int), c_int]
+                                  POINTER(c_double), POINTER(c_int), c_int, c_int, POINTER(c_double)]
 
 # crop sphere filter
-def cropSphereFilter(visibleAtoms, pos, xCentre, yCentre, zCentre, radius, cellDims, PBC, invertSelection):
+def cropSphereFilter(visibleAtoms, pos, xCentre, yCentre, zCentre, radius, cellDims, PBC, invertSelection, scalars):
     """
     Crop sphere filter.
     
     """
     return _lib.cropSphereFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), xCentre, yCentre, zCentre, 
-                                 radius, CPtrToDouble(cellDims), CPtrToInt(PBC), invertSelection)
+                                 radius, CPtrToDouble(cellDims), CPtrToInt(PBC), invertSelection, len(scalars), CPtrToDouble(scalars))
 
 ################################################################################
 
 # crop filter prototype
 _lib.cropFilter.restype = c_int
 _lib.cropFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_double, c_double, 
-                            c_double, c_double, c_int, c_int, c_int]
+                            c_double, c_double, c_int, c_int, c_int, c_int, POINTER(c_double)]
 
 # crop filter
-def cropFilter(visibleAtoms, pos, xmin, xmax, ymin, ymax, zmin, zmax, xEnabled, yEnabled, zEnabled):
+def cropFilter(visibleAtoms, pos, xmin, xmax, ymin, ymax, zmin, zmax, xEnabled, yEnabled, zEnabled, scalars):
     """
     Crop filter.
     
     """
     return _lib.cropFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), xmin, xmax, ymin, ymax, 
-                           zmin, zmax, xEnabled, yEnabled, zEnabled)
+                           zmin, zmax, xEnabled, yEnabled, zEnabled, len(scalars), CPtrToDouble(scalars))
 
 ################################################################################
 
@@ -119,43 +120,44 @@ def displacementFilter(visibleAtoms, scalars, pos, refPos, cellDims, PBC, minDis
 
 # kinetic energy filter prototype
 _lib.KEFilter.restype = c_int
-_lib.KEFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double]
+_lib.KEFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_int, POINTER(c_double)]
 
 # kinetic energy filter
-def KEFilter(visibleAtoms, KE, minKE, maxKE):
+def KEFilter(visibleAtoms, KE, minKE, maxKE, scalars):
     """
     Kinetic energy filter.
     
     """
-    return _lib.KEFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(KE), CPtrToDouble(KE), minKE, maxKE)
+    return _lib.KEFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(KE), CPtrToDouble(KE), minKE, maxKE, len(scalars), CPtrToDouble(scalars))
 
 ################################################################################
 
 # potential energy filter prototype
 _lib.PEFilter.restype = c_int
-_lib.PEFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double]
+_lib.PEFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_int, POINTER(c_double)]
 
 # potential energy filter
-def PEFilter(visibleAtoms, PE, minPE, maxPE):
+def PEFilter(visibleAtoms, PE, minPE, maxPE, scalars):
     """
     Potential energy filter.
     
     """
-    return _lib.PEFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(PE), CPtrToDouble(PE), minPE, maxPE)
+    return _lib.PEFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(PE), CPtrToDouble(PE), minPE, maxPE, len(scalars), CPtrToDouble(scalars))
 
 ################################################################################
 
 # charge filter prototype
 _lib.chargeFilter.restype = c_int
-_lib.chargeFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double]
+_lib.chargeFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_int, POINTER(c_double)]
 
 # charge filter
-def chargeFilter(visibleAtoms, PE, minPE, maxPE):
+def chargeFilter(visibleAtoms, charge, minCharge, maxCharge, scalars):
     """
     Charge filter.
     
     """
-    return _lib.chargeFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(PE), CPtrToDouble(PE), minPE, maxPE)
+    return _lib.chargeFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(charge), CPtrToDouble(charge), 
+                             minCharge, maxCharge, len(scalars), CPtrToDouble(scalars))
 
 ################################################################################
 

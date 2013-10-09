@@ -514,9 +514,11 @@ class Filterer(object):
             if count != len(visSpecArray):
                 visSpecArray.resize(count)
         
-        NVisible = filtering_c.specieFilter(self.visibleAtoms, visSpecArray, self.pipelinePage.inputState.specie)
+        NVisible = filtering_c.specieFilter(self.visibleAtoms, visSpecArray, self.pipelinePage.inputState.specie, self.scalars)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
+        if len(self.scalars):
+            self.scalars.resize(NVisible, refcheck=False)
     
     def displacementFilter(self, settings):
         """
@@ -552,9 +554,11 @@ class Filterer(object):
         
         NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
                                           settings.ymax, settings.zmin, settings.zmax, settings.xEnabled, 
-                                          settings.yEnabled, settings.zEnabled)
+                                          settings.yEnabled, settings.zEnabled, self.scalars)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
+        if len(self.scalars):
+            self.scalars.resize(NVisible, refcheck=False)
     
     def cropSphereFilter(self, settings):
         """
@@ -564,9 +568,11 @@ class Filterer(object):
         lattice = self.pipelinePage.inputState
         
         NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, settings.xCentre, settings.yCentre, settings.zCentre, 
-                                                settings.radius, lattice.cellDims, self.pipelinePage.PBC, settings.invertSelection)
+                                                settings.radius, lattice.cellDims, self.pipelinePage.PBC, settings.invertSelection, self.scalars)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
+        if len(self.scalars):
+            self.scalars.resize(NVisible, refcheck=False)
     
     def sliceFilter(self, settings):
         """
@@ -576,9 +582,11 @@ class Filterer(object):
         lattice = self.pipelinePage.inputState
         
         NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, settings.x0, settings.y0, settings.z0, 
-                                           settings.xn, settings.yn, settings.zn, settings.invert)
+                                           settings.xn, settings.yn, settings.zn, settings.invert, self.scalars)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
+        if len(self.scalars):
+            self.scalars.resize(NVisible, refcheck=False)
     
     def chargeFilter(self, settings):
         """
@@ -587,9 +595,11 @@ class Filterer(object):
         """
         lattice = self.pipelinePage.inputState
         
-        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge)
+        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge, self.scalars)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
+        if len(self.scalars):
+            self.scalars.resize(NVisible, refcheck=False)
     
     def KEFilter(self, settings):
         """
@@ -598,9 +608,11 @@ class Filterer(object):
         """
         lattice = self.pipelinePage.inputState
         
-        NVisible = filtering_c.KEFilter(self.visibleAtoms, lattice.KE, settings.minKE, settings.maxKE)
+        NVisible = filtering_c.KEFilter(self.visibleAtoms, lattice.KE, settings.minKE, settings.maxKE, self.scalars)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
+        if len(self.scalars):
+            self.scalars.resize(NVisible, refcheck=False)
     
     def PEFilter(self, settings):
         """
@@ -609,9 +621,11 @@ class Filterer(object):
         """
         lattice = self.pipelinePage.inputState
         
-        NVisible = filtering_c.PEFilter(self.visibleAtoms, lattice.PE, settings.minPE, settings.maxPE)
+        NVisible = filtering_c.PEFilter(self.visibleAtoms, lattice.PE, settings.minPE, settings.maxPE, self.scalars)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
+        if len(self.scalars):
+            self.scalars.resize(NVisible, refcheck=False)
     
     def pointDefectFilter(self, settings):
         """
