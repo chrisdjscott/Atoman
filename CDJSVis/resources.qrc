@@ -6,6 +6,7 @@
 	<file>icons/system-log-out.svg</file>
 	<file>icons/document-open.svg</file>
 	<file>icons/folder.svg</file>
+	<file>icons/folder-new.svg</file>
 	<file>icons/imageviewer-icon.svg</file>
 	<file>icons/applications-system.svg</file>
 	<file>icons/preferences-desktop-screensaver.svg</file>
@@ -68,6 +69,7 @@
     <file>icons/window-new.svg</file>
     <file>icons/cam.png</file>
     <file>icons/capital_f.gif</file>
+    <file>icons/open-file-icon.png</file>
     
     <file>help/index.html</file>
     <file>help/input.html</file>

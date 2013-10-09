@@ -150,7 +150,7 @@ class MainWindow(QtGui.QMainWindow):
                                             icon="window-new.svg", tip="Open new render sub window")
 #         loadInputAction = self.createAction("Load input", slot=self.showLoadInputDialog, icon="document-open.svg",
 #                                             tip="Open load input dialog")
-        systems_action = self.createAction("Systems dialog", slot=self.show_systems_dialog, icon="document-open.svg",
+        systems_action = self.createAction("Systems dialog", slot=self.show_systems_dialog, icon="open-file-icon.png",
                                            tip="Show systems dialog")
         openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="folder.svg", 
                                           tip="Open current working directory")
@@ -166,10 +166,12 @@ class MainWindow(QtGui.QMainWindow):
                                                   icon="applications-graphics.svg", tip="Show image viewer")
         showPreferencesAction = self.createAction("Preferences", slot=self.showPreferences, 
                                                   icon="applications-system.svg", tip="Show preferences window")
+        changeCWDAction = self.createAction("Change CWD", slot=self.changeCWD, icon="folder-new.svg", 
+                                            tip="Change current working directory")
         
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, systems_action, openCWDAction, importElementsAction, 
+        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, systems_action, openCWDAction, changeCWDAction, importElementsAction, 
                                    exportElementsAction, importBondsAction, exportBondsAction, None, exitAction))
         
         # button to show console window
@@ -192,6 +194,7 @@ class MainWindow(QtGui.QMainWindow):
 #         fileToolbar.addAction(loadInputAction)
         fileToolbar.addAction(systems_action)
         fileToolbar.addAction(openCWDAction)
+        fileToolbar.addAction(changeCWDAction)
         fileToolbar.addSeparator()
         
         # util tool bar
@@ -264,6 +267,19 @@ class MainWindow(QtGui.QMainWindow):
         
         # show input dialog
 #        self.showLoadInputDialog()
+    
+    def changeCWD(self):
+        """
+        Change current working directory...
+        
+        """
+        new_dir = QtGui.QFileDialog.getExistingDirectory(self, "New working directory", os.getcwd())
+        
+        print "NEW DIR", new_dir
+        
+        if new_dir and os.path.isdir(new_dir):
+            os.chdir(new_dir)
+            self.updateCWD()
     
     def show_systems_dialog(self):
         """
