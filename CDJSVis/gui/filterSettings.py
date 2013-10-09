@@ -493,9 +493,9 @@ class CropSphereSettingsDialog(GenericSettingsDialog):
         Set centre to lattice centre.
         
         """
-        self.xCentreSpinBox.setValue(self.mainWindow.pipelinePage.cellDims[0] / 2.0)
-        self.yCentreSpinBox.setValue(self.mainWindow.pipelinePage.cellDims[1] / 2.0)
-        self.zCentreSpinBox.setValue(self.mainWindow.pipelinePage.cellDims[2] / 2.0)
+        self.xCentreSpinBox.setValue(self.pipelinePage.inputState.cellDims[0] / 2.0)
+        self.yCentreSpinBox.setValue(self.pipelinePage.inputState.cellDims[1] / 2.0)
+        self.zCentreSpinBox.setValue(self.pipelinePage.inputState.cellDims[2] / 2.0)
     
     def radiusChanged(self, val):
         """
