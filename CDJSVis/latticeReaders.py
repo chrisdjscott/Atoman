@@ -111,8 +111,6 @@ class GenericLatticeReader(object):
             
             else:
                 self.displayWarning("Input file read failed with error code: %s" % str(status))
-            
-            return None, None
         
         elif state is not None:
             self.currentFile = os.path.abspath(filename)
@@ -170,8 +168,6 @@ class LbomdXYZReader(GenericLatticeReader):
             
             elif status == -3:
                 self.displayWarning("Unrecognised format for LBOMD XYZ input file!")
-            
-            return None, None
         
         elif state is not None:
             self.currentFile = os.path.abspath(xyzfilename)
@@ -280,6 +276,9 @@ class LbomdRefReader(GenericLatticeReader):
         dims_array = line.split()
         
         f.close()
+        
+        if len(dims_array) != 3:
+            return -3, None
         
         state.reset(NAtoms)
         
