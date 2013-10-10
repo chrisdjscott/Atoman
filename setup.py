@@ -99,6 +99,15 @@ def main():
             os.symlink(os.path.join("lib", lib), libName)
         
         os.chdir("..")
+        
+        if len(sys.argv) == 2 and sys.argv[1] == "test":
+            print ""
+            print "="*80
+            print "RUNNING TESTS"
+            print "="*80
+            print ""
+            
+            os.system("nosetests -v")
 
         
     
