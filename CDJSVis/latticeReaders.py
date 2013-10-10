@@ -33,6 +33,7 @@ class GenericLatticeReader(object):
         self.currentFile = None
         self.displayWarning = displayWarning
         self.displayError = displayError
+        self.requiresRef = False
     
     def checkForZipped(self, filename):
         """
@@ -135,6 +136,8 @@ class LbomdXYZReader(GenericLatticeReader):
     """
     def __init__(self, tmpLocation, log, displayWarning, displayError):
         super(LbomdXYZReader, self).__init__(tmpLocation, log, displayWarning, displayError)
+        
+        self.requiresRef = True
     
     def readFile(self, xyzfilename, refState, rouletteIndex=None):
         """

@@ -1198,7 +1198,11 @@ class ImageSequenceTab(QtGui.QWidget):
 #                 status = form.openFile(filename=currentFile, rouletteIndex=i-1)
                 
                 # read in state
-                status, state = reader.readFile(currentFile, rouletteIndex=i-1)
+                if reader.requiresRef:
+                    status, state = reader.readFile(currentFile, readerForm.currentRefState, rouletteIndex=i-1)
+                
+                else:
+                    status, state = reader.readFile(currentFile, rouletteIndex=i-1)
                 
                 if status:
                     log("Sequencer read file failed with status: %d" % (status,), 0, 2)
