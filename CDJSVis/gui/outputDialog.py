@@ -1073,23 +1073,23 @@ class ImageSequenceTab(QtGui.QWidget):
             filename = pp.filename
         
         count = 0
+        lim = None
         for i in xrange(len(filename)):
             if filename[i] == ".":
                 break
             
-            error = 0
             try:
                 int(filename[i])
+                
+                if lim is None:
+                    lim = count
             
             except ValueError:
-                error = 1
-            
-            if not error:
-                break
+                lim = None
             
             count += 1
         
-        self.fileprefix.setText(filename[:count])
+        self.fileprefix.setText(filename[:lim])
     
     def startSequencer(self):
         """
