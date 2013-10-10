@@ -196,6 +196,9 @@ class BondsOptionsWindow(QtGui.QDialog):
         row = QtGui.QHBoxLayout()
         row.addWidget(numSidesSpin)
         numSidesLayout.addLayout(row)
+        
+        # always refresh
+        self.refresh()
     
     def numSidesChanged(self, val):
         """
@@ -289,6 +292,9 @@ class BondsOptionsWindow(QtGui.QDialog):
         
         """
         inputState = self.parent.filterTab.inputState
+        
+        if inputState is None:
+            return
         
         for specie in inputState.specieList:
             self.addSpecie(specie)
