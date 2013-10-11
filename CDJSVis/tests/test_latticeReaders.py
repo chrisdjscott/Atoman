@@ -333,7 +333,7 @@ class TestLbomdXYZReader(unittest.TestCase):
         refStatus, self.refState = refReader.readFile(path_to_file("anim-ref-HDiff.xyz"))
         
         if refStatus:
-            raise Exception('IOError', 'readRefFailed')
+            raise unittest.SkipTest("read ref failed")
         
         self.reader = latticeReaders.LbomdXYZReader(self.tmpLocation, log_output, log_warning, log_error)
     
