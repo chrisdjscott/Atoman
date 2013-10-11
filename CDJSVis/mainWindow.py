@@ -56,6 +56,9 @@ class MainWindow(QtGui.QMainWindow):
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         MainWindow.Instances.add(self)
         
+        # first time show called
+        self.firstShow = True
+        
         # initialise user interface
         self.initUI()
         
@@ -257,16 +260,27 @@ class MainWindow(QtGui.QMainWindow):
         
         self.setStatus('Ready')
         
-        self.show()
-        
-        # give focus
-        self.raise_()
+#         self.show()
+#         
+#         # give focus
+#         self.raise_()
         
         # show system dialog
-        self.show_systems_dialog()
+#         self.show_systems_dialog()
         
         # show input dialog
 #        self.showLoadInputDialog()
+    
+    def show(self):
+        """
+        Override show
+        
+        """
+        super(MainWindow, self).show()
+        
+        if self.firstShow:
+            self.show_systems_dialog()
+            self.firstShow = False
     
     def changeCWD(self):
         """

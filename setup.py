@@ -98,16 +98,38 @@ def main():
                 os.unlink(libName)
             os.symlink(os.path.join("lib", lib), libName)
         
-        os.chdir("..")
+        os.chdir("../..")
         
         if len(sys.argv) == 2 and sys.argv[1] == "test":
             print ""
             print "="*80
-            print "RUNNING TESTS"
+            print "RUNNING ALL TESTS"
             print "="*80
             print ""
             
             os.system("nosetests -v")
+        
+        elif len(sys.argv) == 2 and sys.argv[1] == "unittest":
+            print ""
+            print "="*80
+            print "RUNNING UNIT TESTS ONLY"
+            print "="*80
+            print ""
+            
+            os.chdir("CDJSVis")
+            os.system("nosetests -v")
+            os.chdir("..")
+        
+        elif len(sys.argv) == 2 and sys.argv[1] == "slowtest":
+            print ""
+            print "="*80
+            print "RUNNING SLOW TESTS ONLY"
+            print "="*80
+            print ""
+            
+            os.chdir("slow_tests")
+            os.system("nosetests -v")
+            os.chdir("..")
 
         
     

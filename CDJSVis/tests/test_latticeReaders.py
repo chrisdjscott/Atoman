@@ -30,6 +30,17 @@ def path_to_file(path):
 
 ################################################################################
 
+def specie_index(specieList, symIn):
+    index = None
+    for count, sym in enumerate(specieList):
+        if sym == symIn:
+            index = count
+            break
+    
+    return index
+
+################################################################################
+
 class TestLbomdDatReader(unittest.TestCase):
     """
     Test LBOMD DAT reader
@@ -59,7 +70,7 @@ class TestLbomdDatReader(unittest.TestCase):
     
     def test_readGzipLatticeInstance(self):
         """
-        DAT: Read gzipped lattice returns Lattice
+        READDAT gzipped returns Lattice
         
         """
         filename = path_to_file("postcascref.dat")
@@ -70,7 +81,7 @@ class TestLbomdDatReader(unittest.TestCase):
     
     def test_readGzipStatusOk(self):
         """
-        DAT: Read gzipped lattice status ok
+        READDAT gzipped status ok
         
         """
         filename = path_to_file("postcascref.dat")
@@ -81,7 +92,7 @@ class TestLbomdDatReader(unittest.TestCase):
     
     def test_readLatticeInstance(self):
         """
-        DAT: Read lattice returns Lattice
+        READDAT returns Lattice
         
         """
         filename = path_to_file("lattice.dat")
@@ -92,7 +103,7 @@ class TestLbomdDatReader(unittest.TestCase):
     
     def test_readStatusOk(self):
         """
-        DAT: Read lattice status ok
+        READDAT lattice status ok
         
         """
         filename = path_to_file("lattice.dat")
@@ -103,7 +114,7 @@ class TestLbomdDatReader(unittest.TestCase):
     
     def test_NAtoms(self):
         """
-        DAT: NAtoms
+        READDAT NAtoms
         
         """
         filename = path_to_file("kenny_lattice.dat")
@@ -114,7 +125,7 @@ class TestLbomdDatReader(unittest.TestCase):
     
     def test_cellDims(self):
         """
-        DAT: Cell dimensions
+        READDAT cell dimensions
         
         """
         filename = path_to_file("kenny_lattice.dat")
@@ -127,7 +138,7 @@ class TestLbomdDatReader(unittest.TestCase):
     
     def test_NSpecies(self):
         """
-        DAT: NSpecies
+        READDAT NSpecies
         
         """
         filename = path_to_file("kenny_lattice.dat")
@@ -138,7 +149,7 @@ class TestLbomdDatReader(unittest.TestCase):
     
     def test_specieList(self):
         """
-        DAT: Specie list
+        READDAT specie list
         
         """
         filename = path_to_file("kenny_lattice.dat")
@@ -149,31 +160,18 @@ class TestLbomdDatReader(unittest.TestCase):
         self.assertIn("B_", state.specieList)
         self.assertIn("O_", state.specieList)
     
-    def test_getSpecieIndex(self):
-        """
-        DAT: Get specie index
-        
-        """
-        filename = path_to_file("kenny_lattice.dat")
-        
-        status, state = self.reader.readFile(filename)
-        
-        self.assertEqual(state.specieList[state.getSpecieIndex("Si")], "Si")
-        self.assertEqual(state.specieList[state.getSpecieIndex("B_")], "B_")
-        self.assertEqual(state.specieList[state.getSpecieIndex("O_")], "O_")
-    
     def test_specieCount(self):
         """
-        DAT: Specie count
+        READDAT specie count
         
         """
         filename = path_to_file("kenny_lattice.dat")
         
         status, state = self.reader.readFile(filename)
         
-        self.assertEqual(state.specieCount[state.getSpecieIndex("Si")], 280)
-        self.assertEqual(state.specieCount[state.getSpecieIndex("B_")], 120)
-        self.assertEqual(state.specieCount[state.getSpecieIndex("O_")], 740)
+        self.assertEqual(state.specieCount[specie_index(state.specieList, "Si")], 280)
+        self.assertEqual(state.specieCount[specie_index(state.specieList, "B_")], 120)
+        self.assertEqual(state.specieCount[specie_index(state.specieList, "O_")], 740)
     
 ################################################################################
 
@@ -206,7 +204,7 @@ class TestLbomdRefReader(unittest.TestCase):
     
     def test_readGzipLatticeInstance(self):
         """
-        REF: Read gzipped lattice returns Lattice
+        READREF gzipped returns Lattice
         
         """
         filename = path_to_file("anim-ref-Hdiff.xyz")
@@ -217,7 +215,7 @@ class TestLbomdRefReader(unittest.TestCase):
     
     def test_readGzipStatusOk(self):
         """
-        REF: Read gzipped lattice status ok
+        READREF gzipped status ok
         
         """
         filename = path_to_file("anim-ref-Hdiff.xyz")
@@ -228,7 +226,7 @@ class TestLbomdRefReader(unittest.TestCase):
     
     def test_readLatticeInstance(self):
         """
-        REF: Read lattice returns Lattice
+        READREF returns Lattice
         
         """
         filename = path_to_file("animation-reference.xyz")
@@ -239,7 +237,7 @@ class TestLbomdRefReader(unittest.TestCase):
     
     def test_readStatusOk(self):
         """
-        REF: Read lattice status ok
+        READREF lattice status ok
         
         """
         filename = path_to_file("animation-reference.xyz")
@@ -250,7 +248,7 @@ class TestLbomdRefReader(unittest.TestCase):
     
     def test_NAtoms(self):
         """
-        REF: NAtoms
+        READREF NAtoms
         
         """
         filename = path_to_file("anim-ref-Hdiff.xyz")
@@ -261,7 +259,7 @@ class TestLbomdRefReader(unittest.TestCase):
     
     def test_cellDims(self):
         """
-        REF: Cell dimensions
+        READREF cell dimensions
         
         """
         filename = path_to_file("anim-ref-Hdiff.xyz")
@@ -274,7 +272,7 @@ class TestLbomdRefReader(unittest.TestCase):
     
     def test_NSpecies(self):
         """
-        REF: NSpecies
+        READREF NSpecies
         
         """
         filename = path_to_file("anim-ref-Hdiff.xyz")
@@ -285,7 +283,7 @@ class TestLbomdRefReader(unittest.TestCase):
     
     def test_specieList(self):
         """
-        REF: Specie list
+        READREF specie list
         
         """
         filename = path_to_file("anim-ref-Hdiff.xyz")
@@ -296,33 +294,165 @@ class TestLbomdRefReader(unittest.TestCase):
         self.assertIn("Ga", state.specieList)
         self.assertIn("H_", state.specieList)
     
-    def test_getSpecieIndex(self):
+    def test_specieCount(self):
         """
-        REF: Get specie index
+        READREF specie count
         
         """
         filename = path_to_file("anim-ref-Hdiff.xyz")
         
         status, state = self.reader.readFile(filename)
         
-        self.assertEqual(state.specieList[state.getSpecieIndex("Pu")], "Pu")
-        self.assertEqual(state.specieList[state.getSpecieIndex("Ga")], "Ga")
-        self.assertEqual(state.specieList[state.getSpecieIndex("H_")], "H_")
+        self.assertEqual(state.specieCount[specie_index(state.specieList, "Pu")], 15565)
+        self.assertEqual(state.specieCount[specie_index(state.specieList, "Ga")], 819)
+        self.assertEqual(state.specieCount[specie_index(state.specieList, "H_")], 8)
+
+################################################################################
+
+def skipIfStatus(status):
+    if not status:
+        return unittest.skip("Skipping XYZ test because readRef failed")
+
+################################################################################
+
+class TestLbomdXYZReader(unittest.TestCase):
+    """
+    Test LBOMD DAT reader
+    
+    """
+    def setUp(self):
+        """
+        Called before each test
+        
+        """
+        # tmp dir
+        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+        
+        # create reader
+        refReader = latticeReaders.LbomdRefReader(self.tmpLocation, log_output, log_warning, log_error)
+        refStatus, self.refState = refReader.readFile(path_to_file("anim-ref-HDiff.xyz"))
+        
+        if refStatus:
+            raise Exception('IOError', 'readRefFailed')
+        
+        self.reader = latticeReaders.LbomdXYZReader(self.tmpLocation, log_output, log_warning, log_error)
+    
+    def tearDown(self):
+        """
+        Called after each test
+        
+        """
+        # remove tmp dir
+        shutil.rmtree(self.tmpLocation)
+        
+        # remove ref to reader
+        self.reader = None
+        self.refState = None
+    
+    def test_readGzipLatticeInstance(self):
+        """
+        READXYZ gzipped returns Lattice
+        
+        """
+        filename = path_to_file("input-Hdiff.xyz")
+        
+        status, state = self.reader.readFile(filename, self.refState)
+        
+        self.assertIsInstance(state, Lattice)
+    
+    def test_readGzipStatusOk(self):
+        """
+        READXYZ gzipped status ok
+        
+        """
+        filename = path_to_file("input-Hdiff.xyz")
+        
+        status, state = self.reader.readFile(filename, self.refState)
+        
+        self.assertEqual(status, 0)
+    
+#     def test_readLatticeInstance(self):
+#         """
+#         READXYZ returns Lattice
+#         
+#         """
+#         filename = path_to_file("animation-reference.xyz")
+#         
+#         status, state = self.reader.readFile(filename)
+#         
+#         self.assertIsInstance(state, Lattice)
+#     
+#     def test_readStatusOk(self):
+#         """
+#         READXYZ lattice status ok
+#         
+#         """
+#         filename = path_to_file("animation-reference.xyz")
+#         
+#         status, state = self.reader.readFile(filename)
+#         
+#         self.assertEqual(status, 0)
+    
+    def test_NAtoms(self):
+        """
+        READXYZ NAtoms
+        
+        """
+        filename = path_to_file("input-Hdiff.xyz")
+        
+        status, state = self.reader.readFile(filename, self.refState)
+        
+        self.assertEqual(state.NAtoms, 16392)
+    
+    def test_cellDims(self):
+        """
+        READXYZ cell dimensions
+        
+        """
+        filename = path_to_file("input-Hdiff.xyz")
+        
+        status, state = self.reader.readFile(filename, self.refState)
+        
+        self.assertEqual(state.cellDims[0], 74.24)
+        self.assertEqual(state.cellDims[1], 74.24)
+        self.assertEqual(state.cellDims[2], 74.24)
+    
+    def test_NSpecies(self):
+        """
+        READXYZ NSpecies
+        
+        """
+        filename = path_to_file("input-Hdiff.xyz")
+        
+        status, state = self.reader.readFile(filename, self.refState)
+        
+        self.assertEqual(len(state.specieList), 3)
+    
+    def test_specieList(self):
+        """
+        READXYZ specie list
+        
+        """
+        filename = path_to_file("input-Hdiff.xyz")
+        
+        status, state = self.reader.readFile(filename, self.refState)
+        
+        self.assertIn("Pu", state.specieList)
+        self.assertIn("Ga", state.specieList)
+        self.assertIn("H_", state.specieList)
     
     def test_specieCount(self):
         """
-        REF: Specie count
+        READXYZ specie count
         
         """
-        filename = path_to_file("anim-ref-Hdiff.xyz")
+        filename = path_to_file("input-Hdiff.xyz")
         
-        status, state = self.reader.readFile(filename)
+        status, state = self.reader.readFile(filename, self.refState)
         
-        self.assertEqual(state.specieCount[state.getSpecieIndex("Pu")], 15565)
-        self.assertEqual(state.specieCount[state.getSpecieIndex("Ga")], 819)
-        self.assertEqual(state.specieCount[state.getSpecieIndex("H_")], 8)
-
-
+        self.assertEqual(state.specieCount[specie_index(state.specieList, "Pu")], 15565)
+        self.assertEqual(state.specieCount[specie_index(state.specieList, "Ga")], 819)
+        self.assertEqual(state.specieCount[specie_index(state.specieList, "H_")], 8)
 
 
 

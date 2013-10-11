@@ -33,6 +33,10 @@ def main():
     mw = mainWindow.MainWindow()
     mw.setWindowIcon(QtGui.QIcon(iconPath("CDJSVis.ico")))
     
+    # show main window and give it focus
+    mw.show()
+    mw.raise_()
+    
     sys.exit(app.exec_())
 
 ################################################################################

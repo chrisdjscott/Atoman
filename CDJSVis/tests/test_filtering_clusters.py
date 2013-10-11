@@ -36,7 +36,7 @@ def path_to_file(path):
    
 ################################################################################
    
-class TestFilters(unittest.TestCase):
+class TestClusters(unittest.TestCase):
     """
     Test filterer
        

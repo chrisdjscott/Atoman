@@ -375,7 +375,7 @@ class FilterList(QtGui.QWidget):
         """
         QtGui.QMessageBox.warning(self, "Warning", "The point defects filter cannot be used in conjunction with any other filter!")
     
-    def addFilter(self):
+    def addFilter(self, filterName=None):
         """
         Add new filter
         
@@ -385,7 +385,11 @@ class FilterList(QtGui.QWidget):
             return
         
         # first determine what filter is to be added
-        filterName, ok = QtGui.QInputDialog.getItem(self, "Add filter", "Select filter:", self.allFilters, editable=False)
+        if filterName is not None and filterName in self.allFilters:
+            ok = True
+        
+        else:
+            filterName, ok = QtGui.QInputDialog.getItem(self, "Add filter", "Select filter:", self.allFilters, editable=False)
         
         if ok:
             if self.defectFilterSelected:
