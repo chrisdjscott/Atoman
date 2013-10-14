@@ -45,7 +45,13 @@ if sys.platform == "darwin":
     from PySide.QtGui import QWidget as MSWidget
 else:
     from PySide.QtOpenGL import QGLWidget as MSWidget
-    
+
+
+class VTKRenWinInteractOverride(vtk.vtkGenericRenderWindowInteractor):
+    def Initialize(self):
+        self.Initialized = 1
+        self.Enable()
+
 class QVTKRenderWindowInteractor(MSWidget):
 
     """ A QVTKRenderWindowInteractor for Python and Qt.  Uses a
@@ -175,7 +181,8 @@ class QVTKRenderWindowInteractor(MSWidget):
             self._RenderWindow.StereoCapableWindowOn()
             self._RenderWindow.SetStereoTypeToCrystalEyes()
 
-        self._Iren = vtk.vtkGenericRenderWindowInteractor()
+#         self._Iren = vtk.vtkGenericRenderWindowInteractor()
+        self._Iren = VTKRenWinInteractOverride()
         self._Iren.SetRenderWindow(self._RenderWindow)
 
         # do all the necessary qt setup

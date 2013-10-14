@@ -45,17 +45,43 @@ class TestMW(unittest.TestCase):
         self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
         
         self.mw = mainWindow.MainWindow()
+        self.mw.show()
     
     def tearDown(self):
         # remove tmp dir
         shutil.rmtree(self.tmpLocation)
     
-    def test_loadLattice(self):
+    def test_loadLbomdDat(self):
         """
-        Load lattice
+        Load LBOMD DAT file
            
         """
         status = self.mw.systemsDialog.load_system_form.lbomdDatWidget.openFile(filename=path_to_file("kenny_lattice.dat"))
         
         self.assertEqual(status, 0)
         self.assertIsInstance(self.mw.mainToolbar.pipelineList[0].inputState, Lattice)
+    
+    def test_loadLbomdRef(self):
+        """
+        Load LBOMD ref file
+           
+        """
+        status = self.mw.systemsDialog.load_system_form.lbomdRefWidget.openFile(filename=path_to_file("anim-ref-Hdiff.xyz"))
+        
+        self.assertEqual(status, 0)
+        self.assertIsInstance(self.mw.mainToolbar.pipelineList[0].inputState, Lattice)
+    
+#     def test_loadLbomdXYZ(self):
+#         """
+#         Load LBOMD ref file
+#            
+#         """
+#         status = self.mw.systemsDialog.load_system_form.lbomdRefWidget.openFile(filename=path_to_file("anim-ref-Hdiff.xyz"))
+#         
+#         self.assertEqual(status, 0)
+#         self.assertIsInstance(self.mw.mainToolbar.pipelineList[0].inputState, Lattice)
+
+
+
+
+
