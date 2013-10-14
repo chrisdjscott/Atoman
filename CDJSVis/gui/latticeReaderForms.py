@@ -490,7 +490,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
         if not status:
             if isRef:
                 self.setRefState(state, filename)
-                self.parent.lbomdXyzWidget_input.setRefState(state, filename)
+                self.parent.lbomdXyzWidget.setRefState(state, filename)
             else:
                 GenericReaderForm.postOpenFile(self, self.stateType, state, filename)
             
