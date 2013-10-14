@@ -35,9 +35,9 @@ def path_to_file(path):
    
 ################################################################################
    
-class TestMW(unittest.TestCase):
+class TestLoadLattice(unittest.TestCase):
     """
-    Test filterer
+    Test loading lattices
        
     """
     def setUp(self):
@@ -63,7 +63,7 @@ class TestMW(unittest.TestCase):
     
     def test_loadLbomdRef(self):
         """
-        Load LBOMD ref file
+        Load LBOMD Ref file
            
         """
         status = self.mw.systemsDialog.load_system_form.lbomdRefWidget.openFile(filename=path_to_file("anim-ref-Hdiff.xyz"))
@@ -71,15 +71,17 @@ class TestMW(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertIsInstance(self.mw.mainToolbar.pipelineList[0].inputState, Lattice)
     
-#     def test_loadLbomdXYZ(self):
-#         """
-#         Load LBOMD ref file
-#            
-#         """
-#         status = self.mw.systemsDialog.load_system_form.lbomdRefWidget.openFile(filename=path_to_file("anim-ref-Hdiff.xyz"))
-#         
-#         self.assertEqual(status, 0)
-#         self.assertIsInstance(self.mw.mainToolbar.pipelineList[0].inputState, Lattice)
+    def test_loadLbomdXYZ(self):
+        """
+        Load LBOMD XYZ file
+            
+        """
+        status = self.mw.systemsDialog.load_system_form.lbomdXyzWidget.openFile(filename=path_to_file("anim-ref-Hdiff.xyz"), isRef=True)
+        self.assertEqual(status, 0)
+        
+        status = self.mw.systemsDialog.load_system_form.lbomdXyzWidget.openFile(filename=path_to_file("input-HDiff.xyz"))
+        self.assertEqual(status, 0)
+        self.assertIsInstance(self.mw.mainToolbar.pipelineList[0].inputState, Lattice)
 
 
 
