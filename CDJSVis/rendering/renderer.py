@@ -1244,14 +1244,14 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     lut = setupLUT(inputLattice.specieList, inputLattice.specieRGB, colouringOptions)
     
     # loop over interstitials, settings points
-    pos = refLattice.pos
+    pos = inputLattice.pos
     spec = inputLattice.specie
     for i in xrange(NAnt):
         index = onAntisites[i]
         specInd = spec[index]
         intScalarsList[specInd].InsertNextValue(specInd)
         
-        index = antisites[i]
+#         index = antisites[i]
         intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
     
     # now loop over species making actors
