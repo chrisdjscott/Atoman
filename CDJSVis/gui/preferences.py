@@ -76,10 +76,8 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         settings = QtCore.QSettings()
         
         # default settings
-        self.framerate = 10
         self.bitrate = 10000
         self.suffix = "mpg"
-        self.prefix = "movie"
         
         self.pathToFFmpeg = str(settings.value("ffmpeg/pathToFFmpeg", "ffmpeg"))
         if not os.path.exists(self.pathToFFmpeg):
@@ -93,22 +91,6 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         rowLayout = self.newRow()
         rowLayout.addWidget(QtGui.QLabel("Path to FFmpeg:"))
         rowLayout.addWidget(pathToFFmpegLineEdit)
-        
-        # framerate
-        rowLayout = self.newRow()
-        
-        label = QtGui.QLabel("Framerate:")
-        rowLayout.addWidget(label)
-        
-        framerateSpin = QtGui.QSpinBox()
-        framerateSpin.setMinimum(1)
-        framerateSpin.setMaximum(10000)
-        framerateSpin.setValue(self.framerate)
-        framerateSpin.valueChanged.connect(self.framerateChanged)
-        rowLayout.addWidget(framerateSpin)
-        
-        label = QtGui.QLabel("fps")
-        rowLayout.addWidget(label)
         
         # bitrate
         rowLayout = self.newRow()
@@ -125,17 +107,6 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         
         label = QtGui.QLabel("kbits/s")
         rowLayout.addWidget(label)
-        
-        # file prefix
-        rowLayout = self.newRow()
-        
-        label = QtGui.QLabel("File prefix:")
-        rowLayout.addWidget(label)
-        
-        prefixLineEdit = QtGui.QLineEdit(self.prefix)
-        prefixLineEdit.setFixedWidth(130)
-        prefixLineEdit.textChanged.connect(self.prefixChanged)
-        rowLayout.addWidget(prefixLineEdit)
         
         # file suffix
         rowLayout = self.newRow()
@@ -179,26 +150,12 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         """
         self.suffix = str(text)
     
-    def prefixChanged(self, text):
-        """
-        Prefix changed.
-        
-        """
-        self.prefix = str(text)
-    
     def bitrateChanged(self, val):
         """
         Bitrate changed.
         
         """
         self.bitrate = val
-    
-    def framerateChanged(self, val):
-        """
-        Framerate changed.
-        
-        """
-        self.framerate = val
 
 ################################################################################
 

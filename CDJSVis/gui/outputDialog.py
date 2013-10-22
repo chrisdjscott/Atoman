@@ -628,7 +628,7 @@ class ImageTab(QtGui.QWidget):
             self.imageFormat = "jpg"
             self.JPEGCheck.setChecked(1)
     
-    def createMovie(self, saveDir, saveText):
+    def createMovie(self, saveDir, saveText, createMovieBox):
         """
         Create movie.
         
@@ -650,9 +650,9 @@ class ImageTab(QtGui.QWidget):
         try:
             # temporary (should be optional)
             settings = self.mainWindow.preferences.ffmpegForm
-            framerate = settings.framerate
+            framerate = createMovieBox.framerate
             bitrate = settings.bitrate
-            outputprefix = settings.prefix
+            outputprefix = createMovieBox.prefix
             outputsuffix = settings.suffix
             
             saveText = os.path.basename(saveText)
@@ -842,7 +842,80 @@ class SingleImageTab(QtGui.QWidget):
         
         else:
             self.overwriteImage = 0
+
+################################################################################
+class CreateMovieBox(QtGui.QGroupBox):
+    """
+    Create movie settings
     
+    """
+    def __init__(self, parent=None):
+        super(CreateMovieBox, self).__init__(parent)
+        
+        self.setTitle("Create movie")
+        self.setCheckable(True)
+        self.setChecked(True)
+        self.setAlignment(QtCore.Qt.AlignCenter)
+        
+        # defaults
+        self.framerate = 10
+        self.prefix = "movie"
+        
+        # layout
+        self.contentLayout = QtGui.QVBoxLayout(self)
+        self.contentLayout.setContentsMargins(0, 0, 0, 0)
+        self.contentLayout.setSpacing(0)
+        
+        # framerate
+        rowLayout = self.newRow()
+        
+        label = QtGui.QLabel("Framerate:")
+        rowLayout.addWidget(label)
+        
+        framerateSpin = QtGui.QSpinBox()
+        framerateSpin.setMinimum(1)
+        framerateSpin.setMaximum(10000)
+        framerateSpin.setValue(self.framerate)
+        framerateSpin.valueChanged.connect(self.framerateChanged)
+        rowLayout.addWidget(framerateSpin)
+        
+        label = QtGui.QLabel(" fps")
+        rowLayout.addWidget(label)
+        
+        # file prefix
+        rowLayout = self.newRow()
+        
+        label = QtGui.QLabel("File prefix:")
+        rowLayout.addWidget(label)
+        
+        prefixLineEdit = QtGui.QLineEdit(self.prefix)
+        prefixLineEdit.setFixedWidth(130)
+        prefixLineEdit.textChanged.connect(self.prefixChanged)
+        rowLayout.addWidget(prefixLineEdit)
+    
+    def framerateChanged(self, val):
+        """
+        Framerate changed.
+        
+        """
+        self.framerate = val
+    
+    def prefixChanged(self, text):
+        """
+        Prefix changed.
+        
+        """
+        self.prefix = str(text)
+    
+    def newRow(self, align=None):
+        """
+        New row
+        
+        """
+        row = genericForm.FormRow(align=align)
+        self.contentLayout.addWidget(row)
+        
+        return row
 
 ################################################################################
 class ImageSequenceTab(QtGui.QWidget):
@@ -861,7 +934,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.interval = 1
         self.fileprefixText = "guess"
         self.overwrite = 0
-        self.createMovie = 1
+#         self.createMovie = 1
         
         # layout
         mainLayout = QtGui.QVBoxLayout(self)
@@ -1003,26 +1076,9 @@ class ImageSequenceTab(QtGui.QWidget):
         
         mainLayout.addWidget(row)
         
-        # create movie check box
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-#        rowLayout.setSpacing(0)
-        rowLayout.setContentsMargins(0, 0, 0, 0)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        self.createMovieCheck = QtGui.QCheckBox("Create movie")
-        settings = self.mainWindow.preferences.ffmpegForm
-        if utilities.checkForExe(settings.pathToFFmpeg):
-            self.createMovieCheck.setChecked(True)
-            self.createMovie = True
-        else:
-            self.createMovieCheck.setChecked(False)
-            self.createMovie = False
-        self.createMovieCheck.stateChanged[int].connect(self.createMovieCheckChanged)
-        
-        rowLayout.addWidget(self.createMovieCheck)
-        
-        mainLayout.addWidget(row)
+        # create movie box
+        self.createMovieBox = CreateMovieBox(self)
+        mainLayout.addWidget(self.createMovieBox)
         
         # start button
         row = QtGui.QWidget(self)
@@ -1040,24 +1096,6 @@ class ImageSequenceTab(QtGui.QWidget):
         
         mainLayout.addWidget(row)
         
-    def createMovieCheckChanged(self, val):
-        """
-        Create movie?
-        
-        """
-        if self.createMovieCheck.isChecked():
-            settings = self.mainWindow.preferences.ffmpegForm
-            
-            if not utilities.checkForExe(settings.pathToFFmpeg):
-                utilities.warnExeNotFound(self, "%s (FFmpeg)" % (settings.pathToFFmpeg,))
-                self.createMovieCheck.setCheckState(QtCore.Qt.Unchecked)
-                return
-            
-            self.createMovie = True
-        
-        else:
-            self.createMovie = False
-    
     def resetPrefix(self):
         """
         Reset the prefix to the one from 
@@ -1096,9 +1134,6 @@ class ImageSequenceTab(QtGui.QWidget):
         Start the sequencer
         
         """
-#         self.mainWindow.displayError("Sequencer not working")
-#         return
-        
         self.runSequencer()
         
     def runSequencer(self):
@@ -1200,10 +1235,6 @@ class ImageSequenceTab(QtGui.QWidget):
                 currentFile = fileText % (i,)
                 log("Current file: %s" % (currentFile,), 0, 1)
                 
-                # first open the file
-#                 form = self.mainWindow.loadInputDialog.loadInputStack.widget(self.mainWindow.loadInputDialog.inputTypeCurrentIndex)
-#                 status = form.openFile(filename=currentFile, rouletteIndex=i-1)
-                
                 # read in state
                 if reader.requiresRef:
                     status, state = reader.readFile(currentFile, readerForm.currentRefState, rouletteIndex=i-1)
@@ -1261,12 +1292,12 @@ class ImageSequenceTab(QtGui.QWidget):
             progDialog.close()
         
         # create movie
-        if not status and self.createMovie:
+        if not status and self.createMovieBox.isChecked():
             # show wait cursor
             QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
             
             try:
-                self.parent.createMovie(saveDir, saveText)
+                self.parent.createMovie(saveDir, saveText, self.createMovieBox)
             
             finally:
                 # set cursor to normal
@@ -1361,7 +1392,6 @@ class ImageRotateTab(QtGui.QWidget):
         # initial values
         self.fileprefixText = "rotate"
         self.overwrite = 0
-        self.createMovie = 0
         self.degreesPerRotation = 5.0
         
         # layout
@@ -1437,26 +1467,9 @@ class ImageRotateTab(QtGui.QWidget):
         
         mainLayout.addWidget(row)
         
-        # create movie check box
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-#        rowLayout.setSpacing(0)
-        rowLayout.setContentsMargins(0, 0, 0, 0)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        self.createMovieCheck = QtGui.QCheckBox("Create movie")
-        settings = self.mainWindow.preferences.ffmpegForm
-        if utilities.checkForExe(settings.pathToFFmpeg):
-            self.createMovieCheck.setChecked(True)
-            self.createMovie = True
-        else:
-            self.createMovieCheck.setChecked(False)
-            self.createMovie = False
-        self.connect(self.createMovieCheck, QtCore.SIGNAL('stateChanged(int)'), self.createMovieCheckChanged)
-        
-        rowLayout.addWidget(self.createMovieCheck)
-        
-        mainLayout.addWidget(row)
+        # create movie box
+        self.createMovieBox = CreateMovieBox(self)
+        mainLayout.addWidget(self.createMovieBox)
         
         # start button
         row = QtGui.QWidget(self)
@@ -1518,14 +1531,14 @@ class ImageRotateTab(QtGui.QWidget):
         
         else:
             # create movie
-            if self.createMovie:
+            if self.createMovieBox.isChecked():
                 # show wait cursor
                 QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
                 
                 
                 try:
                     saveText = os.path.join(saveDir, "%s%s" % (str(self.fileprefix.text()), "%d"))
-                    self.parent.createMovie(saveDir, saveText)
+                    self.parent.createMovie(saveDir, saveText, self.createMovieBox)
                 
                 finally:
                     # set cursor to normal
@@ -1538,24 +1551,6 @@ class ImageRotateTab(QtGui.QWidget):
         """
         self.degreesPerRotation = val
     
-    def createMovieCheckChanged(self, val):
-        """
-        Create movie?
-        
-        """
-        if self.createMovieCheck.isChecked():
-            settings = self.mainWindow.preferences.ffmpegForm
-            
-            if not utilities.checkForExe(settings.pathToFFmpeg):
-                utilities.warnExeNotFound(self, "%s (FFmpeg)" % (settings.pathToFFmpeg,))
-                self.createMovieCheck.setCheckState(QtCore.Qt.Unchecked)
-                return
-            
-            self.createMovie = True
-        
-        else:
-            self.createMovie = False
-
     def overwriteCheckChanged(self, val):
         """
         Overwrite check changed
