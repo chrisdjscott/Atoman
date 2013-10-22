@@ -1118,10 +1118,23 @@ class ImageSequenceTab(QtGui.QWidget):
         
         self.setFirstFileLabel()
         
+        # get pipeline page
+        pipelinePage = self.rendererWindow.getCurrentPipelinePage()
+        
+        # formatted string
+        fileText = "%s%s.%s" % (str(self.fileprefix.text()), self.numberFormat, pipelinePage.extension)
+        
         # check first file exists
         firstFileExists = utilities.checkForFile(str(self.firstFileLabel.text()))
         if not firstFileExists:
-            self.warnFirstFileNotPresent(str(self.firstFileLabel.text()))
+            self.warnFileNotPresent(str(self.firstFileLabel.text()), tag="first")
+            return
+        
+        # check last file exists
+        lastFile = fileText % self.maxIndex
+        lastFileExists = utilities.checkForFile(lastFile)
+        if not lastFileExists:
+            self.warnFileNotPresent(lastFile, tag="last")
             return
         
         log = self.mainWindow.console.write
@@ -1129,9 +1142,6 @@ class ImageSequenceTab(QtGui.QWidget):
         
         # store current input state
         origInput = copy.deepcopy(self.rendererWindow.getCurrentInputState())
-        
-        # get pipeline page
-        pipelinePage = self.rendererWindow.getCurrentPipelinePage()
         
         # pipeline index
         pipelineIndex = self.rendererWindow.currentPipelineIndex
@@ -1155,9 +1165,6 @@ class ImageSequenceTab(QtGui.QWidget):
         reader = readerForm.latticeReader
         
         print "READER", readerForm, reader
-        
-        # formatted string
-        fileText = "%s%s.%s" % (str(self.fileprefix.text()), self.numberFormat, pipelinePage.extension)
         
         # directory
         saveDir = str(self.outputFolder.text())
@@ -1265,12 +1272,12 @@ class ImageSequenceTab(QtGui.QWidget):
                 # set cursor to normal
                 QtGui.QApplication.restoreOverrideCursor()
     
-    def warnFirstFileNotPresent(self, filename):
+    def warnFileNotPresent(self, filename, tag="first"):
         """
         Warn the first file is not present.
         
         """
-        QtGui.QMessageBox.warning(self, "Warning", "Could not locate first file in sequence: %s" % (filename,))
+        QtGui.QMessageBox.warning(self, "Warning", "Could not locate %s file in sequence: %s" % (tag, filename))
     
     def overwriteCheckChanged(self, val):
         """
