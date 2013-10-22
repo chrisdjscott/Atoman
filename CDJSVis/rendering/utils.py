@@ -10,6 +10,54 @@ import math
 import vtk
 
 
+################################################################################
+
+def setMapperScalarRange(mapper, colouringOptions, NSpecies):
+    """
+    Set scalar range on mapper
+    
+    """
+    if colouringOptions.colourBy == "Specie":
+        mapper.SetScalarRange(0, NSpecies - 1)
+    
+    elif colouringOptions.colourBy == "Height":
+        mapper.SetScalarRange(colouringOptions.minVal, colouringOptions.maxVal)
+    
+    elif colouringOptions.colourBy == "Atom property":
+        mapper.SetScalarRange(colouringOptions.propertyMinSpin.value(), colouringOptions.propertyMaxSpin.value())
+    
+    else:
+        mapper.SetScalarRange(colouringOptions.scalarMinSpin.value(), colouringOptions.scalarMaxSpin.value())
+
+
+################################################################################
+
+def getScalar(colouringOptions, lattice, atomIndex, scalarVal=None):
+    """
+    Return the correct scalar value for using with LUT
+    
+    """
+    if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
+        scalar = lattice.specie[atomIndex]
+    
+    elif colouringOptions.colourBy == "Height":
+        scalar = lattice.pos[3*atomIndex+colouringOptions.heightAxis]
+    
+    elif colouringOptions.colourBy == "Atom property":
+        if colouringOptions.atomPropertyType == "Kinetic energy":
+            scalar = lattice.KE[atomIndex]
+        elif colouringOptions.atomPropertyType == "Potential energy":
+            scalar = lattice.PE[atomIndex]
+        else:
+            scalar = lattice.charge[atomIndex]
+    
+    elif scalarVal is not None:
+        scalar = scalarVal
+    
+    else:
+        scalar = lattice.specie[atomIndex]
+    
+    return scalar
 
 ################################################################################
 

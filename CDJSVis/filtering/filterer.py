@@ -255,9 +255,6 @@ class Filterer(object):
         renderTime = time.time()
         povfile = "pipeline%d_atoms%d.pov" % (self.pipelineIndex, self.parent.tab)
         if self.parent.defectFilterSelected:
-            colourBy = self.colouringOptions.colourBy
-            self.colouringOptions.colourBy = "Specie"
-            
             # vtk render
             if filterSettings.findClusters and filterSettings.drawConvexHulls:
                 self.pointDefectFilterDrawHulls(clusterList, filterSettings, hullFile)
@@ -273,13 +270,13 @@ class Filterer(object):
                 self.interstitialSpecieCount = counters[1]
                 self.antisiteSpecieCount = counters[2]
                 self.splitIntSpecieCount = counters[3]
+                self.scalarBar_white_bg = counters[4]
+                self.scalarBar_black_bg = counters[5]
                 
                 # write pov-ray file too
                 povfile = "pipeline%d_defects%d.pov" % (self.pipelineIndex, self.parent.tab)
                 renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow, 
                                             self.displayOptions, splitInterstitials, self.pipelinePage)
-            
-            self.colouringOptions.colourBy = colourBy
             
             # add defect info to text screen?
             

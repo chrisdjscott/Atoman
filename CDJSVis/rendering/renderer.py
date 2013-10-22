@@ -18,7 +18,7 @@ from ..visutils import utilities
 from ..visclibs import output as output_c
 from . import axes
 from . import cell
-from .utils import setRes, setupLUT
+from .utils import setRes, setupLUT, getScalar, setMapperScalarRange
 
 
 
@@ -1080,8 +1080,11 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         
         intSpecCount[specInd] += 1
         
+        # scalar
+        scalar = getScalar(colouringOptions, inputLattice, index)
+        
         intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
-        intScalarsList[specInd].InsertNextValue(specInd)
+        intScalarsList[specInd].InsertNextValue(scalar)
     
     # now loop over species making actors
     for i in xrange(NSpecies):
@@ -1104,7 +1107,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsMapper = vtk.vtkPolyDataMapper()
         intsMapper.SetInput(intsGlyph.GetOutput())
         intsMapper.SetLookupTable(lut)
-        intsMapper.SetScalarRange(0, NSpecies - 1)
+        setMapperScalarRange(intsMapper, colouringOptions, NSpecies)
         
         intsActor = vtk.vtkActor()
         intsActor.SetMapper(intsMapper)
@@ -1132,15 +1135,19 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         index = splitInterstitials[3*i+1]
         specInd1 = spec[index]
         
+        scalar = getScalar(colouringOptions, inputLattice, index)
+        
         intPointsList[specInd1].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
-        intScalarsList[specInd1].InsertNextValue(specInd1)
+        intScalarsList[specInd1].InsertNextValue(scalar)
         
         # second
         index = splitInterstitials[3*i+2]
         specInd2 = spec[index]
         
+        scalar = getScalar(colouringOptions, inputLattice, index)
+        
         intPointsList[specInd2].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
-        intScalarsList[specInd2].InsertNextValue(specInd2)
+        intScalarsList[specInd2].InsertNextValue(scalar)
         
         # counter
         splitSpecCount[specInd1][specInd2] += 1
@@ -1166,7 +1173,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsMapper = vtk.vtkPolyDataMapper()
         intsMapper.SetInput(intsGlyph.GetOutput())
         intsMapper.SetLookupTable(lut)
-        intsMapper.SetScalarRange(0, NSpecies - 1)
+        setMapperScalarRange(intsMapper, colouringOptions, NSpecies)
         
         intsActor = vtk.vtkActor()
         intsActor.SetMapper(intsMapper)
@@ -1174,7 +1181,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         actorsCollection.AddItem(intsActor)
     
     #----------------------------------------#
-    # split interstitial bonds next
+    # split interstitial vacs next
     #----------------------------------------#
     NSpecies = len(refLattice.specieList)
     intPointsList = []
@@ -1193,8 +1200,10 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         index = splitInterstitials[3*i]
         specInd = spec[index]
         
+        scalar = getScalar(colouringOptions, refLattice, index)
+        
         intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
-        intScalarsList[specInd].InsertNextValue(specInd)
+        intScalarsList[specInd].InsertNextValue(scalar)
     
     # now loop over species making actors
     for i in xrange(NSpecies):
@@ -1218,7 +1227,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsMapper = vtk.vtkPolyDataMapper()
         vacsMapper.SetInput(vacsGlyph.GetOutput())
         vacsMapper.SetLookupTable(lut)
-        vacsMapper.SetScalarRange(0, NSpecies - 1)
+        setMapperScalarRange(vacsMapper, colouringOptions, NSpecies)
         
         vacsActor = vtk.vtkActor()
         vacsActor.SetMapper(vacsMapper)
@@ -1249,9 +1258,10 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     for i in xrange(NAnt):
         index = onAntisites[i]
         specInd = spec[index]
-        intScalarsList[specInd].InsertNextValue(specInd)
         
-#         index = antisites[i]
+        scalar = getScalar(colouringOptions, inputLattice, index)
+        
+        intScalarsList[specInd].InsertNextValue(scalar)
         intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
     
     # now loop over species making actors
@@ -1275,7 +1285,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsMapper = vtk.vtkPolyDataMapper()
         intsMapper.SetInput(intsGlyph.GetOutput())
         intsMapper.SetLookupTable(lut)
-        intsMapper.SetScalarRange(0, NSpecies - 1)
+        setMapperScalarRange(intsMapper, colouringOptions, NSpecies)
         
         intsActor = vtk.vtkActor()
         intsActor.SetMapper(intsMapper)
@@ -1304,8 +1314,10 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         
         vacSpecCount[specInd] += 1
         
+        scalar = getScalar(colouringOptions, refLattice, index)
+        
         intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
-        intScalarsList[specInd].InsertNextValue(specInd)
+        intScalarsList[specInd].InsertNextValue(scalar)
     
     # now loop over species making actors
     for i in xrange(NSpecies):
@@ -1329,7 +1341,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsMapper = vtk.vtkPolyDataMapper()
         vacsMapper.SetInput(vacsGlyph.GetOutput())
         vacsMapper.SetLookupTable(lut)
-        vacsMapper.SetScalarRange(0, NSpecies - 1)
+        setMapperScalarRange(vacsMapper, colouringOptions, NSpecies)
         
         vacsActor = vtk.vtkActor()
         vacsActor.SetMapper(vacsMapper)
@@ -1361,8 +1373,10 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         
         antSpecCount[specInd][inputLattice.specie[onAntisites[i]]] += 1
         
+        scalar = getScalar(colouringOptions, refLattice, index)
+        
         intPointsList[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
-        intScalarsList[specInd].InsertNextValue(specInd)
+        intScalarsList[specInd].InsertNextValue(scalar)
     
     # now loop over species making actors
     for i in xrange(NSpecies):
@@ -1393,14 +1407,21 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsMapper = vtk.vtkPolyDataMapper()
         vacsMapper.SetInput(vacsGlyph.GetOutput())
         vacsMapper.SetLookupTable(lut)
-        vacsMapper.SetScalarRange(0, NSpecies - 1)
+        setMapperScalarRange(vacsMapper, colouringOptions, NSpecies)
         
         vacsActor = vtk.vtkActor()
         vacsActor.SetMapper(vacsMapper)
         
         actorsCollection.AddItem(vacsActor)
         
-        return (vacSpecCount, intSpecCount, antSpecCount, splitSpecCount)
+    # scalar bar
+    scalarBar_white = None
+    scalarBar_black = None
+    if colouringOptions.colourBy != "Specie" and colouringOptions.colourBy != "Solid colour":
+        scalarBar_white = makeScalarBar(lut, colouringOptions, (0, 0, 0))
+        scalarBar_black = makeScalarBar(lut, colouringOptions, (1, 1, 1))
+    
+    return vacSpecCount, intSpecCount, antSpecCount, splitSpecCount, scalarBar_white, scalarBar_black
 
 
 ################################################################################
