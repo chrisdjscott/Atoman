@@ -8,6 +8,7 @@ The filter tab for the main toolbar
 import os
 import sys
 import glob
+import math
 
 from PySide import QtGui, QtCore
 import vtk
@@ -219,7 +220,8 @@ class FilterForm(QtGui.QWidget):
         
         diff = False
         for i in xrange(3):
-            if inp.cellDims[i] != ref.cellDims[i]:
+#             if inp.cellDims[i] != ref.cellDims[i]:
+            if math.fabs(inp.cellDims[i] - ref.cellDims[i]) > 1e-4:
                 diff = True
                 break
         
