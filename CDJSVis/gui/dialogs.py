@@ -7,6 +7,7 @@ Additional dialogs.
 """
 import os
 import sys
+import copy
 
 from PySide import QtGui, QtCore
 import numpy as np
@@ -24,6 +25,235 @@ except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)
 
+
+################################################################################
+
+class CameraSettingsDialog(QtGui.QDialog):
+    """
+    Camera settings dialog
+    
+    """
+    def __init__(self, parent, renderer):
+        super(CameraSettingsDialog, self).__init__(parent)
+        
+        self.renderer = renderer
+        
+        self.setModal(True)
+        
+        self.setWindowTitle("Camera settings")
+        self.setWindowIcon(QtGui.QIcon(iconPath("cam.png")))
+        
+        self.contentLayout = QtGui.QVBoxLayout(self)
+#         self.contentLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        # ini vals
+        self.campos = list(renderer.camera.GetPosition())
+        self.camfoc = list(renderer.camera.GetFocalPoint())
+        self.camvup = list(renderer.camera.GetViewUp())
+        
+        self.camposbkup = copy.deepcopy(self.campos)
+        self.camfocbkup = copy.deepcopy(self.camfoc)
+        self.camvupbkup = copy.deepcopy(self.camvup)
+        
+        # row
+        row = self.newRow()
+        
+        label = QtGui.QLabel("Position: ")
+        row.addWidget(label)
+        
+        # cam pos
+        self.camPosXSpin = QtGui.QDoubleSpinBox()
+        self.camPosXSpin.setMinimum(-99999.0)
+        self.camPosXSpin.setMaximum(99999.0)
+        self.camPosXSpin.setValue(self.campos[0])
+        self.camPosXSpin.valueChanged[float].connect(self.camxposChanged)
+        row.addWidget(self.camPosXSpin)
+        
+        self.camPosYSpin = QtGui.QDoubleSpinBox()
+        self.camPosYSpin.setMinimum(-99999.0)
+        self.camPosYSpin.setMaximum(99999.0)
+        self.camPosYSpin.setValue(self.campos[1])
+        self.camPosYSpin.valueChanged[float].connect(self.camyposChanged)
+        row.addWidget(self.camPosYSpin)
+        
+        self.camPosZSpin = QtGui.QDoubleSpinBox()
+        self.camPosZSpin.setMinimum(-99999.0)
+        self.camPosZSpin.setMaximum(99999.0)
+        self.camPosZSpin.setValue(self.campos[2])
+        self.camPosZSpin.valueChanged[float].connect(self.camzposChanged)
+        row.addWidget(self.camPosZSpin)
+        
+        # row
+        row = self.newRow()
+        
+        label = QtGui.QLabel("Focal point: ")
+        row.addWidget(label)
+        
+        # cam focal point
+        self.camFocXSpin = QtGui.QDoubleSpinBox()
+        self.camFocXSpin.setMinimum(-99999.0)
+        self.camFocXSpin.setMaximum(99999.0)
+        self.camFocXSpin.setValue(self.camfoc[0])
+        self.camFocXSpin.valueChanged[float].connect(self.camxfocChanged)
+        row.addWidget(self.camFocXSpin)
+        
+        self.camFocYSpin = QtGui.QDoubleSpinBox()
+        self.camFocYSpin.setMinimum(-99999.0)
+        self.camFocYSpin.setMaximum(99999.0)
+        self.camFocYSpin.setValue(self.camfoc[1])
+        self.camFocYSpin.valueChanged[float].connect(self.camyfocChanged)
+        row.addWidget(self.camFocYSpin)
+        
+        self.camFocZSpin = QtGui.QDoubleSpinBox()
+        self.camFocZSpin.setMinimum(-99999.0)
+        self.camFocZSpin.setMaximum(99999.0)
+        self.camFocZSpin.setValue(self.camfoc[2])
+        self.camFocZSpin.valueChanged[float].connect(self.camzfocChanged)
+        row.addWidget(self.camFocZSpin)
+        
+        # row
+        row = self.newRow()
+        
+        label = QtGui.QLabel("View up: ")
+        row.addWidget(label)
+        
+        # cam focal point
+        self.camVupXSpin = QtGui.QDoubleSpinBox()
+        self.camVupXSpin.setMinimum(-99999.0)
+        self.camVupXSpin.setMaximum(99999.0)
+        self.camVupXSpin.setValue(self.camvup[0])
+        self.camVupXSpin.valueChanged[float].connect(self.camxvupChanged)
+        row.addWidget(self.camVupXSpin)
+        
+        self.camVupYSpin = QtGui.QDoubleSpinBox()
+        self.camVupYSpin.setMinimum(-99999.0)
+        self.camVupYSpin.setMaximum(99999.0)
+        self.camVupYSpin.setValue(self.camvup[1])
+        self.camVupYSpin.valueChanged[float].connect(self.camyvupChanged)
+        row.addWidget(self.camVupYSpin)
+        
+        self.camVupZSpin = QtGui.QDoubleSpinBox()
+        self.camVupZSpin.setMinimum(-99999.0)
+        self.camVupZSpin.setMaximum(99999.0)
+        self.camVupZSpin.setValue(self.camvup[2])
+        self.camVupZSpin.valueChanged[float].connect(self.camzvupChanged)
+        row.addWidget(self.camVupZSpin)
+        
+        # reset button
+        resetButton = QtGui.QPushButton(QtGui.QIcon(iconPath("undo_64.png")), "Reset")
+        resetButton.setStatusTip("Reset changes")
+        resetButton.setToolTip("Reset changes")
+        resetButton.clicked.connect(self.resetChanges)
+        
+        row = self.newRow()
+        row.addWidget(resetButton)
+    
+    def resetChanges(self):
+        """
+        Reset changes
+        
+        """
+        self.campos = self.camposbkup
+        self.camfoc = self.camfocbkup
+        self.camvup = self.camvupbkup
+        
+        self.renderer.camera.SetPosition(self.campos)
+        self.renderer.camera.SetFocalPoint(self.camfoc)
+        self.renderer.camera.SetViewUp(self.camvup)
+        
+        self.renderer.reinit()
+    
+    def camxposChanged(self, val):
+        """
+        Cam x pos changed
+        
+        """
+        self.campos[0] = val
+        self.renderer.camera.SetPosition(self.campos)
+        self.renderer.reinit()
+    
+    def camyposChanged(self, val):
+        """
+        Cam y pos changed
+        
+        """
+        self.campos[1] = val
+        self.renderer.camera.SetPosition(self.campos)
+        self.renderer.reinit()
+    
+    def camzposChanged(self, val):
+        """
+        Cam z pos changed
+        
+        """
+        self.campos[2] = val
+        self.renderer.camera.SetPosition(self.campos)
+        self.renderer.reinit()
+    
+    def camxfocChanged(self, val):
+        """
+        Cam x foc changed
+        
+        """
+        self.camfoc[0] = val
+        self.renderer.camera.SetFocalPoint(self.camfoc)
+        self.renderer.reinit()
+    
+    def camyfocChanged(self, val):
+        """
+        Cam y foc changed
+        
+        """
+        self.camfoc[1] = val
+        self.renderer.camera.SetFocalPoint(self.camfoc)
+        self.renderer.reinit()
+    
+    def camzfocChanged(self, val):
+        """
+        Cam z foc changed
+        
+        """
+        self.camfoc[2] = val
+        self.renderer.camera.SetFocalPoint(self.camfoc)
+        self.renderer.reinit()
+    
+    def camxvupChanged(self, val):
+        """
+        Cam x foc changed
+        
+        """
+        self.camvup[0] = val
+        self.renderer.camera.SetViewUp(self.camvup)
+        self.renderer.reinit()
+    
+    def camyvupChanged(self, val):
+        """
+        Cam y foc changed
+        
+        """
+        self.camvup[1] = val
+        self.renderer.camera.SetViewUp(self.camvup)
+        self.renderer.reinit()
+    
+    def camzvupChanged(self, val):
+        """
+        Cam z foc changed
+        
+        """
+        self.camvup[2] = val
+        self.renderer.camera.SetViewUp(self.camvup)
+        self.renderer.reinit()
+    
+    def newRow(self, align="Right"):
+        """
+        New row
+        
+        """
+        row = genericForm.FormRow(align=align)
+        self.contentLayout.addWidget(row)
+        
+        return row
+        
 
 ################################################################################
 

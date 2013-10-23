@@ -101,8 +101,12 @@ class RendererWindow(QtGui.QWidget):
         aaDownAction = self.createAction("Decrease anti-aliasing", slot=self.decreaseAA, icon="go-down.svg",
                                        tip="Decrease anti-aliasing")
         
+        # camera settings
+        cameraSettingsAction = self.createAction("Camera settings", slot=self.showCameraSettings, icon="cam.png", tip="Show camera settings")
+        
+        # add actions
         self.addActions(toolbar, (showCellAction, showAxesAction, backgroundColourAction, None, 
-                                  setCamToCellAction, None, 
+                                  setCamToCellAction, cameraSettingsAction, None, 
                                   openTextSelectorAction, showOutputDialogAction, None,
                                   aaUpAction, aaDownAction))
         
@@ -170,6 +174,14 @@ class RendererWindow(QtGui.QWidget):
         row.addWidget(self.analysisPipelineCombo)
         
         layout.addLayout(row)
+    
+    def showCameraSettings(self):
+        """
+        Show camera settings
+        
+        """
+        dlg = dialogs.CameraSettingsDialog(self, self.renderer)
+        dlg.show()
     
     def increaseAA(self):
         """
