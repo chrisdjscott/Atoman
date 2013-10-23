@@ -5,10 +5,13 @@ Module for rendering Voronoi cells
 @author: Chris Scott
 
 """
+import time
+
 import numpy as np
 import vtk
 
 from ..visutils import vectors
+from .utils import setupLUT, getScalar, setMapperScalarRange
 
 
 ################################################################################
@@ -33,15 +36,22 @@ def makePolygon(indexes):
 
 ################################################################################
 
-def getActorsForVoronoiCells(visibleAtoms, inputState, vorRegionList, log=None):
+def getActorsForVoronoiCells(visibleAtoms, inputState, vorRegionList, colouringOptions, actorsCollection, log=None):
     """
     Return actors for Voronoi cells
     
     """
+    renderVoroTime = time.time()
+    
     print "RENDER VORONOI"
     
     print "ASSUMING ORDERING IS THE SAME!!!!"
     
+    # setup LUT
+    lut = setupLUT(inputState.specieList, inputState.specieRGB, colouringOptions)
+    
+    # looks like we will have to make an actor for each atom
+    # NOT IDEAL!
     for index in visibleAtoms:
         # this region
         vorDict = vorRegionList[index]
@@ -53,48 +63,42 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, vorRegionList, log=None):
         sep = vectors.separation(inp_pos, out_pos, inputState.cellDims, np.ones(3, np.int32))
         assert sep < 1e-4, "ERROR: VORO OUTPUT ORDERING DIFFERENT (%f)" % sep
         
+        # scalar val for this atom
+        scalar = getScalar(colouringOptions, inputState, index)
+        
+        # points (vertices)
+        points = vtk.vtkPoints()
+        scalars = vtk.vtkFloatArray()
+        for point in vorDict["vertices"]:
+            points.InsertNextPoint(point)
+            scalars.InsertNextValue(scalar)
+        
         # make polygons
+        facePolygons = vtk.vtkCellArray()
+        for faceDict in vorDict["faces"]:
+            face = faceDict["vertices"]
+            facePolygon = makePolygon(face)
+            facePolygons.InsertNextCell(facePolygon)
         
+        # polydata object
+        regionPolyData = vtk.vtkPolyData()
+        regionPolyData.SetPoints(points)
+        regionPolyData.SetPolys(facePolygons)
+        regionPolyData.GetPointData().SetScalars(scalars)
         
-        return
+        # mapper
+        mapper = vtk.vtkPolyDataMapper()
+        mapper.SetInput(regionPolyData)
+        mapper.SetLookupTable(lut)
+        setMapperScalarRange(mapper, colouringOptions, len(inputState.specieList))
+        
+        # actor
+        actor = vtk.vtkActor()
+        actor.SetMapper(mapper)
+        actor.GetProperty().SetOpacity(1.0)
+        
+        actorsCollection.AddItem(actor)
+        
+    renderVoroTime = time.time() - renderVoroTime
     
-
-
-
-
-
-################################################################################
-def getActorsForHullFacets(facets, pos, mainWindow, actorsCollection, settings):
-    """
-    Render convex hull facets
-    
-    """
-    # probably want to pass some settings through too eg colour, opacity etc
-    
-    
-    points = vtk.vtkPoints()
-    for i in xrange(len(pos) / 3):
-        points.InsertNextPoint(pos[3*i], pos[3*i+1], pos[3*i+2])
-    
-    # create triangles
-    triangles = vtk.vtkCellArray()
-    for i in xrange(len(facets)):
-        triangle = makeTriangle(facets[i])
-        triangles.InsertNextCell(triangle)
-    
-    # polydata object
-    trianglePolyData = vtk.vtkPolyData()
-    trianglePolyData.SetPoints(points)
-    trianglePolyData.SetPolys(triangles)
-    
-    # mapper
-    mapper = vtk.vtkPolyDataMapper()
-    mapper.SetInput(trianglePolyData)
-    
-    # actor
-    actor = vtk.vtkActor()
-    actor.SetMapper(mapper)
-    actor.GetProperty().SetOpacity(settings.hullOpacity)
-    actor.GetProperty().SetColor(settings.hullCol[0], settings.hullCol[1], settings.hullCol[2])
-    
-    actorsCollection.AddItem(actor)
+    print "RENDER VORO TIME", renderVoroTime
