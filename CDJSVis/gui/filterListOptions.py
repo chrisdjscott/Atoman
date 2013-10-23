@@ -23,6 +23,27 @@ except ImportError:
 
 ################################################################################
 
+class VoronoiOptionsWindow(QtGui.QDialog):
+    """
+    Options for Voronoi tesselation
+    
+    """
+    def __init__(self, mainWindow, parent=None):
+        super(VoronoiOptionsWindow, self).__init__(parent)
+        
+        self.parent = parent
+        self.mainWindow = mainWindow
+        
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.setWindowTitle("Voronoi options") # filter list id should be in here
+#        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        
+        
+
+
+################################################################################
+
 class DisplayOptionsWindow(QtGui.QDialog):
     """
     Display options for filter list.

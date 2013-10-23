@@ -306,6 +306,9 @@ class Filterer(object):
             if self.bondsOptions.drawBonds:
                 # find bonds
                 self.calculateBonds()
+            
+            # voronoi TESTING
+            self.calculateVoronoi()
         
         # time to render
         renderTime = time.time() - renderTime
@@ -323,6 +326,21 @@ class Filterer(object):
         runFiltersTime = time.time() - runFiltersTime
         
         self.log("Apply list total time: %f s" % (runFiltersTime,), 0, 0)
+    
+    def calculateVoronoi(self):
+        """
+        Calc voronoi tesselation
+        
+        """
+        from . import voronoi
+        from ..rendering import renderVoronoi
+        
+        # compute voronoi regions
+        vorRegionList = voronoi.computeVoronoi(self.pipelinePage.inputState, log=self.log)
+        
+        # get actors for vis atoms only!
+        renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, self.pipelinePage.inputState, vorRegionList)
+        
     
     def calculateBonds(self):
         """
