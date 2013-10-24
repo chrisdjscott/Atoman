@@ -36,7 +36,7 @@ def makePolygon(indexes):
 
 ################################################################################
 
-def getActorsForVoronoiCells(visibleAtoms, inputState, vorRegionList, colouringOptions, actorsCollection, log=None):
+def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions, actorsCollection, log=None):
     """
     Return actors for Voronoi cells
     
@@ -45,20 +45,15 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, vorRegionList, colouringO
     
     print "RENDER VORONOI"
     
-    print "ASSUMING ORDERING IS THE SAME!!!!"
-    
     # setup LUT
     lut = setupLUT(inputState.specieList, inputState.specieRGB, colouringOptions)
     
     # looks like we will have to make an actor for each atom
     # NOT IDEAL!
     for index in visibleAtoms:
-        # this region
-        vorDict = vorRegionList[index]
-        
         # check we are working with the same atom!
         inp_pos = inputState.atomPos(index)
-        out_pos = vorDict["original"]
+        out_pos = voronoi.getInputAtomPos(index)
         
         sep = vectors.separation(inp_pos, out_pos, inputState.cellDims, np.ones(3, np.int32))
         assert sep < 1e-4, "ERROR: VORO OUTPUT ORDERING DIFFERENT (%f)" % sep
@@ -69,14 +64,13 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, vorRegionList, colouringO
         # points (vertices)
         points = vtk.vtkPoints()
         scalars = vtk.vtkFloatArray()
-        for point in vorDict["vertices"]:
+        for point in voronoi.atomVertices(index):
             points.InsertNextPoint(point)
             scalars.InsertNextValue(scalar)
         
         # make polygons
         facePolygons = vtk.vtkCellArray()
-        for faceDict in vorDict["faces"]:
-            face = faceDict["vertices"]
+        for face in voronoi.atomFaces(index):
             facePolygon = makePolygon(face)
             facePolygons.InsertNextCell(facePolygon)
         

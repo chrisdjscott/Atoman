@@ -39,6 +39,8 @@ class Lattice(object):
         self.KE = np.empty(0, np.float64)
         self.PE = np.empty(0, np.float64)
         self.charge = np.empty(0, np.float64)
+        
+        self.voronoi = None
     
     def reset(self, NAtoms):
         """
@@ -68,6 +70,7 @@ class Lattice(object):
         
         self.simTime = 0.0
         self.barrier = None
+        self.voronoi = None
     
     def addAtom(self, sym, pos, charge):
         """

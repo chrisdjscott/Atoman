@@ -109,13 +109,13 @@ class FilterForm(QtGui.QWidget):
         #----- buttons for new/trash filter list
         runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('view-refresh-all.svg')),'Apply lists')
         runAll.setStatusTip("Apply all filter lists")
-        self.connect(runAll, QtCore.SIGNAL('clicked()'), self.runAllFilterLists)
+        runAll.clicked.connect(self.runAllFilterLists)
         add = QtGui.QPushButton(QtGui.QIcon(iconPath('tab-new.svg')),'New list')
         add.setStatusTip("New filter list")
-        self.connect(add, QtCore.SIGNAL('clicked()'), self.addFilterList)
+        add.clicked.connect(self.addFilterList)
         clear = QtGui.QPushButton(QtGui.QIcon(iconPath('edit-delete.svg')),'Clear lists')
         clear.setStatusTip("Clear all filter lists")
-        self.connect(clear, QtCore.SIGNAL('clicked()'), self.clearAllFilterLists)
+        clear.clicked.connect(self.clearAllFilterLists)
         
         rowLayout.addWidget(add)
         rowLayout.addWidget(clear)
@@ -126,7 +126,7 @@ class FilterForm(QtGui.QWidget):
         #----- add tab bar for filter lists
         self.filterTabBar = QtGui.QTabWidget(self)
         self.filterTabBar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-        self.connect(self.filterTabBar, QtCore.SIGNAL('currentChanged(int)'), self.filterTabBarChanged)
+        self.filterTabBar.currentChanged[int].connect(self.filterTabBarChanged)
         filterTabLayout.addWidget(self.filterTabBar)
         
         # add a filter list
@@ -145,9 +145,9 @@ class FilterForm(QtGui.QWidget):
         self.PBCZCheckBox = QtGui.QCheckBox("z")
         self.PBCZCheckBox.setChecked(1)
         
-        self.connect(self.PBCXCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.PBCXChanged)
-        self.connect(self.PBCYCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.PBCYChanged)
-        self.connect(self.PBCZCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.PBCZChanged)
+        self.PBCXCheckBox.stateChanged[int].connect(self.PBCXChanged)
+        self.PBCYCheckBox.stateChanged[int].connect(self.PBCYChanged)
+        self.PBCZCheckBox.stateChanged[int].connect(self.PBCZChanged)
         
         row = QtGui.QWidget(self)
         rowLayout = QtGui.QHBoxLayout(row)
@@ -358,6 +358,9 @@ class FilterForm(QtGui.QWidget):
             os.unlink(fn)
         
         self.scalarBarAdded = False
+        
+        # make sure voroList is not set to begin with
+        self.inputState.voroList = None
         
         count = 0
         for filterList in self.filterLists:

@@ -21,6 +21,8 @@ from ..rendering import renderBonds
 from ..visutils import vectors
 from . import clusters
 from ..atoms import elements
+from . import voronoi
+from ..rendering import renderVoronoi
 
 
 ################################################################################
@@ -332,15 +334,15 @@ class Filterer(object):
         Calc voronoi tesselation
         
         """
-        from . import voronoi
-        from ..rendering import renderVoronoi
+        inputState = self.pipelinePage.inputState
         
-        # compute voronoi regions
-        vorRegionList = voronoi.computeVoronoi(self.pipelinePage.inputState, log=self.log)
+        # first check if need to compute
+        if inputState.voronoi is None:
+            # compute voronoi regions
+            inputState.voronoi = voronoi.computeVoronoi(inputState, log=self.log)
         
         # get actors for vis atoms only!
-        renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, self.pipelinePage.inputState, vorRegionList, self.colouringOptions, self.actorsCollection)
-        
+        renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, self.pipelinePage.inputState, inputState.voronoi, self.colouringOptions, self.actorsCollection)
     
     def calculateBonds(self):
         """
