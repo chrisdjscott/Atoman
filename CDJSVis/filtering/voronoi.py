@@ -146,6 +146,8 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
             line = "%d,%f,%s" % (i, vor.atomVolume(i), vor.atomNumNebs(i))
             nl(line)
         
+        nl("")
+        
         f = open(fn, "w")
         f.write("\n".join(lines))
         f.close()

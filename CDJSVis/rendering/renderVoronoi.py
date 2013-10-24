@@ -5,6 +5,7 @@ Module for rendering Voronoi cells
 @author: Chris Scott
 
 """
+import os
 import time
 
 import numpy as np
@@ -36,7 +37,7 @@ def makePolygon(indexes):
 
 ################################################################################
 
-def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions, voronoiOptions, actorsCollection, log=None):
+def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions, voronoiOptions, actorsCollection, povfile, log=None):
     """
     Return actors for Voronoi cells
     
@@ -93,6 +94,61 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         
         actorsCollection.AddItem(actor)
         
+        # colour for povray file
+        rgb = np.empty(3, np.float64)
+        lut.GetColor(scalar, rgb)
+        
+        # write to POV-Ray file
+        writePOVRayVoroVolume(voronoi.atomVertices(index), voronoi.atomFaces(index), povfile, rgb, voronoiOptions)
+        
     renderVoroTime = time.time() - renderVoroTime
     
     print "RENDER VORO TIME", renderVoroTime
+
+################################################################################
+
+def writePOVRayVoroVolume(vertices, faces, povfile, colour_rgb, voronoiOptions):
+    """
+    Write Voronoi volume to POV-Ray file
+    
+    """
+    lines = []
+    nl = lines.append
+    
+    # loop over faces
+    for face in faces:
+        num_points = len(face)
+        
+        nl("polygon {")
+        nl("  %d," % num_points)
+        
+        line = ""
+        for index in face:
+            point = vertices[index]
+            
+            if len(line):
+                line += ","
+            else:
+                line += "  "
+            
+            line += "<%f,%f,%f>" % (-point[0], point[1], point[2])
+        
+        nl(line)
+        
+        #TODO: make these options...
+        nl("  texture {")
+        nl("    finish { diffuse 0.4 ambient 0.25 phong 0.9 }")
+        nl("    pigment { color rgbt <%f,%f,%f,%f> }" % (colour_rgb[0], colour_rgb[1], colour_rgb[2], 1.0 - voronoiOptions.opacity))
+        nl("  }")
+        nl("}")
+    
+    nl("")
+    
+    if os.path.exists(povfile):
+        f = open(povfile, "a")
+    else:
+        f = open(povfile, "w")
+    
+    f.write("\n".join(lines))
+    
+    f.close()

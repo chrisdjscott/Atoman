@@ -365,8 +365,15 @@ class Filterer(object):
             if status:
                 return status
         
+        if not len(self.visibleAtoms):
+            return 2
+        
+        # POV-RAY file
+        voroFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_voro%d.pov" % (self.pipelineIndex, self.parent.tab))
+        
         # get actors for vis atoms only!
-        renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.pipelinePage.inputState.voronoi, self.colouringOptions, self.voronoiOptions, self.actorsCollection)
+        renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.pipelinePage.inputState.voronoi, 
+                                               self.colouringOptions, self.voronoiOptions, self.actorsCollection, voroFile)
     
     def calculateBonds(self):
         """

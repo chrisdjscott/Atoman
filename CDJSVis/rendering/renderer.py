@@ -8,6 +8,7 @@ Module for rendering
 import os
 import sys
 import shutil
+import glob
 
 import numpy as np
 import vtk
@@ -372,12 +373,12 @@ class Renderer(object):
             writer.Write()
         
         elif renderType == "POV":
-#            pov = vtk.vtkPOVExporter()
-#            pov.SetRenderWindow(self.renWinInteract.GetRenderWindow())
-#            pov.SetFileName("fruitcake.pov")
-#            pov.Write()
-#            print "WRITTEN"
-#            return None
+#             pov = vtk.vtkPOVExporter()
+#             pov.SetRenderWindow(self.renWinInteract.GetRenderWindow())
+#             pov.SetFileName("fruitcake.pov")
+#             pov.Write()
+#             print "WRITTEN"
+#             return None
             
             renIndex = self.parent.rendererIndex
             pipelineIndex = self.parent.currentPipelineIndex
@@ -412,17 +413,10 @@ class Renderer(object):
                 command = "cat 'renderer%d_header.pov'" % renIndex
                 for filterList in filterLists:
                     if filterList.visible:
-                        if os.path.exists("pipeline%d_atoms%d.pov" % (pipelineIndex, filterList.tab)):
-                            command += " 'pipeline%d_atoms%d.pov'" % (pipelineIndex, filterList.tab)
+                        pipeline_pov_files = glob.glob("pipeline%d_*%d.pov" % (pipelineIndex, filterList.tab))
                         
-                        if os.path.exists("pipeline%d_hulls%d.pov" % (pipelineIndex, filterList.tab)):
-                            command += " 'pipeline%d_hulls%d.pov'" % (pipelineIndex, filterList.tab)
-                        
-                        if os.path.exists("pipeline%d_defects%d.pov" % (pipelineIndex, filterList.tab)):
-                            command += " 'pipeline%d_defects%d.pov'" % (pipelineIndex, filterList.tab)
-                        
-                        if os.path.exists("pipeline%d_bonds%d.pov" % (pipelineIndex, filterList.tab)):
-                            command += " 'pipeline%d_bonds%d.pov'" % (pipelineIndex, filterList.tab)
+                        for fn in pipeline_pov_files:
+                            command += " '%s'" % fn
                 
                 fullPovFile = "renderer%d_image.pov" % renIndex
                 
@@ -476,9 +470,9 @@ class Renderer(object):
                 print "ERROR COPYING POV FILE", sys.exc_info() 
                         
             # remove image files
-            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.pov" % renIndex))
-            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_header.pov" % renIndex))
-            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.ini" % renIndex))
+#             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.pov" % renIndex))
+#             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_header.pov" % renIndex))
+#             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.ini" % renIndex))
         
         if not os.path.exists(filename):
             print "WARNING: SOMETHING WENT WRONG WITH SAVEIMAGE"
