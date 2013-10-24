@@ -19,8 +19,9 @@ class VoronoiResult(object):
     Object to hold Voronoi result
     
     """
-    def __init__(self, voroList):
+    def __init__(self, voroList, pbc=None):
         self.voroList = voroList
+        self.pbc = pbc
     
     def atomVolume(self, atomIndex):
         """
@@ -35,7 +36,7 @@ class VoronoiResult(object):
         
         """
         # check non neg???
-        return len(self.voroList[atomIndex]["faces"])
+        return len([v for v in self.voroList[atomIndex]["faces"] if v["adjacent_cell"] >= 0])
     
     def atomNebList(self, atomIndex):
         """
@@ -43,7 +44,7 @@ class VoronoiResult(object):
         
         """
         # what to do about negative??
-        return [v["adjacent_cell"] for v in self.voroList[atomIndex]["faces"]]
+        return [v["adjacent_cell"] for v in self.voroList[atomIndex]["faces"] if v["adjacent_cell"] >= 0]
     
     def getInputAtomPos(self, atomIndex):
         """
@@ -65,7 +66,20 @@ class VoronoiResult(object):
         Return faces of Voronoi cell as list of list of indexes of vertices
         
         """
-        return [v["vertices"] for v in self.voroList[atomIndex]["faces"]]
+        negFound = False
+        for v in self.voroList[atomIndex]["faces"]:
+            if v["adjacent_cell"] < 0:
+                negFound = True
+                break
+        
+        if negFound:
+            retval = None
+        
+        else:
+            retval =  [v["vertices"] for v in self.voroList[atomIndex]["faces"]]
+        
+        return retval
+        
 
 ################################################################################
 
@@ -108,8 +122,8 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
             upper[i] = lattice.cellDims[i]
         
         else:
-            lower[i] = lattice.minPos[i]
-            upper[i] = lattice.maxPos[i]
+            lower[i] = lattice.minPos[i] - voronoiOptions.dispersion
+            upper[i] = lattice.maxPos[i] + voronoiOptions.dispersion
     
     if log is not None:
         log("  Limits: [[%f, %f], [%f, %f], [%f, %f]]" % (lower[0], upper[0], lower[1], upper[1], lower[2], upper[2]))
@@ -129,7 +143,7 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
                                            periodic=[bool(PBC[0]), bool(PBC[1]), bool(PBC[2])])
     
     # create result object
-    vor = VoronoiResult(pyvoro_result)
+    vor = VoronoiResult(pyvoro_result, PBC)
     
     # save to file
     if voronoiOptions.outputToFile:

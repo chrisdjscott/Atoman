@@ -409,11 +409,11 @@ class Filterer(object):
         
         """
         PBC = self.pipelinePage.PBC
-        if not PBC[0] or not PBC[1] or not PBC[2]:
-            msg = "ERROR: Voronoi only works with PBCs currently"
-            print msg
-            self.log(msg)
-            return 1
+#         if not PBC[0] or not PBC[1] or not PBC[2]:
+#             msg = "ERROR: Voronoi only works with PBCs currently"
+#             print msg
+#             self.log(msg)
+#             return 1
         
         inputState = self.pipelinePage.inputState
         

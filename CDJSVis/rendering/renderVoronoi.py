@@ -62,8 +62,19 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         sep = vectors.separation(inp_pos, out_pos, inputState.cellDims, np.ones(3, np.int32))
         assert sep < 1e-4, "ERROR: VORO OUTPUT ORDERING DIFFERENT (%f)" % sep
         
+        # faces
+        faces = voronoi.atomFaces(index)
+        
+        if faces is None:
+            continue
+        
+        if len(scalarsArray):
+            scalarVal=scalarsArray[visIndex]
+        else:
+            scalarVal = None
+        
         # scalar val for this atom
-        scalar = getScalar(colouringOptions, inputState, index, scalarVal=scalarsArray[visIndex])
+        scalar = getScalar(colouringOptions, inputState, index, scalarVal=scalarVal)
         
         # points (vertices)
         points = vtk.vtkPoints()
@@ -74,7 +85,7 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         
         # make polygons
         facePolygons = vtk.vtkCellArray()
-        for face in voronoi.atomFaces(index):
+        for face in faces:
             facePolygon = makePolygon(face)
             facePolygons.InsertNextCell(facePolygon)
         
