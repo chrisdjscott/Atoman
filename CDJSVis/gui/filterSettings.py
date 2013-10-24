@@ -1712,3 +1712,103 @@ class CoordinationNumberSettingsDialog(GenericSettingsDialog):
         
         """
         self.maxCoordNum = val
+
+################################################################################
+class VoronoiNeighboursSettingsDialog(GenericSettingsDialog):
+    def __init__(self, mainWindow, title, parent=None):
+        super(VoronoiNeighboursSettingsDialog, self).__init__(title, parent)
+        
+        self.filterType = "Voronoi neighbours"
+        
+        self.minVoroNebs = 0
+        self.maxVoroNebs = 999
+        
+        label = QtGui.QLabel("Min ")
+        self.minVoroNebsSpin = QtGui.QSpinBox()
+        self.minVoroNebsSpin.setSingleStep(1)
+        self.minVoroNebsSpin.setMinimum(0)
+        self.minVoroNebsSpin.setMaximum(999)
+        self.minVoroNebsSpin.setValue(self.minVoroNebs)
+        self.minVoroNebsSpin.valueChanged[int].connect(self.setMinVoroNebs)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.minVoroNebsSpin)
+        
+        label = QtGui.QLabel("Max ")
+        self.maxVoroNebsSpin = QtGui.QSpinBox()
+        self.maxVoroNebsSpin.setSingleStep(1)
+        self.maxVoroNebsSpin.setMinimum(0)
+        self.maxVoroNebsSpin.setMaximum(999)
+        self.maxVoroNebsSpin.setValue(self.maxVoroNebs)
+        self.maxVoroNebsSpin.valueChanged[int].connect(self.setMaxVoroNebs)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.maxVoroNebsSpin)
+    
+    def setMinVoroNebs(self, val):
+        """
+        Set the minimum Voronoi neighbours.
+        
+        """
+        self.minVoroNebs = val
+
+    def setMaxVoroNebs(self, val):
+        """
+        Set the maximum Voronoi neighbours.
+        
+        """
+        self.maxVoroNebs = val
+
+################################################################################
+class VoronoiVolumeSettingsDialog(GenericSettingsDialog):
+    """
+    Settings for Voronoi volume filter
+    
+    """
+    def __init__(self, mainWindow, title, parent=None):
+        super(VoronoiVolumeSettingsDialog, self).__init__(title, parent)
+        
+        self.filterType = "Voronoi volume"
+        
+        self.minVoroVol = 0.0
+        self.maxVoroVol = 9999.99
+        
+        label = QtGui.QLabel("Min ")
+        self.minVoroVolSpin = QtGui.QDoubleSpinBox()
+        self.minVoroVolSpin.setSingleStep(0.01)
+        self.minVoroVolSpin.setMinimum(0.0)
+        self.minVoroVolSpin.setMaximum(9999.99)
+        self.minVoroVolSpin.setValue(self.minVoroVol)
+        self.minVoroVolSpin.valueChanged[float].connect(self.setMinVoroVol)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.minVoroVolSpin)
+        
+        label = QtGui.QLabel("Max ")
+        self.maxVoroVolSpin = QtGui.QDoubleSpinBox()
+        self.maxVoroVolSpin.setSingleStep(0.01)
+        self.maxVoroVolSpin.setMinimum(0.0)
+        self.maxVoroVolSpin.setMaximum(9999.99)
+        self.maxVoroVolSpin.setValue(self.maxVoroVol)
+        self.maxVoroVolSpin.valueChanged[float].connect(self.setMaxVoroVol)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.maxVoroVolSpin)
+    
+    def setMinVoroVol(self, val):
+        """
+        Set the minimum Voronoi volume.
+        
+        """
+        self.minVoroVol = val
+
+    def setMaxVoroVol(self, val):
+        """
+        Set the maximum Voronoi volume.
+        
+        """
+        self.maxVoroVol = val

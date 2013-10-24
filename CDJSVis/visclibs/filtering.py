@@ -178,5 +178,32 @@ def coordNumFilter(visibleAtoms, pos, specie, NSpecies, bondMinArray, bondMaxArr
                                CPtrToDouble(bondMaxArray), approxBoxWidth, CPtrToDouble(cellDims), CPtrToInt(PBC), CPtrToDouble(minPos), 
                                CPtrToDouble(maxPos), CPtrToDouble(coordArray), minCoordNum, maxCoordNum)
 
+################################################################################
 
+# voronoi volume filter prototype
+_lib.voronoiVolumeFilter.restype = c_int
+_lib.voronoiVolumeFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_int, POINTER(c_double)]
 
+# voronoi volume filter
+def voronoiVolumeFilter(visibleAtoms, volume, minVolume, maxVolume, scalars):
+    """
+    Voronoi volume filter.
+    
+    """
+    return _lib.voronoiVolumeFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(volume), CPtrToDouble(volume), 
+                                    minVolume, maxVolume, len(scalars), CPtrToDouble(scalars))
+
+################################################################################
+
+# voronoi neighbours filter prototype
+_lib.voronoiNeighboursFilter.restype = c_int
+_lib.voronoiNeighboursFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_int), c_int, c_int, c_int, POINTER(c_double)]
+
+# voronoi neighbours filter
+def voronoiNeighboursFilter(visibleAtoms, numNebsArray, minNebs, maxNebs, scalars):
+    """
+    Voronoi neighbours filter.
+    
+    """
+    return _lib.voronoiNeighboursFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(numNebsArray), CPtrToInt(numNebsArray), 
+                                        minNebs, maxNebs, len(scalars), CPtrToDouble(scalars))

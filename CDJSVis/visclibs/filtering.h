@@ -16,3 +16,7 @@ int PEFilter(int, int *, int, double *, double, double, int, double *);
 int chargeFilter(int, int *, int, double *, double, double, int, double *);
 
 int coordNumFilter(int, int *, double *, int *, int, double *, double *, double, double *, int *, double *, double *, double *, int, int);
+
+int voronoiVolumeFilter(int, int*, int, double*, double, double, int, double*);
+
+int voronoiNeighboursFilter(int, int*, int, int*, int, int, int, double *);

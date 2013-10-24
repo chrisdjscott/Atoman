@@ -232,6 +232,14 @@ class Filterer(object):
                 self.coordinationNumberFilter(filterSettings)
                 self.scalarsType = filterName
             
+            elif filterName == "Voronoi volume":
+                self.voronoiVolumeFilter(filterSettings)
+                self.scalarsType = filterName
+            
+            elif filterName == "Voronoi neighbours":
+                self.voronoiNeighboursFilter(filterSettings)
+                self.scalarsType = filterName
+            
             # write to log
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites) + len(splitInterstitials)
@@ -330,6 +338,70 @@ class Filterer(object):
         runFiltersTime = time.time() - runFiltersTime
         
         self.log("Apply list total time: %f s" % (runFiltersTime,), 0, 0)
+    
+    def voronoiNeighboursFilter(self, settings):
+        """
+        Voronoi neighbours filter
+        
+        """
+        inputState = self.pipelinePage.inputState
+        
+        # calculate Voronoi tessellation
+        status = self.calculateVoronoi()
+        
+        if status:
+            print "ERROR: VORO VOL FAILED"
+            self.log("ERROR: VORO VOL FAILED")
+            self.visibleAtoms.resize(0, refcheck=False)
+            return status
+        
+        assert inputState.voronoi is not None
+        
+        vor = inputState.voronoi
+        
+        # scalars array
+        if len(self.scalars) != len(self.visibleAtoms):
+            self.scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        
+        # make array of neighbours
+        num_nebs_array = np.asarray([vor.atomNumNebs(i) for i in xrange(inputState.NAtoms)], dtype=np.int32)
+        
+        NVisible = filtering_c.voronoiNeighboursFilter(self.visibleAtoms, num_nebs_array, settings.minVoroNebs, settings.maxVoroNebs, self.scalars)
+        
+        self.visibleAtoms.resize(NVisible, refcheck=False)
+        self.scalars.resize(NVisible, refcheck=False)
+    
+    def voronoiVolumeFilter(self, settings):
+        """
+        Voronoi volume filter
+        
+        """
+        inputState = self.pipelinePage.inputState
+        
+        # calculate Voronoi tessellation
+        status = self.calculateVoronoi()
+        
+        if status:
+            print "ERROR: VORO VOL FAILED"
+            self.log("ERROR: VORO VOL FAILED")
+            self.visibleAtoms.resize(0, refcheck=False)
+            return status
+        
+        assert inputState.voronoi is not None
+        
+        vor = inputState.voronoi
+        
+        # scalars array
+        if len(self.scalars) != len(self.visibleAtoms):
+            self.scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        
+        # make array of volumes
+        atom_volumes = np.asarray([vor.atomVolume(i) for i in xrange(inputState.NAtoms)], dtype=np.float64)
+        
+        NVisible = filtering_c.voronoiVolumeFilter(self.visibleAtoms, atom_volumes, settings.minVoroVol, settings.maxVoroVol, self.scalars)
+        
+        self.visibleAtoms.resize(NVisible, refcheck=False)
+        self.scalars.resize(NVisible, refcheck=False)
     
     def calculateVoronoi(self):
         """

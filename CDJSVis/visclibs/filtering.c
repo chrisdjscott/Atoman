@@ -464,3 +464,62 @@ int coordNumFilter(int NVisible, int *visibleAtoms, double *pos, int *specie, in
     return NVisibleNew;
 }
 
+/*******************************************************************************
+ ** Voronoi volume filter
+ *******************************************************************************/
+int voronoiVolumeFilter(int NVisibleIn, int* visibleAtoms, int volumeDim, double *volume, double minVolume, double maxVolume,
+		  	            int scalarsDim, double *scalars)
+{
+    int i, NVisible, index;
+    
+    
+    NVisible = 0;
+    for (i=0; i<NVisibleIn; i++)
+    {
+        index = visibleAtoms[i];
+        
+        if (volume[index] < minVolume || volume[index] > maxVolume)
+        {
+            continue;
+        }
+        else
+        {
+            visibleAtoms[NVisible] = index;
+            scalars[NVisible] = volume[index];
+            
+            NVisible++;
+        }
+    }
+    
+    return NVisible;
+}
+
+/*******************************************************************************
+ ** Voronoi neighbours filter
+ *******************************************************************************/
+int voronoiNeighboursFilter(int NVisibleIn, int* visibleAtoms, int volumeDim, int *num_nebs_array, int minNebs, int maxNebs,
+		  	            	int scalarsDim, double *scalars)
+{
+    int i, NVisible, index;
+    
+    
+    NVisible = 0;
+    for (i=0; i<NVisibleIn; i++)
+    {
+        index = visibleAtoms[i];
+        
+        if (num_nebs_array[index] < minNebs || num_nebs_array[index] > maxNebs)
+        {
+            continue;
+        }
+        else
+        {
+            visibleAtoms[NVisible] = index;
+            scalars[NVisible] = (double) num_nebs_array[index];
+            
+            NVisible++;
+        }
+    }
+    
+    return NVisible;
+}

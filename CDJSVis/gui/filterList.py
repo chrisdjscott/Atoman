@@ -48,7 +48,9 @@ class FilterList(QtGui.QWidget):
                            "Charge",
                            "Crop sphere",
                            "Slice",
-                           "Coordination number"]
+                           "Coordination number",
+                           "Voronoi neighbours",
+                           "Voronoi volume"]
         self.allFilters.sort()
         
         # current selected filters
