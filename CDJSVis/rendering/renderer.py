@@ -470,9 +470,9 @@ class Renderer(object):
                 print "ERROR COPYING POV FILE", sys.exc_info() 
                         
             # remove image files
-#             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.pov" % renIndex))
-#             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_header.pov" % renIndex))
-#             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.ini" % renIndex))
+            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.pov" % renIndex))
+            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_header.pov" % renIndex))
+            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.ini" % renIndex))
         
         if not os.path.exists(filename):
             print "WARNING: SOMETHING WENT WRONG WITH SAVEIMAGE"
