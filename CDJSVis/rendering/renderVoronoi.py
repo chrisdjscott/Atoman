@@ -13,6 +13,7 @@ import vtk
 
 from ..visutils import vectors
 from .utils import setupLUT, getScalar, setMapperScalarRange
+from ..filtering import clusters
 
 
 ################################################################################
@@ -99,11 +100,90 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         lut.GetColor(scalar, rgb)
         
         # write to POV-Ray file
-        writePOVRayVoroVolume(voronoi.atomVertices(index), voronoi.atomFaces(index), povfile, rgb, voronoiOptions)
+#         writePOVRayVoroVolume(voronoi.atomVertices(index), voronoi.atomFaces(index), povfile, rgb, voronoiOptions)
         
+        # this is messy...
+        # find convex hull of vertices (so can get triangles...)
+        # then write to POV file
+        pos = np.asarray(voronoi.atomVertices(index))
+        pos = pos.flatten()
+        facets = clusters.findConvexHullFacets(len(pos) / 3, pos)
+        writePOVRayVoroVolumeTriangles(facets, pos, povfile, voronoiOptions, rgb)
+    
     renderVoroTime = time.time() - renderVoroTime
     
     print "RENDER VORO TIME", renderVoroTime
+
+################################################################################
+def writePOVRayVoroVolumeTriangles(facets, pos, filename, settings, colour_rgb):
+    """
+    Write hull to POV-Ray file.
+    
+    """
+    if len(pos) / 3 < 3:
+        pass
+    
+    else:
+        if os.path.exists(filename):
+            fh = open(filename, "a")
+        
+        else:
+            fh = open(filename, "w")
+        
+        # how many vertices
+        vertices = set()
+        vertexMapper = {}
+        NVertices = 0
+        for facet in facets:
+            for j in xrange(3):
+                if facet[j] not in vertices:
+                    vertices.add(facet[j])
+                    vertexMapper[facet[j]] = NVertices
+                    NVertices += 1
+        
+        # construct mesh
+        lines = []
+        nl = lines.append
+        
+        nl("mesh2 {")
+        nl("  vertex_vectors {")
+        nl("    %d," % NVertices)
+        
+        count = 0
+        for key, value in sorted(vertexMapper.iteritems(), key=lambda (k, v): (v, k)):
+            if count == NVertices - 1:
+                string = ""
+            
+            else:
+                string = ","
+            
+            nl("    <%f,%f,%f>%s" % (- pos[3*key], pos[3*key+1], pos[3*key+2], string))
+            
+            count += 1
+        
+        nl("  }")
+        nl("  face_indices {")
+        nl("    %d," % len(facets))
+        
+        count = 0
+        for facet in facets:
+            if count == len(facets) - 1:
+                string = ""
+            
+            else:
+                string = ","
+            
+            nl("    <%d,%d,%d>%s" % (vertexMapper[facet[0]], vertexMapper[facet[1]], vertexMapper[facet[2]], string))
+            
+            count += 1
+        
+        nl("  }")
+        nl("  pigment { color rgbt <%f,%f,%f,%f> }" % (colour_rgb[0], colour_rgb[1], colour_rgb[2], 1.0 - settings.opacity))
+        nl("  finish { diffuse 0.4 ambient 0.25 phong 0.9 }")
+        nl("}")
+        nl("")
+        
+        fh.write("\n".join(lines))
 
 ################################################################################
 
