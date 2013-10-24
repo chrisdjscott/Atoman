@@ -208,6 +208,13 @@ class FilterList(QtGui.QWidget):
         groupLayout.addWidget(self.bondsOptionsButton)
         groupLayout.addWidget(self.displayOptionsButton)
         
+        # Voronoi options
+        self.voronoiOptions = filterListOptions.VoronoiOptionsWindow(self.mainWindow, parent=self)
+        self.voronoiOptionsButton = QtGui.QPushButton("Voronoi options")
+        self.voronoiOptionsButton.clicked.connect(self.showVoronoiOptions)
+        
+        groupLayout.addWidget(self.voronoiOptionsButton)
+        
         self.filterListLayout.addWidget(extraOptionsGroupBox)
         
         # the filterer (does the filtering)
@@ -226,6 +233,14 @@ class FilterList(QtGui.QWidget):
         
         else:
             self.filterer.hideScalarBar()
+    
+    def showVoronoiOptions(self):
+        """
+        Show the Voronoi options window.
+        
+        """
+        self.voronoiOptions.hide()
+        self.voronoiOptions.show()
     
     def showDisplayOptions(self):
         """

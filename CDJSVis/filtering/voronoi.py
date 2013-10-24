@@ -34,7 +34,16 @@ class VoronoiResult(object):
         Return number of neighbours (faces of Voronoi cell)
         
         """
+        # check non neg???
         return len(self.voroList[atomIndex]["faces"])
+    
+    def atomNebList(self, atomIndex):
+        """
+        Return list of neighbouring atom indexes
+        
+        """
+        # what to do about negative??
+        return [v["adjacent_cell"] for v in self.voroList[atomIndex]["faces"]]
     
     def getInputAtomPos(self, atomIndex):
         """
@@ -60,16 +69,16 @@ class VoronoiResult(object):
 
 ################################################################################
 
-def computeVoronoi(lattice, log=None):
+def computeVoronoi(lattice, voronoiOptions, PBC, log=None):
     """
     Compute Voronoi
     
     """
-    return computeVoronoiPyvoro(lattice, log)
+    return computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log)
 
 ################################################################################
 
-def computeVoronoiPyvoro(lattice, log=None):
+def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
     """
     Compute Voronoi
     
@@ -77,7 +86,12 @@ def computeVoronoiPyvoro(lattice, log=None):
     vorotime = time.time()
     print "COMPUTING VORONOI"
     print "NATOMS", lattice.NAtoms
-     
+    if log is not None:
+        log("Computing Voronoi")
+        log("  Dispersion is: %f" % voronoiOptions.dispersion)
+        log("  PBCs are: %s %s %s" % (bool(PBC[0]), bool(PBC[1]), bool(PBC[2])))
+        log("  Using radii: %s" % voronoiOptions.useRadii)
+    
     # make points
     pts = np.empty((lattice.NAtoms, 3), dtype=np.float64)
     for i in xrange(lattice.NAtoms):
@@ -85,20 +99,68 @@ def computeVoronoiPyvoro(lattice, log=None):
         pts[i][1] = lattice.atomPos(i)[1]
         pts[i][2] = lattice.atomPos(i)[2]
     
-    pyvoro_vor = pyvoro.compute_voronoi(pts,
-                                        [[0.0, lattice.cellDims[0]], [0.0, lattice.cellDims[1]], [0.0, lattice.cellDims[2]]],
-                                        10.0,
-                                        periodic=[True, True, True])
+    # boundary
+    upper = np.empty(3, np.float64)
+    lower = np.empty(3, np.float64)
+    for i in xrange(3):
+        if PBC[i]:
+            lower[i] = 0.0
+            upper[i] = lattice.cellDims[i]
+        
+        else:
+            lower[i] = lattice.minPos[i]
+            upper[i] = lattice.maxPos[i]
     
-    print "PYVORO TYPE", type(pyvoro_vor)
-    print "PYVORO LEN", len(pyvoro_vor)
+    if log is not None:
+        log("  Limits: [[%f, %f], [%f, %f], [%f, %f]]" % (lower[0], upper[0], lower[1], upper[1], lower[2], upper[2]))
+    
+    # radii
+    if voronoiOptions.useRadii:
+        radii = [lattice.specieCovalentRadius[specInd] for specInd in lattice.specie]
+    
+    else:
+        radii = []
+    
+    # call pyvoro
+    pyvoro_result = pyvoro.compute_voronoi(pts,
+                                           [[lower[0], upper[0]], [lower[1], upper[1]], [lower[2], upper[2]]],
+                                           voronoiOptions.dispersion,
+                                           radii=radii,
+                                           periodic=[bool(PBC[0]), bool(PBC[1]), bool(PBC[2])])
     
     # create result object
-    vor = VoronoiResult(pyvoro_vor)
+    vor = VoronoiResult(pyvoro_result)
+    
+    # save to file
+    if voronoiOptions.outputToFile:
+        fn = voronoiOptions.outputFilename
+        
+        #TODO: make this a CLIB
+        
+        lines = []
+        nl = lines.append
+        
+        nl("Atom index,Voronoi volume,Voronoi neighbours (faces)")
+        
+        for i in xrange(lattice.NAtoms):
+            line = "%d,%f,%s" % (i, vor.atomVolume(i), vor.atomNumNebs(i))
+            nl(line)
+        
+        f = open(fn, "w")
+        f.write("\n".join(lines))
+        f.close()
+    
+#     print "CHECKING NEBS"
+#     for i in xrange(lattice.NAtoms):
+#         nebs = vor.atomNebList(i)
+#         for neb in nebs:
+#             if neb < 0:
+#                 print "******* neg neb for %d" % i
     
     vorotime = time.time() - vorotime
     print "PYVORO VORO TIME", vorotime
-    log("PYVORO VORO TIME: %f" % vorotime)
+    if log is not None:
+        log("  Compute Voronoi time: %f" % vorotime)
     
     return vor
 

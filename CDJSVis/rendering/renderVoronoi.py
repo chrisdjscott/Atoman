@@ -36,7 +36,7 @@ def makePolygon(indexes):
 
 ################################################################################
 
-def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions, actorsCollection, log=None):
+def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions, voronoiOptions, actorsCollection, log=None):
     """
     Return actors for Voronoi cells
     
@@ -89,7 +89,7 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         # actor
         actor = vtk.vtkActor()
         actor.SetMapper(mapper)
-        actor.GetProperty().SetOpacity(1.0)
+        actor.GetProperty().SetOpacity(voronoiOptions.opacity)
         
         actorsCollection.AddItem(actor)
         

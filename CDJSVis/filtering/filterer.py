@@ -62,6 +62,7 @@ class Filterer(object):
         self.colouringOptions = self.parent.colouringOptions
         self.bondsOptions = self.parent.bondsOptions
         self.displayOptions = self.parent.displayOptions
+        self.voronoiOptions = self.parent.voronoiOptions
         self.scalarBarAdded = False
 #         self.scalarBar = None
         self.scalarBar_white_bg = None
@@ -309,8 +310,9 @@ class Filterer(object):
                 # find bonds
                 self.calculateBonds()
             
-            # voronoi TESTING
-            self.calculateVoronoi()
+            # voronoi
+            if self.voronoiOptions.displayVoronoi:
+                self.renderVoronoi()
         
         # time to render
         renderTime = time.time() - renderTime
@@ -334,15 +336,37 @@ class Filterer(object):
         Calc voronoi tesselation
         
         """
+        PBC = self.pipelinePage.PBC
+        if not PBC[0] or not PBC[1] or not PBC[2]:
+            msg = "ERROR: Voronoi only works with PBCs currently"
+            print msg
+            self.log(msg)
+            return 1
+        
         inputState = self.pipelinePage.inputState
         
         # first check if need to compute
         if inputState.voronoi is None:
             # compute voronoi regions
-            inputState.voronoi = voronoi.computeVoronoi(inputState, log=self.log)
+            inputState.voronoi = voronoi.computeVoronoi(inputState, self.voronoiOptions, self.pipelinePage.PBC, log=self.log)
+        
+        return 0
+    
+    def renderVoronoi(self):
+        """
+        Render Voronoi cells
+        
+        """
+        inputState = self.pipelinePage.inputState
+        
+        if inputState.voronoi is None:
+            status = self.calculateVoronoi()
+            
+            if status:
+                return status
         
         # get actors for vis atoms only!
-        renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, self.pipelinePage.inputState, inputState.voronoi, self.colouringOptions, self.actorsCollection)
+        renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.pipelinePage.inputState.voronoi, self.colouringOptions, self.voronoiOptions, self.actorsCollection)
     
     def calculateBonds(self):
         """

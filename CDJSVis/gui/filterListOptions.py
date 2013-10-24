@@ -39,8 +39,141 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         self.setWindowTitle("Voronoi options") # filter list id should be in here
 #        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
         
+        # options
+        self.dispersion = 10.0
+        self.displayVoronoi = False
+        self.useRadii = False
+        self.opacity = 0.8
+        self.outputToFile = False
+        self.outputFilename = "voronoi.csv"
         
-
+        # layout
+        self.contentLayout = QtGui.QVBoxLayout(self)
+#        layout.setSpacing(0)
+#        layout.setContentsMargins(0, 0, 0, 0)
+        self.contentLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        # display voronoi cells
+        self.displayVoronoiCheck = QtGui.QCheckBox("Display Voronoi cells")
+        self.displayVoronoiCheck.stateChanged.connect(self.displayVoronoiToggled)
+        
+        row = self.newRow()
+        row.addWidget(self.displayVoronoiCheck)
+        
+        # dispersion
+        label = QtGui.QLabel("Dispersion:")
+        
+        self.dispersionSpin = QtGui.QDoubleSpinBox()
+        self.dispersionSpin.setMinimum(0.1)
+        self.dispersionSpin.setMaximum(99.9)
+        self.dispersionSpin.setSingleStep(0.1)
+        self.dispersionSpin.setValue(self.dispersion)
+        self.dispersionSpin.valueChanged.connect(self.dispersionChanged)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.dispersionSpin)
+        
+        # use radii
+        self.useRadiiCheck = QtGui.QCheckBox("Use radii")
+        self.useRadiiCheck.stateChanged.connect(self.useRadiiChanged)
+        
+        row = self.newRow()
+        row.addWidget(self.useRadiiCheck)
+        
+        # opacity
+        label = QtGui.QLabel("Opacity:")
+        
+        self.opacitySpin = QtGui.QDoubleSpinBox()
+        self.opacitySpin.setMinimum(0.0)
+        self.opacitySpin.setMaximum(1.0)
+        self.opacitySpin.setSingleStep(0.01)
+        self.opacitySpin.setValue(self.opacity)
+        self.opacitySpin.valueChanged.connect(self.opacityChanged)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.opacitySpin)
+        
+        # save to file
+        saveToFileGroup = QtGui.QGroupBox("Save to file")
+        saveToFileGroup.setCheckable(True)
+        saveToFileGroup.setChecked(False)
+#         saveToFileGroup.setAlignment(QtCore.Qt.AlignCenter)
+        saveToFileGroup.toggled.connect(self.saveToFileChanged)
+        
+        layout = QtGui.QVBoxLayout(saveToFileGroup)
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+                
+        row = QtGui.QWidget()
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setSpacing(0)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        
+        filenameEdit = QtGui.QLineEdit(self.outputFilename)
+        filenameEdit.setFixedWidth(130)
+        filenameEdit.textChanged.connect(self.filenameChanged)
+        
+        rowLayout.addWidget(filenameEdit)
+        
+        layout.addWidget(row)
+        
+        row = self.newRow()
+        row.addWidget(saveToFileGroup)
+        
+    
+    def saveToFileChanged(self, val):
+        """
+        Save to file changed
+        
+        """
+        self.outputToFile = val
+    
+    def filenameChanged(self, text):
+        """
+        Filename changed
+        
+        """
+        self.outputFilename = str(text)
+    
+    def opacityChanged(self, val):
+        """
+        Opacity changed
+        
+        """
+        self.opacity = val
+    
+    def useRadiiChanged(self, val):
+        """
+        Use radii changed
+        
+        """
+        self.useRadii = bool(val)
+    
+    def dispersionChanged(self, val):
+        """
+        Dispersion changed
+        
+        """
+        self.dispersion = val
+    
+    def displayVoronoiToggled(self, val):
+        """
+        Display Voronoi toggled
+        
+        """
+        self.displayVoronoi = bool(val)
+    
+    def newRow(self, align=None):
+        """
+        New row
+        
+        """
+        row = genericForm.FormRow(align=align)
+        self.contentLayout.addWidget(row)
+        
+        return row
 
 ################################################################################
 
