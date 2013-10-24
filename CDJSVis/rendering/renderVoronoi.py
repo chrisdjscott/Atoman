@@ -38,7 +38,7 @@ def makePolygon(indexes):
 
 ################################################################################
 
-def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions, voronoiOptions, actorsCollection, povfile, log=None):
+def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions, voronoiOptions, actorsCollection, povfile, scalarsArray, log=None):
     """
     Return actors for Voronoi cells
     
@@ -46,13 +46,15 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
     renderVoroTime = time.time()
     
     print "RENDER VORONOI"
+    if log is not None:
+        log("Rendering Voronoi volumes")
     
     # setup LUT
     lut = setupLUT(inputState.specieList, inputState.specieRGB, colouringOptions)
     
     # looks like we will have to make an actor for each atom
     # NOT IDEAL!
-    for index in visibleAtoms:
+    for visIndex, index in enumerate(visibleAtoms):
         # check we are working with the same atom!
         inp_pos = inputState.atomPos(index)
         out_pos = voronoi.getInputAtomPos(index)
@@ -61,7 +63,7 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         assert sep < 1e-4, "ERROR: VORO OUTPUT ORDERING DIFFERENT (%f)" % sep
         
         # scalar val for this atom
-        scalar = getScalar(colouringOptions, inputState, index)
+        scalar = getScalar(colouringOptions, inputState, index, scalarVal=scalarsArray[visIndex])
         
         # points (vertices)
         points = vtk.vtkPoints()
@@ -113,6 +115,8 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
     renderVoroTime = time.time() - renderVoroTime
     
     print "RENDER VORO TIME", renderVoroTime
+    if log is not None:
+        log("  Voronoi render time: %f" % renderVoroTime)
 
 ################################################################################
 def writePOVRayVoroVolumeTriangles(facets, pos, filename, settings, colour_rgb):

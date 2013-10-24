@@ -445,7 +445,8 @@ class Filterer(object):
         
         # get actors for vis atoms only!
         renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.pipelinePage.inputState.voronoi, 
-                                               self.colouringOptions, self.voronoiOptions, self.actorsCollection, voroFile)
+                                               self.colouringOptions, self.voronoiOptions, self.actorsCollection, 
+                                               voroFile, self.scalars, log=self.log)
     
     def calculateBonds(self):
         """
