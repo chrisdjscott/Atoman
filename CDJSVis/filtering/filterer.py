@@ -356,9 +356,8 @@ class Filterer(object):
             self.visibleAtoms.resize(0, refcheck=False)
             return status
         
-        assert inputState.voronoi is not None
-        
-        vor = inputState.voronoi
+        voroKey = self.voronoiOptions.getVoronoiDictKey()
+        vor = inputState.voronoiDict[voroKey]
         
         # scalars array
         if len(self.scalars) != len(self.visibleAtoms):
@@ -388,9 +387,8 @@ class Filterer(object):
             self.visibleAtoms.resize(0, refcheck=False)
             return status
         
-        assert inputState.voronoi is not None
-        
-        vor = inputState.voronoi
+        voroKey = self.voronoiOptions.getVoronoiDictKey()
+        vor = inputState.voronoiDict[voroKey]
         
         # scalars array
         if len(self.scalars) != len(self.visibleAtoms):
@@ -418,10 +416,16 @@ class Filterer(object):
         
         inputState = self.pipelinePage.inputState
         
-        # first check if need to compute
-        if inputState.voronoi is None:
-            # compute voronoi regions
-            inputState.voronoi = voronoi.computeVoronoi(inputState, self.voronoiOptions, self.pipelinePage.PBC, log=self.log)
+        # first see if we need to compute
+        voroKey = self.voronoiOptions.getVoronoiDictKey()
+        compute = voroKey not in inputState.voronoiDict
+        
+        # compute voronoi regions
+        if compute:
+            voroResult = voronoi.computeVoronoi(inputState, self.voronoiOptions, PBC, log=self.log)
+            
+            # store result
+            inputState.voronoiDict[voroKey] = voroResult
         
         return 0
     
@@ -432,7 +436,10 @@ class Filterer(object):
         """
         inputState = self.pipelinePage.inputState
         
-        if inputState.voronoi is None:
+        # first see if we need to compute
+        voroKey = self.voronoiOptions.getVoronoiDictKey()
+        
+        if voroKey not in inputState.voronoiDict:
             status = self.calculateVoronoi()
             
             if status:
@@ -456,7 +463,7 @@ class Filterer(object):
         voroFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_voro%d.pov" % (self.pipelineIndex, self.parent.tab))
         
         # get actors for vis atoms only!
-        renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.pipelinePage.inputState.voronoi, 
+        renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.pipelinePage.inputState.voronoiDict[voroKey], 
                                                self.colouringOptions, self.voronoiOptions, self.actorsCollection, 
                                                voroFile, self.scalars, log=self.log)
     
@@ -1288,7 +1295,8 @@ class Filterer(object):
             # compute Voronoi
             self.calculateVoronoi()
             
-            vor = lattice.voronoi
+            voroKey = self.voronoiOptions.getVoronoiDictKey()
+            vor = lattice.voronoiDict[voroKey]
             
             count = 0
             for cluster in clusterList:

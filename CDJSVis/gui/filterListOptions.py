@@ -122,13 +122,28 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         row = self.newRow()
         row.addWidget(saveToFileGroup)
     
+    def getVoronoiDictKey(self):
+        """
+        Return unique key based on current (calculate) settings
+        
+        The settings that matter are:
+            dispersion
+            useRadii
+        
+        """
+        key = "%f_%d" % (self.dispersion, int(self.useRadii))
+        print "KEY", key
+        
+        return key
+    
     def clearVoronoiResults(self):
         """
         Clear Voronoi results from lattices
         
         """
-        for state in self.mainWindow.systemsDialog.lattice_list:
-            state.voronoi = None
+        pass
+#         for state in self.mainWindow.systemsDialog.lattice_list:
+#             state.voronoi = None
     
     def saveToFileChanged(self, val):
         """

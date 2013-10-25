@@ -40,7 +40,7 @@ class Lattice(object):
         self.PE = np.empty(0, np.float64)
         self.charge = np.empty(0, np.float64)
         
-        self.voronoi = None
+        self.voronoiDict = {}
     
     def reset(self, NAtoms):
         """
@@ -70,7 +70,7 @@ class Lattice(object):
         
         self.simTime = 0.0
         self.barrier = None
-        self.voronoi = None
+        self.voronoiDict = {}
     
     def addAtom(self, sym, pos, charge):
         """
@@ -106,7 +106,7 @@ class Lattice(object):
         
         # min/max pos!!??
         
-        
+        self.voronoiDict = {}
         self.NAtoms += 1
     
     def removeAtom(self, index):
@@ -128,6 +128,8 @@ class Lattice(object):
         
         self.KE = np.delete(self.KE, index)
         self.PE = np.delete(self.PE, index)
+        
+        self.voronoiDict = {}
     
     def removeSpecie(self, index):
         """
@@ -227,6 +229,8 @@ class Lattice(object):
         self.cellDims[0] = lattice.cellDims[0]
         self.cellDims[1] = lattice.cellDims[1]
         self.cellDims[2] = lattice.cellDims[2]
+        
+        self.voronoiDict = lattice.voronoiDict
         
         # specie stuff
         NSpecies = len(lattice.specieList)
