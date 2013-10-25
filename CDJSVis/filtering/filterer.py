@@ -1242,34 +1242,55 @@ class Filterer(object):
         lattice = self.pipelinePage.inputState
         
         # draw them as they are
-        count = 0
-        for cluster in clusterList:
-            # first make pos array for this cluster
-            clusterPos = np.empty(3 * len(cluster), np.float64)
-            for i in xrange(len(cluster)):
-                index = cluster[i]
+        if filterSettings.calculateVolumesHull:
+            count = 0
+            for cluster in clusterList:
+                # first make pos array for this cluster
+                clusterPos = np.empty(3 * len(cluster), np.float64)
+                for i in xrange(len(cluster)):
+                    index = cluster[i]
+                    
+                    clusterPos[3*i] = lattice.pos[3*index]
+                    clusterPos[3*i+1] = lattice.pos[3*index+1]
+                    clusterPos[3*i+2] = lattice.pos[3*index+2]
                 
-                clusterPos[3*i] = lattice.pos[3*index]
-                clusterPos[3*i+1] = lattice.pos[3*index+1]
-                clusterPos[3*i+2] = lattice.pos[3*index+2]
-            
-            # now get convex hull
-            if len(cluster) < 4:
-                pass
-            
-            else:
-                PBC = self.pipelinePage.PBC
-                if PBC[0] or PBC[1] or PBC[2]:
-                    appliedPBCs = np.zeros(7, np.int32)
-                    clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
-                                                         PBC, appliedPBCs, filterSettings.neighbourRadius)
+                # now get convex hull
+                if len(cluster) < 4:
+                    pass
                 
-                volume, area = clusters.findConvexHullVolume(len(cluster), clusterPos)
+                else:
+                    PBC = self.pipelinePage.PBC
+                    if PBC[0] or PBC[1] or PBC[2]:
+                        appliedPBCs = np.zeros(7, np.int32)
+                        clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
+                                                             PBC, appliedPBCs, filterSettings.neighbourRadius)
+                    
+                    volume, area = clusters.findConvexHullVolume(len(cluster), clusterPos)
+                
+                self.log("Cluster %d (%d atoms)" % (count, len(cluster)), 0, 4)
+                self.log("volume is %f; facet area is %f" % (volume, area), 0, 5)
+                
+                count += 1
+        
+        elif filterSettings.calculateVolumesVoro:
+            # compute Voronoi
+            self.calculateVoronoi()
             
-            self.log("Cluster %d (%d atoms)" % (count, len(cluster)), 0, 4)
-            self.log("volume is %f; facet area is %f" % (volume, area), 0, 5)
+            vor = lattice.voronoi
             
-            count += 1
+            count = 0
+            for cluster in clusterList:
+                volume = 0.0
+                for index in cluster:
+                    volume += vor.atomVolume(index)
+                
+                self.log("Cluster %d (%d atoms)" % (count, len(cluster)), 0, 4)
+                self.log("volume is %f" % volume, 0, 5)
+                
+                count += 1
+        
+        else:
+            self.log("ERROR: method to calculate cluster volumes not specified")
     
     def coordinationNumberFilter(self, filterSettings):
         """

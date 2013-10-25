@@ -121,7 +121,14 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         row = self.newRow()
         row.addWidget(saveToFileGroup)
+    
+    def clearVoronoiResults(self):
+        """
+        Clear Voronoi results from lattices
         
+        """
+        for state in self.mainWindow.systemsDialog.lattice_list:
+            state.voronoi = None
     
     def saveToFileChanged(self, val):
         """
@@ -129,6 +136,8 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         """
         self.outputToFile = val
+        
+        self.clearVoronoiResults()
     
     def filenameChanged(self, text):
         """
@@ -136,6 +145,8 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         """
         self.outputFilename = str(text)
+        
+        self.clearVoronoiResults()
     
     def opacityChanged(self, val):
         """
@@ -150,6 +161,8 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         """
         self.useRadii = bool(val)
+        
+        self.clearVoronoiResults()
     
     def dispersionChanged(self, val):
         """
@@ -157,6 +170,8 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         """
         self.dispersion = val
+        
+        self.clearVoronoiResults()
     
     def displayVoronoiToggled(self, val):
         """

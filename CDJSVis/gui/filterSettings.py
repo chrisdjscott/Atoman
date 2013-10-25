@@ -1045,7 +1045,9 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.maxClusterSize = -1
         self.drawConvexHulls = 0
         self.neighbourRadius = 5.0
-        self.calculateVolumes = 0
+        self.calculateVolumes = False
+        self.calculateVolumesVoro = False
+        self.calculateVolumesHull = True
         self.hullCol = [0]*3
         self.hullCol[2] = 1
         self.hullOpacity = 0.5
@@ -1089,10 +1091,10 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         row.addWidget(self.maxNumSpinBox)
                 
         # draw hulls group box
-        self.drawHullsGroupBox = QtGui.QGroupBox(" Draw convex hulls")
+        self.drawHullsGroupBox = QtGui.QGroupBox("Draw convex hulls")
         self.drawHullsGroupBox.setCheckable(True)
         self.drawHullsGroupBox.setChecked(False)
-        self.drawHullsGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
+#         self.drawHullsGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
         self.drawHullsGroupBox.toggled.connect(self.drawHullsChanged)
         
         drawHullsLayout = QtGui.QVBoxLayout(self.drawHullsGroupBox)
@@ -1141,15 +1143,32 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         row.addWidget(self.hideAtomsCheckBox)
         drawHullsLayout.addWidget(row)
         
-        # calculate volumes check box
-        self.calcVolsCheckBox = QtGui.QCheckBox(" Calculate volumes")
-        self.calcVolsCheckBox.setChecked(0)
-        self.connect(self.calcVolsCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.calcVolsChanged)
+        # calculate volume group box
+        self.calcVolsGroup = QtGui.QGroupBox("Calculate volumes")
+        self.calcVolsGroup.setCheckable(True)
+        self.calcVolsGroup.setChecked(False)
+#         self.calcVolsGroup.setAlignment(QtCore.Qt.AlignHCenter)
+        self.calcVolsGroup.toggled.connect(self.calcVolsChanged)
         
-        self.newDisplayRow()
+        calcVolsLayout = QtGui.QVBoxLayout(self.calcVolsGroup)
+        calcVolsLayout.setAlignment(QtCore.Qt.AlignTop)
+        calcVolsLayout.setContentsMargins(0, 0, 0, 0)
+        calcVolsLayout.setSpacing(0)
         
         row = self.newDisplayRow()
-        row.addWidget(self.calcVolsCheckBox)
+        row.addWidget(self.calcVolsGroup)
+        
+        # radio buttons
+        self.convHullVolRadio = QtGui.QRadioButton("Use volume of convex hull", parent=self.calcVolsGroup)
+        self.convHullVolRadio.toggled.connect(self.calcVolsChanged)
+        
+        self.voroVolRadio = QtGui.QRadioButton("Sum Voronoi volumes", parent=self.calcVolsGroup)
+#         self.voroVolRadio.toggled.connect(self.calcVolsChanged)
+        
+        self.convHullVolRadio.setChecked(True)
+        
+        calcVolsLayout.addWidget(self.convHullVolRadio)
+        calcVolsLayout.addWidget(self.voroVolRadio)
     
     def hideAtomsChanged(self, val):
         """
@@ -1188,10 +1207,20 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         Changed calc vols.
         
         """
-        if self.calcVolsCheckBox.isChecked():
-            self.calculateVolumes = 1
+        if self.calcVolsGroup.isChecked():
+            self.calculateVolumes = True
         else:
-            self.calculateVolumes = 0
+            self.calculateVolumes = False
+        
+        if self.convHullVolRadio.isChecked():
+            self.calculateVolumesHull = True
+        else:
+            self.calculateVolumesHull = False
+        
+        if self.voroVolRadio.isChecked():
+            self.calculateVolumesVoro = True
+        else:
+            self.calculateVolumesVoro = False
     
     def minNumChanged(self, val):
         """

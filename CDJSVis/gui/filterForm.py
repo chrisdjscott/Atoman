@@ -360,7 +360,7 @@ class FilterForm(QtGui.QWidget):
         self.scalarBarAdded = False
         
         # make sure voroList is not set to begin with
-        self.inputState.voronoi = None
+#         self.inputState.voronoi = None
         
         count = 0
         for filterList in self.filterLists:
