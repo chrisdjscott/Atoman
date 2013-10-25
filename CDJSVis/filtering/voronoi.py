@@ -162,6 +162,9 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
         
         nl("")
         
+        if log is not None:
+            log("  Writing Voronoi data to file: %s" % fn)
+        
         f = open(fn, "w")
         f.write("\n".join(lines))
         f.close()
