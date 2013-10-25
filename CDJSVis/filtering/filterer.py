@@ -11,6 +11,7 @@ import time
 
 import numpy as np
 import vtk
+from PySide import QtGui
 
 from ..visclibs import filtering as filtering_c
 from ..visclibs import defects as defects_c
@@ -439,6 +440,17 @@ class Filterer(object):
         
         if not len(self.visibleAtoms):
             return 2
+        
+        if len(self.visibleAtoms) > 2000:
+            # warn that this will be slow
+            msg = """<p>You are about to render a large number of Voronoi cells (%d).</p>
+                     <p>This will probably be very slow!</p>
+                     <p>Do you want to continue?</p>""" % len(self.visibleAtoms)
+            
+            reply = QtGui.QMessageBox.question(self.mainWindow, "Message", msg, QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.Yes)
+            
+            if reply == QtGui.QMessageBox.No:
+                return
         
         # POV-RAY file
         voroFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_voro%d.pov" % (self.pipelineIndex, self.parent.tab))
