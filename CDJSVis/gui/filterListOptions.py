@@ -121,6 +121,12 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         row = self.newRow()
         row.addWidget(saveToFileGroup)
+        
+        label = QtGui.QLabel("""<qt>See <a href="https://github.com/joe-jordan/pyvoro/blob/master/README.md">here</a> and <a href="http://math.lbl.gov/voro++/about.html">here</a> for info</qt>""")
+        label.setOpenExternalLinks(True)
+        label.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse)
+        row = self.newRow()
+        row.addWidget(label)        
     
     def getVoronoiDictKey(self):
         """
