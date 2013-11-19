@@ -653,7 +653,7 @@ class ImageTab(QtGui.QWidget):
             framerate = createMovieBox.framerate
             bitrate = settings.bitrate
             outputprefix = createMovieBox.prefix
-            outputsuffix = settings.suffix
+            outputsuffix = createMovieBox.suffix
             
             saveText = os.path.basename(saveText)
             
@@ -860,6 +860,7 @@ class CreateMovieBox(QtGui.QGroupBox):
         # defaults
         self.framerate = 10
         self.prefix = "movie"
+        self.suffix = "flv"
         
         # layout
         self.contentLayout = QtGui.QVBoxLayout(self)
@@ -892,6 +893,28 @@ class CreateMovieBox(QtGui.QGroupBox):
         prefixLineEdit.setFixedWidth(130)
         prefixLineEdit.textChanged.connect(self.prefixChanged)
         rowLayout.addWidget(prefixLineEdit)
+        
+        # container
+        rowLayout = self.newRow()
+        
+        label = QtGui.QLabel("Container:")
+        rowLayout.addWidget(label)
+        
+        containerCombo = QtGui.QComboBox()
+        containerCombo.addItem("flv")
+        containerCombo.addItem("mpg")
+#         containerCombo.addItem("mp4")
+        containerCombo.addItem("avi")
+#         containerCombo.addItem("mov")
+        containerCombo.currentIndexChanged[str].connect(self.suffixChanged)
+        rowLayout.addWidget(containerCombo)
+    
+    def suffixChanged(self, text):
+        """
+        Suffix changed
+        
+        """
+        self.suffix = str(text)
     
     def framerateChanged(self, val):
         """

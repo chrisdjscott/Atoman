@@ -77,7 +77,6 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         
         # default settings
         self.bitrate = 10000
-        self.suffix = "mpg"
         
         self.pathToFFmpeg = str(settings.value("ffmpeg/pathToFFmpeg", "ffmpeg"))
         if not os.path.exists(self.pathToFFmpeg):
@@ -108,20 +107,6 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         label = QtGui.QLabel("kbits/s")
         rowLayout.addWidget(label)
         
-        # file suffix
-        rowLayout = self.newRow()
-        
-        label = QtGui.QLabel("Container:")
-        rowLayout.addWidget(label)
-        
-        containerCombo = QtGui.QComboBox()
-        containerCombo.addItem("mpg")
-#        containerCombo.addItem("mp4")
-        containerCombo.addItem("avi")
-#        containerCombo.addItem("mov")
-        containerCombo.currentIndexChanged[str].connect(self.suffixChanged)
-        rowLayout.addWidget(containerCombo)
-        
         self.init()
     
     def pathToFFmpegEdited(self):
@@ -142,13 +127,6 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         
         """
         self.pathToFFmpeg = str(text)
-    
-    def suffixChanged(self, text):
-        """
-        Suffix changed
-        
-        """
-        self.suffix = str(text)
     
     def bitrateChanged(self, val):
         """
