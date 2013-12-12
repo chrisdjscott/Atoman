@@ -11,7 +11,7 @@ view loaded lattices; set input/ref system, etc
 import os
 import sys
 
-from PySide import QtGui, QtCore
+from PySide import QtGui
 
 from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
@@ -130,28 +130,14 @@ class LoadSystemForm(GenericForm):
         Change load ref stack.
         
         """
-#         ok = self.okToChangeFileType() 
-        ok = True
-        
-        if ok:
-            self.stackedWidget.setCurrentIndex(index)
-#             self.refTypeCurrentIndex = index
-            
-#             if index == 0:
-#                 self.inputTypeCombo.setCurrentIndex(0)
-#             
-#             elif index == 1:
-#                 self.inputTypeCombo.setCurrentIndex(2)
+        self.stackedWidget.setCurrentIndex(index)
     
     def fileLoaded(self, fileType, state, filename, extension):
         """
         Called when a file is loaded
         
         """
-        print "FILE HAS BEEN LOADED... DO SOMETHING"
-        
         self.parent.file_loaded(state, filename, extension)
-        
 
 ################################################################################
 
@@ -179,12 +165,6 @@ class SystemsDialog(QtGui.QDialog):
         self.extensions_list = []
         self.stackIndex_list = []
         self.abspath_list = []
-        
-        # defaults
-        self.ref_selected = False
-        self.input_selected = True
-        self.ref_index = None
-        self.input_index = None
         
         # dialog layout
         dialog_layout = QtGui.QVBoxLayout(self)
@@ -244,18 +224,14 @@ class SystemsDialog(QtGui.QDialog):
         File generated
         
         """
-        print "FILE GENERATED", lattice, "generated.dat", "dat"
-        
-        index = self.add_lattice(lattice, "generated.dat", "dat")
+        self.add_lattice(lattice, "generated.dat", "dat")
     
     def file_loaded(self, lattice, filename, extension):
         """
         Called after a file had been loaded (or generated too?)
         
         """
-        print "FILE LOADED", lattice, filename, extension
-        
-        index = self.add_lattice(lattice, filename, extension)
+        self.add_lattice(lattice, filename, extension)
     
     def add_lattice(self, lattice, filename, extension):
         """
@@ -292,6 +268,7 @@ class SystemsDialog(QtGui.QDialog):
         
         list_item = QtGui.QListWidgetItem()
         list_item.setText("%s (%d atoms)" % (filename, lattice.NAtoms))
+        list_item.setToolTip(abspath)
         
         self.systems_list_widget.addItem(list_item)
         
