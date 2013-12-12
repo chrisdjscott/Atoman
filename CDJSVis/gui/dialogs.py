@@ -1178,7 +1178,7 @@ class AtomInfoWindow(QtGui.QDialog):
     Atom info window.
     
     """
-    def __init__(self, rendererWindow, atomIndex, scalar, scalarType, parent=None):
+    def __init__(self, rendererWindow, atomIndex, scalar, scalarType, filterList, parent=None):
         super(AtomInfoWindow, self).__init__(parent)
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
@@ -1224,7 +1224,10 @@ class AtomInfoWindow(QtGui.QDialog):
             row.addWidget(QtGui.QLabel("%s: %f" % (scalarType, scalar)))
             layout.addLayout(row)
         
-        self.highlighter.add(lattice.atomPos(atomIndex), lattice.specieCovalentRadius[lattice.specie[atomIndex]])
+        # radius
+        radius = lattice.specieCovalentRadius[lattice.specie[atomIndex]] * filterList.displayOptions.atomScaleFactor
+        
+        self.highlighter.add(lattice.atomPos(atomIndex), radius)
         
         self.setLayout(layout)
     

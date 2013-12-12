@@ -135,6 +135,16 @@ class QVTKRenderWindowInteractor(MSWidget):
         9:  QtCore.Qt.PointingHandCursor,   # VTK_CURSOR_HAND
         10: QtCore.Qt.CrossCursor,          # VTK_CURSOR_CROSSHAIR
     }
+    
+    leftButtonPressOverride = QtCore.Signal(QtCore.QEvent)
+    rightButtonPressOverride = QtCore.Signal(QtCore.QEvent)
+    midButtonPressOverride = QtCore.Signal(QtCore.QEvent)
+    
+    leftButtonReleaseOverride = QtCore.Signal(QtCore.QEvent)
+    rightButtonReleaseOverride = QtCore.Signal(QtCore.QEvent)
+    midButtonReleaseOverride = QtCore.Signal(QtCore.QEvent)
+    
+    mouseMoveOverride = QtCore.Signal(QtCore.QEvent)
 
     def __init__(self, parent=None, **kw):
         logging.debug("In QVTKRenderWindowInteractor::__init__()")
@@ -332,10 +342,13 @@ class QVTKRenderWindowInteractor(MSWidget):
         self._ActiveButton = ev.button()
 
         if self._ActiveButton == QtCore.Qt.LeftButton:
+            self.leftButtonPressOverride.emit(ev)
             self._Iren.LeftButtonPressEvent()
         elif self._ActiveButton == QtCore.Qt.RightButton:
+            self.rightButtonPressOverride.emit(ev)
             self._Iren.RightButtonPressEvent()
         elif self._ActiveButton == QtCore.Qt.MidButton:
+            self.midButtonPressOverride.emit(ev)
             self._Iren.MiddleButtonPressEvent()
 
     def mouseReleaseEvent(self, ev):
@@ -345,10 +358,13 @@ class QVTKRenderWindowInteractor(MSWidget):
                                             ctrl, shift, chr(0), 0, None)
 
         if self._ActiveButton == QtCore.Qt.LeftButton:
+            self.leftButtonReleaseOverride.emit(ev)
             self._Iren.LeftButtonReleaseEvent()
         elif self._ActiveButton == QtCore.Qt.RightButton:
+            self.rightButtonReleaseOverride.emit(ev)
             self._Iren.RightButtonReleaseEvent()
         elif self._ActiveButton == QtCore.Qt.MidButton:
+            self.midButtonReleaseOverride.emit(ev)
             self._Iren.MiddleButtonReleaseEvent()
 
     def mouseMoveEvent(self, ev):
@@ -362,6 +378,7 @@ class QVTKRenderWindowInteractor(MSWidget):
         self._Iren.SetEventInformationFlipY(ev.x(), ev.y(),
                                             ctrl, shift, chr(0), 0, None)
         self._Iren.MouseMoveEvent()
+        self.mouseMoveOverride.emit(ev)
 
     def keyPressEvent(self, ev):
         logging.debug("In QVTKRenderWindowInteractor::keyPressEvent()")

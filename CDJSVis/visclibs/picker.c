@@ -82,14 +82,18 @@ int pickObject(int visibleAtomsDim, int *visibleAtoms, int vacsDim, int *vacs, i
                 
                 rad = specieCovRad[specie[realIndex]];
                 
-                sep = fabs(sqrt(sep2) - rad);
+                sep = sqrt(sep2);
+                
+                /* if separation is greater than radius, subtract radius, 
+                 * otherwise set to zero (within radius is good enough for me)
+                 */
+                sep = (sep > rad) ? sep - rad : 0.0;
                 
                 if (sep < minSep)
                 {
                     minSep = sep;
                     minSepIndex = index;
                 }
-                
             }
         }
         
@@ -215,14 +219,19 @@ int pickObject(int visibleAtomsDim, int *visibleAtoms, int vacsDim, int *vacs, i
                 
                 /* need radius too */
                 rad = visCovRad[index];
-                
-                sep = fabs(sqrt(sep2) - rad);
-                
-                if (sep < minSep)
-                {
-                    minSep = sep;
-                    minSepIndex = index;
-                }
+                                
+				sep = sqrt(sep2);
+				
+				/* if separation is greater than radius, subtract radius, 
+				 * otherwise set to zero (within radius is good enough for me)
+				 */
+				sep = (sep > rad) ? sep - rad : 0.0;
+				
+				if (sep < minSep)
+				{
+					minSep = sep;
+					minSepIndex = index;
+				}
                 
             }
         }

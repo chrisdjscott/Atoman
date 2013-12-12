@@ -121,13 +121,16 @@ class RendererWindow(QtGui.QWidget):
         self.vtkRenWinInteract._Iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
         
         # add observers
-        self.vtkRenWinInteract._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
-        self.vtkRenWinInteract._Iren.AddObserver("MouseMoveEvent", self.mouseMoved)
-        self.vtkRenWinInteract._Iren.AddObserver("LeftButtonReleaseEvent", self.leftButtonReleased)
+#         self.vtkRenWinInteract._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
+        
+        # connect signals from QVTK
+        self.vtkRenWinInteract.leftButtonPressOverride.connect(self.leftButtonPressed)
+        self.vtkRenWinInteract.leftButtonReleaseOverride.connect(self.leftButtonReleased)
+        self.vtkRenWinInteract.mouseMoveOverride.connect(self.mouseMoved)
         
         # add picker
         self.vtkPicker = vtk.vtkCellPicker()
-        self.vtkPicker.SetTolerance(0.000001)
+        self.vtkPicker.SetTolerance(0.005)
         self.vtkPicker.AddObserver("EndPickEvent", self.endPickEvent)
         self.vtkRenWinInteract.SetPicker(self.vtkPicker)
         
@@ -502,6 +505,7 @@ class RendererWindow(QtGui.QWidget):
             minSepType = None
             minSepScalarType = None
             minSepScalar = None
+            minSepFilterList = None
             for filterList in filterLists:
                 filterer = filterList.filterer
                 
@@ -529,6 +533,7 @@ class RendererWindow(QtGui.QWidget):
                 if tmp_index >= 0 and tmp_sep < minSep:
                     minSep = tmp_sep
                     minSepType = int(tmp_type)
+                    minSepFilterList = filterList
                     
                     if minSepType == 0:
                         minSepIndex = visibleAtoms[int(tmp_index)]
@@ -551,46 +556,38 @@ class RendererWindow(QtGui.QWidget):
                         minSepScalar = None
                         minSepScalarType = None
             
-            print "MIN SEP", minSep, "TYPE", minSepType, "INDEX", minSepIndex
-            
             if minSep < 0.1:
                 if minSepType == 0:
                     # show window
-                    atomInfoWindow = dialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, parent=self)
+                    atomInfoWindow = dialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, minSepFilterList, parent=self)
                     atomInfoWindow.show()
-                    
-                    # highlight atom
-                    
                 
                 else:
                     defectInfoWindow = dialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, parent=self)
                     defectInfoWindow.show()
     
-    def leftButtonPressed(self, obj, event):
+    def leftButtonPressed(self, event):
         """
         Left mouse button pressed
         
         """
-        self.mouseMotion = 0
-        
-        # left release event isn't working so have to pick by double click
-        if self.vtkRenWinInteract.GetRepeatCount() == 1:
-            pos = self.vtkRenWinInteract.GetEventPosition()
-            self.vtkPicker.Pick(pos[0], pos[1], 0, self.vtkRen)
+        self.mouseMotion = False
     
-    def mouseMoved(self, obj, event):
+    def mouseMoved(self, event):
         """
         Mouse moved
         
         """
-        self.mouseMotion = 1
+        self.mouseMotion = True
     
-    def leftButtonReleased(self, obj, event):
+    def leftButtonReleased(self, event):
         """
         Left button released.
         
         """
-        print "LEFT RELEASE", self.mouseMotion
+        if not self.mouseMotion:
+            pos = self.vtkRenWinInteract.GetEventPosition()
+            self.vtkPicker.Pick(pos[0], pos[1], 0, self.vtkRen)
     
     def setCameraToCell(self):
         """
