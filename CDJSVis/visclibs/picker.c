@@ -154,14 +154,13 @@ int pickObject(int visibleAtomsDim, int *visibleAtoms, int vacsDim, int *vacs, i
         
         for (i=0; i<onAntsDim; i++)
         {
-            /* these are actually antisites not onAntisites... */
             index = onAnts[i];
             
-            visPos[3*count] = refPos[3*index];
-            visPos[3*count+1] = refPos[3*index+1];
-            visPos[3*count+2] = refPos[3*index+2];
+            visPos[3*count] = pos[3*index];
+            visPos[3*count+1] = pos[3*index+1];
+            visPos[3*count+2] = pos[3*index+2];
             
-            visCovRad[count] = refSpecieCovRad[refSpecie[index]];
+            visCovRad[count] = specieCovRad[specie[index]];
             
             count++;
         }

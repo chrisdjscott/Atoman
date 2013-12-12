@@ -987,6 +987,8 @@ class DefectInfoWindow(QtGui.QDialog):
     def __init__(self, rendererWindow, defectIndex, defectType, defList, parent=None):
         super(DefectInfoWindow, self).__init__(parent)
         
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
         self.parent = parent
         self.rendererWindow = rendererWindow
         self.defectIndex = defectIndex

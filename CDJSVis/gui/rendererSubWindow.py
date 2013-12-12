@@ -540,7 +540,7 @@ class RendererWindow(QtGui.QWidget):
                 
                 pp = self.getCurrentPipelinePage()
                 
-                status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, antisites, splitInts, pickPos_np, 
+                status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos_np, 
                                              inputState.pos, refState.pos, pp.PBC, inputState.cellDims,
                                              refState.minPos, refState.maxPos, inputState.specie, 
                                              refState.specie, inputState.specieCovalentRadius, 
