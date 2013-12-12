@@ -79,6 +79,10 @@ class RendererWindow(QtGui.QWidget):
         setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="set_cam_cell.svg", 
                                            tip="Reset camera to cell")
         
+        # rotate image
+        rotateViewPoint = self.createAction("Rotate view point", slot=self.rotateViewPoint, icon="object-rotate.png",
+                                            tip="Rotate view point")
+        
         # text selector
         openTextSelectorAction = self.createAction("On-screen info", self.showTextSelector, 
                                                    icon="preferences-desktop-font.svg", 
@@ -106,7 +110,7 @@ class RendererWindow(QtGui.QWidget):
         
         # add actions
         self.addActions(toolbar, (showCellAction, showAxesAction, backgroundColourAction, None, 
-                                  setCamToCellAction, cameraSettingsAction, None, 
+                                  setCamToCellAction, rotateViewPoint, cameraSettingsAction, None, 
                                   openTextSelectorAction, showOutputDialogAction, None,
                                   aaUpAction, aaDownAction))
         
@@ -164,6 +168,9 @@ class RendererWindow(QtGui.QWidget):
         # text selector
         self.textSelector = dialogs.OnScreenInfoDialog(self.mainWindow, index, parent=self)
         
+        # view point rotate dialog
+        self.rotateViewPointDialog = dialogs.RotateViewPointDialog(self, parent=self)
+        
         # which filter list is it associated with
         label = QtGui.QLabel("Analysis pipeline:")
         self.analysisPipelineCombo = QtGui.QComboBox()
@@ -177,6 +184,17 @@ class RendererWindow(QtGui.QWidget):
         row.addWidget(self.analysisPipelineCombo)
         
         layout.addLayout(row)
+    
+    def rotateViewPoint(self):
+        """
+        Show rotate view point dialog
+        
+        """
+        if self.getCurrentRefState() is None:
+            return
+        
+        self.rotateViewPointDialog.hide()
+        self.rotateViewPointDialog.show()
     
     def showCameraSettings(self):
         """

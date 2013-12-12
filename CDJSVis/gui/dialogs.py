@@ -1274,4 +1274,92 @@ class ConfirmCloseDialog(QtGui.QDialog):
         buttonBox.rejected.connect(self.reject)
         
         layout.addWidget(buttonBox)
+
+################################################################################
+
+class RotateViewPointDialog(QtGui.QDialog):
+    """
+    Rotate view point dialog
+    
+    """
+    def __init__(self, rw, parent=None):
+        super(RotateViewPointDialog, self).__init__(parent)
         
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
+        self.setModal(0)
+        
+        self.rw = rw
+        self.parent = parent
+        
+        layout = QtGui.QVBoxLayout(self)
+        
+        # direction
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        
+        label = QtGui.QLabel("Direction:")
+        
+        self.directionCombo = QtGui.QComboBox()
+        self.directionCombo.addItems(["Right", "Left", "Up", "Down"])
+        
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.directionCombo)
+        
+        layout.addWidget(row)
+        
+        # angle
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        
+        label = QtGui.QLabel("Angle:")
+        
+        self.angleSpin = QtGui.QDoubleSpinBox()
+        self.angleSpin.setSingleStep(0.1)
+        self.angleSpin.setMinimum(0.0)
+        self.angleSpin.setMaximum(360.0)
+        self.angleSpin.setValue(90)
+        
+        rowLayout.addWidget(label)
+        rowLayout.addWidget(self.angleSpin)
+        
+        layout.addWidget(row)
+        
+        # apply button
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        
+        applyButton = QtGui.QPushButton("Apply")
+        applyButton.setStatusTip("Apply rotation")
+        applyButton.setToolTip("Apply rotation")
+        applyButton.clicked.connect(self.applyRotation)
+        
+        rowLayout.addWidget(applyButton)
+        
+        layout.addWidget(row)
+    
+    def applyRotation(self):
+        """
+        Apply the rotation
+        
+        """
+        angle = self.angleSpin.value()
+        direction = str(self.directionCombo.currentText())
+        
+        renderer = self.rw.renderer
+        
+        if direction == "Right" or direction == "Left":
+            if direction == "Right":
+                angle = - angle
+            
+            # apply rotation
+            renderer.camera.Azimuth(angle)
+        
+        else:
+            if direction == "Up":
+                angle = - angle
+            
+            # apply rotation
+            renderer.camera.Elevation(angle)
+        
+        renderer.reinit()
