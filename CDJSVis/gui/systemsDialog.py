@@ -195,6 +195,7 @@ class SystemsDialog(QtGui.QDialog):
         # add list widget
         self.systems_list_widget = QtGui.QListWidget(self)
 #         self.systems_list_widget.setFixedHeight(60)
+        self.systems_list_widget.setSelectionMode(self.systems_list_widget.ExtendedSelection)
         
         row = list_holder.newRow()
         row.addWidget(self.systems_list_widget)
@@ -277,7 +278,11 @@ class SystemsDialog(QtGui.QDialog):
         list_item.setText("%s (%d atoms)" % (filename, lattice.NAtoms))
         
         self.systems_list_widget.addItem(list_item)
-        self.systems_list_widget.setCurrentItem(list_item)
+        
+        # select last one added only
+        for row in xrange(index):
+            self.systems_list_widget.item(row).setSelected(False)
+        self.systems_list_widget.item(index).setSelected(True)
         
         # also add lattice to pipeline forms
         self.mainWindow.mainToolbar.addStateOptionToPipelines(filename)
@@ -299,28 +304,36 @@ class SystemsDialog(QtGui.QDialog):
         if not self.systems_list_widget.count():
             return
         
-        # index of selected item
-        modelIndex = self.systems_list_widget.currentIndex()
-        index = modelIndex.row()
+        items = self.systems_list_widget.selectedItems()
         
-        if index < 0:
-            return
-        
-        # do not allow removal of system that is tagged with ref or input
-        # first find out which ones are refs and inputs
-        currentStateIndexes = self.mainWindow.mainToolbar.getSelectedStatesFromPipelines()
-        
-        if index in currentStateIndexes:
-            self.mainWindow.displayWarning("Cannot remove state that is currently selected")
-            return
-        
-        # remove state
-        self.lattice_list.pop(index)
-        self.filenames_list.pop(index)
-        self.extensions_list.pop(index)
-        self.stackIndex_list.pop(index)
-        
-        itemWidget = self.systems_list_widget.takeItem(index)
-        del itemWidget
-        
-        self.mainWindow.mainToolbar.removeStateFromPipelines(index)
+        # loops over selected items
+        for item in items:
+            # get the index
+            modelIndex = self.systems_list_widget.indexFromItem(item)
+            index = modelIndex.row()
+            
+            if index < 0:
+                continue
+            
+            # do not allow removal of system that is tagged with ref or input
+            # first find out which ones are refs and inputs
+            currentStateIndexes = self.mainWindow.mainToolbar.getSelectedStatesFromPipelines()
+            
+            if index in currentStateIndexes:
+                self.mainWindow.displayWarning("Cannot remove state that is currently selected")
+                continue
+            
+            # remove state
+            self.lattice_list.pop(index)
+            self.filenames_list.pop(index)
+            self.extensions_list.pop(index)
+            self.stackIndex_list.pop(index)
+            
+            itemWidget = self.systems_list_widget.takeItem(index)
+            del itemWidget
+            
+            self.mainWindow.mainToolbar.removeStateFromPipelines(index)
+            
+        # select last one in list
+        self.systems_list_widget.item(len(self.lattice_list) - 1).setSelected(True)
+
