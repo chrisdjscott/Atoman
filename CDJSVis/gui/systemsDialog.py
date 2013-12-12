@@ -8,6 +8,7 @@ view loaded lattices; set input/ref system, etc
 @author: Chris Scott
 
 """
+import os
 import sys
 
 from PySide import QtGui, QtCore
@@ -177,6 +178,7 @@ class SystemsDialog(QtGui.QDialog):
         self.filenames_list = []
         self.extensions_list = []
         self.stackIndex_list = []
+        self.abspath_list = []
         
         # defaults
         self.ref_selected = False
@@ -262,9 +264,23 @@ class SystemsDialog(QtGui.QDialog):
         """
         index = len(self.lattice_list)
         
+        abspath = os.path.abspath(filename)
+        if abspath in self.abspath_list:
+            self.mainWindow.console.write("This file is already loaded (%s)" % filename)
+            
+            index = self.abspath_list.index(abspath)
+            
+            # select this one
+            for row in xrange(len(self.lattice_list)):
+                self.systems_list_widget.item(row).setSelected(False)
+            self.systems_list_widget.item(index).setSelected(True)
+            
+            return
+        
         self.lattice_list.append(lattice)
         self.filenames_list.append(filename)
         self.extensions_list.append(extension)
+        self.abspath_list.append(abspath)
         
         # stack index
         ida = self.new_system_stack.currentIndex()
@@ -328,6 +344,7 @@ class SystemsDialog(QtGui.QDialog):
             self.filenames_list.pop(index)
             self.extensions_list.pop(index)
             self.stackIndex_list.pop(index)
+            self.abspath_list.pop(index)
             
             itemWidget = self.systems_list_widget.takeItem(index)
             del itemWidget
@@ -335,5 +352,7 @@ class SystemsDialog(QtGui.QDialog):
             self.mainWindow.mainToolbar.removeStateFromPipelines(index)
             
         # select last one in list
+        for row in xrange(len(self.lattice_list) - 1):
+            self.systems_list_widget.item(row).setSelected(False)
         self.systems_list_widget.item(len(self.lattice_list) - 1).setSelected(True)
 
