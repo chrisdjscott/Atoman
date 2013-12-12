@@ -86,32 +86,36 @@ class GenericReaderForm(GenericForm):
         
         filesString = str(self.fileFormatString)
         
-        filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
-        filename = str(filename)
+        filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
         
-        if not len(filename):
+        filenames = [str(fn) for fn in filenames]
+        
+        if not len(filenames):
             return None
         
-        (nwd, filename) = os.path.split(filename)        
-        
-        # change to new working directory
-        if nwd != os.getcwd():
-            self.mainWindow.console.write("Changing to dir "+nwd)
-            os.chdir(nwd)
-            self.mainWindow.updateCWD()
-        
-        # remove zip extensions
-        if filename[-3:] == ".gz":
-            filename = filename[:-3]
-        elif filename[-4:] == ".bz2":
-            filename = filename[:-4]
-        
-        # open file
-        result = self.openFile(filename=filename)
+        for filename in filenames:
+            nwd, filename = os.path.split(filename)        
+            
+            # change to new working directory
+            if nwd != os.getcwd():
+                self.mainWindow.console.write("Changing to dir "+nwd)
+                os.chdir(nwd)
+                self.mainWindow.updateCWD()
+            
+            # remove zip extensions
+            if filename[-3:] == ".gz":
+                filename = filename[:-3]
+                
+            elif filename[-4:] == ".bz2":
+                filename = filename[:-4]
+            
+            # open file
+            result = self.openFile(filename=filename)
+            
+            if result:
+                break
         
         return result
-        
-        
 
 ################################################################################
 
@@ -420,28 +424,57 @@ class LbomdXYZReaderForm(GenericReaderForm):
         else:
             filesString = str(self.fileFormatString)
         
-        filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
-        filename = str(filename)
+        if isRef:
+            filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
+            filename = str(filename)
+            
+            if not len(filename):
+                return None
+            
+            (nwd, filename) = os.path.split(filename)        
+            
+            # change to new working directory
+            if nwd != os.getcwd():
+                self.mainWindow.console.write("Changing to dir "+nwd)
+                os.chdir(nwd)
+                self.mainWindow.updateCWD()
+            
+            # remove zip extensions
+            if filename[-3:] == ".gz":
+                filename = filename[:-3]
+            elif filename[-4:] == ".bz2":
+                filename = filename[:-4]
+            
+            # open file
+            result = self.openFile(filename=filename, isRef=isRef)
         
-        if not len(filename):
-            return None
-        
-        (nwd, filename) = os.path.split(filename)        
-        
-        # change to new working directory
-        if nwd != os.getcwd():
-            self.mainWindow.console.write("Changing to dir "+nwd)
-            os.chdir(nwd)
-            self.mainWindow.updateCWD()
-        
-        # remove zip extensions
-        if filename[-3:] == ".gz":
-            filename = filename[:-3]
-        elif filename[-4:] == ".bz2":
-            filename = filename[:-4]
-        
-        # open file
-        result = self.openFile(filename=filename, isRef=isRef)
+        else:
+            filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
+            filenames = [str(fn) for fn in filenames]
+            
+            if not len(filenames):
+                return None
+            
+            for filename in filenames:
+                nwd, filename = os.path.split(filename)        
+                
+                # change to new working directory
+                if nwd != os.getcwd():
+                    self.mainWindow.console.write("Changing to dir "+nwd)
+                    os.chdir(nwd)
+                    self.mainWindow.updateCWD()
+                
+                # remove zip extensions
+                if filename[-3:] == ".gz":
+                    filename = filename[:-3]
+                elif filename[-4:] == ".bz2":
+                    filename = filename[:-4]
+                
+                # open file
+                result = self.openFile(filename=filename, isRef=isRef)
+                
+                if result:
+                    break
         
         return result
     
