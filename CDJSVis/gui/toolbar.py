@@ -125,6 +125,28 @@ class MainToolbar(QtGui.QDockWidget):
         for p in self.pipelineList:
             p.addStateOption(filename)
     
+    def removeStateFromPipelines(self, index):
+        """
+        Remove selected state from pipelines
+        
+        """
+        for p in self.pipelineList:
+            p.removeStateOption(index)
+    
+    def getSelectedStatesFromPipelines(self):
+        """
+        Return set of currently selected states
+        
+        """
+        currentStates = set()
+        for p in self.pipelineList:
+            refIndex, inputIndex = p.getCurrentStateIndexes()
+            
+            currentStates.add(refIndex)
+            currentStates.add(inputIndex)
+        
+        return currentStates
+    
     def runAllPipelines(self):
         """
         Run all pipelines.

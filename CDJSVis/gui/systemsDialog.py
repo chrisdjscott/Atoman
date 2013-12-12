@@ -199,24 +199,13 @@ class SystemsDialog(QtGui.QDialog):
         row = list_holder.newRow()
         row.addWidget(self.systems_list_widget)
         
-        # set as ref button?
-#         set_ref_button = QtGui.QPushButton("Set as ref")
-#         set_ref_button.setToolTip("Set as ref")
-#         set_ref_button.clicked.connect(self.set_ref)
-#         
-#         # set as input button?
-#         set_input_button = QtGui.QPushButton("Set as input")
-#         set_input_button.setToolTip("Set as input")
-#         set_input_button.clicked.connect(self.set_input)
-        
         # remove system button
         remove_system = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
+        remove_system.setAutoDefault(False)
         remove_system.setToolTip("Remove system")
         remove_system.clicked.connect(self.remove_system)
         
         row = list_holder.newRow()
-#         row.addWidget(set_ref_button)
-#         row.addWidget(set_input_button)
         row.addWidget(remove_system)
         
         # box for new system stuff
@@ -247,131 +236,6 @@ class SystemsDialog(QtGui.QDialog):
         self.generate_system_form = GenerateInputForm(self, self.mainWindow, self.mainToolbar)
         self.new_system_stack.addWidget(self.generate_system_form)
     
-    def refresh_type_text(self):
-        """
-        Refresh input/ref marker
-        
-        """
-        if not self.systems_list_widget.count():
-            return
-        
-        for i in xrange(self.systems_list_widget.count()):
-            item_text = "%s (%d atoms)" % (self.filenames_list[i], self.lattice_list[i].NAtoms)
-            
-            if i == self.ref_index:
-                item_text += " [REF]"
-            
-            if i == self.input_index:
-                item_text += " [INPUT]"
-            
-            item = self.systems_list_widget.item(i)
-            
-            item.setText(item_text)
-    
-    def set_ref(self, index=None):
-        """
-        Set reference lattice
-        
-        """
-        if not self.systems_list_widget.count():
-            return
-        
-        if index is None:
-            index = self.systems_list_widget.currentIndex()
-        
-        if not type(index) is int:
-            print "DEBUG", index.column(), index.row()
-            index = index.row()
-        
-        print "SET REF LATTICE", index
-        
-        lattice = self.lattice_list[index]
-        filename = self.filenames_list[index]
-        extension = None
-        
-        self.mainWindow.postFileLoaded("ref", lattice, filename, extension)
-        
-        self.ref_selected = True
-        self.ref_index = index
-        
-        self.refresh_type_text()
-        
-        self.check_ref_change_ok()
-    
-    def check_ref_change_ok(self):
-        """
-        Check it was ok to change the ref.
-        
-        """
-        if self.input_index is None or self.ref_index is None:
-            return
-        
-        ref = self.lattice_list[self.ref_index]
-        inp = self.lattice_list[self.input_index]
-        
-        diff = False
-        for i in xrange(3):
-            if inp.cellDims[i] != ref.cellDims[i]:
-                diff = True
-                break
-        
-        if diff:
-            self.mainWindow.console.write("WARNING: new ref has different cellDims: setting input = ref")
-            
-            self.set_input(self.ref_index)
-    
-    def check_input_change_ok(self):
-        """
-        Check it was ok to change the input.
-        
-        """
-        if self.input_index is None or self.ref_index is None:
-            return
-        
-        ref = self.lattice_list[self.ref_index]
-        inp = self.lattice_list[self.input_index]
-        
-        diff = False
-        for i in xrange(3):
-            if inp.cellDims[i] != ref.cellDims[i]:
-                diff = True
-                break
-        
-        if diff:
-            self.mainWindow.console.write("WARNING: new input has different cellDims: setting ref = input")
-            
-            self.set_ref(self.input_index)
-    
-    def set_input(self, index=None):
-        """
-        Set input lattice
-        
-        """
-        if not self.systems_list_widget.count():
-            return
-        
-        if index is None:
-            index = self.systems_list_widget.currentIndex()
-        
-        if not type(index) is int:
-            print "DEBUG", index.column(), index.row()
-            index = index.row()
-        
-        print "SET INPUT LATTICE", index
-        
-        lattice = self.lattice_list[index]
-        filename = self.filenames_list[index]
-        extension = self.extensions_list[index]
-        
-        self.mainWindow.postFileLoaded("input", lattice, filename, extension)
-        
-        self.input_selected = True
-        self.input_index = index
-        
-        self.refresh_type_text()
-        
-        self.check_input_change_ok()
-    
     def file_generated(self, lattice):
         """
         File generated
@@ -380,10 +244,6 @@ class SystemsDialog(QtGui.QDialog):
         print "FILE GENERATED", lattice, "generated.dat", "dat"
         
         index = self.add_lattice(lattice, "generated.dat", "dat")
-        
-#         if not self.ref_selected:
-#             self.set_ref(index=index)
-#             self.set_input(index=index)
     
     def file_loaded(self, lattice, filename, extension):
         """
@@ -411,14 +271,13 @@ class SystemsDialog(QtGui.QDialog):
         page = self.new_system_stack.currentWidget()
         idb = page.stackedWidget.currentIndex()
         
-        print "ADD (STACK INDICES)", ida, idb
-        
         self.stackIndex_list.append((ida, idb))
         
         list_item = QtGui.QListWidgetItem()
         list_item.setText("%s (%d atoms)" % (filename, lattice.NAtoms))
         
         self.systems_list_widget.addItem(list_item)
+        self.systems_list_widget.setCurrentItem(list_item)
         
         # also add lattice to pipeline forms
         self.mainWindow.mainToolbar.addStateOptionToPipelines(filename)
@@ -430,7 +289,6 @@ class SystemsDialog(QtGui.QDialog):
         Set new system stack
         
         """
-        print "SET STACK", index
         self.new_system_stack.setCurrentIndex(index)
     
     def remove_system(self):
@@ -441,10 +299,28 @@ class SystemsDialog(QtGui.QDialog):
         if not self.systems_list_widget.count():
             return
         
-        print "REMOVE SYSTEM", self.systems_list_widget.currentIndex()
+        # index of selected item
+        modelIndex = self.systems_list_widget.currentIndex()
+        index = modelIndex.row()
+        
+        if index < 0:
+            return
         
         # do not allow removal of system that is tagged with ref or input
+        # first find out which ones are refs and inputs
+        currentStateIndexes = self.mainWindow.mainToolbar.getSelectedStatesFromPipelines()
         
-
-
-
+        if index in currentStateIndexes:
+            self.mainWindow.displayWarning("Cannot remove state that is currently selected")
+            return
+        
+        # remove state
+        self.lattice_list.pop(index)
+        self.filenames_list.pop(index)
+        self.extensions_list.pop(index)
+        self.stackIndex_list.pop(index)
+        
+        itemWidget = self.systems_list_widget.takeItem(index)
+        del itemWidget
+        
+        self.mainWindow.mainToolbar.removeStateFromPipelines(index)

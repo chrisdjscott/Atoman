@@ -197,15 +197,31 @@ class FilterForm(QtGui.QWidget):
         else:
             self.PBC[2] = 0
     
+    def getCurrentStateIndexes(self):
+        """
+        Return indexes of states that are currently selected
+        
+        """
+        refIndex = self.refCombo.currentIndex()
+        inputIndex = self.inputCombo.currentIndex()
+        
+        return refIndex, inputIndex
+    
     def addStateOption(self, filename):
         """
         Add state option to combo boxes
         
         """
-        print "ADD STATE OPTION", filename
-        
         self.refCombo.addItem(filename)
         self.inputCombo.addItem(filename)
+    
+    def removeStateOption(self, index):
+        """
+        Remove state option from combo boxes
+        
+        """
+        self.refCombo.removeItem(index)
+        self.inputCombo.removeItem(index)
     
     def checkStateChangeOk(self):
         """
@@ -273,7 +289,9 @@ class FilterForm(QtGui.QWidget):
         Ref changed
         
         """
-        print "REF CHANGED", index
+        # check if has really changed
+        if self.refState is self.mainWindow.systemsDialog.lattice_list[index]:
+            return
         
         old_ref = self.refState
         
@@ -290,7 +308,6 @@ class FilterForm(QtGui.QWidget):
         status = self.checkStateChangeOk()
         
         if status:
-            print "MUST CHANGE INPUT TOO"
             # must change input too
             self.inputCombo.setCurrentIndex(index)
 #             self.inputChanged(index)
@@ -300,7 +317,9 @@ class FilterForm(QtGui.QWidget):
         Input changed
         
         """
-        print "INPUT CHANGED", index
+        # check if has really changed
+        if self.inputState is self.mainWindow.systemsDialog.lattice_list[index]:
+            return
         
         self.inputState = self.mainWindow.systemsDialog.lattice_list[index]
         self.extension = self.mainWindow.systemsDialog.extensions_list[index]
@@ -311,7 +330,6 @@ class FilterForm(QtGui.QWidget):
         status = self.checkStateChangeOk()
         
         if status:
-            print "MUST CHANGE REF TOO"
             # must change ref too
             self.refCombo.setCurrentIndex(index)
 #             self.refChanged(index)
