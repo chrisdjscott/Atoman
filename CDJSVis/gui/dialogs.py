@@ -1181,6 +1181,8 @@ class AtomInfoWindow(QtGui.QDialog):
     def __init__(self, rendererWindow, atomIndex, scalar, scalarType, parent=None):
         super(AtomInfoWindow, self).__init__(parent)
         
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
         self.parent = parent
         self.rendererWindow = rendererWindow
         self.atomIndex = atomIndex
