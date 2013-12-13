@@ -7,6 +7,7 @@ Lattice reader forms for the inputTab.
 """
 import os
 import sys
+import platform
 
 from PySide import QtGui, QtCore
 
@@ -86,7 +87,11 @@ class GenericReaderForm(GenericForm):
         
         filesString = str(self.fileFormatString)
         
-        filenames = fdiag.getOpenFileNames(self.parent.parent, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+        if platform.system() == "Darwin":
+            filenames = fdiag.getOpenFileNames(self.parent.parent, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+        
+        else:
+            filenames = fdiag.getOpenFileNames(self.parent.parent, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
         
         filenames = [str(fn) for fn in filenames]
         
