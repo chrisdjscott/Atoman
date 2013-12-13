@@ -50,7 +50,8 @@ class FilterList(QtGui.QWidget):
                            "Slice",
                            "Coordination number",
                            "Voronoi neighbours",
-                           "Voronoi volume"]
+                           "Voronoi volume",
+                           "Q4"]
         self.allFilters.sort()
         
         # current selected filters

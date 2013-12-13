@@ -207,3 +207,20 @@ def voronoiNeighboursFilter(visibleAtoms, numNebsArray, minNebs, maxNebs, scalar
     """
     return _lib.voronoiNeighboursFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(numNebsArray), CPtrToInt(numNebsArray), 
                                         minNebs, maxNebs, len(scalars), CPtrToDouble(scalars))
+
+################################################################################
+
+# Q4 filter prototype
+_lib.Q4Filter.restype = c_int
+_lib.Q4Filter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_double, c_int, POINTER(c_double), 
+                          POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int)]
+
+# Q4 filter
+def Q4Filter(visibleAtoms, pos, minQ4, maxQ4, maxBondDistance, scalars, minPos, maxPos, cellDims, PBC):
+    """
+    Q4 filter.
+    
+    """
+    return _lib.Q4Filter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), minQ4, maxQ4, maxBondDistance, 
+                         len(scalars), CPtrToDouble(scalars), CPtrToDouble(minPos), CPtrToDouble(maxPos), CPtrToDouble(cellDims), 
+                         CPtrToInt(PBC))

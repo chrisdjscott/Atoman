@@ -241,6 +241,10 @@ class Filterer(object):
                 self.voronoiNeighboursFilter(filterSettings)
                 self.scalarsType = filterName
             
+            elif filterName == "Q4":
+                self.Q4Filter(filterSettings)
+                self.scalarsType = filterName
+            
             # write to log
             if self.parent.defectFilterSelected:
                 NVis = len(interstitials) + len(vacancies) + len(antisites) + len(splitInterstitials)
@@ -398,6 +402,23 @@ class Filterer(object):
         atom_volumes = np.asarray([vor.atomVolume(i) for i in xrange(inputState.NAtoms)], dtype=np.float64)
         
         NVisible = filtering_c.voronoiVolumeFilter(self.visibleAtoms, atom_volumes, settings.minVoroVol, settings.maxVoroVol, self.scalars)
+        
+        self.visibleAtoms.resize(NVisible, refcheck=False)
+        self.scalars.resize(NVisible, refcheck=False)
+    
+    def Q4Filter(self, settings):
+        """
+        Q4 filter
+        
+        """
+        inputState = self.pipelinePage.inputState
+        
+        # scalars array
+        if len(self.scalars) != len(self.visibleAtoms):
+            self.scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        
+        NVisible = filtering_c.Q4Filter(self.visibleAtoms, inputState.pos, settings.minQ4, settings.maxQ4, settings.maxBondDistance, 
+                                        self.scalars, inputState.minPos, inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
         self.scalars.resize(NVisible, refcheck=False)

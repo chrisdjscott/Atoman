@@ -20,3 +20,5 @@ int coordNumFilter(int, int *, double *, int *, int, double *, double *, double,
 int voronoiVolumeFilter(int, int*, int, double*, double, double, int, double*);
 
 int voronoiNeighboursFilter(int, int*, int, int*, int, int, int, double *);
+
+int Q4Filter(int, int*, int, double *, double, double, double, int, double *, double *, double *, double *, int *);

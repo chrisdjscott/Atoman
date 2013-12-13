@@ -1843,3 +1843,56 @@ class VoronoiVolumeSettingsDialog(GenericSettingsDialog):
         
         """
         self.maxVoroVol = val
+
+################################################################################
+class Q4SettingsDialog(GenericSettingsDialog):
+    """
+    Settings for Q4 filter
+    
+    """
+    def __init__(self, mainWindow, title, parent=None):
+        super(Q4SettingsDialog, self).__init__(title, parent)
+        
+        self.filterType = "Q4"
+        
+        self.minQ4 = 0.0
+        self.maxQ4 = 9999.99
+        self.maxBondDistance = 4.0
+        
+        label = QtGui.QLabel("Min ")
+        self.minQ4Spin = QtGui.QDoubleSpinBox()
+        self.minQ4Spin.setSingleStep(0.01)
+        self.minQ4Spin.setMinimum(0.0)
+        self.minQ4Spin.setMaximum(9999.99)
+        self.minQ4Spin.setValue(self.minQ4)
+        self.minQ4Spin.valueChanged[float].connect(self.setMinQ4)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.minQ4Spin)
+        
+        label = QtGui.QLabel("Max ")
+        self.maxQ4Spin = QtGui.QDoubleSpinBox()
+        self.maxQ4Spin.setSingleStep(0.01)
+        self.maxQ4Spin.setMinimum(0.0)
+        self.maxQ4Spin.setMaximum(9999.99)
+        self.maxQ4Spin.setValue(self.maxQ4)
+        self.maxQ4Spin.valueChanged[float].connect(self.setMaxQ4)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.maxQ4Spin)
+    
+    def setMinQ4(self, val):
+        """
+        Set the minimum Q4
+        
+        """
+        self.minQ4 = val
+
+    def setMaxQ4(self, val):
+        """
+        Set the maximum Q4
+        
+        """
+        self.maxQ4 = val
