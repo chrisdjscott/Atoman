@@ -11,7 +11,7 @@ view loaded lattices; set input/ref system, etc
 import os
 import sys
 
-from PySide import QtGui
+from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
@@ -151,6 +151,8 @@ class SystemsDialog(QtGui.QDialog):
         
         self.setWindowTitle("Systems dialog")
         self.setModal(False)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.mainToolbar = mainWindow
         self.mainWindow = mainWindow

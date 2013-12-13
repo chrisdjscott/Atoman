@@ -559,6 +559,8 @@ class PreferencesDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         super(PreferencesDialog, self).__init__(parent)
         
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
         self.parent = parent
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         

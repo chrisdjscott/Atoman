@@ -884,15 +884,28 @@ class MainWindow(QtGui.QMainWindow):
         Display about message.
         
         """
-        QtGui.QMessageBox.about(self, "About CDJSVis", 
-                                """<b>CDJSVis</b> %s
-                                <p>Copyright &copy; 2013 Chris Scott</p>
-                                <p>This application can be used to visualise atomistic simulations.</p>
-                                <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
-                                   by Marc Robinson.</p>
-                                <p>Python %s - Qt %s - PySide %s - VTK %s - SciPy %s - Matplotlib %s on %s""" % (
-                                __version__, platform.python_version(), QtCore.__version__, PySide.__version__,
-                                vtk.vtkVersion.GetVTKVersion(), scipy.__version__, matplotlib.__version__, platform.system()))
+#         QtGui.QMessageBox.about(self, "About CDJSVis", 
+#                                 """<b>CDJSVis</b> %s
+#                                 <p>Copyright &copy; 2013 Chris Scott</p>
+#                                 <p>This application can be used to visualise atomistic simulations.</p>
+#                                 <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
+#                                    by Marc Robinson.</p>
+#                                 <p>Python %s - Qt %s - PySide %s - VTK %s - SciPy %s - Matplotlib %s on %s""" % (
+#                                 __version__, platform.python_version(), QtCore.__version__, PySide.__version__,
+#                                 vtk.vtkVersion.GetVTKVersion(), scipy.__version__, matplotlib.__version__, platform.system()))
+        
+        msgBox = QtGui.QMessageBox()
+        msgBox.setText("""<p><b>CDJSVis</b> %s</p>
+                          <p>Copyright &copy; 2013 Chris Scott</p>
+                          <p>This application can be used to visualise atomistic simulations.</p>
+                          <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
+                             by Marc Robinson.</p>
+                          <p>Python %s - Qt %s - PySide %s - VTK %s - SciPy %s - Matplotlib %s on %s""" % (
+                          __version__, platform.python_version(), QtCore.__version__, PySide.__version__,
+                          vtk.vtkVersion.GetVTKVersion(), scipy.__version__, matplotlib.__version__, platform.system()))
+        msgBox.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
+        msgBox.exec_()
     
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):

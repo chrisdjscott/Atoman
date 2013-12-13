@@ -23,11 +23,11 @@ def main():
     app.setApplicationName("CDJSVis")
     
     # display splash screen
-    splash_pix = QtGui.QPixmap(imagePath("splash_loading.png"))
-    splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
-    splash.setMask(splash_pix.mask())
-    splash.show()
-    app.processEvents()
+#     splash_pix = QtGui.QPixmap(imagePath("splash_loading.png"))
+#     splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
+#     splash.setMask(splash_pix.mask())
+#     splash.show()
+#     app.processEvents()
     
     # main window
     mw = mainWindow.MainWindow()

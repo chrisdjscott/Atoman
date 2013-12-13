@@ -36,6 +36,8 @@ class CameraSettingsDialog(QtGui.QDialog):
     def __init__(self, parent, renderer):
         super(CameraSettingsDialog, self).__init__(parent)
         
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
         self.renderer = renderer
         
         self.setModal(True)
@@ -253,47 +255,6 @@ class CameraSettingsDialog(QtGui.QDialog):
         self.contentLayout.addWidget(row)
         
         return row
-        
-
-################################################################################
-
-class NewRendererWindowDialog(QtGui.QDialog):
-    """
-    Dialog for opening new renderer window.
-    
-    """
-    def __init__(self, parent=None):
-        super(NewRendererWindowDialog, self).__init__(parent)
-        
-        self.parent = parent
-        self.setModal(True)
-        
-        self.setWindowTitle("Open new render window")
-        self.setWindowIcon(QtGui.QIcon(iconPath("window-new.svg")))
-        
-        layout = QtGui.QVBoxLayout(self)
-        layout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        label = QtGui.QLabel("Number of viewports: ")
-        
-        NViewPortsSpin = QtGui.QSpinBox()
-        NViewPortsSpin.setMinimum(1)
-        NViewPortsSpin.setMaximum(2)
-        NViewPortsSpin.setValue(1)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(NViewPortsSpin)
-        
-        layout.addLayout(row)
-        
-        # buttons
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
-        buttonBox.accepted.connect(self.accept)
-        buttonBox.rejected.connect(self.reject)
-        
-        layout.addWidget(buttonBox)
-        
 
 ################################################################################
 
@@ -304,6 +265,8 @@ class ConsoleWindow(QtGui.QDialog):
     """
     def __init__(self, parent=None):
         super(ConsoleWindow, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.parent = parent
         self.setModal(0)
@@ -374,6 +337,8 @@ class ElementEditor(QtGui.QDialog):
     """
     def __init__(self, parent=None):
         super(ElementEditor, self).__init__(parent)
+        
+#         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.parent = parent
         self.setModal(0)
@@ -600,6 +565,8 @@ class ImageViewer(QtGui.QDialog):
     def __init__(self, mainWindow, parent=None):
         super(ImageViewer, self).__init__(parent)
         
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
         self.parent = parent
         self.mainWindow = mainWindow
         
@@ -820,6 +787,8 @@ class OnScreenInfoDialog(QtGui.QDialog):
     """
     def __init__(self, mainWindow, index, parent=None):
         super(OnScreenInfoDialog, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.parent = parent
         self.rendererWindow = parent
@@ -1251,6 +1220,8 @@ class ConfirmCloseDialog(QtGui.QDialog):
     """
     def __init__(self, parent=None):
         super(ConfirmCloseDialog, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.setModal(1)
         self.setWindowTitle("Exit application?")

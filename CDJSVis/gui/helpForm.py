@@ -22,6 +22,8 @@ class HelpForm(QtGui.QDialog):
         
         self.parent = parent
         
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
         self.setModal(0)
         
 #        self.setWindowTitle("Help")

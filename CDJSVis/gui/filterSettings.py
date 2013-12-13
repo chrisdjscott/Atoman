@@ -33,6 +33,8 @@ class GenericSettingsDialog(QtGui.QDialog):
     def __init__(self, title, parent):
         super(GenericSettingsDialog, self).__init__(parent)
         
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
         self.parent = parent
         self.mainWindow = self.parent.mainWindow
         self.pipelinePage = self.parent.filterTab

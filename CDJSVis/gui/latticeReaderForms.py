@@ -86,7 +86,7 @@ class GenericReaderForm(GenericForm):
         
         filesString = str(self.fileFormatString)
         
-        filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
+        filenames = fdiag.getOpenFileNames(self.parent.parent, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
         
         filenames = [str(fn) for fn in filenames]
         

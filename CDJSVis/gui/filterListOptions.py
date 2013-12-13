@@ -31,6 +31,8 @@ class VoronoiOptionsWindow(QtGui.QDialog):
     def __init__(self, mainWindow, parent=None):
         super(VoronoiOptionsWindow, self).__init__(parent)
         
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
         self.parent = parent
         self.mainWindow = mainWindow
         
@@ -221,6 +223,8 @@ class DisplayOptionsWindow(QtGui.QDialog):
     def __init__(self, mainWindow, parent=None):
         super(DisplayOptionsWindow, self).__init__(parent)
         
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
         self.parent = parent
         self.mainWindow = mainWindow
         
@@ -290,6 +294,8 @@ class BondsOptionsWindow(QtGui.QDialog):
     """
     def __init__(self, mainWindow, parent=None):
         super(BondsOptionsWindow, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.parent = parent
         
@@ -500,6 +506,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
     """
     def __init__(self, parent=None):
         super(ColouringOptionsWindow, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.parent = parent
         self.setModal(0)
