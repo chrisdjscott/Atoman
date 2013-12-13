@@ -566,6 +566,9 @@ int Q4Filter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, double 
 	boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
 	putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
 	
+	/* only required for boxing */
+	free(visiblePos);
+	
 	/* set up arrays for calculation */
 	NBondsForAtom = calloc(NVisibleIn, sizeof(int));
 	if (NBondsForAtom == NULL)
@@ -742,7 +745,6 @@ int Q4Filter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, double 
 	free(Q44);
 	free(NBondsForAtom);
 	freeBoxes(boxes);
-	free(visiblePos);
 	
 	return NVisible;
 }

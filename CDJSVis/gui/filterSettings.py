@@ -1882,6 +1882,25 @@ class Q4SettingsDialog(GenericSettingsDialog):
         row = self.newRow()
         row.addWidget(label)
         row.addWidget(self.maxQ4Spin)
+        
+        label = QtGui.QLabel("Max bond distance ")
+        self.maxBondDistanceSpin = QtGui.QDoubleSpinBox()
+        self.maxBondDistanceSpin.setSingleStep(0.01)
+        self.maxBondDistanceSpin.setMinimum(2.0)
+        self.maxBondDistanceSpin.setMaximum(9.99)
+        self.maxBondDistanceSpin.setValue(self.maxBondDistance)
+        self.maxBondDistanceSpin.valueChanged[float].connect(self.setMaxBondDistance)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.maxBondDistanceSpin)
+    
+    def setMaxBondDistance(self, val):
+        """
+        Set the max bond distance
+        
+        """
+        self.maxBondDistance = val
     
     def setMinQ4(self, val):
         """
