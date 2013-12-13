@@ -373,6 +373,19 @@ class LbomdXYZReaderForm(GenericReaderForm):
         self.openLatticeDialogButton.setCheckable(0)
         self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), lambda isRef=False: self.openFileDialog(isRef))
         row.addWidget(self.openLatticeDialogButton)
+        
+        # help icon
+        row = self.newRow()
+        row.RowLayout.addStretch(1)
+        
+        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
+        helpButton.setFixedWidth(20)
+        helpButton.setFixedHeight(20)
+        helpButton.setToolTip("""<p>XYZ files must be linked with a REF file!</p>
+                                 <p>If you have loaded a REF already it will automatically be linked to the XYZ files you load.</p>
+                                 <p>Otherwise, you will need to load a REF before loading XYZs.</p>""")
+        
+        row.addWidget(helpButton)
     
     def getFileName(self, isRef):
         """
