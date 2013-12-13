@@ -443,7 +443,12 @@ class LbomdXYZReaderForm(GenericReaderForm):
             filesString = str(self.fileFormatString)
         
         if isRef:
-            filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+            if platform.system() == "Darwin":
+                filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+            
+            else:
+                filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
+            
             filename = str(filename)
             
             if not len(filename):
@@ -467,7 +472,12 @@ class LbomdXYZReaderForm(GenericReaderForm):
             result = self.openFile(filename=filename, isRef=isRef)
         
         else:
-            filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+            if platform.system() == "Darwin":
+                filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+            
+            else:
+                filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
+            
             filenames = [str(fn) for fn in filenames]
             
             if not len(filenames):
