@@ -438,7 +438,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
             filesString = str(self.fileFormatString)
         
         if isRef:
-            filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
+            filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
             filename = str(filename)
             
             if not len(filename):
@@ -462,7 +462,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
             result = self.openFile(filename=filename, isRef=isRef)
         
         else:
-            filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
+            filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
             filenames = [str(fn) for fn in filenames]
             
             if not len(filenames):
