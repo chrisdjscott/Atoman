@@ -582,7 +582,7 @@ class RendererWindow(QtGui.QWidget):
                     atomInfoWindow.show()
                 
                 else:
-                    defectInfoWindow = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, parent=self)
+                    defectInfoWindow = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, minSepFilterList, parent=self)
                     defectInfoWindow.show()
     
     def leftButtonPressed(self, event):

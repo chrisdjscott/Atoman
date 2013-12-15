@@ -1299,7 +1299,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     # make LUT
     lut = setupLUT(refLattice.specieList, refLattice.specieRGB, colouringOptions)
     
-    # loop over interstitials, settings points
+    # loop over vacancies, settings points
     pos = refLattice.pos
     spec = refLattice.specie
     for i in xrange(NVac):

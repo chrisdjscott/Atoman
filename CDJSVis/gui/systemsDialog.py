@@ -220,6 +220,15 @@ class SystemsDialog(QtGui.QDialog):
         # generate input form
         self.generate_system_form = GenerateInputForm(self, self.mainWindow, self.mainToolbar)
         self.new_system_stack.addWidget(self.generate_system_form)
+        
+        # hide button
+        hideButton = QtGui.QPushButton("&Hide")
+        hideButton.clicked.connect(self.close)
+        row = QtGui.QHBoxLayout()
+        row.addStretch(1)
+        row.addWidget(hideButton)
+        row.addStretch(1)
+        dialog_layout.addLayout(row)
     
     def file_generated(self, lattice):
         """
