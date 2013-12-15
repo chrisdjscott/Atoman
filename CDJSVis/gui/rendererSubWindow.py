@@ -16,6 +16,7 @@ import numpy as np
 from ..visutils.utilities import iconPath, resourcePath
 from ..visutils import utilities
 from . import dialogs
+from . import infoDialogs
 from ..visclibs import picker as picker_c
 from ..rendering import renderer
 from .outputDialog import OutputDialog
@@ -577,11 +578,11 @@ class RendererWindow(QtGui.QWidget):
             if minSep < 0.1:
                 if minSepType == 0:
                     # show window
-                    atomInfoWindow = dialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, minSepFilterList, parent=self)
+                    atomInfoWindow = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, minSepFilterList, parent=self)
                     atomInfoWindow.show()
                 
                 else:
-                    defectInfoWindow = dialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, parent=self)
+                    defectInfoWindow = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, parent=self)
                     defectInfoWindow.show()
     
     def leftButtonPressed(self, event):
