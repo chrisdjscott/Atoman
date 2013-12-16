@@ -10,7 +10,7 @@ import sys
 from PySide import QtGui, QtCore
 
 from .genericForm import GenericForm
-from .filterForm import FilterForm
+from .filterForm import PipelineForm
 from ..visutils.utilities import iconPath
 try:
     from .. import resources
@@ -172,7 +172,7 @@ class MainToolbar(QtGui.QDockWidget):
             rw.newPipeline(name)
         
         # form
-        form = FilterForm(self, self.mainWindow, self.toolbarWidth, self.NPipelines, name)
+        form = PipelineForm(self, self.mainWindow, self.toolbarWidth, self.NPipelines, name)
         
         self.pipelineList.append(form)
         self.stackedWidget.addWidget(form)

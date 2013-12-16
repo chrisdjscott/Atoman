@@ -27,9 +27,9 @@ except ImportError:
 
 
 ################################################################################
-class FilterForm(QtGui.QWidget):
+class PipelineForm(QtGui.QWidget):
     def __init__(self, parent, mainWindow, width, pipelineIndex, pipelineString):
-        super(FilterForm, self).__init__(parent)
+        super(PipelineForm, self).__init__(parent)
         
         self.mainToolbar = parent
         self.mainWindow = mainWindow
