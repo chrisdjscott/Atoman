@@ -13,7 +13,7 @@ import glob
 import subprocess
 import tempfile
 
-from PySide import QtGui
+from PySide import QtGui, QtCore
 
 from .. import globalsModule
 
@@ -124,8 +124,16 @@ def warnExeNotFound(parent, exe):
     Warn that an executable was not located.
     
     """
-    QtGui.QMessageBox.warning(parent, "Warning", "Could not locate '%s' executable!" % (exe,))
-
+#     QtGui.QMessageBox.warning(parent, "Warning", "Could not locate '%s' executable!" % (exe,))
+    
+    message = "Could not locate '%s' executable!" % exe
+    
+    msgBox = QtGui.QMessageBox(parent)
+    msgBox.setText(message)
+    msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+    msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
+    msgBox.setIcon(QtGui.QMessageBox.Warning)
+    msgBox.exec_()
 
 ################################################################################
 def checkForExe(exe):

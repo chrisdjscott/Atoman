@@ -27,7 +27,6 @@ from .gui import helpForm
 from .gui import dialogs
 from .gui import preferences
 from .gui import rendererSubWindow
-from .gui import inputDialog
 from .gui import systemsDialog
 try:
     from . import resources
@@ -870,14 +869,28 @@ class MainWindow(QtGui.QMainWindow):
         Display warning message.
         
         """
-        QtGui.QMessageBox.warning(self, "Warning", message)
+#         QtGui.QMessageBox.warning(self, "Warning", message)
+        
+        msgBox = QtGui.QMessageBox(self)
+        msgBox.setText(message)
+        msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
+        msgBox.setIcon(QtGui.QMessageBox.Warning)
+        msgBox.exec_()
     
     def displayError(self, message):
         """
         Display error message
         
         """
-        QtGui.QMessageBox.critical(self, "Error", "A critical error has occurred.\n"+message)
+#         QtGui.QMessageBox.critical(self, "Error", "A critical error has occurred.\n"+message)
+        
+        msgBox = QtGui.QMessageBox(self)
+        msgBox.setText(message)
+        msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
+        msgBox.setIcon(QtGui.QMessageBox.Critical)
+        msgBox.exec_()
     
     def aboutMe(self):
         """
@@ -894,7 +907,7 @@ class MainWindow(QtGui.QMainWindow):
 #                                 __version__, platform.python_version(), QtCore.__version__, PySide.__version__,
 #                                 vtk.vtkVersion.GetVTKVersion(), scipy.__version__, matplotlib.__version__, platform.system()))
         
-        msgBox = QtGui.QMessageBox()
+        msgBox = QtGui.QMessageBox(self)
         msgBox.setText("""<p><b>CDJSVis</b> %s</p>
                           <p>Copyright &copy; 2013 Chris Scott</p>
                           <p>This application can be used to visualise atomistic simulations.</p>
@@ -903,8 +916,9 @@ class MainWindow(QtGui.QMainWindow):
                           <p>Python %s - Qt %s - PySide %s - VTK %s - SciPy %s - Matplotlib %s on %s""" % (
                           __version__, platform.python_version(), QtCore.__version__, PySide.__version__,
                           vtk.vtkVersion.GetVTKVersion(), scipy.__version__, matplotlib.__version__, platform.system()))
-        msgBox.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
+        msgBox.setIcon(QtGui.QMessageBox.Information)
         msgBox.exec_()
     
     def createAction(self, text, slot=None, shortcut=None, icon=None,

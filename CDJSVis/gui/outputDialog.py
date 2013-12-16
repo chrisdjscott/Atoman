@@ -1331,7 +1331,16 @@ class ImageSequenceTab(QtGui.QWidget):
         Warn the first file is not present.
         
         """
-        QtGui.QMessageBox.warning(self, "Warning", "Could not locate %s file in sequence: %s" % (tag, filename))
+#         QtGui.QMessageBox.warning(self, "Warning", "Could not locate %s file in sequence: %s" % (tag, filename))
+        
+        message = "Could not locate %s file in sequence: %s" % (tag, filename)
+        
+        msgBox = QtGui.QMessageBox(self)
+        msgBox.setText(message)
+        msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
+        msgBox.setIcon(QtGui.QMessageBox.Warning)
+        msgBox.exec_()
     
     def overwriteCheckChanged(self, val):
         """
