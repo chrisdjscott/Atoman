@@ -10,7 +10,7 @@ import sys
 from PySide import QtGui, QtCore
 
 from .genericForm import GenericForm
-from .filterForm import PipelineForm
+from .pipelineForm import PipelineForm
 from ..visutils.utilities import iconPath
 try:
     from .. import resources
