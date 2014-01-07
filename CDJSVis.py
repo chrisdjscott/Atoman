@@ -19,6 +19,8 @@ from CDJSVis.visutils.utilities import iconPath, imagePath
 def main():
     # application
     app = QtGui.QApplication(sys.argv)
+    
+    # set application info used by QSettings
     app.setOrganizationName("chrisdjscott")
     app.setApplicationName("CDJSVis")
     
@@ -29,8 +31,11 @@ def main():
 #     splash.show()
 #     app.processEvents()
     
-    # main window
-    mw = mainWindow.MainWindow()
+    # pass QDesktopWidget to app so it can access screen info
+    desktop = app.desktop()
+    
+    # create main window
+    mw = mainWindow.MainWindow(desktop)
     mw.setWindowIcon(QtGui.QIcon(iconPath("CDJSVis.ico")))
     
     # show main window and give it focus

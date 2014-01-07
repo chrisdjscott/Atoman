@@ -48,7 +48,7 @@ class MainWindow(QtGui.QMainWindow):
     
     Instances = set()
     
-    def __init__(self, parent=None):
+    def __init__(self, desktop, parent=None):
         super(MainWindow, self).__init__(parent)
         
         # multiple instances
@@ -57,6 +57,9 @@ class MainWindow(QtGui.QMainWindow):
         
         # first time show called
         self.firstShow = True
+        
+        # QDesktopWidget: gives access to screen geometry, which screen we're displayed on, etc...
+        self.desktop = desktop
         
         # initialise user interface
         self.initUI()
