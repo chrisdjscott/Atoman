@@ -295,7 +295,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         new_dir = QtGui.QFileDialog.getExistingDirectory(self, "New working directory", os.getcwd())
         
-        print "NEW DIR", new_dir
+        logging.debug("Changing directory: '%s'", new_dir)
         
         if new_dir and os.path.isdir(new_dir):
             os.chdir(new_dir)
@@ -694,6 +694,8 @@ class MainWindow(QtGui.QMainWindow):
         Try to read sim identity and PBCs from lbomd.IN
         
         """
+        logger = logging.getLogger(__name__)
+        
         if os.path.exists("lbomd.IN"):
             f = open("lbomd.IN")
             
@@ -714,8 +716,7 @@ class MainWindow(QtGui.QMainWindow):
 #                         rw.outputDialog.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
                 
                 except IndexError:
-                    self.console.write("WARNING: INDEX ERROR 1 (check lbomd.IN format)")
-                    pass
+                    logger.warning("Index error 1 (check lbomd.IN format)")
                 
                 line = f.readline().strip()
                 array = line.split()
@@ -744,7 +745,7 @@ class MainWindow(QtGui.QMainWindow):
 #                         self.loadInputDialog.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
                 
                 except IndexError:
-                    self.console.write("WARNING: INDEX ERROR 2 (check lbomd.IN format)")
+                    logger.warning("Index error 2 (check lbomd.IN format)")
             
             except Exception as e:
                 self.displayError("Read lbomd.IN failed with error:\n\n%s" % "".join(traceback.format_exception(*sys.exc_info())))

@@ -8,6 +8,7 @@ The filterer object.
 import os
 import copy
 import time
+import logging
 
 import numpy as np
 import vtk
@@ -44,6 +45,7 @@ class Filterer(object):
         self.pipelinePage = self.filterTab
         
         self.log = self.mainWindow.console.write
+        self.logger = logging.getLogger(__name__)
         
         self.NVis = 0
         self.NVac = 0
@@ -161,7 +163,7 @@ class Filterer(object):
             NVis = NAtoms
             self.NVis = NAtoms
 #            self.scalars = np.empty(NAtoms, dtype=np.float64)
-            self.log("%d visible atoms" % (len(self.visibleAtoms),), 0, 2)
+            self.logger.info("%d visible atoms", len(self.visibleAtoms))
         
         self.availableScreenInfo = {}
         
@@ -184,7 +186,7 @@ class Filterer(object):
             # filter settings
             filterSettings = currentSettings[i]
             
-            self.log("Running filter: %s" % (filterName,), 0, 2)
+            self.logger.info("Running filter: '%s'", filterName)
             
             if filterName == "Specie":
                 self.filterSpecie(filterSettings)
@@ -257,12 +259,12 @@ class Filterer(object):
             
             self.NVis = NVis
             
-            self.log("%d visible atoms" % (NVis,), 0, 3)
+            self.logger.info("  %d visible atoms", NVis)
             self.availableScreenInfo["visible"] = NVis
         
         # time to apply filters
         applyFiltersTime = time.time() - applyFiltersTime
-        self.log("Apply filters time time: %f s" % (applyFiltersTime,), 0, 0)
+        self.logger.debug("Apply filter(s) time: %f s", applyFiltersTime)
         
         # refresh available scalars in extra options dialog
         self.parent.colouringOptions.refreshScalarColourOption(self.scalarsType)
@@ -329,7 +331,7 @@ class Filterer(object):
         
         # time to render
         renderTime = time.time() - renderTime
-        self.log("Create actors time: %f s" % (renderTime,), 0, 0)
+        self.logger.debug("Create actors time: %f s", renderTime)
         
         if self.parent.visible:
             addActorsTime = time.time()
@@ -337,12 +339,11 @@ class Filterer(object):
             self.addActors()
             
             addActorsTime = time.time() - addActorsTime
-            self.log("Add actors time: %f s" % (addActorsTime,), 0, 0)
+            self.logger.debug("Add actors time: %f s" % addActorsTime)
         
         # time
         runFiltersTime = time.time() - runFiltersTime
-        
-        self.log("Apply list total time: %f s" % (runFiltersTime,), 0, 0)
+        self.logger.debug("Apply list total time: %f s", runFiltersTime)
     
     def voronoiNeighboursFilter(self, settings):
         """
@@ -355,8 +356,7 @@ class Filterer(object):
         status = self.calculateVoronoi()
         
         if status:
-            print "ERROR: VORO VOL FAILED"
-            self.log("ERROR: VORO VOL FAILED")
+            self.logger.error("Calculate Voronoi volume failed")
             self.visibleAtoms.resize(0, refcheck=False)
             return status
         
@@ -386,8 +386,7 @@ class Filterer(object):
         status = self.calculateVoronoi()
         
         if status:
-            print "ERROR: VORO VOL FAILED"
-            self.log("ERROR: VORO VOL FAILED")
+            self.logger.error("Calculate Voronoi volume failed")
             self.visibleAtoms.resize(0, refcheck=False)
             return status
         
@@ -496,7 +495,7 @@ class Filterer(object):
         if not len(self.visibleAtoms):
             return 1
         
-        self.log("Calculating bonds", 0, 2)
+        self.logger.info("  Calculating bonds")
                 
         inputState = self.pipelinePage.inputState
         specieList = inputState.specieList
@@ -553,7 +552,7 @@ class Filterer(object):
                         self.log("PAIR: %s - %s; bond range: %f -> %f" % (pair[0], pair[1], bondMin, bondMax), 0, 3)
         
         if not calcBonds:
-            self.log("No bonds to calculate", 0, 3)
+            self.logger.info("    No bonds to calculate")
             return 1
         
         # arrays for results
@@ -568,12 +567,12 @@ class Filterer(object):
                                         bondArray, NBondsArray, bondVectorArray, bondSpecieCounter)
         
         if status:
-            self.log("ERROR IN BONDS LIB (%d)" % (status,), 0, 3)
+            self.logger.error("    Error in bonds clib (%d)", status)
             return 1
         
         # total number of bonds
         NBondsTotal = np.sum(NBondsArray)
-        self.log("Total number of bonds: %d (x2 for actors)" % (NBondsTotal,), 0, 3)
+        self.logger.info("    Total number of bonds: %d (x2 for actors)", NBondsTotal)
         
         # resize bond array
         bondArray.resize(NBondsTotal)

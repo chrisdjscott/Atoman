@@ -9,6 +9,7 @@ import os
 import sys
 import glob
 import math
+import logging
 
 from PySide import QtGui, QtCore
 import vtk
@@ -39,6 +40,7 @@ class PipelineForm(QtGui.QWidget):
         self.systemsDialog = mainWindow.systemsDialog
         
         self.log = self.mainWindow.console.write
+        self.logger = logging.getLogger(__name__)
         
         self.rendererWindows = self.mainWindow.rendererWindows
         
@@ -368,7 +370,7 @@ class PipelineForm(QtGui.QWidget):
         Run all the filter lists.
         
         """
-        self.log("Running all filter lists")
+        self.logger.info("Running all filter lists")
         
         # first remove all old povray files
         oldpovfiles = glob.glob(os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_*.pov" % self.pipelineIndex))
@@ -379,10 +381,10 @@ class PipelineForm(QtGui.QWidget):
         
         count = 0
         for filterList in self.filterLists:
-            self.log("Running filter list %d" % (count,), 0, 1)
+            self.logger.info("  Running filter list %d", count)
             
             if filterList.isStaticList():
-                self.log("Static filter list: skipping", 0, 2)
+                self.logger.info("    Static filter list: skipping")
             
             else:
                 filterList.filterer.runFilters()

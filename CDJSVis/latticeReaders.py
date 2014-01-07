@@ -8,6 +8,7 @@ Lattice reader objects.
 import os
 import copy
 import re
+import logging
 
 import numpy as np
 
@@ -15,9 +16,6 @@ from .visclibs import input as input_c
 from .atoms import elements
 from .visutils import utilities
 from .lattice import Lattice
-
-
-
 
 
 ################################################################################
@@ -34,6 +32,7 @@ class GenericLatticeReader(object):
         self.displayWarning = displayWarning
         self.displayError = displayError
         self.requiresRef = False
+        self.logger = logging.getLogger(__name__)
     
     def checkForZipped(self, filename):
         """
@@ -89,7 +88,7 @@ class GenericLatticeReader(object):
 #            print "ALREADY LOADED"
 #            return -4, None
         
-        self.log("Reading file: %s" % (filename,), 0, 0)
+        self.logger.info("Reading file: '%s'", filename)
         
         filepath, zipFlag = self.checkForZipped(filename)
         if zipFlag == -1:
@@ -149,7 +148,7 @@ class LbomdXYZReader(GenericLatticeReader):
 #            print "ALREADY LOADED"
 #            return -4, None
         
-        self.log("Reading file: %s" % (xyzfilename,), 0, 0)
+        self.logger.info("Reading file: '%s'", xyzfilename)
         
         # check input exists, unzip if necessary
         filepath, zipFlag = self.checkForZipped(xyzfilename)
@@ -213,7 +212,7 @@ class LbomdXYZReader(GenericLatticeReader):
         state.reset(NAtoms)
         state.simTime = simTime
         
-        self.log("%d atoms" % (NAtoms,), 0, 1)
+        self.logger.info("  %d atoms", NAtoms)
         
         tmpForceArray = np.empty(3, np.float64)
         
@@ -242,7 +241,7 @@ class LbomdXYZReader(GenericLatticeReader):
         state.specieAtomicNumber = copy.deepcopy(refLattice.specieAtomicNumber)
         
         for i in xrange(len(state.specieList)):
-            self.log("%d %s (%s) atoms" % (state.specieCount[i], state.specieList[i], elements.atomName(state.specieList[i])), 0, 2)
+            self.logger.info("    %d %s (%s) atoms", state.specieCount[i], state.specieList[i], elements.atomName(state.specieList[i]))
         
         return 0, state
         
@@ -287,7 +286,7 @@ class LbomdRefReader(GenericLatticeReader):
         
         state.setDims(dims_array)
         
-        self.log("%d atoms" % (NAtoms,), 0, 1)
+        self.logger.info("  %d atoms", NAtoms)
         
         # temporary specie list and counter arrays
         maxNumSpecies = 20 ## if there are more than 20 species these must be changed
@@ -332,7 +331,7 @@ class LbomdRefReader(GenericLatticeReader):
             state.specieRGB[i][1] = rgbtemp[1]
             state.specieRGB[i][2] = rgbtemp[2]
             
-            self.log("%d %s (%s) atoms" % (specieCountTemp[i], specieListTemp[i], elements.atomName(specieListTemp[i])), 0, 2)
+            self.logger.info("    %d %s (%s) atoms", specieCountTemp[i], specieListTemp[i], elements.atomName(specieListTemp[i]))
     
         return 0, state
 
@@ -376,7 +375,7 @@ class LbomdDatReader(GenericLatticeReader):
         
         state.setDims(dims_array)
         
-        self.log("%d atoms" % (NAtoms,), 0, 1)
+        self.logger.info("  %d atoms", NAtoms)
         
         # need temporary specie list and counter arrays
         maxNumSpecies = 20
@@ -419,7 +418,7 @@ class LbomdDatReader(GenericLatticeReader):
             state.specieRGB[i][1] = rgbtemp[1]
             state.specieRGB[i][2] = rgbtemp[2]
             
-            self.log("%d %s (%s) atoms" % (specieCountTemp[i], specieListTemp[i], elements.atomName(specieListTemp[i])), 0, 2)
+            self.logger.info("    %d %s (%s) atoms", specieCountTemp[i], specieListTemp[i], elements.atomName(specieListTemp[i]))
         
         # guess roulette
         if rouletteIndex is None:
@@ -447,5 +446,3 @@ class LbomdDatReader(GenericLatticeReader):
             state.barrier = utilities.getBarrierFromRoulette(rouletteIndex)
         
         return 0, state
-
-
