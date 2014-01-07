@@ -563,63 +563,78 @@ class LoggingSettingsForm(GenericPreferencesSettingsForm):
     def __init__(self, parent):
         super(LoggingSettingsForm, self).__init__(parent)
         
-        self.loggingLevels = ["CRITICAL",
-                              "ERROR",
-                              "WARNING",
-                              "INFO",
-                              "DEBUG",
-                              "NOTSET"]
+        self.loggingLevels = {"CRITICAL": logging.CRITICAL,
+                              "ERROR": logging.ERROR,
+                              "WARNING": logging.WARNING,
+                              "INFO": logging.INFO,
+                              "DEBUG": logging.DEBUG,
+                              "NOTSET": logging.NOTSET}
+        
+        self.loggingLevelsSorted = ["CRITICAL",
+                                    "ERROR",
+                                    "WARNING",
+                                    "INFO",
+                                    "DEBUG",
+                                    "NOTSET"]
+        
+        settings = QtCore.QSettings()
         
         # should get these from settings
-        self.consoleWindowLevelIndex = 3
+        consoleLevel = settings.value("logging/console", logging.INFO)
+        consoleLevelIndex = self.getLevelIndex(consoleLevel)
         
         # console window settings
-        self.consoleWindowLevelCombo = QtGui.QComboBox()
-        self.consoleWindowLevelCombo.addItems(self.loggingLevels)
-        self.consoleWindowLevelCombo.setCurrentIndex(self.consoleWindowLevelIndex)
-        self.consoleWindowLevelCombo.currentIndexChanged.connect(self.consoleWindowLevelChanged)
+        self.consoleLevelCombo = QtGui.QComboBox()
+        self.consoleLevelCombo.addItems(self.loggingLevelsSorted)
+        self.consoleLevelCombo.currentIndexChanged[str].connect(self.consoleLevelChanged)
+        self.consoleLevelCombo.setCurrentIndex(consoleLevelIndex)
         
         label = QtGui.QLabel("Console window level:")
         
         row = self.newRow()
         row.addWidget(label)
-        row.addWidget(self.consoleWindowLevelCombo)
+        row.addWidget(self.consoleLevelCombo)
         
         
         
         
         self.init()
     
-    def consoleWindowLevelChanged(self, levelIndex):
+    def getLevelIndex(self, level):
+        """
+        Return index of level
+        
+        """
+        levelKey = None
+        for key, val in self.loggingLevels.iteritems():
+            if val == level:
+                levelKey = key
+                break
+        
+        if levelKey is None:
+            logger = logging.getLogger(__name__)
+            logger.critical("No match for log level: %s", str(level))
+            return 2
+        
+        return self.loggingLevelsSorted.index(levelKey)
+    
+    def consoleLevelChanged(self, levelKey):
         """
         Console window logging level has changed
         
         """
-        logger = logging.getLogger(__name__)
-        print "CONSOLE WINDOW LOGGING LEVEL CHANGED", levelIndex
-        
-        level = self.loggingLevels[levelIndex]
-        
-        # getting level attribute from logging module
-        loggingLevel = getattr(logging, level, None)
-        if loggingLevel is None:
-            logging.critical("Error getting level attribute from logging: '%s'", level)
-            return
+        levelKey = str(levelKey)
+        level = self.loggingLevels[levelKey]
         
         # get handler (console window is second)
         handler = logging.getLogger().handlers[1]
         
         # set level
-        handler.setLevel(loggingLevel)
-        
-        logger.critical("critical")
-        logger.error("error")
-        logger.warning("warning")
-        logger.info("info")
-        logger.debug("debug")
+        handler.setLevel(level)
         
         # update settings
-        
+        settings = QtCore.QSettings()
+        settings.setValue("logging/console", level)
 
 ################################################################################
 

@@ -21,6 +21,40 @@ from .. import globalsModule
 
 ################################################################################
 
+def setupLogging(argv):
+    """
+    Setup logger from command line args or QSettings
+    
+    """
+    # set default logging
+    #   first check command line args
+    #   next check QSettings
+    #   finally use default of WARNING
+    level = None
+    if len(argv) > 1:
+        if "DEBUG" in argv:
+            level = logging.DEBUG
+        
+        elif "INFO" in argv:
+            level = logging.INFO
+        
+        elif "WARNING" in argv:
+            level = logging.WARNING
+        
+        elif "ERROR" in argv:
+            level = logging.ERROR
+        
+        elif "CRITICAL" in argv:
+            level = logging.CRITICAL
+        
+    if level is None:
+        settings = QtCore.QSettings()
+        level = settings.value("logging/standard", logging.WARNING)
+    
+    logging.getLogger().handlers[0].setLevel(level)
+
+################################################################################
+
 class TextEditHandler(logging.Handler):
     """
     Logging handler than outputs to a QTextEdit

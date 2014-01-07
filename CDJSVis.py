@@ -6,13 +6,20 @@ Initialise application.
 @author: Chris Scott
 
 """
+# configure logging (we have to set logging.NOTSET here as global for root logger)
+import logging
+logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s", level=logging.NOTSET)
+
+# set default for stream handler (we don't want it to be NOTSET by default)
+logging.getLogger().handlers[0].setLevel(logging.WARNING)
+
 import sys
 import multiprocessing
 
 from PySide import QtGui, QtCore
 
 from CDJSVis import mainWindow
-from CDJSVis.visutils.utilities import iconPath, imagePath
+from CDJSVis.visutils.utilities import iconPath, imagePath, setupLogging
 
 ################################################################################
 
@@ -30,6 +37,9 @@ def main():
 #     splash.setMask(splash_pix.mask())
 #     splash.show()
 #     app.processEvents()
+    
+    # set default logging
+    setupLogging(sys.argv)
     
     # pass QDesktopWidget to app so it can access screen info
     desktop = app.desktop()

@@ -62,9 +62,6 @@ class MainWindow(QtGui.QMainWindow):
         # QDesktopWidget: gives access to screen geometry, which screen we're displayed on, etc...
         self.desktop = desktop
         
-        # configure logging
-        logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s")
-        
         # initialise user interface
         self.initUI()
         
