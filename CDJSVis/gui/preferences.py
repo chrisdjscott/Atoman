@@ -7,6 +7,7 @@ Preferences dialog
 """
 import os
 import sys
+import logging
 
 from PySide import QtGui, QtCore
 
@@ -463,6 +464,9 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
     def __init__(self, parent):
         super(ForcesSettingsForm, self).__init__(parent)
         
+        # logging
+        logger = logging.getLogger(__name__)
+        
         # settings object
         settings = QtCore.QSettings()
         
@@ -474,7 +478,7 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
         self.pathToMDDir = str(settings.value("forces/pathToMDDir", ""))
         if len(self.pathToMDDir) and not os.path.isdir(self.pathToMDDir):
             self.pathToMDDir = ""
-        print "PATH TO MD DIR INI", self.pathToMDDir
+        logger.debug("Path to MD dir ini: '%s'", self.pathToMDDir)
         
         if not len(self.pathToMDDir):
             self.forcesConfig.md_dir = resourcePath("", dirname="md")
@@ -482,11 +486,11 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
         else:
             self.forcesConfig.md_dir = self.pathToMDDir
         
-        print "CONFIG PATH TO MD DIR INI", self.forcesConfig.md_dir
+        logger.debug("Config path to MD dir ini: '%s'", self.forcesConfig.md_dir)
         
         # interface type
         self.interfaceType = str(settings.value("forces/interface", "LBOMD"))
-        print "FORCE INTERFACE INI", self.interfaceType
+        logger.debug("Force interface ini: '%s'", self.interfaceType)
         
         self.forcesConfig.md_type = self.interfaceType
         
@@ -551,6 +555,74 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
 
 ################################################################################
 
+class LoggingSettingsForm(GenericPreferencesSettingsForm):
+    """
+    Logging preferences
+    
+    """
+    def __init__(self, parent):
+        super(LoggingSettingsForm, self).__init__(parent)
+        
+        self.loggingLevels = ["CRITICAL",
+                              "ERROR",
+                              "WARNING",
+                              "INFO",
+                              "DEBUG",
+                              "NOTSET"]
+        
+        # should get these from settings
+        self.consoleWindowLevelIndex = 3
+        
+        # console window settings
+        self.consoleWindowLevelCombo = QtGui.QComboBox()
+        self.consoleWindowLevelCombo.addItems(self.loggingLevels)
+        self.consoleWindowLevelCombo.setCurrentIndex(self.consoleWindowLevelIndex)
+        self.consoleWindowLevelCombo.currentIndexChanged.connect(self.consoleWindowLevelChanged)
+        
+        label = QtGui.QLabel("Console window level:")
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.consoleWindowLevelCombo)
+        
+        
+        
+        
+        self.init()
+    
+    def consoleWindowLevelChanged(self, levelIndex):
+        """
+        Console window logging level has changed
+        
+        """
+        logger = logging.getLogger(__name__)
+        print "CONSOLE WINDOW LOGGING LEVEL CHANGED", levelIndex
+        
+        level = self.loggingLevels[levelIndex]
+        
+        # getting level attribute from logging module
+        loggingLevel = getattr(logging, level, None)
+        if loggingLevel is None:
+            logging.critical("Error getting level attribute from logging: '%s'", level)
+            return
+        
+        # get handler (console window is second)
+        handler = logging.getLogger().handlers[1]
+        
+        # set level
+        handler.setLevel(loggingLevel)
+        
+        logger.critical("critical")
+        logger.error("error")
+        logger.warning("warning")
+        logger.info("info")
+        logger.debug("debug")
+        
+        # update settings
+        
+
+################################################################################
+
 class PreferencesDialog(QtGui.QDialog):
     """
     Preferences dialog.
@@ -578,6 +650,10 @@ class PreferencesDialog(QtGui.QDialog):
         
         # add toolbox to layout
         dlgLayout.addWidget(self.toolbox)
+        
+        # logging tab
+        self.loggingForm = LoggingSettingsForm(self)
+        self.toolbox.addItem(self.loggingForm, QtGui.QIcon(iconPath("logging-icon.png")), "Logging")
         
         # povray tab
         self.povrayForm = PovraySettingsForm(self)

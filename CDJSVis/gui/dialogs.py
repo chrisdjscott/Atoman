@@ -8,6 +8,7 @@ Additional dialogs.
 import os
 import sys
 import copy
+import logging
 
 from PySide import QtGui, QtCore
 import numpy as np
@@ -303,6 +304,22 @@ class ConsoleWindow(QtGui.QDialog):
         buttonLayout.addWidget(self.closeButton)
         
         consoleLayout.addWidget(buttonWidget)
+        
+        # logging handler
+        handler = utilities.TextEditHandler(self.textWidget)
+        handler.setLevel(logging.INFO)
+        
+        formatter = logging.Formatter("%(levelname)s: %(name)s: %(message)s")
+        handler.setFormatter(formatter)
+        
+        # add to root logger
+        logging.getLogger().addHandler(handler)
+        
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
+        
+        root = logging.getLogger()
+        print "HANDLERS", root.handlers
         
         
     def clearText(self):

@@ -10,6 +10,7 @@ import shutil
 import platform
 import tempfile
 import traceback
+import logging
 
 from PySide import QtGui, QtCore
 import PySide
@@ -61,6 +62,9 @@ class MainWindow(QtGui.QMainWindow):
         # QDesktopWidget: gives access to screen geometry, which screen we're displayed on, etc...
         self.desktop = desktop
         
+        # configure logging
+        logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s")
+        
         # initialise user interface
         self.initUI()
         
@@ -72,6 +76,11 @@ class MainWindow(QtGui.QMainWindow):
         Initialise the interface.
         
         """
+#         logging.getLogger().setLevel(logging.DEBUG)
+        
+        logger = logging.getLogger(__name__)
+        logger.debug("Initialising user interface")
+        
         # defaults
         self.refFile = ""
         self.inputFile = ""
@@ -84,9 +93,7 @@ class MainWindow(QtGui.QMainWindow):
         self.verboseLevel = 3
         self.mouseMotion = 0
         
-        print "*"*40 + "DEBUG" + "*"*40
-        print "RESOURCE PATH", resourcePath("lbomd.IN", dirname="md_input"), os.path.exists(resourcePath("lbomd.IN", dirname="md_input"))
-        print "*"*38 + "END DEBUG" + "*"*38
+        logger.debug("MD resource path: %s (exists %s)", resourcePath("lbomd.IN", dirname="md_input"), os.path.exists(resourcePath("lbomd.IN", dirname="md_input")))
         
         # initiate lattice objects for storing reference and input states
 #         self.inputState = lattice.Lattice()
@@ -97,17 +104,17 @@ class MainWindow(QtGui.QMainWindow):
         
         # initial directory
         currentDir = str(settings.value("mainWindow/currentDirectory", ""))
-        print "DIR", currentDir
+        logger.debug("Settings dir: '%s'", currentDir)
         
         if hasattr(sys, "_MEIPASS"):
             if not len(currentDir) or not os.path.exists(currentDir):
                 # change to home directory if running from pyinstaller bundle
                 currentDir = os.environ.get("HOME")
-                print "DIR", currentDir
+                logger.debug("Change dir $HOME: '%s'", currentDir)
         
         else:
             currentDir = os.getcwd()
-            print "DIR", currentDir
+            logger.debug("Use CWD: '%s'", currentDir)
         
         os.chdir(currentDir)
         

@@ -12,10 +12,33 @@ import string
 import glob
 import subprocess
 import tempfile
+import logging
 
 from PySide import QtGui, QtCore
 
 from .. import globalsModule
+
+
+################################################################################
+
+class TextEditHandler(logging.Handler):
+    """
+    Logging handler than outputs to a QTextEdit
+    
+    """
+    def __init__(self, textEdit):
+        super(TextEditHandler, self).__init__()
+        
+        # text edit
+        self.textEdit = textEdit
+    
+    def emit(self, record):
+        """
+        Write log message
+         
+        """
+        record.message = self.format(record)
+        self.textEdit.append("> %s" % record.message)
 
 ################################################################################
 

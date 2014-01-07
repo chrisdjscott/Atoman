@@ -49,6 +49,7 @@ else:
 
 class VTKRenWinInteractOverride(vtk.vtkGenericRenderWindowInteractor):
     def Initialize(self):
+        # initialize
         self.Initialized = 1
         self.Enable()
 
@@ -147,7 +148,10 @@ class QVTKRenderWindowInteractor(MSWidget):
     mouseMoveOverride = QtCore.Signal(QtCore.QEvent)
 
     def __init__(self, parent=None, **kw):
-        logging.debug("In QVTKRenderWindowInteractor::__init__()")
+        # logger
+        self.logger = logging.getLogger(__name__)
+        
+        self.logger.log(1, "In QVTKRenderWindowInteractor::__init__()")
         # the current button
         self._ActiveButton = QtCore.Qt.NoButton
 
@@ -212,7 +216,7 @@ class QVTKRenderWindowInteractor(MSWidget):
 
     def __getattr__(self, attr):
         """Makes the object behave like a vtkGenericRenderWindowInteractor"""
-        logging.debug("In QVTKRenderWindowInteractor::__getattr__()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::__getattr__()")
         if attr == '__vtk__':
             return lambda t=self._Iren: t
         elif hasattr(self._Iren, attr):
@@ -222,21 +226,21 @@ class QVTKRenderWindowInteractor(MSWidget):
                   " has no attribute named " + attr
 
     def CreateTimer(self, obj, evt):
-        logging.debug("In QVTKRenderWindowInteractor::CreateTimer()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::CreateTimer()")
         self._Timer.start(10)
 
     def DestroyTimer(self, obj, evt):
-        logging.debug("In QVTKRenderWindowInteractor::DestroyTimer()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::DestroyTimer()")
         self._Timer.stop()
         return 1
 
     def TimerEvent(self):
-        logging.debug("In QVTKRenderWindowInteractor::TimerEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::TimerEvent()")
         self._Iren.TimerEvent()
 
     def CursorChangedEvent(self, obj, evt):
         """Called when the CursorChangedEvent fires on the render window."""
-        logging.debug("In QVTKRenderWindowInteractor::CursorChangedEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::CursorChangedEvent()")
         # This indirection is needed since when the event fires, the current
         # cursor is not yet set so we defer this by which time the current
         # cursor should have been set.
@@ -244,30 +248,30 @@ class QVTKRenderWindowInteractor(MSWidget):
 
     def HideCursor(self):
         """Hides the cursor."""
-        logging.debug("In QVTKRenderWindowInteractor::HideCursor()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::HideCursor()")
         self.setCursor(QtCore.Qt.BlankCursor)
 
     def ShowCursor(self):
         """Shows the cursor."""
-        logging.debug("In QVTKRenderWindowInteractor::ShowCursor()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::ShowCursor()")
         vtk_cursor = self._Iren.GetRenderWindow().GetCurrentCursor()
         qt_cursor = self._CURSOR_MAP.get(vtk_cursor, QtCore.Qt.ArrowCursor)
         self.setCursor(qt_cursor)
 
     def sizeHint(self):
-        logging.debug("In QVTKRenderWindowInteractor::sizeHint()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::sizeHint()")
         return QtCore.QSize(400, 400)
 
     def paintEngine(self):
-        logging.debug("In QVTKRenderWindowInteractor::paintEngine()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::paintEngine()")
         return None
 
     def paintEvent(self, ev):
-        logging.debug("In QVTKRenderWindowInteractor::paintEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::paintEvent()")
         self._RenderWindow.Render()
 
     def resizeEvent(self, ev):
-        logging.debug("In QVTKRenderWindowInteractor::resizeEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::resizeEvent()")
         if self._should_set_parent_info:
             # Set the window info and parent info on every resize.
             # vtkWin32OpenGLRenderWindow will render using incorrect offsets if
@@ -292,7 +296,7 @@ class QVTKRenderWindowInteractor(MSWidget):
         self._Iren.SetSize(w, h)
 
     def _GetCtrlShift(self, ev):
-        logging.debug("In QVTKRenderWindowInteractor::_GetCtrlShift()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::_GetCtrlShift()")
         ctrl = shift = False
 
         if hasattr(ev, 'modifiers'):
@@ -309,7 +313,7 @@ class QVTKRenderWindowInteractor(MSWidget):
         return ctrl, shift
 
     def enterEvent(self, ev):
-        logging.debug("In QVTKRenderWindowInteractor::enterEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::enterEvent()")
         if not self.hasFocus():
             self.__oldFocus = self.focusWidget()
             self.setFocus()
@@ -320,7 +324,7 @@ class QVTKRenderWindowInteractor(MSWidget):
         self._Iren.EnterEvent()
 
     def leaveEvent(self, ev):
-        logging.debug("In QVTKRenderWindowInteractor::leaveEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::leaveEvent()")
         if self.__saveButtons == QtCore.Qt.NoButton and self.__oldFocus:
             self.__oldFocus.setFocus()
             self.__oldFocus = None
@@ -331,7 +335,7 @@ class QVTKRenderWindowInteractor(MSWidget):
         self._Iren.LeaveEvent()
 
     def mousePressEvent(self, ev):
-        logging.debug("In QVTKRenderWindowInteractor::mousePressEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::mousePressEvent()")
         ctrl, shift = self._GetCtrlShift(ev)
         repeat = 0
         if ev.type() == QtCore.QEvent.MouseButtonDblClick:
@@ -352,7 +356,7 @@ class QVTKRenderWindowInteractor(MSWidget):
             self._Iren.MiddleButtonPressEvent()
 
     def mouseReleaseEvent(self, ev):
-        logging.debug("In QVTKRenderWindowInteractor::mouseReleaseEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::mouseReleaseEvent()")
         ctrl, shift = self._GetCtrlShift(ev)
         self._Iren.SetEventInformationFlipY(ev.x(), ev.y(),
                                             ctrl, shift, chr(0), 0, None)
@@ -368,7 +372,7 @@ class QVTKRenderWindowInteractor(MSWidget):
             self._Iren.MiddleButtonReleaseEvent()
 
     def mouseMoveEvent(self, ev):
-        logging.debug("In QVTKRenderWindowInteractor::mouseMoveEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::mouseMoveEvent()")
         self.__saveModifiers = ev.modifiers()
         self.__saveButtons = ev.buttons()
         self.__saveX = ev.x()
@@ -381,7 +385,7 @@ class QVTKRenderWindowInteractor(MSWidget):
         self.mouseMoveOverride.emit(ev)
 
     def keyPressEvent(self, ev):
-        logging.debug("In QVTKRenderWindowInteractor::keyPressEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::keyPressEvent()")
         ctrl, shift = self._GetCtrlShift(ev)
         if ev.key() < 256:
             key = str(ev.text())
@@ -396,7 +400,7 @@ class QVTKRenderWindowInteractor(MSWidget):
         self._Iren.CharEvent()
 
     def keyReleaseEvent(self, ev):
-        logging.debug("In QVTKRenderWindowInteractor::keyReleaseEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::keyReleaseEvent()")
         ctrl, shift = self._GetCtrlShift(ev)
         if ev.key() < 256:
             key = chr(ev.key())
@@ -408,18 +412,18 @@ class QVTKRenderWindowInteractor(MSWidget):
         self._Iren.KeyReleaseEvent()
 
     def wheelEvent(self, ev):
-        logging.debug("In QVTKRenderWindowInteractor::wheelEvent()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::wheelEvent()")
         if ev.delta() >= 0:
             self._Iren.MouseWheelForwardEvent()
         else:
             self._Iren.MouseWheelBackwardEvent()
 
     def GetRenderWindow(self):
-        logging.debug("In QVTKRenderWindowInteractor::GetRenderWindow()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::GetRenderWindow()")
         return self._RenderWindow
 
     def Render(self):
-        logging.debug("In QVTKRenderWindowInteractor::Render()")
+        self.logger.log(1, "In QVTKRenderWindowInteractor::Render()")
         self.update()
 
 
