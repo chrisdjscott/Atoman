@@ -322,6 +322,12 @@ class ConsoleWindow(QtGui.QDialog):
         logger = logging.getLogger(__name__)
         logger.setLevel(level)
         logger.debug("Initial console window logging level: %s", logging.getLevelName(level))
+        
+#         logger.debug("test message")
+#         logger.info("test message")
+#         logger.warning("test message")
+#         logger.error("test message")
+#         logger.critical("test message")
     
     def clearText(self):
         """

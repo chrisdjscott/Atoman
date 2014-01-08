@@ -93,6 +93,7 @@ class GenericLatticeReader(object):
         filepath, zipFlag = self.checkForZipped(filename)
         if zipFlag == -1:
             self.displayWarning("Could not find file: "+filename)
+            self.logger.warning("Could not find file: %s", filename)
             return -1, None
         
         status, state = self.readFileMain(filepath, rouletteIndex)
@@ -102,15 +103,19 @@ class GenericLatticeReader(object):
         if status:
             if status == -1:
                 self.displayWarning("Could not find file: "+filename)
+                self.logger.warning("Could not find file: %s", filename)
             
             elif status == -2:
                 self.displayWarning("LBOMD XYZ input NAtoms does not match reference!")
+                self.logger.warning("LBOMD XYZ input NAtoms does not match reference!")
             
             elif status == -3:
                 self.displayWarning("Unrecognised format for input file!")
+                self.logger.warning("Unrecognised format for input file!")
             
             else:
                 self.displayWarning("Input file read failed with error code: %s" % str(status))
+                self.logger.warning("Input file read failed with error code: %s", str(status))
         
         elif state is not None:
             self.currentFile = os.path.abspath(filename)
@@ -154,6 +159,7 @@ class LbomdXYZReader(GenericLatticeReader):
         filepath, zipFlag = self.checkForZipped(xyzfilename)
         if zipFlag == -1:
             self.displayWarning("Could not find file: "+xyzfilename)
+            self.logger.warning("Could not find file: %s", xyzfilename)
             return -1, None
         
         # read input
@@ -164,12 +170,15 @@ class LbomdXYZReader(GenericLatticeReader):
         if status:
             if status == -1:
                 self.displayWarning("Could not find file: "+xyzfilename)
+                self.logger.warning("Could not find file: %s", xyzfilename)
             
             elif status == -2:
                 self.displayWarning("LBOMD XYZ input NAtoms does not match reference!")
+                self.logger.warning("LBOMD XYZ input NAtoms does not match reference!")
             
             elif status == -3:
                 self.displayWarning("Unrecognised format for LBOMD XYZ input file!")
+                self.logger.warning("Unrecognised format for input file!")
         
         elif state is not None:
             self.currentFile = os.path.abspath(xyzfilename)

@@ -549,7 +549,7 @@ class Filterer(object):
                         
                         drawList.append("%s-%s" % (syma, symb))
                         
-                        self.log("PAIR: %s - %s; bond range: %f -> %f" % (pair[0], pair[1], bondMin, bondMax), 0, 3)
+                        self.logger.info("    Pair: %s - %s; bond range: %f -> %f", pair[0], pair[1], bondMin, bondMax)
         
         if not calcBonds:
             self.logger.info("    No bonds to calculate")
@@ -594,7 +594,7 @@ class Filterer(object):
                     if i != j:
                         NBondsPair += bondSpecieCounter[j][i]
                     
-                    self.log("%d %s - %s bonds" % (NBondsPair, syma, symb), 0, 4)
+                    self.logger.info("      %d %s - %s bonds", NBondsPair, syma, symb)
         
         # draw bonds
         if NBondsTotal > 0:
@@ -690,7 +690,7 @@ class Filterer(object):
         refState = self.pipelinePage.refState
         
         if inputState.NAtoms != refState.NAtoms:
-            self.log("WARNING: cannot run displacement filter with different numbers of input and reference atoms: skipping this filter list")
+            self.logger.warning("Cannot run displacement filter with different numbers of input and reference atoms: skipping this filter list")
             self.visibleAtoms.resize(0, refcheck=False)
         
         else:
@@ -874,39 +874,39 @@ class Filterer(object):
         splitInterstitials.resize(NSplit*3)
         
         # report counters
-        self.log("Found %d defects" % (NDef,), 0, 3)
+        self.logger.info("Found %d defects", NDef)
         
         if settings.showVacancies:
-            self.log("%d vacancies" % (NVac,), 0, 4)
+            self.logger.info("  %d vacancies", NVac)
             for i in xrange(len(refLattice.specieList)):
-                self.log("%d %s vacancies" % (vacSpecCount[i], refLattice.specieList[i]), 0, 5)
+                self.logger.info("    %d %s vacancies", vacSpecCount[i], refLattice.specieList[i])
         
         if settings.showInterstitials:
-            self.log("%d interstitials" % (NInt + NSplit,), 0, 4)
+            self.logger.info("  %d interstitials", NInt + NSplit)
             for i in xrange(len(inputLattice.specieList)):
-                self.log("%d %s interstitials" % (intSpecCount[i], inputLattice.specieList[i]), 0, 5)
+                self.logger.info("    %d %s interstitials", intSpecCount[i], inputLattice.specieList[i])
         
             if settings.identifySplitInts:
-                self.log("%d split interstitials" % (NSplit,), 0, 5)
+                self.logger.info("    %d split interstitials", NSplit)
                 for i in xrange(len(inputLattice.specieList)):
                     for j in xrange(i, len(inputLattice.specieList)):
                         if j == i:
                             N = splitIntSpecCount[i][j]
                         else:
                             N = splitIntSpecCount[i][j] + splitIntSpecCount[j][i]
-                        self.log("%d %s - %s split interstitials" % (N, inputLattice.specieList[i], inputLattice.specieList[j]), 0, 6)
+                        self.logger.info("      %d %s - %s split interstitials", N, inputLattice.specieList[i], inputLattice.specieList[j])
         
         if settings.showAntisites:
-            self.log("%d antisites" % (NAnt,), 0, 4)
+            self.logger.info("  %d antisites", NAnt)
             for i in xrange(len(refLattice.specieList)):
                 for j in xrange(len(inputLattice.specieList)):
                     if inputLattice.specieList[j] == refLattice.specieList[i]:
                         continue
                     
-                    self.log("%d %s on %s antisites" % (onAntSpecCount[i][j], inputLattice.specieList[j], refLattice.specieList[i]), 0, 6)
+                    self.logger.info("    %d %s on %s antisites", onAntSpecCount[i][j], inputLattice.specieList[j], refLattice.specieList[i])
         
         if settings.identifySplitInts:
-            self.log("Split int analysis")
+            self.logger.info("Splint interstitial analysis")
             
             PBC = self.pipelinePage.PBC
             cellDims = inputLattice.cellDims
@@ -921,7 +921,7 @@ class Filterer(object):
                 sepVec = vectors.separationVector(pos1, pos2, cellDims, PBC)
                 norm = vectors.normalise(sepVec)
                 
-                self.log("Orientation of split int %d: (%.3f %.3f %.3f)" % (i, norm[0], norm[1], norm[2]), 0, 1)
+                self.logger.info("  Orientation of split int %d: (%.3f %.3f %.3f)", i, norm[0], norm[1], norm[2])
         
         # sort clusters here
         clusterList = []
@@ -1306,8 +1306,8 @@ class Filterer(object):
                     
                     volume, area = clusters.findConvexHullVolume(len(cluster), clusterPos)
                 
-                self.log("Cluster %d (%d atoms)" % (count, len(cluster)), 0, 4)
-                self.log("volume is %f; facet area is %f" % (volume, area), 0, 5)
+                self.logger.info("  Cluster %d (%d atoms)", count, len(cluster))
+                self.logger.info("    volume is %f; facet area is %f", volume, area)
                 
                 count += 1
         
@@ -1324,8 +1324,8 @@ class Filterer(object):
                 for index in cluster:
                     volume += vor.atomVolume(index)
                 
-                self.log("Cluster %d (%d atoms)" % (count, len(cluster)), 0, 4)
-                self.log("volume is %f" % volume, 0, 5)
+                self.logger.info("  Cluster %d (%d atoms)", count, len(cluster))
+                self.logger.info("    volume is %f", volume)
                 
                 count += 1
         
@@ -1374,10 +1374,10 @@ class Filterer(object):
                         if bondMax > 0:
                             calcBonds = True
                         
-                        self.log("%s - %s; bond range: %f -> %f" % (symi, symj, bondMin, bondMax), 0, 3)
+                        self.logger.info("  %s - %s; bond range: %f -> %f", symi, symj, bondMin, bondMax)
         
         if not calcBonds:
-            self.log("No bonds defined: all coordination numbers will be zero", 0, 3)
+            self.logger.warning("No bonds defined: all coordination numbers will be zero")
         
         # scalars array
         if len(self.scalars) != len(self.visibleAtoms):

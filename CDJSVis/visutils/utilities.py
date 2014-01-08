@@ -78,17 +78,17 @@ class TextEditHandler(logging.Handler):
         level = record.levelno
         
         if level >= 50:
-            colour = QtCore.Qt.yellow
+            colour = QtCore.Qt.cyan
         elif level >= 40:
-            colour = QtCore.Qt.magenta
-        elif level >= 30:
             colour = QtCore.Qt.red
+        elif level >= 30:
+            colour = QtCore.Qt.magenta
         elif level >= 20:
             colour = QtCore.Qt.black
         elif level >= 10:
             colour = QtCore.Qt.blue
         else:
-            colour = QtCore.Qt.green
+            colour = QtCore.Qt.gray
         
         # set colour
         self.textEdit.setTextColor(colour)

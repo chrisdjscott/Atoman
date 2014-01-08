@@ -7,6 +7,7 @@ Module for rendering Voronoi cells
 """
 import os
 import time
+import logging
 
 import numpy as np
 import vtk
@@ -43,11 +44,11 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
     Return actors for Voronoi cells
     
     """
+    logger = logging.getLogger(__name__)
+    
     renderVoroTime = time.time()
     
-    print "RENDER VORONOI"
-    if log is not None:
-        log("Rendering Voronoi volumes")
+    logger.debug("Rendering Voronoi volumes")
     
     # setup LUT
     lut = setupLUT(inputState.specieList, inputState.specieRGB, colouringOptions)
@@ -60,7 +61,8 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         out_pos = voronoi.getInputAtomPos(index)
         
         sep = vectors.separation(inp_pos, out_pos, inputState.cellDims, np.ones(3, np.int32))
-        assert sep < 1e-4, "ERROR: VORO OUTPUT ORDERING DIFFERENT (%f)" % sep
+        if sep > 1e-4:
+            logger.error("Voro output ordering different (%f)", sep)
         
         # faces
         faces = voronoi.atomFaces(index)
@@ -125,9 +127,7 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
     
     renderVoroTime = time.time() - renderVoroTime
     
-    print "RENDER VORO TIME", renderVoroTime
-    if log is not None:
-        log("  Voronoi render time: %f" % renderVoroTime)
+    logger.debug("  Render Voronoi time: %f", renderVoroTime)
 
 ################################################################################
 def writePOVRayVoroVolumeTriangles(facets, pos, filename, settings, colour_rgb):

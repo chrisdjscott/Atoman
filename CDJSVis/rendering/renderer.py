@@ -9,6 +9,7 @@ import os
 import sys
 import shutil
 import glob
+import logging
 
 import numpy as np
 import vtk
@@ -36,6 +37,7 @@ class Renderer(object):
         self.renWin = self.parent.vtkRenWin
         
         self.log = self.parent.mainWindow.console.write
+        self.logger = logging.getLogger(__name__)
         
         # is the interactor initialised
         self.init = 0
@@ -383,7 +385,7 @@ class Renderer(object):
             renIndex = self.parent.rendererIndex
             pipelineIndex = self.parent.currentPipelineIndex
             
-            print "REN %d; PIPE %d" % (renIndex, pipelineIndex)
+            self.logger.debug("Ren %d; PIPE %d", renIndex, pipelineIndex)
             
             # header file
             povfile = os.path.join(self.mainWindow.tmpDirectory, "renderer%d_header.pov" % renIndex)
@@ -475,7 +477,7 @@ class Renderer(object):
             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.ini" % renIndex))
         
         if not os.path.exists(filename):
-            print "WARNING: SOMETHING WENT WRONG WITH SAVEIMAGE"
+            self.logger.error("Something went wrong with save image")
             return None
         
         elif renderType == "POV" and overlay:

@@ -6,6 +6,7 @@ Module for computing Voronoi tesselation
 
 """
 import time
+import logging
 
 import numpy as np
 from scipy.spatial import Voronoi
@@ -97,14 +98,15 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
     Compute Voronoi
     
     """
+    logger = logging.getLogger(__name__)
+    
     vorotime = time.time()
-    print "COMPUTING VORONOI"
-    print "NATOMS", lattice.NAtoms
-    if log is not None:
-        log("Computing Voronoi")
-        log("  Dispersion is: %f" % voronoiOptions.dispersion)
-        log("  PBCs are: %s %s %s" % (bool(PBC[0]), bool(PBC[1]), bool(PBC[2])))
-        log("  Using radii: %s" % voronoiOptions.useRadii)
+    
+    logger.info("Computing Voronoi (pyvoro)")
+    logger.debug("  NAtoms: %d", lattice.NAtoms)
+    logger.info("  Dispersion is: %f", voronoiOptions.dispersion)
+    logger.info("  PBCs are: %s %s %s", bool(PBC[0]), bool(PBC[1]), bool(PBC[2]))
+    logger.info("  Using radii: %s", voronoiOptions.useRadii)
     
     # make points
     pts = np.empty((lattice.NAtoms, 3), dtype=np.float64)
@@ -125,8 +127,7 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
             lower[i] = lattice.minPos[i] - voronoiOptions.dispersion
             upper[i] = lattice.maxPos[i] + voronoiOptions.dispersion
     
-    if log is not None:
-        log("  Limits: [[%f, %f], [%f, %f], [%f, %f]]" % (lower[0], upper[0], lower[1], upper[1], lower[2], upper[2]))
+    logger.info("  Limits: [[%f, %f], [%f, %f], [%f, %f]]", lower[0], upper[0], lower[1], upper[1], lower[2], upper[2])
     
     # radii
     if voronoiOptions.useRadii:
@@ -162,8 +163,7 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
         
         nl("")
         
-        if log is not None:
-            log("  Writing Voronoi data to file: %s" % fn)
+        logger.info("  Writing Voronoi data to file: %s", fn)
         
         f = open(fn, "w")
         f.write("\n".join(lines))
@@ -177,9 +177,7 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
 #                 print "******* neg neb for %d" % i
     
     vorotime = time.time() - vorotime
-    print "PYVORO VORO TIME", vorotime
-    if log is not None:
-        log("  Compute Voronoi time: %f" % vorotime)
+    logger.debug("  Compute Voronoi time: %f", vorotime)
     
     return vor
 

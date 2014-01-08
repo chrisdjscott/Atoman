@@ -7,6 +7,7 @@ Options for filter lists.
 """
 import sys
 import functools
+import logging
 
 from PySide import QtGui, QtCore
 
@@ -35,6 +36,8 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         self.parent = parent
         self.mainWindow = mainWindow
+        
+        self.logger = logging.getLogger(__name__)
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
@@ -128,7 +131,7 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         label.setOpenExternalLinks(True)
         label.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse)
         row = self.newRow()
-        row.addWidget(label)        
+        row.addWidget(label)
     
     def getVoronoiDictKey(self):
         """
@@ -140,7 +143,8 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         """
         key = "%f_%d" % (self.dispersion, int(self.useRadii))
-        print "KEY", key
+        
+        self.logger.debug("Voronoi dict key: %s", key)
         
         return key
     
