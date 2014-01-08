@@ -443,7 +443,7 @@ class FileTab(QtGui.QWidget):
         Open dialog.
         
         """
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')[0]
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.', options=QtGui.QFileDialog.DontUseNativeDialog)[0]
         
         if len(filename):
             self.outputFileName.setText(str(filename))

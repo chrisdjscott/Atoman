@@ -428,7 +428,8 @@ class MainWindow(QtGui.QMainWindow):
         """
         fname = os.path.join(".", "atoms-exported.IN")
         
-        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export element properties", fname, "IN files (*.IN)")[0]
+        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export element properties", fname, 
+                                                  "IN files (*.IN)", options=QtGui.QFileDialog.DontUseNativeDialog)[0]
         
         print "FNAME", fname
         
@@ -451,7 +452,8 @@ class MainWindow(QtGui.QMainWindow):
         
         if reply == QtGui.QMessageBox.Yes:
             # open file dialog
-            fname = QtGui.QFileDialog.getOpenFileName(self, "CDJSVis - Import bonds file", ".", "IN files (*.IN)")[0]
+            fname = QtGui.QFileDialog.getOpenFileName(self, "CDJSVis - Import bonds file", ".", "IN files (*.IN)", 
+                                                      options=QtGui.QFileDialog.DontUseNativeDialog)[0]
             
             if fname:
                 # read in new file
@@ -469,7 +471,8 @@ class MainWindow(QtGui.QMainWindow):
         """
         fname = os.path.join(".", "bonds-exported.IN")
         
-        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export bonds file", fname, "IN files (*.IN)")[0]
+        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export bonds file", fname, "IN files (*.IN)", 
+                                                  options=QtGui.QFileDialog.DontUseNativeDialog)[0]
         
         if fname:
             if not "." in fname or fname[-3:] != ".IN":

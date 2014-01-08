@@ -291,15 +291,20 @@ class ConsoleWindow(QtGui.QDialog):
         
         self.clearButton = QtGui.QPushButton("Clear")
         self.clearButton.setAutoDefault(0)
-        self.connect(self.clearButton, QtCore.SIGNAL('clicked()'), self.clearText)
+        self.clearButton.clicked.connect(self.clearText)
+        
+        self.saveButton = QtGui.QPushButton("Save")
+        self.saveButton.setAutoDefault(0)
+        self.saveButton.clicked.connect(self.saveText)
         
         self.closeButton = QtGui.QPushButton("Hide")
         self.closeButton.setAutoDefault(1)
-        self.connect(self.closeButton, QtCore.SIGNAL('clicked()'), self.close)
+        self.closeButton.clicked.connect(self.close)
         
         buttonWidget = QtGui.QWidget()
         buttonLayout = QtGui.QHBoxLayout(buttonWidget)
         buttonLayout.addWidget(self.clearButton)
+        buttonLayout.addWidget(self.saveButton)
         buttonLayout.addStretch()
         buttonLayout.addWidget(self.closeButton)
         
@@ -323,11 +328,29 @@ class ConsoleWindow(QtGui.QDialog):
         logger.setLevel(level)
         logger.debug("Initial console window logging level: %s", logging.getLevelName(level))
         
+        self.logger = logger
+        
 #         logger.debug("test message")
 #         logger.info("test message")
 #         logger.warning("test message")
 #         logger.error("test message")
 #         logger.critical("test message")
+    
+    def saveText(self):
+        """
+        Save text to file
+        
+        """
+        # get file name
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Console Output', '.', options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+        
+        if len(filename):
+            self.logger.debug("Saving console output to file: '%s'", filename)
+            
+            # write to file
+            f = open(filename, "w")
+            f.write(self.textWidget.toPlainText())
+            f.close()
     
     def clearText(self):
         """
