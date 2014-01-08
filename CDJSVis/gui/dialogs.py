@@ -342,14 +342,17 @@ class ConsoleWindow(QtGui.QDialog):
         
         """
         # get file name
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Console Output', '.', options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Console Output', '.', "HTML files (*.html)", options=QtGui.QFileDialog.DontUseNativeDialog)[0]
         
         if len(filename):
+            if not filename.endswith(".html"):
+                filename += ".html"
+            
             self.logger.debug("Saving console output to file: '%s'", filename)
             
             # write to file
             f = open(filename, "w")
-            f.write(self.textWidget.toPlainText())
+            f.write(self.textWidget.toHtml())
             f.close()
     
     def clearText(self):
