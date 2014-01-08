@@ -275,7 +275,7 @@ class ConsoleWindow(QtGui.QDialog):
         
         self.setWindowTitle("Console")
         self.setWindowIcon(QtGui.QIcon(iconPath("console-icon.png")))
-        self.resize(500,300)
+        self.resize(800,400)
         
         consoleLayout = QtGui.QVBoxLayout(self)
         consoleLayout.setAlignment(QtCore.Qt.AlignTop)

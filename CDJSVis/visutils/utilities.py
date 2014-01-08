@@ -71,7 +71,29 @@ class TextEditHandler(logging.Handler):
         Write log message
          
         """
+        # format the record
         record.message = self.format(record)
+        
+        # choose colour based on level
+        level = record.levelno
+        
+        if level >= 50:
+            colour = QtCore.Qt.yellow
+        elif level >= 40:
+            colour = QtCore.Qt.magenta
+        elif level >= 30:
+            colour = QtCore.Qt.red
+        elif level >= 20:
+            colour = QtCore.Qt.black
+        elif level >= 10:
+            colour = QtCore.Qt.blue
+        else:
+            colour = QtCore.Qt.green
+        
+        # set colour
+        self.textEdit.setTextColor(colour)
+        
+        # add message
         self.textEdit.append("> %s" % record.message)
 
 ################################################################################
