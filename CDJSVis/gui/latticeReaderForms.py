@@ -8,6 +8,7 @@ Lattice reader forms for the inputTab.
 import os
 import sys
 import platform
+import logging
 
 from PySide import QtGui, QtCore
 
@@ -31,20 +32,25 @@ class GenericReaderForm(GenericForm):
     Generic reader widget.
     
     """
-    def __init__(self, parent, mainToolbar, mainWindow, width, title, stateType):
-        super(GenericReaderForm, self).__init__(parent, width, title)
+    def __init__(self, parent, mainToolbar, mainWindow, name):
+        super(GenericReaderForm, self).__init__(parent, None, "%s READER" % name)
         
         self.inputTab = parent
         self.mainToolbar = mainToolbar
         self.mainWindow = mainWindow
-        self.toolbarWidth = width
-        self.widgetTitle = title
+        self.toolbarWidth = None
+        self.widgetTitle = "%s READER" % name
         
-        self.stateType = stateType
+        self.logger = logging.getLogger(__name__)
+        
+        self.stateType = "ref"
         
         self.fileFormatString = None
         
         self.fileExtension = None
+        
+        self.stackIndex = parent.readerFormsKeys.index(name)
+        self.logger.debug("Setting up readerForm '%s': stack index is %d", name, self.stackIndex)
         
         # always show widget
         self.show()
@@ -72,7 +78,7 @@ class GenericReaderForm(GenericForm):
         """
         self.updateFileLabel(filename)
         
-        self.parent.fileLoaded(stateType, state, filename, self.fileExtension)
+        self.parent.fileLoaded(stateType, state, filename, self.fileExtension, self.stackIndex)
     
     def openFileDialog(self):
         """
@@ -124,18 +130,253 @@ class GenericReaderForm(GenericForm):
 
 ################################################################################
 
+class AutoDetectReaderForm(GenericReaderForm):
+    """
+    Auto detect form
+    
+    """
+    def __init__(self, parent, mainToolbar, mainWindow, name):
+        super(AutoDetectReaderForm, self).__init__(parent, mainToolbar, mainWindow, name)
+        
+        self.loadSystemForm = parent
+        self.mainToolbar = mainToolbar
+        self.mainWindow = mainWindow
+        
+        self.tmpLocation = self.mainWindow.tmpDirectory
+        
+        # acceptable formats string
+        self.fileFormatString = "Lattice files (*.dat *.dat.bz2 *.dat.gz *.xyz *.xyz.bz2 *.xyz.gz)"
+        
+        self.show()
+        
+        # file name line
+        row = self.newRow()
+        label = QtGui.QLabel("File name")
+        row.addWidget(label)
+        
+        if os.path.exists("ref.dat"):
+            ininame = "ref.dat"
+        elif os.path.exists("animation-reference.xyz"):
+            ininame = "animation-reference.xyz"
+        elif os.path.exists("launch.dat"):
+            ininame = "launch.dat"
+        elif os.path.exists("KMC0.dat"):
+            ininame = "KMC0.dat"
+        elif os.path.exists("lattice0.dat"):
+            ininame = "lattice0.dat"
+        else:
+            ininame = "lattice.dat"
+        
+        self.latticeLabel = QtGui.QLineEdit(ininame)
+        self.latticeLabel.setFixedWidth(150)
+        row.addWidget(self.latticeLabel)
+        
+        self.loadLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-jump.svg")), '')
+        self.loadLatticeButton.setToolTip("Load file")
+        self.loadLatticeButton.clicked.connect(self.openFile)
+        row.addWidget(self.loadLatticeButton)
+        
+        # open dialog
+        row = self.newRow()
+        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
+        self.openLatticeDialogButton.setToolTip("Open file")
+        self.openLatticeDialogButton.setCheckable(0)
+        self.openLatticeDialogButton.clicked.connect(self.openFileDialog)
+        row.addWidget(self.openLatticeDialogButton)
+        
+    def updateFileLabel(self, filename):
+        """
+        Update file label.
+        
+        """
+        self.latticeLabel.setText(filename)
+    
+    def getFileName(self):
+        """
+        Returns file name from label.
+        
+        """
+        return str(self.latticeLabel.text())
+    
+    def openFile(self, filename=None, rouletteIndex=None):
+        """
+        Open file.
+        
+        """
+        if filename is None:
+            filename = self.getFileName()
+        
+        filename = str(filename)
+        
+        logger = self.logger
+        logger.info("Opening file using autodetect method: '%s'", filename)
+        
+        # remove zip extensions
+        if filename[-3:] == ".gz":
+            filename = filename[:-3]
+        elif filename[-4:] == ".bz2":
+            filename = filename[:-4]
+        
+        # unzip if required
+        filepath, zipFlag = self.checkForZipped(filename)
+        if zipFlag == -1:
+            self.displayWarning("Could not find file: "+filename)
+            self.logger.warning("Could not find file: '%s'", filename)
+            return -1, None
+        
+        # determine format and type of reader
+        formatIdentifier = self.determineFileFormat(filepath)
+        
+        # clean unzipped
+        self.cleanUnzipped(filepath, zipFlag)
+        
+        if formatIdentifier is None:
+            self.logger.error("Could not auto detect format of file")
+            self.mainWindow.displayError("ERROR: could not auto detect format of file: '%s'\n\nPlease send me the file." % filename)
+            return 1
+        
+        # get reader from LoadSystemForm
+        # first get list of readerForms
+        readerForms = self.loadSystemForm.readerForms.values()
+        
+        # now get list of readers
+        readers = [form.latticeReader for form in readerForms if (hasattr(form, "latticeReader") and form.latticeReader is not None)]
+        self.logger.debug("Readers: %s", str([type(r) for r in readers]))
+        
+        # check if matches
+        selectedReaderForm = None
+        for readerForm in readerForms:
+            if hasattr(readerForm, "latticeReader") and readerForm.latticeReader is not None:
+                for fmt in readerForm.latticeReader.formatIdentifiers:
+                    if fmt == formatIdentifier:
+                        selectedReaderForm = readerForm
+                        break
+                
+                if selectedReaderForm is not None:
+                    break
+        
+        if selectedReaderForm is None:
+            self.logger.error("Could not find matching format in available readers (%s)", formatIdentifier)
+            self.mainWindow.displayError("ERROR: could not find matching format in available readers.\n\nNeed to implement new reader.")
+            return 2
+        
+        self.logger.info("Selected reader: '%s'", selectedReaderForm.widgetTitle)
+        
+        # read file
+        status = selectedReaderForm.openFile(filename=filename)
+        
+        return status
+    
+    def determineFileFormat(self, filename):
+        """
+        Determine file format
+        
+        """
+        self.logger.debug("Attempting to determine file format")
+        
+        f = open(filename)
+        
+        # if can't determine within limit stop
+        maxLines = 20
+        
+        # stop when this number of lines are repeating (won't work for FAILSAFE!!!)
+        repeatThreshold = 3
+        
+        lineArrayCountList = []
+        
+        count = 0
+        success = False
+        repeatCount = 0
+        repeatVal = None
+        repeatFirstIndexLen = None
+        while True and count < maxLines:
+            line = f.readline().strip()
+            
+            # ignore blank lines
+            if not len(line):
+                continue
+            
+            # split line
+            array = line.split()
+            num = len(array)
+            
+            lineArrayCountList.append(num)
+            
+            if num == repeatVal:
+                repeatCount += 1
+            
+            else:
+                repeatCount = 0
+                repeatVal = num
+                repeatFirstIndexLen = len(lineArrayCountList)
+            
+            if repeatCount == repeatThreshold:
+                self.logger.debug("  Repeat threshold reached (%d): exiting detect loop", repeatCount)
+                success = True
+                break
+            
+            count += 1
+        
+        if not success:
+            self.logger.debug("Failed to detect file format")
+            return None
+        
+        format_ident = lineArrayCountList[:repeatFirstIndexLen]
+        self.logger.debug("Format identifier: '%s'", str(format_ident))
+        
+        return format_ident
+    
+    def checkForZipped(self, filename):
+        """
+        Check if file exists (unzip if required)
+        
+        """
+        if os.path.exists(filename):
+            fileLocation = '.'
+            zipFlag = 0
+        
+        else:
+            if os.path.exists(filename + '.bz2'):
+                command = 'bzcat -k "%s.bz2" > ' % (filename)
+            
+            elif os.path.exists(filename + '.gz'):
+                command = 'gzip -dc "%s.gz" > ' % (filename)
+                
+            else:
+                return None, -1
+                
+            fileLocation = self.tmpLocation
+            command = command + os.path.join(fileLocation, filename)
+            os.system(command)
+            zipFlag = 1
+            
+        filepath = os.path.join(fileLocation, filename)
+        if not os.path.exists(filepath):
+            return None, -1
+            
+        return filepath, zipFlag
+    
+    def cleanUnzipped(self, filepath, zipFlag):
+        """
+        Clean up unzipped file.
+        
+        """
+        if zipFlag:
+            os.unlink(filepath)
+
+################################################################################
+
 class LbomdDatReaderForm(GenericReaderForm):
     """
     LBOMD DAT input widget.
     
     """
-    def __init__(self, parent, mainToolbar, mainWindow, width, state):
-        super(LbomdDatReaderForm, self).__init__(parent, mainToolbar, mainWindow, width, "LBOMD DAT READER", state)
+    def __init__(self, parent, mainToolbar, mainWindow, name):
+        super(LbomdDatReaderForm, self).__init__(parent, mainToolbar, mainWindow, name)
         
         self.inputTab = parent
         self.mainToolbar = mainToolbar
         self.mainWindow = mainWindow
-        self.toolbarWidth = width
         
         self.fileExtension = "dat"
         
@@ -153,9 +394,9 @@ class LbomdDatReaderForm(GenericReaderForm):
         label = QtGui.QLabel("File name")
         row.addWidget(label)
         
-        if state == "ref" and os.path.exists("ref.dat"):
+        if os.path.exists("ref.dat"):
             ininame = "ref.dat"
-        elif state == "input" and os.path.exists("launch.dat"):
+        elif os.path.exists("launch.dat"):
             ininame = "launch.dat"
         else:
             ininame = "lattice.dat"
@@ -166,7 +407,7 @@ class LbomdDatReaderForm(GenericReaderForm):
         
         self.loadLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath("go-jump.svg")), '')
         self.loadLatticeButton.setToolTip("Load file")
-        self.connect(self.loadLatticeButton, QtCore.SIGNAL('clicked()'), self.openFile)
+        self.loadLatticeButton.clicked.connect(self.openFile)
         row.addWidget(self.loadLatticeButton)
         
         # open dialog
@@ -174,7 +415,7 @@ class LbomdDatReaderForm(GenericReaderForm):
         self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
         self.openLatticeDialogButton.setToolTip("Open file")
         self.openLatticeDialogButton.setCheckable(0)
-        self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), self.openFileDialog)
+        self.openLatticeDialogButton.clicked.connect(self.openFileDialog)
         row.addWidget(self.openLatticeDialogButton)
     
     def updateFileLabel(self, filename):
@@ -224,13 +465,12 @@ class LbomdRefReaderForm(GenericReaderForm):
     LBOMD REF input widget.
     
     """
-    def __init__(self, parent, mainToolbar, mainWindow, width, state):
-        super(LbomdRefReaderForm, self).__init__(parent, mainToolbar, mainWindow, width, "LBOMD REF READER", state)
+    def __init__(self, parent, mainToolbar, mainWindow, name):
+        super(LbomdRefReaderForm, self).__init__(parent, mainToolbar, mainWindow, name)
         
         self.inputTab = parent
         self.mainToolbar = mainToolbar
         self.mainWindow = mainWindow
-        self.toolbarWidth = width
         
         self.fileExtension = "xyz"
         
@@ -302,7 +542,8 @@ class LbomdRefReaderForm(GenericReaderForm):
             GenericReaderForm.postOpenFile(self, self.stateType, state, filename)
             
             # set xyz input form to use this as ref
-            self.parent.lbomdXyzWidget.setRefState(state, filename)
+            self.logger.debug("Setting as ref on xyz reader")
+            self.parent.readerForms["LBOMD XYZ"].setRefState(state, filename)
         
         return status
 
@@ -313,13 +554,12 @@ class LbomdXYZReaderForm(GenericReaderForm):
     LBOMD XYZ reader.
     
     """
-    def __init__(self, parent, mainToolbar, mainWindow, width, state):
-        super(LbomdXYZReaderForm, self).__init__(parent, mainToolbar, mainWindow, width, "LBOMD XYZ READER", state)
+    def __init__(self, parent, mainToolbar, mainWindow, name):
+        super(LbomdXYZReaderForm, self).__init__(parent, mainToolbar, mainWindow, name)
         
         self.inputTab = parent
         self.mainToolbar = mainToolbar
         self.mainWindow = mainWindow
-        self.toolbarWidth = width
         
         self.refLoaded = False
         
@@ -424,7 +664,8 @@ class LbomdXYZReaderForm(GenericReaderForm):
             return None
         
         if not isRef and not self.refLoaded:
-            self.mainWindow.displayWarning("Must load corresponding reference first!")
+            self.logger.warning("Must load corresponding reference first")
+            self.mainWindow.displayWarning("Must load corresponding reference first!\n\nXYZ files MUST always be linked ta a reference.")
             return None
         
         if isRef and self.refLoaded:
@@ -521,7 +762,8 @@ class LbomdXYZReaderForm(GenericReaderForm):
         
         """
         if not isRef and not self.refLoaded:
-            self.mainWindow.displayWarning("Must load corresponding reference first!")
+            self.logger.warning("Must load corresponding reference first")
+            self.mainWindow.displayWarning("Must load corresponding reference first!\n\nXYZ files MUST always be linked to a reference.")
             return 2
         
         if isRef and self.refLoaded:

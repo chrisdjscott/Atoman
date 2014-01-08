@@ -1,11 +1,12 @@
 
 """
-The Lattice object.
-Stores positions etc
+Lattice module, with Lattice object and utilities
 
 @author: Chris Scott
 
 """
+import logging
+
 import numpy as np
 
 from .atoms import elements
@@ -13,7 +14,12 @@ from .md import forces
 
 
 ################################################################################
+
 class Lattice(object):
+    """
+    The Lattice object.
+    
+    """
     def __init__(self):
         
         self.NAtoms = 0

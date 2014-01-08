@@ -11,6 +11,7 @@ import sys
 import shutil
 import subprocess
 import copy
+import logging
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -950,6 +951,8 @@ class ImageSequenceTab(QtGui.QWidget):
         self.width = width
         self.rendererWindow = self.parent.rendererWindow
         
+        self.logger = logging.getLogger(__name__)
+        
         # initial values
         self.numberFormat = "%04d"
         self.minIndex = 0
@@ -1196,7 +1199,7 @@ class ImageSequenceTab(QtGui.QWidget):
             return
         
         log = self.mainWindow.console.write
-        log("Running sequencer", 0, 0)
+        self.logger.info("Running sequencer")
         
         # store current input state
         origInput = copy.deepcopy(self.rendererWindow.getCurrentInputState())
@@ -1208,10 +1211,10 @@ class ImageSequenceTab(QtGui.QWidget):
         ida, idb = pipelinePage.inputStackIndex
         
         if ida != 0:
-            print "CANNOT SEQUENCE A GENERATED LATTICE..."
+            self.logger.error("Cannot sequence a generated lattice")
             return
         
-        print "INPUT STACK INDEX", ida, idb
+        self.logger.debug("  Input stack index: %d, %d", ida, idb)
         
         systemsDialog = self.mainWindow.systemsDialog
         
@@ -1222,7 +1225,7 @@ class ImageSequenceTab(QtGui.QWidget):
         readerForm = in_page.stackedWidget.currentWidget()
         reader = readerForm.latticeReader
         
-        print "READER", readerForm, reader
+        self.logger.debug("  Reader: %s %s", str(readerForm), str(reader))
         
         # directory
         saveDir = str(self.outputFolder.text())
@@ -1256,7 +1259,7 @@ class ImageSequenceTab(QtGui.QWidget):
             count = 0
             for i in xrange(self.minIndex, self.maxIndex + self.interval, self.interval):
                 currentFile = fileText % (i,)
-                log("Current file: %s" % (currentFile,), 0, 1)
+                self.logger.info("Current file: '%s'", currentFile)
                 
                 # read in state
                 if reader.requiresRef:
@@ -1266,7 +1269,7 @@ class ImageSequenceTab(QtGui.QWidget):
                     status, state = reader.readFile(currentFile, rouletteIndex=i-1)
                 
                 if status:
-                    log("Sequencer read file failed with status: %d" % (status,), 0, 2)
+                    self.logger.error("Sequencer read file failed with status: %d" % status)
                     break
                 
                 # set input state on current pipeline
@@ -1274,10 +1277,6 @@ class ImageSequenceTab(QtGui.QWidget):
                 
                 # exit if cancelled
                 if progDialog.wasCanceled():
-                    return
-                
-                if status:
-                    print "SEQUENCER ERROR"
                     return
                 
                 # now apply all filters
@@ -1288,7 +1287,7 @@ class ImageSequenceTab(QtGui.QWidget):
                     return
                 
                 saveName = saveText % (count,)
-                log("Saving image: %s" % (saveName,), 0, 2)
+                self.logger.info("  Saving image: '%s'", saveName)
                 
                 # now save image
                 filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 

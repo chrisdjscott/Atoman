@@ -10,6 +10,7 @@ view loaded lattices; set input/ref system, etc
 """
 import os
 import sys
+import logging
 
 from PySide import QtGui, QtCore
 
@@ -82,7 +83,6 @@ class GenerateInputForm(GenericForm):
         
         """
         self.stackedWidget.setCurrentIndex(index)
-    
 
 ################################################################################
 
@@ -98,11 +98,25 @@ class LoadSystemForm(GenericForm):
         self.mainWindow = mainWindow
         self.mainToolbar = mainToolbar
         
+        # ordered list of keys
+        self.readerFormsKeys = [
+            "LBOMD DAT",
+            "LBOMD REF",
+            "LBOMD XYZ",
+            "AUTO DETECT"
+        ]
+        
+        # reader forms
+        self.readerForms = {
+            "LBOMD DAT": latticeReaderForms.LbomdDatReaderForm(self, self.mainToolbar, self.mainWindow, "LBOMD DAT"),
+            "LBOMD REF": latticeReaderForms.LbomdRefReaderForm(self, self.mainToolbar, self.mainWindow, "LBOMD REF"),
+            "LBOMD XYZ": latticeReaderForms.LbomdXYZReaderForm(self, self.mainToolbar, self.mainWindow, "LBOMD XYZ"),
+            "AUTO DETECT": latticeReaderForms.AutoDetectReaderForm(self, self.mainToolbar, self.mainWindow, "AUTO DETECT"),
+        }
+        
         # file type combo
         self.inputTypeCombo = QtGui.QComboBox()
-        self.inputTypeCombo.addItem("LBOMD DAT")
-        self.inputTypeCombo.addItem("LBOMD REF")
-        self.inputTypeCombo.addItem("LBOMD XYZ")
+        self.inputTypeCombo.addItems(self.readerFormsKeys)
         self.inputTypeCombo.currentIndexChanged.connect(self.setWidgetStack)
         
         row = self.newRow()
@@ -111,17 +125,15 @@ class LoadSystemForm(GenericForm):
         # stacked widget
         self.stackedWidget = QtGui.QStackedWidget()
         
-        self.lbomdDatWidget = latticeReaderForms.LbomdDatReaderForm(self, self.mainToolbar, self.mainWindow, None, "ref")
-        self.stackedWidget.addWidget(self.lbomdDatWidget)
-        
-        self.lbomdRefWidget = latticeReaderForms.LbomdRefReaderForm(self, self.mainToolbar, self.mainWindow, None, "ref")
-        self.stackedWidget.addWidget(self.lbomdRefWidget)
-        
-        self.lbomdXyzWidget = latticeReaderForms.LbomdXYZReaderForm(self, self.mainToolbar, self.mainWindow, None, "ref")
-        self.stackedWidget.addWidget(self.lbomdXyzWidget)
+        # add reader forms
+        for key in self.readerFormsKeys:
+            self.stackedWidget.addWidget(self.readerForms[key])
         
         row = self.newRow()
         row.addWidget(self.stackedWidget)
+        
+        # select auto by default
+        self.inputTypeCombo.setCurrentIndex(self.readerFormsKeys.index("AUTO DETECT"))
         
         self.show()
     
@@ -132,12 +144,12 @@ class LoadSystemForm(GenericForm):
         """
         self.stackedWidget.setCurrentIndex(index)
     
-    def fileLoaded(self, fileType, state, filename, extension):
+    def fileLoaded(self, fileType, state, filename, extension, readerStackIndex):
         """
         Called when a file is loaded
         
         """
-        self.parent.file_loaded(state, filename, extension)
+        self.parent.file_loaded(state, filename, extension, readerStackIndex)
 
 ################################################################################
 
@@ -156,6 +168,8 @@ class SystemsDialog(QtGui.QDialog):
         
         self.mainToolbar = mainWindow
         self.mainWindow = mainWindow
+        
+        self.logger = logging.getLogger(__name__)
         
         self.resize(80, 120)
         
@@ -237,14 +251,14 @@ class SystemsDialog(QtGui.QDialog):
         """
         self.add_lattice(lattice, "generated.dat", "dat")
     
-    def file_loaded(self, lattice, filename, extension):
+    def file_loaded(self, lattice, filename, extension, readerStackIndex):
         """
         Called after a file had been loaded (or generated too?)
         
         """
-        self.add_lattice(lattice, filename, extension)
+        self.add_lattice(lattice, filename, extension, idb=readerStackIndex, ida=0)
     
-    def add_lattice(self, lattice, filename, extension):
+    def add_lattice(self, lattice, filename, extension, ida=None, idb=None):
         """
         Add lattice
         
@@ -253,7 +267,7 @@ class SystemsDialog(QtGui.QDialog):
         
         abspath = os.path.abspath(filename)
         if abspath in self.abspath_list:
-            self.mainWindow.console.write("This file is already loaded (%s)" % filename)
+            self.logger.info("This file has already been loaded (%s): not adding it again", filename)
             
             index = self.abspath_list.index(abspath)
             
@@ -270,12 +284,16 @@ class SystemsDialog(QtGui.QDialog):
         self.abspath_list.append(abspath)
         
         # stack index
-        ida = self.new_system_stack.currentIndex()
+        if ida is None:
+            ida = self.new_system_stack.currentIndex()
+            page = self.new_system_stack.currentWidget()
         
-        page = self.new_system_stack.currentWidget()
-        idb = page.stackedWidget.currentIndex()
+        if idb is None:
+            idb = page.stackedWidget.currentIndex()
         
         self.stackIndex_list.append((ida, idb))
+        
+        self.logger.debug("Adding new lattice to systemsList: %s; %s; %d,%d", filename, extension, ida, idb)
         
         list_item = QtGui.QListWidgetItem()
         list_item.setText("%s (%d atoms)" % (filename, lattice.NAtoms))

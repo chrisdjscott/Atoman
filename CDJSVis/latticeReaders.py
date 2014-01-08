@@ -33,6 +33,7 @@ class GenericLatticeReader(object):
         self.displayError = displayError
         self.requiresRef = False
         self.logger = logging.getLogger(__name__)
+        self.formatIdentifiers = []
     
     def checkForZipped(self, filename):
         """
@@ -140,6 +141,9 @@ class LbomdXYZReader(GenericLatticeReader):
     """
     def __init__(self, tmpLocation, log, displayWarning, displayError):
         super(LbomdXYZReader, self).__init__(tmpLocation, log, displayWarning, displayError)
+        
+        self.formatIdentifiers.append([1, 1, 6])
+        self.formatIdentifiers.append([1, 1, 7])
         
         self.requiresRef = True
     
@@ -264,6 +268,8 @@ class LbomdRefReader(GenericLatticeReader):
     """
     def __init__(self, tmpLocation, log, displayWarning, displayError):
         super(LbomdRefReader, self).__init__(tmpLocation, log, displayWarning, displayError)
+        
+        self.formatIdentifiers.append([1, 3, 11])
     
     def readFileMain(self, filename, rouletteIndex):
         """
@@ -354,6 +360,8 @@ class LbomdDatReader(GenericLatticeReader):
     """
     def __init__(self, tmpLocation, log, displayWarning, displayError):
         super(LbomdDatReader, self).__init__(tmpLocation, log, displayWarning, displayError)
+        
+        self.formatIdentifiers.append([1, 3, 5])
         
         self.intRegex = re.compile(r'[0-9]+')
     
