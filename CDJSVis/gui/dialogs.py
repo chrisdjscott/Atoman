@@ -315,8 +315,13 @@ class ConsoleWindow(QtGui.QDialog):
         # add to root logger
         logging.getLogger().addHandler(handler)
         
+        # set level, try settings first or fallback to INFO
+        settings = QtCore.QSettings()
+        level = settings.value("logging/console", logging.INFO)
+        
         logger = logging.getLogger(__name__)
-        logger.setLevel(logging.INFO)
+        logger.setLevel(level)
+        logger.debug("Initial console window logging level: %s", logging.getLevelName(level))
     
     def clearText(self):
         """

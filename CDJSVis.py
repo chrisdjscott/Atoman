@@ -6,14 +6,29 @@ Initialise application.
 @author: Chris Scott
 
 """
-# configure logging (we have to set logging.NOTSET here as global for root logger)
+import sys
 import logging
-logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s", level=logging.NOTSET)
 
+try:
+    from rainbow_logging_handler import RainbowLoggingHandler
+    
+    root = logging.getLogger()
+    root.setLevel(logging.NOTSET)
+    
+    # formatter = logging.Formatter("%(levelname)s: %(name)s: %(message)s")
+    formatter = logging.Formatter("%(name)s:%(funcName)s():%(lineno)d: %(message)s")
+    handler = RainbowLoggingHandler(sys.stderr)
+    handler.setFormatter(formatter)
+    root.addHandler(handler)
+
+except ImportError:
+    # configure logging (we have to set logging.NOTSET here as global for root logger)
+    logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s", level=logging.NOTSET)
+      
 # set default for stream handler (we don't want it to be NOTSET by default)
 logging.getLogger().handlers[0].setLevel(logging.WARNING)
 
-import sys
+# import sys
 import multiprocessing
 
 from PySide import QtGui, QtCore
