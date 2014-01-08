@@ -317,11 +317,7 @@ class ConsoleWindow(QtGui.QDialog):
         
         logger = logging.getLogger(__name__)
         logger.setLevel(logging.INFO)
-        
-        root = logging.getLogger()
-        print "HANDLERS", root.handlers
-        
-        
+    
     def clearText(self):
         """
         Clear all text.
@@ -337,7 +333,7 @@ class ConsoleWindow(QtGui.QDialog):
         #TODO: change colour depending on level
         if level < self.parent.verboseLevel:
             ind = ""
-            for i in xrange(indent):
+            for _ in xrange(indent):
                 ind += "  "
             self.textWidget.append("%s %s%s" % (">", ind, string))
         

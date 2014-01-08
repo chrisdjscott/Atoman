@@ -567,15 +567,13 @@ class LoggingSettingsForm(GenericPreferencesSettingsForm):
                               "ERROR": logging.ERROR,
                               "WARNING": logging.WARNING,
                               "INFO": logging.INFO,
-                              "DEBUG": logging.DEBUG,
-                              "NOTSET": logging.NOTSET}
+                              "DEBUG": logging.DEBUG}
         
         self.loggingLevelsSorted = ["CRITICAL",
                                     "ERROR",
                                     "WARNING",
                                     "INFO",
-                                    "DEBUG",
-                                    "NOTSET"]
+                                    "DEBUG"]
         
         settings = QtCore.QSettings()
         
@@ -594,9 +592,6 @@ class LoggingSettingsForm(GenericPreferencesSettingsForm):
         row = self.newRow()
         row.addWidget(label)
         row.addWidget(self.consoleLevelCombo)
-        
-        
-        
         
         self.init()
     

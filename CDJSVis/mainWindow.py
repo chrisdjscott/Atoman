@@ -127,6 +127,9 @@ class MainWindow(QtGui.QMainWindow):
         windowWidth = self.renderWindowWidth+self.mainToolbarWidth
         windowHeight = self.renderWindowHeight
         
+        self.defaultWindowWidth = windowWidth
+        self.defaultWindowHeight = windowHeight
+        
         # resize
         self.resize(settings.value("mainWindow/size", QtCore.QSize(windowWidth, windowHeight)))
         
@@ -190,9 +193,17 @@ class MainWindow(QtGui.QMainWindow):
         openElementEditorAction = self.createAction("Element editor", slot=self.openElementEditor, icon="periodic-table-icon.png", 
                                                     tip="Show element editor")
         
+        # default window size action
+        defaultWindowSizeAction = self.createAction("Default size", slot=self.defaultWindowSize, icon="Window.png", 
+                                                    tip="Resize window to default size")
+        
         # add view menu
         viewMenu = self.menuBar().addMenu("&View")
         self.addActions(viewMenu, (openConsoleAction, showImageViewerAction, openElementEditorAction, showPreferencesAction))
+        
+        # add window menu
+        windowMenu = self.menuBar().addMenu("&Window")
+        self.addActions(windowMenu, (defaultWindowSizeAction,))
         
         # add file toolbar
         fileToolbar = self.addToolBar("File")
@@ -276,6 +287,13 @@ class MainWindow(QtGui.QMainWindow):
         
         # show input dialog
 #        self.showLoadInputDialog()
+    
+    def defaultWindowSize(self):
+        """
+        Resize window to default size
+        
+        """
+        self.resize(self.defaultWindowWidth, self.defaultWindowHeight)
     
     def show(self):
         """
