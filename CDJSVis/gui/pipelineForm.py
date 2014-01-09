@@ -10,6 +10,8 @@ import sys
 import glob
 import math
 import logging
+import functools
+import uuid
 
 from PySide import QtGui, QtCore
 import vtk
@@ -22,6 +24,7 @@ from ..visutils import utilities
 from ..visclibs import picker as picker_c
 from . import infoDialogs
 from . import utils
+from ..rendering import highlight
 
 try:
     from .. import resources
@@ -46,6 +49,10 @@ class PipelineForm(QtGui.QWidget):
         self.logger = logging.getLogger(__name__)
         
         self.rendererWindows = self.mainWindow.rendererWindows
+        
+        self.pickerContextMenuID = uuid.uuid4()
+        self.pickerContextMenu = QtGui.QMenu(self)
+        self.pickerContextMenu.aboutToHide.connect(self.hidePickerMenuHighlight)
         
         self.filterListCount = 0
         self.filterLists = []
@@ -547,7 +554,7 @@ class PipelineForm(QtGui.QWidget):
                 
                 call(*args, **kwargs)
     
-    def pickObject(self, pickPos):
+    def pickObject(self, pickPos, clickType):
         """
         Pick object
         
@@ -596,6 +603,8 @@ class PipelineForm(QtGui.QWidget):
                 
                 if minSepType == 0:
                     minSepIndex = visibleAtoms[int(tmp_index)]
+                    defList = None
+                
                 else:
                     minSepIndex = int(tmp_index)
                     
@@ -619,58 +628,142 @@ class PipelineForm(QtGui.QWidget):
         
         # check if close enough
         if minSep < 0.1:
-            logger.debug("Found picked object")
-            
-            # key for storing the window
-            windowKey = "%d_%d" % (minSepType, minSepIndex) 
-            logger.debug("Picked object window key: '%s' (exists already: %s)", windowKey, windowKey in minSepFilterList.infoWindows)
-            
-            # check if key already exists, if so use stored window
-            if windowKey in minSepFilterList.infoWindows:
-                window = minSepFilterList.infoWindows[windowKey]
+            if clickType == "RightClick" and minSepType == 0:
+                logger.debug("Picked object (right click)")
                 
-                # highlight
-                highlightersID, highlighters = window.getHighlighters()
+                viewAction = QtGui.QAction("View atom", self)
+                viewAction.setToolTip("View atom info")
+                viewAction.setStatusTip("View atom info")
+                viewAction.triggered.connect(functools.partial(self.viewAtomClicked, minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList))
                 
-                # add to renderers
-                self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
+                editAction = QtGui.QAction("Edit atom", self)
+                editAction.setToolTip("Edit atom")
+                editAction.setStatusTip("Edit atom")
+                editAction.triggered.connect(functools.partial(self.editAtomClicked, minSepIndex))
                 
-                # need cursor position on screen to decide where to show window
+                removeAction = QtGui.QAction("Remove atom", self)
+                removeAction.setToolTip("Remove atom")
+                removeAction.setStatusTip("Remove atom")
+                removeAction.triggered.connect(functools.partial(self.removeAtomClicked, minSepIndex))
+                
+                menu = self.pickerContextMenu
+                menu.clear()
+                
+                menu.addAction(viewAction)
+                menu.addAction(editAction)
+                menu.addAction(removeAction)
+                
+                # highlight atom
+                lattice = self.inputState
+                radius = lattice.specieCovalentRadius[lattice.specie[minSepIndex]] * minSepFilterList.displayOptions.atomScaleFactor
+                highlighter = highlight.AtomHighlighter(lattice.atomPos(minSepIndex), radius * 1.1)
+                self.broadcastToRenderers("addHighlighters", (self.pickerContextMenuID, [highlighter,]))
+                
                 cursor = QtGui.QCursor()
-                cursor_pos = cursor.pos()
                 
-                # position window
-                utils.positionWindow(cursor_pos, window, self.mainWindow.desktop, self)
-                
-                # should reposition before showing...
-                window.show()
+                menu.popup(cursor.pos())
             
-            # otherwise make new window
             else:
-                if minSepType == 0:
-                    # atom info window
-                    infoWindow = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, minSepFilterList, parent=self)
-                
-                else:
-                    # defect info window
-                    infoWindow = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, minSepFilterList, parent=self)
-                
-                # highlighting
-                highlightersID, highlighters = infoWindow.getHighlighters()
-                
-                # add to renderers
-                self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
-                
-                # need cursor position on screen to decide where to open window
-                cursor = QtGui.QCursor()
-                cursor_pos = cursor.pos()
-                
-                # show first to force correct size
-                infoWindow.show()
-                
-                # position window
-                utils.positionWindow(cursor_pos, infoWindow, self.mainWindow.desktop, self)
-                
-                # store window for reuse
-                minSepFilterList.infoWindows[windowKey] = infoWindow
-
+                # show the info window
+                self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList)
+    
+    def showInfoWindow(self, minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList):
+        """
+        Show info window
+        
+        """
+        logger = self.logger
+        
+        logger.debug("Showing info window for picked object")
+        
+        # key for storing the window
+        windowKey = "%d_%d" % (minSepType, minSepIndex) 
+        logger.debug("Picked object window key: '%s' (exists already: %s)", windowKey, windowKey in minSepFilterList.infoWindows)
+        
+        # check if key already exists, if so use stored window
+        if windowKey in minSepFilterList.infoWindows:
+            window = minSepFilterList.infoWindows[windowKey]
+            
+            # highlight
+            highlightersID, highlighters = window.getHighlighters()
+            
+            # add to renderers
+            self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
+            
+            # need cursor position on screen to decide where to show window
+            cursor = QtGui.QCursor()
+            cursor_pos = cursor.pos()
+            
+            # position window
+            utils.positionWindow(cursor_pos, window, window.size(), self.mainWindow.desktop, self)
+            
+            # show window
+            window.show()
+        
+        # otherwise make new window
+        else:
+            if minSepType == 0:
+                # atom info window
+                infoWindow = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, minSepFilterList, parent=self)
+            
+            else:
+                # defect info window
+                infoWindow = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, minSepFilterList, parent=self)
+            
+            # highlighting
+            highlightersID, highlighters = infoWindow.getHighlighters()
+            
+            # add to renderers
+            self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
+            
+            # need cursor position on screen to decide where to open window
+            cursor = QtGui.QCursor()
+            cursor_pos = cursor.pos()
+            
+            # position window
+            utils.positionWindow(cursor_pos, infoWindow, infoWindow.sizeHint(), self.mainWindow.desktop, self)
+            
+            # show window
+            infoWindow.show()
+            
+            # store window for reuse
+            minSepFilterList.infoWindows[windowKey] = infoWindow
+    
+    def viewAtomClicked(self, minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList):
+        """
+        View atom
+        
+        """
+        logger = self.logger
+        logger.debug("View atom action; Index is %d", minSepIndex)
+        
+        self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList)
+    
+    def editAtomClicked(self, index):
+        """
+        Edit atom
+        
+        """
+        logger = self.logger
+        logger.debug("Edit atom action; Index is %d", index)
+        
+        self.mainWindow.displayWarning("Edit atom not implemented yet.")
+    
+    def removeAtomClicked(self, index):
+        """
+        Remove atom
+        
+        """
+        logger = self.logger
+        logger.debug("Remove atom action; Index is %d", index)
+        
+        self.mainWindow.displayWarning("Remove atom not implemented yet.")
+    
+    def hidePickerMenuHighlight(self):
+        """
+        Hide picker menu highlighter
+        
+        """
+        self.logger.debug("Hiding picker context menu highlighter")
+        
+        self.broadcastToRenderers("removeHighlighters", (self.pickerContextMenuID,))

@@ -12,7 +12,7 @@ from PySide import QtCore
 
 ################################################################################
 
-def positionWindow(cursor_pos, window, desktop, parentWidget, offset=30, border=10):
+def positionWindow(cursor_pos, window, windowSize, desktop, parentWidget, offset=30, border=10):
     """
     Positions window near cursor
     
@@ -31,7 +31,6 @@ def positionWindow(cursor_pos, window, desktop, parentWidget, offset=30, border=
                  screenGeometry.width(), screenGeometry.height())
     
     # now window size
-    windowSize = window.size()
     windowWidth = windowSize.width()
     windowHeight = windowSize.height()
     logger.debug("Window size: %d x %d", windowWidth, windowHeight)

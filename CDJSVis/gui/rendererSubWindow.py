@@ -58,6 +58,9 @@ class RendererWindow(QtGui.QWidget):
         
         self.highlighters = {}
         
+        self.leftClick = False
+        self.rightClick = False
+        
         # layout
         layout = QtGui.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -134,11 +137,13 @@ class RendererWindow(QtGui.QWidget):
         # connect signals from QVTK
         self.vtkRenWinInteract.leftButtonPressOverride.connect(self.leftButtonPressed)
         self.vtkRenWinInteract.leftButtonReleaseOverride.connect(self.leftButtonReleased)
+        self.vtkRenWinInteract.rightButtonPressOverride.connect(self.rightButtonPressed)
+        self.vtkRenWinInteract.rightButtonReleaseOverride.connect(self.rightButtonReleased)
         self.vtkRenWinInteract.mouseMoveOverride.connect(self.mouseMoved)
         
         # add picker
         self.vtkPicker = vtk.vtkCellPicker()
-        self.vtkPicker.SetTolerance(0.005)
+        self.vtkPicker.SetTolerance(0.001)
         self.vtkPicker.AddObserver("EndPickEvent", self.endPickEvent)
         self.vtkRenWinInteract.SetPicker(self.vtkPicker)
         
@@ -514,12 +519,24 @@ class RendererWindow(QtGui.QWidget):
         End of vtk pick event.
         
         """
+        logger = self.logger
+        
+        if self.leftClick and not self.rightClick:
+            logger.debug("Left click event")
+            clickType = "LeftClick"
+        
+        elif self.rightClick and not self.leftClick:
+            logger.debug("Right click event")
+            clickType = "RightClick"
+        
+        else:
+            logger.error("Left/right click not set")
+            return
+        
         if self.vtkPicker.GetCellId() < 0:
             pass
         
         else:
-            logger = self.logger
-            
             logger.debug("End pick event: sending pick to pipeline")
             
             pickPos = self.vtkPicker.GetPickPosition()
@@ -527,14 +544,7 @@ class RendererWindow(QtGui.QWidget):
             
             # pipeline form
             pipelinePage = self.getCurrentPipelinePage()
-            pipelinePage.pickObject(pickPos_np)
-    
-    def leftButtonPressed(self, event):
-        """
-        Left mouse button pressed
-        
-        """
-        self.mouseMotion = False
+            pipelinePage.pickObject(pickPos_np, clickType)
     
     def mouseMoved(self, event):
         """
@@ -543,14 +553,45 @@ class RendererWindow(QtGui.QWidget):
         """
         self.mouseMotion = True
     
+    def leftButtonPressed(self, event):
+        """
+        Left mouse button pressed
+        
+        """
+        self.mouseMotion = False
+        self.rightClick = False
+        self.leftClick = True
+    
     def leftButtonReleased(self, event):
         """
         Left button released.
         
         """
         if not self.mouseMotion:
+            self.leftClick = True
             pos = self.vtkRenWinInteract.GetEventPosition()
             self.vtkPicker.Pick(pos[0], pos[1], 0, self.vtkRen)
+        
+        self.leftClick = False
+    
+    def rightButtonPressed(self, event):
+        """
+        Left mouse button pressed
+        
+        """
+        self.mouseMotion = False
+    
+    def rightButtonReleased(self, event):
+        """
+        Left button released.
+        
+        """
+        if not self.mouseMotion:
+            self.rightClick = True
+            pos = self.vtkRenWinInteract.GetEventPosition()
+            self.vtkPicker.Pick(pos[0], pos[1], 0, self.vtkRen)
+        
+        self.rightClick = False
     
     def setCameraToCell(self):
         """
