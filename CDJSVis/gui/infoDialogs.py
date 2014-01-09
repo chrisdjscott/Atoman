@@ -6,6 +6,7 @@ Info dialogs
 
 """
 import sys
+import uuid
 
 from PySide import QtGui, QtCore
 
@@ -25,19 +26,19 @@ class AtomInfoWindow(QtGui.QDialog):
     Atom info window.
     
     """
-    def __init__(self, rendererWindow, atomIndex, scalar, scalarType, filterList, parent=None):
+    def __init__(self, pipelinePage, atomIndex, scalar, scalarType, filterList, parent=None):
         super(AtomInfoWindow, self).__init__(parent)
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
+        self.windowID = uuid.uuid4()
+        
         self.parent = parent
-        self.rendererWindow = rendererWindow
+        self.pipelinePage = pipelinePage
         self.atomIndex = atomIndex
         self.filterList = filterList
         
-        lattice = self.rendererWindow.getCurrentInputState()
-        
-        self.highlighter = highlight.AtomHighlighter(self, self.rendererWindow.vtkRen, self.rendererWindow.vtkRenWinInteract)
+        lattice = self.pipelinePage.inputState
         
         self.setWindowTitle("Atom info")
         
@@ -72,11 +73,6 @@ class AtomInfoWindow(QtGui.QDialog):
             row.addWidget(QtGui.QLabel("%s: %f" % (scalarType, scalar)))
             layout.addLayout(row)
         
-        # radius
-        radius = lattice.specieCovalentRadius[lattice.specie[atomIndex]] * filterList.displayOptions.atomScaleFactor
-        
-        self.highlighter.add(lattice.atomPos(atomIndex), radius * 1.1)
-        
         row = QtGui.QHBoxLayout()
         row.addStretch(1)
         closeButton = QtGui.QPushButton("Close")
@@ -87,12 +83,29 @@ class AtomInfoWindow(QtGui.QDialog):
         
         self.setLayout(layout)
     
+    def getHighlighters(self):
+        """
+        Return highlighter for this atom
+        
+        """
+        # lattice
+        lattice = self.pipelinePage.inputState
+        
+        # radius
+        radius = lattice.specieCovalentRadius[lattice.specie[self.atomIndex]] * self.filterList.displayOptions.atomScaleFactor
+        
+        # highlighter
+        highlighter = highlight.AtomHighlighter(lattice.atomPos(self.atomIndex), radius * 1.1)
+        
+        return self.windowID, [highlighter,]
+    
     def closeEvent(self, event):
         """
         Override close event
         
         """
-        self.highlighter.remove()
+        # remove highlighters
+        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
         
         event.accept()
 
@@ -103,23 +116,22 @@ class DefectInfoWindow(QtGui.QDialog):
     Atom info window.
     
     """
-    def __init__(self, rendererWindow, defectIndex, defectType, defList, filterList, parent=None):
+    def __init__(self, pipelinePage, defectIndex, defectType, defList, filterList, parent=None):
         super(DefectInfoWindow, self).__init__(parent)
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
+        self.windowID = uuid.uuid4()
+        
         self.parent = parent
-        self.rendererWindow = rendererWindow
+        self.pipelinePage = pipelinePage
         self.defectIndex = defectIndex
         self.defectType = defectType
         self.defList = defList
         self.filterList = filterList
         
-        self.highlighter = None
-        self.highlighters = []
-        
-        inputState = self.rendererWindow.getCurrentInputState()
-        refState = self.rendererWindow.getCurrentRefState()
+        inputState = self.pipelinePage.inputState
+        refState = self.pipelinePage.refState
         
         self.setWindowTitle("Defect info")
         
@@ -127,9 +139,6 @@ class DefectInfoWindow(QtGui.QDialog):
         
         if defectType == 1:
             vacancies = defList[0]
-            
-            # highlighter
-            self.highlighter = highlight.VacancyHighlighter(self, self.rendererWindow.vtkRen, self.rendererWindow.vtkRenWinInteract)
             
             # vacancy
             index = vacancies[defectIndex]
@@ -149,22 +158,9 @@ class DefectInfoWindow(QtGui.QDialog):
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (refState.pos[3*index], refState.pos[3*index+1], refState.pos[3*index+2])))
             layout.addLayout(row)
-            
-            # radius
-            radius = refState.specieCovalentRadius[refState.specie[index]] * filterList.displayOptions.atomScaleFactor
-            
-            # can do this because defect filter is always by itself
-            vacScaleSize = filterList.currentSettings[0].vacScaleSize
-            radius *= vacScaleSize * 2.0
-            
-            # highlight
-            self.highlighter.add(refState.atomPos(index), radius * 1.1)
         
         elif defectType == 2:
             interstitials = defList[0]
-            
-            # highlighter
-            self.highlighter = highlight.AtomHighlighter(self, self.rendererWindow.vtkRen, self.rendererWindow.vtkRenWinInteract)
             
             # interstitial
             index = interstitials[defectIndex]
@@ -196,19 +192,10 @@ class DefectInfoWindow(QtGui.QDialog):
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("Charge: %f" % (inputState.charge[index],)))
             layout.addLayout(row)
-            
-            # radius
-            radius = inputState.specieCovalentRadius[inputState.specie[index]] * filterList.displayOptions.atomScaleFactor
-            
-            self.highlighter.add(inputState.atomPos(index), radius * 1.1)
         
         elif defectType == 3:
             antisites = defList[0]
             onAntisites = defList[1]
-            
-            # highlighter
-            self.highlighters.append(highlight.AntisiteHighlighter(self, self.rendererWindow.vtkRen, self.rendererWindow.vtkRenWinInteract))
-            self.highlighters.append(highlight.AtomHighlighter(self, self.rendererWindow.vtkRen, self.rendererWindow.vtkRenWinInteract))
             
             # antisite
             index = antisites[defectIndex]
@@ -257,29 +244,9 @@ class DefectInfoWindow(QtGui.QDialog):
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("    Charge: %f" % (inputState.charge[index2],)))
             layout.addLayout(row)
-            
-            #### highlight antisite frame ####
-            
-            # radius
-            radius = 2.0 * refState.specieCovalentRadius[refState.specie[index]] * filterList.displayOptions.atomScaleFactor
-            
-            # highlight
-            self.highlighters[0].add(refState.atomPos(index), radius)
-            
-            #### highlight occupying atom ####
-            
-            # radius
-            radius = inputState.specieCovalentRadius[inputState.specie[index2]] * filterList.displayOptions.atomScaleFactor
-            
-            self.highlighters[1].add(inputState.atomPos(index2), radius * 1.1)
         
         elif defectType == 4:
             splitInts = defList[0]
-            
-            # highlighter
-            self.highlighters.append(highlight.VacancyHighlighter(self, self.rendererWindow.vtkRen, self.rendererWindow.vtkRenWinInteract))
-            self.highlighters.append(highlight.AtomHighlighter(self, self.rendererWindow.vtkRen, self.rendererWindow.vtkRenWinInteract))
-            self.highlighters.append(highlight.AtomHighlighter(self, self.rendererWindow.vtkRen, self.rendererWindow.vtkRenWinInteract))
             
             # split interstitial
             vacIndex = splitInts[3*defectIndex]
@@ -362,40 +329,12 @@ class DefectInfoWindow(QtGui.QDialog):
             pos1 = inputState.pos[3*int1Index:3*int1Index+3]
             pos2 = inputState.pos[3*int2Index:3*int2Index+3]
             
-            pp = rendererWindow.getCurrentPipelinePage()
-            
-            sepVec = vectors.separationVector(pos1, pos2, inputState.cellDims, pp.PBC)
+            sepVec = vectors.separationVector(pos1, pos2, inputState.cellDims, self.pipelinePage.PBC)
             norm = vectors.normalise(sepVec)
             
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("Orientation: (%f %f %f)" % (norm[0], norm[1], norm[2])))
             layout.addLayout(row)
-            
-            #### highlight vacancy ####
-            
-            # radius
-            radius = refState.specieCovalentRadius[refState.specie[vacIndex]] * filterList.displayOptions.atomScaleFactor
-            
-            # can do this because defect filter is always by itself
-            vacScaleSize = filterList.currentSettings[0].vacScaleSize
-            radius *= vacScaleSize * 2.0
-            
-            # highlight
-            self.highlighters[0].add(refState.atomPos(vacIndex), radius * 1.1)
-            
-            #### highlight int 1 ####
-            
-            # radius
-            radius = inputState.specieCovalentRadius[inputState.specie[int1Index]] * filterList.displayOptions.atomScaleFactor
-            
-            self.highlighters[1].add(inputState.atomPos(int1Index), radius * 1.1)
-            
-            #### highlight int 2 ####
-            
-            # radius
-            radius = inputState.specieCovalentRadius[inputState.specie[int2Index]] * filterList.displayOptions.atomScaleFactor
-            
-            self.highlighters[2].add(inputState.atomPos(int2Index), radius * 1.1)
         
         row = QtGui.QHBoxLayout()
         row.addStretch(1)
@@ -407,16 +346,121 @@ class DefectInfoWindow(QtGui.QDialog):
         
         self.setLayout(layout)
     
+    def getHighlighters(self):
+        """
+        Return highlighter for this defect
+        
+        """
+        highlighters = []
+        
+        inputState = self.pipelinePage.inputState
+        refState = self.pipelinePage.refState
+        
+        if self.defectType == 1:
+            vacancies = self.defList[0]
+            
+            # vacancy
+            index = vacancies[self.defectIndex]
+            
+            # radius
+            radius = refState.specieCovalentRadius[refState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # can do this because defect filter is always by itself
+            vacScaleSize = self.filterList.currentSettings[0].vacScaleSize
+            radius *= vacScaleSize * 2.0
+            
+            # highlighter
+            highlighter = highlight.VacancyHighlighter(refState.atomPos(index), radius * 1.1)
+            
+            highlighters.append(highlighter)
+        
+        elif self.defectType == 2:
+            interstitials = self.defList[0]
+            
+            # interstitial
+            index = interstitials[self.defectIndex]
+            
+            # radius
+            radius = inputState.specieCovalentRadius[inputState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # highlighter
+            highlighter = highlight.AtomHighlighter(inputState.atomPos(index), radius * 1.1)
+            
+            highlighters.append(highlighter)
+        
+        elif self.defectType == 3:
+            antisites = self.defList[0]
+            onAntisites = self.defList[1]
+            
+            # antisite
+            index = antisites[self.defectIndex]
+            index2 = onAntisites[self.defectIndex]
+            
+            #### highlight antisite ####
+            
+            # radius
+            radius = 2.0 * refState.specieCovalentRadius[refState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # highlight
+            highlighter = highlight.AntisiteHighlighter(refState.atomPos(index), radius)
+            highlighters.append(highlighter)
+            
+            #### highlight occupying atom ####
+            
+            # radius
+            radius = inputState.specieCovalentRadius[inputState.specie[index2]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # highlight
+            highlighter = highlight.AtomHighlighter(inputState.atomPos(index2), radius * 1.1)
+            highlighters.append(highlighter)
+        
+        elif self.defectType == 4:
+            splitInts = self.defList[0]
+            
+            # split interstitial
+            vacIndex = splitInts[3*self.defectIndex]
+            int1Index = splitInts[3*self.defectIndex+1]
+            int2Index = splitInts[3*self.defectIndex+2]
+            
+            #### highlight vacancy ####
+            
+            # radius
+            radius = refState.specieCovalentRadius[refState.specie[vacIndex]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # can do this because defect filter is always by itself
+            vacScaleSize = self.filterList.currentSettings[0].vacScaleSize
+            radius *= vacScaleSize * 2.0
+            
+            # highlight
+            highlighter = highlight.VacancyHighlighter(refState.atomPos(vacIndex), radius * 1.1)
+            highlighters.append(highlighter)
+            
+            #### highlight int 1 ####
+            
+            # radius
+            radius = inputState.specieCovalentRadius[inputState.specie[int1Index]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # highlight
+            highlighter = highlight.AtomHighlighter(inputState.atomPos(int1Index), radius * 1.1)
+            highlighters.append(highlighter)
+            
+            #### highlight int 2 ####
+            
+            # radius
+            radius = inputState.specieCovalentRadius[inputState.specie[int2Index]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # highlight
+            highlighter = highlight.AtomHighlighter(inputState.atomPos(int2Index), radius * 1.1)
+            highlighters.append(highlighter)
+        
+        return self.windowID, highlighters
+    
     def closeEvent(self, event):
         """
         Close event
         
         """
-        if self.highlighter is not None:
-            self.highlighter.remove()
-        
-        elif len(self.highlighters):
-            for hl in self.highlighters:
-                hl.remove()
+        # remove highlighters
+        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
         
         event.accept()

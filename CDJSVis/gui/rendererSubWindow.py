@@ -17,8 +17,6 @@ import numpy as np
 from ..visutils.utilities import iconPath, resourcePath
 from ..visutils import utilities
 from . import dialogs
-from . import infoDialogs
-from ..visclibs import picker as picker_c
 from ..rendering import renderer
 from .outputDialog import OutputDialog
 from ..rendering.text import vtkRenderWindowText
@@ -48,6 +46,8 @@ class RendererWindow(QtGui.QWidget):
         
         self.setWindowTitle("Render window %d" % index)
         
+        self.logger = logging.getLogger(__name__)
+        
         self.closed = False
         
         self.slicePlaneActor = None
@@ -55,6 +55,8 @@ class RendererWindow(QtGui.QWidget):
         self.blackBackground = False
         
         self.currentAAFrames = 2
+        
+        self.highlighters = {}
         
         # layout
         layout = QtGui.QVBoxLayout()
@@ -357,6 +359,7 @@ class RendererWindow(QtGui.QWidget):
         """
         filterLists = self.getFilterLists()
         
+        # remove actors from filter lists
         for filterList in filterLists:
             filterer = filterList.filterer
             actorsCollection = filterer.actorsCollection
@@ -379,8 +382,15 @@ class RendererWindow(QtGui.QWidget):
                     scalarBar = filterer.scalarBar_white_bg
                 
                 self.vtkRen.RemoveActor2D(scalarBar)
-            
-            self.vtkRenWinInteract.ReInitialize()
+        
+        # remove slice plane?
+        self.removeSlicePlane()
+        
+        # remove 
+        for key in self.highlighters.keys():
+            self.removeHighlighters(key)
+        
+        self.vtkRenWinInteract.ReInitialize()
     
     def addActors(self):
         """
@@ -508,184 +518,16 @@ class RendererWindow(QtGui.QWidget):
             pass
         
         else:
-            logger = logging.getLogger(__name__)
-#             logger.setLevel(logging.DEBUG)
+            logger = self.logger
             
-            logger.debug("End pick event")
+            logger.debug("End pick event: sending pick to pipeline")
             
             pickPos = self.vtkPicker.GetPickPosition()
             pickPos_np = np.asarray(pickPos, dtype=np.float64)
             
-            # find which atom was picked...
-            
-            # loop over filter lists
-            filterLists = self.getFilterLists()
-            
-            # states
-            refState = self.getCurrentRefState()
-            inputState = self.getCurrentInputState()
-            
-            minSepIndex = -1
-            minSep = 9999999.0
-            minSepType = None
-            minSepScalarType = None
-            minSepScalar = None
-            minSepFilterList = None
-            for filterList in filterLists:
-                filterer = filterList.filterer
-                
-                visibleAtoms = filterer.visibleAtoms
-                interstitials = filterer.interstitials
-                vacancies = filterer.vacancies
-                antisites = filterer.antisites
-                onAntisites = filterer.onAntisites
-                splitInts = filterer.splitInterstitials
-                scalars = filterer.scalars
-                scalarsType = filterer.scalarsType
-                
-                result = np.empty(3, np.float64)
-                
-                pp = self.getCurrentPipelinePage()
-                
-                status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos_np, 
-                                             inputState.pos, refState.pos, pp.PBC, inputState.cellDims,
-                                             refState.minPos, refState.maxPos, inputState.specie, 
-                                             refState.specie, inputState.specieCovalentRadius, 
-                                             refState.specieCovalentRadius, result)
-                
-                tmp_type, tmp_index, tmp_sep = result
-                
-                if tmp_index >= 0 and tmp_sep < minSep:
-                    minSep = tmp_sep
-                    minSepType = int(tmp_type)
-                    minSepFilterList = filterList
-                    
-                    if minSepType == 0:
-                        minSepIndex = visibleAtoms[int(tmp_index)]
-                    else:
-                        minSepIndex = int(tmp_index)
-                        
-                        if minSepType == 1:
-                            defList = (vacancies,)
-                        elif minSepType == 2:
-                            defList = (interstitials,)
-                        elif minSepType == 3:
-                            defList = (antisites, onAntisites)
-                        else:
-                            defList = (splitInts,)
-                    
-                    if len(scalarsType):
-                        minSepScalar = scalars[tmp_index]
-                        minSepScalarType = scalarsType
-                    else:
-                        minSepScalar = None
-                        minSepScalarType = None
-            
-            if minSep < 0.1:
-                if minSepType == 0:
-                    # atom info window
-                    infoWindow = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, minSepFilterList, parent=self)
-                
-                else:
-                    # defect info window
-                    infoWindow = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, minSepFilterList, parent=self)
-                
-                # need cursor position on screen to decide where to open window
-                cursor = QtGui.QCursor()
-                cursor_pos = cursor.pos()
-                logger.debug("Cursor pos: (%d, %d)", cursor_pos.x(), cursor_pos.y())
-                
-                # show first to force correct size
-                infoWindow.show()
-                
-                # decide where to put the window
-                offset = 30
-                border = 10
-                
-                # first determine screen size, which screen, etc
-                desktop = self.mainWindow.desktop
-                screenNumber = desktop.screenNumber(widget=self)
-                logger.debug("Screen number: %d", screenNumber)
-                screenGeometry = desktop.availableGeometry(self)
-                logger.debug("Screen geometry: (%d, %d, %d, %d)", screenGeometry.left(), screenGeometry.top(), 
-                             screenGeometry.width(), screenGeometry.height())
-                
-                # now window size
-                windowSize = infoWindow.size()
-                windowWidth = windowSize.width()
-                windowHeight = windowSize.height()
-                logger.debug("Window size: %d x %d", windowWidth, windowHeight)
-                logger.debug("Cursor offset: %d", offset)
-                logger.debug("Screen border: %d", border)
-                
-                # first determine x position: right, left or centre
-                logger.debug("Checking right")
-                
-                # fits right if: point_x + offset + window_width < screen_max_x - border
-                window_x_max = cursor_pos.x() + offset + windowWidth
-                screen_max_x = screenGeometry.left() + screenGeometry.width() - border
-                logger.debug("  Window/screen max x: %d < %d?", window_x_max, screen_max_x)
-                
-                if window_x_max < screen_max_x:
-                    logger.debug("Window fits right")
-                    
-                    new_x = cursor_pos.x() + offset
-                    
-                else:
-                    logger.debug("Checking left")
-                    
-                    # fits left if: point_x - offset - window_width > screen_min_x + border
-                    window_x_min = cursor_pos.x() - offset - windowWidth
-                    screen_min_x = screenGeometry.left() + border
-                    logger.debug("  Window/screen min x: %d > %d?", window_x_min, screen_min_x)
-                    
-                    if window_x_min > screen_min_x:
-                        logger.debug("Window fits left")
-                        
-                        new_x = cursor_pos.x() - offset - windowWidth
-                    
-                    else:
-                        logger.debug("Centering window left to right")
-                        
-                        new_x = screenGeometry.left() + (screenGeometry.width() - windowWidth) / 2.0
-                
-                # now determine y position: below, above or centre
-                logger.debug("Checking fits below")
-                
-                # fits below if: point_y - offset - window_height > screen_min_y + border
-                window_y_max = cursor_pos.y() + offset + windowHeight
-                screen_max_y = screenGeometry.top() + screenGeometry.height() - border
-                logger.debug("  Window/screen max y: %d < %d?", window_y_max, screen_max_y)
-                
-                if window_y_max < screen_max_y:
-                    logger.debug("Window fits below")
-                    
-                    new_y = cursor_pos.y() + offset
-                
-                else:
-                    logger.debug("Checking fits above")
-                    
-                    # fits above if: point_y + offset + window_height < screen_max_x - border
-                    window_y_min = cursor_pos.y() - offset - windowHeight
-                    screen_min_y = screenGeometry.top() + border
-                    logger.debug("  Window/screen min y: %d > %d?", window_y_min, screen_min_y)
-                    
-                    if window_y_min > screen_min_y:
-                        logger.debug("Window fits above")
-                        
-                        new_y = cursor_pos.y() - offset - windowHeight
-                    
-                    else:
-                        logger.debug("Centering window above to below")
-                        
-                        new_y = screenGeometry.top() + (screenGeometry.height - windowHeight) / 2.0
-                
-                # set position of window
-                windowPoint = QtCore.QPoint(new_x, new_y)
-                
-                logger.debug("Setting window position: (%d, %d)", new_x, new_y)
-                
-                infoWindow.setGeometry(QtCore.QRect(windowPoint, infoWindow.size()))
+            # pipeline form
+            pipelinePage = self.getCurrentPipelinePage()
+            pipelinePage.pickObject(pickPos_np)
     
     def leftButtonPressed(self, event):
         """
@@ -1129,5 +971,53 @@ class RendererWindow(QtGui.QWidget):
                 self.slicePlaneActor = None
             except:
                 print "REM SLICE ACTOR FAILED"
-
+    
+    def addHighlighters(self, highlightersID, highlighters):
+        """
+        Add highlighters to renderer
+        
+        """
+        logger = self.logger
+        logger.debug("Adding highlighters to renderer %d", self.rendererIndex)
+        
+        # first check if highlighter is already in our dict
+        if highlightersID in self.highlighters:
+            logger.debug("Highlighters already in dict: ignoring")
+            return
+        
+        # add to renderer
+        for actor in highlighters:
+            self.vtkRen.AddActor(actor)
+        
+        # reinit
+        self.vtkRenWinInteract.ReInitialize()
+        
+        # add to dict
+        self.highlighters[highlightersID] = highlighters
+    
+    def removeHighlighters(self, highlightersID):
+        """
+        Remove specified highlighters from render
+        
+        """
+        logger = self.logger
+        logger.debug("Removing highlighters from renderer %d", self.rendererIndex)
+        
+        if highlightersID not in self.highlighters:
+            logger.critical("Highlighters not in dict: this should not be possible!")
+            return
+        
+        # get highlighters
+        hls = self.highlighters[highlightersID]
+        
+        # remove actors
+        for actor in hls:
+            self.vtkRen.RemoveActor(actor)
+        
+        # reinit
+        self.vtkRenWinInteract.ReInitialize()
+        
+        # remove from dict
+        self.highlighters.pop(highlightersID)
+        
 

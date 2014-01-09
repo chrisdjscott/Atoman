@@ -6,6 +6,7 @@ The filter tab for the main toolbar
 
 """
 import sys
+import logging
 
 from PySide import QtGui, QtCore
 
@@ -35,7 +36,13 @@ class FilterList(QtGui.QWidget):
         self.filterCounter = 0
         self.pipelinePage = self.filterTab
         
-        self.defectFilterSelected = 0
+        self.logger = logging.getLogger(__name__)
+        
+        # have to treat defect filter differently
+        self.defectFilterSelected = False
+        
+        # info windows stored here
+        self.infoWindows = {}
         
         # all available filters
         self.allFilters = ["Specie", 
@@ -73,13 +80,13 @@ class FilterList(QtGui.QWidget):
         self.visibleButton.setStatusTip("Visible")
         self.visibleButton.setCheckable(1)
         self.visibleButton.setChecked(0)
-        self.connect(self.visibleButton, QtCore.SIGNAL('clicked()'), self.visibilityChanged)
+        self.visibleButton.clicked.connect(self.visibilityChanged)
         
         # trash the list
         trashButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-delete.svg")), "")
         trashButton.setStatusTip("Delete filter list")
         trashButton.setFixedWidth(35)
-        self.connect(trashButton, QtCore.SIGNAL('clicked()'), self.filterTab.removeFilterList)
+        trashButton.clicked.connect(self.filterTab.removeFilterList)
         
         # persistent list button
         self.persistButton = QtGui.QPushButton(QtGui.QIcon(iconPath("application-certificate.svg")), "")
@@ -141,27 +148,27 @@ class FilterList(QtGui.QWidget):
         # add more buttons
         addFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
         addFilter.setStatusTip("Add new filter")
-        self.connect(addFilter, QtCore.SIGNAL('clicked()'), self.addFilter)
+        addFilter.clicked.connect(self.addFilter)
         
         removeFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
         removeFilter.setStatusTip("Remove filter")
-        self.connect(removeFilter, QtCore.SIGNAL('clicked()'), self.removeFilter)
+        removeFilter.clicked.connect(self.removeFilter)
         
         moveUp = QtGui.QPushButton(QtGui.QIcon(iconPath("go-up.svg")), "")
         moveUp.setStatusTip("Move up")
-        self.connect(moveUp, QtCore.SIGNAL('clicked()'), self.moveFilterUpInList)
+        moveUp.clicked.connect(self.moveFilterUpInList)
         
         moveDown = QtGui.QPushButton(QtGui.QIcon(iconPath("go-down.svg")), "")
         moveDown.setStatusTip("Move down")
-        self.connect(moveDown, QtCore.SIGNAL('clicked()'), self.moveFilterDownInList)
+        moveDown.clicked.connect(self.moveFilterDownInList)
         
         clearList = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-clear.svg")), "")
         clearList.setStatusTip("Clear current filter list")
-        self.connect(clearList, QtCore.SIGNAL('clicked()'), self.clearList)
+        clearList.clicked.connect(self.clearList)
         
         applyList = QtGui.QPushButton(QtGui.QIcon(iconPath("view-refresh.svg")), "")
         applyList.setStatusTip("Apply current filter list")
-        self.connect(applyList, QtCore.SIGNAL('clicked()'), self.applyList)
+        applyList.clicked.connect(self.applyList)
         
         buttonWidget = QtGui.QWidget()
         buttonLayout = QtGui.QHBoxLayout(buttonWidget)
@@ -222,6 +229,19 @@ class FilterList(QtGui.QWidget):
         
         # the filterer (does the filtering)
         self.filterer = filterer.Filterer(self)
+    
+    def removeInfoWindows(self):
+        """
+        Remove info windows and highlighters
+        
+        """
+        self.logger.debug("Removing info windows")
+        
+        keys = self.infoWindows.keys()
+        
+        for key in keys:
+            win = self.infoWindows.pop(key)
+            win.close()
     
     def toggleScalarBar(self):
         """
@@ -317,7 +337,7 @@ class FilterList(QtGui.QWidget):
         self.staticListButton.setChecked(0)
         self.persistButton.setChecked(0)
         
-        self.defectFilterSelected = 0
+        self.defectFilterSelected = False
         
         if self.filterer.scalarBarAdded:
 #            self.filterer.hideScalarBar()
@@ -438,7 +458,7 @@ class FilterList(QtGui.QWidget):
                 self.currentSettings.append(form)
                 
                 if str(filterName) == "Point defects":
-                    self.defectFilterSelected = 1
+                    self.defectFilterSelected = True
     
     def removeFilter(self):
         """
@@ -463,7 +483,7 @@ class FilterList(QtGui.QWidget):
         dlg.accept()
         
         if filterName.startswith("Point defects"):
-            self.defectFilterSelected = 0
+            self.defectFilterSelected = False
     
     def createSettingsForm(self, filterName):
         """

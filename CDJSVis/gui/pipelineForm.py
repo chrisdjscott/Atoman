@@ -19,6 +19,9 @@ from ..visutils.utilities import iconPath
 from . import filterList
 from ..rendering.text import vtkRenderWindowText
 from ..visutils import utilities
+from ..visclibs import picker as picker_c
+from . import infoDialogs
+from . import utils
 
 try:
     from .. import resources
@@ -255,6 +258,7 @@ class PipelineForm(QtGui.QWidget):
         """
         if oldRef is not None:
             self.clearAllActors()
+            self.removeInfoWindows()
             self.refreshAllFilters()
                 
             for rw in self.rendererWindows:
@@ -274,11 +278,17 @@ class PipelineForm(QtGui.QWidget):
         Do stuff after the input has been loaded
         
         """
+        self.clearAllActors()
+        self.removeInfoWindows()
+        self.refreshAllFilters()
+        
         if self.analysisPipelineFormHidden:
             self.mainToolbar.analysisPipelinesForm.show()
             self.analysisPipelineFormHidden = False
         
-        self.refreshAllFilters()
+        else:
+            # auto run filters... ?
+            pass
         
         for rw in self.rendererWindows:
             if rw.currentPipelineIndex == self.pipelineIndex:
@@ -339,6 +349,16 @@ class PipelineForm(QtGui.QWidget):
         # post input loaded
         self.postInputLoaded()
     
+    def removeInfoWindows(self):
+        """
+        Remove all info windows and associated highlighters
+        
+        """
+        self.logger.debug("Clearing all info windows/highlighters")
+        
+        for filterList in self.filterLists:
+            filterList.removeInfoWindows()
+    
     def showFilterSummary(self):
         """
         Show filtering summary.
@@ -377,6 +397,10 @@ class PipelineForm(QtGui.QWidget):
         for fn in oldpovfiles:
             os.unlink(fn)
         
+        # remove old info windows
+        self.removeInfoWindows()
+        
+        # set scalar bar false
         self.scalarBarAdded = False
         
         count = 0
@@ -501,19 +525,152 @@ class PipelineForm(QtGui.QWidget):
         Broadcast command to associated renderers.
         
         """
-        rwList = []
-        for rw in self.mainWindow.rendererWindows:
-            if globalBcast:
-                rwList.append(rw)
-            
-            elif rw.currentPipelineString == self.pipelineString:
-                rwList.append(rw)
+        if globalBcast:
+            rwList = self.mainWindow.rendererWindows
+        
+        else:
+            rwList = [rw for rw in self.mainWindow.rendererWindows if rw.currentPipelineString == self.pipelineString]
+        
+#         rwList = []
+#         for rw in self.mainWindow.rendererWindows:
+#             if globalBcast:
+#                 rwList.append(rw)
+#             
+#             elif rw.currentPipelineString == self.pipelineString:
+#                 rwList.append(rw)
+        
+        self.logger.debug("Broadcasting to renderers (%d/%d): %s", len(rwList), len(self.mainWindow.rendererWindows), method)
         
         for rw in rwList:
             if hasattr(rw, method):
                 call = getattr(rw, method)
                 
                 call(*args, **kwargs)
-
-
+    
+    def pickObject(self, pickPos):
+        """
+        Pick object
+        
+        """
+        logger = self.logger
+        
+        # loop over filter lists
+        filterLists = self.filterLists
+        
+        # states
+        refState = self.refState
+        inputState = self.inputState
+        
+        minSepIndex = -1
+        minSep = 9999999.0
+        minSepType = None
+        minSepScalarType = None
+        minSepScalar = None
+        minSepFilterList = None
+        for filterList in filterLists:
+            filterer = filterList.filterer
+            
+            visibleAtoms = filterer.visibleAtoms
+            interstitials = filterer.interstitials
+            vacancies = filterer.vacancies
+            antisites = filterer.antisites
+            onAntisites = filterer.onAntisites
+            splitInts = filterer.splitInterstitials
+            scalars = filterer.scalars
+            scalarsType = filterer.scalarsType
+            
+            result = np.empty(3, np.float64)
+            
+            status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos, 
+                                         inputState.pos, refState.pos, self.PBC, inputState.cellDims,
+                                         refState.minPos, refState.maxPos, inputState.specie, 
+                                         refState.specie, inputState.specieCovalentRadius, 
+                                         refState.specieCovalentRadius, result)
+            
+            tmp_type, tmp_index, tmp_sep = result
+            
+            if tmp_index >= 0 and tmp_sep < minSep:
+                minSep = tmp_sep
+                minSepType = int(tmp_type)
+                minSepFilterList = filterList
+                
+                if minSepType == 0:
+                    minSepIndex = visibleAtoms[int(tmp_index)]
+                else:
+                    minSepIndex = int(tmp_index)
+                    
+                    if minSepType == 1:
+                        defList = (vacancies,)
+                    elif minSepType == 2:
+                        defList = (interstitials,)
+                    elif minSepType == 3:
+                        defList = (antisites, onAntisites)
+                    else:
+                        defList = (splitInts,)
+                
+                if len(scalarsType):
+                    minSepScalar = scalars[tmp_index]
+                    minSepScalarType = scalarsType
+                else:
+                    minSepScalar = None
+                    minSepScalarType = None
+        
+        logger.debug("Closest object to pick: %f (threshold: %f)", minSep, 0.1)
+        
+        # check if close enough
+        if minSep < 0.1:
+            logger.debug("Found picked object")
+            
+            # key for storing the window
+            windowKey = "%d_%d" % (minSepType, minSepIndex) 
+            logger.debug("Picked object window key: '%s' (exists already: %s)", windowKey, windowKey in minSepFilterList.infoWindows)
+            
+            # check if key already exists, if so use stored window
+            if windowKey in minSepFilterList.infoWindows:
+                window = minSepFilterList.infoWindows[windowKey]
+                
+                # highlight
+                highlightersID, highlighters = window.getHighlighters()
+                
+                # add to renderers
+                self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
+                
+                # need cursor position on screen to decide where to show window
+                cursor = QtGui.QCursor()
+                cursor_pos = cursor.pos()
+                
+                # position window
+                utils.positionWindow(cursor_pos, window, self.mainWindow.desktop, self)
+                
+                # should reposition before showing...
+                window.show()
+            
+            # otherwise make new window
+            else:
+                if minSepType == 0:
+                    # atom info window
+                    infoWindow = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, minSepFilterList, parent=self)
+                
+                else:
+                    # defect info window
+                    infoWindow = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, minSepFilterList, parent=self)
+                
+                # highlighting
+                highlightersID, highlighters = infoWindow.getHighlighters()
+                
+                # add to renderers
+                self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
+                
+                # need cursor position on screen to decide where to open window
+                cursor = QtGui.QCursor()
+                cursor_pos = cursor.pos()
+                
+                # show first to force correct size
+                infoWindow.show()
+                
+                # position window
+                utils.positionWindow(cursor_pos, infoWindow, self.mainWindow.desktop, self)
+                
+                # store window for reuse
+                minSepFilterList.infoWindows[windowKey] = infoWindow
 

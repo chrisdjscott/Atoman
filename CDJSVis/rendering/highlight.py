@@ -10,30 +10,14 @@ import vtk
 
 ################################################################################
 
-class AtomHighlighter(object):
+class AtomHighlighter(vtk.vtkActor):
     """
     Atom highlighter
     
     """
-    def __init__(self, parent, ren, renWinInteract):
-        self.parent = parent
-        
+    def __init__(self, pos, radius, rgb=[0.62, 0, 0.77]):
         self.source = vtk.vtkSphereSource()
         self.mapper = vtk.vtkPolyDataMapper()
-        self.actor = vtk.vtkActor()
-        
-        self.ren = ren
-        self.renWinInteract = renWinInteract
-        
-        self.added = False
-    
-    def add(self, pos, radius, rgb=[0.62, 0, 0.77]):
-        """
-        Highlight atom
-        
-        """
-        if self.added:
-            self.remove()
         
         # source
         self.source.SetCenter(pos)
@@ -43,57 +27,19 @@ class AtomHighlighter(object):
         self.mapper.SetInput(self.source.GetOutput())
         
         # actor
-        self.actor.SetMapper(self.mapper)
-        self.actor.GetProperty().SetColor(rgb)
-        
-        # add to renderer
-        self.ren.AddActor(self.actor)
-        
-        # reinit
-        self.renWinInteract.ReInitialize()
-        
-        self.added = True
-    
-    def remove(self):
-        """
-        Remove 
-        
-        """
-        if self.added:
-            # remove from renderer
-            self.ren.RemoveActor(self.actor)
-            
-            # reinit
-            self.renWinInteract.ReInitialize()
-            
-            self.added = False
+        self.SetMapper(self.mapper)
+        self.GetProperty().SetColor(rgb)
 
 ################################################################################
 
-class VacancyHighlighter(object):
+class VacancyHighlighter(vtk.vtkActor):
     """
     Vacancy highlighter
     
     """
-    def __init__(self, parent, ren, renWinInteract):
-        self.parent = parent
-        
+    def __init__(self, pos, radius, rgb=[0.62, 0, 0.77]):
         self.source = vtk.vtkCubeSource()
         self.mapper = vtk.vtkPolyDataMapper()
-        self.actor = vtk.vtkActor()
-        
-        self.ren = ren
-        self.renWinInteract = renWinInteract
-        
-        self.added = False
-    
-    def add(self, pos, radius, rgb=[0.62, 0, 0.77]):
-        """
-        Highlight atom
-        
-        """
-        if self.added:
-            self.remove()
         
         # length of sides
         self.source.SetXLength(radius)
@@ -107,57 +53,19 @@ class VacancyHighlighter(object):
         self.mapper.SetInput(self.source.GetOutput())
         
         # actor
-        self.actor.SetMapper(self.mapper)
-        self.actor.GetProperty().SetColor(rgb)
-        
-        # add to renderer
-        self.ren.AddActor(self.actor)
-        
-        # reinit
-        self.renWinInteract.ReInitialize()
-        
-        self.added = True
+        self.SetMapper(self.mapper)
+        self.GetProperty().SetColor(rgb)
     
-    def remove(self):
-        """
-        Remove 
-        
-        """
-        if self.added:
-            # remove from renderer
-            self.ren.RemoveActor(self.actor)
-            
-            # reinit
-            self.renWinInteract.ReInitialize()
-            
-            self.added = False
-
 ################################################################################
 
-class AntisiteHighlighter(object):
+class AntisiteHighlighter(vtk.vtkActor):
     """
     Antisite highlighter
     
     """
-    def __init__(self, parent, ren, renWinInteract):
-        self.parent = parent
-        
+    def __init__(self, pos, radius, rgb=[0.62, 0, 0.77]):
         self.source = vtk.vtkCubeSource()
         self.mapper = vtk.vtkPolyDataMapper()
-        self.actor = vtk.vtkActor()
-        
-        self.ren = ren
-        self.renWinInteract = renWinInteract
-        
-        self.added = False
-    
-    def add(self, pos, radius, rgb=[0.62, 0, 0.77]):
-        """
-        Highlight atom
-        
-        """
-        if self.added:
-            self.remove()
         
         # length of sides
         self.source.SetXLength(radius)
@@ -183,27 +91,5 @@ class AntisiteHighlighter(object):
         self.mapper.SetInput(tubes.GetOutput())
         
         # actor
-        self.actor.SetMapper(self.mapper)
-        self.actor.GetProperty().SetColor(rgb)
-        
-        # add to renderer
-        self.ren.AddActor(self.actor)
-        
-        # reinit
-        self.renWinInteract.ReInitialize()
-        
-        self.added = True
-    
-    def remove(self):
-        """
-        Remove 
-        
-        """
-        if self.added:
-            # remove from renderer
-            self.ren.RemoveActor(self.actor)
-            
-            # reinit
-            self.renWinInteract.ReInitialize()
-            
-            self.added = False
+        self.SetMapper(self.mapper)
+        self.GetProperty().SetColor(rgb)
