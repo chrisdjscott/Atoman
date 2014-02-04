@@ -28,7 +28,6 @@ except ImportError:
 # set default for stream handler (we don't want it to be NOTSET by default)
 logging.getLogger().handlers[0].setLevel(logging.WARNING)
 
-# import sys
 import multiprocessing
 
 from PySide import QtGui, QtCore
@@ -67,6 +66,7 @@ def main():
     mw.show()
     mw.raise_()
     
+    # run application
     sys.exit(app.exec_())
 
 ################################################################################
