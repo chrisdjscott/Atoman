@@ -568,6 +568,10 @@ class PipelineForm(QtGui.QWidget):
         refState = self.refState
         inputState = self.inputState
         
+        # we don't want PBCs when picking
+        pickPBC = np.zeros(3, np.int32)
+        
+        # loop over filter lists, looking for closest object to pick pos
         minSepIndex = -1
         minSep = 9999999.0
         minSepType = None
@@ -589,7 +593,7 @@ class PipelineForm(QtGui.QWidget):
             result = np.empty(3, np.float64)
             
             status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos, 
-                                         inputState.pos, refState.pos, self.PBC, inputState.cellDims,
+                                         inputState.pos, refState.pos, pickPBC, inputState.cellDims,
                                          refState.minPos, refState.maxPos, inputState.specie, 
                                          refState.specie, inputState.specieCovalentRadius, 
                                          refState.specieCovalentRadius, result)
