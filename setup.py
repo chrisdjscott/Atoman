@@ -43,15 +43,36 @@ def main():
                     os.unlink("LBOMDInterface.so")
     
     else:
+        # compile resource file
+        pyrcc4 = utilities.checkForExe("pyside-rcc")
+        
+        # on mac it is appended with python version
+        if not pyrcc4:
+            pyrcc4 = utilities.checkForExe("pyside-rcc-%d.%d" % (sys.version_info[0], sys.version_info[1]))
+        
+        if not pyrcc4:
+            sys.exit("ERROR: COULD NOT LOCATE PYRCC4")
+        
+        # have to compile resources first so that it can be imported by sphinx...
+        # ...viscous circle...
+        try:
+            from CDJSVis import resources
+        except ImportError:
+            os.chdir("CDJSVis")
+        
+            command = "%s resources.qrc > resources.py" % (pyrcc4,)
+            print command
+            os.system(command)
+        
+            os.chdir("..")
+        
         # build sphinx doc
         os.chdir("doc")
         
-        # maybe don't need to delete this, it might update stuff that has changed
-#         if os.path.exists("modules"):
-#             shutil.rmtree("modules")
-        
+        # first generate latest module info
         os.system("./modules_gen_auto.sh")
         
+        # then run make
         os.system("make html")
         
         os.chdir("..")
@@ -101,15 +122,6 @@ def main():
         f.close()
         
         # compile resource file
-        pyrcc4 = utilities.checkForExe("pyside-rcc")
-        
-        # on mac it is appended with python version
-        if not pyrcc4:
-            pyrcc4 = utilities.checkForExe("pyside-rcc-%d.%d" % (sys.version_info[0], sys.version_info[1]))
-        
-        if not pyrcc4:
-            sys.exit("ERROR: COULD NOT LOCATE PYRCC4")
-        
         command = "%s resources_mod.qrc > resources.py" % (pyrcc4,)
         print command
         os.system(command)
