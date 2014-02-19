@@ -10,3 +10,5 @@
 resources.py
 *~
 version_freeze.py
+doc/
+resources_mod.qrc
