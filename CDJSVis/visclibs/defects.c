@@ -29,7 +29,7 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
 {
     int i, exitLoop, k, j, index;
     double vacRad2;
-    int boxNebList[27], specieIndex, index2;
+    int boxNebList[27], index2;
     char symtemp[3], symtemp2[3];
     double xpos, ypos, zpos;
     int checkBox, refIndex, comp, boxIndex;
@@ -40,12 +40,11 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
     int *possibleVacancy, *possibleInterstitial;
     int *possibleAntisite, *possibleOnAntisite;
     int skip, count, NClusters, clusterIndex, vacCount;
-    double approxBoxWidth, splitIntRad, splitIntRad2;
+    double approxBoxWidth, splitIntRad;
     struct Boxes *boxes;
-    double *defectPos, *intPos;
-    int NVacNew, NIntNew, NAntNew, numInCluster, NSplitNew;
-    int NVacNebs, intIndex, vacIndex, *vacNebs;
-    int NSplitInterstitials, *intStat, *defectClusterSplit, splitIndexes[3];
+    double *defectPos;
+    int NVacNew, NIntNew, NAntNew, numInCluster;
+    int NSplitInterstitials, *defectClusterSplit, splitIndexes[3];
     
     
     /* approx width, must be at least vacRad
@@ -295,7 +294,6 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
         }
         
         splitIntRad = 2.0 * vacancyRadius;
-        splitIntRad2 = splitIntRad * splitIntRad;
         
         /* box defects */
         approxBoxWidth = splitIntRad;

@@ -18,6 +18,10 @@ int getSpecieIndex( int NSpecies, char* specie, char* specieList )
 {
     int i, comp, specieIndex;
     
+    /* initialise to something wrong */
+    specieIndex = -99;
+    
+    /* find a match */
     for ( i=0; i<NSpecies; i++ )
     {
         comp = strcmp( &specie[0], &specieList[3*i] );

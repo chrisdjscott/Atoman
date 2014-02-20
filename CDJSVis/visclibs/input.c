@@ -45,7 +45,7 @@ int specieIndex(char* sym, int NSpecies, char* specieList)
 int readRef(char* file, int* specie, double* pos, double* charge, double* KE, double* PE, double* force, 
             char* specieList_c, int* specieCount_c, double* maxPos, double* minPos)
 {
-    int i, j, NAtoms, specInd, stat;
+    int i, NAtoms, specInd, stat;
     FILE *INFILE;
     double xdim, ydim, zdim;
     char symtemp[3];
@@ -54,7 +54,7 @@ int readRef(char* file, int* specie, double* pos, double* charge, double* KE, do
     double xforce, yforce, zforce;
     int id, index;
     double ketemp, petemp, chargetemp;
-    int NSpecies, comp, specieMatch;
+    int NSpecies;
     
     
     INFILE = fopen( file, "r" );
@@ -176,7 +176,7 @@ int readLBOMDXYZ(char* file, double* pos, double* charge, double* KE, double* PE
     int i, index, id, NAtoms, stat;
     double simTime, xpos, ypos, zpos;
     double chargetmp, KEtmp, PEtmp;
-    double xfor, yfor, zfor;
+//    double xfor, yfor, zfor;
     
     
     /* open file */
@@ -274,12 +274,12 @@ int readLatticeLBOMD(char* file, int* specie, double* pos, double* charge, char*
                      int* specieCount_c, double* maxPos, double* minPos)
 {
     FILE *INFILE;
-    int i, j, NAtoms, specInd;
+    int i, NAtoms, specInd;
     double xdim, ydim, zdim;
     char symtemp[3];
     char* specieList;
     double xpos, ypos, zpos, chargetemp;
-    int NSpecies, comp, specieMatch, stat;
+    int NSpecies, stat;
     
     
     /* open file */
