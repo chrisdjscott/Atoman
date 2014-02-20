@@ -110,6 +110,13 @@ class HelpFormSphinx(QtGui.QDialog):
         
         self.resize(900, 700)
     
+    def loadUrl(self, url):
+        """
+        Load given url
+        
+        """
+        self.webView.load(url)
+    
     def closeEvent(self, event):
         """
         Close event

@@ -626,11 +626,18 @@ class LbomdXYZReaderForm(GenericReaderForm):
         helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
         helpButton.setFixedWidth(20)
         helpButton.setFixedHeight(20)
-        helpButton.setToolTip("""<p>XYZ files must be linked with a REF file!</p>
-                                 <p>If you have loaded a REF already it will automatically be linked to the XYZ files you load.</p>
-                                 <p>Otherwise, you will need to load a REF before loading XYZs.</p>""")
+        helpButton.setToolTip("Show help page")
+        helpButton.clicked.connect(self.loadHelpPage)
         
         row.addWidget(helpButton)
+    
+    def loadHelpPage(self):
+        """
+        Load the help page for this form
+        
+        """
+        self.mainWindow.helpWindow.loadUrl("qrc:///doc/usage/file_input.html")
+        self.mainWindow.showHelp()
     
     def getFileName(self, isRef):
         """

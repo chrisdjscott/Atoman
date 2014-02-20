@@ -126,6 +126,10 @@ def main():
         print command
         os.system(command)
         
+        # delete doc/ dir and modified qrc file, no longer required
+        os.unlink("resources_mod.qrc")
+        shutil.rmtree("doc")
+        
         # run Makefile
         os.chdir("visclibs")
         command = "make"
