@@ -259,8 +259,7 @@ int prepareClusterToDrawHulls(int N, double *pos, double *cellDims, int *PBC, in
 int findNeighboursUnapplyPBC(int NAtoms, int index, int clusterID, int numInCluster, int* atomCluster, double *pos, double maxSep2, 
                              double *cellDims, int *PBC, int *appliedPBCs)
 {
-    int i, j, index2;
-    int boxIndex, boxNebList[27];
+    int j, index2;
     double sep2;
     int localPBCsApplied[3];
     

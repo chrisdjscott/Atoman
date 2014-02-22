@@ -297,7 +297,6 @@ void getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes
     int i, j, k;
     int posintx, posinty, posintz;
     int index, count;
-    int xint, yint, zint, tmp;
     
     
     /* first get i,j,k indices of the main box */

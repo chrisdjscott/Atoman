@@ -345,7 +345,6 @@ int coordNumFilter(int NVisible, int *visibleAtoms, double *pos, int *specie, in
     int speca, specb, count, NVisibleNew;
     int boxIndex, boxNebList[27];
     double *visiblePos, sep2, sep;
-    double sepVec[3];
     struct Boxes *boxes;
     
     
