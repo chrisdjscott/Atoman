@@ -213,7 +213,7 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
         }
         
         /* antisites */
-        else if ( (possibleAntisite[i] == 1) )//&& (includeAnts == 1) )
+        else if (possibleAntisite[i] == 1) //&& (includeAnts == 1) )
         {
             antisites[NAntisites] = i;
             onAntisites[NAntisites] = possibleOnAntisite[i];
@@ -241,7 +241,7 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
 //            }
                         
             /* interstitials */
-            if ( (possibleInterstitial[i] == 1) )
+            if (possibleInterstitial[i] == 1)
             {
                 interstitials[NInterstitials] = i;
                 NInterstitials++;
