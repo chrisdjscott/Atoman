@@ -1,9 +1,9 @@
 Usage documentation
 ===================
 
-Contents:
-
 .. toctree::
-    :maxdepth 2
+   :maxdepth: 2
     
-    file_input
+   input/index
+   analysis/index
+   output/index

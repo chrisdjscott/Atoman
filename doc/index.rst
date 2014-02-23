@@ -6,8 +6,6 @@
 Welcome to CDJSVis's documentation!
 ===================================
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
    
@@ -15,7 +13,8 @@ Contents:
    usage/index
    changelog
    modules/modules
-    
+
+You can read this documentation online at http://vis.chrisdjscott.co.uk/.
 
 Indices and tables
 ==================
