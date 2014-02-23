@@ -68,6 +68,8 @@ class MainWindow(QtGui.QMainWindow):
         
         # set focue
         self.setFocus()
+        
+        QtGui.QMessageBox.information(self, "Information", "I've started rewriting the help section so if you aren't sure how something works please look there first; then ask me if that doesn't help.")
     
     def initUI(self):
         """
