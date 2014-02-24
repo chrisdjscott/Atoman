@@ -1,11 +1,10 @@
 
 """
-The systems dialog.
-
-From here you can load/generate a lattice;
-view loaded lattices; set input/ref system, etc
-
-@author: Chris Scott
+Data input is handled by the systems dialog. 
+From here you can load or generate a lattice; view loaded lattices; set input/ref system, etc.
+Once loaded systems will be added to the "Loaded systems" list.  
+Systems can be removed from the list by selecting them (multiple selection is possible) and clicking the minus sign. 
+Note that systems that are currently selected on an analysis pipeline, as either a ref or input, cannot be removed.
 
 """
 import os
@@ -69,6 +68,26 @@ class GenerateInputForm(GenericForm):
         self.pu3ga_generator = latticeGeneratorForms.Pu3GaLatticeGeneratorForm(self, self.mainWindow)
         self.stackedWidget.addWidget(self.pu3ga_generator)
         
+        # help icon
+        row = self.newRow()
+        row.RowLayout.addStretch(1)
+        
+        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
+        helpButton.setFixedWidth(20)
+        helpButton.setFixedHeight(20)
+        helpButton.setToolTip("Show help page")
+        helpButton.clicked.connect(self.loadHelpPage)
+        row.addWidget(helpButton)
+        
+        self.show()
+    
+    def loadHelpPage(self):
+        """
+        Load the help page for this form
+        
+        """
+        self.mainWindow.helpWindow.loadPage("usage/input/lattice_generation.html")
+        self.mainWindow.showHelp()
     
     def file_generated(self, lattice):
         """
@@ -135,7 +154,26 @@ class LoadSystemForm(GenericForm):
         # select auto by default
         self.inputTypeCombo.setCurrentIndex(self.readerFormsKeys.index("AUTO DETECT"))
         
+        # help icon
+        row = self.newRow()
+        row.RowLayout.addStretch(1)
+        
+        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
+        helpButton.setFixedWidth(20)
+        helpButton.setFixedHeight(20)
+        helpButton.setToolTip("Show help page")
+        helpButton.clicked.connect(self.loadHelpPage)
+        row.addWidget(helpButton)
+        
         self.show()
+    
+    def loadHelpPage(self):
+        """
+        Load the help page for this form
+        
+        """
+        self.mainWindow.helpWindow.loadPage("usage/input/file_input.html")
+        self.mainWindow.showHelp()
     
     def setWidgetStack(self, index):
         """
@@ -235,6 +273,13 @@ class SystemsDialog(QtGui.QDialog):
         self.generate_system_form = GenerateInputForm(self, self.mainWindow, self.mainToolbar)
         self.new_system_stack.addWidget(self.generate_system_form)
         
+        # help icon
+        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
+        helpButton.setFixedWidth(20)
+        helpButton.setFixedHeight(20)
+        helpButton.setToolTip("Show help page")
+        helpButton.clicked.connect(self.load_help_page)
+        
         # hide button
         hideButton = QtGui.QPushButton("&Hide")
         hideButton.clicked.connect(self.close)
@@ -242,7 +287,16 @@ class SystemsDialog(QtGui.QDialog):
         row.addStretch(1)
         row.addWidget(hideButton)
         row.addStretch(1)
+        row.addWidget(helpButton)
         dialog_layout.addLayout(row)
+    
+    def load_help_page(self):
+        """
+        Load the help page for this form
+        
+        """
+        self.mainWindow.helpWindow.loadPage("usage/input/index.html")
+        self.mainWindow.showHelp()
     
     def file_generated(self, lattice):
         """

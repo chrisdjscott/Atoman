@@ -1,7 +1,8 @@
+=====
 Input
 =====
 
-Currently there are two ways to get data into the visualiser:
+.. automodule:: CDJSVis.gui.systemsDialog
 
 .. toctree::
     :maxdepth: 2

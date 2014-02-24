@@ -93,11 +93,12 @@ class HelpFormSphinx(QtGui.QDialog):
         self.setWindowTitle("CDJSVis Help")
         self.setWindowIcon(QtGui.QIcon(iconPath("Help-icon.png")))
         
-        self.open = False
+        self.helpFormOpen = False
         
         self.webView = QtWebKit.QWebView(self)
         
         logger = logging.getLogger(__name__)
+        self.logger = logger
         logger.debug("Setting up help form")
         
         self.webView.load("qrc:///doc/index.html")
@@ -115,12 +116,36 @@ class HelpFormSphinx(QtGui.QDialog):
         Load given url
         
         """
+        self.logger.debug("Loading URL: '%s'", url)
         self.webView.load(url)
+    
+    def loadPage(self, page):
+        """
+        Load given page
+        
+        """
+        url = "qrc:///doc/%s" % page
+        self.loadUrl(url)
+    
+    def show(self):
+        """
+        Show window
+        
+        """
+        if self.helpFormOpen:
+            self.logger.debug("Raising helpWindow")
+            self.raise_()
+        
+        else:
+            self.logger.debug("Showing helpWindow")
+            super(HelpFormSphinx, self).show()
+            self.helpFormOpen = True
     
     def closeEvent(self, event):
         """
         Close event
         
         """
-        self.parent.helpOpen = 0
+        self.logger.debug("HelpWindow close event")
+        self.helpFormOpen = False
         self.hide()

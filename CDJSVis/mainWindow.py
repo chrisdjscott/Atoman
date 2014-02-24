@@ -89,7 +89,6 @@ class MainWindow(QtGui.QMainWindow):
         self.refLoaded = 0
         self.inputLoaded = 0
         self.consoleOpen = 0
-        self.helpOpen = 0
         self.verboseLevel = 3
         self.mouseMotion = 0
         
@@ -567,13 +566,7 @@ class MainWindow(QtGui.QMainWindow):
         Show the help window.
         
         """
-        if self.helpOpen:
-            self.helpWindow.closeEvent(1)
-            self.helpWindow.show()
-        
-        else:
-            self.helpWindow.show()
-            self.helpOpen = 1
+        self.helpWindow.show()
     
     def renderWindowClosed(self):
         """
