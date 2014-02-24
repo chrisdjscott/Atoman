@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 The main window class
 
@@ -66,10 +68,32 @@ class MainWindow(QtGui.QMainWindow):
         # initialise user interface
         self.initUI()
         
-        # set focue
+        # set focus
         self.setFocus()
         
-        QtGui.QMessageBox.information(self, "Information", "I've started rewriting the help section so if you aren't sure how something works please look there first; then ask me if that doesn't help.")
+        # display feature notification window?
+        self.displayFeatureNotificationWindow()
+    
+    def displayFeatureNotificationWindow(self):
+        """
+        Show the feature notification window
+        
+        """
+        settings = QtCore.QSettings()
+        
+        dlg = dialogs.NotifyFeatureWindow(self)
+        
+        # key for settings
+        settingsKey = "notification/%s" % dlg.notificationID
+        
+        # see if they don't want us to show the window
+        showDialog = settings.value(settingsKey, True)
+        
+        if showDialog:
+            dlg.exec_()
+            
+            if dlg.dontShowAgainCheck.isChecked():
+                settings.setValue(settingsKey, False)
     
     def initUI(self):
         """
