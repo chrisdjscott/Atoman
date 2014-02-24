@@ -12,7 +12,7 @@ SHELL = /bin/sh
 ifeq (Darwin, $(shell uname -s))
     # compiler flags
     CCLINKFLAGS =   -bundle #-flat_namespace -undefined suppress
-	CCFLAGS =  -c -O3 -fPIC
+	CCFLAGS =  -c -O3 -fPIC -Wall
 	CC = gcc
     INCLUDES = 
 endif
@@ -21,7 +21,7 @@ endif
 ifeq (Linux, $(shell uname -s))
     # compiler flags
     CCLINKFLAGS =   -shared # -flat_namespace
-	CCFLAGS = -c -O3 -fPIC
+	CCFLAGS = -c -O3 -fPIC -Wall
 	CC = gcc
 	
 	# different includes depending on OS

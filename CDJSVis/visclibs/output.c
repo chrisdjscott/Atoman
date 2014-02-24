@@ -82,7 +82,6 @@ void writePOVRAYAtoms(char *filename, int specieDim, int *specie, int posDim, do
 {
     int i, index, specieIndex;
     FILE *OUTFILE;
-    double xpos, ypos, zpos, R, G, B, rad;
     
     /* open file */
     OUTFILE = fopen(filename, "w");
@@ -202,6 +201,8 @@ int writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int 
 	}
 
 	fclose(OUTFILE);
+	
+	return 0;
 }
 
 /*******************************************************************************

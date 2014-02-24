@@ -57,6 +57,7 @@ void maxMovement( int dim1, double* returnVector, int dim4, double* pos1, int di
     
     /* loop over atoms and calculate displacement from original */
     maxMove = -1;
+    maxMoveIndex = -1;
     sum = 0.0;
     sumSep = 0.0;
     for (i=0; i<N; i++)
@@ -287,10 +288,8 @@ double magnitude(int length, double* pos1)
 void addVectorsInplace( int dim4, double* pos1, int dim12, double* pos2 )
 {
     int i;
-    double sum;
     
     
-    sum = 0.0;
     for ( i=0; i<dim4; i++ )
     {
     	pos1[i] += pos2[i];
@@ -304,10 +303,8 @@ void addVectorsInplace( int dim4, double* pos1, int dim12, double* pos2 )
 void scaleVector( int dim1, double* returnVector, int dim4, double* pos1, double factor )
 {
     int i;
-    double sum;
     
     
-    sum = 0.0;
     for ( i=0; i<dim4; i++ )
     {
         returnVector[i] = pos1[i] * factor;
@@ -321,10 +318,8 @@ void scaleVector( int dim1, double* returnVector, int dim4, double* pos1, double
 void subtractVectors( int dim1, double* returnVector, int dim4, double* pos1, int dim12, double* pos2 )
 {
     int i;
-    double sum;
     
-    
-    sum = 0.0;
+
     for ( i=0; i<dim4; i++ )
     {
         returnVector[i] = pos1[i] - pos2[i];
@@ -338,10 +333,8 @@ void subtractVectors( int dim1, double* returnVector, int dim4, double* pos1, in
 void addVectors( int dim1, double* returnVector, int dim4, double* pos1, int dim12, double* pos2 )
 {
     int i;
-    double sum;
     
-    
-    sum = 0.0;
+
     for ( i=0; i<dim4; i++ )
     {
         returnVector[i] = pos1[i] + pos2[i];
