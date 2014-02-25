@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 The main window class
 
@@ -11,6 +13,7 @@ import platform
 import tempfile
 import traceback
 import logging
+import datetime
 
 from PySide import QtGui, QtCore
 import PySide
@@ -65,8 +68,32 @@ class MainWindow(QtGui.QMainWindow):
         # initialise user interface
         self.initUI()
         
-        # set focue
+        # set focus
         self.setFocus()
+        
+        # display feature notification window?
+        self.displayFeatureNotificationWindow()
+    
+    def displayFeatureNotificationWindow(self):
+        """
+        Show the feature notification window
+        
+        """
+        settings = QtCore.QSettings()
+        
+        dlg = dialogs.NotifyFeatureWindow(self)
+        
+        # key for settings
+        settingsKey = "notification/%s" % dlg.notificationID
+        
+        # see if they don't want us to show the window
+        showDialog = settings.value(settingsKey, True)
+        
+        if showDialog:
+            dlg.exec_()
+            
+            if dlg.dontShowAgainCheck.isChecked():
+                settings.setValue(settingsKey, False)
     
     def initUI(self):
         """
@@ -86,7 +113,6 @@ class MainWindow(QtGui.QMainWindow):
         self.refLoaded = 0
         self.inputLoaded = 0
         self.consoleOpen = 0
-        self.helpOpen = 0
         self.verboseLevel = 3
         self.mouseMotion = 0
         
@@ -145,7 +171,8 @@ class MainWindow(QtGui.QMainWindow):
         self.console = dialogs.ConsoleWindow(self)
         
         # help window for displaying help
-        self.helpWindow = helpForm.HelpForm("index.html", parent=self)
+#         self.helpWindow = helpForm.HelpForm("index.html", parent=self)
+        self.helpWindow = helpForm.HelpFormSphinx(parent=self)
         
         # image viewer
         self.imageViewer = dialogs.ImageViewer(self, parent=self)
@@ -563,13 +590,7 @@ class MainWindow(QtGui.QMainWindow):
         Show the help window.
         
         """
-        if self.helpOpen:
-            self.helpWindow.closeEvent(1)
-            self.helpWindow.show()
-        
-        else:
-            self.helpWindow.show()
-            self.helpOpen = 1
+        self.helpWindow.show()
     
     def renderWindowClosed(self):
         """
@@ -898,8 +919,6 @@ class MainWindow(QtGui.QMainWindow):
         Display warning message.
         
         """
-#         QtGui.QMessageBox.warning(self, "Warning", message)
-        
         msgBox = QtGui.QMessageBox(self)
         msgBox.setText(message)
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
@@ -912,8 +931,6 @@ class MainWindow(QtGui.QMainWindow):
         Display error message
         
         """
-#         QtGui.QMessageBox.critical(self, "Error", "A critical error has occurred.\n"+message)
-        
         msgBox = QtGui.QMessageBox(self)
         msgBox.setText(message)
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
@@ -926,25 +943,15 @@ class MainWindow(QtGui.QMainWindow):
         Display about message.
         
         """
-#         QtGui.QMessageBox.about(self, "About CDJSVis", 
-#                                 """<b>CDJSVis</b> %s
-#                                 <p>Copyright &copy; 2013 Chris Scott</p>
-#                                 <p>This application can be used to visualise atomistic simulations.</p>
-#                                 <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
-#                                    by Marc Robinson.</p>
-#                                 <p>Python %s - Qt %s - PySide %s - VTK %s - SciPy %s - Matplotlib %s on %s""" % (
-#                                 __version__, platform.python_version(), QtCore.__version__, PySide.__version__,
-#                                 vtk.vtkVersion.GetVTKVersion(), scipy.__version__, matplotlib.__version__, platform.system()))
-        
         msgBox = QtGui.QMessageBox(self)
         msgBox.setText("""<p><b>CDJSVis</b> %s</p>
-                          <p>Copyright &copy; 2013 Chris Scott</p>
+                          <p>Copyright &copy; %d Chris Scott</p>
                           <p>This application can be used to visualise atomistic simulations.</p>
                           <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
                              by Marc Robinson.</p>
-                          <p>Python %s - Qt %s - PySide %s - VTK %s - SciPy %s - Matplotlib %s on %s""" % (
-                          __version__, platform.python_version(), QtCore.__version__, PySide.__version__,
-                          vtk.vtkVersion.GetVTKVersion(), scipy.__version__, matplotlib.__version__, platform.system()))
+                          <p>Python %s - Qt %s - PySide %s - VTK %s - NumPy %s - SciPy %s - Matplotlib %s on %s</p>""" % (
+                          __version__, datetime.date.today().year, platform.python_version(), QtCore.__version__, PySide.__version__,
+                          vtk.vtkVersion.GetVTKVersion(), np.__version__, scipy.__version__, matplotlib.__version__, platform.system()))
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
         msgBox.setIcon(QtGui.QMessageBox.Information)

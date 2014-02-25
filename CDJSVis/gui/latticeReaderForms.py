@@ -1,8 +1,10 @@
 
 """
-Lattice reader forms for the inputTab.
+File input is handled by the lattice reader forms on the systems dialog.
+The file type should be selected from the drop down menu.
+Multiple files can be loaded at the same time by shift/cmd clicking them.
 
-@author: Chris Scott
+Basically you should always leave this as 'AUTO DETECT'. The available formats are listed below. 
 
 """
 import os
@@ -132,7 +134,9 @@ class GenericReaderForm(GenericForm):
 
 class AutoDetectReaderForm(GenericReaderForm):
     """
-    Auto detect form
+    This method should usually always be selected. It will read the first few lines of a file and decide which reader 
+    should be used (datReader, xyzReader, refReader, ...).  If this doesn't work then probably there is something 
+    wrong with the file or it is in a format not recognised yet (let me know).
     
     """
     def __init__(self, parent, mainToolbar, mainWindow, name):
@@ -368,7 +372,17 @@ class AutoDetectReaderForm(GenericReaderForm):
 
 class LbomdDatReaderForm(GenericReaderForm):
     """
-    LBOMD DAT input widget.
+    Read LBOMD lattice format files.  They should be in the format that LBOMD requires for 'lattice.dat':
+
+    #) First line should be the number of atoms
+    #) Second line should be the cell dimensions (x, y, z)
+    #) Then one line per atom containing (separated by whitespace): 
+      
+       * symbol
+       * x position
+       * y position
+       * z position
+       * charge
     
     """
     def __init__(self, parent, mainToolbar, mainWindow, name):
@@ -462,7 +476,23 @@ class LbomdDatReaderForm(GenericReaderForm):
 
 class LbomdRefReaderForm(GenericReaderForm):
     """
-    LBOMD REF input widget.
+    Read LBOMD animation-reference format files. They should be in the following format
+
+    #) First line should be the number of atoms
+    #) Second line should be the cell dimensions (x, y, z)
+    #) Then one line per atom containing (separated by whitespace): 
+      
+       * symbol
+       * atom index (starting from 1 to NATOMS)
+       * x position
+       * y position
+       * z position
+       * kinetic energy at time 0
+       * potential energy at time 0
+       * x force at time 0
+       * y force at time 0
+       * z force at time 0
+       * charge
     
     """
     def __init__(self, parent, mainToolbar, mainWindow, name):
@@ -551,7 +581,40 @@ class LbomdRefReaderForm(GenericReaderForm):
 
 class LbomdXYZReaderForm(GenericReaderForm):
     """
-    LBOMD XYZ reader.
+    Read LBOMD XYZ format files.  XYZ files must be linked to an :ref:`LBOMD_REF` file (i.e. you must read one 
+    of those files first).  It does not make sense to have an XYZ file without an animation-reference file 
+    because the atom symbols are only stored in the reference. The number of atoms must be the same in the 
+    reference you are using to link with the XYZs.  When you load an :ref:`LBOMD_REF` file it will automatically 
+    be linked to any subsequently loaded XYZ files.
+
+    Different formats of XYZ files are supported (more can be added...)
+
+    #)  Positions and energies
+
+        *   First line is number of atoms
+        *   Second line is simulation time in fs
+        *   Then one line per atom containing (separated by whitespace)
+    
+            *   atom index
+            *   x position
+            *   y position
+            *   z position
+            *   kinetic energy
+            *   potential energy
+
+    #)  Positions, energies and charges
+    
+        *   First line is number of atoms
+        *   Second line is simulation time in fs
+        *   Then one line per atom containing (separated by whitespace)
+        
+            *   atom index
+            *   x position
+            *   y position
+            *   z position
+            *   kinetic energy
+            *   potential energy
+            *   charge
     
     """
     def __init__(self, parent, mainToolbar, mainWindow, name):
@@ -618,19 +681,6 @@ class LbomdXYZReaderForm(GenericReaderForm):
         self.openLatticeDialogButton.setCheckable(0)
         self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), lambda isRef=False: self.openFileDialog(isRef))
         row.addWidget(self.openLatticeDialogButton)
-        
-        # help icon
-        row = self.newRow()
-        row.RowLayout.addStretch(1)
-        
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
-        helpButton.setFixedWidth(20)
-        helpButton.setFixedHeight(20)
-        helpButton.setToolTip("""<p>XYZ files must be linked with a REF file!</p>
-                                 <p>If you have loaded a REF already it will automatically be linked to the XYZ files you load.</p>
-                                 <p>Otherwise, you will need to load a REF before loading XYZs.</p>""")
-        
-        row.addWidget(helpButton)
     
     def getFileName(self, isRef):
         """

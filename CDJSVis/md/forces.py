@@ -10,7 +10,7 @@ import sys
 
 import numpy as np
 
-from . import LBOMDInterface
+#from . import LBOMDInterface
 from ..visutils.utilities import log_error
 
 
@@ -62,11 +62,11 @@ def _calc_force_lbomd(lattice, force_config, image):
     specieList = lattice.specieList
     specieString = "".join(specieList)
     
-    try:
-        lattice.totalEnergy, lattice.maxForce, lattice.maxForceAtomNo, status = LBOMDInterface.calcforce(imageFor, specieString, lattice.specie, lattice.pos, lattice.charge, lattice.force, lattice.KE, lattice.PE, lattice.cellDims[0], lattice.cellDims[1], lattice.cellDims[2], np.empty(0, np.int32), np.empty(0, np.int32))
-    except:
-        log_error("ERROR: LBOMD calc_force failed (caught exception)")
-        return 44
+#    try:
+#        lattice.totalEnergy, lattice.maxForce, lattice.maxForceAtomNo, status = LBOMDInterface.calcforce(imageFor, specieString, lattice.specie, lattice.pos, lattice.charge, lattice.force, lattice.KE, lattice.PE, lattice.cellDims[0], lattice.cellDims[1], lattice.cellDims[2], np.empty(0, np.int32), np.empty(0, np.int32))
+#    except:
+#        log_error("ERROR: LBOMD calc_force failed (caught exception)")
+#        return 44
     
     # check status
     if status:

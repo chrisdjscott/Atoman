@@ -6,3 +6,7 @@
 .project
 .DS_Store
 *_wrap.c
+_build/
+_static/
+_templates/
+modules/

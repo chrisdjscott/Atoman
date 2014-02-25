@@ -11,15 +11,16 @@ Eventually should compile C libraries too.
 """
 import os
 import sys
+import shutil
 
 from CDJSVis.visutils import utilities
 
-
 ################################################################################
+
 def main():
-    os.chdir("CDJSVis")
-    
     if len(sys.argv) == 2 and sys.argv[1] == "clean":
+        os.chdir("CDJSVis")
+        
         # walk
         for dirpath, dirnames, filenames in os.walk(os.getcwd()):
             os.chdir(dirpath)
@@ -42,6 +43,7 @@ def main():
                     os.unlink("LBOMDInterface.so")
     
     else:
+        # compile resource file
         pyrcc4 = utilities.checkForExe("pyside-rcc")
         
         # on mac it is appended with python version
@@ -51,52 +53,88 @@ def main():
         if not pyrcc4:
             sys.exit("ERROR: COULD NOT LOCATE PYRCC4")
         
-        command = "%s resources.qrc > resources.py" % (pyrcc4,)
+        # have to compile resources first so that it can be imported by sphinx...
+        # ...viscous circle...
+        try:
+            from CDJSVis import resources
+        except ImportError:
+            os.chdir("CDJSVis")
+        
+            command = "%s resources.qrc > resources.py" % (pyrcc4,)
+            print command
+            os.system(command)
+        
+            os.chdir("..")
+        
+        # build sphinx doc
+        os.chdir("doc")
+        
+        # first generate latest module info
+        os.system("./modules_gen_auto.sh")
+        
+        # then run make
+        os.system("make html")
+        
+        os.chdir("..")
+        
+        # copy doc to CDJSVis
+        if os.path.isdir(os.path.join("CDJSVis", "doc")):
+            shutil.rmtree(os.path.join("CDJSVis", "doc"))
+        
+        shutil.copytree(os.path.join("doc", "_build", "html"), os.path.join("CDJSVis", "doc"))
+        
+        # edit resources file
+        os.chdir("CDJSVis")
+        
+        fn = "resources.qrc"
+        f = open(fn)
+        lines = f.readlines()
+        f.close()
+
+        count = 0
+        for line in lines:
+            if line.startswith("</qresource>"):
+                break
+    
+            count += 1
+
+        lines = lines[:count]
+
+        lines.append("\n")
+
+        assert os.path.isdir("doc")
+        assert os.path.exists(os.path.join("doc", "index.html"))
+
+        if os.path.exists(os.path.join("doc", ".buildinfo")):
+            os.unlink(os.path.join("doc", ".buildinfo"))
+
+        count = 0
+        for root, dirs, files in os.walk("doc"):
+            for addfn in files:
+                lines.append("    <file>%s</file>\n" % os.path.join(root, addfn))
+                count += 1
+
+        lines.append("</qresource>\n")
+        lines.append("</RCC>\n")
+
+        f = open("resources_mod.qrc", "w")
+        f.write("".join(lines))
+        f.close()
+        
+        # compile resource file
+        command = "%s resources_mod.qrc > resources.py" % (pyrcc4,)
         print command
         os.system(command)
+        
+        # delete doc/ dir and modified qrc file, no longer required
+        os.unlink("resources_mod.qrc")
+        shutil.rmtree("doc")
         
         # run Makefile
         os.chdir("visclibs")
         command = "make"
         print command
         os.system(command)
-        os.chdir("..")
-        
-        os.chdir("md")
-        
-        libName = "LBOMDInterface.so"
-        if os.path.islink(libName):
-            head, currentLib = os.path.split(os.readlink(libName))
-        else:
-            currentLib = None
-        
-        # if we are on a mac
-        lib = None
-        if os.uname()[0] == "Darwin":
-            lib = "LBOMDInterface.maci7.so"
-        
-        # if we are on a linux box
-        elif os.uname()[0] == "Linux":
-            
-            # if on hydra
-            if os.uname()[1][:5] == "hydra":
-                lib = "LBOMDInterface.hydra.so"
-            
-            # hera
-            elif os.uname()[1][:4] == "hera":
-                lib = "LBOMDInterface.hera.so"
-            
-            # otherwise use my linux (Ubuntu) compiled library
-            else:
-                lib = "LBOMDInterface.linux.so"
-        
-        # link to lib
-        if lib is None or lib == currentLib:
-            pass
-        else:
-            if currentLib is not None:
-                os.unlink(libName)
-            os.symlink(os.path.join("lib", lib), libName)
         
         os.chdir("../..")
         
@@ -131,9 +169,7 @@ def main():
             os.system("nosetests -v")
             os.chdir("..")
 
-        
-    
-    
 ################################################################################
+
 if __name__ == "__main__":
     main()

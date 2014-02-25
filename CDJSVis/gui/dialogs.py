@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 """
 Additional dialogs.
@@ -995,6 +996,48 @@ class OnScreenInfoDialog(QtGui.QDialog):
         
         """
         pass
+
+################################################################################
+
+class NotifyFeatureWindow(QtGui.QDialog):
+    """
+    Notify user of new feature at startup
+    
+    """
+    def __init__(self, parent=None):
+        super(NotifyFeatureWindow, self).__init__(parent)
+        
+        self.notificationID = "help_updated"
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        self.setFixedWidth(300)
+        
+        self.setModal(1)
+        self.setWindowTitle("New features")
+        
+        layout = QtGui.QVBoxLayout(self)
+        
+        dialogText = "<p>I've started rewriting the help section so if you aren't sure how something works please look there first; if that doesn't help ask me.</p>"
+        
+        # label
+        label = QtGui.QLabel(dialogText)
+        label.setWordWrap(True)
+        row = QtGui.QHBoxLayout()
+        row.addWidget(label)
+        layout.addLayout(row)
+        
+        # show message next time
+        self.dontShowAgainCheck = QtGui.QCheckBox("Do not show this again")
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignRight)
+        row.addWidget(self.dontShowAgainCheck)
+        layout.addLayout(row)
+        
+        # buttons
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok)
+        buttonBox.accepted.connect(self.accept)
+        
+        layout.addWidget(buttonBox)
 
 ################################################################################
 
