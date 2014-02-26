@@ -38,6 +38,7 @@ class GenericLatticeGeneratorForm(GenericForm):
         self.mainWindow = mainWindow
         
         self.generatorArgs = None
+        self.filename = "generated.dat"
         
         self.show()
     
@@ -70,7 +71,7 @@ class GenericLatticeGeneratorForm(GenericForm):
         
         """
         if not status and lattice is not None:
-            self.parent.file_generated(lattice)
+            self.parent.file_generated(lattice, self.filename)
     
     def add_specie_options(self, NSpecies):
         """
@@ -171,6 +172,28 @@ class GenericLatticeGeneratorForm(GenericForm):
         """
         self.generatorArgs.NCells[2] = val
     
+    def filenameChanged(self, text):
+        """
+        Filename has changed
+        
+        """
+        self.filename = str(text)
+    
+    def add_filename_option(self):
+        """
+        Add filename option
+        
+        """
+        row = self.newRow()
+        
+        label = QtGui.QLabel("Filename:")
+        row.addWidget(label)
+        
+        filenameLineEdit = QtGui.QLineEdit(self.filename)
+        filenameLineEdit.setFixedWidth(130)
+        filenameLineEdit.textChanged.connect(self.filenameChanged)
+        row.addWidget(filenameLineEdit)
+    
     def add_pbc_options(self):
         """
         Add pbc options
@@ -265,6 +288,8 @@ class Pu3GaLatticeGeneratorForm(GenericLatticeGeneratorForm):
         
         self.generatorArgs = lattice_gen_pu3ga.Args()
         
+        self.add_filename_option()
+        
         self.add_unit_cell_options()
         
         self.add_a0_option()
@@ -317,6 +342,8 @@ class FCCLatticeGeneratorForm(GenericLatticeGeneratorForm):
         super(FCCLatticeGeneratorForm, self).__init__(parent, mainWindow, "FCC lattice generator")
         
         self.generatorArgs = lattice_gen_fcc.Args()
+        
+        self.add_filename_option()
         
         # specie
         row = self.newRow()

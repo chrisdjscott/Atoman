@@ -89,12 +89,12 @@ class GenerateInputForm(GenericForm):
         self.mainWindow.helpWindow.loadPage("usage/input/lattice_generation.html")
         self.mainWindow.showHelp()
     
-    def file_generated(self, lattice):
+    def file_generated(self, lattice, filename):
         """
         File generated
         
         """
-        self.parent.file_generated(lattice)
+        self.parent.file_generated(lattice, filename)
     
     def setWidgetStack(self, index):
         """
@@ -298,12 +298,12 @@ class SystemsDialog(QtGui.QDialog):
         self.mainWindow.helpWindow.loadPage("usage/input/index.html")
         self.mainWindow.showHelp()
     
-    def file_generated(self, lattice):
+    def file_generated(self, lattice, filename):
         """
         File generated
         
         """
-        self.add_lattice(lattice, "generated.dat", "dat")
+        self.add_lattice(lattice, filename, "dat")
     
     def file_loaded(self, lattice, filename, extension, readerStackIndex):
         """
