@@ -191,6 +191,35 @@ class LoadSystemForm(GenericForm):
 
 ################################################################################
 
+class SystemsListWidgetItem(QtGui.QListWidgetItem):
+    """
+    Item that goes in the systems list
+    
+    """
+    def __init__(self, lattice, filename, displayName, stackIndex, abspath):
+        super(SystemsListWidgetItem, self).__init__()
+        
+        self.lattice = lattice
+        self.filename = filename
+        self.displayName = displayName
+        self.stackIndex = stackIndex
+        self.abspath = stackIndex
+        
+        self.setText("%s (%d atoms)" % (displayName, lattice.NAtoms))
+        self.setToolTip(abspath)
+    
+    def changeDisplayName(self, displayName):
+        """
+        Change the display name
+        
+        """
+        self.displayName = displayName
+        
+        self.setText("%s (%d atoms)" % (displayName, self.lattice.NAtoms))
+    
+
+################################################################################
+
 class SystemsDialog(QtGui.QDialog):
     """
     Systems dialog
@@ -214,11 +243,12 @@ class SystemsDialog(QtGui.QDialog):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         # dict for storing loaded systems
-        self.lattice_list = []
-        self.filenames_list = []
-        self.extensions_list = []
-        self.stackIndex_list = []
-        self.abspath_list = []
+#         self.lattice_list = []
+#         self.filenames_list = []
+#         self.extensions_list = []
+#         self.stackIndex_list = []
+#         self.abspath_list = []
+#         self.displayNames_list = []
         
         # dialog layout
         dialog_layout = QtGui.QVBoxLayout(self)
@@ -232,6 +262,8 @@ class SystemsDialog(QtGui.QDialog):
         self.systems_list_widget = QtGui.QListWidget(self)
 #         self.systems_list_widget.setFixedHeight(60)
         self.systems_list_widget.setSelectionMode(self.systems_list_widget.ExtendedSelection)
+        self.systems_list_widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.systems_list_widget.customContextMenuRequested.connect(self.showListWidgetContextMenu)
         
         row = list_holder.newRow()
         row.addWidget(self.systems_list_widget)
@@ -290,6 +322,22 @@ class SystemsDialog(QtGui.QDialog):
         row.addWidget(helpButton)
         dialog_layout.addLayout(row)
     
+    def showListWidgetContextMenu(self, point):
+        """
+        Show context menu for listWidgetItem
+        
+        """
+        logger = logging.getLogger(__name__)
+        logger.debug("Show list widget context menu")
+        
+        globalPoint = self.systems_list_widget.mapToGlobal(point)
+        print "POINT", point, globalPoint
+        
+        t = self.systems_list_widget.indexAt(point)
+        print "INDEX", t
+        print "ROW", t.row()
+        print "ITEM", self.systems_list_widget.item(t.row())
+    
     def load_help_page(self):
         """
         Load the help page for this form
@@ -326,16 +374,17 @@ class SystemsDialog(QtGui.QDialog):
             index = self.abspath_list.index(abspath)
             
             # select this one
-            for row in xrange(len(self.lattice_list)):
+            for row in self.systems_list_widget.count():
                 self.systems_list_widget.item(row).setSelected(False)
             self.systems_list_widget.item(index).setSelected(True)
             
             return
         
-        self.lattice_list.append(lattice)
-        self.filenames_list.append(filename)
-        self.extensions_list.append(extension)
-        self.abspath_list.append(abspath)
+#         self.lattice_list.append(lattice)
+#         self.filenames_list.append(filename)
+#         self.displayNames_list.append(filename)
+#         self.extensions_list.append(extension)
+#         self.abspath_list.append(abspath)
         
         # stack index
         if ida is None:
@@ -345,13 +394,16 @@ class SystemsDialog(QtGui.QDialog):
         if idb is None:
             idb = page.stackedWidget.currentIndex()
         
-        self.stackIndex_list.append((ida, idb))
+        stackIndex = (ida, idb)
+#         self.stackIndex_list.append((ida, idb))
         
         self.logger.debug("Adding new lattice to systemsList: %s; %s; %d,%d", filename, extension, ida, idb)
         
-        list_item = QtGui.QListWidgetItem()
-        list_item.setText("%s (%d atoms)" % (filename, lattice.NAtoms))
-        list_item.setToolTip(abspath)
+        list_item = SystemsListWidgetItem(lattice, filename, filename, stackIndex, abspath)
+        
+#         list_item = QtGui.QListWidgetItem()
+#         list_item.setText("%s (%d atoms)" % (filename, lattice.NAtoms))
+#         list_item.setToolTip(abspath)
         
         self.systems_list_widget.addItem(list_item)
         
@@ -400,11 +452,12 @@ class SystemsDialog(QtGui.QDialog):
                 continue
             
             # remove state
-            self.lattice_list.pop(index)
-            self.filenames_list.pop(index)
-            self.extensions_list.pop(index)
-            self.stackIndex_list.pop(index)
-            self.abspath_list.pop(index)
+#             self.lattice_list.pop(index)
+#             self.filenames_list.pop(index)
+#             self.extensions_list.pop(index)
+#             self.stackIndex_list.pop(index)
+#             self.abspath_list.pop(index)
+#             self.displayNames_list.pop(index)
             
             itemWidget = self.systems_list_widget.takeItem(index)
             del itemWidget
