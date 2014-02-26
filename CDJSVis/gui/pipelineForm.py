@@ -62,7 +62,6 @@ class PipelineForm(QtGui.QWidget):
         
         self.refState = None
         self.inputState = None
-        self.extension = None
         self.inputStackIndex = None
         self.filename = None
         self.PBC = np.ones(3, np.int32)
@@ -315,7 +314,6 @@ class PipelineForm(QtGui.QWidget):
         old_ref = self.refState
         
         self.refState = self.mainWindow.systemsDialog.lattice_list[index]
-        self.extension = self.mainWindow.systemsDialog.extensions_list[index]
         
         # read lbomd in?
         
@@ -341,7 +339,6 @@ class PipelineForm(QtGui.QWidget):
             return
         
         self.inputState = self.mainWindow.systemsDialog.lattice_list[index]
-        self.extension = self.mainWindow.systemsDialog.extensions_list[index]
         self.inputStackIndex = self.mainWindow.systemsDialog.stackIndex_list[index]
         self.filename = self.mainWindow.systemsDialog.filenames_list[index]
         

@@ -80,7 +80,7 @@ class GenericReaderForm(GenericForm):
         """
         self.updateFileLabel(filename)
         
-        self.parent.fileLoaded(stateType, state, filename, self.fileExtension, self.stackIndex)
+        self.parent.fileLoaded(stateType, state, filename, self.stackIndex)
     
     def openFileDialog(self):
         """

@@ -182,12 +182,12 @@ class LoadSystemForm(GenericForm):
         """
         self.stackedWidget.setCurrentIndex(index)
     
-    def fileLoaded(self, fileType, state, filename, extension, readerStackIndex):
+    def fileLoaded(self, fileType, state, filename, readerStackIndex):
         """
         Called when a file is loaded
         
         """
-        self.parent.file_loaded(state, filename, extension, readerStackIndex)
+        self.parent.file_loaded(state, filename, readerStackIndex)
 
 ################################################################################
 
@@ -351,16 +351,16 @@ class SystemsDialog(QtGui.QDialog):
         File generated
         
         """
-        self.add_lattice(lattice, filename, "dat")
+        self.add_lattice(lattice, filename)
     
-    def file_loaded(self, lattice, filename, extension, readerStackIndex):
+    def file_loaded(self, lattice, filename, readerStackIndex):
         """
         Called after a file had been loaded (or generated too?)
         
         """
-        self.add_lattice(lattice, filename, extension, idb=readerStackIndex, ida=0)
+        self.add_lattice(lattice, filename, idb=readerStackIndex, ida=0)
     
-    def add_lattice(self, lattice, filename, extension, ida=None, idb=None):
+    def add_lattice(self, lattice, filename, ida=None, idb=None):
         """
         Add lattice
         
@@ -374,7 +374,7 @@ class SystemsDialog(QtGui.QDialog):
             index = self.abspath_list.index(abspath)
             
             # select this one
-            for row in self.systems_list_widget.count():
+            for row in xrange(self.systems_list_widget.count()):
                 self.systems_list_widget.item(row).setSelected(False)
             self.systems_list_widget.item(index).setSelected(True)
             
@@ -397,7 +397,7 @@ class SystemsDialog(QtGui.QDialog):
         stackIndex = (ida, idb)
 #         self.stackIndex_list.append((ida, idb))
         
-        self.logger.debug("Adding new lattice to systemsList: %s; %s; %d,%d", filename, extension, ida, idb)
+        self.logger.debug("Adding new lattice to systemsList: %s; %d,%d", filename, ida, idb)
         
         list_item = SystemsListWidgetItem(lattice, filename, filename, stackIndex, abspath)
         
@@ -416,6 +416,14 @@ class SystemsDialog(QtGui.QDialog):
         self.mainWindow.mainToolbar.addStateOptionToPipelines(filename)
         
         return index
+    
+    def getLatticeList(self):
+        """
+        Return ordered list of lattices
+        
+        """
+        for i in xrange(self.systems_list_widget.count()):
+            
     
     def set_new_system_stack(self, index):
         """
