@@ -1,10 +1,12 @@
 
 """
-Generate FCC lattice
+Generate BCC lattice
 
 @author: Chris Scott
 
 """
+import logging
+
 from ..lattice import Lattice
 
 
@@ -20,7 +22,7 @@ class Args(object):
     quiet: suppress stdout
     
     """
-    def __init__(self, sym="Au", NCells=[10,10,10], a0=4.078, pbcx=True, pbcy=True, pbcz=True, quiet=False):
+    def __init__(self, sym="Fe", NCells=[10,10,10], a0=2.87, pbcx=True, pbcy=True, pbcz=True, quiet=False):
         self.sym = sym
         self.NCells = NCells
         self.a0 = a0
@@ -31,9 +33,9 @@ class Args(object):
 
 ################################################################################
 
-class FCCLatticeGenerator(object):
+class BCCLatticeGenerator(object):
     """
-    FCC lattice generator.
+    BCC lattice generator.
     
     """
     def __init__(self, log=None):
@@ -52,8 +54,8 @@ class FCCLatticeGenerator(object):
         Generate the lattice.
         
         """
-        if not args.quiet:
-            self.log("Generating FCC lattice")
+        logger = logging.getLogger(__name__)
+        logging.info("Generating BCC lattice")
         
         # lattice constants
         a0 = args.a0
@@ -61,9 +63,9 @@ class FCCLatticeGenerator(object):
         
         # define primitive cell (4 atoms)
         # corner atom is Ga
-        UC_rx = [0.0, 0.0, a1,  a1]
-        UC_ry = [0.0, a1,  0.0, a1]
-        UC_rz = [0.0, a1,  a1,  0.0]
+        UC_rx = [0.0, a1]
+        UC_ry = [0.0, a1]
+        UC_rz = [0.0, a1]
         
         # handle PBCs
         if args.PBCX:
@@ -95,7 +97,7 @@ class FCCLatticeGenerator(object):
         for i in xrange(iStop):
             for j in xrange(jStop):
                 for k in xrange(kStop):
-                    for l in xrange(4):
+                    for l in xrange(2):
                         # position of new atom
                         rx_tmp = UC_rx[l] + i * a0
                         ry_tmp = UC_ry[l] + j * a0
@@ -114,8 +116,7 @@ class FCCLatticeGenerator(object):
         
         assert NAtoms == lattice.NAtoms
         
-        if not args.quiet:
-            self.log("Number of atoms: %d" % (NAtoms,), indent=1)
-            self.log("Dimensions: %s" % (str(dims),), indent=1)
+        logging.info("  Number of atoms: %d", NAtoms)
+        logging.info("  Dimensions: %s", str(dims))
         
         return 0, lattice

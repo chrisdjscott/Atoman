@@ -45,6 +45,7 @@ class GenerateInputForm(GenericForm):
         self.inputTypeCombo = QtGui.QComboBox()
         self.inputTypeCombo.addItem("FCC")
         self.inputTypeCombo.addItem("Pu-Ga (L12 method)")
+        self.inputTypeCombo.addItem("BCC")
 #         self.inputTypeCombo.addItem("Rock salt (eg. MgO)")
 #         self.inputTypeCombo.addItem("Fluorite")
 #         self.inputTypeCombo.addItem("Pyrochlore")
@@ -69,6 +70,10 @@ class GenerateInputForm(GenericForm):
         # Pu3Ga generator
         self.pu3ga_generator = latticeGeneratorForms.Pu3GaLatticeGeneratorForm(self, self.mainWindow)
         self.stackedWidget.addWidget(self.pu3ga_generator)
+        
+        # BCC generator
+        self.bcc_generator = latticeGeneratorForms.BCCLatticeGeneratorForm(self, self.mainWindow)
+        self.stackedWidget.addWidget(self.bcc_generator)
         
         # help icon
         row = self.newRow()

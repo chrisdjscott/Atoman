@@ -14,6 +14,7 @@ from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
 from ..lattice_gen import lattice_gen_pu3ga
 from ..lattice_gen import lattice_gen_fcc
+from ..lattice_gen import lattice_gen_bcc
 
 try:
     from .. import resources
@@ -384,6 +385,64 @@ class FCCLatticeGeneratorForm(GenericLatticeGeneratorForm):
         
         """
         generator = lattice_gen_fcc.FCCLatticeGenerator(log=self.mainWindow.console.write)
+        
+        status, lattice = generator.generateLattice(self.generatorArgs)
+        
+        return status, lattice
+
+################################################################################
+
+class BCCLatticeGeneratorForm(GenericLatticeGeneratorForm):
+    """
+    BCC lattice generator
+    
+    """
+    def __init__(self, parent, mainWindow):
+        super(BCCLatticeGeneratorForm, self).__init__(parent, mainWindow, "BCC lattice generator")
+        
+        self.generatorArgs = lattice_gen_bcc.Args()
+        
+        self.add_filename_option()
+        
+        # specie
+        row = self.newRow()
+        
+        label = QtGui.QLabel("Specie:")
+        row.addWidget(label)
+        
+        self.specie_text = QtGui.QLineEdit(self.generatorArgs.sym)
+        self.specie_text.setFixedWidth(30)
+        self.specie_text.textEdited.connect(self.specie_text_edited)
+        row.addWidget(self.specie_text)
+        
+        self.add_unit_cell_options()
+        
+        self.add_a0_option()
+        
+        self.add_pbc_options()
+                
+        # generate button
+        self.add_generate_button()
+    
+    def specie_text_edited(self, text):
+        """
+        Specie text edited
+        
+        """
+        text = str(text)
+        
+        if len(text) > 2:
+            self.specie_text.setText(self.generatorArgs.sym)
+        
+        else:
+            self.generatorArgs.sym = text
+    
+    def generateLatticeMain(self):
+        """
+        Generate lattice
+        
+        """
+        generator = lattice_gen_bcc.BCCLatticeGenerator(log=self.mainWindow.console.write)
         
         status, lattice = generator.generateLattice(self.generatorArgs)
         
