@@ -453,7 +453,7 @@ class SystemsDialog(QtGui.QDialog):
         File generated
         
         """
-        self.add_lattice(lattice, filename, "dat")
+        self.add_lattice(lattice, filename, "dat", allowDuplicate=True)
     
     def file_loaded(self, lattice, filename, extension, readerStackIndex):
         """
