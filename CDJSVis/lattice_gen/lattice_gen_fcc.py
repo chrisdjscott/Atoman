@@ -66,17 +66,17 @@ class FCCLatticeGenerator(object):
         UC_rz = [0.0, a1,  a1,  0.0]
         
         # handle PBCs
-        if args.PBCX:
+        if args.pbcx:
             iStop = args.NCells[0]
         else:
             iStop = args.NCells[0] + 1
         
-        if args.PBCY:
+        if args.pbcy:
             jStop = args.NCells[1]
         else:
             jStop = args.NCells[1] + 1
         
-        if args.PBCZ:
+        if args.pbcz:
             kStop = args.NCells[2]
         else:
             kStop = args.NCells[2] + 1
