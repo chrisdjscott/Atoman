@@ -62,6 +62,7 @@ class PipelineForm(QtGui.QWidget):
         
         self.refState = None
         self.inputState = None
+        self.extension = None
         self.inputStackIndex = None
         self.filename = None
         self.PBC = np.ones(3, np.int32)
@@ -84,7 +85,7 @@ class PipelineForm(QtGui.QWidget):
         # reference selector
         self.refCombo = QtGui.QComboBox()
         self.refCombo.currentIndexChanged.connect(self.refChanged)
-        for fn in self.systemsDialog.filenames_list:
+        for fn in self.systemsDialog.getDisplayNames():
             self.refCombo.addItem(fn)    
         
         # add to row
@@ -102,7 +103,7 @@ class PipelineForm(QtGui.QWidget):
         # reference selector
         self.inputCombo = QtGui.QComboBox()
         self.inputCombo.currentIndexChanged.connect(self.inputChanged)
-        for fn in self.systemsDialog.filenames_list:
+        for fn in self.systemsDialog.getDisplayNames():
             self.inputCombo.addItem(fn)
         
         # add to row
@@ -218,6 +219,14 @@ class PipelineForm(QtGui.QWidget):
         
         return refIndex, inputIndex
     
+    def changeStateDisplayName(self, index, displayName):
+        """
+        Change display name of state
+        
+        """
+        self.refCombo.setItemText(index, displayName)
+        self.inputCombo.setItemText(index, displayName)
+    
     def addStateOption(self, filename):
         """
         Add state option to combo boxes
@@ -307,13 +316,20 @@ class PipelineForm(QtGui.QWidget):
         Ref changed
         
         """
+        # item
+        item = self.mainWindow.systemsDialog.systems_list_widget.item(index)
+        
+        # lattice
+        state = item.lattice
+        
         # check if has really changed
-        if self.refState is self.mainWindow.systemsDialog.lattice_list[index]:
+        if self.refState is state:
             return
         
         old_ref = self.refState
         
-        self.refState = self.mainWindow.systemsDialog.lattice_list[index]
+        self.refState = state
+        self.extension = item.extension
         
         # read lbomd in?
         
@@ -334,13 +350,20 @@ class PipelineForm(QtGui.QWidget):
         Input changed
         
         """
+        # item
+        item = self.mainWindow.systemsDialog.systems_list_widget.item(index)
+        
+        # lattice
+        state = item.lattice
+        
         # check if has really changed
-        if self.inputState is self.mainWindow.systemsDialog.lattice_list[index]:
+        if self.inputState is state:
             return
         
-        self.inputState = self.mainWindow.systemsDialog.lattice_list[index]
-        self.inputStackIndex = self.mainWindow.systemsDialog.stackIndex_list[index]
-        self.filename = self.mainWindow.systemsDialog.filenames_list[index]
+        self.inputState = state
+        self.inputStackIndex = item.stackIndex
+        self.filename = item.displayName
+        self.extension = item.extension
         
         # check ok
         status = self.checkStateChangeOk()

@@ -117,6 +117,14 @@ class MainToolbar(QtGui.QDockWidget):
         # set the main widget
         self.setWidget(self.container)
     
+    def changeStateDisplayName(self, index, displayName):
+        """
+        Change display name for a state.
+        
+        """
+        for p in self.pipelineList:
+            p.changeStateDisplayName(index, displayName)
+    
     def addStateOptionToPipelines(self, filename):
         """
         Add state option to pipeline combos
