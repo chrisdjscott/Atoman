@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 """
 The filter tab for the main toolbar
@@ -591,6 +592,26 @@ class PipelineForm(QtGui.QWidget):
         # we don't want PBCs when picking
         pickPBC = np.zeros(3, np.int32)
         
+        # min/max pos for boxing
+        # we need the min/max of ref/input/pickPos
+        minPos = np.zeros(3, np.float64)
+        maxPos = np.zeros(3, np.float64)
+        for i in xrange(3):
+            # set to min ref pos
+            minPos[i] = min(refState.pos[i::3])
+            maxPos[i] = max(refState.pos[i::3])
+            
+            # see if min input pos is less
+            minPos[i] = min(minPos[i], min(inputState.pos[i::3]))
+            maxPos[i] = max(maxPos[i], max(inputState.pos[i::3]))
+            
+            # see if picked pos is less
+            minPos[i] = min(minPos[i], pickPos[i])
+            maxPos[i] = max(maxPos[i], pickPos[i])
+        
+        logger.debug("Min pos for picker: %r", minPos)
+        logger.debug("Max pos for picker: %r", maxPos)
+        
         # loop over filter lists, looking for closest object to pick pos
         minSepIndex = -1
         minSep = 9999999.0
@@ -614,7 +635,7 @@ class PipelineForm(QtGui.QWidget):
             
             status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos, 
                                          inputState.pos, refState.pos, pickPBC, inputState.cellDims,
-                                         refState.minPos, refState.maxPos, inputState.specie, 
+                                         minPos, maxPos, inputState.specie, 
                                          refState.specie, inputState.specieCovalentRadius, 
                                          refState.specieCovalentRadius, result)
             

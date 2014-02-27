@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 """
 Mdi sub window for displaying VTK render window.
