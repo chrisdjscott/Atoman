@@ -11,6 +11,7 @@ import os
 import sys
 import logging
 import functools
+import copy
 
 from PySide import QtGui, QtCore
 
@@ -204,7 +205,7 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
         self.filename = filename
         self.displayName = displayName
         self.stackIndex = stackIndex
-        self.abspath = stackIndex
+        self.abspath = abspath
         self.extension = extension
         
         self.setText("%s (%d atoms)" % (displayName, lattice.NAtoms))
@@ -347,6 +348,12 @@ class SystemsDialog(QtGui.QDialog):
             dnAction.setStatusTip("Change display name")
             dnAction.triggered.connect(functools.partial(self.changeDisplayName, index))
             
+            # duplicate action
+            duplicateAction = QtGui.QAction("Duplicate system", self)
+            duplicateAction.setToolTip("Duplicate selected system")
+            duplicateAction.setStatusTip("Duplicate selected system")
+            duplicateAction.triggered.connect(functools.partial(self.duplicate_system, index))
+            
             # remove action
             removeAction = QtGui.QAction("Remove system(s)", self)
             removeAction.setToolTip("Remove selected system(s)")
@@ -361,11 +368,39 @@ class SystemsDialog(QtGui.QDialog):
             
             # add action
             menu.addAction(dnAction)
+            menu.addAction(duplicateAction)
             menu.addAction(reloadAction)
             menu.addAction(removeAction)
             
             # show menu
             menu.exec_(globalPos)
+    
+    def duplicate_system(self, index):
+        """
+        Duplicate selected system
+        
+        """
+        self.logger.debug("Duplicating system (%d)", index)
+        
+        # item
+        item = self.systems_list_widget.item(index)
+        
+        # first we get a new display name
+        text, ok = QtGui.QInputDialog.getText(self, 'Display name', "Enter new display name:", text=item.displayName)
+        
+        if ok:
+            text = text.strip()
+            
+            if not len(text.strip()):
+                text = item.displayName
+        
+            # then we copy and add the new system
+            newState = copy.deepcopy(item.lattice)
+            
+            # stack indexes
+            ida, idb = item.stackIndex
+            
+            self.add_lattice(newState, item.filename, item.extension, ida=ida, idb=idb, displayName=text, allowDuplicate=True)
     
     def changeDisplayName(self, index):
         """
@@ -427,7 +462,7 @@ class SystemsDialog(QtGui.QDialog):
         """
         self.add_lattice(lattice, filename, extension, idb=readerStackIndex, ida=0)
     
-    def add_lattice(self, lattice, filename, extension, ida=None, idb=None):
+    def add_lattice(self, lattice, filename, extension, ida=None, idb=None, displayName=None, allowDuplicate=False):
         """
         Add lattice
         
@@ -435,19 +470,21 @@ class SystemsDialog(QtGui.QDialog):
         index = self.systems_list_widget.count()
         
         abspath = os.path.abspath(filename)
-        abspathList = self.getAbspathList()
         
-        if abspath in abspathList:
-            self.logger.info("This file has already been loaded (%s): not adding it again", filename)
+        if not allowDuplicate:
+            abspathList = self.getAbspathList()
             
-            index = abspathList.index(abspath)
-            
-            # select this one
-            for row in xrange(self.systems_list_widget.count()):
-                self.systems_list_widget.item(row).setSelected(False)
-            self.systems_list_widget.item(index).setSelected(True)
-            
-            return
+            if abspath in abspathList:
+                self.logger.info("This file has already been loaded (%s): not adding it again", filename)
+                
+                index = abspathList.index(abspath)
+                
+                # select this one
+                for row in xrange(self.systems_list_widget.count()):
+                    self.systems_list_widget.item(row).setSelected(False)
+                self.systems_list_widget.item(index).setSelected(True)
+                
+                return
         
         # stack index
         if ida is None:
@@ -461,8 +498,11 @@ class SystemsDialog(QtGui.QDialog):
         
         self.logger.debug("Adding new lattice to systemsList (%d): %s; %d,%d", index, filename, ida, idb)
         
+        if displayName is None:
+            displayName = filename
+        
         # item for list
-        list_item = SystemsListWidgetItem(lattice, filename, filename, stackIndex, abspath, extension)
+        list_item = SystemsListWidgetItem(lattice, filename, displayName, stackIndex, abspath, extension)
         
         # add to list
         self.systems_list_widget.addItem(list_item)
@@ -473,7 +513,7 @@ class SystemsDialog(QtGui.QDialog):
         self.systems_list_widget.item(index).setSelected(True)
         
         # also add lattice to pipeline forms
-        self.mainWindow.mainToolbar.addStateOptionToPipelines(filename)
+        self.mainWindow.mainToolbar.addStateOptionToPipelines(displayName)
         
         return index
     
