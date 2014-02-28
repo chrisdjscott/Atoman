@@ -24,9 +24,9 @@ class Args(object):
         self.sym = sym
         self.NCells = NCells
         self.a0 = a0
-        self.PBCX = pbcx
-        self.PBCY = pbcy
-        self.PBCZ = pbcz
+        self.pbcx = pbcx
+        self.pbcy = pbcy
+        self.pbcz = pbcz
         self.quiet = quiet
 
 ################################################################################
