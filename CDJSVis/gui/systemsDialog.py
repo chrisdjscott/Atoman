@@ -441,7 +441,7 @@ class SystemsDialog(QtGui.QDialog):
         Reload selected systems
         
         """
-        self.logger.debug("Reloading selected systems: not implemented yet")
+        self.logger.debug("Reloading selected systems")
         
         if not self.systems_list_widget.count():
             return
@@ -452,6 +452,63 @@ class SystemsDialog(QtGui.QDialog):
         for item in items:
             if item is None:
                 continue
+            
+            # stack index
+            ida, idb = item.stackIndex
+            
+            # check this is not a generated lattice
+            if ida != 0:
+                self.logger.debug("Cannot reload a generated lattice")
+                return
+            
+            self.logger.info("  Reloading: '%s' (%s)", item.displayName, item.filename)
+            self.logger.debug("  Input stack index: %d, %d", ida, idb)
+        
+            systemsDialog = self.mainWindow.systemsDialog
+            
+            systemsDialog.new_system_stack.setCurrentIndex(ida)
+            in_page = systemsDialog.new_system_stack.currentWidget()
+            
+            in_page.stackedWidget.setCurrentIndex(idb)
+            readerForm = in_page.stackedWidget.currentWidget()
+            reader = readerForm.latticeReader
+            
+            self.logger.debug("  Reader: %s %s", str(readerForm), str(reader))
+            
+            # read in state
+            if reader.requiresRef:
+                status, state = reader.readFile(item.abspath, readerForm.currentRefState)
+            
+            else:
+                status, state = reader.readFile(item.abspath)
+            
+            if status:
+                self.logger.error("Reload read file failed with status: %d" % status)
+                continue
+            
+            # set on item
+            item.lattice = state
+            
+            # need index of this item
+            t = self.systems_list_widget.indexFromItem(item)
+            index = t.row()
+            self.logger.debug("  Item index: %d (%s)", index, item.displayName)
+            
+            # set on pipeline pages
+            for pp in self.mainWindow.mainToolbar.pipelineList:
+                refIndex, inputIndex = pp.getCurrentStateIndexes()
+                
+                changed = False
+                if refIndex == index:
+                    pp.refState = state
+                    changed = True
+                
+                if inputIndex == index:
+                    pp.inputState = state
+                    changed = True
+                
+                if changed:
+                    pp.runAllFilterLists()
     
     def load_help_page(self):
         """
