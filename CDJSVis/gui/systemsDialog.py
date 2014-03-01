@@ -488,6 +488,7 @@ class SystemsDialog(QtGui.QDialog):
             
             # set on item
             item.lattice = state
+            item.changeDisplayName(item.displayName)
             
             # need index of this item
             t = self.systems_list_widget.indexFromItem(item)
