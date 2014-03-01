@@ -60,8 +60,6 @@ class Filterer(object):
         
         self.actorsCollection = vtk.vtkActorCollection()
         
-        self.availableScreenInfo = {}
-        
         self.colouringOptions = self.parent.colouringOptions
         self.bondsOptions = self.parent.bondsOptions
         self.displayOptions = self.parent.displayOptions
@@ -86,6 +84,17 @@ class Filterer(object):
         self.scalarBar = None
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
+        
+        self.NVis = 0
+        self.NVac = 0
+        self.NInt = 0
+        self.NAnt = 0
+        self.visibleAtoms = np.empty(0, np.int32)
+        self.visibleSpecieCount = []
+        self.vacancySpecieCount = []
+        self.interstitialSpecieCount = []
+        self.antisiteSpecieCount = []
+        self.splitIntSpecieCount = []
     
     def hideActors(self):
         """
@@ -164,8 +173,6 @@ class Filterer(object):
             self.NVis = NAtoms
 #            self.scalars = np.empty(NAtoms, dtype=np.float64)
             self.logger.info("%d visible atoms", len(self.visibleAtoms))
-        
-        self.availableScreenInfo = {}
         
         hullFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_hulls%d.pov" % (self.pipelineIndex, self.parent.tab))
         if os.path.exists(hullFile):
@@ -260,7 +267,6 @@ class Filterer(object):
             self.NVis = NVis
             
             self.logger.info("  %d visible atoms", NVis)
-            self.availableScreenInfo["visible"] = NVis
         
         # time to apply filters
         applyFiltersTime = time.time() - applyFiltersTime
