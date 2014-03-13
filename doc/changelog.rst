@@ -1,6 +1,10 @@
 Changelog
 =========
 
+**v0.10.1**
+
+* Add 'invert selection' option to crop filter
+
 **v0.10**
 
 * New documentation

@@ -154,9 +154,10 @@ int cropSphereFilter(int NVisibleIn, int *visibleAtoms, int posDim, double *pos,
  *******************************************************************************/
 int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, double xmin, double xmax,
                double ymin, double ymax, double zmin, double zmax, int xEnabled, int yEnabled, int zEnabled,
-               int scalarsDim, double *scalars)
+               int invertSelection, int scalarsDim, double *scalars)
 {
-    int i, index, NVisible;
+    int i, index, NVisible, add;
+    double rx, ry, rz;
     
     
     NVisible = 0;
@@ -164,36 +165,44 @@ int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, doubl
     {
         index = visibleAtoms[i];
         
+        rx = pos[3*index];
+        ry = pos[3*index+1];
+        rz = pos[3*index+2];
+        
+        add = 1;
         if (xEnabled == 1)
         {
-            if (pos[3*index] < xmin || pos[3*index] > xmax)
+            if (rx < xmin || rx > xmax)
             {
-                continue;
+				add = 0;
             }
         }
         
-        if (yEnabled == 1)
+        if (add && yEnabled == 1)
         {
-            if (pos[3*index+1] < ymin || pos[3*index+1] > ymax)
+            if (ry < ymin || ry > ymax)
             {
-                continue;
+				add = 0;
             }
         }
         
-        if (zEnabled == 1)
+        if (add && zEnabled == 1)
         {
-            if (pos[3*index+2] < zmin || pos[3*index+2] > zmax)
+            if (rz < zmin || rz > zmax)
             {
-                continue;
+				add = 0;
             }
         }
         
-        visibleAtoms[NVisible] = index;
-        
-        if (scalarsDim == NVisibleIn)
-			scalars[NVisible] = scalars[i];
-        
-        NVisible++;
+        if ((add && !invertSelection) || (!add && invertSelection))
+        {
+			visibleAtoms[NVisible] = index;
+			
+			if (scalarsDim == NVisibleIn)
+				scalars[NVisible] = scalars[i];
+			
+			NVisible++;
+        }
     }
     
     return NVisible;
