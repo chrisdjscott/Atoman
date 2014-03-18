@@ -1,6 +1,7 @@
 Changelog
 =========
 
+
 **v0.11**
 
 * Add context menu to systems list widget
@@ -13,6 +14,10 @@ Changelog
 * Reset counters (number visible) when removing actors from filter list
 * Automatically run filter lists on systems with less than 5000 atoms
 * Add option to reload a system (if you edit a lattice file that has already been loaded)
+
+**v0.10.1**
+
+* Add 'invert selection' option to crop filter
 
 **v0.10**
 

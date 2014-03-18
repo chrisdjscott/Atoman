@@ -720,7 +720,7 @@ class Filterer(object):
         
         NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
                                           settings.ymax, settings.zmin, settings.zmax, settings.xEnabled, 
-                                          settings.yEnabled, settings.zEnabled, self.scalars)
+                                          settings.yEnabled, settings.zEnabled, settings.invertSelection, self.scalars)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
         if len(self.scalars):

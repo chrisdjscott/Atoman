@@ -246,6 +246,7 @@ class CropSettingsDialog(GenericSettingsDialog):
         self.xEnabled = 0
         self.yEnabled = 0
         self.zEnabled = 0
+        self.invertSelection = 0
         
         label = QtGui.QLabel( " X Min " )
         label2 = QtGui.QLabel( " X Max " )
@@ -335,6 +336,25 @@ class CropSettingsDialog(GenericSettingsDialog):
         row = self.newRow(align='Center')
         row.addWidget(self.setToLatticeButton)
         
+        # invert selection
+        self.invertCheckBox = QtGui.QCheckBox("Invert selection")
+        self.invertCheckBox.setChecked(0)
+        self.invertCheckBox.stateChanged.connect(self.invertChanged)
+        
+        row = self.newRow()
+        row.addWidget(self.invertCheckBox)
+    
+    def invertChanged(self, index):
+        """
+        Invert setting changed.
+        
+        """
+        if self.invertCheckBox.isChecked():
+            self.invertSelection = 1
+        
+        else:
+            self.invertSelection = 0
+    
     def setCropToLattice( self ):
         self.xMinRangeSpinBox.setValue( 0.0 )
         self.xMaxRangeSpinBox.setValue( self.pipelinePage.inputState.cellDims[0] )
