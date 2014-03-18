@@ -10,6 +10,8 @@ Note that systems that are currently selected on an analysis pipeline, as either
 import os
 import sys
 import logging
+import functools
+import copy
 
 from PySide import QtGui, QtCore
 
@@ -43,8 +45,9 @@ class GenerateInputForm(GenericForm):
         self.inputTypeCombo = QtGui.QComboBox()
         self.inputTypeCombo.addItem("FCC")
         self.inputTypeCombo.addItem("Pu-Ga (L12 method)")
-#         self.inputTypeCombo.addItem("Rock salt (eg. MgO)")
-#         self.inputTypeCombo.addItem("Fluorite")
+        self.inputTypeCombo.addItem("BCC")
+        self.inputTypeCombo.addItem("Fluorite (CaF2)")
+        self.inputTypeCombo.addItem("Rock salt (NaCl)")
 #         self.inputTypeCombo.addItem("Pyrochlore")
 #         self.inputTypeCombo.addItem("6H")
         self.inputTypeCombo.currentIndexChanged.connect(self.setWidgetStack)
@@ -68,6 +71,18 @@ class GenerateInputForm(GenericForm):
         self.pu3ga_generator = latticeGeneratorForms.Pu3GaLatticeGeneratorForm(self, self.mainWindow)
         self.stackedWidget.addWidget(self.pu3ga_generator)
         
+        # BCC generator
+        self.bcc_generator = latticeGeneratorForms.BCCLatticeGeneratorForm(self, self.mainWindow)
+        self.stackedWidget.addWidget(self.bcc_generator)
+        
+        # Fluorite generator
+        self.fluorite_generator = latticeGeneratorForms.FluoriteLatticeGeneratorForm(self, self.mainWindow)
+        self.stackedWidget.addWidget(self.fluorite_generator)
+        
+        # Rock Salt generator
+        self.rockSalt_generator = latticeGeneratorForms.RockSaltLatticeGeneratorForm(self, self.mainWindow)
+        self.stackedWidget.addWidget(self.rockSalt_generator)
+        
         # help icon
         row = self.newRow()
         row.RowLayout.addStretch(1)
@@ -89,12 +104,12 @@ class GenerateInputForm(GenericForm):
         self.mainWindow.helpWindow.loadPage("usage/input/lattice_generation.html")
         self.mainWindow.showHelp()
     
-    def file_generated(self, lattice):
+    def file_generated(self, lattice, filename):
         """
         File generated
         
         """
-        self.parent.file_generated(lattice)
+        self.parent.file_generated(lattice, filename)
     
     def setWidgetStack(self, index):
         """
@@ -191,6 +206,36 @@ class LoadSystemForm(GenericForm):
 
 ################################################################################
 
+class SystemsListWidgetItem(QtGui.QListWidgetItem):
+    """
+    Item that goes in the systems list
+    
+    """
+    def __init__(self, lattice, filename, displayName, stackIndex, abspath, extension):
+        super(SystemsListWidgetItem, self).__init__()
+        
+        self.lattice = lattice
+        self.filename = filename
+        self.displayName = displayName
+        self.stackIndex = stackIndex
+        self.abspath = abspath
+        self.extension = extension
+        
+        self.setText("%s (%d atoms)" % (displayName, lattice.NAtoms))
+        self.setToolTip(abspath)
+    
+    def changeDisplayName(self, displayName):
+        """
+        Change the display name
+        
+        """
+        self.displayName = displayName
+        
+        self.setText("%s (%d atoms)" % (displayName, self.lattice.NAtoms))
+    
+
+################################################################################
+
 class SystemsDialog(QtGui.QDialog):
     """
     Systems dialog
@@ -213,13 +258,6 @@ class SystemsDialog(QtGui.QDialog):
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
-        # dict for storing loaded systems
-        self.lattice_list = []
-        self.filenames_list = []
-        self.extensions_list = []
-        self.stackIndex_list = []
-        self.abspath_list = []
-        
         # dialog layout
         dialog_layout = QtGui.QVBoxLayout(self)
         
@@ -232,6 +270,8 @@ class SystemsDialog(QtGui.QDialog):
         self.systems_list_widget = QtGui.QListWidget(self)
 #         self.systems_list_widget.setFixedHeight(60)
         self.systems_list_widget.setSelectionMode(self.systems_list_widget.ExtendedSelection)
+        self.systems_list_widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.systems_list_widget.customContextMenuRequested.connect(self.showListWidgetContextMenu)
         
         row = list_holder.newRow()
         row.addWidget(self.systems_list_widget)
@@ -290,6 +330,187 @@ class SystemsDialog(QtGui.QDialog):
         row.addWidget(helpButton)
         dialog_layout.addLayout(row)
     
+    def showListWidgetContextMenu(self, point):
+        """
+        Show context menu for listWidgetItem
+        
+        """
+        logger = logging.getLogger(__name__)
+        logger.debug("Show list widget context menu")
+        
+        # position to open menu at
+        globalPos = self.systems_list_widget.mapToGlobal(point)
+        
+        # index of item
+        t = self.systems_list_widget.indexAt(point)
+        index = t.row()
+        
+        # item
+        item = self.systems_list_widget.item(index)
+        
+        if item is not None:
+            logger.debug("Showing context menu for item at row: %d", index)
+            
+            # context menu
+            menu = QtGui.QMenu(self)
+            
+            # make actions
+            # change display name action
+            dnAction = QtGui.QAction("Set display name", self)
+            dnAction.setToolTip("Change display name")
+            dnAction.setStatusTip("Change display name")
+            dnAction.triggered.connect(functools.partial(self.changeDisplayName, index))
+            
+            # duplicate action
+            duplicateAction = QtGui.QAction("Duplicate system", self)
+            duplicateAction.setToolTip("Duplicate selected system")
+            duplicateAction.setStatusTip("Duplicate selected system")
+            duplicateAction.triggered.connect(functools.partial(self.duplicate_system, index))
+            
+            # remove action
+            removeAction = QtGui.QAction("Remove system(s)", self)
+            removeAction.setToolTip("Remove selected system(s)")
+            removeAction.setStatusTip("Remove selected system(s)")
+            removeAction.triggered.connect(self.remove_system)
+            
+            # reload action
+            reloadAction = QtGui.QAction("Reload system(s)", self)
+            reloadAction.setToolTip("Reload selected system(s)")
+            reloadAction.setStatusTip("Reload selected system(s)")
+            reloadAction.triggered.connect(self.reload_system)
+            
+            # add action
+            menu.addAction(dnAction)
+            menu.addAction(duplicateAction)
+            menu.addAction(reloadAction)
+            menu.addAction(removeAction)
+            
+            # show menu
+            menu.exec_(globalPos)
+    
+    def duplicate_system(self, index):
+        """
+        Duplicate selected system
+        
+        """
+        self.logger.debug("Duplicating system (%d)", index)
+        
+        # item
+        item = self.systems_list_widget.item(index)
+        
+        # first we get a new display name
+        text, ok = QtGui.QInputDialog.getText(self, 'Display name', "Enter new display name:", text=item.displayName)
+        
+        if ok:
+            text = text.strip()
+            
+            if not len(text.strip()):
+                text = item.displayName
+        
+            # then we copy and add the new system
+            newState = copy.deepcopy(item.lattice)
+            
+            # stack indexes
+            ida, idb = item.stackIndex
+            
+            self.add_lattice(newState, item.filename, item.extension, ida=ida, idb=idb, displayName=text, allowDuplicate=True)
+    
+    def changeDisplayName(self, index):
+        """
+        Change display name
+        
+        """
+        self.logger.debug("Changing display name (%d)", index)
+        
+        # item
+        item = self.systems_list_widget.item(index)
+        
+        # show dialog
+        text, ok = QtGui.QInputDialog.getText(self, 'Display name', "Enter new display name:", text=item.displayName)
+        
+        if ok and len(text.strip()):
+            text = text.strip()
+            
+            self.logger.debug("  Changing display name to: '%s'", text)
+            
+            item.changeDisplayName(text)
+            self.mainWindow.mainToolbar.changeStateDisplayName(index, text)
+    
+    def reload_system(self):
+        """
+        Reload selected systems
+        
+        """
+        self.logger.debug("Reloading selected systems")
+        
+        if not self.systems_list_widget.count():
+            return
+        
+        items = self.systems_list_widget.selectedItems()
+        
+        # loops over selected items
+        for item in items:
+            if item is None:
+                continue
+            
+            # stack index
+            ida, idb = item.stackIndex
+            
+            # check this is not a generated lattice
+            if ida != 0:
+                self.logger.debug("Cannot reload a generated lattice")
+                return
+            
+            self.logger.info("  Reloading: '%s' (%s)", item.displayName, item.filename)
+            self.logger.debug("  Input stack index: %d, %d", ida, idb)
+        
+            systemsDialog = self.mainWindow.systemsDialog
+            
+            systemsDialog.new_system_stack.setCurrentIndex(ida)
+            in_page = systemsDialog.new_system_stack.currentWidget()
+            
+            in_page.stackedWidget.setCurrentIndex(idb)
+            readerForm = in_page.stackedWidget.currentWidget()
+            reader = readerForm.latticeReader
+            
+            self.logger.debug("  Reader: %s %s", str(readerForm), str(reader))
+            
+            # read in state
+            if reader.requiresRef:
+                status, state = reader.readFile(item.abspath, readerForm.currentRefState)
+            
+            else:
+                status, state = reader.readFile(item.abspath)
+            
+            if status:
+                self.logger.error("Reload read file failed with status: %d" % status)
+                continue
+            
+            # set on item
+            item.lattice = state
+            item.changeDisplayName(item.displayName)
+            
+            # need index of this item
+            t = self.systems_list_widget.indexFromItem(item)
+            index = t.row()
+            self.logger.debug("  Item index: %d (%s)", index, item.displayName)
+            
+            # set on pipeline pages
+            for pp in self.mainWindow.mainToolbar.pipelineList:
+                refIndex, inputIndex = pp.getCurrentStateIndexes()
+                
+                changed = False
+                if refIndex == index:
+                    pp.refState = state
+                    changed = True
+                
+                if inputIndex == index:
+                    pp.inputState = state
+                    changed = True
+                
+                if changed:
+                    pp.runAllFilterLists()
+    
     def load_help_page(self):
         """
         Load the help page for this form
@@ -298,12 +519,12 @@ class SystemsDialog(QtGui.QDialog):
         self.mainWindow.helpWindow.loadPage("usage/input/index.html")
         self.mainWindow.showHelp()
     
-    def file_generated(self, lattice):
+    def file_generated(self, lattice, filename):
         """
         File generated
         
         """
-        self.add_lattice(lattice, "generated.dat", "dat")
+        self.add_lattice(lattice, filename, "dat", allowDuplicate=True)
     
     def file_loaded(self, lattice, filename, extension, readerStackIndex):
         """
@@ -312,30 +533,29 @@ class SystemsDialog(QtGui.QDialog):
         """
         self.add_lattice(lattice, filename, extension, idb=readerStackIndex, ida=0)
     
-    def add_lattice(self, lattice, filename, extension, ida=None, idb=None):
+    def add_lattice(self, lattice, filename, extension, ida=None, idb=None, displayName=None, allowDuplicate=False):
         """
         Add lattice
         
         """
-        index = len(self.lattice_list)
+        index = self.systems_list_widget.count()
         
         abspath = os.path.abspath(filename)
-        if abspath in self.abspath_list:
-            self.logger.info("This file has already been loaded (%s): not adding it again", filename)
-            
-            index = self.abspath_list.index(abspath)
-            
-            # select this one
-            for row in xrange(len(self.lattice_list)):
-                self.systems_list_widget.item(row).setSelected(False)
-            self.systems_list_widget.item(index).setSelected(True)
-            
-            return
         
-        self.lattice_list.append(lattice)
-        self.filenames_list.append(filename)
-        self.extensions_list.append(extension)
-        self.abspath_list.append(abspath)
+        if not allowDuplicate:
+            abspathList = self.getAbspathList()
+            
+            if abspath in abspathList:
+                self.logger.info("This file has already been loaded (%s): not adding it again", filename)
+                
+                index = abspathList.index(abspath)
+                
+                # select this one
+                for row in xrange(self.systems_list_widget.count()):
+                    self.systems_list_widget.item(row).setSelected(False)
+                self.systems_list_widget.item(index).setSelected(True)
+                
+                return
         
         # stack index
         if ida is None:
@@ -345,14 +565,17 @@ class SystemsDialog(QtGui.QDialog):
         if idb is None:
             idb = page.stackedWidget.currentIndex()
         
-        self.stackIndex_list.append((ida, idb))
+        stackIndex = (ida, idb)
         
-        self.logger.debug("Adding new lattice to systemsList: %s; %s; %d,%d", filename, extension, ida, idb)
+        self.logger.debug("Adding new lattice to systemsList (%d): %s; %d,%d", index, filename, ida, idb)
         
-        list_item = QtGui.QListWidgetItem()
-        list_item.setText("%s (%d atoms)" % (filename, lattice.NAtoms))
-        list_item.setToolTip(abspath)
+        if displayName is None:
+            displayName = filename
         
+        # item for list
+        list_item = SystemsListWidgetItem(lattice, filename, displayName, stackIndex, abspath, extension)
+        
+        # add to list
         self.systems_list_widget.addItem(list_item)
         
         # select last one added only
@@ -361,9 +584,48 @@ class SystemsDialog(QtGui.QDialog):
         self.systems_list_widget.item(index).setSelected(True)
         
         # also add lattice to pipeline forms
-        self.mainWindow.mainToolbar.addStateOptionToPipelines(filename)
+        self.mainWindow.mainToolbar.addStateOptionToPipelines(displayName)
         
         return index
+    
+    def getAbspathList(self):
+        """
+        Return ordered list of lattices
+        
+        """
+        abspathList = []
+        for i in xrange(self.systems_list_widget.count()):
+            item = self.systems_list_widget.item(i)
+            
+            abspathList.append(item.abspath)
+        
+        return abspathList
+    
+    def getLatticeList(self):
+        """
+        Return ordered list of lattices
+        
+        """
+        latticeList = []
+        for i in xrange(self.systems_list_widget.count()):
+            item = self.systems_list_widget.item(i)
+            
+            latticeList.append(item.lattice)
+        
+        return latticeList
+    
+    def getDisplayNames(self):
+        """
+        Return ordered list of display names
+        
+        """
+        displayNames = []
+        for i in xrange(self.systems_list_widget.count()):
+            item = self.systems_list_widget.item(i)
+            
+            displayNames.append(item.displayName)
+        
+        return displayNames
     
     def set_new_system_stack(self, index):
         """
@@ -399,20 +661,14 @@ class SystemsDialog(QtGui.QDialog):
                 self.mainWindow.displayWarning("Cannot remove state that is currently selected")
                 continue
             
-            # remove state
-            self.lattice_list.pop(index)
-            self.filenames_list.pop(index)
-            self.extensions_list.pop(index)
-            self.stackIndex_list.pop(index)
-            self.abspath_list.pop(index)
-            
+            # remove item and delete (not sure if required)
             itemWidget = self.systems_list_widget.takeItem(index)
             del itemWidget
             
             self.mainWindow.mainToolbar.removeStateFromPipelines(index)
             
         # select last one in list
-        for row in xrange(len(self.lattice_list) - 1):
+        for row in xrange(self.systems_list_widget.count() - 1):
             self.systems_list_widget.item(row).setSelected(False)
-        self.systems_list_widget.item(len(self.lattice_list) - 1).setSelected(True)
+        self.systems_list_widget.item(self.systems_list_widget.count() - 1).setSelected(True)
 

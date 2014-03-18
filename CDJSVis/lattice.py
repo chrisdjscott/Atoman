@@ -78,24 +78,41 @@ class Lattice(object):
         self.barrier = None
         self.voronoiDict = {}
     
+    def addSpecie(self, sym, count=None):
+        """
+        Add specie to specie list
+        
+        """
+        if sym in self.specieList:
+            if count is not None:
+                specInd = self.specieIndex(sym)
+                self.specieCount[specInd] = count
+            
+            return
+        
+        if count is None:
+            count = 0
+        
+        self.specieList = np.append(self.specieList, sym)
+        self.specieCount = np.append(self.specieCount, np.int32(count))
+        
+        self.specieMass = np.append(self.specieMass, elements.atomicMass(sym))
+#         self.specieMassAMU = np.append(self.specieMassAMU, Atoms.atomicMassAMU(sym))
+        self.specieCovalentRadius = np.append(self.specieCovalentRadius, elements.covalentRadius(sym))
+        rgbtemp = elements.RGB(sym)
+        rgbnew = np.empty((1,3), np.float64)
+        rgbnew[0][0] = rgbtemp[0]
+        rgbnew[0][1] = rgbtemp[1]
+        rgbnew[0][2] = rgbtemp[2]            
+        self.specieRGB = np.append(self.specieRGB, rgbnew, axis=0)
+    
     def addAtom(self, sym, pos, charge):
         """
         Add an atom to the lattice
         
         """
         if sym not in self.specieList:
-            self.specieList = np.append(self.specieList, sym)
-            self.specieCount = np.append(self.specieCount, 0)
-            
-            self.specieMass = np.append(self.specieMass, elements.atomicMass(sym))
-#                 self.specieMassAMU = np.append(self.specieMassAMU, Atoms.atomicMassAMU(sym))
-            self.specieCovalentRadius = np.append(self.specieCovalentRadius, elements.covalentRadius(sym))
-            rgbtemp = elements.RGB(sym)
-            rgbnew = np.empty((1,3), np.float64)
-            rgbnew[0][0] = rgbtemp[0]
-            rgbnew[0][1] = rgbtemp[1]
-            rgbnew[0][2] = rgbtemp[2]
-            self.specieRGB = np.append(self.specieRGB, rgbnew, axis=0)
+            self.addSpecie(sym)
         
         specInd = self.getSpecieIndex(sym)
         
@@ -110,7 +127,22 @@ class Lattice(object):
         self.KE = np.append(self.KE, 0.0)
         self.PE = np.append(self.PE, 0.0)
         
+        # wrap positions
+        
+        
         # min/max pos!!??
+        if pos[0] < self.minPos[0]:
+            self.minPos[0] = pos[0]
+        if pos[1] < self.minPos[1]:
+            self.minPos[1] = pos[2]
+        if pos[2] < self.minPos[1]:
+            self.minPos[2] = pos[2]
+        if pos[0] > self.maxPos[0]:
+            self.maxPos[0] = pos[0]
+        if pos[1] > self.maxPos[1]:
+            self.maxPos[1] = pos[2]
+        if pos[2] > self.maxPos[1]:
+            self.maxPos[2] = pos[2]
         
         self.voronoiDict = {}
         self.NAtoms += 1

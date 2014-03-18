@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 """
 The filter tab for the main toolbar
@@ -85,7 +86,7 @@ class PipelineForm(QtGui.QWidget):
         # reference selector
         self.refCombo = QtGui.QComboBox()
         self.refCombo.currentIndexChanged.connect(self.refChanged)
-        for fn in self.systemsDialog.filenames_list:
+        for fn in self.systemsDialog.getDisplayNames():
             self.refCombo.addItem(fn)    
         
         # add to row
@@ -103,7 +104,7 @@ class PipelineForm(QtGui.QWidget):
         # reference selector
         self.inputCombo = QtGui.QComboBox()
         self.inputCombo.currentIndexChanged.connect(self.inputChanged)
-        for fn in self.systemsDialog.filenames_list:
+        for fn in self.systemsDialog.getDisplayNames():
             self.inputCombo.addItem(fn)
         
         # add to row
@@ -219,6 +220,14 @@ class PipelineForm(QtGui.QWidget):
         
         return refIndex, inputIndex
     
+    def changeStateDisplayName(self, index, displayName):
+        """
+        Change display name of state
+        
+        """
+        self.refCombo.setItemText(index, displayName)
+        self.inputCombo.setItemText(index, displayName)
+    
     def addStateOption(self, filename):
         """
         Add state option to combo boxes
@@ -302,20 +311,29 @@ class PipelineForm(QtGui.QWidget):
                 rw.textSelector.refresh()
                 rw.outputDialog.rdfTab.refresh()
                 rw.outputDialog.imageTab.imageSequenceTab.resetPrefix()
+        
+        if self.inputState.NAtoms < 5000:
+            self.runAllFilterLists()
     
     def refChanged(self, index):
         """
         Ref changed
         
         """
+        # item
+        item = self.mainWindow.systemsDialog.systems_list_widget.item(index)
+        
+        # lattice
+        state = item.lattice
+        
         # check if has really changed
-        if self.refState is self.mainWindow.systemsDialog.lattice_list[index]:
+        if self.refState is state:
             return
         
         old_ref = self.refState
         
-        self.refState = self.mainWindow.systemsDialog.lattice_list[index]
-        self.extension = self.mainWindow.systemsDialog.extensions_list[index]
+        self.refState = state
+        self.extension = item.extension
         
         # read lbomd in?
         
@@ -336,14 +354,20 @@ class PipelineForm(QtGui.QWidget):
         Input changed
         
         """
+        # item
+        item = self.mainWindow.systemsDialog.systems_list_widget.item(index)
+        
+        # lattice
+        state = item.lattice
+        
         # check if has really changed
-        if self.inputState is self.mainWindow.systemsDialog.lattice_list[index]:
+        if self.inputState is state:
             return
         
-        self.inputState = self.mainWindow.systemsDialog.lattice_list[index]
-        self.extension = self.mainWindow.systemsDialog.extensions_list[index]
-        self.inputStackIndex = self.mainWindow.systemsDialog.stackIndex_list[index]
-        self.filename = self.mainWindow.systemsDialog.filenames_list[index]
+        self.inputState = state
+        self.inputStackIndex = item.stackIndex
+        self.filename = item.displayName
+        self.extension = item.extension
         
         # check ok
         status = self.checkStateChangeOk()
@@ -571,6 +595,26 @@ class PipelineForm(QtGui.QWidget):
         # we don't want PBCs when picking
         pickPBC = np.zeros(3, np.int32)
         
+        # min/max pos for boxing
+        # we need the min/max of ref/input/pickPos
+        minPos = np.zeros(3, np.float64)
+        maxPos = np.zeros(3, np.float64)
+        for i in xrange(3):
+            # set to min ref pos
+            minPos[i] = min(refState.pos[i::3])
+            maxPos[i] = max(refState.pos[i::3])
+            
+            # see if min input pos is less
+            minPos[i] = min(minPos[i], min(inputState.pos[i::3]))
+            maxPos[i] = max(maxPos[i], max(inputState.pos[i::3]))
+            
+            # see if picked pos is less
+            minPos[i] = min(minPos[i], pickPos[i])
+            maxPos[i] = max(maxPos[i], pickPos[i])
+        
+        logger.debug("Min pos for picker: %r", minPos)
+        logger.debug("Max pos for picker: %r", maxPos)
+        
         # loop over filter lists, looking for closest object to pick pos
         minSepIndex = -1
         minSep = 9999999.0
@@ -594,7 +638,7 @@ class PipelineForm(QtGui.QWidget):
             
             status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos, 
                                          inputState.pos, refState.pos, pickPBC, inputState.cellDims,
-                                         refState.minPos, refState.maxPos, inputState.specie, 
+                                         minPos, maxPos, inputState.specie, 
                                          refState.specie, inputState.specieCovalentRadius, 
                                          refState.specieCovalentRadius, result)
             
