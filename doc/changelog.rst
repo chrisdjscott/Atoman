@@ -1,6 +1,19 @@
 Changelog
 =========
 
+**v0.11**
+
+* Add context menu to systems list widget
+* Add display name to system (shown in pipeline combo)
+* Add ability to duplicate loaded system
+* Add BCC lattice generator
+* Fix picker bug: include pick pos when setting max/min pos for spatial decomposition
+* Add rock salt (MgO) lattice generator
+* Add fluorite lattice generator (HfO2, PuH2, ...)
+* Reset counters (number visible) when removing actors from filter list
+* Automatically run filter lists on systems with less than 5000 atoms
+* Add option to reload a system (if you edit a lattice file that has already been loaded)
+
 **v0.10**
 
 * New documentation
