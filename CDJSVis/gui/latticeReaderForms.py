@@ -224,7 +224,7 @@ class AutoDetectReaderForm(GenericReaderForm):
         # unzip if required
         filepath, zipFlag = self.checkForZipped(filename)
         if zipFlag == -1:
-            self.displayWarning("Could not find file: "+filename)
+            self.mainWindow.displayWarning("Could not find file: "+filename)
             self.logger.warning("Could not find file: '%s'", filename)
             return -1, None
         
