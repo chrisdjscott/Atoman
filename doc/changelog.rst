@@ -1,6 +1,9 @@
 Changelog
 =========
 
+**v0.11.1**
+
+* Fix bug: AutoDetectReaderForm has no displayWarning method; use one from mainWindow instead
 
 **v0.11**
 
