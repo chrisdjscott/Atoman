@@ -326,7 +326,7 @@ class ConsoleWindow(QtGui.QDialog):
         level = settings.value("logging/console", logging.INFO)
         
         logger = logging.getLogger(__name__)
-        logger.setLevel(level)
+        logger.setLevel(int(level))
         logger.debug("Initial console window logging level: %s", logging.getLevelName(level))
         
         self.logger = logger
