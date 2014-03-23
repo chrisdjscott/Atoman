@@ -23,6 +23,7 @@ from ..visclibs import output as output_c
 from . import axes
 from . import cell
 from .utils import setRes, setupLUT, getScalar, setMapperScalarRange
+from . import utils
 from ..visclibs import rendering as c_rendering
 from ..visclibs import numpy_utils
 
@@ -763,38 +764,30 @@ def povrayBond(pos, vector):
     pass
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, displayOptions, pipelinePage, NVisibleForRes=None):
+
+def writePovrayAtoms(filename, visibleAtoms, lattice, scalarsArray, colouringOptions, lut):
     """
-    Make the actors for the filtered system
+    Write pov-ray atoms to file.
     
     """
-    logger = logging.getLogger(__name__)
+    # scalars type
+    scalarsType = getScalarsType(colouringOptions)
     
-    getActorsTime = time.time()
+    # rgb callback
+    rgbcalc = utils.RGBCallBackClass(lut)
     
-    NVisible = len(visibleAtoms)
+    # call C routine to write atoms to file
+    output_c.writePOVRAYAtoms(filename, visibleAtoms, lattice.specie, lattice.pos, lattice.specieCovalentRadius, 
+                              lattice.PE, lattice.KE, lattice.charge, scalarsArray, scalarsType, 
+                              colouringOptions.heightAxis, rgbcalc.cfunc)
+
+################################################################################
+
+def getScalarsType(colouringOptions):
+    """
+    Return scalars type based on colouring options
     
-    if NVisibleForRes is None:
-        NVisibleForRes = NVisible
-    
-    # povray file
-    povFilePath = os.path.join(mainWindow.tmpDirectory, povFileName)
-    fpov = open(povFilePath, "w")
-    
-    # resolution
-    res = setRes(NVisibleForRes)
-    
-    lattice = pipelinePage.inputState
-    
-    # make LUT
-    lut = setupLUT(lattice.specieList, lattice.specieRGB, colouringOptions)
-    
-    NSpecies = len(lattice.specieList)
-    specieCount = np.zeros(NSpecies, np.int32)
-    
-    # loop over atoms, setting points and scalars
-    setPointsTime2 = time.time()
-    
+    """
     # scalar type
     if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
         scalarType = 0
@@ -812,6 +805,22 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     
     else:
         scalarType = 5
+    
+    return scalarType
+
+################################################################################
+
+def getSpeciePosScalarVTKArrays(visibleAtoms, lattice, scalarsArray, colouringOptions):
+    """
+    Split visible atoms pos/scalar arrays by specie
+    
+    """
+    # specie counter
+    NSpecies = len(lattice.specieList)
+    specieCount = np.zeros(NSpecies, np.int32)
+    
+    # scalar type
+    scalarType = getScalarsType(colouringOptions)
     
     # allocator
     alloc = numpy_utils.Allocator(storeAsList=True)
@@ -837,11 +846,58 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         atomPointsList.append(points)
         atomScalarsList.append(numpy_support.numpy_to_vtk(specScalar, deep=1))
     
+    return atomPointsList, atomScalarsList, specieCount
+
+################################################################################
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, displayOptions, pipelinePage, NVisibleForRes=None):
+    """
+    Make the actors for the filtered system
+    
+    """
+    logger = logging.getLogger(__name__)
+    
+    getActorsTime = time.time()
+    
+    NVisible = len(visibleAtoms)
+    
+    if NVisibleForRes is None:
+        NVisibleForRes = NVisible
+    
+    # resolution
+    res = setRes(NVisibleForRes)
+    
+    lattice = pipelinePage.inputState
+    
+    # make LUT
+    lut = setupLUT(lattice.specieList, lattice.specieRGB, colouringOptions)
+    
+    # number of species
+    NSpecies = len(lattice.specieList)
+    
+    # loop over atoms, setting points and scalars
+    setPointsTime2 = time.time()
+    
+    atomPointsList, atomScalarsList, specieCount = getSpeciePosScalarVTKArrays(visibleAtoms, lattice, scalarsArray, colouringOptions)
+    
+    setPointsTime2 = time.time() - setPointsTime2
+    
     # call method to make POV-Ray file (with callback to get rgb?)
     # use class similar to Allocator...
     
+    #NOTE: if this is slow we should move this into a thread
+    #      set var when done and only render after var is set...
+    #      probably run thread from filterer
     
-    setPointsTime2 = time.time() - setPointsTime2
+    for i in xrange(NSpecies):
+        rgbtmp = np.empty(3, np.float64)
+        lut.GetColor(float(i), rgbtmp)
+        print "LUT %d: %r" % (i, rgbtmp)
+    
+    # povray file
+    povtime = time.time()
+    povFilePath = os.path.join(mainWindow.tmpDirectory, povFileName)
+    writePovrayAtoms(povFilePath, visibleAtoms, lattice, scalarsArray, colouringOptions, lut)
+    povtime = time.time() - povtime
     
     # loop over atoms, setting points and scalars
     setPointsTime = time.time()
@@ -852,6 +908,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
 #         atomScalarsList2.append(vtk.vtkFloatArray())
 #     pos = lattice.pos
 #     spec = lattice.specie
+#     fpov = open("/tmp/tmp.pov", "w")
 #     for i in xrange(NVisible):
 #         index = visibleAtoms[i]
 #         specInd = spec[index]
@@ -894,11 +951,6 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     
     # now loop over species, making actors
     t1s = []
-    t2s = []
-    t3s = []
-    t4s = []
-    t5s = []
-    t6s = []
     for i in xrange(NSpecies):
         t1 = time.time()
         
@@ -920,17 +972,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         atomsMapper = vtk.vtkPolyDataMapper()
         atomsMapper.SetInput(atomsGlyph.GetOutput())
         atomsMapper.SetLookupTable(lut)
-        if colouringOptions.colourBy == "Specie":
-            atomsMapper.SetScalarRange(0, NSpecies - 1)
-        
-        elif colouringOptions.colourBy == "Height":
-            atomsMapper.SetScalarRange(colouringOptions.minVal, colouringOptions.maxVal)
-        
-        elif colouringOptions.colourBy == "Atom property":
-            atomsMapper.SetScalarRange(colouringOptions.propertyMinSpin.value(), colouringOptions.propertyMaxSpin.value())
-        
-        else:
-            atomsMapper.SetScalarRange(colouringOptions.scalarMinSpin.value(), colouringOptions.scalarMaxSpin.value())
+        setMapperScalarRange(atomsMapper, colouringOptions, NSpecies)
         
         atomsActor = vtk.vtkActor()
         atomsActor.SetMapper(atomsMapper)
@@ -938,8 +980,6 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         actorsCollection.AddItem(atomsActor)
         
         t1s.append(time.time() - t1)
-        
-    fpov.close()
     
     # scalar bar
     scalarBar = None
@@ -952,7 +992,9 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     getActorsTime = time.time() - getActorsTime
     logger.debug("Get actors time: %f s", getActorsTime)
     logger.debug("  Set points time (old): %f s", setPointsTime)
-    logger.debug("  Set points time (new): %f s", setPointsTime2)
+    logger.debug("  Set points time (new): %f s", povtime + setPointsTime2)
+    logger.debug("    Build spec arrays time: %f s", setPointsTime2)
+    logger.debug("    Write pov atoms time: %f s", povtime)
     for i, t1 in enumerate(t1s):
         logger.debug("  Make actors time (%d): %f s", i, t1)
     
@@ -1014,21 +1056,6 @@ def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisite
     output_c.writePOVRAYDefects(povfile, vacancies, interstitials, antisites, onAntisites, inputLattice.specie, inputLattice.pos,
                                 refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius * displayOptions.atomScaleFactor,
                                 refLattice.specieRGB, refLattice.specieCovalentRadius * displayOptions.atomScaleFactor, splitInterstitials)
-
-
-################################################################################
-# def writePovrayAtoms(filename, visibleAtoms, mainWindow):
-#     """
-#     Write pov-ray atoms to file.
-#     
-#     """
-#     povfile = os.path.join(mainWindow.tmpDirectory, filename)
-#     
-#     lattice = mainWindow.inputState
-#     
-#     # call C routine to write atoms to file
-#     output_c.writePOVRAYAtoms(povfile, lattice.specie, lattice.pos, visibleAtoms, 
-#                               lattice.specieRGB, lattice.specieCovalentRadius)
 
 
 ################################################################################

@@ -38,6 +38,11 @@ from CDJSVis.visutils.utilities import iconPath, imagePath, setupLogging
 ################################################################################
 
 def main():
+    # fix font bug on mavericks
+    import platform
+    if platform.version().startswith("Darwin Kernel Version 13.1.0"):
+        QtGui.QFont.insertSubstitution(".Lucida Grande UI", "Lucida Grande")
+    
     # application
     app = QtGui.QApplication(sys.argv)
     

@@ -12,6 +12,7 @@ import platform
 from ctypes import CDLL, c_double, POINTER, c_int, c_char_p, c_char
 
 from .numpy_utils import CPtrToDouble, CPtrToInt, CPtrToChar
+from ..rendering.utils import RGBCallBackClass as rgbcalcClass
 
 
 ################################################################################
@@ -72,4 +73,27 @@ def writePOVRAYDefects(filename, vacs, ints, ants, onAnts, specie, pos, refSpeci
                                    CPtrToDouble(refPos), CPtrToDouble(specieRGB), CPtrToDouble(specieCovalentRadius), 
                                    CPtrToDouble(refSpecieRGB), CPtrToDouble(refSpecieCovalentRadius), len(splitInterstitials) / 3, 
                                    CPtrToInt(splitInterstitials))
+
+################################################################################
+
+# writePOVRAYAtoms prototype
+_lib.writePOVRAYAtoms.restype = c_int
+_lib.writePOVRAYAtoms.argtypes = [c_char_p, c_int, POINTER(c_int), POINTER(c_int), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int, c_int, rgbcalcClass.CFUNCTYPE]
+
+# writePOVRAYAtoms
+def writePOVRAYAtoms(filename, visibleAtoms, specie, pos, specieCovRad, PE, KE, charge, scalars, scalarType, heightAxis, rgbcalc):
+    """
+    writePOVRAYAtoms
+    
+    """
+    return _lib.writePOVRAYAtoms(filename, len(visibleAtoms), CPtrToInt(visibleAtoms), CPtrToInt(specie), CPtrToDouble(pos), CPtrToDouble(specieCovRad), CPtrToDouble(PE), CPtrToDouble(KE), CPtrToDouble(charge), CPtrToDouble(scalars), scalarType, heightAxis, rgbcalc)
+
+
+
+
+# int writePOVRAYAtoms(char* filename, int NVisible, int *visibleAtoms, int* specie, double* pos, 
+#                      double* specieCovRad, double* PE, double* KE, double* charge, double* scalars, 
+#                      int scalarType, int heightAxis, rgbcalc_t rgbcalc)
+
+
 
