@@ -50,7 +50,7 @@ ifeq (Linux, $(shell uname -s))
 endif
 
 LIBFILES = _bonds.$(LIBSUFFIX) _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX) _output.$(LIBSUFFIX) \
-		   _picker.$(LIBSUFFIX) _clusters.$(LIBSUFFIX) _defects.$(LIBSUFFIX) _vectors.$(LIBSUFFIX)
+		   _picker.$(LIBSUFFIX) _clusters.$(LIBSUFFIX) _defects.$(LIBSUFFIX) _vectors.$(LIBSUFFIX) _rendering.$(LIBSUFFIX)
 
 # target
 all : $(LIBFILES)
@@ -82,6 +82,9 @@ _defects.$(LIBSUFFIX) : defects.o boxeslib.o utilities.o
 
 _vectors.$(LIBSUFFIX) : vectors.o utilities.o
 	$(CC) $(CCLINKFLAGS) vectors.o utilities.o -o _vectors.$(LIBSUFFIX)
+
+_rendering.$(LIBSUFFIX) : rendering.o
+	$(CC) $(CCLINKFLAGS) rendering.o -o _rendering.$(LIBSUFFIX)
 
 # compile module
 boxeslib.o : boxeslib.c
@@ -116,6 +119,9 @@ defects.o : defects.c
 
 vectors.o : vectors.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) vectors.c
+
+rendering.o : rendering.c 
+	$(CC) $(CCFLAGS) $(INCLUDES) rendering.c
 
 # clean
 clean:
