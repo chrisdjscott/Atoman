@@ -302,15 +302,6 @@ class ConsoleWindow(QtGui.QDialog):
         self.closeButton.setAutoDefault(1)
         self.closeButton.clicked.connect(self.close)
         
-        buttonWidget = QtGui.QWidget()
-        buttonLayout = QtGui.QHBoxLayout(buttonWidget)
-        buttonLayout.addWidget(self.clearButton)
-        buttonLayout.addWidget(self.saveButton)
-        buttonLayout.addStretch()
-        buttonLayout.addWidget(self.closeButton)
-        
-        consoleLayout.addWidget(buttonWidget)
-        
         # logging handler
         handler = utilities.TextEditHandler(self.textWidget)
         handler.setLevel(logging.INFO)
@@ -331,11 +322,80 @@ class ConsoleWindow(QtGui.QDialog):
         
         self.logger = logger
         
-#         logger.debug("test message")
-#         logger.info("test message")
-#         logger.warning("test message")
-#         logger.error("test message")
-#         logger.critical("test message")
+        self.loggingLevels = {"CRITICAL": logging.CRITICAL,
+                              "ERROR": logging.ERROR,
+                              "WARNING": logging.WARNING,
+                              "INFO": logging.INFO,
+                              "DEBUG": logging.DEBUG}
+        
+        self.loggingLevelsSorted = ["CRITICAL",
+                                    "ERROR",
+                                    "WARNING",
+                                    "INFO",
+                                    "DEBUG"]
+        
+        # should get these from settings
+        consoleLevel = level
+        consoleLevelIndex = self.getLevelIndex(consoleLevel)
+        
+        self.consoleLevelCombo = QtGui.QComboBox()
+        self.consoleLevelCombo.addItems(self.loggingLevelsSorted)
+        self.consoleLevelCombo.currentIndexChanged[str].connect(self.consoleLevelChanged)
+        self.consoleLevelCombo.setCurrentIndex(consoleLevelIndex)
+        
+        label = QtGui.QLabel("Level:")
+        
+#         row = self.newRow()
+#         row.addWidget(label)
+#         row.addWidget(self.consoleLevelCombo)
+        
+        buttonWidget = QtGui.QWidget()
+        buttonLayout = QtGui.QHBoxLayout(buttonWidget)
+        buttonLayout.addWidget(self.clearButton)
+        buttonLayout.addWidget(self.saveButton)
+        buttonLayout.addStretch()
+        buttonLayout.addWidget(label)
+        buttonLayout.addWidget(self.consoleLevelCombo)
+        buttonLayout.addStretch()
+        buttonLayout.addWidget(self.closeButton)
+        
+        consoleLayout.addWidget(buttonWidget)
+    
+    def getLevelIndex(self, level):
+        """
+        Return index of level
+        
+        """
+        levelKey = None
+        for key, val in self.loggingLevels.iteritems():
+            if val == level:
+                levelKey = key
+                break
+        
+        if levelKey is None:
+            logger = logging.getLogger(__name__)
+            logger.critical("No match for log level: %s", str(level))
+            return 2
+        
+        return self.loggingLevelsSorted.index(levelKey)
+    
+    def consoleLevelChanged(self, levelKey):
+        """
+        Console window logging level has changed
+        
+        """
+        levelKey = str(levelKey)
+        level = self.loggingLevels[levelKey]
+        
+        # get handler (console window is second)
+        handler = logging.getLogger().handlers[1]
+        
+        # set level
+        handler.setLevel(level)
+        
+        # update settings
+        settings = QtCore.QSettings()
+        settings.setValue("logging/console", level)
     
     def saveText(self):
         """
