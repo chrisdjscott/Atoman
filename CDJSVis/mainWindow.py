@@ -92,13 +92,13 @@ class MainWindow(QtGui.QMainWindow):
         settingsKey = "notification/%s" % dlg.notificationID
         
         # see if they don't want us to show the window
-        showDialog = settings.value(settingsKey, True)
+        showDialog = int(settings.value(settingsKey, 1))
         
         if showDialog:
             dlg.exec_()
             
             if dlg.dontShowAgainCheck.isChecked():
-                settings.setValue(settingsKey, False)
+                settings.setValue(settingsKey, 0)
     
     def initUI(self):
         """
