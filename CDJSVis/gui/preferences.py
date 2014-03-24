@@ -73,7 +73,7 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
         settings = QtCore.QSettings()
         
         # default settings
-        self.maxAtomsAutoRun = int(settings.value("rendering/maxAtomsAutoRun", 5000))
+        self.maxAtomsAutoRun = int(settings.value("rendering/maxAtomsAutoRun", 10000))
         
         # max atoms auto run
         rowLayout = self.newRow()
