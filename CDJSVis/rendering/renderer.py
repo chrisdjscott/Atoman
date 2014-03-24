@@ -765,6 +765,46 @@ def povrayBond(pos, vector):
 
 ################################################################################
 
+class PovRayAtomsWriter(QtCore.QObject):
+    """
+    Write POV-Ray atoms to file
+    
+    """
+    finished = QtCore.Signal(int)
+    
+    def __init__(self, filename, visibleAtoms, lattice, scalarsArray, colouringOptions, lut):
+        super(PovRayAtomsWriter, self).__init__()
+        
+        self.filename = filename
+        self.visibleAtoms = visibleAtoms
+        self.lattice = lattice
+        self.scalarsArray = scalarsArray
+        self.colouringOptions = colouringOptions
+        self.lut = lut
+    
+    def run(self):
+        """
+        Write atoms to file
+        
+        """
+        fpov = open(self.filename, "w")
+        
+        # loop over atoms
+        
+        # colour for povray file
+        rgb = np.empty(3, np.float64)
+        lut.GetColor(scalar, rgb)
+         
+        # povray atom
+        fpov.write(povrayAtom(pos[3*index:3*index+3], lattice.specieCovalentRadius[specInd] * displayOptions.atomScaleFactor, rgb))
+
+        
+        
+        fpov.close()
+        
+
+################################################################################
+
 def writePovrayAtoms(filename, visibleAtoms, lattice, scalarsArray, colouringOptions, lut):
     """
     Write pov-ray atoms to file.

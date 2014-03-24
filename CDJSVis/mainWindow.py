@@ -68,6 +68,11 @@ class MainWindow(QtGui.QMainWindow):
         # initialise user interface
         self.initUI()
         
+        # start threadpool
+        self.threadPool = QtCore.QThreadPool(self)
+        if self.threadPool.maxThreadCount() < 2:
+            self.threadPool.setMaxThreadCount(2)
+        
         # set focus
         self.setFocus()
         
