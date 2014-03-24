@@ -22,10 +22,6 @@ except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)
 
-
-
-
-
 ################################################################################
 
 class GenericPreferencesSettingsForm(QtGui.QWidget):
@@ -155,6 +151,7 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         self.HRes = 800
         self.VRes = 600
         self.viewAngle = 45
+        self.cellFrameRadius = 0.15
         
         self.pathToPovray = str(settings.value("povray/pathToPovray", "povray"))
         if not os.path.exists(self.pathToPovray):
@@ -224,6 +221,20 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         label = QtGui.QLabel(" degrees")
         rowLayout.addWidget(label)
         
+        # cell frame radius
+        rowLayout = self.newRow()
+        
+        label = QtGui.QLabel("Cell frame radius: ")
+        rowLayout.addWidget(label)
+        
+        cellFrameSpinBox = QtGui.QDoubleSpinBox()
+        cellFrameSpinBox.setSingleStep(0.01)
+        cellFrameSpinBox.setMinimum(0.01)
+        cellFrameSpinBox.setMaximum(5.0)
+        cellFrameSpinBox.setValue(self.cellFrameRadius)
+        cellFrameSpinBox.valueChanged.connect(self.cellFrameRadiusChanged)
+        rowLayout.addWidget(cellFrameSpinBox)
+        
         self.init()
     
     def pathToPovrayEdited(self):
@@ -234,7 +245,6 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         exe = utilities.checkForExe(self.pathToPovray)
         
         if exe:
-            print "STORING POV PATH IN SETTINGS", exe, self.pathToPovray
             settings = QtCore.QSettings()
             settings.setValue("povray/pathToPovray", exe)
     
@@ -251,6 +261,13 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         
         """
         self.viewAngle = val
+    
+    def cellFrameRadiusChanged(self, val):
+        """
+        Cell frame radius changed
+        
+        """
+        self.cellFrameRadius = val
     
     def VResChanged(self, val):
         """

@@ -660,6 +660,7 @@ class Renderer(object):
         
         """
         lattice = self.getInputState()
+        settings = self.mainWindow.preferences.povrayForm
         
         a = [0]*3
         b = [0]*3 
@@ -672,7 +673,7 @@ class Renderer(object):
         else:
             R = G = B = 0
         
-        filehandle.write("#declare R = 0.15;\n")
+        filehandle.write("#declare R = %f;\n" % settings.cellFrameRadius)
         filehandle.write("#declare myObject = union {\n")
         filehandle.write("    sphere { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
         filehandle.write("    sphere { <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
