@@ -68,6 +68,7 @@ class Filterer(object):
 #         self.scalarBar = None
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
+        self.povrayAtomsWritten = False
         
         self.scalars = np.asarray([], dtype=np.float64)
         self.scalarsType = ""
@@ -143,7 +144,7 @@ class Filterer(object):
         
         self.addScalarBar()
     
-    def runFilters(self):
+    def runFilters(self, sequencer=False):
         """
         Run the filters.
         
@@ -163,6 +164,7 @@ class Filterer(object):
         self.onAntisites = np.asarray([], dtype=np.int32)
         self.splitInterstitials = np.asarray([], dtype=np.int32)
         self.scalars = np.asarray([], dtype=np.float64)
+        self.povrayAtomsWritten = False
         
         # first set up visible atoms arrays
         NAtoms = self.pipelinePage.inputState.NAtoms
@@ -320,7 +322,9 @@ class Filterer(object):
                 self.scalarBar_white_bg, self.scalarBar_black_bg, visSpecCount = renderer.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, 
                                                                                                                      self.actorsCollection, self.colouringOptions, 
                                                                                                                      povfile, self.scalars, self.displayOptions, 
-                                                                                                                     self.pipelinePage, NVisibleForRes=NVisibleForRes)
+                                                                                                                     self.pipelinePage, self.povrayAtomsWrittenSlot,
+                                                                                                                     NVisibleForRes=NVisibleForRes,
+                                                                                                                     sequencer=sequencer)
                 
                 self.visibleSpecieCount = visSpecCount
                 
@@ -350,6 +354,16 @@ class Filterer(object):
         # time
         runFiltersTime = time.time() - runFiltersTime
         self.logger.debug("Apply list total time: %f s", runFiltersTime)
+    
+    def povrayAtomsWrittenSlot(self, status, povtime):
+        """
+        POV-Ray atoms have been written
+        
+        """
+        if not status:
+            self.povrayAtomsWritten = True
+        
+        self.logger.debug("Povray atoms written in %f s", povtime)
     
     def voronoiNeighboursFilter(self, settings):
         """

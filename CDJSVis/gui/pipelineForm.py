@@ -416,7 +416,7 @@ class PipelineForm(QtGui.QWidget):
         for filterList in self.filterLists:
             filterList.filterer.removeActors()
     
-    def runAllFilterLists(self):
+    def runAllFilterLists(self, sequencer=False):
         """
         Run all the filter lists.
         
@@ -442,7 +442,7 @@ class PipelineForm(QtGui.QWidget):
                 self.logger.info("    Static filter list: skipping")
             
             else:
-                filterList.filterer.runFilters()
+                filterList.filterer.runFilters(sequencer=sequencer)
             
             count += 1
         

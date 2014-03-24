@@ -26,6 +26,7 @@ from .utils import setRes, setupLUT, getScalar, setMapperScalarRange
 from . import utils
 from ..visclibs import rendering as c_rendering
 from ..visclibs import numpy_utils
+from ..threading import GenericRunnable
 
 
 ################################################################################
@@ -246,7 +247,7 @@ class Renderer(object):
         Return filter lists
         
         """
-        return self.mainWindow.mainToolbar.filterPage.filterLists
+        return self.parent.getFilterLists()
     
     def render(self):
         """
@@ -383,6 +384,13 @@ class Renderer(object):
 #             pov.Write()
 #             print "WRITTEN"
 #             return None
+            
+            # check pov files are ready
+            filterLists = self.getFilterLists()
+            for filterList in filterLists:
+                if filterList.visible and not filterList.filterer.povrayAtomsWritten:
+                    self.mainWindow.displayError("Error: POV-Ray atoms not written to file yet; please try again in a few seconds")
+                    return
             
             renIndex = self.parent.rendererIndex
             pipelineIndex = self.parent.currentPipelineIndex
@@ -770,9 +778,9 @@ class PovRayAtomsWriter(QtCore.QObject):
     Write POV-Ray atoms to file
     
     """
-    finished = QtCore.Signal(int)
+    finished = QtCore.Signal(int, float)
     
-    def __init__(self, filename, visibleAtoms, lattice, scalarsArray, colouringOptions, lut):
+    def __init__(self, filename, visibleAtoms, lattice, scalarsArray, colouringOptions, displayOptions, lut):
         super(PovRayAtomsWriter, self).__init__()
         
         self.filename = filename
@@ -781,27 +789,65 @@ class PovRayAtomsWriter(QtCore.QObject):
         self.scalarsArray = scalarsArray
         self.colouringOptions = colouringOptions
         self.lut = lut
+        self.displayOptions = displayOptions
     
     def run(self):
         """
         Write atoms to file
         
         """
+        povtime = time.time()
+        
+        # local refs
+        visibleAtoms = self.visibleAtoms
+        lattice = self.lattice
+        scalarsArray = self.scalarsArray
+        colouringOptions = self.colouringOptions
+        displayOptions = self.displayOptions
+        lut = self.lut
+        specie = lattice.specie
+        pos = lattice.pos
+        charge = lattice.charge
+        KE = lattice.KE
+        PE = lattice.PE
+        
+        # scalars type
+        scalarsType = getScalarsType(colouringOptions)
+        
+        # open pov file
         fpov = open(self.filename, "w")
         
         # loop over atoms
-        
-        # colour for povray file
-        rgb = np.empty(3, np.float64)
-        lut.GetColor(scalar, rgb)
-         
-        # povray atom
-        fpov.write(povrayAtom(pos[3*index:3*index+3], lattice.specieCovalentRadius[specInd] * displayOptions.atomScaleFactor, rgb))
-
-        
+        for i, index in enumerate(visibleAtoms):
+            # specie index
+            specInd = specie[index]
+            
+            # scalar val
+            if scalarsType == 0:
+                scalar = specInd
+            elif scalarsType == 1:
+                scalar = pos[3*index+colouringOptions.heightAxis]
+            elif scalarsType == 2:
+                scalar = KE[index]
+            elif scalarsType == 3:
+                scalar = PE[index]
+            elif scalarsType == 4:
+                scalar = charge[index]
+            else:
+                scalar = scalarsArray[i]
+            
+            # colour for povray file
+            rgb = np.empty(3, np.float64)
+            lut.GetColor(scalar, rgb)
+             
+            # povray atom
+            fpov.write(povrayAtom(pos[3*index:3*index+3], lattice.specieCovalentRadius[specInd] * displayOptions.atomScaleFactor, rgb))
         
         fpov.close()
+        povtime = time.time() - povtime
         
+        # emit finished signal
+        self.finished.emit(0, povtime)
 
 ################################################################################
 
@@ -889,7 +935,8 @@ def getSpeciePosScalarVTKArrays(visibleAtoms, lattice, scalarsArray, colouringOp
     return atomPointsList, atomScalarsList, specieCount
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, displayOptions, pipelinePage, NVisibleForRes=None):
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsArray, displayOptions, 
+                               pipelinePage, povFinishedSlot, NVisibleForRes=None, sequencer=False):
     """
     Make the actors for the filtered system
     
@@ -928,16 +975,35 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     #      set var when done and only render after var is set...
     #      probably run thread from filterer
     
-    for i in xrange(NSpecies):
-        rgbtmp = np.empty(3, np.float64)
-        lut.GetColor(float(i), rgbtmp)
-        print "LUT %d: %r" % (i, rgbtmp)
+#     for i in xrange(NSpecies):
+#         rgbtmp = np.empty(3, np.float64)
+#         lut.GetColor(float(i), rgbtmp)
+#         print "LUT %d: %r" % (i, rgbtmp)
     
     # povray file
     povtime = time.time()
     povFilePath = os.path.join(mainWindow.tmpDirectory, povFileName)
-    writePovrayAtoms(povFilePath, visibleAtoms, lattice, scalarsArray, colouringOptions, lut)
+#     writePovrayAtoms(povFilePath, visibleAtoms, lattice, scalarsArray, colouringOptions, lut)
+    
+    povAtomWriter = PovRayAtomsWriter(povFilePath, visibleAtoms, lattice, scalarsArray, colouringOptions, displayOptions, lut)
+    
+    # write pov atoms now if we're running sequencer, otherwise in separate thread
+    if sequencer:
+        povAtomWriter.run()
+    
+    else:
+        povAtomWriter.finished.connect(povFinishedSlot)
+    
+        # create runner
+        runnable = GenericRunnable(povAtomWriter)
+        
+        # add to threadpool
+        QtCore.QThreadPool.globalInstance().start(runnable)
+    
     povtime = time.time() - povtime
+    
+    if sequencer:
+        povFinishedSlot(0, povtime)
     
     # loop over atoms, setting points and scalars
     setPointsTime = time.time()
