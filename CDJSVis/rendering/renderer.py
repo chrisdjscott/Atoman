@@ -1083,13 +1083,13 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         
         atomsActor = vtk.vtkActor()
         atomsActor.SetMapper(atomsMapper)
+#         atomsActor.GetProperty().BackfaceCullingOn()
         
         actorsCollection.AddItem(atomsActor)
         
         t1s.append(time.time() - t1)
     
     # scalar bar
-    scalarBar = None
     scalarBar_white = None
     scalarBar_black = None
     if colouringOptions.colourBy != "Specie" and colouringOptions.colourBy != "Solid colour":

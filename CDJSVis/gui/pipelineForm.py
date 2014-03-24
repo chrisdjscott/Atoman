@@ -322,7 +322,9 @@ class PipelineForm(QtGui.QWidget):
                 rw.outputDialog.rdfTab.refresh()
                 rw.outputDialog.imageTab.imageSequenceTab.resetPrefix()
         
-        if self.inputState.NAtoms < 5000:
+        settings = self.mainWindow.preferences.renderingForm
+        
+        if self.inputState.NAtoms < settings.maxAtomsAutoRun:
             self.runAllFilterLists()
     
     def refChanged(self, index):

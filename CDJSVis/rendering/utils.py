@@ -165,7 +165,7 @@ def setRes(num):
         res = -2.91*math.log(num,2.7) + 35
         res = round(res,0)
         res = 170*(num**-0.36)
-        res = int(res)    
+        res = int(res)
     
-#    print "RES = ",res,num    
+#     print "RES = ",res,num    
     return res

@@ -61,6 +61,48 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
 
 ################################################################################
 
+class RenderingSettingsForm(GenericPreferencesSettingsForm):
+    """
+    Rendering settings form for preferences dialog.
+    
+    """
+    def __init__(self, parent):
+        super(RenderingSettingsForm, self).__init__(parent)
+        
+        # settings object
+        settings = QtCore.QSettings()
+        
+        # default settings
+        self.maxAtomsAutoRun = int(settings.value("rendering/maxAtomsAutoRun", 5000))
+        
+        # max atoms auto run
+        rowLayout = self.newRow()
+        
+        label = QtGui.QLabel("Max atoms auto run:")
+        rowLayout.addWidget(label)
+        
+        maxAtomsSpin = QtGui.QSpinBox()
+        maxAtomsSpin.setMinimum(1)
+        maxAtomsSpin.setMaximum(20000)
+        maxAtomsSpin.setValue(self.maxAtomsAutoRun)
+        maxAtomsSpin.valueChanged.connect(self.maxAtomsChanged)
+        rowLayout.addWidget(maxAtomsSpin)
+        
+        self.init()
+    
+    def maxAtomsChanged(self, val):
+        """
+        maxAtomsAutoRun changed.
+        
+        """
+        self.maxAtomsAutoRun = val
+        
+        # store in settings
+        settings = QtCore.QSettings()
+        settings.setValue("rendering/maxAtomsAutoRun", val)
+
+################################################################################
+
 class FfmpegSettingsForm(GenericPreferencesSettingsForm):
     """
     FFMPEG settings form for preferences dialog.
@@ -599,6 +641,10 @@ class PreferencesDialog(QtGui.QDialog):
         
         # add toolbox to layout
         dlgLayout.addWidget(self.toolbox)
+        
+        # rendering tab
+        self.renderingForm = RenderingSettingsForm(self)
+        self.toolbox.addItem(self.renderingForm, QtGui.QIcon(iconPath("applications-graphics.svg")), "Rendering")
         
         # povray tab
         self.povrayForm = PovraySettingsForm(self)
