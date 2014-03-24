@@ -79,6 +79,16 @@ class PipelineForm(QtGui.QWidget):
         # row 
         row = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setSpacing(0)
+        label = QtGui.QLabel("<b>Pipeline %d settings</b>" % pipelineIndex)
+        rowLayout.addWidget(label)
+        filterTabLayout.addWidget(row)
+        
+        # row 
+        row = QtGui.QWidget()
+        rowLayout = QtGui.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignTop)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setSpacing(0)
