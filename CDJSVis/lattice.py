@@ -120,7 +120,7 @@ class Lattice(object):
         
         pos = np.asarray(pos, dtype=np.float64)
         
-        self.specie = np.append(self.specie, specInd)
+        self.specie = np.append(self.specie, np.int32(specInd))
         self.pos = np.append(self.pos, pos)
         self.charge = np.append(self.charge, charge)
 #         self.force = np.append(self.force, np.zeros(3, np.float64))

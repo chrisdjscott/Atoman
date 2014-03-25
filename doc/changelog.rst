@@ -1,6 +1,14 @@
 Changelog
 =========
 
+**v0.12.2**
+
+* Fix bug when generating lattice (addAtom)
+
+**v0.12.1**
+
+* Fix bug in element editor
+
 **v0.12**
 
 * Improve render atoms speed (rewrite some bits in C)
