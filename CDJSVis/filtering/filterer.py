@@ -176,9 +176,8 @@ class Filterer(object):
 #            self.scalars = np.empty(NAtoms, dtype=np.float64)
             self.logger.info("%d visible atoms", len(self.visibleAtoms))
         
-        hullFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_hulls%d.pov" % (self.pipelineIndex, self.parent.tab))
-        if os.path.exists(hullFile):
-            os.unlink(hullFile)
+        # pov-ray hull file
+        hullFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_hulls%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID)))
         
         # run filters
         applyFiltersTime = time.time()
@@ -279,7 +278,7 @@ class Filterer(object):
         
         # render
         renderTime = time.time()
-        povfile = "pipeline%d_atoms%d.pov" % (self.pipelineIndex, self.parent.tab)
+        povfile = "pipeline%d_atoms%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
         if self.parent.defectFilterSelected:
             # vtk render
             if filterSettings.findClusters and filterSettings.drawConvexHulls:
@@ -300,12 +299,10 @@ class Filterer(object):
                 self.scalarBar_black_bg = counters[5]
                 
                 # write pov-ray file too
-                povfile = "pipeline%d_defects%d.pov" % (self.pipelineIndex, self.parent.tab)
+                povfile = "pipeline%d_defects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
                 renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow, 
                                             self.displayOptions, splitInterstitials, self.pipelinePage)
-            
-            # add defect info to text screen?
-            
+                self.povrayAtomsWritten = True
         
         else:
             if filterName == "Cluster" and filterSettings.drawConvexHulls and filterSettings.hideAtoms:
@@ -500,7 +497,7 @@ class Filterer(object):
                 return
         
         # POV-RAY file
-        voroFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_voro%d.pov" % (self.pipelineIndex, self.parent.tab))
+        voroFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_voro%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID)))
         
         # get actors for vis atoms only!
         renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.pipelinePage.inputState.voronoiDict[voroKey], 
@@ -619,7 +616,7 @@ class Filterer(object):
         # draw bonds
         if NBondsTotal > 0:
             # pov file for bonds
-            povfile = "pipeline%d_bonds%d.pov" % (self.pipelineIndex, self.parent.tab)
+            povfile = "pipeline%d_bonds%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
             
             renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsCollection, self.colouringOptions, 
                                     povfile, self.scalars, bondArray, NBondsArray, bondVectorArray, self.bondsOptions)

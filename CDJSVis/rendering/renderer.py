@@ -249,6 +249,13 @@ class Renderer(object):
         """
         return self.parent.getFilterLists()
     
+    def getCurrentPipelinePage(self):
+        """
+        Get current pipeline page
+        
+        """
+        return self.parent.getCurrentPipelinePage()
+    
     def render(self):
         """
         Render.
@@ -418,6 +425,7 @@ class Renderer(object):
             overlay = settings.overlayImage
             
             # then join filter list files
+            pp = self.getCurrentPipelinePage()
             filterLists = self.parent.getFilterLists()
             CWD = os.getcwd()
             try:
@@ -425,7 +433,7 @@ class Renderer(object):
                 command = "cat 'renderer%d_header.pov'" % renIndex
                 for filterList in filterLists:
                     if filterList.visible:
-                        pipeline_pov_files = glob.glob("pipeline%d_*%d.pov" % (pipelineIndex, filterList.tab))
+                        pipeline_pov_files = glob.glob("pipeline%d_*%d_%s.pov" % (pipelineIndex, filterList.tab, str(pp.currentRunID)))
                         
                         for fn in pipeline_pov_files:
                             command += " '%s'" % fn

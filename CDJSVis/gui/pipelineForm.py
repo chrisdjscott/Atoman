@@ -66,6 +66,7 @@ class PipelineForm(QtGui.QWidget):
         self.extension = None
         self.inputStackIndex = None
         self.filename = None
+        self.currentRunID = None
         self.PBC = np.ones(3, np.int32)
         
         self.analysisPipelineFormHidden = True
@@ -434,6 +435,9 @@ class PipelineForm(QtGui.QWidget):
         
         """
         self.logger.info("Running all filter lists")
+        
+        # unique id (used for POV-Ray file naming)
+        self.currentRunID = uuid.uuid4()
         
         # first remove all old povray files
         oldpovfiles = glob.glob(os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_*.pov" % self.pipelineIndex))
