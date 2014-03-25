@@ -6,9 +6,41 @@ Rendering utils
 
 """
 import math
+import ctypes as C
 
+import numpy as np
 import vtk
 
+
+################################################################################
+
+# call back class
+class RGBCallBackClass(object):
+    CFUNCTYPE = C.CFUNCTYPE(C.c_long, C.c_int)
+    
+    def __init__(self, lut):
+        self._lut = lut
+        self._rgb = np.empty(3, np.float64)
+    
+    def __call__(self, scalar):
+        """
+        Calculate RGB
+    
+        """
+        # rgb array
+        self._rgb = np.empty(3, np.float64)
+        
+        # colour
+        self._lut.GetColor(scalar, self._rgb)
+        
+        print "RGB CALLBACK; scalar %f; rgb %r" % (scalar, self._rgb)
+        
+        return self._rgb.ctypes.data_as(C.c_void_p).value
+
+    def getcfunc(self):
+        return self.CFUNCTYPE(self)
+
+    cfunc = property(getcfunc)
 
 ################################################################################
 
@@ -133,7 +165,7 @@ def setRes(num):
         res = -2.91*math.log(num,2.7) + 35
         res = round(res,0)
         res = 170*(num**-0.36)
-        res = int(res)    
+        res = int(res)
     
-#    print "RES = ",res,num    
+#     print "RES = ",res,num    
     return res

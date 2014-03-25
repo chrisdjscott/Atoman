@@ -1280,7 +1280,7 @@ class ImageSequenceTab(QtGui.QWidget):
                     return
                 
                 # now apply all filters
-                pipelinePage.runAllFilterLists()
+                pipelinePage.runAllFilterLists(sequencer=True)
                 
                 # exit if cancelled
                 if progDialog.wasCanceled():

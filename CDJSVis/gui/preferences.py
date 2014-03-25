@@ -22,10 +22,6 @@ except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)
 
-
-
-
-
 ################################################################################
 
 class GenericPreferencesSettingsForm(QtGui.QWidget):
@@ -62,6 +58,48 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
     
     def init(self):
         self.layout.addStretch(1)
+
+################################################################################
+
+class RenderingSettingsForm(GenericPreferencesSettingsForm):
+    """
+    Rendering settings form for preferences dialog.
+    
+    """
+    def __init__(self, parent):
+        super(RenderingSettingsForm, self).__init__(parent)
+        
+        # settings object
+        settings = QtCore.QSettings()
+        
+        # default settings
+        self.maxAtomsAutoRun = int(settings.value("rendering/maxAtomsAutoRun", 10000))
+        
+        # max atoms auto run
+        rowLayout = self.newRow()
+        
+        label = QtGui.QLabel("Max atoms auto run:")
+        rowLayout.addWidget(label)
+        
+        maxAtomsSpin = QtGui.QSpinBox()
+        maxAtomsSpin.setMinimum(1)
+        maxAtomsSpin.setMaximum(20000)
+        maxAtomsSpin.setValue(self.maxAtomsAutoRun)
+        maxAtomsSpin.valueChanged.connect(self.maxAtomsChanged)
+        rowLayout.addWidget(maxAtomsSpin)
+        
+        self.init()
+    
+    def maxAtomsChanged(self, val):
+        """
+        maxAtomsAutoRun changed.
+        
+        """
+        self.maxAtomsAutoRun = val
+        
+        # store in settings
+        settings = QtCore.QSettings()
+        settings.setValue("rendering/maxAtomsAutoRun", val)
 
 ################################################################################
 
@@ -155,6 +193,7 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         self.HRes = 800
         self.VRes = 600
         self.viewAngle = 45
+        self.cellFrameRadius = 0.15
         
         self.pathToPovray = str(settings.value("povray/pathToPovray", "povray"))
         if not os.path.exists(self.pathToPovray):
@@ -224,6 +263,20 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         label = QtGui.QLabel(" degrees")
         rowLayout.addWidget(label)
         
+        # cell frame radius
+        rowLayout = self.newRow()
+        
+        label = QtGui.QLabel("Cell frame radius: ")
+        rowLayout.addWidget(label)
+        
+        cellFrameSpinBox = QtGui.QDoubleSpinBox()
+        cellFrameSpinBox.setSingleStep(0.01)
+        cellFrameSpinBox.setMinimum(0.01)
+        cellFrameSpinBox.setMaximum(5.0)
+        cellFrameSpinBox.setValue(self.cellFrameRadius)
+        cellFrameSpinBox.valueChanged.connect(self.cellFrameRadiusChanged)
+        rowLayout.addWidget(cellFrameSpinBox)
+        
         self.init()
     
     def pathToPovrayEdited(self):
@@ -234,7 +287,6 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         exe = utilities.checkForExe(self.pathToPovray)
         
         if exe:
-            print "STORING POV PATH IN SETTINGS", exe, self.pathToPovray
             settings = QtCore.QSettings()
             settings.setValue("povray/pathToPovray", exe)
     
@@ -251,6 +303,13 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         
         """
         self.viewAngle = val
+    
+    def cellFrameRadiusChanged(self, val):
+        """
+        Cell frame radius changed
+        
+        """
+        self.cellFrameRadius = val
     
     def VResChanged(self, val):
         """
@@ -555,84 +614,6 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
 
 ################################################################################
 
-class LoggingSettingsForm(GenericPreferencesSettingsForm):
-    """
-    Logging preferences
-    
-    """
-    def __init__(self, parent):
-        super(LoggingSettingsForm, self).__init__(parent)
-        
-        self.loggingLevels = {"CRITICAL": logging.CRITICAL,
-                              "ERROR": logging.ERROR,
-                              "WARNING": logging.WARNING,
-                              "INFO": logging.INFO,
-                              "DEBUG": logging.DEBUG}
-        
-        self.loggingLevelsSorted = ["CRITICAL",
-                                    "ERROR",
-                                    "WARNING",
-                                    "INFO",
-                                    "DEBUG"]
-        
-        settings = QtCore.QSettings()
-        
-        # should get these from settings
-        consoleLevel = settings.value("logging/console", logging.INFO)
-        consoleLevelIndex = self.getLevelIndex(consoleLevel)
-        
-        # console window settings
-        self.consoleLevelCombo = QtGui.QComboBox()
-        self.consoleLevelCombo.addItems(self.loggingLevelsSorted)
-        self.consoleLevelCombo.currentIndexChanged[str].connect(self.consoleLevelChanged)
-        self.consoleLevelCombo.setCurrentIndex(consoleLevelIndex)
-        
-        label = QtGui.QLabel("Console window level:")
-        
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.consoleLevelCombo)
-        
-        self.init()
-    
-    def getLevelIndex(self, level):
-        """
-        Return index of level
-        
-        """
-        levelKey = None
-        for key, val in self.loggingLevels.iteritems():
-            if val == level:
-                levelKey = key
-                break
-        
-        if levelKey is None:
-            logger = logging.getLogger(__name__)
-            logger.critical("No match for log level: %s", str(level))
-            return 2
-        
-        return self.loggingLevelsSorted.index(levelKey)
-    
-    def consoleLevelChanged(self, levelKey):
-        """
-        Console window logging level has changed
-        
-        """
-        levelKey = str(levelKey)
-        level = self.loggingLevels[levelKey]
-        
-        # get handler (console window is second)
-        handler = logging.getLogger().handlers[1]
-        
-        # set level
-        handler.setLevel(level)
-        
-        # update settings
-        settings = QtCore.QSettings()
-        settings.setValue("logging/console", level)
-
-################################################################################
-
 class PreferencesDialog(QtGui.QDialog):
     """
     Preferences dialog.
@@ -661,9 +642,9 @@ class PreferencesDialog(QtGui.QDialog):
         # add toolbox to layout
         dlgLayout.addWidget(self.toolbox)
         
-        # logging tab
-        self.loggingForm = LoggingSettingsForm(self)
-        self.toolbox.addItem(self.loggingForm, QtGui.QIcon(iconPath("logging-icon.png")), "Logging")
+        # rendering tab
+        self.renderingForm = RenderingSettingsForm(self)
+        self.toolbox.addItem(self.renderingForm, QtGui.QIcon(iconPath("applications-graphics.svg")), "Rendering")
         
         # povray tab
         self.povrayForm = PovraySettingsForm(self)

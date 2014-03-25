@@ -292,7 +292,7 @@ void addVectorsInplace( int dim4, double* pos1, int dim12, double* pos2 )
     
     for ( i=0; i<dim4; i++ )
     {
-    	pos1[i] += pos2[i];
+        pos1[i] += pos2[i];
     }
 }
 
@@ -364,19 +364,19 @@ double dotProduct( int dim4, double* pos1, int dim12, double* pos2 )
  *
  *******************************************************************************/
 void applyPartialDisplacement( int dim4, double* pos1, int dim12, double* pos2,
-		int displLen, int* displAtoms)
+        int displLen, int* displAtoms)
 {
     int i, j, atom;
 
     if ((dim12 == (displLen*3)) && (displLen > 0)) {
 
-    	for ( i = 0; i < displLen; i++ ) {
-			atom = displAtoms[i];
+        for ( i = 0; i < displLen; i++ ) {
+            atom = displAtoms[i];
 
-			for ( j = 0; j < 3; j++ ) {
-				pos1[3*atom+j] += pos2[3*i+j];
-			}
-		}
+            for ( j = 0; j < 3; j++ ) {
+                pos1[3*atom+j] += pos2[3*i+j];
+            }
+        }
     }
 }
 
@@ -384,19 +384,19 @@ void applyPartialDisplacement( int dim4, double* pos1, int dim12, double* pos2,
  *
  *******************************************************************************/
 void applyPartialDisplacementReverse( int dim4, double* pos1, int dim12, double* pos2,
-		int displLen, int* displAtoms)
+        int displLen, int* displAtoms)
 {
     int i, j, atom;
 
     if ((dim12 == (displLen*3)) && (displLen > 0)) {
 
-    	for ( i = 0; i < displLen; i++ ) {
-			atom = displAtoms[i];
+        for ( i = 0; i < displLen; i++ ) {
+            atom = displAtoms[i];
 
-			for ( j = 0; j < 3; j++ ) {
-				pos2[3*i+j] += pos1[3*atom+j];
-			}
-		}
+            for ( j = 0; j < 3; j++ ) {
+                pos2[3*i+j] += pos1[3*atom+j];
+            }
+        }
     }
 }
 
@@ -404,20 +404,20 @@ void applyPartialDisplacementReverse( int dim4, double* pos1, int dim12, double*
  *
  *******************************************************************************/
 double partialDotProduct( int dim4, double* pos1, int dim12, double* pos2,
-		int displLen, int* displAtoms)
+        int displLen, int* displAtoms)
 {
-	double sum = 0.0;
+    double sum = 0.0;
     int i, j, atom;
 
     if ((dim12 == (displLen*3)) && (displLen > 0)) {
 
-    	for ( i = 0; i < displLen; i++ ) {
-			atom = displAtoms[i];
+        for ( i = 0; i < displLen; i++ ) {
+            atom = displAtoms[i];
 
-			for ( j = 0; j < 3; j++ ) {
-				sum += pos1[3*atom+j] * pos2[3*i+j];
-			}
-		}
+            for ( j = 0; j < 3; j++ ) {
+                sum += pos1[3*atom+j] * pos2[3*i+j];
+            }
+        }
     }
 
     return sum;

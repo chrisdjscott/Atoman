@@ -66,6 +66,7 @@ class PipelineForm(QtGui.QWidget):
         self.extension = None
         self.inputStackIndex = None
         self.filename = None
+        self.currentRunID = None
         self.PBC = np.ones(3, np.int32)
         
         self.analysisPipelineFormHidden = True
@@ -75,6 +76,16 @@ class PipelineForm(QtGui.QWidget):
         filterTabLayout.setContentsMargins(0, 0, 0, 0)
         filterTabLayout.setSpacing(0)
         filterTabLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        # row 
+        row = QtGui.QWidget()
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setSpacing(0)
+        label = QtGui.QLabel("<b>Pipeline %d settings</b>" % pipelineIndex)
+        rowLayout.addWidget(label)
+        filterTabLayout.addWidget(row)
         
         # row 
         row = QtGui.QWidget()
@@ -312,7 +323,9 @@ class PipelineForm(QtGui.QWidget):
                 rw.outputDialog.rdfTab.refresh()
                 rw.outputDialog.imageTab.imageSequenceTab.resetPrefix()
         
-        if self.inputState.NAtoms < 5000:
+        settings = self.mainWindow.preferences.renderingForm
+        
+        if self.inputState.NAtoms < settings.maxAtomsAutoRun:
             self.runAllFilterLists()
     
     def refChanged(self, index):
@@ -416,12 +429,15 @@ class PipelineForm(QtGui.QWidget):
         for filterList in self.filterLists:
             filterList.filterer.removeActors()
     
-    def runAllFilterLists(self):
+    def runAllFilterLists(self, sequencer=False):
         """
         Run all the filter lists.
         
         """
         self.logger.info("Running all filter lists")
+        
+        # unique id (used for POV-Ray file naming)
+        self.currentRunID = uuid.uuid4()
         
         # first remove all old povray files
         oldpovfiles = glob.glob(os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_*.pov" % self.pipelineIndex))
@@ -442,7 +458,7 @@ class PipelineForm(QtGui.QWidget):
                 self.logger.info("    Static filter list: skipping")
             
             else:
-                filterList.filterer.runFilters()
+                filterList.filterer.runFilters(sequencer=sequencer)
             
             count += 1
         

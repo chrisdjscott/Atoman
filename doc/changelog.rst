@@ -1,6 +1,14 @@
 Changelog
 =========
 
+**v0.12**
+
+* Improve render atoms speed (rewrite some bits in C)
+* Add title to Pipeline Form
+* POV-Ray atoms file is written in separate thread (unless in Sequencer)
+* Add POV-Ray cell frame radius option in Preferences
+* Preferences option to automatically run filter list when less than specified number of atoms in lattice
+
 **v0.11.1**
 
 * Fix bug: AutoDetectReaderForm has no displayWarning method; use one from mainWindow instead

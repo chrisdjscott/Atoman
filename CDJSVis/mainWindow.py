@@ -68,6 +68,11 @@ class MainWindow(QtGui.QMainWindow):
         # initialise user interface
         self.initUI()
         
+        # start threadpool
+        self.threadPool = QtCore.QThreadPool(self)
+        if self.threadPool.maxThreadCount() < 2:
+            self.threadPool.setMaxThreadCount(2)
+        
         # set focus
         self.setFocus()
         
@@ -87,13 +92,13 @@ class MainWindow(QtGui.QMainWindow):
         settingsKey = "notification/%s" % dlg.notificationID
         
         # see if they don't want us to show the window
-        showDialog = settings.value(settingsKey, True)
+        showDialog = int(settings.value(settingsKey, 1))
         
         if showDialog:
             dlg.exec_()
             
             if dlg.dontShowAgainCheck.isChecked():
-                settings.setValue(settingsKey, False)
+                settings.setValue(settingsKey, 0)
     
     def initUI(self):
         """
