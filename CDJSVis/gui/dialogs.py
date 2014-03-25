@@ -472,7 +472,8 @@ class ElementEditor(QtGui.QDialog):
         
         # list of unique species
         uniqueSpecies = set()
-        for latt in self.systemsDialog.lattice_list:
+        latticeList = self.systemsDialog.getLatticeList()
+        for latt in latticeList:
             for sym in latt.specieList:
                 uniqueSpecies.add(sym)
             
@@ -620,7 +621,8 @@ class ElementEditor(QtGui.QDialog):
             G = RGB[1]
             B = RGB[2]
             
-            for latt in self.systemsDialog.lattice_list:
+            latticeList = self.systemsDialog.getLatticeList()
+            for latt in latticeList:
                 # first modify the Lattice objects
                 if sym in latt.specieList:
                     index = np.where(latt.specieList == sym)[0][0]

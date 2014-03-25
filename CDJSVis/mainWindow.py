@@ -421,7 +421,7 @@ class MainWindow(QtGui.QMainWindow):
         Open element editor.
         
         """
-        if not len(self.systemsDialog.lattice_list):
+        if not self.systemsDialog.systems_list_widget.count() > 0:
             return
         
         elementEditor = dialogs.ElementEditor(parent=self)
