@@ -314,7 +314,7 @@ class ConsoleWindow(QtGui.QDialog):
         
         # set level, try settings first or fallback to INFO
         settings = QtCore.QSettings()
-        level = settings.value("logging/console", logging.INFO)
+        level = int(settings.value("logging/console", logging.INFO))
         
         logger = logging.getLogger(__name__)
         logger.setLevel(level)
