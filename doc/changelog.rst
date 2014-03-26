@@ -1,6 +1,11 @@
 Changelog
 =========
 
+**v0.13**
+
+* Add sphere resolution settings to "Display options" on "Filter list"
+* Increase default sphere resolution
+
 **v0.12.2**
 
 * Fix bug when generating lattice (addAtom)

@@ -960,7 +960,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         NVisibleForRes = NVisible
     
     # resolution
-    res = setRes(NVisibleForRes)
+    res = setRes(NVisibleForRes, displayOptions)
     
     lattice = pipelinePage.inputState
     

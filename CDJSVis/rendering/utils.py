@@ -7,6 +7,7 @@ Rendering utils
 """
 import math
 import ctypes as C
+import logging
 
 import numpy as np
 import vtk
@@ -140,32 +141,36 @@ def setupLUT(specieList, specieRGB, colouringOptions):
 
 ################################################################################
 
-def setRes(num):
+def setRes(num, displayOptions):
     #res = 15.84 * (0.99999**natoms)
     #if(LowResVar.get()=="LowResOff"):
-    if(num==0):
-        res = 100
-    else:
-        #if(ResVar.get()=="LowResOn"):
-        #    
-        #    res = -1.0361*math.log(num,e) + 14.051
-        #    #res = round(res,0)
-        #    #res = 176*(num**-0.36)
-        #    res = int(res)
-        #    
-        #elif(ResVar.get()=="HighResOn"):
-        #    
-        #    res = -2.91*math.log(num,e) + 35
-        #    res = round(res,0)
-        #    res = 370*(num**-0.36)
-        #    res = int(res)
-        #    
-        #else:
-        
-        res = -2.91*math.log(num,2.7) + 35
-        res = round(res,0)
-        res = 170*(num**-0.36)
-        res = int(res)
+#     if(num==0):
+#         res = 100
+#     else:
+#         #if(ResVar.get()=="LowResOn"):
+#         #    
+#         #    res = -1.0361*math.log(num,e) + 14.051
+#         #    #res = round(res,0)
+#         #    #res = 176*(num**-0.36)
+#         #    res = int(res)
+#         #    
+#         #elif(ResVar.get()=="HighResOn"):
+#         #    
+#         #    res = -2.91*math.log(num,e) + 35
+#         #    res = round(res,0)
+#         #    res = 370*(num**-0.36)
+#         #    res = int(res)
+#         #    
+#         #else:
+#         
+#         res = -2.91*math.log(num,2.7) + 35
+#         res = round(res,0)
+#         res = 170*(num**-0.36)
+#         res = int(res)
     
-#     print "RES = ",res,num    
+    res = int(displayOptions.resA * num ** (-displayOptions.resB))
+    
+    logger = logging.getLogger(__name__)
+    logger.debug("Setting sphere resolution (N = %d): %d", num, res)
+    
     return res

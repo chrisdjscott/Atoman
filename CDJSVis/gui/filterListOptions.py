@@ -234,11 +234,22 @@ class DisplayOptionsWindow(QtGui.QDialog):
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
-        self.setWindowTitle("Filter list display options") # filter list id should be in here
+        self.setWindowTitle("Filter list %d display options" % self.parent.tab)
 #        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
         
-        # default options
+        # settings
+        settings = QtCore.QSettings()
+        
+        # default options (read from settings if appropriate)
         self.atomScaleFactor = 1.0
+        self.resA = float(settings.value("display/resA", 250.0))
+        self.resB = float(settings.value("display/resB", 0.36))
+        
+        self.resDefaults = {
+            "medium": (250, 0.36),
+            "high": (330, 0.36),
+            "low": (170, 0.36),
+        }
         
         # layout 
         layout = QtGui.QVBoxLayout(self)
@@ -271,6 +282,102 @@ class DisplayOptionsWindow(QtGui.QDialog):
         
         layout.addWidget(scaleFactorGroup)
         
+        # group box for resolution settings
+        resGroupBox = genericForm.GenericForm(self, None, "Sphere resolution")
+        resGroupBox.show()
+        
+        label = QtGui.QLabel("res = a.N^(-b)")
+        row = resGroupBox.newRow()
+        row.addWidget(label)
+        
+        label = QtGui.QLabel("a = ")
+        self.resASpin = QtGui.QDoubleSpinBox()
+        self.resASpin.setMinimum(1)
+        self.resASpin.setMaximum(500)
+        self.resASpin.setSingleStep(1)
+        self.resASpin.valueChanged.connect(self.resAChanged)
+        row = resGroupBox.newRow()
+        row.addWidget(label)
+        row.addWidget(self.resASpin)
+        
+        label = QtGui.QLabel("b = ")
+        self.resBSpin = QtGui.QDoubleSpinBox()
+        self.resBSpin.setMinimum(0.01)
+        self.resBSpin.setMaximum(1)
+        self.resBSpin.setSingleStep(0.01)
+        self.resBSpin.valueChanged.connect(self.resBChanged)
+        row = resGroupBox.newRow()
+        row.addWidget(label)
+        row.addWidget(self.resBSpin)
+        
+        # defaults buttons
+        self.defaultButtonsDict = {}
+        for setting in self.resDefaults:
+            settingButton = QtGui.QPushButton(setting, parent=self)
+            settingButton.setToolTip("Use default: %s" % setting)
+            settingButton.clicked.connect(functools.partial(self.applyDefault, setting))
+            settingButton.setAutoDefault(0)
+            settingButton.setCheckable(1)
+            settingButton.setChecked(0)
+            row = resGroupBox.newRow()
+            row.addWidget(settingButton)
+            self.defaultButtonsDict[setting] = settingButton
+        
+        # set values 
+        self.resASpin.setValue(self.resA)
+        self.resBSpin.setValue(self.resB)
+        
+        # store as default
+        storeDefaultButton = QtGui.QPushButton("Store as default", parent=self)
+        storeDefaultButton.setToolTip("Store settings as default values")
+        storeDefaultButton.setAutoDefault(0)
+        storeDefaultButton.clicked.connect(self.storeResSettings)
+        row = resGroupBox.newRow()
+        row.addWidget(storeDefaultButton)
+        
+        layout.addWidget(resGroupBox)
+    
+    def storeResSettings(self):
+        """
+        Store current settings as default
+        
+        """
+        settings = QtCore.QSettings()
+        settings.setValue("display/resA", self.resA)
+        settings.setValue("display/resB", self.resB)
+    
+    def applyDefault(self, setting):
+        """
+        Use default resA
+        
+        """
+        resA, resB = self.resDefaults[setting]
+        self.resASpin.setValue(resA)
+        self.resBSpin.setValue(resB)
+        
+        # make sure this one is checked
+        self.defaultButtonsDict[setting].setChecked(1)
+    
+    def resAChanged(self, val):
+        """
+        a changed
+        
+        """
+        self.resA = val
+        
+        for setting, values in self.resDefaults.iteritems():
+            aval, bval = values
+            if aval == self.resA and bval == self.resB:
+                self.defaultButtonsDict[setting].setChecked(1)
+            else:
+                self.defaultButtonsDict[setting].setChecked(0)
+    
+    def resBChanged(self, val):
+        """
+        b changed
+        
+        """
+        self.resB = val
     
     def atomScaleSpinChanged(self, val):
         """
@@ -287,7 +394,6 @@ class DisplayOptionsWindow(QtGui.QDialog):
         """
         self.atomScaleFactor = float(val) / 10.0
         self.atomScaleFactorSpin.setValue(self.atomScaleFactor)
-        
 
 ################################################################################
 
