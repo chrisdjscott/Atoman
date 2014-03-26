@@ -1257,7 +1257,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     NDef = NInt + NVac + NAnt + len(splitInterstitials)
     
     # resolution
-    res = setRes(NDef)
+    res = setRes(NDef, displayOptions)
     
     inputLattice = pipelinePage.inputState
     refLattice = pipelinePage.refState
