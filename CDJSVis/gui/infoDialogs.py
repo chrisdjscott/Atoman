@@ -45,7 +45,7 @@ class AtomInfoWindow(QtGui.QDialog):
         layout = QtGui.QVBoxLayout()
         
         row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("Atom: %d" % atomIndex))
+        row.addWidget(QtGui.QLabel("Atom: %d" % lattice.atomID[atomIndex]))
         layout.addLayout(row)
         
         row = QtGui.QHBoxLayout()
@@ -148,7 +148,7 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Site index: %d" % index))
+            row.addWidget(QtGui.QLabel("Site index: %d" % refState.atomID[index]))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
@@ -170,7 +170,7 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Atom: %d" % index))
+            row.addWidget(QtGui.QLabel("Atom: %d" % inputState.atomID[index]))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
@@ -206,7 +206,7 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Site index: %d" % index))
+            row.addWidget(QtGui.QLabel("Site index: %d" % refState.atomID[index]))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
@@ -222,7 +222,7 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Atom: %d" % index2))
+            row.addWidget(QtGui.QLabel("    Atom: %d" % inputState.atomID[index2]))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
@@ -258,7 +258,7 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Site index: %d" % vacIndex))
+            row.addWidget(QtGui.QLabel("Site index: %d" % refState.atomID[vacIndex]))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
@@ -274,7 +274,7 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Atom: %d" % int1Index))
+            row.addWidget(QtGui.QLabel("    Atom: %d" % inputState.atomID[int1Index]))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
@@ -302,7 +302,7 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Atom: %d" % int2Index))
+            row.addWidget(QtGui.QLabel("    Atom: %d" % inputState.atomID[int2Index]))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()

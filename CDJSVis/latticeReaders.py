@@ -230,7 +230,7 @@ class LbomdXYZReader(GenericLatticeReader):
         tmpForceArray = np.empty(3, np.float64)
         
         # call clib
-        status = input_c.readLBOMDXYZ(filename, state.pos, state.charge, state.KE, state.PE, tmpForceArray, 
+        status = input_c.readLBOMDXYZ(filename, state.atomID, state.pos, state.charge, state.KE, state.PE, tmpForceArray, 
                                       state.maxPos, state.minPos, xyzformat)
         
         if status:
@@ -312,7 +312,7 @@ class LbomdRefReader(GenericLatticeReader):
         tmpForceArray = np.empty(3, np.float64)
         
         # call c lib
-        status = input_c.readRef(filename, state.specie, state.pos, state.charge, state.KE, state.PE, tmpForceArray, 
+        status = input_c.readRef(filename, state.atomID, state.specie, state.pos, state.charge, state.KE, state.PE, tmpForceArray, 
                                  specieListTemp, specieCountTemp, state.maxPos, state.minPos)
         
         if status:
@@ -401,7 +401,7 @@ class LbomdDatReader(GenericLatticeReader):
         specieCountTemp = np.zeros( maxNumSpecies+1, np.int32 )
         
         # call c lib
-        status = input_c.readLatticeLBOMD(filename, state.specie, state.pos, state.charge, specieListTemp, 
+        status = input_c.readLatticeLBOMD(filename, state.atomID, state.specie, state.pos, state.charge, specieListTemp, 
                                           specieCountTemp, state.maxPos, state.minPos)
         
         if status:

@@ -21,7 +21,6 @@ class Lattice(object):
     
     """
     def __init__(self):
-        
         self.NAtoms = 0
         
         self.simTime = 0.0
@@ -40,6 +39,7 @@ class Lattice(object):
         self.minPos = np.empty(3, np.float64)
         self.maxPos = np.empty(3, np.float64)
         
+        self.atomID = np.empty(0, np.int32)
         self.specie = np.empty(0, np.int32)
         self.pos = np.empty(0, np.float64)
         self.KE = np.empty(0, np.float64)
@@ -55,6 +55,7 @@ class Lattice(object):
         """
         self.NAtoms = NAtoms
         
+        self.atomID = np.empty(NAtoms, np.int32)
         self.specie = np.empty(NAtoms, np.int32)
         self.pos = np.empty(3 * NAtoms, np.float64)
         self.KE = np.zeros(NAtoms, np.float64)
@@ -106,7 +107,7 @@ class Lattice(object):
         rgbnew[0][2] = rgbtemp[2]            
         self.specieRGB = np.append(self.specieRGB, rgbnew, axis=0)
     
-    def addAtom(self, sym, pos, charge):
+    def addAtom(self, sym, pos, charge, atomID=None):
         """
         Add an atom to the lattice
         
@@ -114,12 +115,17 @@ class Lattice(object):
         if sym not in self.specieList:
             self.addSpecie(sym)
         
+        # atom ID
+        if atomID is None:
+            atomID = self.NAtoms
+        
         specInd = self.getSpecieIndex(sym)
         
         self.specieCount[specInd] += 1
         
         pos = np.asarray(pos, dtype=np.float64)
         
+        self.atomID = np.append(self.specie, np.int32(atomID))
         self.specie = np.append(self.specie, np.int32(specInd))
         self.pos = np.append(self.pos, pos)
         self.charge = np.append(self.charge, charge)
@@ -153,6 +159,7 @@ class Lattice(object):
         
         """
         specInd = self.specie[index]
+        self.atomID = np.delete(self.atomID, index)
         self.specie = np.delete(self.specie, index)
         self.pos = np.delete(self.pos, [3*index,3*index+1,3*index+2])
         self.charge = np.delete(self.charge, index)
@@ -289,12 +296,14 @@ class Lattice(object):
                 self.specieRGB[i][j] = lattice.specieRGB[i][j]
         
         # atom data
+        self.atomID = np.empty(NAtoms, np.int32)
         self.specie = np.empty(NAtoms, np.int32)
         self.pos = np.empty(3 * NAtoms, np.float64)
         self.KE = np.empty(NAtoms, np.float64)
         self.PE = np.empty(NAtoms, np.float64)
         self.charge = np.empty(NAtoms, np.float64)
         for i in xrange(NAtoms):
+            self.atomID[i] = lattice.atomID[i]
             self.specie[i] = lattice.specie[i]
             self.KE[i] = lattice.KE[i]
             self.PE[i] = lattice.PE[i]

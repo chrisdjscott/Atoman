@@ -42,7 +42,7 @@ int specieIndex(char* sym, int NSpecies, char* specieList)
 /*******************************************************************************
 ** read animation-reference file
 *******************************************************************************/
-int readRef(char* file, int* specie, double* pos, double* charge, double* KE, double* PE, double* force, 
+int readRef(char* file, int* atomID, int* specie, double* pos, double* charge, double* KE, double* PE, double* force, 
             char* specieList_c, int* specieCount_c, double* maxPos, double* minPos)
 {
     int i, NAtoms, specInd, stat;
@@ -90,6 +90,8 @@ int readRef(char* file, int* specie, double* pos, double* charge, double* KE, do
         
         /* index for storage is (id-1) */
         index = id - 1;
+        
+        atomID[index] = id;
         
         pos[3*index] = xpos;
         pos[3*index+1] = ypos;
@@ -169,7 +171,7 @@ int readRef(char* file, int* specie, double* pos, double* charge, double* KE, do
 /*******************************************************************************
 ** read xyz input file
 *******************************************************************************/
-int readLBOMDXYZ(char* file, double* pos, double* charge, double* KE, double* PE, 
+int readLBOMDXYZ(char* file, int* atomID, double* pos, double* charge, double* KE, double* PE, 
                  double* force, double* maxPos, double* minPos, int xyzformat)
 {
     FILE *INFILE;
@@ -222,6 +224,8 @@ int readLBOMDXYZ(char* file, double* pos, double* charge, double* KE, double* PE
         index = id - 1;
         
         /* store data */
+        atomID[index] = id;
+        
         pos[3*index] = xpos;
         pos[3*index+1] = ypos;
         pos[3*index+2] = zpos;
@@ -270,7 +274,7 @@ int readLBOMDXYZ(char* file, double* pos, double* charge, double* KE, double* PE
 /*******************************************************************************
  * Read LBOMD lattice file
  *******************************************************************************/
-int readLatticeLBOMD(char* file, int* specie, double* pos, double* charge, char* specieList_c, 
+int readLatticeLBOMD(char* file, int* atomID, int* specie, double* pos, double* charge, char* specieList_c, 
                      int* specieCount_c, double* maxPos, double* minPos)
 {
     FILE *INFILE;
@@ -316,6 +320,9 @@ int readLatticeLBOMD(char* file, int* specie, double* pos, double* charge, char*
         stat = fscanf(INFILE, "%s %lf %lf %lf %lf", symtemp, &xpos, &ypos, &zpos, &chargetemp);
         if (stat != 5)
             return -3;
+        
+        /* atom ID */
+        atomID[i] = i + 1;
         
         /* store position and charge */
         pos[3*i] = xpos;
