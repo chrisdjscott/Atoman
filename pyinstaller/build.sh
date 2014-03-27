@@ -18,7 +18,7 @@ rm -rf build/ dist/ *.log
 
 cd ..
 
-python setup.py
+python setup.py doc
 
 cd pyinstaller
 

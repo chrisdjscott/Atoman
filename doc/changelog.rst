@@ -5,6 +5,9 @@ Changelog
 
 * Add sphere resolution settings to "Display options" on "Filter list"
 * Increase default sphere resolution
+* Atom indexes taken from input file instead of using internal index (i.e. now they normally start from 1)
+* Better handling of small files (< 5 atoms) in Auto-Detect reader
+* Change version numbering to date
 
 **v0.12.2**
 

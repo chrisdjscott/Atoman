@@ -236,7 +236,7 @@ class AutoDetectReaderForm(GenericReaderForm):
         
         if formatIdentifier is None:
             self.logger.error("Could not auto detect format of file")
-            self.mainWindow.displayError("ERROR: could not auto detect format of file: '%s'\n\nPlease send me the file." % filename)
+            self.mainWindow.displayError("ERROR: could not auto detect format of file: '%s'\n\nIf the lattice is small (<5 atoms) you may have to select the right reader manually; otherwise please send me the file and I'll see what the problem is." % filename)
             return 1
         
         # get reader from LoadSystemForm
@@ -288,13 +288,16 @@ class AutoDetectReaderForm(GenericReaderForm):
         
         lineArrayCountList = []
         
-        count = 0
         success = False
         repeatCount = 0
         repeatVal = None
         repeatFirstIndexLen = None
-        while True and count < maxLines:
-            line = f.readline().strip()
+        for count, line in enumerate(f):
+            if count == maxLines:
+                self.logger.debug("  Max lines reached; stopping")
+                break
+            
+            line = line.strip()
             
             # ignore blank lines
             if not len(line):
@@ -304,26 +307,31 @@ class AutoDetectReaderForm(GenericReaderForm):
             array = line.split()
             num = len(array)
             
+            self.logger.debug("  Line %d; num %d (%s)", count, num, line)
+            
+            # store num items in line
             lineArrayCountList.append(num)
             
             if num == repeatVal:
                 repeatCount += 1
-            
             else:
                 repeatCount = 0
                 repeatVal = num
                 repeatFirstIndexLen = len(lineArrayCountList)
             
+            self.logger.debug("  Repeat: cnt %d; val %d; first %d", repeatCount, repeatVal, repeatFirstIndexLen)
+            
             if repeatCount == repeatThreshold:
                 self.logger.debug("  Repeat threshold reached (%d): exiting detect loop", repeatCount)
                 success = True
                 break
-            
-            count += 1
         
         if not success:
-            self.logger.debug("Failed to detect file format")
-            return None
+            if count < 10:
+                self.logger.warning("Trying to determine format of small file; this might not work")
+            else:    
+                self.logger.debug("Failed to detect file format")
+                return None
         
         format_ident = lineArrayCountList[:repeatFirstIndexLen]
         self.logger.debug("Format identifier: '%s'", str(format_ident))
