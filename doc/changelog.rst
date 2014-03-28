@@ -1,7 +1,7 @@
 Changelog
 =========
 
-**v0.13**
+**v140328**
 
 * Add sphere resolution settings to "Display options" on "Filter list"
 * Increase default sphere resolution
