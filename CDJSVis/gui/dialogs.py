@@ -17,9 +17,7 @@ import numpy as np
 from . import genericForm
 from ..atoms import elements
 from ..visutils.utilities import resourcePath, iconPath
-from ..visutils import vectors
 from ..visutils import utilities
-from ..rendering import highlight
 
 try:
     from .. import resources

@@ -26,7 +26,7 @@ class AtomInfoWindow(QtGui.QDialog):
     Atom info window.
     
     """
-    def __init__(self, pipelinePage, atomIndex, scalar, scalarType, filterList, parent=None):
+    def __init__(self, pipelinePage, atomIndex, scalarsDict, filterList, parent=None):
         super(AtomInfoWindow, self).__init__(parent)
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
@@ -68,7 +68,7 @@ class AtomInfoWindow(QtGui.QDialog):
         row.addWidget(QtGui.QLabel("Charge: %f" % (lattice.charge[atomIndex],)))
         layout.addLayout(row)
         
-        if scalar is not None and scalarType is not None:
+        for scalarType, scalar in scalarsDict.iteritems():
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("%s: %f" % (scalarType, scalar)))
             layout.addLayout(row)

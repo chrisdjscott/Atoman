@@ -647,8 +647,7 @@ class PipelineForm(QtGui.QWidget):
             antisites = filterer.antisites
             onAntisites = filterer.onAntisites
             splitInts = filterer.splitInterstitials
-            scalars = filterer.scalars
-            scalarsType = filterer.scalarsType
+            scalarsDict = filterer.scalarsDict
             
             result = np.empty(3, np.float64)
             
@@ -681,12 +680,9 @@ class PipelineForm(QtGui.QWidget):
                     else:
                         defList = (splitInts,)
                 
-                if len(scalarsType):
-                    minSepScalar = scalars[tmp_index]
-                    minSepScalarType = scalarsType
-                else:
-                    minSepScalar = None
-                    minSepScalarType = None
+                minSepScalars = {}
+                for scalarType, scalarArray in scalarsDict.iteritems():
+                    minSepScalars[scalarType] = scalarArray[tmp_index]
         
         logger.debug("Closest object to pick: %f (threshold: %f)", minSep, 0.1)
         
@@ -698,7 +694,7 @@ class PipelineForm(QtGui.QWidget):
                 viewAction = QtGui.QAction("View atom", self)
                 viewAction.setToolTip("View atom info")
                 viewAction.setStatusTip("View atom info")
-                viewAction.triggered.connect(functools.partial(self.viewAtomClicked, minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList))
+                viewAction.triggered.connect(functools.partial(self.viewAtomClicked, minSepIndex, minSepType, minSepFilterList, minSepScalars, defList))
                 
                 editAction = QtGui.QAction("Edit atom", self)
                 editAction.setToolTip("Edit atom")
@@ -729,9 +725,9 @@ class PipelineForm(QtGui.QWidget):
             
             else:
                 # show the info window
-                self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList)
+                self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalars, defList)
     
-    def showInfoWindow(self, minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList):
+    def showInfoWindow(self, minSepIndex, minSepType, minSepFilterList, minSepScalars, defList):
         """
         Show info window
         
@@ -768,7 +764,7 @@ class PipelineForm(QtGui.QWidget):
         else:
             if minSepType == 0:
                 # atom info window
-                infoWindow = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, minSepFilterList, parent=self)
+                infoWindow = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalars, minSepFilterList, parent=self)
             
             else:
                 # defect info window
@@ -793,7 +789,7 @@ class PipelineForm(QtGui.QWidget):
             # store window for reuse
             minSepFilterList.infoWindows[windowKey] = infoWindow
     
-    def viewAtomClicked(self, minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList):
+    def viewAtomClicked(self, minSepIndex, minSepType, minSepFilterList, minSepScalars, defList):
         """
         View atom
         
@@ -801,7 +797,7 @@ class PipelineForm(QtGui.QWidget):
         logger = self.logger
         logger.debug("View atom action; Index is %d", minSepIndex)
         
-        self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList)
+        self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalars, defList)
     
     def editAtomClicked(self, index):
         """

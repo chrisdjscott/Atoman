@@ -60,8 +60,8 @@ def setMapperScalarRange(mapper, colouringOptions, NSpecies):
         mapper.SetScalarRange(colouringOptions.propertyMinSpin.value(), colouringOptions.propertyMaxSpin.value())
     
     else:
-        mapper.SetScalarRange(colouringOptions.scalarMinSpin.value(), colouringOptions.scalarMaxSpin.value())
-
+        mapper.SetScalarRange(colouringOptions.scalarMinSpins[colouringOptions.colourBy].value(), 
+                              colouringOptions.scalarMaxSpins[colouringOptions.colourBy].value())
 
 ################################################################################
 
@@ -133,7 +133,8 @@ def setupLUT(specieList, specieRGB, colouringOptions):
     else:
         lut.SetNumberOfColors(1024)
         lut.SetHueRange(0.667,0.0)
-        lut.SetRange(colouringOptions.scalarMinSpin.value(), colouringOptions.scalarMaxSpin.value())    
+        lut.SetRange(colouringOptions.scalarMinSpins[colouringOptions.colourBy].value(), 
+                     colouringOptions.scalarMaxSpins[colouringOptions.colourBy].value())    
         lut.SetRampToLinear()
         lut.Build()
     
@@ -144,9 +145,9 @@ def setupLUT(specieList, specieRGB, colouringOptions):
 def setRes(num, displayOptions):
     #res = 15.84 * (0.99999**natoms)
     #if(LowResVar.get()=="LowResOff"):
-#     if(num==0):
-#         res = 100
-#     else:
+    if(num==0):
+        res = 100
+    else:
 #         #if(ResVar.get()=="LowResOn"):
 #         #    
 #         #    res = -1.0361*math.log(num,e) + 14.051
@@ -168,9 +169,9 @@ def setRes(num, displayOptions):
 #         res = 170*(num**-0.36)
 #         res = int(res)
     
-    res = int(displayOptions.resA * num ** (-displayOptions.resB))
-    
-    logger = logging.getLogger(__name__)
-    logger.debug("Setting sphere resolution (N = %d): %d", num, res)
+        res = int(displayOptions.resA * num ** (-displayOptions.resB))
+        
+        logger = logging.getLogger(__name__)
+        logger.debug("Setting sphere resolution (N = %d): %d", num, res)
     
     return res
