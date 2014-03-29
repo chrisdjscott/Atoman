@@ -88,12 +88,19 @@ class Filterer(object):
         self.NVac = 0
         self.NInt = 0
         self.NAnt = 0
-        self.visibleAtoms = np.empty(0, np.int32)
-        self.visibleSpecieCount = []
-        self.vacancySpecieCount = []
-        self.interstitialSpecieCount = []
-        self.antisiteSpecieCount = []
-        self.splitIntSpecieCount = []
+        self.visibleAtoms = np.asarray([], dtype=np.int32)
+        self.interstitials = np.asarray([], dtype=np.int32)
+        self.vacancies = np.asarray([], dtype=np.int32)
+        self.antisites = np.asarray([], dtype=np.int32)
+        self.onAntisites = np.asarray([], dtype=np.int32)
+        self.splitInterstitials = np.asarray([], dtype=np.int32)
+        self.visibleSpecieCount = np.asarray([], dtype=np.int32)
+        self.vacancySpecieCount = np.asarray([], dtype=np.int32)
+        self.interstitialSpecieCount = np.asarray([], dtype=np.int32)
+        self.antisiteSpecieCount = np.asarray([], dtype=np.int32)
+        self.splitIntSpecieCount = np.asarray([], dtype=np.int32)
+        
+        self.povrayAtomsWritten = False
     
     def hideActors(self):
         """
@@ -153,15 +160,6 @@ class Filterer(object):
         # remove actors
         if not self.parent.isPersistentList():
             self.removeActors()
-        
-        # reset
-        self.visibleAtoms = np.asarray([], dtype=np.int32)
-        self.interstitials = np.asarray([], dtype=np.int32)
-        self.vacancies = np.asarray([], dtype=np.int32)
-        self.antisites = np.asarray([], dtype=np.int32)
-        self.onAntisites = np.asarray([], dtype=np.int32)
-        self.splitInterstitials = np.asarray([], dtype=np.int32)
-        self.povrayAtomsWritten = False
         
         # first set up visible atoms arrays
         NAtoms = self.pipelinePage.inputState.NAtoms
@@ -334,6 +332,13 @@ class Filterer(object):
             
             addActorsTime = time.time() - addActorsTime
             self.logger.debug("Add actors time: %f s" % addActorsTime)
+        
+#         for name, scalars in self.scalarsDict.iteritems():
+#             assert len(scalars) == len(self.visibleAtoms)
+#             f = open("%s_after.dat" % name.replace(" ", "_"), "w")
+#             for tup in itertools.izip(self.visibleAtoms, scalars):
+#                 f.write("%d %f\n" % tup)
+#             f.close()
         
         # time
         runFiltersTime = time.time() - runFiltersTime
@@ -690,8 +695,15 @@ class Filterer(object):
         self.logger.debug("Making full scalars array (N=%d)", len(self.scalarsDict))
         
         scalarsList = []
-        for _, scalars in self.scalarsDict.iteritems():
+        for name, scalars in self.scalarsDict.iteritems():
+            self.logger.debug("  Adding '%s' scalars", name)
             scalarsList.append(scalars)
+            
+#             assert len(scalars) == len(self.visibleAtoms)
+#             f = open("%s_before.dat" % name.replace(" ", "_"), "w")
+#             for tup in itertools.izip(self.visibleAtoms, scalars):
+#                 f.write("%d %f\n" % tup)
+#             f.close()
         
         if len(scalarsList):
             scalarsFull = np.concatenate(scalarsList)
@@ -716,8 +728,9 @@ class Filterer(object):
             for key, scalars in itertools.izip(keys, scalarsList):
                 self.logger.debug("  Storing '%s' scalars", key)
                 assert len(scalars) >= NVisible, "ERROR: scalars (%s) smaller than expected (%d < %d)" % (key, len(scalars), NVisible)
-                scalars.resize(NVisible, refcheck=False)
-                self.scalarsDict[key] = scalars
+                scalars_cp = copy.copy(scalars)
+                scalars_cp.resize(NVisible, refcheck=False)
+                self.scalarsDict[key] = scalars_cp
     
     def filterSpecie(self, settings):
         """

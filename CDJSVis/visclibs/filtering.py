@@ -89,7 +89,7 @@ def cropSphereFilter(visibleAtoms, pos, xCentre, yCentre, zCentre, radius, cellD
 # crop filter prototype
 _lib.cropFilter.restype = c_int
 _lib.cropFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_double, c_double, 
-                            c_double, c_double, c_int, c_int, c_int, c_int, c_int, POINTER(c_double), c_int, POINTER(c_double)]
+                            c_double, c_double, c_int, c_int, c_int, c_int, c_int, POINTER(c_double)]
 
 # crop filter
 def cropFilter(visibleAtoms, pos, xmin, xmax, ymin, ymax, zmin, zmax, xEnabled, yEnabled, zEnabled, invertSelection, NScalars, fullScalars):
