@@ -15,6 +15,7 @@ from ..visutils.utilities import iconPath
 from ..filtering import filterer
 from . import filterSettings
 from . import filterListOptions
+from . import utils
 try:
     from .. import resources
 except ImportError:
@@ -76,16 +77,11 @@ class FilterList(QtGui.QWidget):
                            "Q4"]
         self.allFilters.sort()
         
-        # current selected filters
-#         self.currentFilters = []
-#         
-#         # settings (windows) for current filters
-#         self.currentSettings = []
-        
         self.visible = 1
         
         # layout
         self.filterListLayout = QtGui.QVBoxLayout(self)
+        self.filterListLayout.setSpacing(0)
         
         # add the top set of buttons
         
@@ -396,6 +392,7 @@ class FilterList(QtGui.QWidget):
             item = self.listItems.currentItem()
         
         item.filterSettings.hide()
+        utils.positionWindow(item.filterSettings, item.filterSettings.size(), self.mainWindow.desktop, self)
         item.filterSettings.show()
     
     def applyList(self):
@@ -544,6 +541,13 @@ class FilterList(QtGui.QWidget):
         if filterName is not None and filterName in self.allFilters:
             ok = True
         else:
+#             dlg = QtGui.QInputDialog(self)
+#             dlg.setInputMode(QtGui.QInputDialog.TextInput)
+#             dlg.setComboBoxItems(self.allFilters)
+#             dlg.setLabelText("Select filter:")
+#             utils.positionWindow(dlg, dlg.sizeHint(), self.mainWindow.desktop, self)
+#             ok = dlg.exec_()
+#             filterName = dlg.textValue()
             filterName, ok = QtGui.QInputDialog.getItem(self, "Add filter", "Select filter:", self.allFilters, editable=False)
         
         if ok:
@@ -566,6 +570,9 @@ class FilterList(QtGui.QWidget):
                 
                 # add
                 self.listItems.addItem(item)
+                
+                # position form
+                utils.positionWindow(form, form.sizeHint(), self.mainWindow.desktop, self)
                 
                 # show options form
                 form.show()
