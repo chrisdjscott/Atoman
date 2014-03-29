@@ -792,52 +792,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.scalarWidgets = {}
         self.scalarMinSpins = {}
         self.scalarMaxSpins = {}
-        
-        # scalar widget
-#         self.scalarOptions = genericForm.GenericForm(self, 0, "Scalar colour options")
-#         
-#         # min/max
-#         self.scalarMinSpin = QtGui.QDoubleSpinBox()
-#         self.scalarMinSpin.setSingleStep(0.1)
-#         self.scalarMinSpin.setMinimum(-9999.0)
-#         self.scalarMinSpin.setMaximum(9999.0)
-#         self.scalarMinSpin.setValue(0)
-#         
-#         self.scalarMaxSpin = QtGui.QDoubleSpinBox()
-#         self.scalarMaxSpin.setSingleStep(0.1)
-#         self.scalarMaxSpin.setMinimum(-9999.0)
-#         self.scalarMaxSpin.setMaximum(9999.0)
-#         self.scalarMaxSpin.setValue(1)
-#         
-#         label = QtGui.QLabel( " Min " )
-#         label2 = QtGui.QLabel( " Max " )
-#         
-#         row = self.scalarOptions.newRow()
-#         row.addWidget(label)
-#         row.addWidget(self.scalarMinSpin)
-#         
-#         row = self.scalarOptions.newRow()
-#         row.addWidget(label2)
-#         row.addWidget(self.scalarMaxSpin)
-#         
-#         # set to scalar range
-#         setToScalarRangeButton = QtGui.QPushButton("Set to scalar range")
-#         setToScalarRangeButton.setAutoDefault(0)
-#         setToScalarRangeButton.clicked.connect(self.setToScalarRange)
-#         
-#         row = self.scalarOptions.newRow()
-#         row.addWidget(setToScalarRangeButton)
-#         
-#         # scalar bar text
-#         self.scalarBarTextEdit2 = QtGui.QLineEdit("<insert title>")
-#         
-#         label = QtGui.QLabel("Scalar bar title:")
-#         row = self.scalarOptions.newRow()
-#         row.addWidget(label)
-#         row = self.scalarOptions.newRow()
-#         row.addWidget(self.scalarBarTextEdit2)
-#         
-#         self.stackedWidget.addWidget(self.scalarOptions)
+        self.scalarBarTexts = {}
         
         windowLayout.addWidget(self.stackedWidget)
     
@@ -944,13 +899,14 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(setToScalarRangeButton)
          
         # scalar bar text
-        self.scalarBarTextEdit2 = QtGui.QLineEdit("%s" % name)
+        scalarBarTextEdit = QtGui.QLineEdit("%s" % name)
+        self.scalarBarTexts[name] = scalarBarTextEdit
          
         label = QtGui.QLabel("Scalar bar title:")
         row = scalarOptions.newRow()
         row.addWidget(label)
         row = scalarOptions.newRow()
-        row.addWidget(self.scalarBarTextEdit2)
+        row.addWidget(scalarBarTextEdit)
         
         self.scalarWidgets[name] = scalarOptions
         self.stackedWidget.addWidget(scalarOptions)

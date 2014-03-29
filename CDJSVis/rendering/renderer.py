@@ -22,7 +22,7 @@ from ..visutils import utilities
 from ..visclibs import output as output_c
 from . import axes
 from . import cell
-from .utils import setRes, setupLUT, getScalar, setMapperScalarRange
+from .utils import setRes, setupLUT, getScalar, setMapperScalarRange, makeScalarBar
 from . import utils
 from ..visclibs import rendering as c_rendering
 from ..visclibs import numpy_utils
@@ -962,6 +962,8 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     
     """
     logger = logging.getLogger(__name__)
+    logger.debug("Getting actors for filtered system")
+    logger.debug("  Colour by: '%s'", colouringOptions.colourBy)
     
     getActorsTime = time.time()
     
@@ -1002,16 +1004,9 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     #      set var when done and only render after var is set...
     #      probably run thread from filterer
     
-#     for i in xrange(NSpecies):
-#         rgbtmp = np.empty(3, np.float64)
-#         lut.GetColor(float(i), rgbtmp)
-#         print "LUT %d: %r" % (i, rgbtmp)
-    
-    # povray file
+    # povray file and writer
     povtime = time.time()
     povFilePath = os.path.join(mainWindow.tmpDirectory, povFileName)
-#     writePovrayAtoms(povFilePath, visibleAtoms, lattice, scalarsArray, colouringOptions, lut)
-    
     povAtomWriter = PovRayAtomsWriter(povFilePath, visibleAtoms, lattice, scalarsDict, colouringOptions, displayOptions, lut)
     
     # write pov atoms now if we're running sequencer, otherwise in separate thread
@@ -1019,6 +1014,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         povAtomWriter.run()
     
     else:
+        # connect finished slot
         povAtomWriter.finished.connect(povFinishedSlot)
     
         # create runner
@@ -1031,56 +1027,6 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     
     if sequencer:
         povFinishedSlot(0, povtime)
-    
-    # loop over atoms, setting points and scalars
-    setPointsTime = time.time()
-#     atomPointsList2 = []
-#     atomScalarsList2 = []
-#     for i in xrange(NSpecies):
-#         atomPointsList2.append(vtk.vtkPoints())
-#         atomScalarsList2.append(vtk.vtkFloatArray())
-#     pos = lattice.pos
-#     spec = lattice.specie
-#     fpov = open("/tmp/tmp.pov", "w")
-#     for i in xrange(NVisible):
-#         index = visibleAtoms[i]
-#         specInd = spec[index]
-#         
-#         # specie counter
-#         specieCount[specInd] += 1
-#         
-#         # position
-#         atomPointsList2[specInd].InsertNextPoint(pos[3*index], pos[3*index+1], pos[3*index+2])
-#         
-#         # scalar
-#         if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
-#             scalar = specInd
-#         
-#         elif colouringOptions.colourBy == "Height":
-#             scalar = pos[3*index+colouringOptions.heightAxis]
-#         
-#         elif colouringOptions.colourBy == "Atom property":
-#             if colouringOptions.atomPropertyType == "Kinetic energy":
-#                 scalar = lattice.KE[index]
-#             elif colouringOptions.atomPropertyType == "Potential energy":
-#                 scalar = lattice.PE[index]
-#             else:
-#                 scalar = lattice.charge[index]
-#         
-#         else:
-#             scalar = scalarsArray[i]
-#         
-#         # store scalar value
-#         atomScalarsList2[specInd].InsertNextValue(scalar)
-#         
-#         # colour for povray file
-#         rgb = np.empty(3, np.float64)
-#         lut.GetColor(scalar, rgb)
-#         
-#         # povray atom
-#         fpov.write(povrayAtom(pos[3*index:3*index+3], lattice.specieCovalentRadius[specInd] * displayOptions.atomScaleFactor, rgb))
-    
-    setPointsTime = time.time() - setPointsTime
     
     # now loop over species, making actors
     t1s = []
@@ -1124,7 +1070,6 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     
     getActorsTime = time.time() - getActorsTime
     logger.debug("Get actors time: %f s", getActorsTime)
-    logger.debug("  Set points time (old): %f s", setPointsTime)
     logger.debug("  Set points time (new): %f s", povtime + setPointsTime2)
     logger.debug("    Build spec arrays time: %f s", setPointsTime2)
     logger.debug("    Write pov atoms time: %f s", povtime)
@@ -1132,47 +1077,6 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         logger.debug("  Make actors time (%d): %f s", i, t1)
     
     return scalarBar_white, scalarBar_black, specieCount
-
-################################################################################
-
-def makeScalarBar(lut, colouringOptions, text_colour):
-    """
-    Make a scalar bar
-    
-    """
-    scalarBar = vtk.vtkScalarBarActor()
-    scalarBar.SetLookupTable(lut)
-    
-    if colouringOptions.colourBy == "Height":
-        title = colouringOptions.scalarBarText
-    elif colouringOptions.colourBy == "Atom property":
-        title = str(colouringOptions.scalarBarTextEdit3.text())
-    else:
-        title = str(colouringOptions.scalarBarTextEdit2.text())
-    
-    scalarBar.SetTitle(title)
-    scalarBar.SetOrientationToHorizontal()
-    
-    lprop = scalarBar.GetTitleTextProperty()
-    lprop.SetColor(text_colour)
-    lprop.ItalicOff()
-    lprop.BoldOn()
-    lprop.SetFontSize(20)
-    lprop.SetFontFamilyToArial()
-    
-    lprop = scalarBar.GetLabelTextProperty()
-    lprop.SetColor(text_colour)
-    lprop.ItalicOff()
-    lprop.BoldOn()
-    lprop.SetFontSize(10)
-    lprop.SetFontFamilyToArial()
-    
-    scalarBar.SetWidth(0.85)
-    scalarBar.GetPositionCoordinate().SetValue(0.1, 0.01)
-    scalarBar.SetHeight(0.12)
-    
-    return scalarBar
-
 
 ################################################################################
 def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 

@@ -687,6 +687,8 @@ class Filterer(object):
         Combine scalars array into one big array for passing to C
         
         """
+        self.logger.debug("Making full scalars array (N=%d)", len(self.scalarsDict))
+        
         scalarsList = []
         for _, scalars in self.scalarsDict.iteritems():
             scalarsList.append(scalars)
@@ -707,10 +709,12 @@ class Filterer(object):
         
         """
         if NScalars > 0:
+            self.logger.debug("Storing full scalars array in dict")
             scalarsList = np.split(scalarsFull, NScalars)
             keys = self.scalarsDict.keys()
             
             for key, scalars in itertools.izip(keys, scalarsList):
+                self.logger.debug("  Storing '%s' scalars", key)
                 assert len(scalars) >= NVisible, "ERROR: scalars (%s) smaller than expected (%d < %d)" % (key, len(scalars), NVisible)
                 scalars.resize(NVisible, refcheck=False)
                 self.scalarsDict[key] = scalars
