@@ -227,7 +227,7 @@ int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, doubl
  ** Displacement filter
  *******************************************************************************/
 int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int posDim, double *pos, int refPosDim, double *refPos, 
-                       double *cellDims, int *PBC, double minDisp, double maxDisp, int NScalars, double* fullScalars)
+                       double *cellDims, int *PBC, double minDisp, double maxDisp, int NScalars, double* fullScalars, int filteringEnabled)
 {
     int i, NVisible, index, j;
     double sep2, maxDisp2, minDisp2;
@@ -246,7 +246,7 @@ int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double
                                  cellDims[0], cellDims[1], cellDims[2], 
                                  PBC[0], PBC[1], PBC[2]);
         
-        if (sep2 <= maxDisp2 && sep2 >= minDisp2)
+        if (!filteringEnabled || (sep2 <= maxDisp2 && sep2 >= minDisp2))
         {
             visibleAtoms[NVisible] = index;
             scalars[NVisible] = sqrt(sep2);
@@ -378,7 +378,7 @@ int chargeFilter(int NVisibleIn, int* visibleAtoms, int chargeDim, double *charg
  *******************************************************************************/
 int coordNumFilter(int NVisible, int *visibleAtoms, double *pos, int *specie, int NSpecies, double *bondMinArray, double *bondMaxArray, 
                    double approxBoxWidth, double *cellDims, int *PBC, double *minPos, double *maxPos, double *coordArray, 
-                   int minCoordNum, int maxCoordNum, int NScalars, double* fullScalars)
+                   int minCoordNum, int maxCoordNum, int NScalars, double* fullScalars, int filteringEnabled)
 {
     int i, j, k, index, index2, visIndex;
     int speca, specb, count, NVisibleNew;
@@ -485,22 +485,29 @@ int coordNumFilter(int NVisible, int *visibleAtoms, double *pos, int *specie, in
     }
     
     /* filter */
-    NVisibleNew = 0;
-    for (i=0; i<NVisible; i++)
+    if (filteringEnabled)
     {
-        if (coordArray[i] >= minCoordNum && coordArray[i] <= maxCoordNum)
-        {
-            visibleAtoms[NVisibleNew] = visibleAtoms[i];
-            coordArray[NVisibleNew] = coordArray[i];
-            
-            /* handle full scalars array */
-			for (j = 0; j < NScalars; j++)
+    	NVisibleNew = 0;
+		for (i=0; i<NVisible; i++)
+		{
+			if (coordArray[i] >= minCoordNum && coordArray[i] <= maxCoordNum)
 			{
-				fullScalars[NVisible * j + NVisibleNew] = fullScalars[NVisible * j + i];
+				visibleAtoms[NVisibleNew] = visibleAtoms[i];
+				coordArray[NVisibleNew] = coordArray[i];
+				
+				/* handle full scalars array */
+				for (j = 0; j < NScalars; j++)
+				{
+					fullScalars[NVisible * j + NVisibleNew] = fullScalars[NVisible * j + i];
+				}
+				
+				NVisibleNew++;
 			}
-            
-            NVisibleNew++;
-        }
+		}
+    }
+    else
+    {
+    	NVisibleNew = NVisible;
     }
     
     /* free */
@@ -513,7 +520,7 @@ int coordNumFilter(int NVisible, int *visibleAtoms, double *pos, int *specie, in
  ** Voronoi volume filter
  *******************************************************************************/
 int voronoiVolumeFilter(int NVisibleIn, int* visibleAtoms, int volumeDim, double *volume, double minVolume, double maxVolume,
-                        int scalarsDim, double *scalars, int NScalars, double *fullScalars)
+                        int scalarsDim, double *scalars, int NScalars, double *fullScalars, int filteringEnabled)
 {
     int i, j, NVisible, index;
     
@@ -523,11 +530,7 @@ int voronoiVolumeFilter(int NVisibleIn, int* visibleAtoms, int volumeDim, double
     {
         index = visibleAtoms[i];
         
-        if (volume[index] < minVolume || volume[index] > maxVolume)
-        {
-            continue;
-        }
-        else
+        if (!filteringEnabled || (volume[index] >= minVolume && volume[index] <= maxVolume))
         {
             visibleAtoms[NVisible] = index;
             scalars[NVisible] = volume[index];
@@ -549,7 +552,7 @@ int voronoiVolumeFilter(int NVisibleIn, int* visibleAtoms, int volumeDim, double
  ** Voronoi neighbours filter
  *******************************************************************************/
 int voronoiNeighboursFilter(int NVisibleIn, int* visibleAtoms, int volumeDim, int *num_nebs_array, int minNebs, int maxNebs,
-                            int scalarsDim, double *scalars, int NScalars, double *fullScalars)
+                            int scalarsDim, double *scalars, int NScalars, double *fullScalars, int filteringEnabled)
 {
     int i, j, NVisible, index;
     
@@ -559,11 +562,7 @@ int voronoiNeighboursFilter(int NVisibleIn, int* visibleAtoms, int volumeDim, in
     {
         index = visibleAtoms[i];
         
-        if (num_nebs_array[index] < minNebs || num_nebs_array[index] > maxNebs)
-        {
-            continue;
-        }
-        else
+        if (!filteringEnabled || (num_nebs_array[index] >= minNebs && num_nebs_array[index] <= maxNebs))
         {
             visibleAtoms[NVisible] = index;
             scalars[NVisible] = num_nebs_array[index];
@@ -586,7 +585,7 @@ int voronoiNeighboursFilter(int NVisibleIn, int* visibleAtoms, int volumeDim, in
  *******************************************************************************/
 int Q4Filter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, double minQ4, double maxQ4, double maxBondDistance, 
                         int scalarsDim, double *scalars, double *minPos, double *maxPos, double *cellDims, int *PBC, 
-                        int NScalars, double *fullScalars)
+                        int NScalars, double *fullScalars, int filteringEnabled)
 {
     int i, j, k, index, index2, NVisible, boxNebList[27];
     int *NBondsForAtom, boxIndex, visIndex, maxSep2, num_bonds;
@@ -770,7 +769,7 @@ int Q4Filter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, double 
         
         Q4Param = sqrt((4.0 * PI / 9.0) * (Q4m4SQ + Q4m3SQ + Q4m2SQ + Q4m1SQ + Q40SQ + Q41SQ + Q42SQ + Q43SQ + Q44SQ));
         
-        if (Q4Param >= minQ4 && Q4Param <= maxQ4)
+        if (!filteringEnabled || (Q4Param >= minQ4 && Q4Param <= maxQ4))
         {
             visibleAtoms[NVisible] = visibleAtoms[i];
             

@@ -381,7 +381,7 @@ class Filterer(object):
         num_nebs_array = np.asarray([vor.atomNumNebs(i) for i in xrange(inputState.NAtoms)], dtype=np.int32)
         
         NVisible = filtering_c.voronoiNeighboursFilter(self.visibleAtoms, num_nebs_array, settings.minVoroNebs, settings.maxVoroNebs, 
-                                                       scalars, NScalars, fullScalars)
+                                                       scalars, NScalars, fullScalars, settings.filteringEnabled)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -421,7 +421,7 @@ class Filterer(object):
         atom_volumes = np.asarray([vor.atomVolume(i) for i in xrange(inputState.NAtoms)], dtype=np.float64)
         
         NVisible = filtering_c.voronoiVolumeFilter(self.visibleAtoms, atom_volumes, settings.minVoroVol, settings.maxVoroVol, 
-                                                   scalars, NScalars, fullScalars)
+                                                   scalars, NScalars, fullScalars, settings.filteringEnabled)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -448,7 +448,7 @@ class Filterer(object):
         
         NVisible = filtering_c.Q4Filter(self.visibleAtoms, inputState.pos, settings.minQ4, settings.maxQ4, settings.maxBondDistance, 
                                         scalars, inputState.minPos, inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC,
-                                        NScalars, fullScalars)
+                                        NScalars, fullScalars, settings.filteringEnabled)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -785,7 +785,7 @@ class Filterer(object):
             # run displacement filter
             NVisible = filtering_c.displacementFilter(self.visibleAtoms, scalars, inputState.pos, refState.pos, refState.cellDims, 
                                                       self.pipelinePage.PBC, settings.minDisplacement, settings.maxDisplacement, 
-                                                      NScalars, fullScalars)
+                                                      NScalars, fullScalars, settings.filteringEnabled)
             
             # update scalars dict
             self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -1511,7 +1511,8 @@ class Filterer(object):
         # run displacement filter
         NVisible = filtering_c.coordNumFilter(self.visibleAtoms, inputState.pos, inputState.specie, NSpecies, bondMinArray, bondMaxArray, 
                                               maxBond, inputState.cellDims, self.pipelinePage.PBC, inputState.minPos, inputState.maxPos, 
-                                              scalars, filterSettings.minCoordNum, filterSettings.maxCoordNum, NScalars, fullScalars)
+                                              scalars, filterSettings.minCoordNum, filterSettings.maxCoordNum, NScalars, fullScalars, 
+                                              filterSettings.filteringEnabled)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)

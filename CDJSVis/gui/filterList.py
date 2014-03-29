@@ -169,7 +169,7 @@ class FilterList(QtGui.QWidget):
         
         # quick add combo
         self.quickAddCombo = QtGui.QComboBox()
-        self.quickAddCombo.addItem("Add property/filter...")
+        self.quickAddCombo.addItem("Add property/filter ...")
         self.quickAddCombo.addItems(self.allFilters)
         self.quickAddCombo.currentIndexChanged[str].connect(self.quickAddComboAction)
         row = QtGui.QHBoxLayout()

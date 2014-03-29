@@ -7,7 +7,7 @@ int cropSphereFilter(int, int *, int, double *, double, double, double, double, 
 
 int cropFilter(int, int *, int, double*, double, double, double, double, double, double, int, int, int, int, int, double *);
 
-int displacementFilter(int, int *, int, double *, int, double *, int, double *, double *, int *, double, double, int, double*);
+int displacementFilter(int, int *, int, double *, int, double *, int, double *, double *, int *, double, double, int, double*, int);
 
 int KEFilter(int, int *, int, double *, double, double, int, double *);
 
@@ -15,10 +15,10 @@ int PEFilter(int, int *, int, double *, double, double, int, double *);
 
 int chargeFilter(int, int *, int, double *, double, double, int, double *);
 
-int coordNumFilter(int, int *, double *, int *, int, double *, double *, double, double *, int *, double *, double *, double *, int, int, int, double*);
+int coordNumFilter(int, int *, double *, int *, int, double *, double *, double, double *, int *, double *, double *, double *, int, int, int, double*, int);
 
-int voronoiVolumeFilter(int, int*, int, double*, double, double, int, double*, int, double *);
+int voronoiVolumeFilter(int, int*, int, double*, double, double, int, double*, int, double *, int);
 
-int voronoiNeighboursFilter(int, int*, int, int*, int, int, int, double *, int, double *);
+int voronoiNeighboursFilter(int, int*, int, int*, int, int, int, double *, int, double *, int);
 
-int Q4Filter(int, int*, int, double *, double, double, double, int, double *, double *, double *, double *, int *, int, double *);
+int Q4Filter(int, int*, int, double *, double, double, double, int, double *, double *, double *, double *, int *, int, double *, int);

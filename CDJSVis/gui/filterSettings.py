@@ -11,21 +11,18 @@ Dialogs must be named like: FilterNameSettingsDialog
 
 """
 import sys
+import logging
 
 from PySide import QtGui, QtCore
 
-from ..visutils import utilities
 from ..visutils.utilities import iconPath
 from . import genericForm
 from ..rendering import slicePlane
-
 try:
     from .. import resources
 except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)
-
-
 
 
 ################################################################################
@@ -38,6 +35,8 @@ class GenericSettingsDialog(QtGui.QDialog):
         self.parent = parent
         self.mainWindow = self.parent.mainWindow
         self.pipelinePage = self.parent.filterTab
+        
+        self.logger = logging.getLogger(__name__)
         
         # get tab and filter id's
         array = title.split("(")[1].split(")")[0].split()
@@ -97,6 +96,34 @@ class GenericSettingsDialog(QtGui.QDialog):
         buttonLayout.addWidget(closeButton)
         
         dialogLayout.addWidget(buttonWidget)
+        
+        # filtering enabled by default
+        self.filteringEnabled = True
+    
+    def addEnableFilteringCheck(self):
+        """
+        Add the enable filtering check to the form
+        
+        """
+        self.enableFilteringCheck = QtGui.QCheckBox("Enable filtering")
+        self.enableFilteringCheck.stateChanged.connect(self.enableFilteringChanged)
+        self.enableFilteringCheck.setCheckState(QtCore.Qt.Unchecked)
+        self.filteringEnabled = False
+        row = self.newRow()
+        row.addWidget(self.enableFilteringCheck)
+        row = self.newRow()
+    
+    def enableFilteringChanged(self, checkState):
+        """
+        Enable filtering option has changed
+        
+        """
+        if checkState == QtCore.Qt.Unchecked:
+            self.filteringEnabled = False
+        else:
+            self.filteringEnabled = True
+        
+        self.logger.debug("Enable filtering changed (%s): %r", self.filterType, self.filteringEnabled)
     
     def newRow(self, align=None):
         """
@@ -556,7 +583,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.filterType = "Point defects"
         
         # settings
-        self.vacancyRadius = 1.0
+        self.vacancyRadius = 1.3
         self.specieList = []
         self.visibleSpecieList = []
         self.specieRows = {}
@@ -1082,7 +1109,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.nebRadSpinBox.setMinimum(0.01)
         self.nebRadSpinBox.setMaximum(100.0)
         self.nebRadSpinBox.setValue(self.neighbourRadius)
-        self.connect(self.nebRadSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.nebRadChanged)
+        self.nebRadSpinBox.valueChanged.connect(self.nebRadChanged)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1094,7 +1121,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.minNumSpinBox.setMinimum(1)
         self.minNumSpinBox.setMaximum(1000)
         self.minNumSpinBox.setValue(self.minClusterSize)
-        self.connect(self.minNumSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.minNumChanged)
+        self.minNumSpinBox.valueChanged.connect(self.minNumChanged)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1106,7 +1133,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.maxNumSpinBox.setMinimum(-1)
         self.maxNumSpinBox.setMaximum(999999)
         self.maxNumSpinBox.setValue(self.maxClusterSize)
-        self.connect(self.maxNumSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.maxNumChanged)
+        self.maxNumSpinBox.valueChanged.connect(self.maxNumChanged)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1135,7 +1162,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.hullColourButton.setFixedWidth(50)
         self.hullColourButton.setFixedHeight(30)
         self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
-        self.connect(self.hullColourButton, QtCore.SIGNAL("clicked()"), self.showColourDialog)
+        self.hullColourButton.clicked.connect(self.showColourDialog)
         
         row = genericForm.FormRow()
         row.addWidget(label)
@@ -1150,7 +1177,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.hullOpacitySpinBox.setMinimum(0.01)
         self.hullOpacitySpinBox.setMaximum(1.0)
         self.hullOpacitySpinBox.setValue(self.hullOpacity)
-        self.connect(self.hullOpacitySpinBox, QtCore.SIGNAL('valueChanged(double)'), self.hullOpacityChanged)
+        self.hullOpacitySpinBox.valueChanged.connect(self.hullOpacityChanged)
         
         row = genericForm.FormRow()
         row.addWidget(label)
@@ -1286,13 +1313,15 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         self.minDisplacement = 1.3
         self.maxDisplacement = 1000.0
         
+        self.addEnableFilteringCheck()
+        
         label = QtGui.QLabel("Min displacement ")
         self.minDisplacementSpinBox = QtGui.QDoubleSpinBox()
         self.minDisplacementSpinBox.setSingleStep(0.1)
         self.minDisplacementSpinBox.setMinimum(0.0)
         self.minDisplacementSpinBox.setMaximum(9999.0)
         self.minDisplacementSpinBox.setValue(self.minDisplacement)
-        self.connect(self.minDisplacementSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMinDisplacement)
+        self.minDisplacementSpinBox.valueChanged.connect(self.setMinDisplacement)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1304,7 +1333,7 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         self.maxDisplacementSpinBox.setMinimum(0.0)
         self.maxDisplacementSpinBox.setMaximum(9999.0)
         self.maxDisplacementSpinBox.setValue(self.maxDisplacement)
-        self.connect(self.maxDisplacementSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMaxDisplacement)
+        self.maxDisplacementSpinBox.valueChanged.connect(self.setMaxDisplacement)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1341,7 +1370,7 @@ class KineticEnergySettingsDialog(GenericSettingsDialog):
         self.minKESpinBox.setMinimum(-9999.0)
         self.minKESpinBox.setMaximum(9999.0)
         self.minKESpinBox.setValue(self.minKE)
-        self.connect(self.minKESpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMinKE)
+        self.minKESpinBox.valueChanged.connect(self.setMinKE)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1353,7 +1382,7 @@ class KineticEnergySettingsDialog(GenericSettingsDialog):
         self.maxKESpinBox.setMinimum(-9999.0)
         self.maxKESpinBox.setMaximum(9999.0)
         self.maxKESpinBox.setValue(self.maxKE)
-        self.connect(self.maxKESpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMaxKE)
+        self.maxKESpinBox.valueChanged.connect(self.setMaxKE)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1390,7 +1419,7 @@ class PotentialEnergySettingsDialog(GenericSettingsDialog):
         self.minPESpinBox.setMinimum(-9999.0)
         self.minPESpinBox.setMaximum(9999.0)
         self.minPESpinBox.setValue(self.minPE)
-        self.connect(self.minPESpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMinPE)
+        self.minPESpinBox.valueChanged.connect(self.setMinPE)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1402,7 +1431,7 @@ class PotentialEnergySettingsDialog(GenericSettingsDialog):
         self.maxPESpinBox.setMinimum(-9999.0)
         self.maxPESpinBox.setMaximum(9999.0)
         self.maxPESpinBox.setValue(self.maxPE)
-        self.connect(self.maxPESpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMaxPE)
+        self.maxPESpinBox.valueChanged.connect(self.setMaxPE)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1439,7 +1468,7 @@ class ChargeSettingsDialog(GenericSettingsDialog):
         self.minChargeSpinBox.setMinimum(-999.0)
         self.minChargeSpinBox.setMaximum(999.0)
         self.minChargeSpinBox.setValue(self.minCharge)
-        self.connect(self.minChargeSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMinCharge)
+        self.minChargeSpinBox.valueChanged.connect(self.setMinCharge)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1451,7 +1480,7 @@ class ChargeSettingsDialog(GenericSettingsDialog):
         self.maxChargeSpinBox.setMinimum(-999.0)
         self.maxChargeSpinBox.setMaximum(999.0)
         self.maxChargeSpinBox.setValue(self.maxCharge)
-        self.connect(self.maxChargeSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMaxCharge)
+        self.maxChargeSpinBox.valueChanged.connect(self.setMaxCharge)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1726,13 +1755,15 @@ class CoordinationNumberSettingsDialog(GenericSettingsDialog):
         self.minCoordNum = 0
         self.maxCoordNum = 100
         
+        self.addEnableFilteringCheck()
+        
         label = QtGui.QLabel("Min ")
         self.minCoordNumSpinBox = QtGui.QSpinBox()
         self.minCoordNumSpinBox.setSingleStep(1)
         self.minCoordNumSpinBox.setMinimum(0)
         self.minCoordNumSpinBox.setMaximum(999)
         self.minCoordNumSpinBox.setValue(self.minCoordNum)
-        self.connect(self.minCoordNumSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMinCoordNum)
+        self.minCoordNumSpinBox.valueChanged.connect(self.setMinCoordNum)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1744,7 +1775,7 @@ class CoordinationNumberSettingsDialog(GenericSettingsDialog):
         self.maxCoordNumSpinBox.setMinimum(0)
         self.maxCoordNumSpinBox.setMaximum(999)
         self.maxCoordNumSpinBox.setValue(self.maxCoordNum)
-        self.connect(self.maxCoordNumSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.setMaxCoordNum)
+        self.maxCoordNumSpinBox.valueChanged.connect(self.setMaxCoordNum)
         
         row = self.newRow()
         row.addWidget(label)
@@ -1773,6 +1804,8 @@ class VoronoiNeighboursSettingsDialog(GenericSettingsDialog):
         
         self.minVoroNebs = 0
         self.maxVoroNebs = 999
+        
+        self.addEnableFilteringCheck()
         
         label = QtGui.QLabel("Min ")
         self.minVoroNebsSpin = QtGui.QSpinBox()
@@ -1826,6 +1859,8 @@ class VoronoiVolumeSettingsDialog(GenericSettingsDialog):
         self.minVoroVol = 0.0
         self.maxVoroVol = 9999.99
         
+        self.addEnableFilteringCheck()
+        
         label = QtGui.QLabel("Min ")
         self.minVoroVolSpin = QtGui.QDoubleSpinBox()
         self.minVoroVolSpin.setSingleStep(0.01)
@@ -1878,6 +1913,8 @@ class Q4SettingsDialog(GenericSettingsDialog):
         self.minQ4 = 0.0
         self.maxQ4 = 9999.99
         self.maxBondDistance = 4.0
+        
+        self.addEnableFilteringCheck()
         
         label = QtGui.QLabel("Min ")
         self.minQ4Spin = QtGui.QDoubleSpinBox()
