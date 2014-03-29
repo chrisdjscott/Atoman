@@ -15,7 +15,6 @@ from ..visutils.utilities import iconPath
 from ..filtering import filterer
 from . import filterSettings
 from . import filterListOptions
-
 try:
     from .. import resources
 except ImportError:
@@ -166,8 +165,17 @@ class FilterList(QtGui.QWidget):
         self.listItems.customContextMenuRequested.connect(self.showListWidgetContextMenu)
         self.listItems.setDragEnabled(True)
         self.listItems.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
-        
         self.filterListLayout.addWidget(self.listItems)
+        
+        # quick add combo
+        self.quickAddCombo = QtGui.QComboBox()
+        self.quickAddCombo.addItem("Add property/filter...")
+        self.quickAddCombo.addItems(self.allFilters)
+        self.quickAddCombo.currentIndexChanged[str].connect(self.quickAddComboAction)
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignHCenter)
+        row.addWidget(self.quickAddCombo)
+        self.filterListLayout.addLayout(row)
         
         # add more buttons
         addFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
@@ -259,6 +267,17 @@ class FilterList(QtGui.QWidget):
         
         # the filterer (does the filtering)
         self.filterer = filterer.Filterer(self)
+    
+    def quickAddComboAction(self, text):
+        """
+        Quick add combo item selected.
+        
+        """
+        text = str(text)
+        if text in self.allFilters:
+            self.logger.debug("Quick add: '%s'", text)
+            self.addFilter(filterName=text)
+            self.quickAddCombo.setCurrentIndex(0)
     
     def showListWidgetContextMenu(self, point):
         """

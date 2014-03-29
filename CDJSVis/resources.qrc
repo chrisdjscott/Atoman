@@ -73,14 +73,6 @@
     <file>icons/object-rotate.png</file>
     <file>icons/logging-icon.png</file>
     <file>icons/Window.png</file>
-    
-    <file>help/index.html</file>
-    <file>help/input.html</file>
-    <file>help/filtering.html</file>
-    <file>help/output.html</file>
-    <file>help/installation.html</file>
-    <file>help/changelog.html</file>
-    
     <file>images/splash_loading.png</file>
 </qresource>
 </RCC>
