@@ -24,6 +24,21 @@ except ImportError:
 
 
 ################################################################################
+
+class FilterListWidgetItem(QtGui.QListWidgetItem):
+    """
+    Item that goes in the filter list
+    
+    """
+    def __init__(self, filterName, filterSettings):
+        super(FilterListWidgetItem, self).__init__()
+        
+        self.filterName = filterName
+        self.filterSettings = filterSettings
+        self.setText(filterName)
+
+################################################################################
+
 class FilterList(QtGui.QWidget):
     def __init__(self, parent, mainToolbar, mainWindow, tab, width, height=150):
         super(FilterList, self).__init__(parent)
@@ -63,10 +78,10 @@ class FilterList(QtGui.QWidget):
         self.allFilters.sort()
         
         # current selected filters
-        self.currentFilters = []
-        
-        # settings (windows) for current filters
-        self.currentSettings = []
+#         self.currentFilters = []
+#         
+#         # settings (windows) for current filters
+#         self.currentSettings = []
         
         self.visible = 1
         
@@ -149,6 +164,8 @@ class FilterList(QtGui.QWidget):
         self.listItems.itemDoubleClicked.connect(self.openFilterSettings)
         self.listItems.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.listItems.customContextMenuRequested.connect(self.showListWidgetContextMenu)
+        self.listItems.setDragEnabled(True)
+        self.listItems.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
         
         self.filterListLayout.addWidget(self.listItems)
         
@@ -272,7 +289,7 @@ class FilterList(QtGui.QWidget):
             editAction = QtGui.QAction("Edit settings", self)
             editAction.setToolTip("Edit settings")
             editAction.setStatusTip("Edit settings")
-            editAction.triggered.connect(functools.partial(self.openFilterSettings, index))
+            editAction.triggered.connect(functools.partial(self.openFilterSettings, item))
             
             # removee action
             removeAction = QtGui.QAction("Remove from list", self)
@@ -349,22 +366,18 @@ class FilterList(QtGui.QWidget):
         self.colouringOptions.show()
         self.colouringOptionsOpen = True
     
-    def openFilterSettings(self, row=None):
+    def openFilterSettings(self, item=None):
         """
         Open filter settings window
         
         """
-        if row is None:
-            row = self.listItems.currentRow()
-        self.currentSettings[row].hide()
-        self.currentSettings[row].show()
-    
-    def openOptionsWindow(self):
-        """
-        Open additional options window
+        self.logger.debug("Open filter settings dialog (%s)", item.filterName)
         
-        """
-        print "NOT IMPLEMENTED YET"
+        if item is None:
+            item = self.listItems.currentItem()
+        
+        item.filterSettings.hide()
+        item.filterSettings.show()
     
     def applyList(self):
         """
@@ -375,7 +388,31 @@ class FilterList(QtGui.QWidget):
         self.filterer.runFilters()
         
         self.filterTab.refreshOnScreenInfo()
-            
+    
+    def getCurrentFilterSettings(self):
+        """
+        Return ordered list of current filter settings objects
+        
+        """
+        currentSettings = []
+        for i in xrange(self.listItems.count()):
+            item = self.listItems.item(i)
+            currentSettings.append(item.filterSettings)
+        
+        return currentSettings
+    
+    def getCurrentFilterNames(self):
+        """
+        Return ordered list of current filter names
+        
+        """
+        currentNames = []
+        for i in xrange(self.listItems.count()):
+            item = self.listItems.item(i)
+            currentNames.append(item.filterName)
+        
+        return currentNames
+    
     def clearList(self):
         """
         Clear filters and actors from list.
@@ -383,14 +420,14 @@ class FilterList(QtGui.QWidget):
         """
         self.filterer.removeActors()
         
-        self.listItems.clear()
-        
-        while len(self.currentFilters):
-            self.currentFilters.pop()
-        
-        while len(self.currentSettings):
-            dlg = self.currentSettings.pop()
+        # close settings dialogs
+        settingsDialogs = self.getCurrentFilterSettings()
+        while len(settingsDialogs):
+            dlg = settingsDialogs.pop()
             dlg.accept()
+        
+        # clear list items
+        self.listItems.clear()
         
         self.staticListButton.setChecked(0)
         self.persistButton.setChecked(0)
@@ -436,8 +473,6 @@ class FilterList(QtGui.QWidget):
             return
         
         self.listItems.insertItem(newRow, self.listItems.takeItem(row))
-        self.currentFilters.insert(newRow, self.currentFilters.pop(row))
-        self.currentSettings.insert(newRow, self.currentSettings.pop(row))
     
     def moveFilterUpInList(self):
         """
@@ -459,8 +494,6 @@ class FilterList(QtGui.QWidget):
             return
         
         self.listItems.insertItem(newRow, self.listItems.takeItem(row))
-        self.currentFilters.insert(newRow, self.currentFilters.pop(row))
-        self.currentSettings.insert(newRow, self.currentSettings.pop(row))
     
     def warnDefectFilter(self):
         """
@@ -498,20 +531,25 @@ class FilterList(QtGui.QWidget):
             if self.defectFilterSelected:
                 self.warnDefectFilter()
             
-            elif len(self.currentFilters) and str(filterName) == "Point defects":
+            elif self.listItems.count() > 0 and str(filterName) == "Point defects":
                 self.warnDefectFilter()
             
             else:
+                # filter name
                 filterNameString = "%s [%d]" % (filterName, self.filterCounter)
                 self.logger.debug("Adding filter/property calculator: '%s'", filterNameString)
                 
-                self.currentFilters.append(str(filterNameString))
-                self.listItems.addItem(filterNameString)
-                
-                # create option form
+                # create options form
                 form = self.createSettingsForm(filterName)
+                
+                # list widget item
+                item = FilterListWidgetItem(str(filterNameString), form)
+                
+                # add
+                self.listItems.addItem(item)
+                
+                # show options form
                 form.show()
-                self.currentSettings.append(form)
                 
                 if str(filterName) == "Point defects":
                     self.defectFilterSelected = True
@@ -533,13 +571,13 @@ class FilterList(QtGui.QWidget):
             return
                 
         # remove it from lists
-        itm = self.listItems.takeItem(row)
-        del itm
-        filterName = self.currentFilters.pop(row)
+        item = self.listItems.takeItem(row)
+        filterName = item.filterName
         self.logger.debug("Removing filter/property calculation (%d): '%s'", row, filterName)
-        dlg = self.currentSettings.pop(row)
+        dlg = item.filterSettings
         dlg.close()
         dlg.accept()
+        del item
         
         if filterName.startswith("Point defects"):
             self.defectFilterSelected = False

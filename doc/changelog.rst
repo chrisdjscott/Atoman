@@ -5,6 +5,8 @@ Changelog
 
 * Add ability to store multiple scalar values
 * Rename 'filter list' to 'property/filter list'
+* Add context menu to items in property/filter lists with options to edit settings and remove from list
+* Items in property/filter lists can be reordered by dragging
 
 **v140328**
 

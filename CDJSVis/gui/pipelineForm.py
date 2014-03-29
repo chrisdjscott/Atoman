@@ -552,7 +552,8 @@ class PipelineForm(QtGui.QWidget):
         """
         self.log("Refreshing filters", 3)
         for filterList in self.filterLists:
-            for filterSettings in filterList.currentSettings:
+            currentSettings = filterList.getCurrentFilterSettings()
+            for filterSettings in currentSettings:
                 filterSettings.refresh()
             
             filterList.bondsOptions.refresh()
@@ -585,14 +586,6 @@ class PipelineForm(QtGui.QWidget):
         
         else:
             rwList = [rw for rw in self.mainWindow.rendererWindows if rw.currentPipelineString == self.pipelineString]
-        
-#         rwList = []
-#         for rw in self.mainWindow.rendererWindows:
-#             if globalBcast:
-#                 rwList.append(rw)
-#             
-#             elif rw.currentPipelineString == self.pipelineString:
-#                 rwList.append(rw)
         
         self.logger.debug("Broadcasting to renderers (%d/%d): %s", len(rwList), len(self.mainWindow.rendererWindows), method)
         
@@ -643,8 +636,6 @@ class PipelineForm(QtGui.QWidget):
         minSepIndex = -1
         minSep = 9999999.0
         minSepType = None
-        minSepScalarType = None
-        minSepScalar = None
         minSepFilterList = None
         for filterList in filterLists:
             filterer = filterList.filterer

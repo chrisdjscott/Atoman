@@ -166,7 +166,6 @@ class Filterer(object):
         
         if not self.parent.defectFilterSelected:
             self.visibleAtoms = np.arange(NAtoms, dtype=np.int32)
-            NVis = NAtoms
             self.NVis = NAtoms
             self.logger.info("%d visible atoms", len(self.visibleAtoms))
         
@@ -176,8 +175,8 @@ class Filterer(object):
         # run filters
         applyFiltersTime = time.time()
         filterName = ""
-        currentFilters = self.parent.currentFilters
-        currentSettings = self.parent.currentSettings
+        currentFilters = self.parent.getCurrentFilterNames()
+        currentSettings = self.parent.getCurrentFilterSettings()
         for i in xrange(len(currentFilters)):
             # filter name
             filterNameString = currentFilters[i]
@@ -256,7 +255,7 @@ class Filterer(object):
             else:
                 self.NVis = len(self.visibleAtoms)
             
-            self.logger.info("  %d visible atoms", NVis)
+            self.logger.info("  %d visible atoms", self.NVis)
         
         # time to apply filters
         applyFiltersTime = time.time() - applyFiltersTime

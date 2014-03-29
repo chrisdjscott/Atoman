@@ -761,7 +761,7 @@ class RendererWindow(QtGui.QWidget):
                 NAnt += filterList.filterer.NAnt
                 
                 # defects settings
-                defectsSettings = filterList.currentSettings[0]
+                defectsSettings = filterList.getCurrentFilterSettings()[0]
                 
                 if defectsSettings.showVacancies:
                     showVacs = True
