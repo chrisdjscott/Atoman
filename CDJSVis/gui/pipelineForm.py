@@ -749,12 +749,8 @@ class PipelineForm(QtGui.QWidget):
             # add to renderers
             self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
             
-            # need cursor position on screen to decide where to show window
-            cursor = QtGui.QCursor()
-            cursor_pos = cursor.pos()
-            
             # position window
-            utils.positionWindow(cursor_pos, window, window.size(), self.mainWindow.desktop, self)
+            utils.positionWindow(window, window.size(), self.mainWindow.desktop, self)
             
             # show window
             window.show()
@@ -775,12 +771,8 @@ class PipelineForm(QtGui.QWidget):
             # add to renderers
             self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
             
-            # need cursor position on screen to decide where to open window
-            cursor = QtGui.QCursor()
-            cursor_pos = cursor.pos()
-            
             # position window
-            utils.positionWindow(cursor_pos, infoWindow, infoWindow.sizeHint(), self.mainWindow.desktop, self)
+            utils.positionWindow(infoWindow, infoWindow.sizeHint(), self.mainWindow.desktop, self)
             
             # show window
             infoWindow.show()

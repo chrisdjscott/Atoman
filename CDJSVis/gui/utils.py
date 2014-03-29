@@ -7,20 +7,22 @@ GUI utilities
 """
 import logging
 
-from PySide import QtCore
+from PySide import QtGui, QtCore
 
 
 ################################################################################
 
-def positionWindow(cursor_pos, window, windowSize, desktop, parentWidget, offset=30, border=10):
+def positionWindow(window, windowSize, desktop, parentWidget, offset=30, border=10):
     """
     Positions window near cursor
     
     """
     logger = logging.getLogger(__name__)
-    
     logger.debug("Positioning window")
     
+    # need cursor position on screen to decide where to open window
+    cursor = QtGui.QCursor()
+    cursor_pos = cursor.pos()
     logger.debug("Cursor pos: (%d, %d)", cursor_pos.x(), cursor_pos.y())
     
     # first determine screen size, which screen, etc
