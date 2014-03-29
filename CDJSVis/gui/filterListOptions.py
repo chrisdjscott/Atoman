@@ -804,6 +804,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.atomPropertyType = str(self.propertyTypeCombo.currentText())
         
         self.parent.colouringOptionsButton.setText("Colouring options: %s" % self.atomPropertyType)
+        self.scalarBarTextEdit3.setText(self.atomPropertyType)
     
     def setToPropertyRange(self):
         """
@@ -1022,6 +1023,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         if self.colourBy == "Atom property":
             colourByText = str(self.propertyTypeCombo.currentText())
+            self.scalarBarTextEdit3.setText(self.atomPropertyType)
         else:
             colourByText = self.colourBy
         
