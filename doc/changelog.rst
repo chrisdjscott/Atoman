@@ -1,6 +1,11 @@
 Changelog
 =========
 
+**dev**
+
+* Add ability to store multiple scalar values
+* Rename 'filter list' to 'property/filter list'
+
 **v140328**
 
 * Add sphere resolution settings to "Display options" on "Filter list"

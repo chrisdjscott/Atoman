@@ -123,6 +123,11 @@ class PipelineForm(QtGui.QWidget):
         rowLayout.addWidget(self.inputCombo)
         filterTabLayout.addWidget(row)
         
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignHCenter)
+        row.addWidget(QtGui.QLabel("<b>Property/filter lists:</b>"))
+        filterTabLayout.addLayout(row)
+        
         # row
         row = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row)
@@ -132,13 +137,16 @@ class PipelineForm(QtGui.QWidget):
         
         #----- buttons for new/trash filter list
         runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('view-refresh-all.svg')),'Apply lists')
-        runAll.setStatusTip("Apply all filter lists")
+        runAll.setStatusTip("Apply all property/filter lists")
+        runAll.setToolTip("Apply all property/filter lists")
         runAll.clicked.connect(self.runAllFilterLists)
         add = QtGui.QPushButton(QtGui.QIcon(iconPath('tab-new.svg')),'New list')
-        add.setStatusTip("New filter list")
+        add.setToolTip("New property/filter list")
+        add.setStatusTip("New property/filter list")
         add.clicked.connect(self.addFilterList)
         clear = QtGui.QPushButton(QtGui.QIcon(iconPath('edit-delete.svg')),'Clear lists')
-        clear.setStatusTip("Clear all filter lists")
+        clear.setStatusTip("Clear all property/filter lists")
+        clear.setToolTip("Clear all property/filter lists")
         clear.clicked.connect(self.clearAllFilterLists)
         
         rowLayout.addWidget(add)

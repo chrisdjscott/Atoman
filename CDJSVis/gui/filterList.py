@@ -78,27 +78,31 @@ class FilterList(QtGui.QWidget):
         self.visibleButton = QtGui.QPushButton(QtGui.QIcon(iconPath("eye-ava.svg")), "")
         self.visibleButton.setFixedWidth(35)
         self.visibleButton.setStatusTip("Visible")
+        self.visibleButton.setToolTip("Visible")
         self.visibleButton.setCheckable(1)
         self.visibleButton.setChecked(0)
         self.visibleButton.clicked.connect(self.visibilityChanged)
         
         # trash the list
         trashButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-delete.svg")), "")
-        trashButton.setStatusTip("Delete filter list")
+        trashButton.setStatusTip("Delete property/filter list")
+        trashButton.setToolTip("Delete property/filter list")
         trashButton.setFixedWidth(35)
         trashButton.clicked.connect(self.filterTab.removeFilterList)
         
         # persistent list button
         self.persistButton = QtGui.QPushButton(QtGui.QIcon(iconPath("application-certificate.svg")), "")
         self.persistButton.setFixedWidth(35)
-        self.persistButton.setStatusTip("Persistent filter list")
+        self.persistButton.setStatusTip("Persistent property/filter list")
+        self.persistButton.setToolTip("Persistent property/filter list")
         self.persistButton.setCheckable(1)
         self.persistButton.setChecked(0)
         
         # static list button
         self.staticListButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Stop_hand_nuvola_black.svg")), "")
         self.staticListButton.setFixedWidth(35)
-        self.staticListButton.setStatusTip("Static filter list")
+        self.staticListButton.setStatusTip("Freeze property/filter list")
+        self.staticListButton.setToolTip("Freeze property/filter list")
         self.staticListButton.setCheckable(1)
         self.staticListButton.setChecked(0)
         
@@ -106,6 +110,7 @@ class FilterList(QtGui.QWidget):
         self.scalarBarButton = QtGui.QPushButton(QtGui.QIcon(iconPath("preferences-desktop-locale.svg")), "")
         self.scalarBarButton.setFixedWidth(35)
         self.scalarBarButton.setStatusTip("Show scalar bar")
+        self.scalarBarButton.setToolTip("Show scalar bar")
         self.scalarBarButton.setCheckable(1)
         self.scalarBarButton.setChecked(0)
         self.scalarBarButton.clicked.connect(self.toggleScalarBar)
@@ -140,34 +145,39 @@ class FilterList(QtGui.QWidget):
         # Now add the list widget
         self.listItems = QtGui.QListWidget(self)
         self.listItems.setFixedHeight(self.tabHeight)
-        
-        self.connect(self.listItems, QtCore.SIGNAL('itemDoubleClicked(QListWidgetItem*)'), self.openFilterSettings)
+        self.listItems.itemDoubleClicked.connect(self.openFilterSettings)
         
         self.filterListLayout.addWidget(self.listItems)
         
         # add more buttons
         addFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
-        addFilter.setStatusTip("Add new filter")
+        addFilter.setStatusTip("Add new property/filter")
+        addFilter.setToolTip("Add new property/filter")
         addFilter.clicked.connect(self.addFilter)
         
         removeFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
-        removeFilter.setStatusTip("Remove filter")
+        removeFilter.setStatusTip("Remove property/filter")
+        removeFilter.setToolTip("Remove property/filter")
         removeFilter.clicked.connect(self.removeFilter)
         
         moveUp = QtGui.QPushButton(QtGui.QIcon(iconPath("go-up.svg")), "")
         moveUp.setStatusTip("Move up")
+        moveUp.setToolTip("Move up")
         moveUp.clicked.connect(self.moveFilterUpInList)
         
         moveDown = QtGui.QPushButton(QtGui.QIcon(iconPath("go-down.svg")), "")
         moveDown.setStatusTip("Move down")
+        moveDown.setToolTip("Move down")
         moveDown.clicked.connect(self.moveFilterDownInList)
         
         clearList = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-clear.svg")), "")
-        clearList.setStatusTip("Clear current filter list")
+        clearList.setStatusTip("Clear current property/filter list")
+        clearList.setToolTip("Clear current property/filter list")
         clearList.clicked.connect(self.clearList)
         
         applyList = QtGui.QPushButton(QtGui.QIcon(iconPath("view-refresh.svg")), "")
-        applyList.setStatusTip("Apply current filter list")
+        applyList.setStatusTip("Apply current property/filter list")
+        applyList.setToolTip("Apply current property/filter list")
         applyList.clicked.connect(self.applyList)
         
         buttonWidget = QtGui.QWidget()
@@ -340,7 +350,6 @@ class FilterList(QtGui.QWidget):
         self.defectFilterSelected = False
         
         if self.filterer.scalarBarAdded:
-#            self.filterer.hideScalarBar()
             self.scalarBarButton.setChecked(0)
         
         self.filterTab.refreshOnScreenInfo()
@@ -365,7 +374,7 @@ class FilterList(QtGui.QWidget):
         
         """
         if self.isStaticList():
-            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            self.mainWindow.displayWarning("Cannot modify a frozen filter list")
             return
         
         # find which one is selected
@@ -388,7 +397,7 @@ class FilterList(QtGui.QWidget):
         
         """
         if self.isStaticList():
-            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            self.mainWindow.displayWarning("Cannot modify a frozen filter list")
             return
         
         # find which one is selected
@@ -428,7 +437,7 @@ class FilterList(QtGui.QWidget):
         
         """
         if self.isStaticList():
-            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            self.mainWindow.displayWarning("Cannot modify a frozen filter list")
             return
         
         # first determine what filter is to be added
@@ -466,7 +475,7 @@ class FilterList(QtGui.QWidget):
         
         """
         if self.isStaticList():
-            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            self.mainWindow.displayWarning("Cannot modify a frozen filter list")
             return
         
         # find which one is selected
@@ -520,4 +529,3 @@ class FilterList(QtGui.QWidget):
             self.filterer.addActors()
         
         self.filterTab.refreshOnScreenInfo()
-
