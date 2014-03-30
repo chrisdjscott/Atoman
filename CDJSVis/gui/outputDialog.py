@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import copy
 import logging
+import time
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -78,14 +79,18 @@ class OutputDialog(QtGui.QDialog):
         self.outputTypeTabBar.addTab(fileTabWidget, "File")
         
         # rdf tab
-        rdfTabWidget = QtGui.QWidget()
-        rdfTabLayout = QtGui.QVBoxLayout(rdfTabWidget)
-        rdfTabLayout.setContentsMargins(0, 0, 0, 0)
+#         rdfTabWidget = QtGui.QWidget()
+#         rdfTabLayout = QtGui.QVBoxLayout(rdfTabWidget)
+#         rdfTabLayout.setContentsMargins(0, 0, 0, 0)
+#         
+#         self.rdfTab = RDFTab(self, self.mainWindow, self.width)
+#         rdfTabLayout.addWidget(self.rdfTab)
+#         
+#         self.outputTypeTabBar.addTab(rdfTabWidget, "Plot")
         
-        self.rdfTab = RDFTab(self, self.mainWindow, self.width)
-        rdfTabLayout.addWidget(self.rdfTab)
-        
-        self.outputTypeTabBar.addTab(rdfTabWidget, "Plot")
+        # plot tab
+        self.plotTab = PlotTab(self.mainWindow, self.rendererWindow, parent=self)
+        self.outputTypeTabBar.addTab(self.plotTab, "Plot")
         
         # add tab bar to layout
         outputTabLayout.addWidget(self.outputTypeTabBar)
@@ -96,18 +101,255 @@ class OutputDialog(QtGui.QDialog):
 
 ################################################################################
 
-class RDFTab(QtGui.QWidget):
+class PlotTab(QtGui.QWidget):
     """
-    RDF output tab.
+    Plot tab
     
     """
-    def __init__(self, parent, mainWindow, tabWidth):
-        super(RDFTab, self).__init__(parent)
+    def __init__(self, mainWindow, rendererWindow, parent=None):
+        super(PlotTab, self).__init__(parent)
+        
+        self.mainWindow = mainWindow
+        self.rendererWindow = rendererWindow
+        self.currentPlots = {}
+        self.currentPlotsRows = {}
+        
+        # layout
+        self.layout = QtGui.QVBoxLayout(self)
+        self.layout.setAlignment(QtCore.Qt.AlignTop)
+        self.layout.setSpacing(0)
+        
+        # rdf
+        row = self.newRow()
+        self.rdfForm = RDFForm(self, self.mainWindow)
+        row.addWidget(self.rdfForm)
+        
+        # logging
+        self.logger = logging.getLogger(__name__)
+    
+    def newRow(self):
+        """
+        New row
+        
+        """
+        row = genericForm.FormRow()
+        self.layout.addWidget(row)
+        
+        return row
+    
+    def removeScalarPlotOptions(self, name):
+        """
+        Remove scalar plot options
+        
+        """
+        row = self.currentPlotsRows.pop(name)
+        form = self.currentPlots.pop(name)
+        self.layout.removeWidget(row)
+        form.deleteLater()
+    
+    def addScalarPlotOptions(self, scalarsID, scalarsName, scalarsArray):
+        """
+        Add plot for scalar 'name'
+        
+        """
+        if scalarsID in self.currentPlots:
+            return
+        
+        self.logger.debug("Adding scalar plot option: '%s' (id: '%s')", scalarsName, scalarsID)
+        
+        row = self.newRow()
+        form = GenericHistogramPlotForm(self, scalarsID, scalarsName, scalarsArray)
+        self.currentPlots[scalarsID] = form
+        self.currentPlotsRows[scalarsID] = row
+        row.addWidget(form)
+    
+    def refreshPlotOptions(self):
+        """
+        Refresh plot options
+        
+        * Called after pipeline page has run filters/single filter has run
+        * loops over all filter lists under pipeline page, adding plots for all scalars
+        * plots named after pipeline index and filter list index
+        * also called when renderWindow pipeline index changes
+        * also called when filter lists are cleared, etc...?
+        
+        """
+        self.logger.debug("Refreshing plot options")
+        
+        # get current pipeline page
+        pp = self.rendererWindow.getCurrentPipelinePage()
+        ppindex = pp.pipelineIndex
+        
+        # get filter lists
+        filterLists = pp.filterLists
+        
+        # loop over filter lists
+        self.logger.debug("  Looping over filter lists (%d)", len(filterLists))
+        availableScalars = []
+        for filterList in filterLists:
+            # make unique name for pipeline page/filter list combo
+            findex = filterList.tab
+            filterListID = "%d-%d" % (ppindex, findex)
+            self.logger.debug("    Filter list %d; id '%s'", filterList.tab, filterListID)
+            
+            # loop over scalars in scalarsDict on filterer
+            for scalarsName in filterList.filterer.scalarsDict:
+                # make unique name, add to list
+                scalarsID = "%s-%s" % (filterListID, scalarsName.replace(" ", "_"))
+                self.logger.debug("      Found scalars '%s'; id '%s'", scalarsName, scalarsID)
+                availableScalars.append(scalarsID)
+                
+        # compare unique names to those in currentPlots dict; removing as necessary
+#         self.logger.debug("  Removing old scalars no longer available")
+#         for oldScalarsName, oldScalarsForm in self.currentPlots:
+#             if oldScalarsName not in availableScalars:
+#                 self.logger.debug("    Removing: '%s'", oldScalarsName)
+#                 self.removeScalarPlotOptions(oldScalarsName)
+        
+        # remove all
+        for oldScalarsName in self.currentPlots.keys():
+            self.logger.debug("    Removing: '%s'", oldScalarsName)
+            self.removeScalarPlotOptions(oldScalarsName)
+        
+        # add plots that aren't already added...
+        self.logger.debug("  Adding available scalars")
+        count = 0
+        for filterList in filterLists:
+            # make unique name for pipeline page/filter list combo
+            findex = filterList.tab
+            filterListID = "%d-%d" % (ppindex, findex)
+            
+            # loop over scalars in scalarsDict on filterer
+            for scalarsName, scalarsArray in filterList.filterer.scalarsDict.iteritems():
+                # id
+                scalarsID = availableScalars[count]
+                count += 1
+                
+                # add
+                self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
+
+################################################################################
+
+class GenericHistogramPlotForm(genericForm.GenericForm):
+    """
+    Plot options for a histogram of scalar values
+    
+    """
+    def __init__(self, parent, scalarsID, scalarsName, scalarsArray):
+        super(GenericHistogramPlotForm, self).__init__(parent, 0, "%s histogram" % scalarsName)
+        
+        self.parent = parent
+        self.scalarsID = scalarsID
+        self.scalarsName = scalarsName
+        self.scalarsArray = scalarsArray
+        self.logger = logging.getLogger(__name__)
+        
+        # scalar min/max
+        self.scalarMin = np.min(scalarsArray)
+        self.scalarMax = np.max(scalarsArray)
+        
+        # default 
+        self.numBins = 10
+        self.showAsFraction = False
+        
+        # list number
+        row = self.newRow()
+        row.addWidget(QtGui.QLabel("Property/filter list %s" % scalarsID.split("-")[1]))
+        
+        # min/max labels
+        row = self.newRow()
+        row.addWidget(QtGui.QLabel("Min: %f" % self.scalarMin))
+        row = self.newRow()
+        row.addWidget(QtGui.QLabel("Max: %f" % self.scalarMax))
+        
+        # num bins
+        label = QtGui.QLabel("Number of bins:")
+        row = self.newRow()
+        row.addWidget(label)
+        
+        numBinsSpin = QtGui.QSpinBox()
+        numBinsSpin.setMinimum(2)
+        numBinsSpin.setMaximum(1000)
+        numBinsSpin.setSingleStep(1)
+        numBinsSpin.setValue(self.numBins)
+        numBinsSpin.valueChanged.connect(self.numBinsChanged)
+        row.addWidget(numBinsSpin)
+        
+        # show as fraction option
+        
+        
+        # plot button
+        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Plotter.png")), "Plot")
+        plotButton.clicked.connect(self.makePlot)
+        row = self.newRow()
+        row.addWidget(plotButton)
+        
+        # show
+        self.show()
+    
+    def numBinsChanged(self, val):
+        """
+        Number of bins changed
+        
+        """
+        self.NBins = NBins
+    
+    def makePlot(self):
+        """
+        Do the plot
+        
+        """
+        self.logger.debug("Plotting '%s'", self.scalarsID)
+        
+        scalars = self.scalarsArray
+        minVal = self.scalarMin
+        maxVal = self.scalarMax
+        numBins = self.numBins
+        
+        if maxVal == minVal:
+            self.logger.error("Max val == min val; not plotting histogram")
+            return
+        
+        # prepare to plot
+        settingsDict = {}
+        settingsDict["title"] = "a histogram"
+        settingsDict["xlabel"] = "och"
+        settingsDict["ylabel"] = "justnow"
+        
+        # plot dialog
+        dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "histogram plot", "hist", (scalars, numBins), 
+                                    {"range": (minVal, maxVal),}, settingsDict=settingsDict)
+        dlg.show()
+        
+        # compute histogram
+#         if asFraction:
+#             # compute histogram
+#             hist, binEdges = pylab.histogram(data, NBins, range=(xmin, xmax))
+#             
+#             # make fraction
+#             fracHist = hist / float(N)
+#             
+#             # plot
+#             self.axes.bar(binEdges[:-1], fracHist, width=binWidth, color=settings.colour, label=settings.label)
+#         
+#         else:
+#             # plot
+#             self.axes.hist(data, NBins, range=(xmin, xmax), color=settings.colour, label=settings.label)
+
+################################################################################
+
+class RDFForm(genericForm.GenericForm):
+    """
+    RDF output form.
+    
+    """
+    def __init__(self, parent, mainWindow):
+        super(RDFForm, self).__init__(parent, 0, "RDF plot options")
         
         self.parent = parent
         self.mainWindow = mainWindow
-        self.tabWidth = tabWidth
         self.rendererWindow = self.parent.rendererWindow
+        self.logger = logging.getLogger(__name__)
         
         # defaults
         self.spec1 = "ALL"
@@ -116,17 +358,9 @@ class RDFTab(QtGui.QWidget):
         self.binMax = 10.0
         self.NBins = 100
         
-        # layout
-        formLayout = QtGui.QVBoxLayout(self)
-        formLayout.setAlignment(QtCore.Qt.AlignTop)
-        
-        # form
-        rdfForm = genericForm.GenericForm(self, 0, "RDF plot options")
-        rdfForm.show()
-        
         # bond type
         label = QtGui.QLabel("Bond type:")
-        row = rdfForm.newRow()
+        row = self.newRow()
         row.addWidget(label)
         
         self.spec1Combo = QtGui.QComboBox()
@@ -144,7 +378,7 @@ class RDFTab(QtGui.QWidget):
         
         # bin range
         label = QtGui.QLabel("Bin range:")
-        row = rdfForm.newRow()
+        row = self.newRow()
         row.addWidget(label)
         
         binMinSpin = QtGui.QDoubleSpinBox()
@@ -168,7 +402,7 @@ class RDFTab(QtGui.QWidget):
         
         # num bins
         label = QtGui.QLabel("Number of bins:")
-        row = rdfForm.newRow()
+        row = self.newRow()
         row.addWidget(label)
         
         numBinsSpin = QtGui.QSpinBox()
@@ -182,10 +416,11 @@ class RDFTab(QtGui.QWidget):
         # plot button
         plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Plotter.png")), "Plot")
         plotButton.clicked.connect(self.plotRDF)
-        row = rdfForm.newRow()
+        row = self.newRow()
         row.addWidget(plotButton)
         
-        formLayout.addWidget(rdfForm)
+        # show
+        self.show()
     
     def refresh(self):
         """
@@ -236,6 +471,8 @@ class RDFTab(QtGui.QWidget):
         Plot RDF.
         
         """
+        self.logger.info("Plotting RDF for visible atoms")
+        
         # first gather vis atoms
         visibleAtoms = self.rendererWindow.gatherVisibleAtoms()
                     

@@ -299,7 +299,7 @@ class PipelineForm(QtGui.QWidget):
             for rw in self.rendererWindows:
                 if rw.currentPipelineIndex == self.pipelineIndex:
                     rw.textSelector.refresh()
-                    rw.outputDialog.rdfTab.refresh()
+                    rw.outputDialog.plotTab.rdfForm.refresh()
         
         self.mainWindow.readLBOMDIN()
         
@@ -328,7 +328,7 @@ class PipelineForm(QtGui.QWidget):
         for rw in self.rendererWindows:
             if rw.currentPipelineIndex == self.pipelineIndex:
                 rw.textSelector.refresh()
-                rw.outputDialog.rdfTab.refresh()
+                rw.outputDialog.plotTab.rdfForm.refresh()
                 rw.outputDialog.imageTab.imageSequenceTab.resetPrefix()
         
         settings = self.mainWindow.preferences.renderingForm
@@ -471,6 +471,10 @@ class PipelineForm(QtGui.QWidget):
             count += 1
         
         self.refreshOnScreenInfo()
+        
+        for rw in self.rendererWindows:
+            if rw.currentPipelineIndex == self.pipelineIndex:
+                rw.outputDialog.plotTab.refreshPlotOptions()
         
         self.mainWindow.setStatus("Ready")
     
