@@ -99,7 +99,7 @@ def positionWindow(window, windowSize, desktop, parentWidget, offset=30, border=
         else:
             logger.debug("Centering window above to below")
             
-            new_y = screenGeometry.top() + (screenGeometry.height - windowHeight) / 2.0
+            new_y = screenGeometry.top() + (screenGeometry.height() - windowHeight) / 2.0
     
     # set position of window
     windowPoint = QtCore.QPoint(new_x, new_y)
