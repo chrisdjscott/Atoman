@@ -7,6 +7,7 @@ The filter tab for the main toolbar
 """
 import sys
 import logging
+import functools
 
 from PySide import QtGui, QtCore
 
@@ -14,7 +15,7 @@ from ..visutils.utilities import iconPath
 from ..filtering import filterer
 from . import filterSettings
 from . import filterListOptions
-
+from . import utils
 try:
     from .. import resources
 except ImportError:
@@ -23,6 +24,21 @@ except ImportError:
 
 
 ################################################################################
+
+class FilterListWidgetItem(QtGui.QListWidgetItem):
+    """
+    Item that goes in the filter list
+    
+    """
+    def __init__(self, filterName, filterSettings):
+        super(FilterListWidgetItem, self).__init__()
+        
+        self.filterName = filterName
+        self.filterSettings = filterSettings
+        self.setText(filterName)
+
+################################################################################
+
 class FilterList(QtGui.QWidget):
     def __init__(self, parent, mainToolbar, mainWindow, tab, width, height=150):
         super(FilterList, self).__init__(parent)
@@ -61,16 +77,11 @@ class FilterList(QtGui.QWidget):
                            "Q4"]
         self.allFilters.sort()
         
-        # current selected filters
-        self.currentFilters = []
-        
-        # settings (windows) for current filters
-        self.currentSettings = []
-        
         self.visible = 1
         
         # layout
         self.filterListLayout = QtGui.QVBoxLayout(self)
+        self.filterListLayout.setSpacing(0)
         
         # add the top set of buttons
         
@@ -78,27 +89,31 @@ class FilterList(QtGui.QWidget):
         self.visibleButton = QtGui.QPushButton(QtGui.QIcon(iconPath("eye-ava.svg")), "")
         self.visibleButton.setFixedWidth(35)
         self.visibleButton.setStatusTip("Visible")
+        self.visibleButton.setToolTip("Visible")
         self.visibleButton.setCheckable(1)
         self.visibleButton.setChecked(0)
         self.visibleButton.clicked.connect(self.visibilityChanged)
         
         # trash the list
         trashButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-delete.svg")), "")
-        trashButton.setStatusTip("Delete filter list")
+        trashButton.setStatusTip("Delete property/filter list")
+        trashButton.setToolTip("Delete property/filter list")
         trashButton.setFixedWidth(35)
         trashButton.clicked.connect(self.filterTab.removeFilterList)
         
         # persistent list button
         self.persistButton = QtGui.QPushButton(QtGui.QIcon(iconPath("application-certificate.svg")), "")
         self.persistButton.setFixedWidth(35)
-        self.persistButton.setStatusTip("Persistent filter list")
+        self.persistButton.setStatusTip("Persistent property/filter list")
+        self.persistButton.setToolTip("Persistent property/filter list")
         self.persistButton.setCheckable(1)
         self.persistButton.setChecked(0)
         
         # static list button
         self.staticListButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Stop_hand_nuvola_black.svg")), "")
         self.staticListButton.setFixedWidth(35)
-        self.staticListButton.setStatusTip("Static filter list")
+        self.staticListButton.setStatusTip("Freeze property/filter list")
+        self.staticListButton.setToolTip("Freeze property/filter list")
         self.staticListButton.setCheckable(1)
         self.staticListButton.setChecked(0)
         
@@ -106,6 +121,7 @@ class FilterList(QtGui.QWidget):
         self.scalarBarButton = QtGui.QPushButton(QtGui.QIcon(iconPath("preferences-desktop-locale.svg")), "")
         self.scalarBarButton.setFixedWidth(35)
         self.scalarBarButton.setStatusTip("Show scalar bar")
+        self.scalarBarButton.setToolTip("Show scalar bar")
         self.scalarBarButton.setCheckable(1)
         self.scalarBarButton.setChecked(0)
         self.scalarBarButton.clicked.connect(self.toggleScalarBar)
@@ -140,34 +156,52 @@ class FilterList(QtGui.QWidget):
         # Now add the list widget
         self.listItems = QtGui.QListWidget(self)
         self.listItems.setFixedHeight(self.tabHeight)
-        
-        self.connect(self.listItems, QtCore.SIGNAL('itemDoubleClicked(QListWidgetItem*)'), self.openFilterSettings)
-        
+        self.listItems.itemDoubleClicked.connect(self.openFilterSettings)
+        self.listItems.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.listItems.customContextMenuRequested.connect(self.showListWidgetContextMenu)
+        self.listItems.setDragEnabled(True)
+        self.listItems.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
         self.filterListLayout.addWidget(self.listItems)
+        
+        # quick add combo
+        self.quickAddCombo = QtGui.QComboBox()
+        self.quickAddCombo.addItem("Add property/filter ...")
+        self.quickAddCombo.addItems(self.allFilters)
+        self.quickAddCombo.currentIndexChanged[str].connect(self.quickAddComboAction)
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignHCenter)
+        row.addWidget(self.quickAddCombo)
+        self.filterListLayout.addLayout(row)
         
         # add more buttons
         addFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
-        addFilter.setStatusTip("Add new filter")
+        addFilter.setStatusTip("Add new property/filter")
+        addFilter.setToolTip("Add new property/filter")
         addFilter.clicked.connect(self.addFilter)
         
         removeFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
-        removeFilter.setStatusTip("Remove filter")
+        removeFilter.setStatusTip("Remove property/filter")
+        removeFilter.setToolTip("Remove property/filter")
         removeFilter.clicked.connect(self.removeFilter)
         
         moveUp = QtGui.QPushButton(QtGui.QIcon(iconPath("go-up.svg")), "")
         moveUp.setStatusTip("Move up")
+        moveUp.setToolTip("Move up")
         moveUp.clicked.connect(self.moveFilterUpInList)
         
         moveDown = QtGui.QPushButton(QtGui.QIcon(iconPath("go-down.svg")), "")
         moveDown.setStatusTip("Move down")
+        moveDown.setToolTip("Move down")
         moveDown.clicked.connect(self.moveFilterDownInList)
         
         clearList = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-clear.svg")), "")
-        clearList.setStatusTip("Clear current filter list")
+        clearList.setStatusTip("Clear current property/filter list")
+        clearList.setToolTip("Clear current property/filter list")
         clearList.clicked.connect(self.clearList)
         
         applyList = QtGui.QPushButton(QtGui.QIcon(iconPath("view-refresh.svg")), "")
-        applyList.setStatusTip("Apply current filter list")
+        applyList.setStatusTip("Apply current property/filter list")
+        applyList.setToolTip("Apply current property/filter list")
         applyList.clicked.connect(self.applyList)
         
         buttonWidget = QtGui.QWidget()
@@ -229,6 +263,61 @@ class FilterList(QtGui.QWidget):
         
         # the filterer (does the filtering)
         self.filterer = filterer.Filterer(self)
+    
+    def quickAddComboAction(self, text):
+        """
+        Quick add combo item selected.
+        
+        """
+        text = str(text)
+        if text in self.allFilters:
+            self.logger.debug("Quick add: '%s'", text)
+            self.addFilter(filterName=text)
+            self.quickAddCombo.setCurrentIndex(0)
+    
+    def showListWidgetContextMenu(self, point):
+        """
+        Show context menu for listWidgetItem
+        
+        """
+        logger = logging.getLogger(__name__)
+        logger.debug("Show list widget context menu (property/filter list)")
+        
+        # position to open menu at
+        globalPos = self.listItems.mapToGlobal(point)
+        
+        # index of item
+        t = self.listItems.indexAt(point)
+        index = t.row()
+        
+        # item
+        item = self.listItems.item(index)
+        
+        if item is not None:
+            logger.debug("  Showing context menu for item at row: %d", index)
+            
+            # context menu
+            menu = QtGui.QMenu(self)
+            
+            # make actions
+            # edit action
+            editAction = QtGui.QAction("Edit settings", self)
+            editAction.setToolTip("Edit settings")
+            editAction.setStatusTip("Edit settings")
+            editAction.triggered.connect(functools.partial(self.openFilterSettings, item))
+            
+            # removee action
+            removeAction = QtGui.QAction("Remove from list", self)
+            removeAction.setToolTip("Remove from list")
+            removeAction.setStatusTip("Remove from list")
+            removeAction.triggered.connect(functools.partial(self.removeFilter, index))
+            
+            # add action
+            menu.addAction(editAction)
+            menu.addAction(removeAction)
+            
+            # show menu
+            menu.exec_(globalPos)
     
     def removeInfoWindows(self):
         """
@@ -292,21 +381,19 @@ class FilterList(QtGui.QWidget):
         self.colouringOptions.show()
         self.colouringOptionsOpen = True
     
-    def openFilterSettings(self):
+    def openFilterSettings(self, item=None):
         """
         Open filter settings window
         
         """
-        row = self.listItems.currentRow()
-        self.currentSettings[row].hide()
-        self.currentSettings[row].show()
-    
-    def openOptionsWindow(self):
-        """
-        Open additional options window
+        self.logger.debug("Open filter settings dialog (%s)", item.filterName)
         
-        """
-        print "NOT IMPLEMENTED YET"
+        if item is None:
+            item = self.listItems.currentItem()
+        
+        item.filterSettings.hide()
+#         utils.positionWindow(item.filterSettings, item.filterSettings.size(), self.mainWindow.desktop, self)
+        item.filterSettings.show()
     
     def applyList(self):
         """
@@ -317,7 +404,31 @@ class FilterList(QtGui.QWidget):
         self.filterer.runFilters()
         
         self.filterTab.refreshOnScreenInfo()
-            
+    
+    def getCurrentFilterSettings(self):
+        """
+        Return ordered list of current filter settings objects
+        
+        """
+        currentSettings = []
+        for i in xrange(self.listItems.count()):
+            item = self.listItems.item(i)
+            currentSettings.append(item.filterSettings)
+        
+        return currentSettings
+    
+    def getCurrentFilterNames(self):
+        """
+        Return ordered list of current filter names
+        
+        """
+        currentNames = []
+        for i in xrange(self.listItems.count()):
+            item = self.listItems.item(i)
+            currentNames.append(item.filterName)
+        
+        return currentNames
+    
     def clearList(self):
         """
         Clear filters and actors from list.
@@ -325,14 +436,14 @@ class FilterList(QtGui.QWidget):
         """
         self.filterer.removeActors()
         
-        self.listItems.clear()
-        
-        while len(self.currentFilters):
-            self.currentFilters.pop()
-        
-        while len(self.currentSettings):
-            dlg = self.currentSettings.pop()
+        # close settings dialogs
+        settingsDialogs = self.getCurrentFilterSettings()
+        while len(settingsDialogs):
+            dlg = settingsDialogs.pop()
             dlg.accept()
+        
+        # clear list items
+        self.listItems.clear()
         
         self.staticListButton.setChecked(0)
         self.persistButton.setChecked(0)
@@ -340,7 +451,6 @@ class FilterList(QtGui.QWidget):
         self.defectFilterSelected = False
         
         if self.filterer.scalarBarAdded:
-#            self.filterer.hideScalarBar()
             self.scalarBarButton.setChecked(0)
         
         self.filterTab.refreshOnScreenInfo()
@@ -365,7 +475,7 @@ class FilterList(QtGui.QWidget):
         
         """
         if self.isStaticList():
-            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            self.mainWindow.displayWarning("Cannot modify a frozen filter list")
             return
         
         # find which one is selected
@@ -379,8 +489,6 @@ class FilterList(QtGui.QWidget):
             return
         
         self.listItems.insertItem(newRow, self.listItems.takeItem(row))
-        self.currentFilters.insert(newRow, self.currentFilters.pop(row))
-        self.currentSettings.insert(newRow, self.currentSettings.pop(row))
     
     def moveFilterUpInList(self):
         """
@@ -388,7 +496,7 @@ class FilterList(QtGui.QWidget):
         
         """
         if self.isStaticList():
-            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            self.mainWindow.displayWarning("Cannot modify a frozen filter list")
             return
         
         # find which one is selected
@@ -402,8 +510,6 @@ class FilterList(QtGui.QWidget):
             return
         
         self.listItems.insertItem(newRow, self.listItems.takeItem(row))
-        self.currentFilters.insert(newRow, self.currentFilters.pop(row))
-        self.currentSettings.insert(newRow, self.currentSettings.pop(row))
     
     def warnDefectFilter(self):
         """
@@ -428,59 +534,76 @@ class FilterList(QtGui.QWidget):
         
         """
         if self.isStaticList():
-            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            self.mainWindow.displayWarning("Cannot modify a frozen filter list")
             return
         
         # first determine what filter is to be added
         if filterName is not None and filterName in self.allFilters:
             ok = True
-        
         else:
+#             dlg = QtGui.QInputDialog(self)
+#             dlg.setInputMode(QtGui.QInputDialog.TextInput)
+#             dlg.setComboBoxItems(self.allFilters)
+#             dlg.setLabelText("Select filter:")
+#             utils.positionWindow(dlg, dlg.sizeHint(), self.mainWindow.desktop, self)
+#             ok = dlg.exec_()
+#             filterName = dlg.textValue()
             filterName, ok = QtGui.QInputDialog.getItem(self, "Add filter", "Select filter:", self.allFilters, editable=False)
         
         if ok:
             if self.defectFilterSelected:
                 self.warnDefectFilter()
             
-            elif len(self.currentFilters) and str(filterName) == "Point defects":
+            elif self.listItems.count() > 0 and str(filterName) == "Point defects":
                 self.warnDefectFilter()
             
             else:
-#                if filterName not in self.currentFilters:
+                # filter name
                 filterNameString = "%s [%d]" % (filterName, self.filterCounter)
+                self.logger.debug("Adding filter/property calculator: '%s'", filterNameString)
                 
-                self.currentFilters.append(str(filterNameString))
-                self.listItems.addItem(filterNameString)
-                
-                # create option form
+                # create options form
                 form = self.createSettingsForm(filterName)
+                
+                # list widget item
+                item = FilterListWidgetItem(str(filterNameString), form)
+                
+                # add
+                self.listItems.addItem(item)
+                
+                # position form
+#                 utils.positionWindow(form, form.sizeHint(), self.mainWindow.desktop, self)
+                
+                # show options form
                 form.show()
-                self.currentSettings.append(form)
                 
                 if str(filterName) == "Point defects":
                     self.defectFilterSelected = True
     
-    def removeFilter(self):
+    def removeFilter(self, row=None):
         """
         Remove new filter
         
         """
         if self.isStaticList():
-            self.mainWindow.displayWarning("Cannot modify a static filter list")
+            self.mainWindow.displayWarning("Cannot modify a frozen filter list")
             return
         
         # find which one is selected
-        row = self.listItems.currentRow()
+        if row is None:
+            row = self.listItems.currentRow()
         
         if not self.listItems.count() or row < 0:
             return
                 
         # remove it from lists
-        self.listItems.takeItem(row)
-        filterName = self.currentFilters.pop(row)
-        dlg = self.currentSettings.pop(row)
+        item = self.listItems.takeItem(row)
+        filterName = item.filterName
+        self.logger.debug("Removing filter/property calculation (%d): '%s'", row, filterName)
+        dlg = item.filterSettings
         dlg.close()
         dlg.accept()
+        del item
         
         if filterName.startswith("Point defects"):
             self.defectFilterSelected = False
@@ -520,4 +643,3 @@ class FilterList(QtGui.QWidget):
             self.filterer.addActors()
         
         self.filterTab.refreshOnScreenInfo()
-

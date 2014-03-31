@@ -264,3 +264,7 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+# matplotlib version
+import matplotlib
+rst_epilog = ".. |mpl_version| replace:: %s" % matplotlib.__version__

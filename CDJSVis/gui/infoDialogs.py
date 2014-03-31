@@ -26,7 +26,7 @@ class AtomInfoWindow(QtGui.QDialog):
     Atom info window.
     
     """
-    def __init__(self, pipelinePage, atomIndex, scalar, scalarType, filterList, parent=None):
+    def __init__(self, pipelinePage, atomIndex, scalarsDict, filterList, parent=None):
         super(AtomInfoWindow, self).__init__(parent)
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
@@ -68,7 +68,7 @@ class AtomInfoWindow(QtGui.QDialog):
         row.addWidget(QtGui.QLabel("Charge: %f" % (lattice.charge[atomIndex],)))
         layout.addLayout(row)
         
-        if scalar is not None and scalarType is not None:
+        for scalarType, scalar in scalarsDict.iteritems():
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("%s: %f" % (scalarType, scalar)))
             layout.addLayout(row)
@@ -366,7 +366,7 @@ class DefectInfoWindow(QtGui.QDialog):
             radius = refState.specieCovalentRadius[refState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
             
             # can do this because defect filter is always by itself
-            vacScaleSize = self.filterList.currentSettings[0].vacScaleSize
+            vacScaleSize = self.filterList.getCurrentFilterSettings()[0].vacScaleSize
             radius *= vacScaleSize * 2.0
             
             # highlighter
@@ -428,7 +428,7 @@ class DefectInfoWindow(QtGui.QDialog):
             radius = refState.specieCovalentRadius[refState.specie[vacIndex]] * self.filterList.displayOptions.atomScaleFactor
             
             # can do this because defect filter is always by itself
-            vacScaleSize = self.filterList.currentSettings[0].vacScaleSize
+            vacScaleSize = self.filterList.getCurrentFilterSettings()[0].vacScaleSize
             radius *= vacScaleSize * 2.0
             
             # highlight

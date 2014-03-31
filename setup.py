@@ -69,9 +69,9 @@ def main():
         # build sphinx doc
         os.chdir("doc")
         
-        if "doc" in sys.argv:
-            # first generate latest module info
-            os.system("./modules_gen_auto.sh")
+#        if "doc" in sys.argv:
+#            # first generate latest module info
+#            os.system("./modules_gen_auto.sh")
         
         # then run make
         os.system("make html")

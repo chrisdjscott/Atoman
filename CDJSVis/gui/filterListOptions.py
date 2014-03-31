@@ -8,10 +8,10 @@ Options for filter lists.
 import sys
 import functools
 import logging
+import math
 
 from PySide import QtGui, QtCore
 
-from ..visutils import utilities
 from ..visutils.utilities import iconPath
 from . import genericForm
 
@@ -788,51 +788,11 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         self.stackedWidget.addWidget(atomPropertyOptions)
         
-        # scalar widget
-        self.scalarOptions = genericForm.GenericForm(self, 0, "Scalar colour options")
-        
-        # min/max
-        self.scalarMinSpin = QtGui.QDoubleSpinBox()
-        self.scalarMinSpin.setSingleStep(0.1)
-        self.scalarMinSpin.setMinimum(-9999.0)
-        self.scalarMinSpin.setMaximum(9999.0)
-        self.scalarMinSpin.setValue(0)
-        
-        self.scalarMaxSpin = QtGui.QDoubleSpinBox()
-        self.scalarMaxSpin.setSingleStep(0.1)
-        self.scalarMaxSpin.setMinimum(-9999.0)
-        self.scalarMaxSpin.setMaximum(9999.0)
-        self.scalarMaxSpin.setValue(1)
-        
-        label = QtGui.QLabel( " Min " )
-        label2 = QtGui.QLabel( " Max " )
-        
-        row = self.scalarOptions.newRow()
-        row.addWidget(label)
-        row.addWidget(self.scalarMinSpin)
-        
-        row = self.scalarOptions.newRow()
-        row.addWidget(label2)
-        row.addWidget(self.scalarMaxSpin)
-        
-        # set to scalar range
-        setToScalarRangeButton = QtGui.QPushButton("Set to scalar range")
-        setToScalarRangeButton.setAutoDefault(0)
-        setToScalarRangeButton.clicked.connect(self.setToScalarRange)
-        
-        row = self.scalarOptions.newRow()
-        row.addWidget(setToScalarRangeButton)
-        
-        # scalar bar text
-        self.scalarBarTextEdit2 = QtGui.QLineEdit("<insert title>")
-        
-        label = QtGui.QLabel("Scalar bar title:")
-        row = self.scalarOptions.newRow()
-        row.addWidget(label)
-        row = self.scalarOptions.newRow()
-        row.addWidget(self.scalarBarTextEdit2)
-        
-        self.stackedWidget.addWidget(self.scalarOptions)
+        # scalar widgets
+        self.scalarWidgets = {}
+        self.scalarMinSpins = {}
+        self.scalarMaxSpins = {}
+        self.scalarBarTexts = {}
         
         windowLayout.addWidget(self.stackedWidget)
     
@@ -844,6 +804,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.atomPropertyType = str(self.propertyTypeCombo.currentText())
         
         self.parent.colouringOptionsButton.setText("Colouring options: %s" % self.atomPropertyType)
+        self.scalarBarTextEdit3.setText(self.atomPropertyType)
     
     def setToPropertyRange(self):
         """
@@ -870,40 +831,134 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.propertyMinSpin.setValue(minVal)
         self.propertyMaxSpin.setValue(maxVal)
     
-    def setToScalarRange(self):
+    def setToScalarRange(self, scalarType):
         """
         Set min/max to scalar range.
         
         """
-        scalars = self.parent.filterer.scalars
+        logger = logging.getLogger(__name__)
+        logger.debug("Setting to scalar range (%s)", scalarType)
         
-        if len(scalars):
-            minVal = min(scalars)
-            maxVal = max(scalars)
-            if minVal == maxVal:
-                maxVal += 1
-            
-            self.scalarMinSpin.setValue(minVal)
-            self.scalarMaxSpin.setValue(maxVal)
+        scalarsDict = self.parent.filterer.scalarsDict
+        
+        minVal = min(scalarsDict[scalarType])
+        maxVal = max(scalarsDict[scalarType])
+        if math.fabs(minVal - maxVal) < 0.01:
+            maxVal += 1
+        
+        self.scalarMinSpins[scalarType].setValue(minVal)
+        self.scalarMaxSpins[scalarType].setValue(maxVal)
     
-    def refreshScalarColourOption(self, scalarType):
+    def removeScalarWidget(self, name):
+        """
+        Remove scalar widget
+        
+        """
+        widget = self.scalarWidgets[name]
+        self.stackedWidget.removeWidget(widget)
+        del widget
+    
+    def addScalarWidget(self, name):
+        """
+        Add scalar widget
+        
+        """
+        scalarOptions = genericForm.GenericForm(self, 0, "Options")
+         
+        # min/max
+        scalarMinSpin = QtGui.QDoubleSpinBox()
+        scalarMinSpin.setSingleStep(0.1)
+        scalarMinSpin.setMinimum(-9999.0)
+        scalarMinSpin.setMaximum(9999.0)
+        scalarMinSpin.setValue(0)
+        self.scalarMinSpins[name] = scalarMinSpin
+         
+        scalarMaxSpin = QtGui.QDoubleSpinBox()
+        scalarMaxSpin.setSingleStep(0.1)
+        scalarMaxSpin.setMinimum(-9999.0)
+        scalarMaxSpin.setMaximum(9999.0)
+        scalarMaxSpin.setValue(1)
+        self.scalarMaxSpins[name] = scalarMaxSpin
+         
+        label = QtGui.QLabel( " Min " )
+        label2 = QtGui.QLabel( " Max " )
+         
+        row = scalarOptions.newRow()
+        row.addWidget(label)
+        row.addWidget(scalarMinSpin)
+         
+        row = scalarOptions.newRow()
+        row.addWidget(label2)
+        row.addWidget(scalarMaxSpin)
+         
+        # set to scalar range
+        setToScalarRangeButton = QtGui.QPushButton("Set to scalar range")
+        setToScalarRangeButton.setAutoDefault(0)
+        setToScalarRangeButton.clicked.connect(functools.partial(self.setToScalarRange, name))
+         
+        row = scalarOptions.newRow()
+        row.addWidget(setToScalarRangeButton)
+         
+        # scalar bar text
+        scalarBarTextEdit = QtGui.QLineEdit("%s" % name)
+        self.scalarBarTexts[name] = scalarBarTextEdit
+         
+        label = QtGui.QLabel("Scalar bar title:")
+        row = scalarOptions.newRow()
+        row.addWidget(label)
+        row = scalarOptions.newRow()
+        row.addWidget(scalarBarTextEdit)
+        
+        self.scalarWidgets[name] = scalarOptions
+        self.stackedWidget.addWidget(scalarOptions)
+    
+    def refreshScalarColourOption(self):
         """
         Refresh colour by scalar options.
         
         """
-        if self.colouringCombo.count() == 5 and self.colouringCombo.currentText() == scalarType:
-            print "SAME"
+        logger = logging.getLogger(__name__)
+        logger.debug("Refreshing scalar colour options")
         
-        else:
-            if self.colouringCombo.currentIndex() == 4:
-                print "SET ZERO"
-                self.colouringCombo.setCurrentIndex(0)
-            
-            self.colouringCombo.removeItem(4)
-            
-            if len(scalarType):
+        # store current item
+        iniText = str(self.colouringCombo.currentText())
+        logger.debug("Initially selected: '%s'", iniText)
+        
+        # ref to scalarsDict
+        scalarsDict = self.parent.filterer.scalarsDict
+        
+        # list of previous scalar types
+        previousScalarTypes = []
+        for i in xrange(4, self.colouringCombo.count()):
+            previousScalarTypes.append(str(self.colouringCombo.itemText(i)))
+        
+        logger.debug("New scalars: %r", scalarsDict.keys())
+        logger.debug("Old scalars: %r", previousScalarTypes)
+        
+        # check if need to remove any scalar types
+        for i, name in enumerate(previousScalarTypes):
+            if name not in scalarsDict:
+                logger.debug("Removing '%s'", name)
+                
+                # if selected set zero
+                if str(self.colouringCombo.currentText()) == name:
+                    self.colouringCombo.setCurrentIndex(0)
+                
+                # remove (inefficient...)
+                for j in xrange(4, self.colouringCombo.count()):
+                    if str(self.colouringCombo.itemText(j)) == name:
+                        self.colouringCombo.removeItem(j)
+                        self.removeScalarWidget(name)
+        
+        # add new
+        for scalarType in scalarsDict:
+            # already in?
+            if scalarType in previousScalarTypes:
+                logger.debug("Skipping '%s'; already exists", scalarType)
+            else:
+                logger.debug("Adding: '%s'", scalarType)
                 self.colouringCombo.addItem(scalarType)
-                print "ADD", scalarType
+                self.addScalarWidget(scalarType)
     
     def scalarBarTextChanged(self, text):
         """
@@ -968,6 +1023,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         if self.colourBy == "Atom property":
             colourByText = str(self.propertyTypeCombo.currentText())
+            self.scalarBarTextEdit3.setText(self.atomPropertyType)
         else:
             colourByText = self.colourBy
         

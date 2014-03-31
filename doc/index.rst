@@ -12,7 +12,7 @@ Welcome to CDJSVis's documentation!
    requirements
    usage/index
    changelog
-   modules/modules
+   license/index
 
 You can read this documentation online at http://vis.chrisdjscott.co.uk/.
 

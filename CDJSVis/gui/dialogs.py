@@ -17,9 +17,7 @@ import numpy as np
 from . import genericForm
 from ..atoms import elements
 from ..visutils.utilities import resourcePath, iconPath
-from ..visutils import vectors
 from ..visutils import utilities
-from ..rendering import highlight
 
 try:
     from .. import resources
@@ -38,7 +36,7 @@ class CameraSettingsDialog(QtGui.QDialog):
     def __init__(self, parent, renderer):
         super(CameraSettingsDialog, self).__init__(parent)
         
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+#         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.renderer = renderer
         
@@ -268,7 +266,8 @@ class ConsoleWindow(QtGui.QDialog):
     def __init__(self, parent=None):
         super(ConsoleWindow, self).__init__(parent)
         
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        self.iniWinFlags = self.windowFlags()
+        self.setWindowFlags(self.iniWinFlags | QtCore.Qt.WindowStaysOnTopHint)
         
         self.parent = parent
         self.setModal(0)
@@ -342,12 +341,7 @@ class ConsoleWindow(QtGui.QDialog):
         self.consoleLevelCombo.addItems(self.loggingLevelsSorted)
         self.consoleLevelCombo.currentIndexChanged[str].connect(self.consoleLevelChanged)
         self.consoleLevelCombo.setCurrentIndex(consoleLevelIndex)
-        
         label = QtGui.QLabel("Level:")
-        
-#         row = self.newRow()
-#         row.addWidget(label)
-#         row.addWidget(self.consoleLevelCombo)
         
         buttonWidget = QtGui.QWidget()
         buttonLayout = QtGui.QHBoxLayout(buttonWidget)
@@ -402,8 +396,13 @@ class ConsoleWindow(QtGui.QDialog):
         Save text to file
         
         """
+        self.setWindowFlags(self.iniWinFlags)
+        
         # get file name
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Console Output', '.', "HTML files (*.html)", options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Console Output', '.', "HTML files (*.html)")[0]
+        
+        self.setWindowFlags(self.iniWinFlags | QtCore.Qt.WindowStaysOnTopHint)
+        self.show()
         
         if len(filename):
             if not filename.endswith(".html"):
@@ -449,7 +448,8 @@ class ElementEditor(QtGui.QDialog):
     def __init__(self, parent=None):
         super(ElementEditor, self).__init__(parent)
         
-#         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        self.iniWinFlags = self.windowFlags()
+        self.setWindowFlags(self.iniWinFlags | QtCore.Qt.WindowStaysOnTopHint)
         
         self.parent = parent
         self.setModal(0)
@@ -678,7 +678,7 @@ class ImageViewer(QtGui.QDialog):
     def __init__(self, mainWindow, parent=None):
         super(ImageViewer, self).__init__(parent)
         
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+#         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.parent = parent
         self.mainWindow = mainWindow
@@ -901,7 +901,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
     def __init__(self, mainWindow, index, parent=None):
         super(OnScreenInfoDialog, self).__init__(parent)
         
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+#         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.parent = parent
         self.rendererWindow = parent
@@ -1148,7 +1148,7 @@ class RotateViewPointDialog(QtGui.QDialog):
     def __init__(self, rw, parent=None):
         super(RotateViewPointDialog, self).__init__(parent)
         
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+#         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.setModal(0)
         

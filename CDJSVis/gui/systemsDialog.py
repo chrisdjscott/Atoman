@@ -247,6 +247,7 @@ class SystemsDialog(QtGui.QDialog):
         self.setWindowTitle("Systems dialog")
         self.setModal(False)
         
+        self.iniWinFlags = self.windowFlags()
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.mainToolbar = mainWindow
@@ -329,6 +330,21 @@ class SystemsDialog(QtGui.QDialog):
         row.addStretch(1)
         row.addWidget(helpButton)
         dialog_layout.addLayout(row)
+    
+    def tmpHide(self):
+        """
+        Temporarily remove staysOnTop hint
+        
+        """
+        self.setWindowFlags(self.iniWinFlags)
+    
+    def showAgain(self):
+        """
+        Readd stayOnTop hint and show
+        
+        """
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        self.show()
     
     def showListWidgetContextMenu(self, point):
         """

@@ -123,6 +123,11 @@ class PipelineForm(QtGui.QWidget):
         rowLayout.addWidget(self.inputCombo)
         filterTabLayout.addWidget(row)
         
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignHCenter)
+        row.addWidget(QtGui.QLabel("<b>Property/filter lists:</b>"))
+        filterTabLayout.addLayout(row)
+        
         # row
         row = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row)
@@ -132,13 +137,16 @@ class PipelineForm(QtGui.QWidget):
         
         #----- buttons for new/trash filter list
         runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('view-refresh-all.svg')),'Apply lists')
-        runAll.setStatusTip("Apply all filter lists")
+        runAll.setStatusTip("Apply all property/filter lists")
+        runAll.setToolTip("Apply all property/filter lists")
         runAll.clicked.connect(self.runAllFilterLists)
         add = QtGui.QPushButton(QtGui.QIcon(iconPath('tab-new.svg')),'New list')
-        add.setStatusTip("New filter list")
+        add.setToolTip("New property/filter list")
+        add.setStatusTip("New property/filter list")
         add.clicked.connect(self.addFilterList)
         clear = QtGui.QPushButton(QtGui.QIcon(iconPath('edit-delete.svg')),'Clear lists')
-        clear.setStatusTip("Clear all filter lists")
+        clear.setStatusTip("Clear all property/filter lists")
+        clear.setToolTip("Clear all property/filter lists")
         clear.clicked.connect(self.clearAllFilterLists)
         
         rowLayout.addWidget(add)
@@ -291,7 +299,7 @@ class PipelineForm(QtGui.QWidget):
             for rw in self.rendererWindows:
                 if rw.currentPipelineIndex == self.pipelineIndex:
                     rw.textSelector.refresh()
-                    rw.outputDialog.rdfTab.refresh()
+                    rw.outputDialog.plotTab.rdfForm.refresh()
         
         self.mainWindow.readLBOMDIN()
         
@@ -320,7 +328,7 @@ class PipelineForm(QtGui.QWidget):
         for rw in self.rendererWindows:
             if rw.currentPipelineIndex == self.pipelineIndex:
                 rw.textSelector.refresh()
-                rw.outputDialog.rdfTab.refresh()
+                rw.outputDialog.plotTab.rdfForm.refresh()
                 rw.outputDialog.imageTab.imageSequenceTab.resetPrefix()
         
         settings = self.mainWindow.preferences.renderingForm
@@ -464,6 +472,11 @@ class PipelineForm(QtGui.QWidget):
         
         self.refreshOnScreenInfo()
         
+        # refresh plot options
+        for rw in self.rendererWindows:
+            if rw.currentPipelineIndex == self.pipelineIndex:
+                rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
+        
         self.mainWindow.setStatus("Ready")
     
     def refreshOnScreenInfo(self):
@@ -544,7 +557,8 @@ class PipelineForm(QtGui.QWidget):
         """
         self.log("Refreshing filters", 3)
         for filterList in self.filterLists:
-            for filterSettings in filterList.currentSettings:
+            currentSettings = filterList.getCurrentFilterSettings()
+            for filterSettings in currentSettings:
                 filterSettings.refresh()
             
             filterList.bondsOptions.refresh()
@@ -577,14 +591,6 @@ class PipelineForm(QtGui.QWidget):
         
         else:
             rwList = [rw for rw in self.mainWindow.rendererWindows if rw.currentPipelineString == self.pipelineString]
-        
-#         rwList = []
-#         for rw in self.mainWindow.rendererWindows:
-#             if globalBcast:
-#                 rwList.append(rw)
-#             
-#             elif rw.currentPipelineString == self.pipelineString:
-#                 rwList.append(rw)
         
         self.logger.debug("Broadcasting to renderers (%d/%d): %s", len(rwList), len(self.mainWindow.rendererWindows), method)
         
@@ -635,8 +641,6 @@ class PipelineForm(QtGui.QWidget):
         minSepIndex = -1
         minSep = 9999999.0
         minSepType = None
-        minSepScalarType = None
-        minSepScalar = None
         minSepFilterList = None
         for filterList in filterLists:
             filterer = filterList.filterer
@@ -647,8 +651,7 @@ class PipelineForm(QtGui.QWidget):
             antisites = filterer.antisites
             onAntisites = filterer.onAntisites
             splitInts = filterer.splitInterstitials
-            scalars = filterer.scalars
-            scalarsType = filterer.scalarsType
+            scalarsDict = filterer.scalarsDict
             
             result = np.empty(3, np.float64)
             
@@ -681,12 +684,9 @@ class PipelineForm(QtGui.QWidget):
                     else:
                         defList = (splitInts,)
                 
-                if len(scalarsType):
-                    minSepScalar = scalars[tmp_index]
-                    minSepScalarType = scalarsType
-                else:
-                    minSepScalar = None
-                    minSepScalarType = None
+                minSepScalars = {}
+                for scalarType, scalarArray in scalarsDict.iteritems():
+                    minSepScalars[scalarType] = scalarArray[tmp_index]
         
         logger.debug("Closest object to pick: %f (threshold: %f)", minSep, 0.1)
         
@@ -698,7 +698,7 @@ class PipelineForm(QtGui.QWidget):
                 viewAction = QtGui.QAction("View atom", self)
                 viewAction.setToolTip("View atom info")
                 viewAction.setStatusTip("View atom info")
-                viewAction.triggered.connect(functools.partial(self.viewAtomClicked, minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList))
+                viewAction.triggered.connect(functools.partial(self.viewAtomClicked, minSepIndex, minSepType, minSepFilterList, minSepScalars, defList))
                 
                 editAction = QtGui.QAction("Edit atom", self)
                 editAction.setToolTip("Edit atom")
@@ -729,9 +729,9 @@ class PipelineForm(QtGui.QWidget):
             
             else:
                 # show the info window
-                self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList)
+                self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalars, defList)
     
-    def showInfoWindow(self, minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList):
+    def showInfoWindow(self, minSepIndex, minSepType, minSepFilterList, minSepScalars, defList):
         """
         Show info window
         
@@ -754,12 +754,8 @@ class PipelineForm(QtGui.QWidget):
             # add to renderers
             self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
             
-            # need cursor position on screen to decide where to show window
-            cursor = QtGui.QCursor()
-            cursor_pos = cursor.pos()
-            
             # position window
-            utils.positionWindow(cursor_pos, window, window.size(), self.mainWindow.desktop, self)
+            utils.positionWindow(window, window.size(), self.mainWindow.desktop, self)
             
             # show window
             window.show()
@@ -768,7 +764,7 @@ class PipelineForm(QtGui.QWidget):
         else:
             if minSepType == 0:
                 # atom info window
-                infoWindow = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalar, minSepScalarType, minSepFilterList, parent=self)
+                infoWindow = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalars, minSepFilterList, parent=self)
             
             else:
                 # defect info window
@@ -780,12 +776,8 @@ class PipelineForm(QtGui.QWidget):
             # add to renderers
             self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
             
-            # need cursor position on screen to decide where to open window
-            cursor = QtGui.QCursor()
-            cursor_pos = cursor.pos()
-            
             # position window
-            utils.positionWindow(cursor_pos, infoWindow, infoWindow.sizeHint(), self.mainWindow.desktop, self)
+            utils.positionWindow(infoWindow, infoWindow.sizeHint(), self.mainWindow.desktop, self)
             
             # show window
             infoWindow.show()
@@ -793,7 +785,7 @@ class PipelineForm(QtGui.QWidget):
             # store window for reuse
             minSepFilterList.infoWindows[windowKey] = infoWindow
     
-    def viewAtomClicked(self, minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList):
+    def viewAtomClicked(self, minSepIndex, minSepType, minSepFilterList, minSepScalars, defList):
         """
         View atom
         
@@ -801,7 +793,7 @@ class PipelineForm(QtGui.QWidget):
         logger = self.logger
         logger.debug("View atom action; Index is %d", minSepIndex)
         
-        self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalar, minSepScalarType, defList)
+        self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalars, defList)
     
     def editAtomClicked(self, index):
         """

@@ -9,6 +9,7 @@ import os
 import copy
 import time
 import logging
+import itertools
 
 import numpy as np
 import vtk
@@ -65,13 +66,10 @@ class Filterer(object):
         self.displayOptions = self.parent.displayOptions
         self.voronoiOptions = self.parent.voronoiOptions
         self.scalarBarAdded = False
-#         self.scalarBar = None
+        self.scalarsDict = {}
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
         self.povrayAtomsWritten = False
-        
-        self.scalars = np.asarray([], dtype=np.float64)
-        self.scalarsType = ""
     
     def removeActors(self):
         """
@@ -82,7 +80,7 @@ class Filterer(object):
         
         self.actorsCollection = vtk.vtkActorCollection()
         
-        self.scalarBar = None
+        self.scalarsDict = {}
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
         
@@ -90,12 +88,19 @@ class Filterer(object):
         self.NVac = 0
         self.NInt = 0
         self.NAnt = 0
-        self.visibleAtoms = np.empty(0, np.int32)
-        self.visibleSpecieCount = []
-        self.vacancySpecieCount = []
-        self.interstitialSpecieCount = []
-        self.antisiteSpecieCount = []
-        self.splitIntSpecieCount = []
+        self.visibleAtoms = np.asarray([], dtype=np.int32)
+        self.interstitials = np.asarray([], dtype=np.int32)
+        self.vacancies = np.asarray([], dtype=np.int32)
+        self.antisites = np.asarray([], dtype=np.int32)
+        self.onAntisites = np.asarray([], dtype=np.int32)
+        self.splitInterstitials = np.asarray([], dtype=np.int32)
+        self.visibleSpecieCount = np.asarray([], dtype=np.int32)
+        self.vacancySpecieCount = np.asarray([], dtype=np.int32)
+        self.interstitialSpecieCount = np.asarray([], dtype=np.int32)
+        self.antisiteSpecieCount = np.asarray([], dtype=np.int32)
+        self.splitIntSpecieCount = np.asarray([], dtype=np.int32)
+        
+        self.povrayAtomsWritten = False
     
     def hideActors(self):
         """
@@ -156,24 +161,12 @@ class Filterer(object):
         if not self.parent.isPersistentList():
             self.removeActors()
         
-        # reset
-        self.visibleAtoms = np.asarray([], dtype=np.int32)
-        self.interstitials = np.asarray([], dtype=np.int32)
-        self.vacancies = np.asarray([], dtype=np.int32)
-        self.antisites = np.asarray([], dtype=np.int32)
-        self.onAntisites = np.asarray([], dtype=np.int32)
-        self.splitInterstitials = np.asarray([], dtype=np.int32)
-        self.scalars = np.asarray([], dtype=np.float64)
-        self.povrayAtomsWritten = False
-        
         # first set up visible atoms arrays
         NAtoms = self.pipelinePage.inputState.NAtoms
         
         if not self.parent.defectFilterSelected:
             self.visibleAtoms = np.arange(NAtoms, dtype=np.int32)
-            NVis = NAtoms
             self.NVis = NAtoms
-#            self.scalars = np.empty(NAtoms, dtype=np.float64)
             self.logger.info("%d visible atoms", len(self.visibleAtoms))
         
         # pov-ray hull file
@@ -182,9 +175,8 @@ class Filterer(object):
         # run filters
         applyFiltersTime = time.time()
         filterName = ""
-        self.scalarsType = ""
-        currentFilters = self.parent.currentFilters
-        currentSettings = self.parent.currentSettings
+        currentFilters = self.parent.getCurrentFilterNames()
+        currentSettings = self.parent.getCurrentFilterSettings()
         for i in xrange(len(currentFilters)):
             # filter name
             filterNameString = currentFilters[i]
@@ -204,7 +196,6 @@ class Filterer(object):
             
             elif filterName == "Displacement":
                 self.displacementFilter(filterSettings)
-                self.scalarsType = filterName
             
             elif filterName == "Point defects":
                 interstitials, vacancies, antisites, onAntisites, splitInterstitials, clusterList = self.pointDefectFilter(filterSettings)
@@ -257,24 +248,21 @@ class Filterer(object):
             
             # write to log
             if self.parent.defectFilterSelected:
-                NVis = len(interstitials) + len(vacancies) + len(antisites) + len(splitInterstitials)
+                self.NVis = len(interstitials) + len(vacancies) + len(antisites) + len(splitInterstitials)
                 self.NVac = len(vacancies)
                 self.NInt = len(interstitials) + len(splitInterstitials) / 3
                 self.NAnt = len(antisites)
-                
             else:
-                NVis = len(self.visibleAtoms)
+                self.NVis = len(self.visibleAtoms)
             
-            self.NVis = NVis
-            
-            self.logger.info("  %d visible atoms", NVis)
+            self.logger.info("  %d visible atoms", self.NVis)
         
         # time to apply filters
         applyFiltersTime = time.time() - applyFiltersTime
         self.logger.debug("Apply filter(s) time: %f s", applyFiltersTime)
         
         # refresh available scalars in extra options dialog
-        self.parent.colouringOptions.refreshScalarColourOption(self.scalarsType)
+        self.parent.colouringOptions.refreshScalarColourOption()
         
         # render
         renderTime = time.time()
@@ -312,21 +300,17 @@ class Filterer(object):
                 # this is a hack!! not ideal
                 if self.parent.isPersistentList():
                     NVisibleForRes = 800
-                
                 else:
                     NVisibleForRes = None
                 
                 self.scalarBar_white_bg, self.scalarBar_black_bg, visSpecCount = renderer.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, 
                                                                                                                      self.actorsCollection, self.colouringOptions, 
-                                                                                                                     povfile, self.scalars, self.displayOptions, 
+                                                                                                                     povfile, self.scalarsDict, self.displayOptions, 
                                                                                                                      self.pipelinePage, self.povrayAtomsWrittenSlot,
                                                                                                                      NVisibleForRes=NVisibleForRes,
                                                                                                                      sequencer=sequencer)
                 
                 self.visibleSpecieCount = visSpecCount
-                
-                # write pov-ray file too (only if pov-ray located??)
-#                renderer.writePovrayAtoms(povfile, self.visibleAtoms, self.mainWindow)
             
             if self.bondsOptions.drawBonds:
                 # find bonds
@@ -347,6 +331,13 @@ class Filterer(object):
             
             addActorsTime = time.time() - addActorsTime
             self.logger.debug("Add actors time: %f s" % addActorsTime)
+        
+#         for name, scalars in self.scalarsDict.iteritems():
+#             assert len(scalars) == len(self.visibleAtoms)
+#             f = open("%s_after.dat" % name.replace(" ", "_"), "w")
+#             for tup in itertools.izip(self.visibleAtoms, scalars):
+#                 f.write("%d %f\n" % tup)
+#             f.close()
         
         # time
         runFiltersTime = time.time() - runFiltersTime
@@ -380,17 +371,27 @@ class Filterer(object):
         voroKey = self.voronoiOptions.getVoronoiDictKey()
         vor = inputState.voronoiDict[voroKey]
         
-        # scalars array
-        if len(self.scalars) != len(self.visibleAtoms):
-            self.scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        # new scalars array
+        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
         
         # make array of neighbours
         num_nebs_array = np.asarray([vor.atomNumNebs(i) for i in xrange(inputState.NAtoms)], dtype=np.int32)
         
-        NVisible = filtering_c.voronoiNeighboursFilter(self.visibleAtoms, num_nebs_array, settings.minVoroNebs, settings.maxVoroNebs, self.scalars)
+        NVisible = filtering_c.voronoiNeighboursFilter(self.visibleAtoms, num_nebs_array, settings.minVoroNebs, settings.maxVoroNebs, 
+                                                       scalars, NScalars, fullScalars, settings.filteringEnabled)
         
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+
+        # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        self.scalars.resize(NVisible, refcheck=False)
+
+        # store scalars
+        scalars.resize(NVisible, refcheck=False)
+        self.scalarsDict["Voronoi neighbours"] = scalars
     
     def voronoiVolumeFilter(self, settings):
         """
@@ -410,17 +411,27 @@ class Filterer(object):
         voroKey = self.voronoiOptions.getVoronoiDictKey()
         vor = inputState.voronoiDict[voroKey]
         
-        # scalars array
-        if len(self.scalars) != len(self.visibleAtoms):
-            self.scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        # new scalars array
+        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
         
         # make array of volumes
         atom_volumes = np.asarray([vor.atomVolume(i) for i in xrange(inputState.NAtoms)], dtype=np.float64)
         
-        NVisible = filtering_c.voronoiVolumeFilter(self.visibleAtoms, atom_volumes, settings.minVoroVol, settings.maxVoroVol, self.scalars)
+        NVisible = filtering_c.voronoiVolumeFilter(self.visibleAtoms, atom_volumes, settings.minVoroVol, settings.maxVoroVol, 
+                                                   scalars, NScalars, fullScalars, settings.filteringEnabled)
         
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        
+        # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        self.scalars.resize(NVisible, refcheck=False)
+
+        # store scalars
+        scalars.resize(NVisible, refcheck=False)
+        self.scalarsDict["Voronoi volume"] = scalars
     
     def Q4Filter(self, settings):
         """
@@ -429,15 +440,25 @@ class Filterer(object):
         """
         inputState = self.pipelinePage.inputState
         
-        # scalars array
-        if len(self.scalars) != len(self.visibleAtoms):
-            self.scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        # new scalars array
+        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
         
         NVisible = filtering_c.Q4Filter(self.visibleAtoms, inputState.pos, settings.minQ4, settings.maxQ4, settings.maxBondDistance, 
-                                        self.scalars, inputState.minPos, inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC)
+                                        scalars, inputState.minPos, inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC,
+                                        NScalars, fullScalars, settings.filteringEnabled)
         
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        
+        # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        self.scalars.resize(NVisible, refcheck=False)
+
+        # store scalars
+        scalars.resize(NVisible, refcheck=False)
+        self.scalarsDict["Q4"] = scalars
     
     def calculateVoronoi(self):
         """
@@ -665,13 +686,51 @@ class Filterer(object):
             self.parent.filterTab.scalarBarAdded = False
             self.scalarBarAdded = False
     
-    def getActorsForFilteredSystem(self):
+    def makeFullScalarsArray(self):
         """
-        Render systems after applying filters.
+        Combine scalars array into one big array for passing to C
         
         """
-        pass
+        self.logger.debug("Making full scalars array (N=%d)", len(self.scalarsDict))
+        
+        scalarsList = []
+        for name, scalars in self.scalarsDict.iteritems():
+            self.logger.debug("  Adding '%s' scalars", name)
+            scalarsList.append(scalars)
             
+#             assert len(scalars) == len(self.visibleAtoms)
+#             f = open("%s_before.dat" % name.replace(" ", "_"), "w")
+#             for tup in itertools.izip(self.visibleAtoms, scalars):
+#                 f.write("%d %f\n" % tup)
+#             f.close()
+        
+        if len(scalarsList):
+            scalarsFull = np.concatenate(scalarsList)
+        else:
+            scalarsFull = np.array([], dtype=np.float64)
+        
+        return len(scalarsList), scalarsFull
+    
+    def storeFullScalarsArray(self, NVisible, NScalars, scalarsFull):
+        """
+        Split and resize full scalars array; store in dict
+        
+        Assumes scalarsDict was not modified since we called
+        makeFullScalarsArray.
+        
+        """
+        if NScalars > 0:
+            self.logger.debug("Storing full scalars array in dict")
+            scalarsList = np.split(scalarsFull, NScalars)
+            keys = self.scalarsDict.keys()
+            
+            for key, scalars in itertools.izip(keys, scalarsList):
+                self.logger.debug("  Storing '%s' scalars", key)
+                assert len(scalars) >= NVisible, "ERROR: scalars (%s) smaller than expected (%d < %d)" % (key, len(scalars), NVisible)
+                scalars_cp = copy.copy(scalars)
+                scalars_cp.resize(NVisible, refcheck=False)
+                self.scalarsDict[key] = scalars_cp
+    
     def filterSpecie(self, settings):
         """
         Filter by specie
@@ -691,11 +750,16 @@ class Filterer(object):
             if count != len(visSpecArray):
                 visSpecArray.resize(count)
         
-        NVisible = filtering_c.specieFilter(self.visibleAtoms, visSpecArray, self.pipelinePage.inputState.specie, self.scalars)
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
         
+        NVisible = filtering_c.specieFilter(self.visibleAtoms, visSpecArray, self.pipelinePage.inputState.specie, NScalars, fullScalars)
+        
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+
+        # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        if len(self.scalars):
-            self.scalars.resize(NVisible, refcheck=False)
     
     def displacementFilter(self, settings):
         """
@@ -708,19 +772,30 @@ class Filterer(object):
         
         if inputState.NAtoms != refState.NAtoms:
             self.logger.warning("Cannot run displacement filter with different numbers of input and reference atoms: skipping this filter list")
+            #TODO: display warning too
             self.visibleAtoms.resize(0, refcheck=False)
         
         else:
-            # scalars array
-            if len(self.scalars) != len(self.visibleAtoms):
-                self.scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+            # new scalars array
+            scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+            
+            # old scalars arrays (resize as appropriate)
+            NScalars, fullScalars = self.makeFullScalarsArray()
             
             # run displacement filter
-            NVisible = filtering_c.displacementFilter(self.visibleAtoms, self.scalars, inputState.pos, refState.pos, refState.cellDims, 
-                                                      self.pipelinePage.PBC, settings.minDisplacement, settings.maxDisplacement)
+            NVisible = filtering_c.displacementFilter(self.visibleAtoms, scalars, inputState.pos, refState.pos, refState.cellDims, 
+                                                      self.pipelinePage.PBC, settings.minDisplacement, settings.maxDisplacement, 
+                                                      NScalars, fullScalars, settings.filteringEnabled)
             
+            # update scalars dict
+            self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+            
+            # resize visible atoms
             self.visibleAtoms.resize(NVisible, refcheck=False)
-            self.scalars.resize(NVisible, refcheck=False)
+            
+            # store scalars
+            scalars.resize(NVisible, refcheck=False)
+            self.scalarsDict["Displacement"] = scalars
     
     def cropFilter(self, settings):
         """
@@ -729,13 +804,18 @@ class Filterer(object):
         """
         lattice = self.pipelinePage.inputState
         
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
+        
         NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
                                           settings.ymax, settings.zmin, settings.zmax, settings.xEnabled, 
-                                          settings.yEnabled, settings.zEnabled, settings.invertSelection, self.scalars)
+                                          settings.yEnabled, settings.zEnabled, settings.invertSelection, NScalars, fullScalars)
         
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+
+        # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        if len(self.scalars):
-            self.scalars.resize(NVisible, refcheck=False)
     
     def cropSphereFilter(self, settings):
         """
@@ -744,12 +824,18 @@ class Filterer(object):
         """
         lattice = self.pipelinePage.inputState
         
-        NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, settings.xCentre, settings.yCentre, settings.zCentre, 
-                                                settings.radius, lattice.cellDims, self.pipelinePage.PBC, settings.invertSelection, self.scalars)
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
         
+        NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, settings.xCentre, settings.yCentre, settings.zCentre, 
+                                                settings.radius, lattice.cellDims, self.pipelinePage.PBC, settings.invertSelection, 
+                                                NScalars, fullScalars)
+        
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+
+        # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        if len(self.scalars):
-            self.scalars.resize(NVisible, refcheck=False)
     
     def sliceFilter(self, settings):
         """
@@ -758,12 +844,17 @@ class Filterer(object):
         """
         lattice = self.pipelinePage.inputState
         
-        NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, settings.x0, settings.y0, settings.z0, 
-                                           settings.xn, settings.yn, settings.zn, settings.invert, self.scalars)
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
         
+        NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, settings.x0, settings.y0, settings.z0, 
+                                           settings.xn, settings.yn, settings.zn, settings.invert, NScalars, fullScalars)
+        
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+
+        # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        if len(self.scalars):
-            self.scalars.resize(NVisible, refcheck=False)
     
     def chargeFilter(self, settings):
         """
@@ -772,11 +863,16 @@ class Filterer(object):
         """
         lattice = self.pipelinePage.inputState
         
-        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge, self.scalars)
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
         
+        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge, NScalars, fullScalars)
+        
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+
+        # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        if len(self.scalars):
-            self.scalars.resize(NVisible, refcheck=False)
     
     def KEFilter(self, settings):
         """
@@ -785,11 +881,16 @@ class Filterer(object):
         """
         lattice = self.pipelinePage.inputState
         
-        NVisible = filtering_c.KEFilter(self.visibleAtoms, lattice.KE, settings.minKE, settings.maxKE, self.scalars)
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
         
+        NVisible = filtering_c.KEFilter(self.visibleAtoms, lattice.KE, settings.minKE, settings.maxKE, NScalars, fullScalars)
+        
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+
+        # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        if len(self.scalars):
-            self.scalars.resize(NVisible, refcheck=False)
     
     def PEFilter(self, settings):
         """
@@ -798,11 +899,16 @@ class Filterer(object):
         """
         lattice = self.pipelinePage.inputState
         
-        NVisible = filtering_c.PEFilter(self.visibleAtoms, lattice.PE, settings.minPE, settings.maxPE, self.scalars)
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
         
+        NVisible = filtering_c.PEFilter(self.visibleAtoms, lattice.PE, settings.minPE, settings.maxPE, NScalars, fullScalars)
+        
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+
+        # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        if len(self.scalars):
-            self.scalars.resize(NVisible, refcheck=False)
     
     def pointDefectFilter(self, settings):
         """
@@ -1396,16 +1502,24 @@ class Filterer(object):
         if not calcBonds:
             self.logger.warning("No bonds defined: all coordination numbers will be zero")
         
-        # scalars array
-        if len(self.scalars) != len(self.visibleAtoms):
-            self.scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        # new scalars array
+        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
         
         # run displacement filter
         NVisible = filtering_c.coordNumFilter(self.visibleAtoms, inputState.pos, inputState.specie, NSpecies, bondMinArray, bondMaxArray, 
                                               maxBond, inputState.cellDims, self.pipelinePage.PBC, inputState.minPos, inputState.maxPos, 
-                                              self.scalars, filterSettings.minCoordNum, filterSettings.maxCoordNum)
+                                              scalars, filterSettings.minCoordNum, filterSettings.maxCoordNum, NScalars, fullScalars, 
+                                              filterSettings.filteringEnabled)
         
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        
+        # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
-        self.scalars.resize(NVisible, refcheck=False)
-
-
+        
+        # store scalars
+        scalars.resize(NVisible, refcheck=False)
+        self.scalarsDict["Coordination number"] = scalars

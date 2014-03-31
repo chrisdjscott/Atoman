@@ -44,13 +44,13 @@ _lib.specieFilter.restype = c_int
 _lib.specieFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_int), c_int, POINTER(c_int), c_int, POINTER(c_double)]
 
 # specie filter
-def specieFilter(visibleAtoms, visibleSpecieArray, specieArray, scalars):
+def specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars):
     """
     Specie filter.
     
     """
     return _lib.specieFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(visibleSpecieArray), CPtrToInt(visibleSpecieArray),
-                             len(specieArray), CPtrToInt(specieArray), len(scalars), CPtrToDouble(scalars))
+                             len(specieArray), CPtrToInt(specieArray), NScalars, CPtrToDouble(fullScalars))
 
 ################################################################################
 
@@ -60,13 +60,13 @@ _lib.sliceFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_
                              c_double, c_double, c_double, c_int, c_int, POINTER(c_double)]
 
 # slice filter
-def sliceFilter(visibleAtoms, pos, x0, y0, z0, xn, yn, zn, invert, scalars):
+def sliceFilter(visibleAtoms, pos, x0, y0, z0, xn, yn, zn, invert, NScalars, fullScalars):
     """
     Slice filter.
     
     """
     return _lib.sliceFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), x0, y0, z0, 
-                            xn, yn, zn, invert, len(scalars), CPtrToDouble(scalars))
+                            xn, yn, zn, invert, NScalars, CPtrToDouble(fullScalars))
 
 ################################################################################
 
@@ -76,13 +76,13 @@ _lib.cropSphereFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double
                                   POINTER(c_double), POINTER(c_int), c_int, c_int, POINTER(c_double)]
 
 # crop sphere filter
-def cropSphereFilter(visibleAtoms, pos, xCentre, yCentre, zCentre, radius, cellDims, PBC, invertSelection, scalars):
+def cropSphereFilter(visibleAtoms, pos, xCentre, yCentre, zCentre, radius, cellDims, PBC, invertSelection, NScalars, fullScalars):
     """
     Crop sphere filter.
     
     """
     return _lib.cropSphereFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), xCentre, yCentre, zCentre, 
-                                 radius, CPtrToDouble(cellDims), CPtrToInt(PBC), invertSelection, len(scalars), CPtrToDouble(scalars))
+                                 radius, CPtrToDouble(cellDims), CPtrToInt(PBC), invertSelection, NScalars, CPtrToDouble(fullScalars))
 
 ################################################################################
 
@@ -92,29 +92,30 @@ _lib.cropFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_d
                             c_double, c_double, c_int, c_int, c_int, c_int, c_int, POINTER(c_double)]
 
 # crop filter
-def cropFilter(visibleAtoms, pos, xmin, xmax, ymin, ymax, zmin, zmax, xEnabled, yEnabled, zEnabled, invertSelection, scalars):
+def cropFilter(visibleAtoms, pos, xmin, xmax, ymin, ymax, zmin, zmax, xEnabled, yEnabled, zEnabled, invertSelection, NScalars, fullScalars):
     """
     Crop filter.
     
     """
     return _lib.cropFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), xmin, xmax, ymin, ymax, 
-                           zmin, zmax, xEnabled, yEnabled, zEnabled, invertSelection, len(scalars), CPtrToDouble(scalars))
+                           zmin, zmax, xEnabled, yEnabled, zEnabled, invertSelection, NScalars, CPtrToDouble(fullScalars))
 
 ################################################################################
 
 # displacement filter prototype
 _lib.displacementFilter.restype = c_int
 _lib.displacementFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_int, POINTER(c_double), c_int, POINTER(c_double), 
-                                    POINTER(c_double), POINTER(c_int), c_double, c_double]
+                                    POINTER(c_double), POINTER(c_int), c_double, c_double, c_int, POINTER(c_double), c_int]
 
 # displacement filter
-def displacementFilter(visibleAtoms, scalars, pos, refPos, cellDims, PBC, minDisp, maxDisp):
+def displacementFilter(visibleAtoms, scalars, pos, refPos, cellDims, PBC, minDisp, maxDisp, NScalars, fullScalars, filteringEnabled):
     """
     Displacement filter.
     
     """
     return _lib.displacementFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(scalars), CPtrToDouble(scalars), len(pos), CPtrToDouble(pos), 
-                                   len(refPos), CPtrToDouble(refPos), CPtrToDouble(cellDims), CPtrToInt(PBC), minDisp, maxDisp)
+                                   len(refPos), CPtrToDouble(refPos), CPtrToDouble(cellDims), CPtrToInt(PBC), minDisp, maxDisp, NScalars, 
+                                   CPtrToDouble(fullScalars), int(filteringEnabled))
 
 ################################################################################
 
@@ -123,12 +124,12 @@ _lib.KEFilter.restype = c_int
 _lib.KEFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_int, POINTER(c_double)]
 
 # kinetic energy filter
-def KEFilter(visibleAtoms, KE, minKE, maxKE, scalars):
+def KEFilter(visibleAtoms, KE, minKE, maxKE, NScalars, fullScalars):
     """
     Kinetic energy filter.
     
     """
-    return _lib.KEFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(KE), CPtrToDouble(KE), minKE, maxKE, len(scalars), CPtrToDouble(scalars))
+    return _lib.KEFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(KE), CPtrToDouble(KE), minKE, maxKE, NScalars, CPtrToDouble(fullScalars))
 
 ################################################################################
 
@@ -137,12 +138,12 @@ _lib.PEFilter.restype = c_int
 _lib.PEFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_int, POINTER(c_double)]
 
 # potential energy filter
-def PEFilter(visibleAtoms, PE, minPE, maxPE, scalars):
+def PEFilter(visibleAtoms, PE, minPE, maxPE, NScalars, fullScalars):
     """
     Potential energy filter.
     
     """
-    return _lib.PEFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(PE), CPtrToDouble(PE), minPE, maxPE, len(scalars), CPtrToDouble(scalars))
+    return _lib.PEFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(PE), CPtrToDouble(PE), minPE, maxPE, NScalars, CPtrToDouble(fullScalars))
 
 ################################################################################
 
@@ -151,13 +152,13 @@ _lib.chargeFilter.restype = c_int
 _lib.chargeFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_int, POINTER(c_double)]
 
 # charge filter
-def chargeFilter(visibleAtoms, charge, minCharge, maxCharge, scalars):
+def chargeFilter(visibleAtoms, charge, minCharge, maxCharge, NScalars, fullScalars):
     """
     Charge filter.
     
     """
     return _lib.chargeFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(charge), CPtrToDouble(charge), 
-                             minCharge, maxCharge, len(scalars), CPtrToDouble(scalars))
+                             minCharge, maxCharge, NScalars, CPtrToDouble(fullScalars))
 
 ################################################################################
 
@@ -165,62 +166,68 @@ def chargeFilter(visibleAtoms, charge, minCharge, maxCharge, scalars):
 _lib.coordNumFilter.restype = c_int
 _lib.coordNumFilter.argtypes = [c_int, POINTER(c_int), POINTER(c_double), POINTER(c_int), c_int, POINTER(c_double), 
                                 POINTER(c_double), c_double, POINTER(c_double), POINTER(c_int), POINTER(c_double), POINTER(c_double), 
-                                POINTER(c_double), c_int, c_int]
+                                POINTER(c_double), c_int, c_int, c_int, POINTER(c_double), c_int]
 
 # coordination number filter
 def coordNumFilter(visibleAtoms, pos, specie, NSpecies, bondMinArray, bondMaxArray, approxBoxWidth, cellDims, PBC, 
-                   minPos, maxPos, coordArray, minCoordNum, maxCoordNum):
+                   minPos, maxPos, coordArray, minCoordNum, maxCoordNum, NScalars, fullScalars, filteringEnabled):
     """
     Coordination number filter.
     
     """
     return _lib.coordNumFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), CPtrToDouble(pos), CPtrToInt(specie), NSpecies, CPtrToDouble(bondMinArray), 
                                CPtrToDouble(bondMaxArray), approxBoxWidth, CPtrToDouble(cellDims), CPtrToInt(PBC), CPtrToDouble(minPos), 
-                               CPtrToDouble(maxPos), CPtrToDouble(coordArray), minCoordNum, maxCoordNum)
+                               CPtrToDouble(maxPos), CPtrToDouble(coordArray), minCoordNum, maxCoordNum, NScalars, CPtrToDouble(fullScalars), 
+                               int(filteringEnabled))
 
 ################################################################################
 
 # voronoi volume filter prototype
 _lib.voronoiVolumeFilter.restype = c_int
-_lib.voronoiVolumeFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_int, POINTER(c_double)]
+_lib.voronoiVolumeFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_int, 
+                                     POINTER(c_double), c_int, POINTER(c_double), c_int]
 
 # voronoi volume filter
-def voronoiVolumeFilter(visibleAtoms, volume, minVolume, maxVolume, scalars):
+def voronoiVolumeFilter(visibleAtoms, volume, minVolume, maxVolume, scalars, NScalars, fullScalars, filteringEnabled):
     """
     Voronoi volume filter.
     
     """
     return _lib.voronoiVolumeFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(volume), CPtrToDouble(volume), 
-                                    minVolume, maxVolume, len(scalars), CPtrToDouble(scalars))
+                                    minVolume, maxVolume, len(scalars), CPtrToDouble(scalars), NScalars, 
+                                    CPtrToDouble(fullScalars), int(filteringEnabled))
 
 ################################################################################
 
 # voronoi neighbours filter prototype
 _lib.voronoiNeighboursFilter.restype = c_int
-_lib.voronoiNeighboursFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_int), c_int, c_int, c_int, POINTER(c_double)]
+_lib.voronoiNeighboursFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_int), c_int, c_int, c_int, 
+                                         POINTER(c_double), c_int, POINTER(c_double), c_int]
 
 # voronoi neighbours filter
-def voronoiNeighboursFilter(visibleAtoms, numNebsArray, minNebs, maxNebs, scalars):
+def voronoiNeighboursFilter(visibleAtoms, numNebsArray, minNebs, maxNebs, scalars, NScalars, fullScalars, filteringEnabled):
     """
     Voronoi neighbours filter.
     
     """
     return _lib.voronoiNeighboursFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(numNebsArray), CPtrToInt(numNebsArray), 
-                                        minNebs, maxNebs, len(scalars), CPtrToDouble(scalars))
+                                        minNebs, maxNebs, len(scalars), CPtrToDouble(scalars), NScalars, CPtrToDouble(fullScalars), 
+                                        int(filteringEnabled))
 
 ################################################################################
 
 # Q4 filter prototype
 _lib.Q4Filter.restype = c_int
 _lib.Q4Filter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_double, c_int, POINTER(c_double), 
-                          POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int)]
+                          POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int), c_int, POINTER(c_double), c_int]
 
 # Q4 filter
-def Q4Filter(visibleAtoms, pos, minQ4, maxQ4, maxBondDistance, scalars, minPos, maxPos, cellDims, PBC):
+def Q4Filter(visibleAtoms, pos, minQ4, maxQ4, maxBondDistance, scalars, minPos, maxPos, cellDims, PBC, NScalars, fullScalars, 
+             filteringEnabled):
     """
     Q4 filter.
     
     """
     return _lib.Q4Filter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), minQ4, maxQ4, maxBondDistance, 
                          len(scalars), CPtrToDouble(scalars), CPtrToDouble(minPos), CPtrToDouble(maxPos), CPtrToDouble(cellDims), 
-                         CPtrToInt(PBC))
+                         CPtrToInt(PBC), NScalars, CPtrToDouble(fullScalars), int(filteringEnabled))
