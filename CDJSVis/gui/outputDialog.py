@@ -367,16 +367,16 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
             settingsDict["ylabel"] = "Fraction"
             
             # bar plot
-            dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "histogram plot", "bar", (binEdges[:-1], fracHist), 
-                                        {"width": binWidth,}, settingsDict=settingsDict)
+            dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "%s histogram" % self.scalarsID, "bar", 
+                                        (binEdges[:-1], fracHist), {"width": binWidth,}, settingsDict=settingsDict)
         
         else:
             # y label
             settingsDict["ylabel"] = "N"
             
             # histogram plot
-            dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "histogram plot", "hist", (scalars, numBins), 
-                                        {"range": (minVal, maxVal),}, settingsDict=settingsDict)
+            dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "%s histogram" % self.scalarsID, "hist", 
+                                        (scalars, numBins), {"range": (minVal, maxVal),}, settingsDict=settingsDict)
         
         # show dialog
         dlg.show()
