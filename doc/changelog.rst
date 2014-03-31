@@ -1,7 +1,7 @@
 Changelog
 =========
 
-**dev**
+**v140331**
 
 * Add ability to store multiple scalar values
 * Rename 'filter list' to 'property/filter list'
@@ -10,6 +10,7 @@ Changelog
 * Added quick add combo box to property/filter list (quicker than adding via dialog)
 * When selecting atom property from colouring options scalar bar text is automatically determined
 * Add option to plot histogram of scalar values (to Plot tab in output dialog)
+* Fix not being able to use native file dialog
 
 **v140328**
 
