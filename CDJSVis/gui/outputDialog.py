@@ -13,6 +13,8 @@ import subprocess
 import copy
 import logging
 import time
+import math
+import functools
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -45,6 +47,9 @@ class OutputDialog(QtGui.QDialog):
         self.setWindowTitle("Output - Render window %d" % index)
         self.setModal(0)
         
+        # size
+        self.resize(QtCore.QSize(350, 600))
+        
         # layout
         outputTabLayout = QtGui.QVBoxLayout(self)
         outputTabLayout.setContentsMargins(0, 0, 0, 0)
@@ -75,18 +80,7 @@ class OutputDialog(QtGui.QDialog):
         
         self.fileTab = FileTab(self, self.mainWindow, self.width)
         fileTabLayout.addWidget(self.fileTab)
-        
         self.outputTypeTabBar.addTab(fileTabWidget, "File")
-        
-        # rdf tab
-#         rdfTabWidget = QtGui.QWidget()
-#         rdfTabLayout = QtGui.QVBoxLayout(rdfTabWidget)
-#         rdfTabLayout.setContentsMargins(0, 0, 0, 0)
-#         
-#         self.rdfTab = RDFTab(self, self.mainWindow, self.width)
-#         rdfTabLayout.addWidget(self.rdfTab)
-#         
-#         self.outputTypeTabBar.addTab(rdfTabWidget, "Plot")
         
         # plot tab
         self.plotTab = PlotTab(self.mainWindow, self.rendererWindow, parent=self)
@@ -101,6 +95,126 @@ class OutputDialog(QtGui.QDialog):
 
 ################################################################################
 
+class ScalarsHistogramOptionsForm(genericForm.GenericForm):
+    """
+    Main options form for scalars histograms
+    
+    """
+    def __init__(self, parent, mainWindow, rendererWindow):
+        super(ScalarsHistogramOptionsForm, self).__init__(parent, 0, "Scalars histograms")
+        
+        self.mainWindow = mainWindow
+        self.rendererWindow = rendererWindow
+        
+        # current number of scalar plots
+        self.numScalarsPlots = 0
+        
+        # current plots
+        self.currentPlots = {}
+        
+        # add combo box
+        self.scalarsCombo = QtGui.QComboBox()
+        self.scalarsCombo.currentIndexChanged[int].connect(self.scalarsComboChanged)
+        self.newRow().addWidget(self.scalarsCombo)
+        
+        # add stacked widget
+        self.stackedWidget = QtGui.QStackedWidget()
+        self.newRow().addWidget(self.stackedWidget)
+        
+        self.logger = logging.getLogger(__name__)
+    
+    def scalarsComboChanged(self, index):
+        """
+        Scalars combo changed
+        
+        """
+        self.stackedWidget.setCurrentIndex(index)
+    
+    def removeScalarPlotOptions(self):
+        """
+        Remove scalar plot options
+        
+        """
+        self.logger.debug("Removing scalar plot options")
+        for scalarsID in self.currentPlots.keys():
+            self.logger.debug(" Removing: '%s'", scalarsID)
+            form = self.currentPlots.pop(scalarsID)
+            self.stackedWidget.removeWidget(form)
+            form.deleteLater()
+            self.scalarsCombo.removeItem(0)
+    
+    def addScalarPlotOptions(self, scalarsID, scalarsName, scalarsArray):
+        """
+        Add plot for scalar 'name'
+        
+        """
+        # don't add duplicates (should never happen anyway)
+        if scalarsID in self.currentPlots:
+            return
+        
+        self.logger.debug("Adding scalar plot option: '%s'", scalarsID)
+        
+        # create form
+        form = GenericHistogramPlotForm(self, scalarsID, scalarsName, scalarsArray)
+        
+        # add to stacked widget
+        self.stackedWidget.addWidget(form)
+        
+        # add to combo box
+        self.scalarsCombo.addItem(scalarsID)
+        
+        # store in dict
+        self.currentPlots[scalarsID] = form
+    
+    def refreshScalarPlotOptions(self):
+        """
+        Refresh plot options
+        
+        * Called after pipeline page has run filters/single filter has run
+        * loops over all filter lists under pipeline page, adding plots for all scalars
+        * plots named after pipeline index and filter list index
+        * also called when renderWindow pipeline index changes
+        * also called when filter lists are cleared, etc...?
+        
+        """
+        self.logger.debug("Refreshing plot options")
+        
+        # remove old options
+        self.removeScalarPlotOptions()
+        
+        # get current pipeline page
+        pp = self.rendererWindow.getCurrentPipelinePage()
+        ppindex = pp.pipelineIndex
+        
+        # get filter lists
+        filterLists = pp.filterLists
+        
+        # loop over filter lists
+        self.logger.debug("Looping over filter lists (%d)", len(filterLists))
+        self.numScalarsPlots = 0
+        for filterList in filterLists:
+            # make unique name for pipeline page/filter list combo
+            findex = filterList.tab
+            filterListID = "%d-%d" % (ppindex, findex)
+            self.logger.debug("Filter list %d; id '%s'", filterList.tab, filterListID)
+            
+            # loop over scalars in scalarsDict on filterer
+            for scalarsName, scalarsArray in filterList.filterer.scalarsDict.iteritems():
+                # make unique id
+                scalarsID = "%s (%s)" % (scalarsName, filterListID)
+                
+                # add
+                self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
+                self.numScalarsPlots += 1
+        
+        # hide if no plots, otherwise show
+        if self.numScalarsPlots > 0:
+            self.show()
+        else:
+            self.hide()
+
+################################################################################
+
 class PlotTab(QtGui.QWidget):
     """
     Plot tab
@@ -111,8 +225,6 @@ class PlotTab(QtGui.QWidget):
         
         self.mainWindow = mainWindow
         self.rendererWindow = rendererWindow
-        self.currentPlots = {}
-        self.currentPlotsRows = {}
         
         # layout
         self.layout = QtGui.QVBoxLayout(self)
@@ -123,6 +235,13 @@ class PlotTab(QtGui.QWidget):
         row = self.newRow()
         self.rdfForm = RDFForm(self, self.mainWindow)
         row.addWidget(self.rdfForm)
+        
+        # scalars histograms
+        self.scalarsForm = ScalarsHistogramOptionsForm(self, mainWindow, rendererWindow)
+        row = self.newRow()
+        row.addWidget(self.scalarsForm)
+        
+        self.layout.addStretch(1)
         
         # logging
         self.logger = logging.getLogger(__name__)
@@ -136,97 +255,6 @@ class PlotTab(QtGui.QWidget):
         self.layout.addWidget(row)
         
         return row
-    
-    def removeScalarPlotOptions(self, name):
-        """
-        Remove scalar plot options
-        
-        """
-        row = self.currentPlotsRows.pop(name)
-        form = self.currentPlots.pop(name)
-        self.layout.removeWidget(row)
-        form.deleteLater()
-    
-    def addScalarPlotOptions(self, scalarsID, scalarsName, scalarsArray):
-        """
-        Add plot for scalar 'name'
-        
-        """
-        if scalarsID in self.currentPlots:
-            return
-        
-        self.logger.debug("Adding scalar plot option: '%s' (id: '%s')", scalarsName, scalarsID)
-        
-        row = self.newRow()
-        form = GenericHistogramPlotForm(self, scalarsID, scalarsName, scalarsArray)
-        self.currentPlots[scalarsID] = form
-        self.currentPlotsRows[scalarsID] = row
-        row.addWidget(form)
-    
-    def refreshPlotOptions(self):
-        """
-        Refresh plot options
-        
-        * Called after pipeline page has run filters/single filter has run
-        * loops over all filter lists under pipeline page, adding plots for all scalars
-        * plots named after pipeline index and filter list index
-        * also called when renderWindow pipeline index changes
-        * also called when filter lists are cleared, etc...?
-        
-        """
-        self.logger.debug("Refreshing plot options")
-        
-        # get current pipeline page
-        pp = self.rendererWindow.getCurrentPipelinePage()
-        ppindex = pp.pipelineIndex
-        
-        # get filter lists
-        filterLists = pp.filterLists
-        
-        # loop over filter lists
-        self.logger.debug("  Looping over filter lists (%d)", len(filterLists))
-        availableScalars = []
-        for filterList in filterLists:
-            # make unique name for pipeline page/filter list combo
-            findex = filterList.tab
-            filterListID = "%d-%d" % (ppindex, findex)
-            self.logger.debug("    Filter list %d; id '%s'", filterList.tab, filterListID)
-            
-            # loop over scalars in scalarsDict on filterer
-            for scalarsName in filterList.filterer.scalarsDict:
-                # make unique name, add to list
-                scalarsID = "%s-%s" % (filterListID, scalarsName.replace(" ", "_"))
-                self.logger.debug("      Found scalars '%s'; id '%s'", scalarsName, scalarsID)
-                availableScalars.append(scalarsID)
-                
-        # compare unique names to those in currentPlots dict; removing as necessary
-#         self.logger.debug("  Removing old scalars no longer available")
-#         for oldScalarsName, oldScalarsForm in self.currentPlots:
-#             if oldScalarsName not in availableScalars:
-#                 self.logger.debug("    Removing: '%s'", oldScalarsName)
-#                 self.removeScalarPlotOptions(oldScalarsName)
-        
-        # remove all
-        for oldScalarsName in self.currentPlots.keys():
-            self.logger.debug("    Removing: '%s'", oldScalarsName)
-            self.removeScalarPlotOptions(oldScalarsName)
-        
-        # add plots that aren't already added...
-        self.logger.debug("  Adding available scalars")
-        count = 0
-        for filterList in filterLists:
-            # make unique name for pipeline page/filter list combo
-            findex = filterList.tab
-            filterListID = "%d-%d" % (ppindex, findex)
-            
-            # loop over scalars in scalarsDict on filterer
-            for scalarsName, scalarsArray in filterList.filterer.scalarsDict.iteritems():
-                # id
-                scalarsID = availableScalars[count]
-                count += 1
-                
-                # add
-                self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
 
 ################################################################################
 
@@ -236,7 +264,7 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
     
     """
     def __init__(self, parent, scalarsID, scalarsName, scalarsArray):
-        super(GenericHistogramPlotForm, self).__init__(parent, 0, "%s histogram" % scalarsName)
+        super(GenericHistogramPlotForm, self).__init__(parent, 0, "%s histogram" % scalarsID)
         
         self.parent = parent
         self.scalarsID = scalarsID
@@ -251,10 +279,6 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         # default 
         self.numBins = 10
         self.showAsFraction = False
-        
-        # list number
-        row = self.newRow()
-        row.addWidget(QtGui.QLabel("Property/filter list %s" % scalarsID.split("-")[1]))
         
         # min/max labels
         row = self.newRow()
@@ -276,7 +300,11 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         row.addWidget(numBinsSpin)
         
         # show as fraction option
-        
+        showAsFractionCheck = QtGui.QCheckBox("Show as fraction")
+        showAsFractionCheck.setCheckState(QtCore.Qt.Unchecked)
+        showAsFractionCheck.stateChanged.connect(self.showAsFractionChanged)
+        row = self.newRow()
+        row.addWidget(showAsFractionCheck)
         
         # plot button
         plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Plotter.png")), "Plot")
@@ -287,12 +315,22 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         # show
         self.show()
     
+    def showAsFractionChanged(self, checkState):
+        """
+        Show as fraction changed
+        
+        """
+        if checkState == QtCore.Qt.Unchecked:
+            self.showAsFraction = False
+        else:
+            self.showAsFraction = True
+    
     def numBinsChanged(self, val):
         """
         Number of bins changed
         
         """
-        self.NBins = NBins
+        self.numBins = val
     
     def makePlot(self):
         """
@@ -302,39 +340,46 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         self.logger.debug("Plotting '%s'", self.scalarsID)
         
         scalars = self.scalarsArray
-        minVal = self.scalarMin
-        maxVal = self.scalarMax
+        minVal = math.floor(self.scalarMin)
+        maxVal = math.ceil(self.scalarMax)
         numBins = self.numBins
         
         if maxVal == minVal:
             self.logger.error("Max val == min val; not plotting histogram")
             return
         
-        # prepare to plot
+        # settings dict
         settingsDict = {}
-        settingsDict["title"] = "a histogram"
-        settingsDict["xlabel"] = "och"
-        settingsDict["ylabel"] = "justnow"
+        settingsDict["xlabel"] = self.scalarsName
         
-        # plot dialog
-        dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "histogram plot", "hist", (scalars, numBins), 
-                                    {"range": (minVal, maxVal),}, settingsDict=settingsDict)
+        # make plot dialog
+        if self.showAsFraction:
+            # compute histogram
+            hist, binEdges = np.histogram(scalars, numBins, range=(minVal, maxVal))
+             
+            # make fraction
+            fracHist = hist / float(len(scalars))
+            
+            # bin width
+            binWidth = (maxVal - minVal) / numBins
+            
+            # y label
+            settingsDict["ylabel"] = "Fraction"
+            
+            # bar plot
+            dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "histogram plot", "bar", (binEdges[:-1], fracHist), 
+                                        {"width": binWidth,}, settingsDict=settingsDict)
+        
+        else:
+            # y label
+            settingsDict["ylabel"] = "N"
+            
+            # histogram plot
+            dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "histogram plot", "hist", (scalars, numBins), 
+                                        {"range": (minVal, maxVal),}, settingsDict=settingsDict)
+        
+        # show dialog
         dlg.show()
-        
-        # compute histogram
-#         if asFraction:
-#             # compute histogram
-#             hist, binEdges = pylab.histogram(data, NBins, range=(xmin, xmax))
-#             
-#             # make fraction
-#             fracHist = hist / float(N)
-#             
-#             # plot
-#             self.axes.bar(binEdges[:-1], fracHist, width=binWidth, color=settings.colour, label=settings.label)
-#         
-#         else:
-#             # plot
-#             self.axes.hist(data, NBins, range=(xmin, xmax), color=settings.colour, label=settings.label)
 
 ################################################################################
 
@@ -646,11 +691,10 @@ class FileTab(QtGui.QWidget):
         Full lattice check changed.
         
         """
-        if val == QtCore.Qt.Checked:
-            self.writeFullLattice = True
-        
-        else:
+        if val == QtCore.Qt.Unchecked:
             self.writeFullLattice = False
+        else:
+            self.writeFullLattice = True
     
     def saveToFile(self):
         """
@@ -672,8 +716,7 @@ class FileTab(QtGui.QWidget):
         # gather vis atoms
         visibleAtoms = self.rendererWindow.gatherVisibleAtoms()
         
-        #TODO: this should write visible atoms only, not whole lattice!
-        
+        # write in C lib
         output_c.writeLattice(filename, visibleAtoms, lattice.cellDims, lattice.specieList, lattice.specie, lattice.pos, lattice.charge, self.writeFullLattice)
     
     def saveToFileDialog(self):
@@ -694,7 +737,6 @@ class FileTab(QtGui.QWidget):
         """
         self.outputFileType = str(fileType)
 
-
 ################################################################################
 
 class ImageTab(QtGui.QWidget):
@@ -710,16 +752,6 @@ class ImageTab(QtGui.QWidget):
         self.renderType = "VTK"
         self.imageFormat = "jpg"
 #        self.overlayImage = False
-        
-        # check ffmpeg/povray installed
-#         self.ffmpeg = utilities.checkForExe("ffmpeg")
-#         self.povray = utilities.checkForExe("povray")
-#         
-#         if self.ffmpeg:
-#             self.mainWindow.console.write("'ffmpeg' executable located at: %s" % (self.ffmpeg,))
-#         
-#         if self.povray:
-#             self.mainWindow.console.write("'povray' executable located at: %s" % (self.povray,))
         
         imageTabLayout = QtGui.QVBoxLayout(self)
 #        imageTabLayout.setContentsMargins(0, 0, 0, 0)
@@ -737,8 +769,7 @@ class ImageTab(QtGui.QWidget):
         # render type (povray or vtk)
         renderTypeButtonGroup = QtGui.QButtonGroup(self)
         renderTypeButtonGroup.setExclusive(1)
-        
-        self.connect(renderTypeButtonGroup, QtCore.SIGNAL('buttonClicked(int)'), self.setRenderType)
+        renderTypeButtonGroup.buttonClicked[int].connect(self.setRenderType)
         
         self.POVButton = QtGui.QPushButton(QtGui.QIcon(iconPath("pov-icon.svg")), "POV-Ray")
         self.POVButton.setCheckable(1)
@@ -766,8 +797,7 @@ class ImageTab(QtGui.QWidget):
         
         imageFormatButtonGroup = QtGui.QButtonGroup(self)
         imageFormatButtonGroup.setExclusive(1)
-        
-        self.connect(imageFormatButtonGroup, QtCore.SIGNAL('buttonClicked(int)'), self.setImageFormat)
+        imageFormatButtonGroup.buttonClicked[int].connect(self.setImageFormat)
         
         self.JPEGCheck = QtGui.QCheckBox("JPEG")
         self.JPEGCheck.setChecked(1)
@@ -796,7 +826,6 @@ class ImageTab(QtGui.QWidget):
         # tab bar for different types of image output
         self.imageTabBar = QtGui.QTabWidget(self)
         self.imageTabBar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-        self.connect(self.imageTabBar, QtCore.SIGNAL('currentChanged(int)'), self.imageTabBarChanged)
         
         # add tabs to tab bar
         singleImageTabWidget = QtGui.QWidget()
@@ -821,13 +850,6 @@ class ImageTab(QtGui.QWidget):
         self.imageTabBar.addTab(imageRotateTabWidget, "Rotate")
         
         imageTabLayout.addWidget(self.imageTabBar)
-    
-    def imageTabBarChanged(self, val):
-        """
-        
-        
-        """
-        pass
     
     def setImageFormat(self, val):
         """
@@ -912,7 +934,7 @@ class ImageTab(QtGui.QWidget):
         
         finally:
             os.chdir(CWD)
-        
+
 
 ################################################################################
 class SingleImageTab(QtGui.QWidget):
@@ -945,8 +967,7 @@ class SingleImageTab(QtGui.QWidget):
         self.imageFileName.setFixedWidth(120)
         saveImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
         saveImageButton.setToolTip("Save image")
-        self.connect(saveImageButton, QtCore.SIGNAL('clicked()'), 
-                     lambda showProgress=True: self.saveSingleImage(showProgress))
+        saveImageButton.clicked.connect(functools.partial(self.saveSingleImage, True))
         
         rowLayout.addWidget(label)
         rowLayout.addWidget(self.imageFileName)
@@ -964,7 +985,7 @@ class SingleImageTab(QtGui.QWidget):
         saveImageDialogButton.setToolTip("Save image")
         saveImageDialogButton.setCheckable(0)
         saveImageDialogButton.setFixedWidth(150)
-        self.connect(saveImageDialogButton, QtCore.SIGNAL('clicked()'), self.saveSingleImageDialog)
+        saveImageDialogButton.clicked.connect(self.saveSingleImageDialog)
         
         rowLayout.addWidget(saveImageDialogButton)
         
@@ -978,11 +999,11 @@ class SingleImageTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         self.overwriteCheck = QtGui.QCheckBox("Overwrite")
-        self.connect(self.overwriteCheck, QtCore.SIGNAL('stateChanged(int)'), self.overwriteCheckChanged)
+        self.overwriteCheck.stateChanged[int].connect(self.overwriteCheckChanged)
         
         self.openImageCheck = QtGui.QCheckBox("Open image")
         self.openImageCheck.setChecked(True)
-        self.connect(self.openImageCheck, QtCore.SIGNAL('stateChanged(int)'), self.openImageCheckChanged)
+        self.openImageCheck.stateChanged[int].connect(self.openImageCheckChanged)
         
         rowLayout.addWidget(self.overwriteCheck)
         rowLayout.addWidget(self.openImageCheck)
@@ -1038,11 +1059,6 @@ class SingleImageTab(QtGui.QWidget):
         if showProgress and self.parent.renderType == "POV":
             QtGui.QApplication.restoreOverrideCursor()
             progress.cancel()
-        
-        # change back to original working dir
-#        if len(head):
-#            os.chdir(OWD)
-#            filename = os.path.join(head, tail)
         
         if filename is None:
             print "SAVE IMAGE FAILED"
@@ -1695,7 +1711,7 @@ class ImageRotateTab(QtGui.QWidget):
                 
         self.fileprefix = QtGui.QLineEdit(self.fileprefixText)
         self.fileprefix.setFixedWidth(120)
-        self.connect(self.fileprefix, QtCore.SIGNAL('textChanged(str)'), self.fileprefixChanged)
+        self.fileprefix.textChanged[str].connect(self.fileprefixChanged)
         
         rowLayout.addWidget(label)
         rowLayout.addWidget(self.fileprefix)
@@ -1729,7 +1745,7 @@ class ImageRotateTab(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         self.overwriteCheck = QtGui.QCheckBox("Overwrite")
-        self.connect(self.overwriteCheck, QtCore.SIGNAL('stateChanged(int)'), self.overwriteCheckChanged)
+        self.overwriteCheck.stateChanged[int].connect(self.overwriteCheckChanged)
         
         rowLayout.addWidget(self.overwriteCheck)
         

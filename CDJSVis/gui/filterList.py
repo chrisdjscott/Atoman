@@ -392,7 +392,7 @@ class FilterList(QtGui.QWidget):
             item = self.listItems.currentItem()
         
         item.filterSettings.hide()
-        utils.positionWindow(item.filterSettings, item.filterSettings.size(), self.mainWindow.desktop, self)
+#         utils.positionWindow(item.filterSettings, item.filterSettings.size(), self.mainWindow.desktop, self)
         item.filterSettings.show()
     
     def applyList(self):
@@ -572,7 +572,7 @@ class FilterList(QtGui.QWidget):
                 self.listItems.addItem(item)
                 
                 # position form
-                utils.positionWindow(form, form.sizeHint(), self.mainWindow.desktop, self)
+#                 utils.positionWindow(form, form.sizeHint(), self.mainWindow.desktop, self)
                 
                 # show options form
                 form.show()

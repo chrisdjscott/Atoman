@@ -472,9 +472,10 @@ class PipelineForm(QtGui.QWidget):
         
         self.refreshOnScreenInfo()
         
+        # refresh plot options
         for rw in self.rendererWindows:
             if rw.currentPipelineIndex == self.pipelineIndex:
-                rw.outputDialog.plotTab.refreshPlotOptions()
+                rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
         
         self.mainWindow.setStatus("Ready")
     

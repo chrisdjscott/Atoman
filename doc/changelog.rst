@@ -9,6 +9,7 @@ Changelog
 * Items in property/filter lists can be reordered by dragging
 * Added quick add combo box to property/filter list (quicker than adding via dialog)
 * When selecting atom property from colouring options scalar bar text is automatically determined
+* Add option to plot histogram of scalar values (to Plot tab in output dialog)
 
 **v140328**
 
