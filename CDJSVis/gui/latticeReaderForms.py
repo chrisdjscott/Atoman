@@ -25,8 +25,6 @@ except ImportError:
     sys.exit(36)
 
 
-
-
 ################################################################################
 
 class GenericReaderForm(GenericForm):
@@ -92,16 +90,18 @@ class GenericReaderForm(GenericForm):
             return None
         
         fdiag = QtGui.QFileDialog()
-        
+         
         filesString = str(self.fileFormatString)
         
-        if platform.system() == "Darwin":
-            filenames = fdiag.getOpenFileNames(self.parent.parent, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+        # temporarily remove stays on top hint on systems dialog
+        sd = self.parent.parent
+        sd.tmpHide()
         
-        else:
-            filenames = fdiag.getOpenFileNames(self.parent.parent, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
+        filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
         
         filenames = [str(fn) for fn in filenames]
+        
+        sd.showAgain()
         
         if not len(filenames):
             return None
@@ -741,12 +741,14 @@ class LbomdXYZReaderForm(GenericReaderForm):
         else:
             filesString = str(self.fileFormatString)
         
+        # temporarily remove stays on top hint on systems dialog
+        sd = self.parent.parent
+        sd.tmpHide()
+        
         if isRef:
-            if platform.system() == "Darwin":
-                filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+            filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
             
-            else:
-                filename = fdiag.getOpenFileName(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
+            sd.showAgain()
             
             filename = str(filename)
             
@@ -771,11 +773,9 @@ class LbomdXYZReaderForm(GenericReaderForm):
             result = self.openFile(filename=filename, isRef=isRef)
         
         else:
-            if platform.system() == "Darwin":
-                filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString, options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+            filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
             
-            else:
-                filenames = fdiag.getOpenFileNames(self, "%s - Open file" % (self.widgetTitle,), os.getcwd(), filesString)[0]
+            sd.showAgain()
             
             filenames = [str(fn) for fn in filenames]
             

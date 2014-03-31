@@ -25,7 +25,7 @@ class HelpFormSphinx(QtGui.QDialog):
         
         self.parent = parent
         
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+#         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.setModal(0)
         
