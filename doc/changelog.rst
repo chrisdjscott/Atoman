@@ -1,6 +1,10 @@
 Changelog
 =========
 
+**dev**
+
+* Fix bug in window positioning
+
 **v140331**
 
 * Add ability to store multiple scalar values
