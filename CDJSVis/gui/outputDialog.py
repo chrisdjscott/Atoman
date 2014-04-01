@@ -320,7 +320,9 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         self.scalarMax = np.max(scalarsArray)
         
         # default 
+        self.useNumBins = True
         self.numBins = 10
+        self.binWidth = 1.0
         self.showAsFraction = False
         
         # min/max labels
@@ -329,18 +331,37 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         row = self.newRow()
         row.addWidget(QtGui.QLabel("Max: %f" % self.scalarMax))
         
-        # num bins
-        label = QtGui.QLabel("Number of bins:")
-        row = self.newRow()
-        row.addWidget(label)
+        # num bins/bin width combo
+        binCombo = QtGui.QComboBox()
+        binCombo.addItem("Number of bins:")
+        binCombo.addItem("Bin width:")
+        binCombo.currentIndexChanged[int].connect(self.binComboChanged)
         
+        # bin stack
+        self.binStack = QtGui.QStackedWidget()
+        
+        # number of bins spin
         numBinsSpin = QtGui.QSpinBox()
         numBinsSpin.setMinimum(2)
-        numBinsSpin.setMaximum(1000)
+        numBinsSpin.setMaximum(999)
         numBinsSpin.setSingleStep(1)
         numBinsSpin.setValue(self.numBins)
         numBinsSpin.valueChanged.connect(self.numBinsChanged)
-        row.addWidget(numBinsSpin)
+        self.binStack.addWidget(numBinsSpin)
+        
+        # bin width spin
+        binWidthSpin = QtGui.QDoubleSpinBox()
+        binWidthSpin.setMinimum(0.01)
+        binWidthSpin.setMaximum(99.99)
+        binWidthSpin.setSingleStep(0.1)
+        binWidthSpin.setValue(self.binWidth)
+        binWidthSpin.valueChanged.connect(self.binWidthChanged)
+        self.binStack.addWidget(binWidthSpin)
+        
+        # row
+        row = self.newRow()
+        row.addWidget(binCombo)
+        row.addWidget(self.binStack)
         
         # show as fraction option
         showAsFractionCheck = QtGui.QCheckBox("Show as fraction")
@@ -357,6 +378,27 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         
         # show
         self.show()
+    
+    def binWidthChanged(self, val):
+        """
+        Bin width changed
+        
+        """
+        self.binWidth = val
+    
+    def binComboChanged(self, index):
+        """
+        Bin combo changed
+        
+        """
+        if index == 0:
+            self.useNumBins = True
+            self.binStack.setCurrentIndex(index)
+        elif index == 1:
+            self.useNumBins = False
+            self.binStack.setCurrentIndex(index)
+        else:
+            self.logger.error("Bin combo index error (%d)", index)
     
     def showAsFractionChanged(self, checkState):
         """
@@ -385,11 +427,24 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         scalars = self.scalarsArray
         minVal = math.floor(self.scalarMin)
         maxVal = math.ceil(self.scalarMax)
-        numBins = self.numBins
         
         if maxVal == minVal:
             self.logger.error("Max val == min val; not plotting histogram")
             return
+        
+        # number of bins
+        if self.useNumBins:
+            numBins = self.numBins
+        else:
+            binWidth = self.binWidth
+            
+            # max
+            maxVal = minVal
+            while maxVal < self.scalarMax:
+                maxVal += binWidth
+            
+            # num bins
+            numBins = math.ceil((maxVal - minVal) / binWidth)
         
         # settings dict
         settingsDict = {}
