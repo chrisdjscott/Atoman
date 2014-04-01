@@ -59,7 +59,6 @@ class OutputDialog(QtGui.QDialog):
         # add tab bar
         self.outputTypeTabBar = QtGui.QTabWidget(self)
         self.outputTypeTabBar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-        self.connect(self.outputTypeTabBar, QtCore.SIGNAL('currentChanged(int)'), self.outputTypeTabBarChanged)
         
         # add tabs to tab bar
         
@@ -88,10 +87,6 @@ class OutputDialog(QtGui.QDialog):
         
         # add tab bar to layout
         outputTabLayout.addWidget(self.outputTypeTabBar)
-        
-        
-    def outputTypeTabBarChanged(self):
-        pass
 
 ################################################################################
 
@@ -101,7 +96,7 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
     
     """
     def __init__(self, parent, mainWindow, rendererWindow):
-        super(ScalarsHistogramOptionsForm, self).__init__(parent, 0, "Scalars histograms")
+        super(ScalarsHistogramOptionsForm, self).__init__(parent, 0, "Histogram plot options")
         
         self.mainWindow = mainWindow
         self.rendererWindow = rendererWindow
@@ -142,6 +137,50 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
             self.stackedWidget.removeWidget(form)
             form.deleteLater()
             self.scalarsCombo.removeItem(0)
+        
+        self.numScalarsPlots = 0
+    
+    def addAtomPropertyPlotOptions(self):
+        """
+        Add atom property plot options
+        
+        """
+        self.logger.debug("Adding atom property plot options")
+        
+        # get current pipeline page
+        pp = self.rendererWindow.getCurrentPipelinePage()
+        ppindex = pp.pipelineIndex
+        lattice = pp.inputState
+        
+        # add PE plot option
+        scalarsArray = lattice.PE
+        if np.min(scalarsArray) == 0 == np.max(scalarsArray):
+            self.logger.debug(" Skipping PE: all zero")
+        else:
+            self.logger.debug(" Adding PE plot")
+            scalarsName = "Potential energy"
+            scalarsID = "%s (%d)" % (scalarsName, ppindex)
+            self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
+        
+        # add KE plot option
+        scalarsArray = lattice.KE
+        if np.min(scalarsArray) == 0 == np.max(scalarsArray):
+            self.logger.debug(" Skipping KE: all zero")
+        else:
+            self.logger.debug(" Adding KE plot")
+            scalarsName = "Kinetic energy"
+            scalarsID = "%s (%d)" % (scalarsName, ppindex)
+            self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
+        
+        # add charge plot option
+        scalarsArray = lattice.charge
+        if np.min(scalarsArray) == 0 == np.max(scalarsArray):
+            self.logger.debug(" Skipping charge: all zero")
+        else:
+            self.logger.debug(" Adding charge plot")
+            scalarsName = "Charge"
+            scalarsID = "%s (%d)" % (scalarsName, ppindex)
+            self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
     
     def addScalarPlotOptions(self, scalarsID, scalarsName, scalarsArray):
         """
@@ -165,6 +204,9 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
         
         # store in dict
         self.currentPlots[scalarsID] = form
+        
+        # number of plots
+        self.numScalarsPlots += 1
     
     def refreshScalarPlotOptions(self):
         """
@@ -189,9 +231,11 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
         # get filter lists
         filterLists = pp.filterLists
         
-        # loop over filter lists
+        # first add atom properties (KE, PE, charge)
+        self.addAtomPropertyPlotOptions()
+        
+        # loop over filter lists, adding scalars
         self.logger.debug("Looping over filter lists (%d)", len(filterLists))
-        self.numScalarsPlots = 0
         for filterList in filterLists:
             # make unique name for pipeline page/filter list combo
             findex = filterList.tab
@@ -205,7 +249,6 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
                 
                 # add
                 self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
-                self.numScalarsPlots += 1
         
         # hide if no plots, otherwise show
         if self.numScalarsPlots > 0:
@@ -264,7 +307,7 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
     
     """
     def __init__(self, parent, scalarsID, scalarsName, scalarsArray):
-        super(GenericHistogramPlotForm, self).__init__(parent, 0, "%s histogram" % scalarsID)
+        super(GenericHistogramPlotForm, self).__init__(parent, 0, "%s plot options" % scalarsID)
         
         self.parent = parent
         self.scalarsID = scalarsID
