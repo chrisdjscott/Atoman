@@ -1,9 +1,11 @@
 Changelog
 =========
 
-**dev**
+**v140401**
 
 * Fix bug in window positioning
+* Add histogram plots for atom properties (PE, KE, charge)
+* Option to specify bin width instead of number of bins for histogram plots
 
 **v140331**
 
