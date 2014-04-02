@@ -9,5 +9,6 @@ Licenses
    license_scipy
    license_matplotlib
    license_pyside
+   license_vtk
    license_pil
-   license_qhull
+   
