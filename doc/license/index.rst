@@ -3,7 +3,7 @@ Licenses
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    license_numpy
    license_scipy
@@ -11,4 +11,6 @@ Licenses
    license_pyside
    license_vtk
    license_pil
-   
+   license_pyhull
+   license_qhull
+   license_voro

@@ -9,7 +9,7 @@ Source Initiative `licenses page
 <http://www.opensource.org/licenses>`_ for details on individual
 licenses. Non-BSD compatible licenses (eg LGPL) are acceptable in
 matplotlib toolkits.  For a discussion of the motivations behind the
-licencing choice, see :ref:`license-discussion`.
+licencing choice, see `Licenses <http://matplotlib.org/1.3.1/devel/license.html#license-discussion>`_.
 
 Copyright Policy
 ================

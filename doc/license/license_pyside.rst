@@ -2,8 +2,6 @@
 PySide license
 **************
 
-https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
-
 Copyright (C) 2009-2011 Nokia Corporation and/or its subsidiary(-ies).
 
 Contact: PySide team <contact@pyside.org>
@@ -16,3 +14,5 @@ This library is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 Lesser General Public License for more details.
+
+https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
