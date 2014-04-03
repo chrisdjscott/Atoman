@@ -1,6 +1,10 @@
 Changelog
 =========
 
+**dev**
+
+* Added app icon (icns file)
+
 **v140401**
 
 * Fix bug in window positioning

@@ -71,3 +71,20 @@ if osname == "Darwin":
         
         shutil.copytree("/opt/local/Library/Frameworks/QtGui.framework/Versions/Current/Resources/qt_menu.nib", "dist/CDJSVis.app/Contents/Resources/qt_menu.nib")
         
+# copy icns file
+new_icns = os.path.join("dist", "CDJSVis.app", "Contents", "Resources", "CDJSVis.icns")
+cmd = "cp -f CDJSVis.icns %s" % os.path.join("dist", "CDJSVis.app", "Contents", "Resources", "CDJSVis.icns")
+print cmd
+os.system(cmd)
+
+# edit plist
+plist_file = os.path.join("dist", "CDJSVis.app", "Contents", "Info.plist")
+f = open(plist_file)
+lines = f.readlines()
+f.close()
+f = open(plist_file, "w")
+for line in lines:
+    if line.startswith("<string>icon-windowed.icns"):
+        line = "<string>CDJSVis.icns</string>\n"
+    f.write(line)
+f.close()
