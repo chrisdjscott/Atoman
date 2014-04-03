@@ -74,7 +74,7 @@ class FilterList(QtGui.QWidget):
                            "Coordination number",
                            "Voronoi neighbours",
                            "Voronoi volume",
-                           "Q4"]
+                           "Bond order"]
         self.allFilters.sort()
         
         self.visible = 1

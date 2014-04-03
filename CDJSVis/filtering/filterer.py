@@ -19,6 +19,7 @@ from ..visclibs import filtering as filtering_c
 from ..visclibs import defects as defects_c
 from ..visclibs import clusters as clusters_c
 from ..visclibs import bonds as bonds_c
+from ..visclibs import bond_order as bond_order_c
 from ..rendering import renderer
 from ..rendering import renderBonds
 from ..visutils import vectors
@@ -232,19 +233,15 @@ class Filterer(object):
             
             elif filterName == "Coordination number":
                 self.coordinationNumberFilter(filterSettings)
-                self.scalarsType = filterName
             
             elif filterName == "Voronoi volume":
                 self.voronoiVolumeFilter(filterSettings)
-                self.scalarsType = filterName
             
             elif filterName == "Voronoi neighbours":
                 self.voronoiNeighboursFilter(filterSettings)
-                self.scalarsType = filterName
             
-            elif filterName == "Q4":
-                self.Q4Filter(filterSettings)
-                self.scalarsType = filterName
+            elif filterName == "Bond order":
+                self.bondOrderFilter(filterSettings)
             
             # write to log
             if self.parent.defectFilterSelected:
@@ -433,22 +430,23 @@ class Filterer(object):
         scalars.resize(NVisible, refcheck=False)
         self.scalarsDict["Voronoi volume"] = scalars
     
-    def Q4Filter(self, settings):
+    def bondOrderFilter(self, settings):
         """
-        Q4 filter
+        Bond order filter
         
         """
         inputState = self.pipelinePage.inputState
         
         # new scalars array
-        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        scalarsQ4 = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        scalarsQ6 = np.zeros(len(self.visibleAtoms), dtype=np.float64)
         
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
-        NVisible = filtering_c.Q4Filter(self.visibleAtoms, inputState.pos, settings.minQ4, settings.maxQ4, settings.maxBondDistance, 
-                                        scalars, inputState.minPos, inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC,
-                                        NScalars, fullScalars, settings.filteringEnabled)
+        NVisible = bond_order_c.bondOrderFilter(self.visibleAtoms, inputState.pos, settings.minVal, settings.maxVal, settings.maxBondDistance, 
+                                                scalarsQ4, scalarsQ6, inputState.minPos, inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC,
+                                                NScalars, fullScalars, settings.filteringEnabled)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -457,8 +455,10 @@ class Filterer(object):
         self.visibleAtoms.resize(NVisible, refcheck=False)
 
         # store scalars
-        scalars.resize(NVisible, refcheck=False)
-        self.scalarsDict["Q4"] = scalars
+        scalarsQ4.resize(NVisible, refcheck=False)
+        scalarsQ6.resize(NVisible, refcheck=False)
+        self.scalarsDict["Q4"] = scalarsQ4
+        self.scalarsDict["Q6"] = scalarsQ6
     
     def calculateVoronoi(self):
         """

@@ -1900,45 +1900,45 @@ class VoronoiVolumeSettingsDialog(GenericSettingsDialog):
         self.maxVoroVol = val
 
 ################################################################################
-class Q4SettingsDialog(GenericSettingsDialog):
+class BondOrderSettingsDialog(GenericSettingsDialog):
     """
-    Settings for Q4 filter
+    Settings for bond order filter
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(Q4SettingsDialog, self).__init__(title, parent)
+        super(BondOrderSettingsDialog, self).__init__(title, parent)
         
-        self.filterType = "Q4"
+        self.filterType = "Bond order"
         
-        self.minQ4 = 0.0
-        self.maxQ4 = 9999.99
+        self.minVal = 0.0
+        self.maxVal = 9999.99
         self.maxBondDistance = 4.0
         
         self.addEnableFilteringCheck()
         
         label = QtGui.QLabel("Min ")
-        self.minQ4Spin = QtGui.QDoubleSpinBox()
-        self.minQ4Spin.setSingleStep(0.01)
-        self.minQ4Spin.setMinimum(0.0)
-        self.minQ4Spin.setMaximum(9999.99)
-        self.minQ4Spin.setValue(self.minQ4)
-        self.minQ4Spin.valueChanged[float].connect(self.setMinQ4)
+        self.minValSpin = QtGui.QDoubleSpinBox()
+        self.minValSpin.setSingleStep(0.01)
+        self.minValSpin.setMinimum(0.0)
+        self.minValSpin.setMaximum(9999.99)
+        self.minValSpin.setValue(self.minVal)
+        self.minValSpin.valueChanged[float].connect(self.setMinVal)
         
         row = self.newRow()
         row.addWidget(label)
-        row.addWidget(self.minQ4Spin)
+        row.addWidget(self.minValSpin)
         
         label = QtGui.QLabel("Max ")
-        self.maxQ4Spin = QtGui.QDoubleSpinBox()
-        self.maxQ4Spin.setSingleStep(0.01)
-        self.maxQ4Spin.setMinimum(0.0)
-        self.maxQ4Spin.setMaximum(9999.99)
-        self.maxQ4Spin.setValue(self.maxQ4)
-        self.maxQ4Spin.valueChanged[float].connect(self.setMaxQ4)
+        self.maxValSpin = QtGui.QDoubleSpinBox()
+        self.maxValSpin.setSingleStep(0.01)
+        self.maxValSpin.setMinimum(0.0)
+        self.maxValSpin.setMaximum(9999.99)
+        self.maxValSpin.setValue(self.maxVal)
+        self.maxValSpin.valueChanged[float].connect(self.setMaxVal)
         
         row = self.newRow()
         row.addWidget(label)
-        row.addWidget(self.maxQ4Spin)
+        row.addWidget(self.maxValSpin)
         
         label = QtGui.QLabel("Max bond distance ")
         self.maxBondDistanceSpin = QtGui.QDoubleSpinBox()
@@ -1959,16 +1959,16 @@ class Q4SettingsDialog(GenericSettingsDialog):
         """
         self.maxBondDistance = val
     
-    def setMinQ4(self, val):
+    def setMinVal(self, val):
         """
-        Set the minimum Q4
+        Set the minimum value
         
         """
-        self.minQ4 = val
+        self.minVal = val
 
-    def setMaxQ4(self, val):
+    def setMaxVal(self, val):
         """
-        Set the maximum Q4
+        Set the maximum value
         
         """
-        self.maxQ4 = val
+        self.maxVal = val
