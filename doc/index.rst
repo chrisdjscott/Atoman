@@ -7,7 +7,7 @@ Welcome to CDJSVis's documentation!
 ===================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    
    requirements
    usage/index

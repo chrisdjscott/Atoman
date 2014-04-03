@@ -99,6 +99,33 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         # filtering enabled by default
         self.filteringEnabled = True
+        
+        # help page
+        self.helpPage = None
+    
+    def addLinkToHelpPage(self, page):
+        """
+        Add button with link to help page
+        
+        """
+        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "Show help")
+        helpButton.setToolTip("Show help page")
+        helpButton.setAutoDefault(0)
+        helpButton.clicked.connect(self.loadHelpPage)
+        self.newRow()
+        self.newRow().addWidget(helpButton)
+        self.helpPage = page
+    
+    def loadHelpPage(self):
+        """
+        Load the help page
+        
+        """
+        if self.helpPage is None:
+            return
+        
+        self.mainWindow.helpWindow.loadPage(self.helpPage)
+        self.mainWindow.showHelp()
     
     def addEnableFilteringCheck(self):
         """
@@ -1951,6 +1978,8 @@ class BondOrderSettingsDialog(GenericSettingsDialog):
         row = self.newRow()
         row.addWidget(label)
         row.addWidget(self.maxBondDistanceSpin)
+        
+        self.addLinkToHelpPage("usage/analysis/filters/bond_order.html")
     
     def setMaxBondDistance(self, val):
         """
