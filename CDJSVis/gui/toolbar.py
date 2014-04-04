@@ -50,32 +50,6 @@ class MainToolbar(QtGui.QDockWidget):
         self.currentPipelineString = "Pipeline 0"
         self.currentPipelineIndex = 0
         
-        # display current file info
-#         self.currentFileBox = GenericForm(self, self.toolbarWidth, "Current file")
-#         self.currentFileBox.show()
-#         
-#         row = self.currentFileBox.newRow()
-#         self.currentRefLabel = QtGui.QLabel("Reference: " + str(self.mainWindow.refFile))
-#         row.addWidget(self.currentRefLabel)
-#         
-#         row = self.currentFileBox.newRow()
-#         self.currentInputLabel = QtGui.QLabel("Input: " + str(self.mainWindow.inputFile))
-#         row.addWidget(self.currentInputLabel)
-#         
-#         containerLayout.addWidget(self.currentFileBox)
-        
-        # load input form
-#         self.loadInputForm = GenericForm(self, 0, "Load input")
-#         self.loadInputForm.show()
-#         
-#         loadInputButton = QtGui.QPushButton(QtGui.QIcon(iconPath("document-open.svg")), "Open input")
-#         loadInputButton.clicked.connect(self.mainWindow.showLoadInputDialog)
-#         
-#         row = self.loadInputForm.newRow()
-#         row.addWidget(loadInputButton)
-#         
-#         containerLayout.addWidget(self.loadInputForm)
-        
         # analysis pipelines form
         self.analysisPipelinesForm = GenericForm(self, 0, "Analysis pipelines")
         
@@ -87,16 +61,19 @@ class MainToolbar(QtGui.QDockWidget):
         
         addPipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
         addPipelineButton.setStatusTip("Add analysis pipeline")
+        addPipelineButton.setToolTip("Add analysis pipeline")
         addPipelineButton.clicked.connect(self.addPipeline)
         row.addWidget(addPipelineButton)
         
         removePipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
         removePipelineButton.setStatusTip("Remove analysis pipeline")
+        removePipelineButton.setToolTip("Remove analysis pipeline")
         removePipelineButton.clicked.connect(self.removePipeline)
         row.addWidget(removePipelineButton)
         
         applyAllButton = QtGui.QPushButton(QtGui.QIcon(iconPath("view-refresh-all.svg")), "")
         applyAllButton.setStatusTip("Run all pipelines")
+        applyAllButton.setToolTip("Run all pipelines")
         applyAllButton.clicked.connect(self.runAllPipelines)
         row.addWidget(applyAllButton)
         

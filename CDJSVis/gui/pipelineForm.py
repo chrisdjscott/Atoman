@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
 """
-The filter tab for the main toolbar
+Analysis is performed using an *Analysis pipeline*, found on the *Analysis toolbar* on the left of the application (see image).  
+Multiple pipelines can be configured at once; a pipeline is viewed in a renderer window. 
 
-@author: Chris Scott
+An individual pipeline takes a reference and an input system as its input and contains one or more filter/calculator lists.  These
+lists operate independently of one another and calculate properties or filter the input system. Available filters/calculators are 
+shown below:
 
 """
 import os
