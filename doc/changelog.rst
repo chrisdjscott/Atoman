@@ -1,15 +1,12 @@
 Changelog
 =========
 
-**dev**
+**v140407**
 
 * Added app icon (icns file)
 * Added toolbar to help page
-* Replaced Q4 filter with "bond order" filter/property calculator
-
-   * Calculates Q4 and Q6 structure parameters
-   * Currently does not filter, only calculates the properties
-   * Added some documentation
+* Replaced Q4 filter with "bond order" filter/property calculator, which calculates Q4 and Q6 parameters
+* Added some documentation for the "bond order" filter
 
 **v140401**
 

@@ -1941,31 +1941,31 @@ class BondOrderSettingsDialog(GenericSettingsDialog):
         self.maxVal = 9999.99
         self.maxBondDistance = 4.0
         
-        self.addEnableFilteringCheck()
-        
-        label = QtGui.QLabel("Min ")
-        self.minValSpin = QtGui.QDoubleSpinBox()
-        self.minValSpin.setSingleStep(0.01)
-        self.minValSpin.setMinimum(0.0)
-        self.minValSpin.setMaximum(9999.99)
-        self.minValSpin.setValue(self.minVal)
-        self.minValSpin.valueChanged[float].connect(self.setMinVal)
-        
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.minValSpin)
-        
-        label = QtGui.QLabel("Max ")
-        self.maxValSpin = QtGui.QDoubleSpinBox()
-        self.maxValSpin.setSingleStep(0.01)
-        self.maxValSpin.setMinimum(0.0)
-        self.maxValSpin.setMaximum(9999.99)
-        self.maxValSpin.setValue(self.maxVal)
-        self.maxValSpin.valueChanged[float].connect(self.setMaxVal)
-        
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.maxValSpin)
+#         self.addEnableFilteringCheck()
+#         
+#         label = QtGui.QLabel("Min ")
+#         self.minValSpin = QtGui.QDoubleSpinBox()
+#         self.minValSpin.setSingleStep(0.01)
+#         self.minValSpin.setMinimum(0.0)
+#         self.minValSpin.setMaximum(9999.99)
+#         self.minValSpin.setValue(self.minVal)
+#         self.minValSpin.valueChanged[float].connect(self.setMinVal)
+#         
+#         row = self.newRow()
+#         row.addWidget(label)
+#         row.addWidget(self.minValSpin)
+#         
+#         label = QtGui.QLabel("Max ")
+#         self.maxValSpin = QtGui.QDoubleSpinBox()
+#         self.maxValSpin.setSingleStep(0.01)
+#         self.maxValSpin.setMinimum(0.0)
+#         self.maxValSpin.setMaximum(9999.99)
+#         self.maxValSpin.setValue(self.maxVal)
+#         self.maxValSpin.valueChanged[float].connect(self.setMaxVal)
+#         
+#         row = self.newRow()
+#         row.addWidget(label)
+#         row.addWidget(self.maxValSpin)
         
         label = QtGui.QLabel("Max bond distance ")
         self.maxBondDistanceSpin = QtGui.QDoubleSpinBox()
