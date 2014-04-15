@@ -72,6 +72,7 @@
     <file>icons/object-rotate.png</file>
     <file>icons/logging-icon.png</file>
     <file>icons/Window.png</file>
+    <file>icons/Drift.jpg</file>
     <file>images/splash_loading.png</file>
 </qresource>
 </RCC>

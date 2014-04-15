@@ -7,7 +7,7 @@ int cropSphereFilter(int, int *, int, double *, double, double, double, double, 
 
 int cropFilter(int, int *, int, double*, double, double, double, double, double, double, int, int, int, int, int, double *);
 
-int displacementFilter(int, int *, int, double *, int, double *, int, double *, double *, int *, double, double, int, double*, int);
+int displacementFilter(int, int *, int, double *, int, double *, int, double *, double *, int *, double, double, int, double*, int, int, double*);
 
 int KEFilter(int, int *, int, double *, double, double, int, double *);
 
@@ -22,3 +22,5 @@ int voronoiVolumeFilter(int, int*, int, double*, double, double, int, double*, i
 int voronoiNeighboursFilter(int, int*, int, int*, int, int, int, double *, int, double *, int);
 
 int Q4Filter(int, int*, int, double *, double, double, double, int, double *, double *, double *, double *, int *, int, double *, int);
+
+int calculate_drift_vector(int, double*, double*, double*, int*, double*);

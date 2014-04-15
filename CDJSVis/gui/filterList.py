@@ -77,7 +77,7 @@ class FilterList(QtGui.QWidget):
                            "Bond order"]
         self.allFilters.sort()
         
-        self.visible = 1
+        self.visible = True
         
         # layout
         self.filterListLayout = QtGui.QVBoxLayout(self)
@@ -100,6 +100,16 @@ class FilterList(QtGui.QWidget):
         trashButton.setToolTip("Delete property/filter list")
         trashButton.setFixedWidth(35)
         trashButton.clicked.connect(self.filterTab.removeFilterList)
+        
+        # drift compenstation
+        self.driftCompButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Drift.jpg")), "")
+        self.driftCompButton.setStatusTip("Drift compensation")
+        self.driftCompButton.setToolTip("Drift compensation")
+        self.driftCompButton.setFixedWidth(35)
+        self.driftCompButton.setCheckable(1)
+        self.driftCompButton.setChecked(0)
+        self.driftCompButton.clicked.connect(self.driftCompClicked)
+        self.driftCompensation = False
         
         # persistent list button
         self.persistButton = QtGui.QPushButton(QtGui.QIcon(iconPath("application-certificate.svg")), "")
@@ -138,6 +148,7 @@ class FilterList(QtGui.QWidget):
         row2 = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row2)
         rowLayout.setAlignment(QtCore.Qt.AlignRight)
+        rowLayout.addWidget(self.driftCompButton)
         rowLayout.addWidget(self.persistButton)
         rowLayout.addWidget(self.staticListButton)
         rowLayout.addWidget(self.scalarBarButton)
@@ -263,6 +274,24 @@ class FilterList(QtGui.QWidget):
         
         # the filterer (does the filtering)
         self.filterer = filterer.Filterer(self)
+    
+    def driftCompClicked(self):
+        """
+        Drift comp button clicked
+        
+        """
+        if self.driftCompButton.isChecked():
+            # check ok to have drift comp
+            pp = self.pipelinePage
+            if pp.inputState.NAtoms != pp.refState.NAtoms:
+                self.mainWindow.displayWarning("Drift compensation can only be used if the input and reference atoms match each other")
+                self.driftCompButton.setChecked(QtCore.Qt.Unchecked)
+            
+            else:
+                self.driftCompensation = True
+        
+        else:
+            self.driftCompensation = False
     
     def quickAddComboAction(self, text):
         """
@@ -634,12 +663,12 @@ class FilterList(QtGui.QWidget):
         """
         if self.visibleButton.isChecked():
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.svg")))
-            self.visible = 0
+            self.visible = False
             self.filterer.hideActors()
         
         else:
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))
-            self.visible = 1
+            self.visible = True
             self.filterer.addActors()
         
         self.filterTab.refreshOnScreenInfo()

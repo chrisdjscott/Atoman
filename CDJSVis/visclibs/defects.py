@@ -45,13 +45,14 @@ _lib.findDefects.argtypes = [c_int, c_int, c_int, POINTER(c_int), POINTER(c_int)
                              POINTER(c_int), c_int, POINTER(c_int), c_int, POINTER(c_char), POINTER(c_int), POINTER(c_double), c_int, 
                              POINTER(c_char), POINTER(c_int), POINTER(c_double), POINTER(c_double), POINTER(c_int), c_double, 
                              POINTER(c_double), POINTER(c_double), c_int, c_double, POINTER(c_int), c_int, POINTER(c_int), POINTER(c_int), 
-                             POINTER(c_int), POINTER(c_int), POINTER(c_int), c_int, c_int, POINTER(c_int), c_int]
+                             POINTER(c_int), POINTER(c_int), POINTER(c_int), c_int, c_int, POINTER(c_int), c_int, c_int, POINTER(c_double)]
 
 # find defects
 def findDefects(includeVacs, includeInts, includeAnts, NDefectsType, vacancies, interstitials, antisites, onAntisites, excludeSpecsInput, 
                 excludeSpecsRef, NAtoms, specieList, specie, pos, refNAtoms, refSpecieList, refSpecie, refPos, cellDims, PBC, vacancyRadius, 
                 minPos, maxPos, findClustersFlag, clusterRadius, defectCluster, vacSpecieCount, intSpecieCount, antSpecieCount, 
-                onAntSpecieCount, splitIntSpecieCount, minClusterSize, maxClusterSize, splitInterstitials, identifySplits):
+                onAntSpecieCount, splitIntSpecieCount, minClusterSize, maxClusterSize, splitInterstitials, identifySplits, driftCompensation, 
+                driftVector):
     """
     Find defects.
     
@@ -62,5 +63,6 @@ def findDefects(includeVacs, includeInts, includeAnts, NDefectsType, vacancies, 
                             CPtrToChar(refSpecieList), CPtrToInt(refSpecie), CPtrToDouble(refPos), CPtrToDouble(cellDims), CPtrToInt(PBC), vacancyRadius, 
                             CPtrToDouble(minPos), CPtrToDouble(maxPos), findClustersFlag, clusterRadius, CPtrToInt(defectCluster), len(vacSpecieCount), 
                             CPtrToInt(vacSpecieCount), CPtrToInt(intSpecieCount), CPtrToInt(antSpecieCount), CPtrToInt(onAntSpecieCount), 
-                            CPtrToInt(splitIntSpecieCount), minClusterSize, maxClusterSize, CPtrToInt(splitInterstitials), identifySplits)
+                            CPtrToInt(splitIntSpecieCount), minClusterSize, maxClusterSize, CPtrToInt(splitInterstitials), identifySplits, 
+                            int(driftCompensation), CPtrToDouble(driftVector))
 

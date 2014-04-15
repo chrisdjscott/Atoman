@@ -15,6 +15,35 @@
 
 
 /*******************************************************************************
+ ** calculate drift
+ *******************************************************************************/
+int calculate_drift_vector(int NAtoms, double *pos, double *refPos, double *cellDims, int *PBC, double *driftVector)
+{
+    int i;
+    double sepVec[3];
+    
+    
+    driftVector[0] = 0.0;
+    driftVector[1] = 0.0;
+    driftVector[2] = 0.0;
+    for (i = 0; i < NAtoms; i++)
+    {
+        atomSeparationVector(sepVec, refPos[3*i], refPos[3*i+1], refPos[3*i+2], pos[3*i], pos[3*i+1], pos[3*i+2], 
+                             cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
+        
+        driftVector[0] += sepVec[0];
+        driftVector[1] += sepVec[1];
+        driftVector[2] += sepVec[2];
+    }
+    
+    driftVector[0] /= (double) NAtoms;
+    driftVector[1] /= (double) NAtoms;
+    driftVector[2] /= (double) NAtoms;
+    
+    return 0;
+}
+
+/*******************************************************************************
  ** Specie filter
  *******************************************************************************/
 int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie,
@@ -226,12 +255,36 @@ int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, doubl
 /*******************************************************************************
  ** Displacement filter
  *******************************************************************************/
-int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int posDim, double *pos, int refPosDim, double *refPos, 
-                       double *cellDims, int *PBC, double minDisp, double maxDisp, int NScalars, double* fullScalars, int filteringEnabled)
+int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int posDim, double *pos, int refPosDim, double *refPosIn, 
+                       double *cellDims, int *PBC, double minDisp, double maxDisp, int NScalars, double* fullScalars, int filteringEnabled,
+                       int driftCompensation, double *driftVector)
 {
     int i, NVisible, index, j;
     double sep2, maxDisp2, minDisp2;
+    double *refPos;
     
+    
+    /* drift compensation? */
+    if (driftCompensation)
+    {
+        refPos = malloc(refPosDim * sizeof(double));
+        if (refPos == NULL)
+        {
+            printf("ERROR: could not allocate refPos\n");
+            exit(34);
+        }
+        
+        for (i = 0; i < refPosDim / 3; i++)
+        {
+            refPos[3*i] = refPosIn[3*i] + driftVector[0];
+            refPos[3*i+1] = refPosIn[3*i+1] + driftVector[1];
+            refPos[3*i+2] = refPosIn[3*i+2] + driftVector[2];
+        }
+    }
+    else
+    {
+        refPos = refPosIn;
+    }
     
     minDisp2 = minDisp * minDisp;
     maxDisp2 = maxDisp * maxDisp;
@@ -259,6 +312,15 @@ int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double
             
             NVisible++;
         }
+    }
+    
+    if (driftCompensation)
+    {
+        free(refPos);
+    }
+    else
+    {
+        refPos = NULL;
     }
     
     return NVisible;
