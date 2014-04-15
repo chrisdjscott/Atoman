@@ -22,10 +22,10 @@ int findDefectNeighbours(int, int, int, int *, double *, struct Boxes *, double,
  *******************************************************************************/
 int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefectsType, int* vacancies, int* interstitials, int* antisites, 
                 int* onAntisites, int exclSpecInputDim, int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, char* specieList, 
-                int* specie, double* pos, int refNAtoms, char* specieListRef, int* specieRef, double* refPos, double *cellDims, int *PBC, 
+                int* specie, double* pos, int refNAtoms, char* specieListRef, int* specieRef, double* refPosIn, double *cellDims, int *PBC, 
                 double vacancyRadius, double *minPos, double *maxPos, int findClustersFlag, double clusterRadius, int *defectCluster, int NSpecies, 
                 int *vacSpecCount, int *intSpecCount, int *antSpecCount, int *onAntSpecCount, int* splitIntSpecCount, int minClusterSize, 
-                int maxClusterSize, int *splitInterstitials, int identifySplits)
+                int maxClusterSize, int *splitInterstitials, int identifySplits, int driftCompensation, double *driftVector)
 {
     int i, exitLoop, k, j, index;
     double vacRad2;
@@ -45,7 +45,30 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
     double *defectPos;
     int NVacNew, NIntNew, NAntNew, numInCluster;
     int NSplitInterstitials, *defectClusterSplit, splitIndexes[3];
+    double *refPos;
     
+    
+    /* drift compensation? */
+    if (driftCompensation)
+    {
+        refPos = malloc(3 * refNAtoms * sizeof(double));
+        if (refPos == NULL)
+        {
+            printf("ERROR: could not allocate refPos\n");
+            exit(34);
+        }
+        
+        for (i = 0; i < refNAtoms; i++)
+        {
+            refPos[3*i] = refPosIn[3*i] + driftVector[0];
+            refPos[3*i+1] = refPosIn[3*i+1] + driftVector[1];
+            refPos[3*i+2] = refPosIn[3*i+2] + driftVector[2];
+        }
+    }
+    else
+    {
+        refPos = refPosIn;
+    }
     
     /* approx width, must be at least vacRad
      * should vary depending on size of cell
@@ -739,6 +762,15 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
         index2 = splitInterstitials[3*i+2];
         
         splitIntSpecCount[specie[index]*NSpecies+specie[index2]]++;
+    }
+    
+    if (driftCompensation)
+    {
+        free(refPos);
+    }
+    else
+    {
+        refPos = NULL;
     }
     
     return 0;

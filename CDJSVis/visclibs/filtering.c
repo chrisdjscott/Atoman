@@ -15,6 +15,35 @@
 
 
 /*******************************************************************************
+ ** calculate drift
+ *******************************************************************************/
+int calculate_drift_vector(int NAtoms, double *pos, double *refPos, double *cellDims, int *PBC, double *driftVector)
+{
+    int i;
+    double sepVec[3];
+    
+    
+    driftVector[0] = 0.0;
+    driftVector[1] = 0.0;
+    driftVector[2] = 0.0;
+    for (i = 0; i < NAtoms; i++)
+    {
+        atomSeparationVector(sepVec, refPos[3*i], refPos[3*i+1], refPos[3*i+2], pos[3*i], pos[3*i+1], pos[3*i+2], 
+                             cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
+        
+        driftVector[0] += sepVec[0];
+        driftVector[1] += sepVec[1];
+        driftVector[2] += sepVec[2];
+    }
+    
+    driftVector[0] /= (double) NAtoms;
+    driftVector[1] /= (double) NAtoms;
+    driftVector[2] /= (double) NAtoms;
+    
+    return 0;
+}
+
+/*******************************************************************************
  ** Specie filter
  *******************************************************************************/
 int specieFilter(int NVisibleIn, int *visibleAtoms, int visSpecDim, int* visSpec, int specieDim, int *specie,

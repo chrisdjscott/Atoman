@@ -60,6 +60,8 @@ class Filterer(object):
         self.antisiteSpecieCount = []
         self.splitIntSpecieCount = []
         
+        self.driftVector = np.zeros(3, np.float64)
+        
         self.actorsCollection = vtk.vtkActorCollection()
         
         self.colouringOptions = self.parent.colouringOptions
@@ -100,6 +102,7 @@ class Filterer(object):
         self.interstitialSpecieCount = np.asarray([], dtype=np.int32)
         self.antisiteSpecieCount = np.asarray([], dtype=np.int32)
         self.splitIntSpecieCount = np.asarray([], dtype=np.int32)
+        self.driftVector = np.zeros(3, np.float64)
         
         self.povrayAtomsWritten = False
     
@@ -172,6 +175,12 @@ class Filterer(object):
         
         # pov-ray hull file
         hullFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_hulls%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID)))
+        
+        # drift compensation
+        if self.parent.driftCompensation:
+            filtering_c.calculate_drift_vector(NAtoms, self.pipelinePage.inputState.pos, self.pipelinePage.refState.pos, self.pipelinePage.refState.cellDims, 
+                                               self.pipelinePage.PBC, self.driftVector)
+            self.logger.info("Calculated drift vector: (%f, %f, %f)" % tuple(self.driftVector))
         
         # run filters
         applyFiltersTime = time.time()
@@ -982,7 +991,7 @@ class Filterer(object):
                                        refLattice.pos, refLattice.cellDims, self.pipelinePage.PBC, settings.vacancyRadius, minPos, maxPos, 
                                        settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
                                        onAntSpecCount, splitIntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials, 
-                                       settings.identifySplitInts)
+                                       settings.identifySplitInts, self.parent.driftCompensation, self.driftVector)
         
         # summarise
         NDef = NDefectsByType[0]

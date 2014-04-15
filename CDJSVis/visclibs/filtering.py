@@ -231,3 +231,17 @@ def Q4Filter(visibleAtoms, pos, minQ4, maxQ4, maxBondDistance, scalars, minPos, 
     return _lib.Q4Filter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), minQ4, maxQ4, maxBondDistance, 
                          len(scalars), CPtrToDouble(scalars), CPtrToDouble(minPos), CPtrToDouble(maxPos), CPtrToDouble(cellDims), 
                          CPtrToInt(PBC), NScalars, CPtrToDouble(fullScalars), int(filteringEnabled))
+
+################################################################################
+
+# calculate_drift_vector prototype
+_lib.calculate_drift_vector.restype = c_int
+_lib.calculate_drift_vector.argtypes = [c_int, POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int), POINTER(c_double)]
+
+# calculate_drift_vector
+def calculate_drift_vector(NAtoms, pos, refPos, cellDims, PBC, driftVector):
+    """
+    calculate_drift_vector
+    
+    """
+    return _lib.calculate_drift_vector(NAtoms, CPtrToDouble(pos), CPtrToDouble(refPos), CPtrToDouble(cellDims), CPtrToInt(PBC), CPtrToDouble(driftVector))

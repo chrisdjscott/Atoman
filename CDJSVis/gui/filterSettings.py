@@ -610,7 +610,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.filterType = "Point defects"
         
         # settings
-        self.vacancyRadius = 1.3
+        self.vacancyRadius = 1.2
         self.specieList = []
         self.visibleSpecieList = []
         self.specieRows = {}
