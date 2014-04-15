@@ -7,7 +7,7 @@ int cropSphereFilter(int, int *, int, double *, double, double, double, double, 
 
 int cropFilter(int, int *, int, double*, double, double, double, double, double, double, int, int, int, int, int, double *);
 
-int displacementFilter(int, int *, int, double *, int, double *, int, double *, double *, int *, double, double, int, double*, int);
+int displacementFilter(int, int *, int, double *, int, double *, int, double *, double *, int *, double, double, int, double*, int, int, double*);
 
 int KEFilter(int, int *, int, double *, double, double, int, double *);
 

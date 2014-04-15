@@ -255,12 +255,36 @@ int cropFilter(int NVisibleIn, int* visibleAtoms, int posDim, double* pos, doubl
 /*******************************************************************************
  ** Displacement filter
  *******************************************************************************/
-int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int posDim, double *pos, int refPosDim, double *refPos, 
-                       double *cellDims, int *PBC, double minDisp, double maxDisp, int NScalars, double* fullScalars, int filteringEnabled)
+int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double *scalars, int posDim, double *pos, int refPosDim, double *refPosIn, 
+                       double *cellDims, int *PBC, double minDisp, double maxDisp, int NScalars, double* fullScalars, int filteringEnabled,
+                       int driftCompensation, double *driftVector)
 {
     int i, NVisible, index, j;
     double sep2, maxDisp2, minDisp2;
+    double *refPos;
     
+    
+    /* drift compensation? */
+    if (driftCompensation)
+    {
+        refPos = malloc(refPosDim * sizeof(double));
+        if (refPos == NULL)
+        {
+            printf("ERROR: could not allocate refPos\n");
+            exit(34);
+        }
+        
+        for (i = 0; i < refPosDim / 3; i++)
+        {
+            refPos[3*i] = refPosIn[3*i] + driftVector[0];
+            refPos[3*i+1] = refPosIn[3*i+1] + driftVector[1];
+            refPos[3*i+2] = refPosIn[3*i+2] + driftVector[2];
+        }
+    }
+    else
+    {
+        refPos = refPosIn;
+    }
     
     minDisp2 = minDisp * minDisp;
     maxDisp2 = maxDisp * maxDisp;
@@ -288,6 +312,15 @@ int displacementFilter(int NVisibleIn, int* visibleAtoms, int scalarsDim, double
             
             NVisible++;
         }
+    }
+    
+    if (driftCompensation)
+    {
+        free(refPos);
+    }
+    else
+    {
+        refPos = NULL;
     }
     
     return NVisible;

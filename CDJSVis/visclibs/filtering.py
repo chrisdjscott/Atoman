@@ -105,17 +105,19 @@ def cropFilter(visibleAtoms, pos, xmin, xmax, ymin, ymax, zmin, zmax, xEnabled, 
 # displacement filter prototype
 _lib.displacementFilter.restype = c_int
 _lib.displacementFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_int, POINTER(c_double), c_int, POINTER(c_double), 
-                                    POINTER(c_double), POINTER(c_int), c_double, c_double, c_int, POINTER(c_double), c_int]
+                                    POINTER(c_double), POINTER(c_int), c_double, c_double, c_int, POINTER(c_double), c_int, c_int, 
+                                    POINTER(c_double)]
 
 # displacement filter
-def displacementFilter(visibleAtoms, scalars, pos, refPos, cellDims, PBC, minDisp, maxDisp, NScalars, fullScalars, filteringEnabled):
+def displacementFilter(visibleAtoms, scalars, pos, refPos, cellDims, PBC, minDisp, maxDisp, NScalars, fullScalars, filteringEnabled, 
+                       driftCompensation, driftVector):
     """
     Displacement filter.
     
     """
     return _lib.displacementFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(scalars), CPtrToDouble(scalars), len(pos), CPtrToDouble(pos), 
                                    len(refPos), CPtrToDouble(refPos), CPtrToDouble(cellDims), CPtrToInt(PBC), minDisp, maxDisp, NScalars, 
-                                   CPtrToDouble(fullScalars), int(filteringEnabled))
+                                   CPtrToDouble(fullScalars), int(filteringEnabled), int(driftCompensation), CPtrToDouble(driftVector))
 
 ################################################################################
 

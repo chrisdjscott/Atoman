@@ -1,6 +1,11 @@
 Changelog
 =========
 
+**v140415**
+
+* Add drift compensation to "point defects" and "displacement" filters
+* Fix bug in picker: ignore filter lists that are not visible
+
 **v140407**
 
 * Added app icon (icns file)

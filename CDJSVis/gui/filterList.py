@@ -77,7 +77,7 @@ class FilterList(QtGui.QWidget):
                            "Bond order"]
         self.allFilters.sort()
         
-        self.visible = 1
+        self.visible = True
         
         # layout
         self.filterListLayout = QtGui.QVBoxLayout(self)
@@ -663,12 +663,12 @@ class FilterList(QtGui.QWidget):
         """
         if self.visibleButton.isChecked():
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.svg")))
-            self.visible = 0
+            self.visible = False
             self.filterer.hideActors()
         
         else:
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))
-            self.visible = 1
+            self.visible = True
             self.filterer.addActors()
         
         self.filterTab.refreshOnScreenInfo()

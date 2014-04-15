@@ -794,7 +794,8 @@ class Filterer(object):
             # run displacement filter
             NVisible = filtering_c.displacementFilter(self.visibleAtoms, scalars, inputState.pos, refState.pos, refState.cellDims, 
                                                       self.pipelinePage.PBC, settings.minDisplacement, settings.maxDisplacement, 
-                                                      NScalars, fullScalars, settings.filteringEnabled)
+                                                      NScalars, fullScalars, settings.filteringEnabled, self.parent.driftCompensation, 
+                                                      self.driftVector)
             
             # update scalars dict
             self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
