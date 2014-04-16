@@ -11,7 +11,7 @@ import functools
 import numpy as np
 import vtk
 
-from .utils import setupLUT
+from .utils import setupLUT, getScalarsType
 from .povutils import povrayBond
 
 
@@ -58,7 +58,7 @@ def bondGlyphMethod(bondGlyph, bondGlyphSource, *args, **kwargs):
 
 ################################################################################
 
-def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colouringOptions, povfile, scalars, bondArray, NBondsArray, bondVectorArray, bondsOptions):
+def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colouringOptions, povfile, scalarsDict, bondArray, NBondsArray, bondVectorArray, bondsOptions):
     """
     Render bonds.
     
@@ -68,6 +68,15 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colour
     bondThicknessPOV = bondsOptions.bondThicknessPOV
     bondNumSides = bondsOptions.bondNumSides
     # END SETTINGS
+    
+    # scalar type
+    scalarType = getScalarsType(colouringOptions)
+    
+    # scalars array
+    if scalarType == 5:
+        scalars = scalarsDict[colouringOptions.colourBy]
+    else:
+        scalars = np.array([], dtype=np.float64)
     
     NVisible = len(visibleAtoms)
     

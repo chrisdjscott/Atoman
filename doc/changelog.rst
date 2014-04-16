@@ -4,6 +4,7 @@ Changelog
 **dev**
 
 * After running sequencer change back to original settings on systems dialog
+* Fix bug in renderBonds/Voronoi introduced when adding multiple scalars
 
 **v140415**
 

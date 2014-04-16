@@ -22,7 +22,7 @@ from ..visutils import utilities
 from ..visclibs import output as output_c
 from . import axes
 from . import cell
-from .utils import setRes, setupLUT, getScalar, setMapperScalarRange, makeScalarBar
+from .utils import setRes, setupLUT, getScalar, setMapperScalarRange, makeScalarBar, getScalarsType
 from . import utils
 from ..visclibs import rendering as c_rendering
 from ..visclibs import numpy_utils
@@ -879,33 +879,6 @@ def writePovrayAtoms(filename, visibleAtoms, lattice, scalarsDict, colouringOpti
     output_c.writePOVRAYAtoms(filename, visibleAtoms, lattice.specie, lattice.pos, lattice.specieCovalentRadius, 
                               lattice.PE, lattice.KE, lattice.charge, scalarsArray, scalarsType, 
                               colouringOptions.heightAxis, rgbcalc.cfunc)
-
-################################################################################
-
-def getScalarsType(colouringOptions):
-    """
-    Return scalars type based on colouring options
-    
-    """
-    # scalar type
-    if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
-        scalarType = 0
-    
-    elif colouringOptions.colourBy == "Height":
-        scalarType = 1
-    
-    elif colouringOptions.colourBy == "Atom property":
-        if colouringOptions.atomPropertyType == "Kinetic energy":
-            scalarType = 2
-        elif colouringOptions.atomPropertyType == "Potential energy":
-            scalarType = 3
-        else:
-            scalarType = 4
-    
-    else:
-        scalarType = 5
-    
-    return scalarType
 
 ################################################################################
 

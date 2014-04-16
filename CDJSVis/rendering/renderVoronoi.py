@@ -13,7 +13,7 @@ import numpy as np
 import vtk
 
 from ..visutils import vectors
-from .utils import setupLUT, getScalar, setMapperScalarRange
+from .utils import setupLUT, getScalar, setMapperScalarRange, getScalarsType
 from ..filtering import clusters
 
 
@@ -39,7 +39,7 @@ def makePolygon(indexes):
 
 ################################################################################
 
-def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions, voronoiOptions, actorsCollection, povfile, scalarsArray, log=None):
+def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions, voronoiOptions, actorsCollection, povfile, scalarsDict, log=None):
     """
     Return actors for Voronoi cells
     
@@ -49,6 +49,15 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
     renderVoroTime = time.time()
     
     logger.debug("Rendering Voronoi volumes")
+    
+    # scalar type
+    scalarType = getScalarsType(colouringOptions)
+    
+    # scalars array
+    if scalarType == 5:
+        scalarsArray = scalarsDict[colouringOptions.colourBy]
+    else:
+        scalarsArray = np.array([], dtype=np.float64)
     
     # setup LUT
     lut = setupLUT(inputState.specieList, inputState.specieRGB, colouringOptions)
