@@ -1,6 +1,10 @@
 Changelog
 =========
 
+**dev**
+
+* After running sequencer change back to original settings on systems dialog
+
 **v140415**
 
 * Add drift compensation to "point defects" and "displacement" filters
