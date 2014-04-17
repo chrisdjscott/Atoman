@@ -26,7 +26,7 @@ from .utils import setRes, setupLUT, getScalar, setMapperScalarRange, makeScalar
 from . import utils
 from ..visclibs import rendering as c_rendering
 from ..visclibs import numpy_utils
-from ..threading import GenericRunnable
+from ..visutils.threading_vis import GenericRunnable
 
 
 ################################################################################
