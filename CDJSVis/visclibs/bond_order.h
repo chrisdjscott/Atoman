@@ -1,5 +1,6 @@
 
-int bondOrderFilter(int, int*, int, double *, double, double, double, int, double *, double *, double *, double *, double *, int *, int, double *, int);
+int bondOrderFilter(int, int*, int, double *, double, int, double *, double *, double *, double *, 
+                    double *, int *, int, double *, int, double, double, int, double, double);
 
 struct AtomStructureResults
 {

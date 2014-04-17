@@ -453,9 +453,9 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
-        NVisible = bond_order_c.bondOrderFilter(self.visibleAtoms, inputState.pos, settings.minVal, settings.maxVal, settings.maxBondDistance, 
-                                                scalarsQ4, scalarsQ6, inputState.minPos, inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC,
-                                                NScalars, fullScalars, settings.filteringEnabled)
+        NVisible = bond_order_c.bondOrderFilter(self.visibleAtoms, inputState.pos, settings.maxBondDistance, scalarsQ4, scalarsQ6, inputState.minPos, 
+                                                inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.filterQ4Enabled, 
+                                                settings.minQ4, settings.maxQ4, settings.filterQ6Enabled, settings.minQ6, settings.maxQ6)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)

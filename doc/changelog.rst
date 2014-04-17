@@ -1,11 +1,13 @@
 Changelog
 =========
 
-**dev**
+**v140417**
 
 * After running sequencer change back to original settings on systems dialog
 * Fix bug in renderBonds/Voronoi introduced when adding multiple scalars
 * Fix bug: don't try to add scalar plot option if there are no visible atoms
+* On filter settings forms use group box with check button to enable filtering
+* Add option to "Bond order" calculator to filter by Q4 and/or Q6
 
 **v140415**
 

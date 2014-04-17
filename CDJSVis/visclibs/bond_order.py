@@ -40,16 +40,17 @@ elif osname == "Linux":
 
 # bondOrderFilter filter prototype
 _lib.bondOrderFilter.restype = c_int
-_lib.bondOrderFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_double, c_int, POINTER(c_double), POINTER(c_double), 
-                                 POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int), c_int, POINTER(c_double), c_int]
+_lib.bondOrderFilter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_int, POINTER(c_double), POINTER(c_double), 
+                                 POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int), c_int, POINTER(c_double), c_int, c_double, c_double,
+                                 c_int, c_double, c_double]
 
 # bondOrderFilter filter
-def bondOrderFilter(visibleAtoms, pos, minVal, maxVal, maxBondDistance, scalarsQ4, scalarsQ6, minPos, maxPos, cellDims, PBC, NScalars, fullScalars, 
-             filteringEnabled):
+def bondOrderFilter(visibleAtoms, pos, maxBondDistance, scalarsQ4, scalarsQ6, minPos, maxPos, cellDims, PBC, NScalars, fullScalars, 
+                    filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6):
     """
     bondOrderFilter filter.
     
     """
-    return _lib.bondOrderFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), minVal, maxVal, maxBondDistance, 
+    return _lib.bondOrderFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), maxBondDistance, 
                                 len(scalarsQ4), CPtrToDouble(scalarsQ4), CPtrToDouble(scalarsQ6), CPtrToDouble(minPos), CPtrToDouble(maxPos), CPtrToDouble(cellDims), 
-                                CPtrToInt(PBC), NScalars, CPtrToDouble(fullScalars), int(filteringEnabled))
+                                CPtrToInt(PBC), NScalars, CPtrToDouble(fullScalars), int(filterQ4Enabled), minQ4, maxQ4, int(filterQ6Enabled), minQ6, maxQ6)

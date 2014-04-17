@@ -63,7 +63,7 @@ class FilterList(QtGui.QWidget):
         # all available filters
         self.allFilters = ["Specie", 
                            "Point defects", 
-                           "Crop", 
+                           "Crop box", 
                            "Cluster", 
                            "Displacement",
                            "Kinetic energy",
@@ -650,7 +650,7 @@ class FilterList(QtGui.QWidget):
         
         formObject = getattr(filterSettings, dialogName, None)
         if formObject is not None:
-            title = "%s filter settings (List %d - %d)" % (filterName, self.tab, self.filterCounter)
+            title = "%s settings (List %d - %d)" % (filterName, self.tab, self.filterCounter)
             form = formObject(self.mainWindow, title, parent=self)
             self.filterCounter += 1
         
