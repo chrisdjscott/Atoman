@@ -5,13 +5,39 @@ Rendering utils
 @author: Chris Scott
 
 """
-import math
 import ctypes as C
 import logging
 
 import numpy as np
 import vtk
 
+
+################################################################################
+
+def getScalarsType(colouringOptions):
+    """
+    Return scalars type based on colouring options
+    
+    """
+    # scalar type
+    if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
+        scalarType = 0
+    
+    elif colouringOptions.colourBy == "Height":
+        scalarType = 1
+    
+    elif colouringOptions.colourBy == "Atom property":
+        if colouringOptions.atomPropertyType == "Kinetic energy":
+            scalarType = 2
+        elif colouringOptions.atomPropertyType == "Potential energy":
+            scalarType = 3
+        else:
+            scalarType = 4
+    
+    else:
+        scalarType = 5
+    
+    return scalarType
 
 ################################################################################
 

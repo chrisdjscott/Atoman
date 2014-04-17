@@ -68,7 +68,7 @@ class GenericSettingsDialog(QtGui.QDialog):
         contentWidget.setLayout(self.contentLayout)
         
 #        dialogLayout.addWidget(contentWidget)
-        tabWidget.addTab(contentWidget, "Filter")
+        tabWidget.addTab(contentWidget, "Calculate")
         
         # display settings
         self.displaySettingsLayout = QtGui.QVBoxLayout()
@@ -126,6 +126,35 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         self.mainWindow.helpWindow.loadPage(self.helpPage)
         self.mainWindow.showHelp()
+    
+    def addFilteringGroupBox(self, title="Enable filtering", slot=None, checked=False):
+        """
+        Add a group box that contains filtering options
+        
+        """
+        # widget
+        grp = QtGui.QGroupBox(title)
+        grp.setCheckable(True)
+        
+        # layout
+        grpLayout = QtGui.QVBoxLayout()
+        grpLayout.setAlignment(QtCore.Qt.AlignTop)
+        grpLayout.setContentsMargins(0,0,0,0)
+        grpLayout.setSpacing(0)
+        grp.setLayout(grpLayout)
+        
+        # connect toggled signal
+        if slot is not None:
+            grp.toggled.connect(slot)
+        
+        # initial check status
+        grp.setChecked(checked)
+        
+        # add to form layout
+        row = self.newRow()
+        row.addWidget(grp)
+        
+        return grpLayout
     
     def addEnableFilteringCheck(self):
         """
@@ -285,11 +314,11 @@ class SpecieSettingsDialog(GenericSettingsDialog):
 
 
 ################################################################################
-class CropSettingsDialog(GenericSettingsDialog):
+class CropBoxSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        super(CropSettingsDialog, self).__init__(title, parent)
+        super(CropBoxSettingsDialog, self).__init__(title, parent)
         
-        self.filterType = "Crop"
+        self.filterType = "Crop box"
         
         self.xmin = 0.0
         self.xmax = 0.0
@@ -1337,12 +1366,12 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         
         self.filterType = "Displacement"
         
-        self.minDisplacement = 1.3
+        self.minDisplacement = 1.2
         self.maxDisplacement = 1000.0
         
-        self.addEnableFilteringCheck()
+        groupLayout = self.addFilteringGroupBox(slot=self.filteringToggled, checked=False)
         
-        label = QtGui.QLabel("Min displacement ")
+        label = QtGui.QLabel("Min:")
         self.minDisplacementSpinBox = QtGui.QDoubleSpinBox()
         self.minDisplacementSpinBox.setSingleStep(0.1)
         self.minDisplacementSpinBox.setMinimum(0.0)
@@ -1350,11 +1379,12 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         self.minDisplacementSpinBox.setValue(self.minDisplacement)
         self.minDisplacementSpinBox.valueChanged.connect(self.setMinDisplacement)
         
-        row = self.newRow()
+        row = QtGui.QHBoxLayout()
         row.addWidget(label)
         row.addWidget(self.minDisplacementSpinBox)
+        groupLayout.addLayout(row)
         
-        label = QtGui.QLabel("Max displacement ")
+        label = QtGui.QLabel("Max:")
         self.maxDisplacementSpinBox = QtGui.QDoubleSpinBox()
         self.maxDisplacementSpinBox.setSingleStep(0.1)
         self.maxDisplacementSpinBox.setMinimum(0.0)
@@ -1362,9 +1392,17 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         self.maxDisplacementSpinBox.setValue(self.maxDisplacement)
         self.maxDisplacementSpinBox.valueChanged.connect(self.setMaxDisplacement)
         
-        row = self.newRow()
+        row = QtGui.QHBoxLayout()
         row.addWidget(label)
         row.addWidget(self.maxDisplacementSpinBox)
+        groupLayout.addLayout(row)
+    
+    def filteringToggled(self, arg):
+        """
+        Filtering toggled
+        
+        """
+        self.filteringEnabled = arg
     
     def setMinDisplacement(self, val):
         """
@@ -1782,9 +1820,9 @@ class CoordinationNumberSettingsDialog(GenericSettingsDialog):
         self.minCoordNum = 0
         self.maxCoordNum = 100
         
-        self.addEnableFilteringCheck()
+        groupLayout = self.addFilteringGroupBox(slot=self.filteringToggled, checked=False)
         
-        label = QtGui.QLabel("Min ")
+        label = QtGui.QLabel("Min:")
         self.minCoordNumSpinBox = QtGui.QSpinBox()
         self.minCoordNumSpinBox.setSingleStep(1)
         self.minCoordNumSpinBox.setMinimum(0)
@@ -1792,11 +1830,12 @@ class CoordinationNumberSettingsDialog(GenericSettingsDialog):
         self.minCoordNumSpinBox.setValue(self.minCoordNum)
         self.minCoordNumSpinBox.valueChanged.connect(self.setMinCoordNum)
         
-        row = self.newRow()
+        row = QtGui.QHBoxLayout()
         row.addWidget(label)
         row.addWidget(self.minCoordNumSpinBox)
+        groupLayout.addLayout(row)
         
-        label = QtGui.QLabel("Max ")
+        label = QtGui.QLabel("Max:")
         self.maxCoordNumSpinBox = QtGui.QSpinBox()
         self.maxCoordNumSpinBox.setSingleStep(1)
         self.maxCoordNumSpinBox.setMinimum(0)
@@ -1804,9 +1843,17 @@ class CoordinationNumberSettingsDialog(GenericSettingsDialog):
         self.maxCoordNumSpinBox.setValue(self.maxCoordNum)
         self.maxCoordNumSpinBox.valueChanged.connect(self.setMaxCoordNum)
         
-        row = self.newRow()
+        row = QtGui.QHBoxLayout()
         row.addWidget(label)
         row.addWidget(self.maxCoordNumSpinBox)
+        groupLayout.addLayout(row)
+    
+    def filteringToggled(self, arg):
+        """
+        Filtering toggled
+        
+        """
+        self.filteringEnabled = arg
     
     def setMinCoordNum(self, val):
         """
@@ -1832,9 +1879,9 @@ class VoronoiNeighboursSettingsDialog(GenericSettingsDialog):
         self.minVoroNebs = 0
         self.maxVoroNebs = 999
         
-        self.addEnableFilteringCheck()
+        groupLayout = self.addFilteringGroupBox(slot=self.filteringToggled, checked=False)
         
-        label = QtGui.QLabel("Min ")
+        label = QtGui.QLabel("Min:")
         self.minVoroNebsSpin = QtGui.QSpinBox()
         self.minVoroNebsSpin.setSingleStep(1)
         self.minVoroNebsSpin.setMinimum(0)
@@ -1842,11 +1889,12 @@ class VoronoiNeighboursSettingsDialog(GenericSettingsDialog):
         self.minVoroNebsSpin.setValue(self.minVoroNebs)
         self.minVoroNebsSpin.valueChanged[int].connect(self.setMinVoroNebs)
         
-        row = self.newRow()
+        row = QtGui.QHBoxLayout()
         row.addWidget(label)
         row.addWidget(self.minVoroNebsSpin)
+        groupLayout.addLayout(row)
         
-        label = QtGui.QLabel("Max ")
+        label = QtGui.QLabel("Max:")
         self.maxVoroNebsSpin = QtGui.QSpinBox()
         self.maxVoroNebsSpin.setSingleStep(1)
         self.maxVoroNebsSpin.setMinimum(0)
@@ -1854,9 +1902,17 @@ class VoronoiNeighboursSettingsDialog(GenericSettingsDialog):
         self.maxVoroNebsSpin.setValue(self.maxVoroNebs)
         self.maxVoroNebsSpin.valueChanged[int].connect(self.setMaxVoroNebs)
         
-        row = self.newRow()
+        row = QtGui.QHBoxLayout()
         row.addWidget(label)
         row.addWidget(self.maxVoroNebsSpin)
+        groupLayout.addLayout(row)
+    
+    def filteringToggled(self, arg):
+        """
+        Filtering toggled
+        
+        """
+        self.filteringEnabled = arg
     
     def setMinVoroNebs(self, val):
         """
@@ -1886,9 +1942,9 @@ class VoronoiVolumeSettingsDialog(GenericSettingsDialog):
         self.minVoroVol = 0.0
         self.maxVoroVol = 9999.99
         
-        self.addEnableFilteringCheck()
+        groupLayout = self.addFilteringGroupBox(slot=self.filteringToggled, checked=False)
         
-        label = QtGui.QLabel("Min ")
+        label = QtGui.QLabel("Min:")
         self.minVoroVolSpin = QtGui.QDoubleSpinBox()
         self.minVoroVolSpin.setSingleStep(0.01)
         self.minVoroVolSpin.setMinimum(0.0)
@@ -1896,11 +1952,12 @@ class VoronoiVolumeSettingsDialog(GenericSettingsDialog):
         self.minVoroVolSpin.setValue(self.minVoroVol)
         self.minVoroVolSpin.valueChanged[float].connect(self.setMinVoroVol)
         
-        row = self.newRow()
+        row = QtGui.QHBoxLayout()
         row.addWidget(label)
         row.addWidget(self.minVoroVolSpin)
+        groupLayout.addLayout(row)
         
-        label = QtGui.QLabel("Max ")
+        label = QtGui.QLabel("Max:")
         self.maxVoroVolSpin = QtGui.QDoubleSpinBox()
         self.maxVoroVolSpin.setSingleStep(0.01)
         self.maxVoroVolSpin.setMinimum(0.0)
@@ -1908,9 +1965,17 @@ class VoronoiVolumeSettingsDialog(GenericSettingsDialog):
         self.maxVoroVolSpin.setValue(self.maxVoroVol)
         self.maxVoroVolSpin.valueChanged[float].connect(self.setMaxVoroVol)
         
-        row = self.newRow()
+        row = QtGui.QHBoxLayout()
         row.addWidget(label)
         row.addWidget(self.maxVoroVolSpin)
+        groupLayout.addLayout(row)
+    
+    def filteringToggled(self, arg):
+        """
+        Filtering toggled
+        
+        """
+        self.filteringEnabled = arg
     
     def setMinVoroVol(self, val):
         """
@@ -1937,37 +2002,15 @@ class BondOrderSettingsDialog(GenericSettingsDialog):
         
         self.filterType = "Bond order"
         
-        self.minVal = 0.0
-        self.maxVal = 9999.99
+        self.minQ4 = 0.0
+        self.maxQ4 = 99.99
+        self.minQ6 = 0.0
+        self.maxQ6 = 99.99
         self.maxBondDistance = 4.0
+        self.filterQ4Enabled = False
+        self.filterQ6Enabled = False
         
-#         self.addEnableFilteringCheck()
-#         
-#         label = QtGui.QLabel("Min ")
-#         self.minValSpin = QtGui.QDoubleSpinBox()
-#         self.minValSpin.setSingleStep(0.01)
-#         self.minValSpin.setMinimum(0.0)
-#         self.minValSpin.setMaximum(9999.99)
-#         self.minValSpin.setValue(self.minVal)
-#         self.minValSpin.valueChanged[float].connect(self.setMinVal)
-#         
-#         row = self.newRow()
-#         row.addWidget(label)
-#         row.addWidget(self.minValSpin)
-#         
-#         label = QtGui.QLabel("Max ")
-#         self.maxValSpin = QtGui.QDoubleSpinBox()
-#         self.maxValSpin.setSingleStep(0.01)
-#         self.maxValSpin.setMinimum(0.0)
-#         self.maxValSpin.setMaximum(9999.99)
-#         self.maxValSpin.setValue(self.maxVal)
-#         self.maxValSpin.valueChanged[float].connect(self.setMaxVal)
-#         
-#         row = self.newRow()
-#         row.addWidget(label)
-#         row.addWidget(self.maxValSpin)
-        
-        label = QtGui.QLabel("Max bond distance ")
+        label = QtGui.QLabel("Max bond distance:")
         self.maxBondDistanceSpin = QtGui.QDoubleSpinBox()
         self.maxBondDistanceSpin.setSingleStep(0.01)
         self.maxBondDistanceSpin.setMinimum(2.0)
@@ -1979,7 +2022,79 @@ class BondOrderSettingsDialog(GenericSettingsDialog):
         row.addWidget(label)
         row.addWidget(self.maxBondDistanceSpin)
         
+        self.newRow()
+        groupLayout = self.addFilteringGroupBox(title="Filter Q4", slot=self.filterQ4Toggled, checked=False)
+        
+        label = QtGui.QLabel("Min:")
+        self.minQ4Spin = QtGui.QDoubleSpinBox()
+        self.minQ4Spin.setSingleStep(0.01)
+        self.minQ4Spin.setMinimum(0.0)
+        self.minQ4Spin.setMaximum(9999.99)
+        self.minQ4Spin.setValue(self.minQ4)
+        self.minQ4Spin.valueChanged[float].connect(self.setMinQ4)
+         
+        row = QtGui.QHBoxLayout()
+        row.addWidget(label)
+        row.addWidget(self.minQ4Spin)
+        groupLayout.addLayout(row)
+         
+        label = QtGui.QLabel("Max:")
+        self.maxQ4Spin = QtGui.QDoubleSpinBox()
+        self.maxQ4Spin.setSingleStep(0.01)
+        self.maxQ4Spin.setMinimum(0.0)
+        self.maxQ4Spin.setMaximum(9999.99)
+        self.maxQ4Spin.setValue(self.maxQ4)
+        self.maxQ4Spin.valueChanged[float].connect(self.setMaxQ4)
+         
+        row = QtGui.QHBoxLayout()
+        row.addWidget(label)
+        row.addWidget(self.maxQ4Spin)
+        groupLayout.addLayout(row)
+        
+        self.newRow()
+        groupLayout = self.addFilteringGroupBox(title="Filter Q6", slot=self.filterQ6Toggled, checked=False)
+        
+        label = QtGui.QLabel("Min:")
+        self.minQ6Spin = QtGui.QDoubleSpinBox()
+        self.minQ6Spin.setSingleStep(0.01)
+        self.minQ6Spin.setMinimum(0.0)
+        self.minQ6Spin.setMaximum(9999.99)
+        self.minQ6Spin.setValue(self.minQ6)
+        self.minQ6Spin.valueChanged[float].connect(self.setMinQ6)
+         
+        row = QtGui.QHBoxLayout()
+        row.addWidget(label)
+        row.addWidget(self.minQ6Spin)
+        groupLayout.addLayout(row)
+         
+        label = QtGui.QLabel("Max:")
+        self.maxQ6Spin = QtGui.QDoubleSpinBox()
+        self.maxQ6Spin.setSingleStep(0.01)
+        self.maxQ6Spin.setMinimum(0.0)
+        self.maxQ6Spin.setMaximum(9999.99)
+        self.maxQ6Spin.setValue(self.maxQ6)
+        self.maxQ6Spin.valueChanged[float].connect(self.setMaxQ6)
+         
+        row = QtGui.QHBoxLayout()
+        row.addWidget(label)
+        row.addWidget(self.maxQ6Spin)
+        groupLayout.addLayout(row)
+        
         self.addLinkToHelpPage("usage/analysis/filters/bond_order.html")
+    
+    def filterQ4Toggled(self, arg):
+        """
+        Filter Q4 toggled
+        
+        """
+        self.filterQ4Enabled = arg
+    
+    def filterQ6Toggled(self, arg):
+        """
+        Filter Q4 toggled
+        
+        """
+        self.filterQ6Enabled = arg
     
     def setMaxBondDistance(self, val):
         """
@@ -1988,16 +2103,30 @@ class BondOrderSettingsDialog(GenericSettingsDialog):
         """
         self.maxBondDistance = val
     
-    def setMinVal(self, val):
+    def setMinQ4(self, val):
         """
-        Set the minimum value
+        Set the minimum value for Q4
         
         """
-        self.minVal = val
+        self.minQ4 = val
 
-    def setMaxVal(self, val):
+    def setMaxQ4(self, val):
         """
-        Set the maximum value
+        Set the maximum value for Q4
         
         """
-        self.maxVal = val
+        self.maxQ4 = val
+    
+    def setMinQ6(self, val):
+        """
+        Set the minimum value for Q6
+        
+        """
+        self.minQ6 = val
+
+    def setMaxQ6(self, val):
+        """
+        Set the maximum value for Q6
+        
+        """
+        self.maxQ6 = val

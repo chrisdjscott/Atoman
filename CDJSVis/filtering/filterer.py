@@ -453,9 +453,9 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
-        NVisible = bond_order_c.bondOrderFilter(self.visibleAtoms, inputState.pos, settings.minVal, settings.maxVal, settings.maxBondDistance, 
-                                                scalarsQ4, scalarsQ6, inputState.minPos, inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC,
-                                                NScalars, fullScalars, settings.filteringEnabled)
+        NVisible = bond_order_c.bondOrderFilter(self.visibleAtoms, inputState.pos, settings.maxBondDistance, scalarsQ4, scalarsQ6, inputState.minPos, 
+                                                inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.filterQ4Enabled, 
+                                                settings.minQ4, settings.maxQ4, settings.filterQ6Enabled, settings.minQ6, settings.maxQ6)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -532,7 +532,7 @@ class Filterer(object):
         # get actors for vis atoms only!
         renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.pipelinePage.inputState.voronoiDict[voroKey], 
                                                self.colouringOptions, self.voronoiOptions, self.actorsCollection, 
-                                               voroFile, self.scalars, log=self.log)
+                                               voroFile, self.scalarsDict, log=self.log)
     
     def calculateBonds(self):
         """
@@ -649,7 +649,7 @@ class Filterer(object):
             povfile = "pipeline%d_bonds%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
             
             renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsCollection, self.colouringOptions, 
-                                    povfile, self.scalars, bondArray, NBondsArray, bondVectorArray, self.bondsOptions)
+                                    povfile, self.scalarsDict, bondArray, NBondsArray, bondVectorArray, self.bondsOptions)
         
         return 0
     

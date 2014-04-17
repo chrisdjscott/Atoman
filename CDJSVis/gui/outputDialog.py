@@ -191,6 +191,10 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
         if scalarsID in self.currentPlots:
             return
         
+        # don't add empty arrays
+        if not len(scalarsArray):
+            return
+        
         self.logger.debug("Adding scalar plot option: '%s'", scalarsID)
         
         # create form
@@ -1569,13 +1573,19 @@ class ImageSequenceTab(QtGui.QWidget):
         self.logger.debug("  Input stack index: %d, %d", ida, idb)
         
         systemsDialog = self.mainWindow.systemsDialog
+        iniStackIndexa = systemsDialog.new_system_stack.currentIndex()
         
         systemsDialog.new_system_stack.setCurrentIndex(ida)
         in_page = systemsDialog.new_system_stack.currentWidget()
+        iniStackIndexb = in_page.stackedWidget.currentIndex()
         
         in_page.stackedWidget.setCurrentIndex(idb)
         readerForm = in_page.stackedWidget.currentWidget()
         reader = readerForm.latticeReader
+        
+        # back to original
+        in_page.stackedWidget.setCurrentIndex(iniStackIndexb)
+        systemsDialog.new_system_stack.setCurrentIndex(iniStackIndexa)
         
         self.logger.debug("  Reader: %s %s", str(readerForm), str(reader))
         

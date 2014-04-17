@@ -66,6 +66,13 @@ def main():
         
             os.chdir("..")
         
+        # compile C libs
+        os.chdir(os.path.join("CDJSVis", "visclibs"))
+        command = "make"
+        print command
+        os.system(command)
+        os.chdir("../..")
+        
         # build sphinx doc
         os.chdir("doc")
         
@@ -131,13 +138,7 @@ def main():
         os.unlink("resources_mod.qrc")
         shutil.rmtree("doc")
         
-        # run Makefile
-        os.chdir("visclibs")
-        command = "make"
-        print command
-        os.system(command)
-        
-        os.chdir("../..")
+        os.chdir("..")
         
         if len(sys.argv) == 2 and sys.argv[1] == "test":
             print ""

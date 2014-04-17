@@ -20,6 +20,7 @@ void complex_qlm(int, int*, struct NeighbourList*, double*, double*, int*, struc
 void calculate_Q(int, struct AtomStructureResults*);
 const double factorials[] = {1.0, 1.0, 2.0, 6.0, 24.0, 120.0, 720.0, 5040.0, 40320.0, 362880.0, 3628800, 39916800.0, 479001600.0};
 
+
 /*******************************************************************************
  ** plgndr from Numerical Recipes in C, page 254
  *******************************************************************************/
@@ -197,7 +198,7 @@ void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList *nebLis
 }
 
 /*******************************************************************************
- ** calcuate Q4/6 from complex q_lm's
+ ** calculate Q4/6 from complex q_lm's
  *******************************************************************************/
 void calculate_Q(int NVisibleIn, struct AtomStructureResults *results)
 {
@@ -231,13 +232,14 @@ void calculate_Q(int NVisibleIn, struct AtomStructureResults *results)
 /*******************************************************************************
  ** bond order filter
  *******************************************************************************/
-int bondOrderFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, double minVal, double maxVal, double maxBondDistance, 
+int bondOrderFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, double maxBondDistance, 
                     int scalarsDim, double *scalarsQ4, double *scalarsQ6, double *minPos, double *maxPos, double *cellDims, int *PBC, 
-                    int NScalars, double *fullScalars, int filteringEnabled)
+                    int NScalars, double *fullScalars, int filterQ4Enabled, double minQ4, double maxQ4, int filterQ6Enabled, 
+                    double minQ6, double maxQ6)
 {
-    int i, index, NVisible;
+    int i, j, index, NVisible;
     int maxSep2;
-    double approxBoxWidth;
+    double approxBoxWidth, q4, q6;
     double *visiblePos;
     struct Boxes *boxes;
     struct NeighbourList *nebList;
@@ -288,15 +290,33 @@ int bondOrderFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, 
     /* calculate Q4 and Q6 */
     calculate_Q(NVisibleIn, results);
     
-    
-    
     /* do filtering here, storing results along the way */
-    NVisible = NVisibleIn;
-    
+    NVisible = 0;
     for (i = 0; i < NVisibleIn; i++)
     {
-        scalarsQ4[i] = results[i].Q4;
-        scalarsQ6[i] = results[i].Q6;
+        q4 = results[i].Q4;
+        q6 = results[i].Q6;
+        
+        if (filterQ4Enabled && (q4 < minQ4 || q4 > maxQ4))
+            continue;
+        
+        if (filterQ6Enabled && (q6 < minQ6 || q6 > maxQ6))
+            continue;
+        
+        /* add */
+        visibleAtoms[NVisible] = visibleAtoms[i];
+        
+        /* store scalars */
+        scalarsQ4[NVisible] = q4;
+        scalarsQ6[NVisible] = q6;
+        
+        /* handle full scalars array */
+        for (j = 0; j < NScalars; j++)
+        {
+            fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+        }
+        
+        NVisible++;
     }
     
     /* free */
@@ -305,4 +325,3 @@ int bondOrderFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, 
     
     return NVisible;
 }
-
