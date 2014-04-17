@@ -191,6 +191,10 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
         if scalarsID in self.currentPlots:
             return
         
+        # don't add empty arrays
+        if not len(scalarsArray):
+            return
+        
         self.logger.debug("Adding scalar plot option: '%s'", scalarsID)
         
         # create form

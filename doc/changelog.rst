@@ -5,6 +5,7 @@ Changelog
 
 * After running sequencer change back to original settings on systems dialog
 * Fix bug in renderBonds/Voronoi introduced when adding multiple scalars
+* Fix bug: don't try to add scalar plot option if there are no visible atoms
 
 **v140415**
 
