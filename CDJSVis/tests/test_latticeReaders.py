@@ -330,10 +330,10 @@ class TestLbomdXYZReader(unittest.TestCase):
         
         # create reader
         refReader = latticeReaders.LbomdRefReader(self.tmpLocation, log_output, log_warning, log_error)
-        refStatus, self.refState = refReader.readFile(path_to_file("anim-ref-HDiff.xyz"))
+        refStatus, self.refState = refReader.readFile(path_to_file("anim-ref-Hdiff.xyz"))
         
         if refStatus:
-            raise unittest.SkipTest("read ref failed")
+            raise unittest.SkipTest("read ref failed ('%s'; %d; %r)" % (path_to_file("anim-ref-Hdiff.xyz"), refStatus, self.refState))
         
         self.reader = latticeReaders.LbomdXYZReader(self.tmpLocation, log_output, log_warning, log_error)
     
@@ -354,7 +354,7 @@ class TestLbomdXYZReader(unittest.TestCase):
         READXYZ gzipped returns Lattice
         
         """
-        filename = path_to_file("input-Hdiff.xyz")
+        filename = path_to_file("input-HDiff.xyz")
         
         status, state = self.reader.readFile(filename, self.refState)
         
@@ -365,7 +365,7 @@ class TestLbomdXYZReader(unittest.TestCase):
         READXYZ gzipped status ok
         
         """
-        filename = path_to_file("input-Hdiff.xyz")
+        filename = path_to_file("input-HDiff.xyz")
         
         status, state = self.reader.readFile(filename, self.refState)
         
@@ -398,7 +398,7 @@ class TestLbomdXYZReader(unittest.TestCase):
         READXYZ NAtoms
         
         """
-        filename = path_to_file("input-Hdiff.xyz")
+        filename = path_to_file("input-HDiff.xyz")
         
         status, state = self.reader.readFile(filename, self.refState)
         
@@ -409,7 +409,7 @@ class TestLbomdXYZReader(unittest.TestCase):
         READXYZ cell dimensions
         
         """
-        filename = path_to_file("input-Hdiff.xyz")
+        filename = path_to_file("input-HDiff.xyz")
         
         status, state = self.reader.readFile(filename, self.refState)
         
@@ -422,7 +422,7 @@ class TestLbomdXYZReader(unittest.TestCase):
         READXYZ NSpecies
         
         """
-        filename = path_to_file("input-Hdiff.xyz")
+        filename = path_to_file("input-HDiff.xyz")
         
         status, state = self.reader.readFile(filename, self.refState)
         
@@ -433,7 +433,7 @@ class TestLbomdXYZReader(unittest.TestCase):
         READXYZ specie list
         
         """
-        filename = path_to_file("input-Hdiff.xyz")
+        filename = path_to_file("input-HDiff.xyz")
         
         status, state = self.reader.readFile(filename, self.refState)
         
@@ -446,7 +446,7 @@ class TestLbomdXYZReader(unittest.TestCase):
         READXYZ specie count
         
         """
-        filename = path_to_file("input-Hdiff.xyz")
+        filename = path_to_file("input-HDiff.xyz")
         
         status, state = self.reader.readFile(filename, self.refState)
         
