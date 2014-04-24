@@ -36,8 +36,8 @@ class Lattice(object):
         self.specieRGB = np.empty((0,3), np.float64)
         self.specieAtomicNumber = np.empty(0, np.int32)
         
-        self.minPos = np.empty(3, np.float64)
-        self.maxPos = np.empty(3, np.float64)
+        self.minPos = np.zeros(3, np.float64)
+        self.maxPos = np.zeros(3, np.float64)
         
         self.atomID = np.empty(0, np.int32)
         self.specie = np.empty(0, np.int32)
@@ -70,8 +70,8 @@ class Lattice(object):
         self.specieRGB = np.empty((0,3), np.float64)
         self.specieAtomicNumber = np.empty(0, np.int32)
         
-        self.minPos = np.empty(3, np.float64)
-        self.maxPos = np.empty(3, np.float64)
+        self.minPos = np.zeros(3, np.float64)
+        self.maxPos = np.zeros(3, np.float64)
          
         self.cellDims = np.zeros(3, np.float64)
         
