@@ -312,7 +312,16 @@ def runSubProcess(command, verbose=0):
     output, stderr = process.communicate()
     status = process.poll()
     
-    return (output, stderr, status)
+    return output, stderr, status
+
+################################################################################
+def runSubprocessInThread(command, resultQ, verbose=False):
+    """
+    Run subprocess in separate thread
+    
+    """
+    result = runSubProcess(command, verbose=verbose)
+    resultQ.put(result)
 
 ################################################################################
 def simulationTimeLine(simTimeInFs):

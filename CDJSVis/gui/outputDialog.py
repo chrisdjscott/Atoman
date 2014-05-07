@@ -1011,7 +1011,7 @@ class ImageTab(QtGui.QWidget):
             return 1
         
         try:
-            # temporary (should be optional)
+            # settings
             settings = self.mainWindow.preferences.ffmpegForm
             framerate = createMovieBox.framerate
             bitrate = settings.bitrate
