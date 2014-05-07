@@ -646,8 +646,8 @@ int voronoiNeighboursFilter(int NVisibleIn, int* visibleAtoms, int volumeDim, in
  **Q4 filter
  *******************************************************************************/
 int Q4Filter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, double minQ4, double maxQ4, double maxBondDistance, 
-                        int scalarsDim, double *scalars, double *minPos, double *maxPos, double *cellDims, int *PBC, 
-                        int NScalars, double *fullScalars, int filteringEnabled)
+             int scalarsDim, double *scalars, double *minPos, double *maxPos, double *cellDims, int *PBC, 
+             int NScalars, double *fullScalars, int filteringEnabled)
 {
     int i, j, k, index, index2, NVisible, boxNebList[27];
     int *NBondsForAtom, boxIndex, visIndex, maxSep2, num_bonds;
@@ -868,6 +868,34 @@ int Q4Filter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, double 
     free(Q44);
     free(NBondsForAtom);
     freeBoxes(boxes);
+    
+    return NVisible;
+}
+
+int atomIndexFilter(int NVisibleIn, int *visibleAtoms, int *atomID, int filteringEnabled, int minVal, int maxVal, int NScalars, double *fullScalars)
+{
+    int i, id, index, NVisible, j;
+    
+    
+    NVisible = 0;
+    for (i = 0; i < NVisibleIn; i++)
+    {
+        index = visibleAtoms[i];
+        
+        id = atomID[index];
+        if (filteringEnabled && (id < minVal || id > maxVal))
+            continue;
+        
+        visibleAtoms[NVisible] = index;
+        
+        /* handle full scalars array */
+        for (j = 0; j < NScalars; j++)
+        {
+            fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+        }
+        
+        NVisible++;
+    }
     
     return NVisible;
 }

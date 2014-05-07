@@ -1,6 +1,10 @@
 Changelog
 =========
 
+**dev**
+
+* Add atom index filter
+
 **v140417**
 
 * After running sequencer change back to original settings on systems dialog
