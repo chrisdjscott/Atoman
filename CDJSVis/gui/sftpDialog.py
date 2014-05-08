@@ -167,14 +167,21 @@ class SFTPBrowserDialog(QtGui.QDialog):
         # check if file is selected
         browser = self.stackedWidget.currentWidget()
         item = browser.listWidget.currentItem()
+        fn = str(item.text())
         if item is not None and not item.is_dir:
             self.logger.debug("Selecting item: '%s'", item.text())
-            self.filename_remote = str(browser.sftp.normalize(item.text()))
+            self.filename_remote = str(browser.sftp.normalize(fn))
             self.filename_source = None
             self.filename_local = os.path.join(self.mainWindow.tmpDirectory, "%s" % item.text())
             
             # we also need to copy the file locally and store that path
-            browser.sftp.get(item.text(), self.filename_local)
+            browser.sftp.get(fn, self.filename_local)
+            
+            # we also need to look for Roulette file
+            if fn.endswith(".dat") or fn.endswith(".dat.gz") or fn.endswith(".dat.bz2"):
+                self.logger.debug("Looking for Roulette file too")
+                
+                
         
         return super(SFTPBrowserDialog, self).accept(*args, **kwargs)
     
