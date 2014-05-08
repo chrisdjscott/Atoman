@@ -182,8 +182,8 @@ class AutoDetectReaderForm(GenericReaderForm):
         
         # open dialog
         row = self.newRow()
-        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
-        self.openLatticeDialogButton.setToolTip("Open file")
+        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
+        self.openLatticeDialogButton.setToolTip("Open file dialog")
         self.openLatticeDialogButton.setCheckable(0)
         self.openLatticeDialogButton.clicked.connect(self.openFileDialog)
         row.addWidget(self.openLatticeDialogButton)
@@ -434,8 +434,8 @@ class LbomdDatReaderForm(GenericReaderForm):
         
         # open dialog
         row = self.newRow()
-        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
-        self.openLatticeDialogButton.setToolTip("Open file")
+        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
+        self.openLatticeDialogButton.setToolTip("Open file dialog")
         self.openLatticeDialogButton.setCheckable(0)
         self.openLatticeDialogButton.clicked.connect(self.openFileDialog)
         row.addWidget(self.openLatticeDialogButton)
@@ -535,8 +535,8 @@ class LbomdRefReaderForm(GenericReaderForm):
         
         # open dialog
         row = self.newRow()
-        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
-        self.openLatticeDialogButton.setToolTip("Open file")
+        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
+        self.openLatticeDialogButton.setToolTip("Open file dialog")
         self.openLatticeDialogButton.setCheckable(0)
         self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), self.openFileDialog)
         row.addWidget(self.openLatticeDialogButton)
@@ -684,8 +684,8 @@ class LbomdXYZReaderForm(GenericReaderForm):
         
         # open dialog
         row = self.newRow()
-        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
-        self.openLatticeDialogButton.setToolTip("Open file")
+        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
+        self.openLatticeDialogButton.setToolTip("Open file dialog")
         self.openLatticeDialogButton.setCheckable(0)
         self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), lambda isRef=False: self.openFileDialog(isRef))
         row.addWidget(self.openLatticeDialogButton)

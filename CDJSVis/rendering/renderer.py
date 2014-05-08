@@ -521,6 +521,13 @@ class Renderer(object):
         
         elif renderType == "POV" and overlay:
             self.overlayImage(filename)
+            
+            # overlay image in separate thread
+#             thread = threading.Thread(target=self.overlayImage, args=(filename,))
+#             thread.start()
+#             while thread.isAlive():
+#                 thread.join(0.1)
+#                 QtGui.QApplication.processEvents()
         
         return filename
     
@@ -529,7 +536,6 @@ class Renderer(object):
         Overlay the image with on screen info.
         
         """
-        import time
         overlayTime = time.time()
         
         # local refs
