@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 """
 SFTP Browser dialog
@@ -6,18 +5,21 @@ SFTP Browser dialog
 @author: Chris Scott
 
 """
+import os
 import sys
 import stat
 import getpass
 import logging
-logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 from PySide import QtGui
 import paramiko
+logging.getLogger("paramiko").setLevel(logging.WARNING)
 
-from CDJSVis import resources
-from CDJSVis.visutils.utilities import iconPath
+from . import genericForm
+from .. import resources
+from ..visutils.utilities import iconPath
 
+################################################################################
 
 class SFTPConnectionDialog(QtGui.QDialog):
     """
@@ -98,14 +100,17 @@ class SFTPConnectionDialog(QtGui.QDialog):
         else:
             self.password = text
 
+################################################################################
+
 class SFTPBrowserDialog(QtGui.QDialog):
     """
     SFTP browser dialog
     
     """
-    def __init__(self, parent=None):
+    def __init__(self, mainWindow, parent=None):
         super(SFTPBrowserDialog, self).__init__(parent)
         
+        self.mainWindow = mainWindow
         self.logger = logging.getLogger(__name__)
         
         self.setModal(1)
@@ -115,8 +120,8 @@ class SFTPBrowserDialog(QtGui.QDialog):
         
         # layout
         layout = QtGui.QVBoxLayout(self)
-        layout.setContentsMargins(0,0,0,0)
-        layout.setSpacing(0)
+#         layout.setContentsMargins(0,0,0,0)
+#         layout.setSpacing(0)
         
         # add connection
         self.connectionsCombo = QtGui.QComboBox()
@@ -133,6 +138,45 @@ class SFTPBrowserDialog(QtGui.QDialog):
         # stacked widget
         self.stackedWidget = QtGui.QStackedWidget()
         layout.addWidget(self.stackedWidget)
+        
+        # buttons
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        layout.addWidget(buttonBox)
+        row = QtGui.QHBoxLayout()
+        row.addStretch()
+        row.addWidget(buttonBox)
+        layout.addLayout(row)
+    
+    def exec_(self, *args, **kwargs):
+        """
+        exec_ override
+        
+        """
+        self.filename_remote = None
+        self.filename_local = None
+        
+        return super(SFTPBrowserDialog, self).exec_(*args, **kwargs)
+    
+    def accept(self, *args, **kwargs):
+        """
+        Accept override
+        
+        """
+        # check if file is selected
+        browser = self.stackedWidget.currentWidget()
+        item = browser.listWidget.currentItem()
+        if item is not None and not item.is_dir:
+            self.logger.debug("Selecting item: '%s'", item.text())
+            self.filename_remote = str(browser.sftp.normalize(item.text()))
+            self.filename_source = None
+            self.filename_local = os.path.join(self.mainWindow.tmpDirectory, "%s" % item.text())
+            
+            # we also need to copy the file locally and store that path
+            browser.sftp.get(item.text(), self.filename_local)
+        
+        return super(SFTPBrowserDialog, self).accept(*args, **kwargs)
     
     def addNewConnection(self):
         """
@@ -183,6 +227,8 @@ class SFTPBrowserDialog(QtGui.QDialog):
         self.logger.debug("Connection changed: %d", index)
         self.stackedWidget.setCurrentIndex(index)
 
+################################################################################
+
 class SFTPBrowserListWidgetItem(QtGui.QListWidgetItem):
     """
     List widget item for SFTP Browser
@@ -192,23 +238,22 @@ class SFTPBrowserListWidgetItem(QtGui.QListWidgetItem):
         super(SFTPBrowserListWidgetItem, self).__init__(icon, text)
         self.is_dir = is_dir
 
-class SFTPBrowser(QtGui.QWidget):
+################################################################################
+
+class SFTPBrowser(genericForm.GenericForm):
     """
     Basic SFTP file browser
     
     """
     def __init__(self, hostname, username, password, parent=None):
-        super(SFTPBrowser, self).__init__(parent)
-        
-        self.logger = logging.getLogger(__name__)
-        
         self.hostname = hostname
         self.username = username
+        if self.username is None:
+            self.username = getpass.getuser()
+
+        super(SFTPBrowser, self).__init__(parent, None, "%s@%s" % (self.username, self.hostname))
         
-#         self.setModal(1)
-#         self.setWindowTitle("SFTP Browser")
-# #         self.setWindowIcon(QtGui.QIcon(iconPath("console-icon.png")))
-#         self.resize(800,400)
+        self.logger = logging.getLogger(__name__)
         
         # defaults
         self.connected = False
@@ -222,22 +267,25 @@ class SFTPBrowser(QtGui.QWidget):
         ]
         
         # layout
-        layout = QtGui.QVBoxLayout(self)
+#         layout = QtGui.QVBoxLayout(self)
 #         layout.setContentsMargins(0,0,0,0)
 #         layout.setSpacing(0)
         
         # connection label
         self.connectedToLabel = QtGui.QLabel("Connected to: ''")
-        layout.addWidget(self.connectedToLabel)
+        row = self.newRow()
+        row.addWidget(self.connectedToLabel)
         
         # current path label
         self.currentPathLabel = QtGui.QLabel("Current directory: ''")
-        layout.addWidget(self.currentPathLabel)
+        row = self.newRow()
+        row.addWidget(self.currentPathLabel)
         
         # list widget
         self.listWidget = QtGui.QListWidget(self)
         self.listWidget.itemDoubleClicked.connect(self.itemDoubleClicked)
-        layout.addWidget(self.listWidget)
+        row = self.newRow()
+        row.addWidget(self.listWidget)
         
         # filters
         label = QtGui.QLabel("Filters:")
@@ -245,11 +293,9 @@ class SFTPBrowser(QtGui.QWidget):
         filtersCombo.currentIndexChanged[int].connect(self.filtersComboChanged)
         for tup in self.filters:
             filtersCombo.addItem("%s (%s)" % (tup[0], " ".join(tup[1])))
-        row = QtGui.QHBoxLayout()
+        row = self.newRow()
         row.addWidget(label)
         row.addWidget(filtersCombo)
-        row.addStretch()
-        layout.addLayout(row)
         
         # buttons (open, close?, ...)
 #         openButton = QtGui.QPushButton("Open")
@@ -311,9 +357,6 @@ class SFTPBrowser(QtGui.QWidget):
         Connect to server
         
         """
-        if self.username is None:
-            self.username = getpass.getuser()
-        
         # make ssh connection
         self.logger.debug("Opening connection: '%s@%s'", self.username, self.hostname)
         self.ssh = paramiko.SSHClient()

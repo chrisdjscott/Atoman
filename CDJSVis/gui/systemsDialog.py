@@ -19,6 +19,7 @@ from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
 from . import latticeReaderForms
 from . import latticeGeneratorForms
+from . import sftpDialog
 
 try:
     from .. import resources
@@ -132,6 +133,9 @@ class LoadSystemForm(GenericForm):
         self.mainWindow = mainWindow
         self.mainToolbar = mainToolbar
         
+        # sftp browser
+        self.sftp_browser = sftpDialog.SFTPBrowserDialog(self.mainWindow, parent=self)
+        
         # ordered list of keys
         self.readerFormsKeys = [
             "LBOMD DAT",
@@ -181,6 +185,14 @@ class LoadSystemForm(GenericForm):
         row.addWidget(helpButton)
         
         self.show()
+    
+    def openSFTPBrowser(self):
+        """
+        Open SFTP browser
+        
+        """
+        
+        
     
     def loadHelpPage(self):
         """
@@ -586,7 +598,7 @@ class SystemsDialog(QtGui.QDialog):
         self.logger.debug("Adding new lattice to systemsList (%d): %s; %d,%d", index, filename, ida, idb)
         
         if displayName is None:
-            displayName = filename
+            displayName = os.path.basename(filename)
         
         # item for list
         list_item = SystemsListWidgetItem(lattice, filename, displayName, stackIndex, abspath, extension)

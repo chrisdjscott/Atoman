@@ -188,6 +188,35 @@ class AutoDetectReaderForm(GenericReaderForm):
         self.openLatticeDialogButton.clicked.connect(self.openFileDialog)
         row.addWidget(self.openLatticeDialogButton)
         
+        # sftp browser
+        if hasattr(self.parent, "sftp_browser"):
+            openSFTPBrowserButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "SFTP browser")
+            openSFTPBrowserButton.setToolTip("Open SFTP browser")
+            openSFTPBrowserButton.setCheckable(0)
+            openSFTPBrowserButton.clicked.connect(self.openSFTPBrowser)
+            row = self.newRow()
+            row.addWidget(openSFTPBrowserButton)
+    
+    def openSFTPBrowser(self):
+        """
+        Open SFTP browser
+        
+        """
+        self.logger.debug("Opening SFTP browser (AUTO DETECT)")
+        
+        ok = self.parent.sftp_browser.exec_()
+        if ok and self.parent.sftp_browser.filename_remote is not None:
+            remotefn = self.parent.sftp_browser.filename_remote
+            localfn = self.parent.sftp_browser.filename_local
+            self.logger.info("Copied remote file (%s) to local machine", remotefn)
+            self.logger.debug("Local filename: '%s'", localfn)
+            
+            # read file
+            status = self.openFile(filename=localfn)
+            
+            # remove local copy
+            self.cleanUnzipped(localfn, True)
+    
     def updateFileLabel(self, filename):
         """
         Update file label.
@@ -463,9 +492,6 @@ class LbomdDatReaderForm(GenericReaderForm):
             filename = self.getFileName()
         
         filename = str(filename)
-        
-#        if not len(filename):
-#            return None
         
         # remove zip extensions
         if filename[-3:] == ".gz":
