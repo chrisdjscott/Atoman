@@ -329,7 +329,23 @@ def simulationTimeLine(simTimeInFs):
     Scales simulation time and returns line including units.
     
     """
-    if simTimeInFs > 1.0E15:
+    if simTimeInFs > 1.0E27:
+        # years
+        simTime = "%.3f years" % ((simTimeInFs / 1.0E15) / 31557600.0,)
+    
+    elif simTimeInFs > 1.0E24:
+        # days
+        simTime = "%.3f days" % ((simTimeInFs / 1.0E15) / 86400.0,)
+    
+    elif simTimeInFs > 1.0E21:
+        # hours
+        simTime = "%.3f hours" % ((simTimeInFs / 1.0E15) / 3600.0,)
+    
+    elif simTimeInFs > 1.0E18:
+        # minutes
+        simTime = "%.3f mins" % ((simTimeInFs / 1.0E15) / 60.0,)
+    
+    elif simTimeInFs > 1.0E15:
         simTime = "%.3f s" % (simTimeInFs / 1.0E15,)
     
     elif simTimeInFs > 1.0E12:
