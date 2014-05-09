@@ -10,6 +10,8 @@ import sys
 import stat
 import getpass
 import logging
+import re
+import errno
 
 from PySide import QtGui
 import paramiko
@@ -116,7 +118,7 @@ class SFTPBrowserDialog(QtGui.QDialog):
         self.setModal(1)
         self.setWindowTitle("SFTP Browser")
 #         self.setWindowIcon(QtGui.QIcon(iconPath("console-icon.png")))
-        self.resize(800,400)
+        self.resize(800,600)
         
         # layout
         layout = QtGui.QVBoxLayout(self)
@@ -158,6 +160,8 @@ class SFTPBrowserDialog(QtGui.QDialog):
         """
         self.filename_remote = None
         self.filename_local = None
+        self.roulette_remote = None
+        self.roulette_local = None
         
         return super(SFTPBrowserDialog, self).exec_(*args, **kwargs)
     
@@ -178,13 +182,18 @@ class SFTPBrowserDialog(QtGui.QDialog):
                 self.filename_local = os.path.join(self.mainWindow.tmpDirectory, "%s" % item.text())
                 
                 # we also need to copy the file locally and store that path
+                self.logger.debug("Copying file: '%s' to '%s'", self.filename_remote, self.filename_local)
                 browser.sftp.get(fn, self.filename_local)
                 
                 # we also need to look for Roulette file
                 if fn.endswith(".dat") or fn.endswith(".dat.gz") or fn.endswith(".dat.bz2"):
                     self.logger.debug("Looking for Roulette file too")
                     
-                    
+                    # roulette
+                    self.roulette_remote, self.roulette_local = browser.lookForRoulette(fn)
+                    if self.roulette_remote is not None:
+                        self.logger.debug("Copying file: '%s' to '%s'", self.roulette_remote, self.roulette_local)
+                        browser.sftp.get(self.roulette_remote, self.roulette_local)
         
         return super(SFTPBrowserDialog, self).accept(*args, **kwargs)
     
@@ -276,10 +285,8 @@ class SFTPBrowser(genericForm.GenericForm):
             ("All files", ["*"]),
         ]
         
-        # layout
-#         layout = QtGui.QVBoxLayout(self)
-#         layout.setContentsMargins(0,0,0,0)
-#         layout.setSpacing(0)
+        # regular expression for finding Roulette index
+        self.intRegex = re.compile(r'[0-9]+')
         
         # connection label
         self.connectedToLabel = QtGui.QLabel("Connected to: ''")
@@ -308,17 +315,61 @@ class SFTPBrowser(genericForm.GenericForm):
         row.addWidget(label)
         row.addWidget(filtersCombo)
         
-        # buttons (open, close?, ...)
-#         openButton = QtGui.QPushButton("Open")
-#         openButton.setAutoDefault(1)
-#         openButton.clicked.connect(self.openButtonClicked)
-#         buttonWidget = QtGui.QWidget()
-#         buttonLayout = QtGui.QHBoxLayout(buttonWidget)
-#         buttonLayout.addStretch()
-#         buttonLayout.addWidget(openButton)
-#         layout.addWidget(buttonWidget)
-        
         self.connect(password)
+    
+    def checkPathExists(self, path):
+        """
+        Check the given path exists (and normalize it)
+        
+        """
+        self.logger.debug("Checking path exists: '%s'", path)
+        
+        try:
+            pathn = self.sftp.normalize(path)
+        except IOError, e:
+            if e.errno == errno.ENOENT:
+                self.logger.debug("File does not exist")
+                return None
+        else:
+            self.logger.debug("File does exist: '%s'", pathn)
+            return pathn
+    
+    def lookForRoulette(self, fn):
+        """
+        Look for linked Roulette file
+        
+        """
+        rouletteFile = None
+        localName = None
+        
+        # file name
+        basename = os.path.basename(fn)
+        self.logger.debug("Looking for Roulette file for: '%s'", basename)
+        
+        # look for integers in the name
+        result = self.intRegex.findall(basename)
+        if len(result):
+            rouletteIndex = int(result[0]) - 1
+            self.logger.debug("Found integer in filename: %d", rouletteIndex)
+            
+            # possible roulette file paths
+            roulette_paths = [
+                "Roulette%d.OUT" % rouletteIndex,
+                "../Step%d/Roulette.OUT" % rouletteIndex,
+            ]
+            
+            # check if one exists
+            while rouletteFile is None and len(roulette_paths):
+                test = roulette_paths.pop(0)
+                rouletteFile = self.checkPathExists(test)
+        
+        if rouletteFile is not None:
+            self.logger.debug("Found Roulette file: '%s'", rouletteFile)
+            
+            # local name must be "Roulette%d.OUT" % rouletteIndex for it to be picked up
+            localName = "Roulette%d.OUT" % rouletteIndex
+        
+        return rouletteFile, localName
     
     def filtersComboChanged(self, index):
         """

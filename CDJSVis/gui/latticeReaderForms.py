@@ -11,6 +11,7 @@ import os
 import sys
 import platform
 import logging
+import glob
 
 from PySide import QtGui, QtCore
 
@@ -216,6 +217,11 @@ class AutoDetectReaderForm(GenericReaderForm):
             
             # remove local copy
             self.cleanUnzipped(localfn, True)
+            
+            # remove Roulette if exists
+            rfns = glob.glob(os.path.join(self.mainWindow.tmpDirectory, "Roulette*.OUT"))
+            for rfn in rfns:
+                os.unlink(rfn)
     
     def updateFileLabel(self, filename):
         """
