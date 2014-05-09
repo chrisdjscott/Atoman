@@ -140,9 +140,11 @@ class SFTPBrowserDialog(QtGui.QDialog):
         layout.addWidget(self.stackedWidget)
         
         # buttons
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Open | QtGui.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
+        self.openButton = buttonBox.button(QtGui.QDialogButtonBox.Open)
+        self.openButton.setEnabled(False)
         layout.addWidget(buttonBox)
         row = QtGui.QHBoxLayout()
         row.addStretch()
@@ -164,24 +166,25 @@ class SFTPBrowserDialog(QtGui.QDialog):
         Accept override
         
         """
-        # check if file is selected
-        browser = self.stackedWidget.currentWidget()
-        item = browser.listWidget.currentItem()
-        fn = str(item.text())
-        if item is not None and not item.is_dir:
-            self.logger.debug("Selecting item: '%s'", item.text())
-            self.filename_remote = str(browser.sftp.normalize(fn))
-            self.filename_source = None
-            self.filename_local = os.path.join(self.mainWindow.tmpDirectory, "%s" % item.text())
-            
-            # we also need to copy the file locally and store that path
-            browser.sftp.get(fn, self.filename_local)
-            
-            # we also need to look for Roulette file
-            if fn.endswith(".dat") or fn.endswith(".dat.gz") or fn.endswith(".dat.bz2"):
-                self.logger.debug("Looking for Roulette file too")
+        if self.stackedWidget.count() > 0:
+            # check if file is selected
+            browser = self.stackedWidget.currentWidget()
+            item = browser.listWidget.currentItem()
+            fn = str(item.text())
+            if item is not None and not item.is_dir:
+                self.logger.debug("Selecting item: '%s'", item.text())
+                self.filename_remote = str(browser.sftp.normalize(fn))
+                self.filename_source = None
+                self.filename_local = os.path.join(self.mainWindow.tmpDirectory, "%s" % item.text())
                 
+                # we also need to copy the file locally and store that path
+                browser.sftp.get(fn, self.filename_local)
                 
+                # we also need to look for Roulette file
+                if fn.endswith(".dat") or fn.endswith(".dat.gz") or fn.endswith(".dat.bz2"):
+                    self.logger.debug("Looking for Roulette file too")
+                    
+                    
         
         return super(SFTPBrowserDialog, self).accept(*args, **kwargs)
     
@@ -291,6 +294,7 @@ class SFTPBrowser(genericForm.GenericForm):
         # list widget
         self.listWidget = QtGui.QListWidget(self)
         self.listWidget.itemDoubleClicked.connect(self.itemDoubleClicked)
+        self.listWidget.itemSelectionChanged.connect(self.itemSelectionChanged)
         row = self.newRow()
         row.addWidget(self.listWidget)
         
@@ -315,6 +319,14 @@ class SFTPBrowser(genericForm.GenericForm):
 #         layout.addWidget(buttonWidget)
         
         self.connect(password)
+    
+    def itemSelectionChanged(self):
+        """
+        Item selection changed
+        
+        """
+        item = self.listWidget.currentItem()
+        print "ITEM CHANGED", item, item.text()
     
     def filtersComboChanged(self, index):
         """
