@@ -985,6 +985,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.selectedText.addItem("Atom count")
         self.selectedText.addItem("Visible count")
         self.availableText.addItem("Visible specie count")
+        self.availableText.addItem("KMC step")
         self.availableText.addItem("Simulation time")
         self.availableText.addItem("Energy barrier")
         self.availableText.addItem("Defect count")

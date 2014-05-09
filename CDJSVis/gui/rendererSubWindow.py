@@ -719,6 +719,9 @@ class RendererWindow(QtGui.QWidget):
         if "Energy barrier" not in self.onScreenInfo and inputState.barrier is not None:
             self.onScreenInfo["Energy barrier"] = "Barrier: %f eV" % inputState.barrier
         
+        if "KMC step" not in self.onScreenInfo and inputState.kmcStep is not None:
+            self.onScreenInfo["KMC step"] = "Step: %d" % inputState.kmcStep
+        
         # filter lists
         filterLists = self.getFilterLists()
         
@@ -848,7 +851,11 @@ class RendererWindow(QtGui.QWidget):
             
             try:
                 line = self.onScreenInfo[item]
-                
+            
+            except KeyError:
+                self.logger.debug("Item '%s' not in onScreenInfo dict", item)
+            
+            else:
                 if item == "Visible specie count":
                     for j, specline in enumerate(line):
                         r, g, b = inputState.specieRGB[j]
@@ -936,10 +943,6 @@ class RendererWindow(QtGui.QWidget):
                         topyRight -= 20
                     
                     self.onScreenInfoActors.AddItem(actor)
-            
-            except KeyError:
-                pass
-#                print "WARNING: '%s' not in onScreenInfo dict" % item
         
         # add to render window
         self.onScreenInfoActors.InitTraversal()

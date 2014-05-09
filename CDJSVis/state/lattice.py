@@ -25,6 +25,7 @@ class Lattice(object):
         
         self.simTime = 0.0
         self.barrier = None
+        self.kmcStep = None
         
         self.cellDims = np.empty(3, np.float64)
         
@@ -77,6 +78,7 @@ class Lattice(object):
         
         self.simTime = 0.0
         self.barrier = None
+        self.kmcStep = None
         self.voronoiDict = {}
     
     def addSpecie(self, sym, count=None):
@@ -269,6 +271,8 @@ class Lattice(object):
         NAtoms = lattice.NAtoms
         
         self.simTime = lattice.simTime
+        self.barrier = lattice.barrier
+        self.kmcStep = lattice.kmcStep
         
         # copy dims
         self.cellDims[0] = lattice.cellDims[0]
