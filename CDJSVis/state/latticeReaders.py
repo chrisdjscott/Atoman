@@ -453,13 +453,20 @@ class LbomdDatReader(GenericLatticeReader):
         
         # attempt to read roulette file
         if rouletteIndex is not None:
+            # different path?
+            head = os.path.dirname(filename)
+            if len(head):
+                testpath = head
+            else:
+                testpath = None
+            
             # read simulation time
-            simTime = utilities.getTimeFromRoulette(rouletteIndex)
+            simTime = utilities.getTimeFromRoulette(rouletteIndex, testpath=testpath)
             
             if simTime is not None:
                 state.simTime = simTime
             
             # get barrier
-            state.barrier = utilities.getBarrierFromRoulette(rouletteIndex)
+            state.barrier = utilities.getBarrierFromRoulette(rouletteIndex, testpath=testpath)
         
         return 0, state

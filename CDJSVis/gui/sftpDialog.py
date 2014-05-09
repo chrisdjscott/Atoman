@@ -59,6 +59,11 @@ class SFTPConnectionDialog(QtGui.QDialog):
         row.addWidget(hostnameLineEdit)
         layout.addLayout(row)
         
+        # help label
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("Leave password blank if using public key"))
+        layout.addLayout(row)
+        
         # password (can be blank)
         passwordLineEdit = QtGui.QLineEdit()
         passwordLineEdit.textEdited.connect(self.passwordEdited)
@@ -190,8 +195,9 @@ class SFTPBrowserDialog(QtGui.QDialog):
                     self.logger.debug("Looking for Roulette file too")
                     
                     # roulette
-                    self.roulette_remote, self.roulette_local = browser.lookForRoulette(fn)
+                    self.roulette_remote, roulette_local_bn = browser.lookForRoulette(fn)
                     if self.roulette_remote is not None:
+                        self.roulette_local = os.path.join(self.mainWindow.tmpDirectory, roulette_local_bn)
                         self.logger.debug("Copying file: '%s' to '%s'", self.roulette_remote, self.roulette_local)
                         browser.sftp.get(self.roulette_remote, self.roulette_local)
         
@@ -288,13 +294,8 @@ class SFTPBrowser(genericForm.GenericForm):
         # regular expression for finding Roulette index
         self.intRegex = re.compile(r'[0-9]+')
         
-        # connection label
-        self.connectedToLabel = QtGui.QLabel("Connected to: ''")
-        row = self.newRow()
-        row.addWidget(self.connectedToLabel)
-        
         # current path label
-        self.currentPathLabel = QtGui.QLabel("Current directory: ''")
+        self.currentPathLabel = QtGui.QLabel("CWD: ''")
         row = self.newRow()
         row.addWidget(self.currentPathLabel)
         
@@ -306,13 +307,11 @@ class SFTPBrowser(genericForm.GenericForm):
         row.addWidget(self.listWidget)
         
         # filters
-        label = QtGui.QLabel("Filters:")
         filtersCombo = QtGui.QComboBox()
         filtersCombo.currentIndexChanged[int].connect(self.filtersComboChanged)
         for tup in self.filters:
             filtersCombo.addItem("%s (%s)" % (tup[0], " ".join(tup[1])))
         row = self.newRow()
-        row.addWidget(label)
         row.addWidget(filtersCombo)
         
         self.connect(password)
@@ -434,9 +433,6 @@ class SFTPBrowser(genericForm.GenericForm):
         # change to home dir
         self.chdir(self.home)
         
-        # update connected to label
-        self.connectedToLabel.setText("Connected to: '%s@%s'" % (self.username, self.hostname))
-        
         self.connected = True
     
     def disconnect(self):
@@ -461,7 +457,7 @@ class SFTPBrowser(genericForm.GenericForm):
         self.sftp.chdir(dirname)
         
         # set current path label
-        self.currentPathLabel.setText("Current directory: '%s'" % self.sftp.getcwd())
+        self.currentPathLabel.setText("CWD: '%s'" % self.sftp.getcwd())
         
         # list directory
         self.list_dir()
@@ -507,15 +503,6 @@ class SFTPBrowser(genericForm.GenericForm):
         # apply selected filter
         self.applyFilterToItems()
     
-    def openButtonClicked(self):
-        """
-        Open button clicked
-        
-        """
-        item = self.listWidget.currentItem()
-        if item is None:
-            return
-    
     def itemDoubleClicked(self):
         """
         Item double clicked
@@ -528,6 +515,9 @@ class SFTPBrowser(genericForm.GenericForm):
         if item.is_dir:
             self.logger.debug("Changing to directory: '%s'", item.text())
             self.chdir(item.text())
+        
+        else:
+            self.parent.accept()
     
     def currentRowChanged(self, row):
         """

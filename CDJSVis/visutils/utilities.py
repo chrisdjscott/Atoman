@@ -350,7 +350,7 @@ def simulationTimeLine(simTimeInFs):
     return simTime
 
 ################################################################################
-def getTimeFromRoulette(rouletteIndex):
+def getTimeFromRoulette(rouletteIndex, testpath=None):
     """
     Attempt to get time from KMC Roulette file.
     
@@ -361,6 +361,11 @@ def getTimeFromRoulette(rouletteIndex):
     
     elif os.path.exists("../Step%d/Roulette.OUT" % rouletteIndex):
         fn = "../Step%d/Roulette.OUT" % rouletteIndex
+    
+    elif testpath is not None:
+        testfn = os.path.join(testpath, "Roulette%d.OUT" % rouletteIndex)
+        if os.path.exists(testfn):
+            fn = testfn
     
     timeInFs = None
     if fn is not None:
@@ -376,7 +381,7 @@ def getTimeFromRoulette(rouletteIndex):
     return timeInFs
     
 ################################################################################
-def getBarrierFromRoulette(rouletteIndex):
+def getBarrierFromRoulette(rouletteIndex, testpath=None):
     """
     Attempt to get barrier from roulette.
     
@@ -387,6 +392,11 @@ def getBarrierFromRoulette(rouletteIndex):
     
     elif os.path.exists("../Step%d/Roulette.OUT" % rouletteIndex):
         fn = "../Step%d/Roulette.OUT" % rouletteIndex
+    
+    elif testpath is not None:
+        testfn = os.path.join(testpath, "Roulette%d.OUT" % rouletteIndex)
+        if os.path.exists(testfn):
+            fn = testfn
     
     barrier = None
     if fn is not None:
