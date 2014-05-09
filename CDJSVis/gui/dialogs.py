@@ -15,7 +15,7 @@ from PySide import QtGui, QtCore
 import numpy as np
 
 from . import genericForm
-from ..atoms import elements
+from ..state.atoms import elements
 from ..visutils.utilities import resourcePath, iconPath
 from ..visutils import utilities
 

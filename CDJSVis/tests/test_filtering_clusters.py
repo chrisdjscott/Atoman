@@ -4,19 +4,10 @@ Unit tests for filterer module
    
 """
 import os
-# import sys
 import unittest
 import tempfile
 import shutil
-   
-# from PySide import QtGui
-   
-# from .. import latticeReaders
-# from .. import mainWindow
 from ..filtering import clusters
-
-# app = QtGui.QApplication(sys.argv)
-   
 
 ################################################################################
 

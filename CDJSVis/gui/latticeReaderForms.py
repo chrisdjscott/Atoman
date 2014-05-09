@@ -16,7 +16,7 @@ from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
-from .. import latticeReaders
+from ..state import latticeReaders
 
 try:
     from .. import resources

@@ -8,8 +8,8 @@ import unittest
 import tempfile
 import shutil
 
-from .. import latticeReaders
-from ..lattice import Lattice
+from ..state import latticeReaders
+from ..state.lattice import Lattice
 
 
 ################################################################################

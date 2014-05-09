@@ -24,7 +24,7 @@ from ..rendering import renderer
 from ..rendering import renderBonds
 from ..visutils import vectors
 from . import clusters
-from ..atoms import elements
+from ..state.atoms import elements
 from . import voronoi
 from ..rendering import renderVoronoi
 

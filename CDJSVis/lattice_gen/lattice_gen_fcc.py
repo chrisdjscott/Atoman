@@ -5,7 +5,7 @@ Generate FCC lattice
 @author: Chris Scott
 
 """
-from ..lattice import Lattice
+from ..state.lattice import Lattice
 
 
 ################################################################################

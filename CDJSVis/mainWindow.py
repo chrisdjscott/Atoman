@@ -23,9 +23,8 @@ import matplotlib
 import scipy
 
 from .visutils.utilities import iconPath, resourcePath
-from .atoms import elements
+from .state.atoms import elements
 from .gui import toolbar as toolbarModule
-from . import lattice
 from .rendering import renderer
 from .gui import helpForm
 from .gui import dialogs
@@ -122,10 +121,6 @@ class MainWindow(QtGui.QMainWindow):
         self.mouseMotion = 0
         
         logger.debug("MD resource path: %s (exists %s)", resourcePath("lbomd.IN", dirname="md_input"), os.path.exists(resourcePath("lbomd.IN", dirname="md_input")))
-        
-        # initiate lattice objects for storing reference and input states
-#         self.inputState = lattice.Lattice()
-#         self.refState = lattice.Lattice()  
         
         # get settings object
         settings = QtCore.QSettings()

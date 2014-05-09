@@ -21,7 +21,7 @@ from . import dialogs
 from ..rendering import renderer
 from .outputDialog import OutputDialog
 from ..rendering.text import vtkRenderWindowText
-from ..lattice import Lattice
+from ..state.lattice import Lattice
 try:
     from .. import resources
 except ImportError:

@@ -7,7 +7,7 @@ Generate Ga stabilised delta-Pu lattice using Pu3Ga technique
 """
 import random
 
-from ..lattice import Lattice
+from ..state.lattice import Lattice
 
 
 ################################################################################
