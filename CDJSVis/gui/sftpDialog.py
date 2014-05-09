@@ -294,7 +294,7 @@ class SFTPBrowser(genericForm.GenericForm):
         # list widget
         self.listWidget = QtGui.QListWidget(self)
         self.listWidget.itemDoubleClicked.connect(self.itemDoubleClicked)
-        self.listWidget.itemSelectionChanged.connect(self.itemSelectionChanged)
+        self.listWidget.currentRowChanged.connect(self.currentRowChanged)
         row = self.newRow()
         row.addWidget(self.listWidget)
         
@@ -319,14 +319,6 @@ class SFTPBrowser(genericForm.GenericForm):
 #         layout.addWidget(buttonWidget)
         
         self.connect(password)
-    
-    def itemSelectionChanged(self):
-        """
-        Item selection changed
-        
-        """
-        item = self.listWidget.currentItem()
-        print "ITEM CHANGED", item, item.text()
     
     def filtersComboChanged(self, index):
         """
@@ -472,8 +464,6 @@ class SFTPBrowser(genericForm.GenericForm):
         item = self.listWidget.currentItem()
         if item is None:
             return
-        
-        self.logger.debug("Open button clicked: %s (dir=%r)", item.text(), item.is_dir)
     
     def itemDoubleClicked(self):
         """
@@ -484,11 +474,20 @@ class SFTPBrowser(genericForm.GenericForm):
         if item is None:
             return
         
-        self.logger.debug("Item double clicked: %s (dir=%r)", item.text(), item.is_dir)
-        
         if item.is_dir:
             self.logger.debug("Changing to directory: '%s'", item.text())
             self.chdir(item.text())
+    
+    def currentRowChanged(self, row):
+        """
+        Current row changed
+        
+        """
+        item = self.listWidget.currentItem()
+        if row < 0 or item.is_dir:
+            self.parent.openButton.setEnabled(False)
+        else:
+            self.parent.openButton.setEnabled(True)
     
     def get_home(self):
         """
