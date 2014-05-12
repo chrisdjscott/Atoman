@@ -209,12 +209,12 @@ class LoadSystemForm(GenericForm):
         """
         self.stackedWidget.setCurrentIndex(index)
     
-    def fileLoaded(self, fileType, state, filename, extension, readerStackIndex):
+    def fileLoaded(self, fileType, state, filename, extension, readerStackIndex, sftpPath):
         """
         Called when a file is loaded
         
         """
-        self.parent.file_loaded(state, filename, extension, readerStackIndex)
+        self.parent.file_loaded(state, filename, extension, readerStackIndex, sftpPath)
 
 ################################################################################
 
@@ -554,21 +554,24 @@ class SystemsDialog(QtGui.QDialog):
         """
         self.add_lattice(lattice, filename, "dat", allowDuplicate=True)
     
-    def file_loaded(self, lattice, filename, extension, readerStackIndex):
+    def file_loaded(self, lattice, filename, extension, readerStackIndex, sftpPath):
         """
         Called after a file had been loaded (or generated too?)
         
         """
-        self.add_lattice(lattice, filename, extension, idb=readerStackIndex, ida=0)
+        self.add_lattice(lattice, filename, extension, idb=readerStackIndex, ida=0, sftpPath=sftpPath)
     
-    def add_lattice(self, lattice, filename, extension, ida=None, idb=None, displayName=None, allowDuplicate=False):
+    def add_lattice(self, lattice, filename, extension, ida=None, idb=None, displayName=None, allowDuplicate=False, sftpPath=None):
         """
         Add lattice
         
         """
         index = self.systems_list_widget.count()
         
-        abspath = os.path.abspath(filename)
+        if sftpPath is None:
+            abspath = os.path.abspath(filename)
+        else:
+            abspath = sftpPath
         
         if not allowDuplicate:
             abspathList = self.getAbspathList()
@@ -595,10 +598,12 @@ class SystemsDialog(QtGui.QDialog):
         
         stackIndex = (ida, idb)
         
-        self.logger.debug("Adding new lattice to systemsList (%d): %s; %d,%d", index, filename, ida, idb)
-        
         if displayName is None:
             displayName = os.path.basename(filename)
+        
+        self.logger.debug("Adding new lattice to systemsList (%d): %s; %d,%d", index, filename, ida, idb)
+        self.logger.debug("Abspath is: '%s'", abspath)
+        self.logger.debug("Display name is: '%s'", displayName)
         
         # item for list
         list_item = SystemsListWidgetItem(lattice, filename, displayName, stackIndex, abspath, extension)

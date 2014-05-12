@@ -4,6 +4,14 @@ Changelog
 **dev**
 
 * Add atom index filter
+* POV-Ray call runs in separate thread
+* Add "KMC step" option to on screen info
+* Add SFTP browser
+
+   * Browse and load files on SFTP server
+   * Sequencer works with files loaded via SFTP
+   * Also looks for Roulette files and copies them too if available
+   * Only available on "AUTO DETECT" reader
 
 **v140417**
 

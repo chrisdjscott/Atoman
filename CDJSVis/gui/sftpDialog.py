@@ -146,6 +146,9 @@ class SFTPBrowserDialog(QtGui.QDialog):
         self.stackedWidget = QtGui.QStackedWidget()
         layout.addWidget(self.stackedWidget)
         
+        # list of open connections
+        self.connectionsList = []
+        
         # buttons
         buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Open | QtGui.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
@@ -165,8 +168,9 @@ class SFTPBrowserDialog(QtGui.QDialog):
         """
         self.filename_remote = None
         self.filename_local = None
-        self.roulette_remote = None
-        self.roulette_local = None
+#         self.roulette_remote = None
+#         self.roulette_local = None
+        self.sftpPath = None
         
         return super(SFTPBrowserDialog, self).exec_(*args, **kwargs)
     
@@ -185,21 +189,10 @@ class SFTPBrowserDialog(QtGui.QDialog):
                 self.filename_remote = str(browser.sftp.normalize(fn))
                 self.filename_source = None
                 self.filename_local = os.path.join(self.mainWindow.tmpDirectory, "%s" % item.text())
+                self.sftpPath = "%s:%s" % (browser.connectionID, self.filename_remote)
                 
                 # we also need to copy the file locally and store that path
-                self.logger.debug("Copying file: '%s' to '%s'", self.filename_remote, self.filename_local)
-                browser.sftp.get(fn, self.filename_local)
-                
-                # we also need to look for Roulette file
-                if fn.endswith(".dat") or fn.endswith(".dat.gz") or fn.endswith(".dat.bz2"):
-                    self.logger.debug("Looking for Roulette file too")
-                    
-                    # roulette
-                    self.roulette_remote, roulette_local_bn = browser.lookForRoulette(fn)
-                    if self.roulette_remote is not None:
-                        self.roulette_local = os.path.join(self.mainWindow.tmpDirectory, roulette_local_bn)
-                        self.logger.debug("Copying file: '%s' to '%s'", self.roulette_remote, self.roulette_local)
-                        browser.sftp.get(self.roulette_remote, self.roulette_local)
+                browser.copySystem(self.filename_remote, self.filename_local)
         
         return super(SFTPBrowserDialog, self).accept(*args, **kwargs)
     
@@ -225,6 +218,10 @@ class SFTPBrowserDialog(QtGui.QDialog):
             else:
                 connectionID = "%s@%s" % (dlg.username, dlg.hostname)
             
+            if connectionID in self.connectionsList:
+                self.logger.warning("Connection already open for '%s': not opening a new one", connectionID)
+                return
+            
             # test connection
             try:
                 ssh = paramiko.SSHClient()
@@ -237,9 +234,10 @@ class SFTPBrowserDialog(QtGui.QDialog):
                 return
             
             # add widget
-            w = SFTPBrowser(dlg.hostname, dlg.username, dlg.password, parent=self)
+            w = SFTPBrowser(dlg.hostname, dlg.username, dlg.password, connectionID, parent=self)
             self.stackedWidget.addWidget(w)
             self.connectionsCombo.addItem(connectionID)
+            self.connectionsList.append(connectionID)
             
             # change to this widget
             self.connectionsCombo.setCurrentIndex(self.connectionsCombo.count() - 1)
@@ -270,8 +268,9 @@ class SFTPBrowser(genericForm.GenericForm):
     Basic SFTP file browser
     
     """
-    def __init__(self, hostname, username, password, parent=None):
+    def __init__(self, hostname, username, password, connectionID, parent=None):
         self.hostname = hostname
+        self.connectionID = connectionID
         self.username = username
         if self.username is None:
             self.username = getpass.getuser()
@@ -325,10 +324,12 @@ class SFTPBrowser(genericForm.GenericForm):
         
         try:
             pathn = self.sftp.normalize(path)
+        
         except IOError, e:
             if e.errno == errno.ENOENT:
                 self.logger.debug("File does not exist")
                 return None
+        
         else:
             self.logger.debug("File does exist: '%s'", pathn)
             return pathn
@@ -549,6 +550,28 @@ class SFTPBrowser(genericForm.GenericForm):
         
         """
         self.logger.debug("Refreshing...")
+    
+    def copySystem(self, remotePath, localPath):
+        """
+        Copy the system onto the local machine.
+        Also copy Roulette if that exists
+        
+        """
+        self.logger.debug("Copying file: '%s' to '%s'", remotePath, localPath)
+        self.sftp.get(remotePath, localPath)
+        
+        fn = os.path.basename(remotePath)
+        
+        # we also need to look for Roulette file
+        if fn.endswith(".dat") or fn.endswith(".dat.gz") or fn.endswith(".dat.bz2"):
+            self.logger.debug("Looking for Roulette file too")
+            
+            # roulette
+            roulette_remote, roulette_local_bn = self.lookForRoulette(fn)
+            if roulette_remote is not None:
+                roulette_local = os.path.join(os.path.dirname(localPath), roulette_local_bn)
+                self.logger.debug("Copying file: '%s' to '%s'", roulette_remote, roulette_local)
+                self.sftp.get(roulette_remote, roulette_local)
     
     def closeEvent(self, event):
         """

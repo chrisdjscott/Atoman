@@ -56,7 +56,7 @@ class GenericReaderForm(GenericForm):
         # always show widget
         self.show()
         
-    def openFile(self, label=None, filename=None, rouletteIndex=None):
+    def openFile(self, label=None, filename=None, rouletteIndex=None, sftpPath=None):
         """
         This should be sub-classed to load the selected file.
         
@@ -72,14 +72,14 @@ class GenericReaderForm(GenericForm):
     def updateFileLabel(self, filename):
         pass
     
-    def postOpenFile(self, stateType, state, filename):
+    def postOpenFile(self, stateType, state, filename, sftpPath):
         """
         Should always be called at the end of openFile.
         
         """
         self.updateFileLabel(filename)
         
-        self.parent.fileLoaded(stateType, state, filename, self.fileExtension, self.stackIndex)
+        self.parent.fileLoaded(stateType, state, filename, self.fileExtension, self.stackIndex, sftpPath)
     
     def openFileDialog(self):
         """
@@ -209,11 +209,13 @@ class AutoDetectReaderForm(GenericReaderForm):
         if ok and self.parent.sftp_browser.filename_remote is not None:
             remotefn = self.parent.sftp_browser.filename_remote
             localfn = self.parent.sftp_browser.filename_local
+            sftpPath = self.parent.sftp_browser.sftpPath
             self.logger.info("Copied remote file (%s) to local machine", remotefn)
             self.logger.debug("Local filename: '%s'", localfn)
+            self.logger.debug("SFTP path: '%s'", sftpPath)
             
             # read file
-            status = self.openFile(filename=localfn)
+            status = self.openFile(filename=localfn, sftpPath=sftpPath)
             
             # remove local copy
             self.cleanUnzipped(localfn, True)
@@ -237,7 +239,7 @@ class AutoDetectReaderForm(GenericReaderForm):
         """
         return str(self.latticeLabel.text())
     
-    def openFile(self, filename=None, rouletteIndex=None):
+    def openFile(self, filename=None, rouletteIndex=None, sftpPath=None):
         """
         Open file.
         
@@ -302,7 +304,7 @@ class AutoDetectReaderForm(GenericReaderForm):
         self.logger.info("Selected reader: '%s'", selectedReaderForm.widgetTitle)
         
         # read file
-        status = selectedReaderForm.openFile(filename=filename)
+        status = selectedReaderForm.openFile(filename=filename, sftpPath=sftpPath)
         
         return status
     
@@ -489,7 +491,7 @@ class LbomdDatReaderForm(GenericReaderForm):
         """
         return str(self.latticeLabel.text())
     
-    def openFile(self, filename=None, rouletteIndex=None):
+    def openFile(self, filename=None, rouletteIndex=None, sftpPath=None):
         """
         Open file.
         
@@ -508,7 +510,7 @@ class LbomdDatReaderForm(GenericReaderForm):
         status, state = self.latticeReader.readFile(filename, rouletteIndex=rouletteIndex)
         
         if not status:
-            GenericReaderForm.postOpenFile(self, self.stateType, state, filename)
+            GenericReaderForm.postOpenFile(self, self.stateType, state, filename, sftpPath)
         
         return status
         
@@ -587,7 +589,7 @@ class LbomdRefReaderForm(GenericReaderForm):
         """
         return str(self.latticeLabel.text())
     
-    def openFile(self, filename=None, rouletteIndex=None):
+    def openFile(self, filename=None, rouletteIndex=None, sftpPath=None):
         """
         Open file.
         
@@ -609,7 +611,7 @@ class LbomdRefReaderForm(GenericReaderForm):
         status, state = self.latticeReader.readFile(filename, rouletteIndex=rouletteIndex)
         
         if not status:
-            GenericReaderForm.postOpenFile(self, self.stateType, state, filename)
+            GenericReaderForm.postOpenFile(self, self.stateType, state, filename, sftpPath)
             
             # set xyz input form to use this as ref
             self.logger.debug("Setting as ref on xyz reader")
@@ -846,7 +848,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
         self.refLabel.setText(filename)
         self.refLoaded = True
     
-    def openFile(self, filename=None, isRef=False, rouletteIndex=None):
+    def openFile(self, filename=None, isRef=False, rouletteIndex=None, sftpPath=None):
         """
         Open file.
         
@@ -884,7 +886,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
             if isRef:
                 self.setRefState(state, filename)
             else:
-                GenericReaderForm.postOpenFile(self, self.stateType, state, filename)
+                GenericReaderForm.postOpenFile(self, self.stateType, state, filename, sftpPath)
             
             self.updateFileLabelCustom(filename, isRef)
         

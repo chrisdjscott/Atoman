@@ -91,6 +91,12 @@ class GenericLatticeReader(object):
         
         self.logger.info("Reading file: '%s'", filename)
         
+        # strip gz/bz2 extension
+        if filename.endswith(".bz2"):
+            filename = filename[:-4]
+        elif filename.endswith(".gz"):
+            filename = filename[:-3]
+        
         filepath, zipFlag = self.checkForZipped(filename)
         if zipFlag == -1:
             self.displayWarning("Could not find file: "+filename)
