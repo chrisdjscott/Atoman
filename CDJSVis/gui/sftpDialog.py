@@ -1,8 +1,14 @@
 
 """
-SFTP Browser dialog
+The SFTP browser can be used to load files on a remote system that is running an SFTP
+server.  To add a connection you must specify the hostname.  If you don't specify a
+username your current username will be used.  You don't need to specify a password if you
+have public/private keys set up.
 
-@author: Chris Scott
+Once a connection is established you can navigate through the browser by double clicking
+or pressing "Open".  Opening a file will copy the file onto the local machine and attempt
+to load that file.  It will also copy a Roulette file if one exists, so KMC information
+can be visualised.
 
 """
 import os
@@ -137,9 +143,15 @@ class SFTPBrowserDialog(QtGui.QDialog):
         addConnectionButton.setToolTip("Add new connection")
         addConnectionButton.setFixedWidth(35)
         addConnectionButton.clicked.connect(self.addNewConnection)
+        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
+        helpButton.setFixedWidth(20)
+        helpButton.setFixedHeight(20)
+        helpButton.setToolTip("Show help page")
+        helpButton.clicked.connect(self.loadHelpPage)
         row = QtGui.QHBoxLayout()
         row.addWidget(self.connectionsCombo)
         row.addWidget(addConnectionButton)
+        row.addWidget(helpButton)
         layout.addLayout(row)
         
         # stacked widget
@@ -160,6 +172,14 @@ class SFTPBrowserDialog(QtGui.QDialog):
         row.addStretch()
         row.addWidget(buttonBox)
         layout.addLayout(row)
+    
+    def loadHelpPage(self):
+        """
+        Load help page
+        
+        """
+        self.mainWindow.helpWindow.loadPage("usage/input/sftp_browser.html")
+        self.mainWindow.showHelp()
     
     def exec_(self, *args, **kwargs):
         """

@@ -8,4 +8,5 @@ Input
     :maxdepth: 2
     
     file_input
+    sftp_browser
     lattice_generation
