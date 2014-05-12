@@ -12,9 +12,9 @@ import shutil
 import subprocess
 import copy
 import logging
-import time
 import math
 import functools
+import datetime
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -1626,6 +1626,7 @@ class ImageSequenceTab(QtGui.QWidget):
         
         # directory
         saveDir = str(self.outputFolder.text())
+        saveDir += "-%s" % datetime.datetime.now().strftime("%y%m%d-%H%M%S")
         if os.path.exists(saveDir):
             if self.overwrite:
                 shutil.rmtree(saveDir)
@@ -1976,6 +1977,7 @@ class ImageRotateTab(QtGui.QWidget):
         
         # directory
         saveDir = str(self.outputFolder.text())
+        saveDir += "-%s" % datetime.datetime.now().strftime("%y%m%d-%H%M%S")
         if os.path.exists(saveDir):
             if self.overwrite:
                 shutil.rmtree(saveDir)
