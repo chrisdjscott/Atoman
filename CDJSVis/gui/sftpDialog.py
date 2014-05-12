@@ -10,6 +10,11 @@ or pressing "Open".  Opening a file will copy the file onto the local machine an
 to load that file.  It will also copy a Roulette file if one exists, so KMC information
 can be visualised.
 
+**Note**: when loading a file via SFTP the current working directory does not change.
+Therefore, if you save an image or run the sequencer the output will be stored whatever
+directory you are in.  You can change the current working directory using one of the
+buttons on the toolbar at the top of the main window.
+
 """
 import os
 import sys
