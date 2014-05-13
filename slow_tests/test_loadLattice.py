@@ -12,7 +12,7 @@ import shutil
 from PySide import QtGui
    
 from CDJSVis import mainWindow
-from CDJSVis.lattice import Lattice
+from CDJSVis.state.lattice import Lattice
 
 app = QtGui.QApplication(sys.argv)
    
