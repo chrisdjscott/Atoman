@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* FFmpeg runs in thread pool
+
 **v140513**
 
 * Add atom index filter

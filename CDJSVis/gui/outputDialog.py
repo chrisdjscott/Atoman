@@ -15,11 +15,13 @@ import logging
 import math
 import functools
 import datetime
+import time
 
 import numpy as np
 from PySide import QtGui, QtCore
 
 from ..visutils import utilities
+from ..visutils import threading_vis
 from ..visutils.utilities import iconPath
 from . import genericForm
 from ..visclibs import output as output_c
@@ -846,6 +848,8 @@ class ImageTab(QtGui.QWidget):
     def __init__(self, parent, mainWindow, width):
         super(ImageTab, self).__init__(parent)
         
+        self.logger = logging.getLogger(__name__)
+        
         self.parent = parent
         self.mainWindow = mainWindow
         self.width = width
@@ -1020,24 +1024,60 @@ class ImageTab(QtGui.QWidget):
             
             saveText = os.path.basename(saveText)
             
-            command = "'%s' -r %d -y -i %s.%s -r %d -b %dk '%s.%s'" % (ffmpeg, framerate, saveText, 
-                                                                  self.imageFormat, 25, bitrate, 
-                                                                  outputprefix, outputsuffix)
+            self.logger.info("Creating movie file: %s.%s", outputprefix, outputsuffix)
             
-            log("Creating movie file: %s.%s" % (outputprefix, outputsuffix))
+            # movie generator object
+            generator = MovieGenerator()
             
-            # change to QProcess
-            process = subprocess.Popen(command, shell=True, executable="/bin/bash", stdin=subprocess.PIPE, 
-                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            output, stderr = process.communicate()
-            status = process.poll()
-            if status:
-                log("FFMPEG FAILED")
-                print stderr
+            # runnable for sending to thread pool
+            runnable = threading_vis.GenericRunnable(generator, args=(os.getcwd(), ffmpeg, framerate, saveText, 
+                                                                      self.imageFormat, bitrate, outputprefix, 
+                                                                      outputsuffix))
+            
+            # add to thread pool
+            QtCore.QThreadPool.globalInstance().start(runnable)
         
         finally:
             os.chdir(CWD)
 
+################################################################################
+
+class MovieGenerator(QtCore.QObject):
+    """
+    Call ffmpeg to generate a movie
+    
+    """
+    def run(self, workDir, ffmpeg, framerate, saveText, imageFormat, bitrate, outputPrefix, outputSuffix):
+        """
+        Create movie
+        
+        """
+        owd = os.getcwd()
+        os.chdir(workDir)
+        
+        try:
+            command = "'%s' -r %d -y -i %s.%s -r %d -b %dk '%s.%s'" % (ffmpeg, framerate, saveText, 
+                                                                       imageFormat, 25, bitrate, 
+                                                                       outputPrefix, outputSuffix)
+            
+            logger = logging.getLogger(__name__)
+            logger.debug("Command: '%s'", command)
+            
+            ffmpegTime = time.time()
+            process = subprocess.Popen(command, shell=True, executable="/bin/bash", stdin=subprocess.PIPE, 
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            
+            output, stderr = process.communicate()
+            status = process.poll()
+            if status:
+                logger.error("FFMPEG FAILED (%d)", status)
+                print stderr
+            
+            ffmpegTime = time.time() - ffmpegTime
+            logger.debug("FFmpeg time taken: %f s", ffmpegTime)
+        
+        finally:
+            os.chdir(owd)
 
 ################################################################################
 class SingleImageTab(QtGui.QWidget):
