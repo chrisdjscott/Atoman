@@ -11,6 +11,8 @@ import shutil
 import glob
 import logging
 import time
+import threading
+import Queue
 
 import numpy as np
 import vtk
@@ -356,6 +358,8 @@ class Renderer(object):
         Save image to file.
         
         """
+        logger = self.logger
+        
         if renderType == "VTK":
             filename = "%s.%s" % (fileprefix, imageFormat)
             
@@ -466,10 +470,27 @@ class Renderer(object):
                 
                 # run povray
                 command = "%s '%s'" % (povray, povIniFile)
-                output, stderr, status = utilities.runSubProcess(command)
+                resultQ = Queue.Queue()
+                
+                # thread
+                thread = threading.Thread(target=utilities.runSubprocessInThread, args=(command, resultQ))
+                thread.start()
+                
+                # check queue for result
+                while thread.isAlive():
+                    thread.join(1)
+                    QtGui.QApplication.processEvents()
+                
+                # result
+                try:
+                    output, stderr, status = resultQ.get(timeout=1)
+                except Queue.Empty:
+                    logger.error("Could not get result from POV-Ray thread!")
+                    return None
+                    
                 if status:
-                    print "STDOUT:", output
-                    print "STDERR:", stderr
+                    logging.error("POV-Ray failed: out: %s", output)
+                    logging.error("POV-Ray failed: err: %s", stderr)
                     return None
                 
             finally:
@@ -487,7 +508,7 @@ class Renderer(object):
             try:
                 shutil.move(os.path.join(self.mainWindow.tmpDirectory, tmpPovOutputFile), filename)
             except:
-                print "ERROR COPYING POV FILE", sys.exc_info() 
+                print "ERROR COPYING POV FILE", sys.exc_info()
                         
             # remove image files
             os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.pov" % renIndex))
@@ -500,6 +521,13 @@ class Renderer(object):
         
         elif renderType == "POV" and overlay:
             self.overlayImage(filename)
+            
+            # overlay image in separate thread
+#             thread = threading.Thread(target=self.overlayImage, args=(filename,))
+#             thread.start()
+#             while thread.isAlive():
+#                 thread.join(0.1)
+#                 QtGui.QApplication.processEvents()
         
         return filename
     
@@ -508,7 +536,6 @@ class Renderer(object):
         Overlay the image with on screen info.
         
         """
-        import time
         overlayTime = time.time()
         
         # local refs

@@ -11,7 +11,7 @@ import unittest
 import tempfile
 import shutil
    
-from .. import latticeReaders
+from ..state import latticeReaders
 from ..filtering import voronoi
    
 

@@ -247,3 +247,18 @@ def calculate_drift_vector(NAtoms, pos, refPos, cellDims, PBC, driftVector):
     
     """
     return _lib.calculate_drift_vector(NAtoms, CPtrToDouble(pos), CPtrToDouble(refPos), CPtrToDouble(cellDims), CPtrToInt(PBC), CPtrToDouble(driftVector))
+
+################################################################################
+
+# atomIndexFilter prototype
+_lib.atomIndexFilter.restype = c_int
+_lib.atomIndexFilter.argtypes = [c_int, POINTER(c_int), POINTER(c_int), c_int, c_int, c_int, c_int, POINTER(c_double)]
+
+# atomIndexFilter
+def atomIndexFilter(visibleAtoms, atomID, filteringEnabled, minVal, maxVal, NScalars, fullScalars):
+    """
+    Atom index filter.
+    
+    """
+    return _lib.atomIndexFilter(len(visibleAtoms), CPtrToInt(visibleAtoms), CPtrToInt(atomID), int(filteringEnabled),
+                                minVal, maxVal, NScalars, CPtrToDouble(fullScalars))

@@ -83,7 +83,7 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
         
         maxAtomsSpin = QtGui.QSpinBox()
         maxAtomsSpin.setMinimum(1)
-        maxAtomsSpin.setMaximum(20000)
+        maxAtomsSpin.setMaximum(99999)
         maxAtomsSpin.setValue(self.maxAtomsAutoRun)
         maxAtomsSpin.valueChanged.connect(self.maxAtomsChanged)
         rowLayout.addWidget(maxAtomsSpin)

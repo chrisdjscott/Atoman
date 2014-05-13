@@ -1811,6 +1811,65 @@ class SliceSettingsDialog(GenericSettingsDialog):
         self.hide()
 
 ################################################################################
+class AtomIndexSettingsDialog(GenericSettingsDialog):
+    def __init__(self, mainWindow, title, parent=None):
+        super(AtomIndexSettingsDialog, self).__init__(title, parent)
+        
+        self.filterType = "Atom index"
+        
+        self.minVal = 0
+        self.maxVal = 1000000
+        
+        groupLayout = self.addFilteringGroupBox(slot=self.filteringToggled, checked=True)
+        
+        label = QtGui.QLabel("Min:")
+        self.minValSpinBox = QtGui.QSpinBox()
+        self.minValSpinBox.setSingleStep(1)
+        self.minValSpinBox.setMinimum(0)
+        self.minValSpinBox.setMaximum(100000000)
+        self.minValSpinBox.setValue(self.minVal)
+        self.minValSpinBox.valueChanged.connect(self.setMinVal)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(label)
+        row.addWidget(self.minValSpinBox)
+        groupLayout.addLayout(row)
+        
+        label = QtGui.QLabel("Max:")
+        self.maxValSpinBox = QtGui.QSpinBox()
+        self.maxValSpinBox.setSingleStep(1)
+        self.maxValSpinBox.setMinimum(0)
+        self.maxValSpinBox.setMaximum(100000000)
+        self.maxValSpinBox.setValue(self.maxVal)
+        self.maxValSpinBox.valueChanged.connect(self.setMaxVal)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(label)
+        row.addWidget(self.maxValSpinBox)
+        groupLayout.addLayout(row)
+    
+    def filteringToggled(self, arg):
+        """
+        Filtering toggled
+        
+        """
+        self.filteringEnabled = arg
+    
+    def setMinVal(self, val):
+        """
+        Set the minimum coordination number.
+        
+        """
+        self.minVal = val
+
+    def setMaxVal(self, val):
+        """
+        Set the maximum coordination number.
+        
+        """
+        self.maxVal = val
+
+################################################################################
 class CoordinationNumberSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
         super(CoordinationNumberSettingsDialog, self).__init__(title, parent)

@@ -11,12 +11,13 @@ import os
 import sys
 import platform
 import logging
+import glob
 
 from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
-from .. import latticeReaders
+from ..state import latticeReaders
 
 try:
     from .. import resources
@@ -55,7 +56,7 @@ class GenericReaderForm(GenericForm):
         # always show widget
         self.show()
         
-    def openFile(self, label=None, filename=None, rouletteIndex=None):
+    def openFile(self, label=None, filename=None, rouletteIndex=None, sftpPath=None):
         """
         This should be sub-classed to load the selected file.
         
@@ -71,14 +72,14 @@ class GenericReaderForm(GenericForm):
     def updateFileLabel(self, filename):
         pass
     
-    def postOpenFile(self, stateType, state, filename):
+    def postOpenFile(self, stateType, state, filename, sftpPath):
         """
         Should always be called at the end of openFile.
         
         """
         self.updateFileLabel(filename)
         
-        self.parent.fileLoaded(stateType, state, filename, self.fileExtension, self.stackIndex)
+        self.parent.fileLoaded(stateType, state, filename, self.fileExtension, self.stackIndex, sftpPath)
     
     def openFileDialog(self):
         """
@@ -182,12 +183,48 @@ class AutoDetectReaderForm(GenericReaderForm):
         
         # open dialog
         row = self.newRow()
-        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
-        self.openLatticeDialogButton.setToolTip("Open file")
+        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
+        self.openLatticeDialogButton.setToolTip("Open file dialog")
         self.openLatticeDialogButton.setCheckable(0)
         self.openLatticeDialogButton.clicked.connect(self.openFileDialog)
         row.addWidget(self.openLatticeDialogButton)
         
+        # sftp browser
+        if hasattr(self.parent, "sftp_browser"):
+            openSFTPBrowserButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "SFTP browser")
+            openSFTPBrowserButton.setToolTip("Open SFTP browser")
+            openSFTPBrowserButton.setCheckable(0)
+            openSFTPBrowserButton.clicked.connect(self.openSFTPBrowser)
+            row = self.newRow()
+            row.addWidget(openSFTPBrowserButton)
+    
+    def openSFTPBrowser(self):
+        """
+        Open SFTP browser
+        
+        """
+        self.logger.debug("Opening SFTP browser (AUTO DETECT)")
+        
+        ok = self.parent.sftp_browser.exec_()
+        if ok and self.parent.sftp_browser.filename_remote is not None:
+            remotefn = self.parent.sftp_browser.filename_remote
+            localfn = self.parent.sftp_browser.filename_local
+            sftpPath = self.parent.sftp_browser.sftpPath
+            self.logger.info("Copied remote file (%s) to local machine", remotefn)
+            self.logger.debug("Local filename: '%s'", localfn)
+            self.logger.debug("SFTP path: '%s'", sftpPath)
+            
+            # read file
+            status = self.openFile(filename=localfn, sftpPath=sftpPath)
+            
+            # remove local copy
+            self.cleanUnzipped(localfn, True)
+            
+            # remove Roulette if exists
+            rfns = glob.glob(os.path.join(self.mainWindow.tmpDirectory, "Roulette*.OUT"))
+            for rfn in rfns:
+                os.unlink(rfn)
+    
     def updateFileLabel(self, filename):
         """
         Update file label.
@@ -202,7 +239,7 @@ class AutoDetectReaderForm(GenericReaderForm):
         """
         return str(self.latticeLabel.text())
     
-    def openFile(self, filename=None, rouletteIndex=None):
+    def openFile(self, filename=None, rouletteIndex=None, sftpPath=None):
         """
         Open file.
         
@@ -267,7 +304,7 @@ class AutoDetectReaderForm(GenericReaderForm):
         self.logger.info("Selected reader: '%s'", selectedReaderForm.widgetTitle)
         
         # read file
-        status = selectedReaderForm.openFile(filename=filename)
+        status = selectedReaderForm.openFile(filename=filename, sftpPath=sftpPath)
         
         return status
     
@@ -434,8 +471,8 @@ class LbomdDatReaderForm(GenericReaderForm):
         
         # open dialog
         row = self.newRow()
-        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
-        self.openLatticeDialogButton.setToolTip("Open file")
+        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
+        self.openLatticeDialogButton.setToolTip("Open file dialog")
         self.openLatticeDialogButton.setCheckable(0)
         self.openLatticeDialogButton.clicked.connect(self.openFileDialog)
         row.addWidget(self.openLatticeDialogButton)
@@ -454,7 +491,7 @@ class LbomdDatReaderForm(GenericReaderForm):
         """
         return str(self.latticeLabel.text())
     
-    def openFile(self, filename=None, rouletteIndex=None):
+    def openFile(self, filename=None, rouletteIndex=None, sftpPath=None):
         """
         Open file.
         
@@ -463,9 +500,6 @@ class LbomdDatReaderForm(GenericReaderForm):
             filename = self.getFileName()
         
         filename = str(filename)
-        
-#        if not len(filename):
-#            return None
         
         # remove zip extensions
         if filename[-3:] == ".gz":
@@ -476,7 +510,7 @@ class LbomdDatReaderForm(GenericReaderForm):
         status, state = self.latticeReader.readFile(filename, rouletteIndex=rouletteIndex)
         
         if not status:
-            GenericReaderForm.postOpenFile(self, self.stateType, state, filename)
+            GenericReaderForm.postOpenFile(self, self.stateType, state, filename, sftpPath)
         
         return status
         
@@ -535,8 +569,8 @@ class LbomdRefReaderForm(GenericReaderForm):
         
         # open dialog
         row = self.newRow()
-        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
-        self.openLatticeDialogButton.setToolTip("Open file")
+        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
+        self.openLatticeDialogButton.setToolTip("Open file dialog")
         self.openLatticeDialogButton.setCheckable(0)
         self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), self.openFileDialog)
         row.addWidget(self.openLatticeDialogButton)
@@ -555,7 +589,7 @@ class LbomdRefReaderForm(GenericReaderForm):
         """
         return str(self.latticeLabel.text())
     
-    def openFile(self, filename=None, rouletteIndex=None):
+    def openFile(self, filename=None, rouletteIndex=None, sftpPath=None):
         """
         Open file.
         
@@ -577,7 +611,7 @@ class LbomdRefReaderForm(GenericReaderForm):
         status, state = self.latticeReader.readFile(filename, rouletteIndex=rouletteIndex)
         
         if not status:
-            GenericReaderForm.postOpenFile(self, self.stateType, state, filename)
+            GenericReaderForm.postOpenFile(self, self.stateType, state, filename, sftpPath)
             
             # set xyz input form to use this as ref
             self.logger.debug("Setting as ref on xyz reader")
@@ -684,8 +718,8 @@ class LbomdXYZReaderForm(GenericReaderForm):
         
         # open dialog
         row = self.newRow()
-        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Open file")
-        self.openLatticeDialogButton.setToolTip("Open file")
+        self.openLatticeDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
+        self.openLatticeDialogButton.setToolTip("Open file dialog")
         self.openLatticeDialogButton.setCheckable(0)
         self.connect(self.openLatticeDialogButton, QtCore.SIGNAL('clicked()'), lambda isRef=False: self.openFileDialog(isRef))
         row.addWidget(self.openLatticeDialogButton)
@@ -814,7 +848,7 @@ class LbomdXYZReaderForm(GenericReaderForm):
         self.refLabel.setText(filename)
         self.refLoaded = True
     
-    def openFile(self, filename=None, isRef=False, rouletteIndex=None):
+    def openFile(self, filename=None, isRef=False, rouletteIndex=None, sftpPath=None):
         """
         Open file.
         
@@ -851,9 +885,8 @@ class LbomdXYZReaderForm(GenericReaderForm):
         if not status:
             if isRef:
                 self.setRefState(state, filename)
-                self.parent.lbomdXyzWidget.setRefState(state, filename)
             else:
-                GenericReaderForm.postOpenFile(self, self.stateType, state, filename)
+                GenericReaderForm.postOpenFile(self, self.stateType, state, filename, sftpPath)
             
             self.updateFileLabelCustom(filename, isRef)
         

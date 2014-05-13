@@ -2,7 +2,7 @@
 """
 Data input is handled by the systems dialog. 
 From here you can load or generate a lattice; view loaded lattices; set input/ref system, etc.
-Once loaded systems will be added to the "Loaded systems" list.  
+Once loaded, systems will be added to the "Loaded systems" list.  
 Systems can be removed from the list by selecting them (multiple selection is possible) and clicking the minus sign. 
 Note that systems that are currently selected on an analysis pipeline, as either a ref or input, cannot be removed.
 
@@ -19,6 +19,7 @@ from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
 from . import latticeReaderForms
 from . import latticeGeneratorForms
+from . import sftpDialog
 
 try:
     from .. import resources
@@ -132,6 +133,9 @@ class LoadSystemForm(GenericForm):
         self.mainWindow = mainWindow
         self.mainToolbar = mainToolbar
         
+        # sftp browser
+        self.sftp_browser = sftpDialog.SFTPBrowserDialog(self.mainWindow, parent=self)
+        
         # ordered list of keys
         self.readerFormsKeys = [
             "LBOMD DAT",
@@ -182,6 +186,14 @@ class LoadSystemForm(GenericForm):
         
         self.show()
     
+    def openSFTPBrowser(self):
+        """
+        Open SFTP browser
+        
+        """
+        
+        
+    
     def loadHelpPage(self):
         """
         Load the help page for this form
@@ -197,12 +209,12 @@ class LoadSystemForm(GenericForm):
         """
         self.stackedWidget.setCurrentIndex(index)
     
-    def fileLoaded(self, fileType, state, filename, extension, readerStackIndex):
+    def fileLoaded(self, fileType, state, filename, extension, readerStackIndex, sftpPath):
         """
         Called when a file is loaded
         
         """
-        self.parent.file_loaded(state, filename, extension, readerStackIndex)
+        self.parent.file_loaded(state, filename, extension, readerStackIndex, sftpPath)
 
 ################################################################################
 
@@ -542,21 +554,24 @@ class SystemsDialog(QtGui.QDialog):
         """
         self.add_lattice(lattice, filename, "dat", allowDuplicate=True)
     
-    def file_loaded(self, lattice, filename, extension, readerStackIndex):
+    def file_loaded(self, lattice, filename, extension, readerStackIndex, sftpPath):
         """
         Called after a file had been loaded (or generated too?)
         
         """
-        self.add_lattice(lattice, filename, extension, idb=readerStackIndex, ida=0)
+        self.add_lattice(lattice, filename, extension, idb=readerStackIndex, ida=0, sftpPath=sftpPath)
     
-    def add_lattice(self, lattice, filename, extension, ida=None, idb=None, displayName=None, allowDuplicate=False):
+    def add_lattice(self, lattice, filename, extension, ida=None, idb=None, displayName=None, allowDuplicate=False, sftpPath=None):
         """
         Add lattice
         
         """
         index = self.systems_list_widget.count()
         
-        abspath = os.path.abspath(filename)
+        if sftpPath is None:
+            abspath = os.path.abspath(filename)
+        else:
+            abspath = sftpPath
         
         if not allowDuplicate:
             abspathList = self.getAbspathList()
@@ -583,10 +598,12 @@ class SystemsDialog(QtGui.QDialog):
         
         stackIndex = (ida, idb)
         
-        self.logger.debug("Adding new lattice to systemsList (%d): %s; %d,%d", index, filename, ida, idb)
-        
         if displayName is None:
-            displayName = filename
+            displayName = os.path.basename(filename)
+        
+        self.logger.debug("Adding new lattice to systemsList (%d): %s; %d,%d", index, filename, ida, idb)
+        self.logger.debug("Abspath is: '%s'", abspath)
+        self.logger.debug("Display name is: '%s'", displayName)
         
         # item for list
         list_item = SystemsListWidgetItem(lattice, filename, displayName, stackIndex, abspath, extension)

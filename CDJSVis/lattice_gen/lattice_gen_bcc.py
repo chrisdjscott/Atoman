@@ -7,7 +7,7 @@ Generate BCC lattice
 """
 import logging
 
-from ..lattice import Lattice
+from ..state.lattice import Lattice
 
 
 ################################################################################

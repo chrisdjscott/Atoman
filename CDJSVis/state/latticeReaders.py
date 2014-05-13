@@ -12,9 +12,9 @@ import logging
 
 import numpy as np
 
-from .visclibs import input as input_c
+from ..visclibs import input as input_c
 from .atoms import elements
-from .visutils import utilities
+from ..visutils import utilities
 from .lattice import Lattice
 
 
@@ -90,6 +90,12 @@ class GenericLatticeReader(object):
 #            return -4, None
         
         self.logger.info("Reading file: '%s'", filename)
+        
+        # strip gz/bz2 extension
+        if filename.endswith(".bz2"):
+            filename = filename[:-4]
+        elif filename.endswith(".gz"):
+            filename = filename[:-3]
         
         filepath, zipFlag = self.checkForZipped(filename)
         if zipFlag == -1:
@@ -438,6 +444,7 @@ class LbomdDatReader(GenericLatticeReader):
             self.logger.info("    %d %s (%s) atoms", specieCountTemp[i], specieListTemp[i], elements.atomName(specieListTemp[i]))
         
         # guess roulette
+        stepNumber = None
         if rouletteIndex is None:
             # file name
             basename = os.path.basename(filename)
@@ -447,19 +454,39 @@ class LbomdDatReader(GenericLatticeReader):
             
             if len(result):
                 try:
-                    rouletteIndex = int(result[0]) - 1
+                    index = int(result[0])
                 except ValueError:
                     rouletteIndex = None
+                else:
+                    stepNumber = index
+                    if index > 0:
+                        rouletteIndex = index - 1
         
         # attempt to read roulette file
         if rouletteIndex is not None:
+            # different path?
+            head = os.path.dirname(filename)
+            if len(head):
+                testpath = head
+            else:
+                testpath = None
+            
+            # step number
+            if stepNumber is None:
+                stepNumber = rouletteIndex + 1
+            state.kmcStep = stepNumber
+            self.logger.debug("Detected KMC step as: %d", state.kmcStep)
+            
             # read simulation time
-            simTime = utilities.getTimeFromRoulette(rouletteIndex)
+            simTime = utilities.getTimeFromRoulette(rouletteIndex, testpath=testpath)
             
             if simTime is not None:
                 state.simTime = simTime
+                self.logger.debug("Detected simulation time as: %f", state.simTime)
             
             # get barrier
-            state.barrier = utilities.getBarrierFromRoulette(rouletteIndex)
+            state.barrier = utilities.getBarrierFromRoulette(rouletteIndex, testpath=testpath)
+            if state.barrier is not None:
+                self.logger.debug("Detected barrier as: %f", state.barrier)
         
         return 0, state

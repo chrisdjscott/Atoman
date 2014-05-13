@@ -10,7 +10,7 @@ import logging
 import numpy as np
 
 from .atoms import elements
-from .md import forces
+from ..md import forces
 
 
 ################################################################################
@@ -25,6 +25,7 @@ class Lattice(object):
         
         self.simTime = 0.0
         self.barrier = None
+        self.kmcStep = None
         
         self.cellDims = np.empty(3, np.float64)
         
@@ -36,8 +37,8 @@ class Lattice(object):
         self.specieRGB = np.empty((0,3), np.float64)
         self.specieAtomicNumber = np.empty(0, np.int32)
         
-        self.minPos = np.empty(3, np.float64)
-        self.maxPos = np.empty(3, np.float64)
+        self.minPos = np.zeros(3, np.float64)
+        self.maxPos = np.zeros(3, np.float64)
         
         self.atomID = np.empty(0, np.int32)
         self.specie = np.empty(0, np.int32)
@@ -70,13 +71,14 @@ class Lattice(object):
         self.specieRGB = np.empty((0,3), np.float64)
         self.specieAtomicNumber = np.empty(0, np.int32)
         
-        self.minPos = np.empty(3, np.float64)
-        self.maxPos = np.empty(3, np.float64)
+        self.minPos = np.zeros(3, np.float64)
+        self.maxPos = np.zeros(3, np.float64)
          
         self.cellDims = np.zeros(3, np.float64)
         
         self.simTime = 0.0
         self.barrier = None
+        self.kmcStep = None
         self.voronoiDict = {}
     
     def addSpecie(self, sym, count=None):
@@ -269,6 +271,8 @@ class Lattice(object):
         NAtoms = lattice.NAtoms
         
         self.simTime = lattice.simTime
+        self.barrier = lattice.barrier
+        self.kmcStep = lattice.kmcStep
         
         # copy dims
         self.cellDims[0] = lattice.cellDims[0]

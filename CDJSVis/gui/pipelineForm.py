@@ -70,6 +70,7 @@ class PipelineForm(QtGui.QWidget):
         self.inputStackIndex = None
         self.filename = None
         self.currentRunID = None
+        self.abspath = None
         self.PBC = np.ones(3, np.int32)
         
         self.analysisPipelineFormHidden = True
@@ -392,6 +393,7 @@ class PipelineForm(QtGui.QWidget):
         self.inputStackIndex = item.stackIndex
         self.filename = item.displayName
         self.extension = item.extension
+        self.abspath = item.abspath
         
         # check ok
         status = self.checkStateChangeOk()

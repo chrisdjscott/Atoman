@@ -24,7 +24,7 @@ from ..rendering import renderer
 from ..rendering import renderBonds
 from ..visutils import vectors
 from . import clusters
-from ..atoms import elements
+from ..state.atoms import elements
 from . import voronoi
 from ..rendering import renderVoronoi
 
@@ -251,6 +251,9 @@ class Filterer(object):
             
             elif filterName == "Bond order":
                 self.bondOrderFilter(filterSettings)
+            
+            elif filterName == "Atom index":
+                self.atomIndexFilter(filterSettings)
             
             # write to log
             if self.parent.defectFilterSelected:
@@ -806,6 +809,26 @@ class Filterer(object):
             # store scalars
             scalars.resize(NVisible, refcheck=False)
             self.scalarsDict["Displacement"] = scalars
+    
+    def atomIndexFilter(self, settings):
+        """
+        Atom index filter
+        
+        """
+        lattice = self.pipelinePage.inputState
+        
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
+        
+        # run displacement filter
+        NVisible = filtering_c.atomIndexFilter(self.visibleAtoms, lattice.atomID, settings.filteringEnabled, settings.minVal, settings.maxVal, 
+                                               NScalars, fullScalars)
+        
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        
+        # resize visible atoms
+        self.visibleAtoms.resize(NVisible, refcheck=False)
     
     def cropFilter(self, settings):
         """

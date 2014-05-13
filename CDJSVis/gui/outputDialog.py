@@ -12,9 +12,9 @@ import shutil
 import subprocess
 import copy
 import logging
-import time
 import math
 import functools
+import datetime
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -1011,7 +1011,7 @@ class ImageTab(QtGui.QWidget):
             return 1
         
         try:
-            # temporary (should be optional)
+            # settings
             settings = self.mainWindow.preferences.ffmpegForm
             framerate = createMovieBox.framerate
             bitrate = settings.bitrate
@@ -1541,20 +1541,55 @@ class ImageSequenceTab(QtGui.QWidget):
         # formatted string
         fileText = "%s%s.%s" % (str(self.fileprefix.text()), self.numberFormat, pipelinePage.extension)
         
+        # check abspath (for sftp)
+        abspath = pipelinePage.abspath
+        sftpBrowser = None
+        if ":" in abspath:
+            self.logger.debug("Sequencing SFTP file")
+            sftpHost, sftpFile = abspath.split(":")
+            self.logger.debug("Host: '%s'; path: '%s'", sftpHost, sftpFile)
+            
+            sysDiag = self.mainWindow.systemsDialog
+            sftpDlg = sysDiag.load_system_form.sftp_browser
+            match = False
+            for i in xrange(sftpDlg.stackedWidget.count()):
+                w = sftpDlg.stackedWidget.widget(i)
+                if w.connectionID == sftpHost:
+                    match = True
+                    break
+            
+            if not match:
+                self.logger.error("Could not find SFTP browser for '%s'", sftpHost)
+                return
+            
+            # browser
+            sftpBrowser = w
+        
         # check first file exists
-        firstFileExists = utilities.checkForFile(str(self.firstFileLabel.text()))
+        if sftpBrowser is None:
+            firstFileExists = utilities.checkForFile(str(self.firstFileLabel.text()))
+        else:
+            rp = os.path.join(os.path.dirname(sftpFile), str(self.firstFileLabel.text()))
+            self.logger.debug("Checking first file exists (SFTP): '%s'", rp)
+            firstFileExists = bool(sftpBrowser.checkPathExists(rp)) or bool(sftpBrowser.checkPathExists(rp+".gz")) or bool(sftpBrowser.checkPathExists(rp+".bz2"))
+        
         if not firstFileExists:
             self.warnFileNotPresent(str(self.firstFileLabel.text()), tag="first")
             return
         
         # check last file exists
         lastFile = fileText % self.maxIndex
-        lastFileExists = utilities.checkForFile(lastFile)
+        if sftpBrowser is None:
+            lastFileExists = utilities.checkForFile(lastFile)
+        else:
+            rp = os.path.join(os.path.dirname(sftpFile), lastFile)
+            self.logger.debug("Checking last file exists (SFTP): '%s'", rp)
+            lastFileExists = bool(sftpBrowser.checkPathExists(rp)) or bool(sftpBrowser.checkPathExists(rp+".gz")) or bool(sftpBrowser.checkPathExists(rp+".bz2"))
+        
         if not lastFileExists:
             self.warnFileNotPresent(lastFile, tag="last")
             return
         
-        log = self.mainWindow.console.write
         self.logger.info("Running sequencer")
         
         # store current input state
@@ -1591,6 +1626,7 @@ class ImageSequenceTab(QtGui.QWidget):
         
         # directory
         saveDir = str(self.outputFolder.text())
+        saveDir += "-%s" % datetime.datetime.now().strftime("%y%m%d-%H%M%S")
         if os.path.exists(saveDir):
             if self.overwrite:
                 shutil.rmtree(saveDir)
@@ -1620,8 +1656,41 @@ class ImageSequenceTab(QtGui.QWidget):
         try:
             count = 0
             for i in xrange(self.minIndex, self.maxIndex + self.interval, self.interval):
-                currentFile = fileText % (i,)
-                self.logger.info("Current file: '%s'", currentFile)
+                if sftpBrowser is None:
+                    currentFile = fileText % i
+                    self.logger.info("Current file: '%s'", currentFile)
+                
+                else:
+                    # we have to copy current file locally and use that, then delete it afterwards
+                    basename = fileText % i
+                    remoteFile = os.path.join(os.path.dirname(sftpFile), basename)
+                    currentFile = os.path.join(self.mainWindow.tmpDirectory, basename)
+                    
+                    # check exists
+                    remoteFileTest = remoteFile
+                    fileExists = bool(sftpBrowser.checkPathExists(remoteFileTest))
+                    if not fileExists:
+                        # check gzip
+                        remoteFileTest = remoteFile + ".gz"
+                        fileExists = bool(sftpBrowser.checkPathExists(remoteFileTest))
+                        if fileExists:
+                            currentFile += ".gz"
+                        else:
+                            # check bzip
+                            remoteFileTest = remoteFile + ".bz2"
+                            fileExists = bool(sftpBrowser.checkPathExists(remoteFileTest))
+                            if fileExists:
+                                currentFile += ".bz2"
+                            else:
+                                self.logger.error("SFTP sequencer file does not exist: '%s'", remoteFile)
+                                return
+                    
+                    remoteFile = remoteFileTest
+                    
+                    # copy locally
+                    self.logger.debug("Copying file for sequencer: '%s' to '%s'", remoteFile, currentFile)
+                    # copy file and roulette if exists..,
+                    sftpBrowser.copySystem(remoteFile, currentFile)
                 
                 # read in state
                 if reader.requiresRef:
@@ -1639,6 +1708,8 @@ class ImageSequenceTab(QtGui.QWidget):
                 
                 # exit if cancelled
                 if progDialog.wasCanceled():
+                    if sftpBrowser is not None:
+                        os.unlink(currentFile)
                     return
                 
                 # now apply all filters
@@ -1646,20 +1717,27 @@ class ImageSequenceTab(QtGui.QWidget):
                 
                 # exit if cancelled
                 if progDialog.wasCanceled():
+                    if sftpBrowser is not None:
+                        os.unlink(currentFile)
                     return
                 
                 saveName = saveText % (count,)
                 self.logger.info("  Saving image: '%s'", saveName)
                 
                 # now save image
-                filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
-                                                                  saveName, 1, povray=povray)
+                filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, saveName, 1, povray=povray)
                 
                 count += 1
                 
                 # exit if cancelled
                 if progDialog.wasCanceled():
+                    if sftpBrowser is not None:
+                        os.unlink(currentFile)
                     return
+                
+                # delete local copy of file (SFTP)
+                if sftpBrowser is not None:
+                    os.unlink(currentFile)
                 
                 # update progress
                 progDialog.setValue(count)
@@ -1899,6 +1977,7 @@ class ImageRotateTab(QtGui.QWidget):
         
         # directory
         saveDir = str(self.outputFolder.text())
+        saveDir += "-%s" % datetime.datetime.now().strftime("%y%m%d-%H%M%S")
         if os.path.exists(saveDir):
             if self.overwrite:
                 shutil.rmtree(saveDir)

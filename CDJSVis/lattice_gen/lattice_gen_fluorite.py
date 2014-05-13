@@ -9,7 +9,7 @@ import logging
 
 import numpy as np
 
-from ..lattice import Lattice
+from ..state.lattice import Lattice
 from . import lattice_gen_utils
 
 

@@ -10,7 +10,7 @@ Eg. atomic mass, radius, etc.
 import os
 import sys
 
-from .visutils.utilities import resourcePath
+from ..visutils.utilities import resourcePath
 
 
 ################################################################################

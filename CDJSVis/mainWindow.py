@@ -21,11 +21,11 @@ import vtk
 import numpy as np
 import matplotlib
 import scipy
+import paramiko
 
 from .visutils.utilities import iconPath, resourcePath
-from .atoms import elements
+from .state.atoms import elements
 from .gui import toolbar as toolbarModule
-from . import lattice
 from .rendering import renderer
 from .gui import helpForm
 from .gui import dialogs
@@ -122,10 +122,6 @@ class MainWindow(QtGui.QMainWindow):
         self.mouseMotion = 0
         
         logger.debug("MD resource path: %s (exists %s)", resourcePath("lbomd.IN", dirname="md_input"), os.path.exists(resourcePath("lbomd.IN", dirname="md_input")))
-        
-        # initiate lattice objects for storing reference and input states
-#         self.inputState = lattice.Lattice()
-#         self.refState = lattice.Lattice()  
         
         # get settings object
         settings = QtCore.QSettings()
@@ -954,9 +950,10 @@ class MainWindow(QtGui.QMainWindow):
                           <p>This application can be used to visualise atomistic simulations.</p>
                           <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
                              by Marc Robinson.</p>
-                          <p>Python %s - Qt %s - PySide %s - VTK %s - NumPy %s - SciPy %s - Matplotlib %s on %s</p>""" % (
+                          <p>Python %s - Qt %s - PySide %s - VTK %s - NumPy %s - SciPy %s - Matplotlib %s - paramiko %s on %s</p>""" % (
                           __version__, datetime.date.today().year, platform.python_version(), QtCore.__version__, PySide.__version__,
-                          vtk.vtkVersion.GetVTKVersion(), np.__version__, scipy.__version__, matplotlib.__version__, platform.system()))
+                          vtk.vtkVersion.GetVTKVersion(), np.__version__, scipy.__version__, matplotlib.__version__, paramiko.__version__, 
+                          platform.system()))
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
         msgBox.setIcon(QtGui.QMessageBox.Information)

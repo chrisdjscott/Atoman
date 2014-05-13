@@ -24,3 +24,5 @@ int voronoiNeighboursFilter(int, int*, int, int*, int, int, int, double *, int, 
 int Q4Filter(int, int*, int, double *, double, double, double, int, double *, double *, double *, double *, int *, int, double *, int);
 
 int calculate_drift_vector(int, double*, double*, double*, int*, double*);
+
+int atomIndexFilter(int, int*, int*, int, int, int, int, double*);
