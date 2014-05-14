@@ -73,6 +73,7 @@ class Filterer(object):
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
         self.povrayAtomsWritten = False
+        self.clustersList = []
     
     def removeActors(self):
         """
@@ -105,6 +106,7 @@ class Filterer(object):
         self.driftVector = np.zeros(3, np.float64)
         
         self.povrayAtomsWritten = False
+        self.clustersList = []
     
     def hideActors(self):
         """
@@ -226,13 +228,13 @@ class Filterer(object):
                 self.chargeFilter(filterSettings)
             
             elif filterName == "Cluster":
-                clusterList = self.clusterFilter(filterSettings)
+                self.clusterFilter(filterSettings)
                 
                 if filterSettings.drawConvexHulls:
-                    self.clusterFilterDrawHulls(clusterList, filterSettings, hullFile)
+                    self.clusterFilterDrawHulls(filterSettings, hullFile)
                 
                 if filterSettings.calculateVolumes:
-                    self.clusterFilterCalculateVolumes(clusterList, filterSettings)
+                    self.clusterFilterCalculateVolumes(filterSettings)
             
             elif filterName == "Crop sphere":
                 self.cropSphereFilter(filterSettings)
@@ -1328,6 +1330,8 @@ class Filterer(object):
         minPos = np.zeros(3, np.float64)
         maxPos = copy.deepcopy(lattice.cellDims)
         
+        #TODO: modify full Scalars array here too
+        
         clusters_c.findClusters(self.visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
                                 minPos, maxPos, minSize, maxSize, result)
         
@@ -1338,9 +1342,9 @@ class Filterer(object):
         atomCluster.resize(NVisible, refcheck=False)
         
         # build cluster lists
-        clusterList = []
+        self.clusterList = []
         for i in xrange(NClusters):
-            clusterList.append([])
+            self.clusterList.append(clusters.AtomCluster())
         
         # add atoms to cluster lists
         clusterIndexMapper = {}
@@ -1355,14 +1359,12 @@ class Filterer(object):
             
             clusterListIndex = clusterIndexMapper[clusterIndex]
             
-            clusterList[clusterListIndex].append(atomIndex)
+            self.clusterList[clusterListIndex].indexes.append(atomIndex)
         
-        #TODO: rebuild scalars array of atom cluster (so can colour by cluster maybe?)
+        #TODO: add cluster index as scalar (so can colour by cluster maybe?)
         
-        
-        return clusterList
     
-    def clusterFilterDrawHulls(self, clusterList, settings, hullPovFile):
+    def clusterFilterDrawHulls(self, settings, hullPovFile):
         """
         Draw hulls around filters.
         
@@ -1372,17 +1374,18 @@ class Filterer(object):
         """
         PBC = self.pipelinePage.PBC
         if PBC[0] or PBC[1] or PBC[2]:
-            self.clusterFilterDrawHullsWithPBCs(clusterList, settings, hullPovFile)
+            self.clusterFilterDrawHullsWithPBCs(settings, hullPovFile)
         
         else:
-            self.clusterFilterDrawHullsNoPBCs(clusterList, settings, hullPovFile)
+            self.clusterFilterDrawHullsNoPBCs(settings, hullPovFile)
     
-    def clusterFilterDrawHullsNoPBCs(self, clusterList, settings, hullPovFile):
+    def clusterFilterDrawHullsNoPBCs(self, settings, hullPovFile):
         """
         SHOULD BE ABLE TO GET RID OF THIS AND JUST USE PBCs ONE
         
         """
         lattice = self.pipelinePage.inputState
+        clusterList = self.clusterList
         
         # draw them as they are
         for cluster in clusterList:
@@ -1417,15 +1420,15 @@ class Filterer(object):
                 # write povray file too
                 renderer.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
     
-    def clusterFilterDrawHullsWithPBCs(self, clusterList, settings, hullPovFile):
+    def clusterFilterDrawHullsWithPBCs(self, settings, hullPovFile):
         """
         
         
         """
         lattice = self.pipelinePage.inputState
+        clusterList = self.clusterList
         
         for cluster in clusterList:
-            
             appliedPBCs = np.zeros(7, np.int32)
             clusterPos = np.empty(3 * len(cluster), np.float64)
             for i in xrange(len(cluster)):
@@ -1481,7 +1484,7 @@ class Filterer(object):
                         # write povray file too
                         renderer.writePovrayHull(facets, tmpClusterPos, self.mainWindow, hullPovFile, settings)
     
-    def clusterFilterCalculateVolumes(self, clusterList, filterSettings):
+    def clusterFilterCalculateVolumes(self, filterSettings):
         """
         Calculate volumes of clusters.
         
@@ -1492,7 +1495,7 @@ class Filterer(object):
         # draw them as they are
         if filterSettings.calculateVolumesHull:
             count = 0
-            for cluster in clusterList:
+            for cluster in self.clusterList:
                 # first make pos array for this cluster
                 clusterPos = np.empty(3 * len(cluster), np.float64)
                 for i in xrange(len(cluster)):
@@ -1528,7 +1531,7 @@ class Filterer(object):
             vor = lattice.voronoiDict[voroKey]
             
             count = 0
-            for cluster in clusterList:
+            for cluster in self.clusterList:
                 volume = 0.0
                 for index in cluster:
                     volume += vor.atomVolume(index)

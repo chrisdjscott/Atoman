@@ -59,6 +59,7 @@ class FilterList(QtGui.QWidget):
         
         # info windows stored here
         self.infoWindows = {}
+        self.clusterInfoWindows = {}
         
         # all available filters
         self.allFilters = ["Specie", 

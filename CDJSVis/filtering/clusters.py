@@ -185,6 +185,23 @@ def checkFacetsPBCs(facetsIn, clusterPos, excludeRadius, PBC, cellDims):
     
     return facets
 
+################################################################################
+
+class AtomCluster(object):
+    """
+    Cluster of atoms
+    
+    """
+    def __init__(self):
+        self.indexes = []
+        self.volume = None
+        self.facetArea = None
+    
+    def __len__(self):
+        return len(self.indexes)
+    
+    def __getitem__(self, i):
+        return self.indexes[i]
 
 ################################################################################
 class DefectCluster(object):
