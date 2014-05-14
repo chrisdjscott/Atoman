@@ -5,10 +5,9 @@ Additional routines to do with clusters (hulls, etc...)
 @author: Chris Scott
 
 """
+import numpy as np
 import pyhull
-import pyhull.convex_hull
 from scipy import spatial
-
 
 
 ################################################################################
@@ -168,14 +167,14 @@ def checkFacetsPBCs(facetsIn, clusterPos, excludeRadius, PBC, cellDims):
     """
     facets = []
     for facet in facetsIn:
-        includeFlag = 1
+        includeFlag = True
         for i in xrange(3):
             index = facet[i]
             
             for j in xrange(3):
                 if PBC[j]:
                     if clusterPos[3*index+j] > cellDims[j] + excludeRadius or clusterPos[3*index+j] < 0.0 - excludeRadius:
-                        includeFlag = 0
+                        includeFlag = False
                         break
             
             if not includeFlag:
@@ -188,7 +187,7 @@ def checkFacetsPBCs(facetsIn, clusterPos, excludeRadius, PBC, cellDims):
 
 
 ################################################################################
-class DefectCluster:
+class DefectCluster(object):
     """
     Defect cluster info.
     
@@ -198,13 +197,23 @@ class DefectCluster:
         self.interstitials = []
         self.antisites = []
         self.onAntisites = []
+        self.splitInterstitials = []
+        self.volume = None
+        self.facetArea = None
     
     def getNDefects(self):
         """
         Return total number of defects.
         
         """
-        return len(self.vacancies) + len(self.interstitials) + len(self.antisites)
+        return len(self.vacancies) + len(self.interstitials) + len(self.antisites) + len(self.splitInterstitials) / 3
+    
+    def getNDefectsFull(self):
+        """
+        Return total number of defects, where a split interstitial counts as 3 defects.
+        
+        """
+        return len(self.vacancies) + len(self.interstitials) + len(self.antisites) + len(self.splitInterstitials)
     
     def getNVacancies(self):
         """
@@ -226,3 +235,70 @@ class DefectCluster:
         
         """
         return len(self.antisites)
+    
+    def getNSplitInterstitials(self):
+        """
+        Return number of split interstitials
+        
+        """
+        return len(self.splitInterstitials) / 3
+    
+    def makeClusterPos(self, inputLattice, refLattice):
+        """
+        Make cluster pos array
+        
+        """
+        clusterPos = np.empty(3 * self.getNDefectsFull(), np.float64)
+        
+        # vacancy positions
+        count = 0
+        for i in xrange(self.getNVacancies()):
+            index = self.vacancies[i]
+            
+            clusterPos[3*count] = refLattice.pos[3*index]
+            clusterPos[3*count+1] = refLattice.pos[3*index+1]
+            clusterPos[3*count+2] = refLattice.pos[3*index+2]
+            
+            count += 1
+        
+        # antisite positions
+        for i in xrange(self.getNAntisites()):
+            index = self.antisites[i]
+            
+            clusterPos[3*count] = refLattice.pos[3*index]
+            clusterPos[3*count+1] = refLattice.pos[3*index+1]
+            clusterPos[3*count+2] = refLattice.pos[3*index+2]
+            
+            count += 1
+        
+        # interstitial positions
+        for i in xrange(self.getNInterstitials()):
+            index = self.interstitials[i]
+            
+            clusterPos[3*count] = inputLattice.pos[3*index]
+            clusterPos[3*count+1] = inputLattice.pos[3*index+1]
+            clusterPos[3*count+2] = inputLattice.pos[3*index+2]
+            
+            count += 1
+        
+        # split interstitial positions
+        for i in xrange(self.getNSplitInterstitials()):
+            index = self.splitInterstitials[3*i]
+            clusterPos[3*count] = refLattice.pos[3*index]
+            clusterPos[3*count+1] = refLattice.pos[3*index+1]
+            clusterPos[3*count+2] = refLattice.pos[3*index+2]
+            count += 1
+            
+            index = self.splitInterstitials[3*i+1]
+            clusterPos[3*count] = refLattice.pos[3*index]
+            clusterPos[3*count+1] = refLattice.pos[3*index+1]
+            clusterPos[3*count+2] = refLattice.pos[3*index+2]
+            count += 1
+            
+            index = self.splitInterstitials[3*i+2]
+            clusterPos[3*count] = refLattice.pos[3*index]
+            clusterPos[3*count+1] = refLattice.pos[3*index+1]
+            clusterPos[3*count+2] = refLattice.pos[3*index+2]
+            count += 1
+        
+        return clusterPos

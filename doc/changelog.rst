@@ -5,6 +5,9 @@ Changelog
 **dev**
 
 * FFmpeg runs in thread pool
+* Defect clusters work with split interstitials
+* Calculating volumes of defect clusters works
+* Option to compute defect cluster volume using convex hull volume or sum of Voronoi volumes
 
 **v140513**
 

@@ -655,7 +655,9 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.hullCol = [0]*3
         self.hullCol[2] = 1
         self.hullOpacity = 0.5
-        self.calculateVolumes = 0
+        self.calculateVolumes = False
+        self.calculateVolumesVoro = False
+        self.calculateVolumesHull = True
         self.drawConvexHulls = 0
         self.hideDefects = 0
         self.identifySplitInts = 1
@@ -671,7 +673,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.vacRadSpinBox.setMinimum(0.01)
         self.vacRadSpinBox.setMaximum(10.0)
         self.vacRadSpinBox.setValue(self.vacancyRadius)
-        self.connect(self.vacRadSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.vacRadChanged)
+        self.vacRadSpinBox.valueChanged[float].connect(self.vacRadChanged)
         
         row = self.newRow()
         row.addWidget(label)
@@ -686,19 +688,19 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         self.intTypeCheckBox = QtGui.QCheckBox(" Interstitials")
         self.intTypeCheckBox.setChecked(1)
-        self.connect( self.intTypeCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.intVisChanged )
+        self.intTypeCheckBox.stateChanged[int].connect(self.intVisChanged)
         row = self.newRow()
         row.addWidget(self.intTypeCheckBox)
         
         self.vacTypeCheckBox = QtGui.QCheckBox(" Vacancies   ")
         self.vacTypeCheckBox.setChecked(1)
-        self.connect( self.vacTypeCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.vacVisChanged )
+        self.vacTypeCheckBox.stateChanged[int].connect(self.vacVisChanged)
         row = self.newRow()
         row.addWidget(self.vacTypeCheckBox)
         
         self.antTypeCheckBox = QtGui.QCheckBox(" Antisites    ")
         self.antTypeCheckBox.setChecked(1)
-        self.connect( self.antTypeCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.antVisChanged )
+        self.antTypeCheckBox.stateChanged[int].connect(self.antVisChanged)
         row = self.newRow()
         row.addWidget(self.antTypeCheckBox)
         
@@ -728,13 +730,6 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row = self.newRow()
         row.addWidget(self.findClustersGroupBox)
         
-        # find clusters check box
-#        self.findClustersCheckBox = QtGui.QCheckBox(" Find clusters")
-#        self.findClustersCheckBox.setChecked(0)
-#        self.connect(self.findClustersCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.findClustersChanged)
-#        row = self.newRow()
-#        row.addWidget(self.findClustersCheckBox)
-        
         # neighbour rad spin box
         label = QtGui.QLabel("Neighbour radius ")
         self.nebRadSpinBox = QtGui.QDoubleSpinBox()
@@ -742,7 +737,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.nebRadSpinBox.setMinimum(0.01)
         self.nebRadSpinBox.setMaximum(100.0)
         self.nebRadSpinBox.setValue(self.neighbourRadius)
-        self.connect(self.nebRadSpinBox, QtCore.SIGNAL('valueChanged(double)'), self.nebRadChanged)
+        self.nebRadSpinBox.valueChanged[float].connect(self.nebRadChanged)
         
         row = genericForm.FormRow()
         row.addWidget(label)
@@ -755,7 +750,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.minNumSpinBox.setMinimum(1)
         self.minNumSpinBox.setMaximum(1000)
         self.minNumSpinBox.setValue(self.minClusterSize)
-        self.connect(self.minNumSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.minNumChanged)
+        self.minNumSpinBox.valueChanged[int].connect(self.minNumChanged)
         
         row = genericForm.FormRow()
         row.addWidget(label)
@@ -768,7 +763,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.maxNumSpinBox.setMinimum(-1)
         self.maxNumSpinBox.setMaximum(999999)
         self.maxNumSpinBox.setValue(self.maxClusterSize)
-        self.connect(self.maxNumSpinBox, QtCore.SIGNAL('valueChanged(int)'), self.maxNumChanged)
+        self.maxNumSpinBox.valueChanged[int].connect(self.maxNumChanged)
         
         row = genericForm.FormRow()
         row.addWidget(label)
@@ -783,7 +778,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         self.allSpeciesBox = QtGui.QCheckBox("All")
         self.allSpeciesBox.setChecked(1)
-        self.connect(self.allSpeciesBox, QtCore.SIGNAL('stateChanged(int)'), self.allSpeciesBoxChanged)
+        self.allSpeciesBox.stateChanged[int].connect(self.allSpeciesBoxChanged)
         row = self.newRow()
         row.addWidget(self.allSpeciesBox)
         
@@ -810,7 +805,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.hullColourButton.setFixedWidth(50)
         self.hullColourButton.setFixedHeight(30)
         self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
-        self.connect(self.hullColourButton, QtCore.SIGNAL("clicked()"), self.showColourDialog)
+        self.hullColourButton.clicked.connect(self.showColourDialog)
         
         row = genericForm.FormRow()
         row.addWidget(label)
@@ -825,7 +820,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.hullOpacitySpinBox.setMinimum(0.01)
         self.hullOpacitySpinBox.setMaximum(1.0)
         self.hullOpacitySpinBox.setValue(self.hullOpacity)
-        self.connect(self.hullOpacitySpinBox, QtCore.SIGNAL('valueChanged(double)'), self.hullOpacityChanged)
+        self.hullOpacitySpinBox.valueChanged[float].connect(self.hullOpacityChanged)
         
         row = genericForm.FormRow()
         row.addWidget(label)
@@ -840,15 +835,31 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row.addWidget(self.hideAtomsCheckBox)
         drawHullsLayout.addWidget(row)
         
-        # calculate volumes check box
-        self.calcVolsCheckBox = QtGui.QCheckBox(" Calculate volumes")
-        self.calcVolsCheckBox.setChecked(0)
-        self.connect(self.calcVolsCheckBox, QtCore.SIGNAL('stateChanged(int)'), self.calcVolsChanged)
+        # calculate volume group box
+        self.calcVolsGroup = QtGui.QGroupBox("Calculate volumes")
+        self.calcVolsGroup.setCheckable(True)
+        self.calcVolsGroup.setChecked(False)
+#         self.calcVolsGroup.setAlignment(QtCore.Qt.AlignHCenter)
+        self.calcVolsGroup.toggled.connect(self.calcVolsChanged)
+        
+        calcVolsLayout = QtGui.QVBoxLayout(self.calcVolsGroup)
+        calcVolsLayout.setAlignment(QtCore.Qt.AlignTop)
+        calcVolsLayout.setContentsMargins(0, 0, 0, 0)
+        calcVolsLayout.setSpacing(0)
+        
+        # radio buttons
+        self.convHullVolRadio = QtGui.QRadioButton("Use volume of convex hull", parent=self.calcVolsGroup)
+        self.convHullVolRadio.toggled.connect(self.calcVolsChanged)
+        self.voroVolRadio = QtGui.QRadioButton("Sum Voronoi volumes", parent=self.calcVolsGroup)
+        self.convHullVolRadio.setChecked(True)
+        
+        calcVolsLayout.addWidget(self.convHullVolRadio)
+        calcVolsLayout.addWidget(self.voroVolRadio)
         
         self.newDisplayRow()
         
         row = self.newDisplayRow()
-        row.addWidget(self.calcVolsCheckBox)
+        row.addWidget(self.calcVolsGroup)
         
         # vac display settings
         vacForm = genericForm.GenericForm(self, 0, "Vac display settings")
@@ -1000,7 +1011,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         """
         self.vacancyRadius = val
     
-    def intVisChanged(self):
+    def intVisChanged(self, val):
         """
         Change visibility of interstitials
         
@@ -1010,7 +1021,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         else:
             self.showInterstitials = 0
     
-    def vacVisChanged(self):
+    def vacVisChanged(self, val):
         """
         Change visibility of vacancies
         
@@ -1020,7 +1031,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         else:
             self.showVacancies = 0
     
-    def antVisChanged(self):
+    def antVisChanged(self, val):
         """
         Change visibility of antisites
         
@@ -1076,14 +1087,13 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         """
         self.specieBoxes[specie] = QtGui.QCheckBox(str(specie))
-        
-        self.connect(self.specieBoxes[specie], QtCore.SIGNAL('stateChanged(int)'), self.changedSpecie)
+        self.specieBoxes[specie].stateChanged[int].connect(self.changedSpecie)
         
         row = self.newRow()
         row.addWidget(self.specieBoxes[specie])
         
         self.specieRows[specie] = row
-        
+    
     def changedSpecie(self, val):
         """
         Changed visibility of a specie.
@@ -1134,10 +1144,20 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         Changed calc vols.
         
         """
-        if self.calcVolsCheckBox.isChecked():
-            self.calculateVolumes = 1
+        if self.calcVolsGroup.isChecked():
+            self.calculateVolumes = True
         else:
-            self.calculateVolumes = 0
+            self.calculateVolumes = False
+        
+        if self.convHullVolRadio.isChecked():
+            self.calculateVolumesHull = True
+        else:
+            self.calculateVolumesHull = False
+        
+        if self.voroVolRadio.isChecked():
+            self.calculateVolumesVoro = True
+        else:
+            self.calculateVolumesVoro = False
 
 ################################################################################
 class ClusterSettingsDialog(GenericSettingsDialog):

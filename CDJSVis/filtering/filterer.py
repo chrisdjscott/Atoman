@@ -277,10 +277,15 @@ class Filterer(object):
         renderTime = time.time()
         povfile = "pipeline%d_atoms%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
         if self.parent.defectFilterSelected:
-            # vtk render
+            # render convex hulls
             if filterSettings.findClusters and filterSettings.drawConvexHulls:
                 self.pointDefectFilterDrawHulls(clusterList, filterSettings, hullFile)
             
+            # cluster volume
+            if filterSettings.findClusters and filterSettings.calculateVolumes:
+                self.pointDefectFilterCalculateClusterVolumes(clusterList, filterSettings)
+            
+            # render defects
             if filterSettings.findClusters and filterSettings.drawConvexHulls and filterSettings.hideDefects:
                 pass
             
@@ -1131,26 +1136,105 @@ class Filterer(object):
                 
                 clusterList[clusterListIndex].antisites.append(atomIndex)
                 clusterList[clusterListIndex].onAntisites.append(atomIndex2)
+            
+            for i in xrange(NSplit):
+                clusterIndex = defectCluster[NVac + NInt + NAnt + i]
+                
+                if clusterIndex not in clusterIndexMapper:
+                    clusterIndexMapper[clusterIndex] = count
+                    count += 1
+                
+                clusterListIndex = clusterIndexMapper[clusterIndex]
+                
+                atomIndex = splitInterstitials[3*i]
+                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
+                
+                atomIndex = splitInterstitials[3*i+1]
+                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
+                
+                atomIndex = splitInterstitials[3*i+2]
+                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
         
-        return (interstitials, vacancies, antisites, onAntisites, splitInterstitials, clusterList)
+        return interstitials, vacancies, antisites, onAntisites, splitInterstitials, clusterList
+    
+    def pointDefectFilterCalculateClusterVolumes(self, clusterList, settings):
+        """
+        Calculate volumes of clusters
+        
+        """
+        self.logger.debug("Calculating volumes of defect clusters")
+        self.logger.warning("If your clusters cross PBCs this may or may not give correct volumes; please test and let me know")
+        
+        inputLattice = self.pipelinePage.inputState
+        refLattice = self.pipelinePage.refState
+        
+        if settings.calculateVolumesHull:
+            count = 0
+            for cluster in clusterList:
+                # first make pos array for this cluster
+                clusterPos = cluster.makeClusterPos(inputLattice, refLattice)
+                NDefects = len(clusterPos) / 3
+                
+                # now get convex hull
+                if NDefects < 4:
+                    pass
+                
+                else:
+                    appliedPBCs = np.zeros(7, np.int32)
+                    clusters_c.prepareClusterToDrawHulls(NDefects, clusterPos, inputLattice.cellDims, 
+                                                         self.pipelinePage.PBC, appliedPBCs, settings.neighbourRadius)
+                    
+                    cluster.volume, cluster.facetArea = clusters.findConvexHullVolume(NDefects, clusterPos)
+                
+                self.logger.info("  Cluster %d (%d defects)", count, cluster.getNDefects())
+                self.logger.info("    volume is %f; facet area is %f", cluster.volume, cluster.facetArea)
+                
+                count += 1
+        
+        elif settings.calculateVolumesVoro:
+            # compute Voronoi
+            self.calculateVoronoi()
+            
+            voroKey = self.voronoiOptions.getVoronoiDictKey()
+            vor = inputLattice.voronoiDict[voroKey]
+            
+            count = 0
+            for cluster in clusterList:
+                volume = 0.0
+                
+                # add volumes of interstitials
+                for i in xrange(cluster.getNInterstitials()):
+                    index = cluster.interstitials[i]
+                    volume += vor.atomVolume(index)
+                
+                # add volumes of split interstitial atoms
+                for i in xrange(cluster.getNSplitInterstitials()):
+                    index = cluster.splitInterstitials[3*i+1]
+                    volume += vor.atomVolume(index)
+                    index = cluster.splitInterstitials[3*i+2]
+                    volume += vor.atomVolume(index)
+                
+                # add volumes of on antisite atoms
+                for i in xrange(cluster.getNAntisites()):
+                    index = cluster.onAntisites[i]
+                    volume += vor.atomVolume(index)
+                
+                cluster.volume = volume
+                
+                self.logger.info("  Cluster %d (%d defects)", count, cluster.getNDefects())
+                self.logger.info("    volume is %f", volume)
+                
+                count += 1
+        
+        else:
+            self.logger.error("Method to calculate defect cluster volumes not specified")
     
     def pointDefectFilterDrawHulls(self, clusterList, settings, hullPovFile):
         """
         Draw convex hulls around defect volumes
         
         """
-#        PBC = self.pipelinePage.PBC
-#        if PBC[0] or PBC[1] or PBC[2]:
-#            self.pointDefectFilterDrawHullsWithPBCs(clusterList, settings)
-#        
-#        else:
-#            self.pointDefectFilterDrawHullsWithPBCs(clusterList, settings)
-#    
-#    def pointDefectFilterDrawHullsWithPBCs(self, clusterList, settings, hullPovFile):
-#        """
-#        Draw hulls around defect volumes (PBCs)
-#        
-#        """
+        # PBCs
         PBC = self.pipelinePage.PBC
         if PBC[0] or PBC[1] or PBC[2]:
             PBCFlag = True
@@ -1161,44 +1245,13 @@ class Filterer(object):
         inputLattice = self.pipelinePage.inputState
         refLattice = self.pipelinePage.refState
         
+        # loop over clusters
         for cluster in clusterList:
-            
-            NDefects = cluster.getNDefects()
-            
             appliedPBCs = np.zeros(7, np.int32)
-            clusterPos = np.empty(3 * NDefects, np.float64)
+            clusterPos = cluster.makeClusterPos(inputLattice, refLattice)
+            NDefects = len(clusterPos) / 3
             
-            # vacancy positions
-            count = 0
-            for i in xrange(cluster.getNVacancies()):
-                index = cluster.vacancies[i]
-                
-                clusterPos[3*count] = refLattice.pos[3*index]
-                clusterPos[3*count+1] = refLattice.pos[3*index+1]
-                clusterPos[3*count+2] = refLattice.pos[3*index+2]
-                
-                count += 1
-            
-            # antisite positions
-            for i in xrange(cluster.getNAntisites()):
-                index = cluster.antisites[i]
-                
-                clusterPos[3*count] = refLattice.pos[3*index]
-                clusterPos[3*count+1] = refLattice.pos[3*index+1]
-                clusterPos[3*count+2] = refLattice.pos[3*index+2]
-                
-                count += 1
-            
-            # interstitial positions
-            for i in xrange(cluster.getNInterstitials()):
-                index = cluster.interstitials[i]
-                
-                clusterPos[3*count] = inputLattice.pos[3*index]
-                clusterPos[3*count+1] = inputLattice.pos[3*index+1]
-                clusterPos[3*count+2] = inputLattice.pos[3*index+2]
-                
-                count += 1
-            
+            # determine if the cluster crosses PBCs
             clusters_c.prepareClusterToDrawHulls(NDefects, clusterPos, inputLattice.cellDims, 
                                                  self.pipelinePage.PBC, appliedPBCs, settings.neighbourRadius)
             
@@ -1212,7 +1265,7 @@ class Filterer(object):
             
             # now render
             if facets is not None:
-                #TODO: make sure not facets more than neighbour rad from cell
+                # make sure not facets more than neighbour rad from cell
                 facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, 
                                                   inputLattice.cellDims)
                 
