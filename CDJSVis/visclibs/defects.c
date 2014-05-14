@@ -43,7 +43,7 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
     double approxBoxWidth, splitIntRad;
     struct Boxes *boxes;
     double *defectPos;
-    int NVacNew, NIntNew, NAntNew, numInCluster;
+    int NVacNew, NIntNew, NAntNew, NSplitNew, numInCluster;
     int NSplitInterstitials, *defectClusterSplit, splitIndexes[3];
     double *refPos;
     
@@ -514,7 +514,7 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
     if (findClustersFlag)
     {
         /* build positions array of all defects */
-        NDefects = NVacancies + NInterstitials + NAntisites;// + 3 * NSplitInterstitials;
+        NDefects = NVacancies + NInterstitials + NAntisites + 3 * NSplitInterstitials;
         defectPos = malloc(3 * NDefects * sizeof(double));
         if (defectPos == NULL)
         {
@@ -557,26 +557,26 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
             count++;
         }
         
-//        for (i=0; i<NSplitInterstitials; i++)
-//        {
-//            index = splitInterstitials[3*i];
-//            defectPos[3*count] = refPos[3*index];
-//            defectPos[3*count+1] = refPos[3*index+1];
-//            defectPos[3*count+2] = refPos[3*index+2];
-//            count++;
-//            
-//            index = splitInterstitials[3*i+1];
-//            defectPos[3*count] = pos[3*index];
-//            defectPos[3*count+1] = pos[3*index+1];
-//            defectPos[3*count+2] = pos[3*index+2];
-//            count++;
-//            
-//            index = splitInterstitials[3*i+2];
-//            defectPos[3*count] = pos[3*index];
-//            defectPos[3*count+1] = pos[3*index+1];
-//            defectPos[3*count+2] = pos[3*index+2];
-//            count++;
-//        }
+        for (i=0; i<NSplitInterstitials; i++)
+        {
+            index = splitInterstitials[3*i];
+            defectPos[3*count] = refPos[3*index];
+            defectPos[3*count+1] = refPos[3*index+1];
+            defectPos[3*count+2] = refPos[3*index+2];
+            count++;
+            
+            index = splitInterstitials[3*i+1];
+            defectPos[3*count] = pos[3*index];
+            defectPos[3*count+1] = pos[3*index+1];
+            defectPos[3*count+2] = pos[3*index+2];
+            count++;
+            
+            index = splitInterstitials[3*i+2];
+            defectPos[3*count] = pos[3*index];
+            defectPos[3*count+1] = pos[3*index+1];
+            defectPos[3*count+2] = pos[3*index+2];
+            count++;
+        }
         
         /* box defects */
         approxBoxWidth = clusterRadius;
@@ -599,6 +599,17 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
         {
             printf("ERROR: could not reallocate NDefectsCluster\n");
             exit(51);
+        }
+        
+        /* first we have to adjust the number of atoms in clusters containing split interstitials */
+        for (i=0; i<NSplitInterstitials; i++)
+        {
+            /* assume all lone defects forming split interstitial are in same cluster; maybe should check!? */
+            j = NVacancies + NInterstitials + NAntisites;
+            clusterIndex = defectCluster[j + 3 * i];
+            
+            /* subtract 2 because we add 3 instead of 1 */
+            NDefectsCluster[clusterIndex] -= 2;
         }
         
         /* now limit by size */
@@ -690,19 +701,40 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
         }
         
         /* split interstitials */
-//        NSplitNew = 0;
-//        for (i=0; i<NSplitInterstitials; i++)
-//        {
-//            
-//            
-//            
-//            
-//        }
+        NSplitNew = 0;
+        for (i=0; i<NSplitInterstitials; i++)
+        {
+            /* assume all lone defects forming split interstitial are in same cluster */
+            j = NVacancies + NInterstitials + NAntisites;
+            clusterIndex = defectCluster[j + 3 * i];
+            
+            /* note, this number is wrong because we add 3 per split int, not 1 */
+            numInCluster = NDefectsCluster[clusterIndex];
+            
+            if (numInCluster < minClusterSize)
+            {
+                continue;
+            }
+            
+            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize)
+            {
+                continue;
+            }
+            
+            splitInterstitials[3*NSplitNew] = splitInterstitials[3*i];
+            splitInterstitials[3*NSplitNew+1] = splitInterstitials[3*i+1];
+            splitInterstitials[3*NSplitNew+2] = splitInterstitials[3*i+2];
+            defectCluster[NVacNew+NIntNew+NAntNew+NSplitNew] = clusterIndex;
+            NDefectsClusterNew[clusterIndex]++;
+            
+            NSplitNew++;
+        }
         
         /* number of visible defects */
         NVacancies = NVacNew;
         NInterstitials = NIntNew;
         NAntisites = NAntNew;
+        NSplitInterstitials = NSplitNew;
         
         /* recalc number of clusters */
         count = 0;
