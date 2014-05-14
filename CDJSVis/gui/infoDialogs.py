@@ -129,13 +129,20 @@ class DefectInfoWindow(QtGui.QDialog):
         self.defectType = defectType
         self.defList = defList
         self.filterList = filterList
+        voronoiOptions = filterList.voronoiOptions
         
         inputState = self.pipelinePage.inputState
         refState = self.pipelinePage.refState
         
+        vor = None
+        voroKey = voronoiOptions.getVoronoiDictKey()
+        if voroKey in inputState.voronoiDict:
+            vor = inputState.voronoiDict[voroKey]
+        
         self.setWindowTitle("Defect info")
         
-        layout = QtGui.QVBoxLayout()
+        self.mainLayout = QtGui.QVBoxLayout()
+        layout = self.mainLayout
         
         if defectType == 1:
             vacancies = defList[0]
@@ -192,6 +199,9 @@ class DefectInfoWindow(QtGui.QDialog):
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("Charge: %f" % (inputState.charge[index],)))
             layout.addLayout(row)
+            
+            if vor is not None:
+                self.voroVolLine(vor.atomVolume(index))
         
         elif defectType == 3:
             antisites = defList[0]
@@ -244,6 +254,9 @@ class DefectInfoWindow(QtGui.QDialog):
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("    Charge: %f" % (inputState.charge[index2],)))
             layout.addLayout(row)
+            
+            if vor is not None:
+                self.voroVolLine(vor.atomVolume(index2))
         
         elif defectType == 4:
             splitInts = defList[0]
@@ -297,6 +310,9 @@ class DefectInfoWindow(QtGui.QDialog):
             row.addWidget(QtGui.QLabel("    Charge: %f" % (inputState.charge[int1Index],)))
             layout.addLayout(row)
             
+            if vor is not None:
+                self.voroVolLine(vor.atomVolume(int1Index))
+            
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("Interstitial 2:"))
             layout.addLayout(row)
@@ -325,6 +341,9 @@ class DefectInfoWindow(QtGui.QDialog):
             row.addWidget(QtGui.QLabel("    Charge: %f" % (inputState.charge[int2Index],)))
             layout.addLayout(row)
             
+            if vor is not None:
+                self.voroVolLine(vor.atomVolume(int2Index))
+            
             # orientation
             pos1 = inputState.pos[3*int1Index:3*int1Index+3]
             pos2 = inputState.pos[3*int2Index:3*int2Index+3]
@@ -345,6 +364,15 @@ class DefectInfoWindow(QtGui.QDialog):
         layout.addLayout(row)
         
         self.setLayout(layout)
+    
+    def voroVolLine(self, vol):
+        """
+        Return line containing Voronoi volume
+        
+        """
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("Voronoi volume: %f" % vol))
+        self.mainLayout.addLayout(row)
     
     def getHighlighters(self):
         """
