@@ -608,8 +608,12 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
             j = NVacancies + NInterstitials + NAntisites;
             clusterIndex = defectCluster[j + 3 * i];
             
-            /* subtract 2 because we add 3 instead of 1 */
-            NDefectsCluster[clusterIndex] -= 2;
+            /* subtract one from other atoms' clusters */
+            /* we could also check they are same as main one? */
+            index = defectCluster[j + 3 * i + 1];
+            NDefectsCluster[index]--;
+            index = defectCluster[j + 3 * i + 2];
+            NDefectsCluster[index]--;
         }
         
         /* now limit by size */
