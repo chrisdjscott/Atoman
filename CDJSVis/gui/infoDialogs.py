@@ -97,16 +97,33 @@ class ClusterInfoWindow(QtGui.QDialog):
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
         self.colourButton.clicked.connect(self.changeHighlighterColour)
         self.colourButton.setAutoDefault(False)
+        self.highlightCheck = QtGui.QCheckBox("Highlight")
+        self.highlightCheck.setChecked(True)
+        self.highlightCheck.stateChanged.connect(self.highlightChanged)
         
         # close button
         row = QtGui.QHBoxLayout()
         row.addWidget(self.colourButton)
+        row.addWidget(self.highlightCheck)
         row.addStretch(1)
         closeButton = QtGui.QPushButton("Close")
         closeButton.clicked.connect(self.close)
         closeButton.setAutoDefault(True)
         row.addWidget(closeButton)
         layout.addLayout(row)
+    
+    def highlightChanged(self, state):
+        """
+        Highlight check changed
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.removeHighlighters()
+            self.colourButton.setEnabled(False)
+        
+        else:
+            self.addHighlighters()
+            self.colourButton.setEnabled(True)
     
     def changeHighlighterColour(self):
         """
@@ -261,10 +278,14 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
         self.colourButton.clicked.connect(self.changeHighlighterColour)
         self.colourButton.setAutoDefault(False)
+        self.highlightCheck = QtGui.QCheckBox("Highlight")
+        self.highlightCheck.setChecked(True)
+        self.highlightCheck.stateChanged.connect(self.highlightChanged)
         
         # close button
         row = QtGui.QHBoxLayout()
         row.addWidget(self.colourButton)
+        row.addWidget(self.highlightCheck)
         row.addStretch(1)
         closeButton = QtGui.QPushButton("Close")
         closeButton.clicked.connect(self.close)
@@ -290,6 +311,19 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             # make change
             self.removeHighlighters()
             self.addHighlighters()
+    
+    def highlightChanged(self, state):
+        """
+        Highlight check changed
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.removeHighlighters()
+            self.colourButton.setEnabled(False)
+        
+        else:
+            self.addHighlighters()
+            self.colourButton.setEnabled(True)
     
     def addHighlighters(self):
         """
@@ -485,10 +519,14 @@ class AtomInfoWindow(QtGui.QDialog):
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
         self.colourButton.clicked.connect(self.changeHighlighterColour)
         self.colourButton.setAutoDefault(False)
+        self.highlightCheck = QtGui.QCheckBox("Highlight")
+        self.highlightCheck.setChecked(True)
+        self.highlightCheck.stateChanged.connect(self.highlightChanged)
         
         # close button
         row = QtGui.QHBoxLayout()
         row.addWidget(self.colourButton)
+        row.addWidget(self.highlightCheck)
         row.addStretch(1)
         closeButton = QtGui.QPushButton("Close")
         closeButton.clicked.connect(self.close)
@@ -532,6 +570,19 @@ class AtomInfoWindow(QtGui.QDialog):
         highlighter = highlight.AtomHighlighter(lattice.atomPos(self.atomIndex), radius * 1.1, rgb=self.highlightColourRGB)
         
         self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, [highlighter,]))
+    
+    def highlightChanged(self, state):
+        """
+        Highlight check changed
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.removeHighlighters()
+            self.colourButton.setEnabled(False)
+        
+        else:
+            self.addHighlighters()
+            self.colourButton.setEnabled(True)
     
     def show(self):
         """
@@ -844,10 +895,14 @@ class DefectInfoWindow(QtGui.QDialog):
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
         self.colourButton.clicked.connect(self.changeHighlighterColour)
         self.colourButton.setAutoDefault(False)
+        self.highlightCheck = QtGui.QCheckBox("Highlight")
+        self.highlightCheck.setChecked(True)
+        self.highlightCheck.stateChanged.connect(self.highlightChanged)
         
         # close button
         row = QtGui.QHBoxLayout()
         row.addWidget(self.colourButton)
+        row.addWidget(self.highlightCheck)
         row.addStretch(1)
         closeButton = QtGui.QPushButton("Close")
         closeButton.clicked.connect(self.close)
@@ -864,6 +919,19 @@ class DefectInfoWindow(QtGui.QDialog):
         row = QtGui.QHBoxLayout()
         row.addWidget(QtGui.QLabel("Voronoi volume: %f" % vol))
         self.mainLayout.addLayout(row)
+    
+    def highlightChanged(self, state):
+        """
+        Highlight check changed
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.removeHighlighters()
+            self.colourButton.setEnabled(False)
+        
+        else:
+            self.addHighlighters()
+            self.colourButton.setEnabled(True)
     
     def addHighlighters(self):
         """
