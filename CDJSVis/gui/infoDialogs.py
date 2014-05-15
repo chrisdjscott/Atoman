@@ -7,6 +7,7 @@ Info dialogs
 """
 import sys
 import uuid
+import functools
 
 from PySide import QtGui, QtCore
 
@@ -18,6 +19,69 @@ try:
 except ImportError:
     print "ERROR: could not import resources: ensure setup.py ran correctly"
     sys.exit(36)
+
+################################################################################
+
+class ClusterInfoWindow(QtGui.QDialog):
+    """
+    Cluster info window
+    
+    """
+    def __init__(self, pipelinePage, filterList, clusterIndex, parent=None):
+        super(ClusterInfoWindow, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
+        self.setWindowTitle("Cluster %d info" % clusterIndex)
+        self.windowID = uuid.uuid4()
+        
+        self.pipelinePage = pipelinePage
+        self.filterList = filterList
+        self.clusterIndex = clusterIndex
+        
+        lattice = self.pipelinePage.inputState
+        
+        layout = QtGui.QVBoxLayout(self)
+        
+        # cluster
+        self.cluster = filterList.filterer.clusterList[clusterIndex]
+        
+        # volume
+        if self.cluster.volume is not None:
+            layout.addWidget(QtGui.QLabel("Volume: %f units^3" % self.cluster.volume))
+        
+        # facet area
+        if self.cluster.facetArea is not None:
+            layout.addWidget(QtGui.QLabel("Facet area: %f units^2" % self.cluster.facetArea))
+        
+        # label
+        layout.addWidget(QtGui.QLabel("Cluster atoms (%d):" % len(self.cluster)))
+        
+        # list widget
+        self.listWidget = QtGui.QListWidget(self)
+        self.listWidget.setFixedHeight(175)
+        self.listWidget.setFixedWidth(300)
+        layout.addWidget(self.listWidget)
+        
+        # populate list widget
+        
+        for index in self.cluster:
+            item = QtGui.QListWidgetItem()
+            item.setText("Atom %d: %s (%.3f, %.3f, %.3f)" % (lattice.atomID[index], lattice.atomSym(index), lattice.pos[3*index], 
+                                                        lattice.pos[3*index+1], lattice.pos[3*index+2]))
+            self.listWidget.addItem(item)
+        
+        
+        
+        # close button
+        row = QtGui.QHBoxLayout()
+        row.addStretch(1)
+        closeButton = QtGui.QPushButton("Close")
+        closeButton.clicked.connect(self.close)
+        closeButton.setAutoDefault(True)
+        row.addWidget(closeButton)
+        row.addStretch(1)
+        layout.addLayout(row)
 
 ################################################################################
 
@@ -68,15 +132,36 @@ class AtomInfoWindow(QtGui.QDialog):
         row.addWidget(QtGui.QLabel("Charge: %f" % (lattice.charge[atomIndex],)))
         layout.addLayout(row)
         
+        # add scalars
         for scalarType, scalar in scalarsDict.iteritems():
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("%s: %f" % (scalarType, scalar)))
             layout.addLayout(row)
         
+        # check if belongs to a cluster?
+        clusterIndex = None
+        for i, cluster in enumerate(filterList.filterer.clusterList):
+            if atomIndex in cluster:
+                clusterIndex = i
+                break
+        
+        # add button to show cluster info
+        if clusterIndex is not None:
+            clusterButton = QtGui.QPushButton("Cluster %d info" % clusterIndex)
+            clusterButton.clicked.connect(functools.partial(filterList.showClusterInfoWindow, clusterIndex))
+            clusterButton.setAutoDefault(False)
+            row = QtGui.QHBoxLayout()
+            row.addStretch()
+            row.addWidget(clusterButton)
+            row.addStretch()
+            layout.addLayout(row)
+        
+        # close button
         row = QtGui.QHBoxLayout()
         row.addStretch(1)
         closeButton = QtGui.QPushButton("Close")
         closeButton.clicked.connect(self.close)
+        closeButton.setAutoDefault(True)
         row.addWidget(closeButton)
         row.addStretch(1)
         layout.addLayout(row)

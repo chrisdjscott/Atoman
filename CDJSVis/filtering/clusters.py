@@ -202,6 +202,9 @@ class AtomCluster(object):
     
     def __getitem__(self, i):
         return self.indexes[i]
+    
+    def __contains__(self, item):
+        return item in self.indexes
 
 ################################################################################
 class DefectCluster(object):

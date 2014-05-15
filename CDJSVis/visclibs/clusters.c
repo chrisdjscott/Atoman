@@ -21,9 +21,10 @@ void setAppliedPBCs(int *, int *);
  * Find clusters
  *******************************************************************************/
 int findClusters(int NVisibleIn, int *visibleAtoms, double *pos, int *clusterArray, double neighbourRad, double *cellDims, 
-                 int *PBC, double *minPos, double *maxPos, int minClusterSize, int maxClusterSize, int *results)
+                 int *PBC, double *minPos, double *maxPos, int minClusterSize, int maxClusterSize, int *results, 
+                 int NScalars, double *fullScalars)
 {
-    int i, index, NClusters, numInCluster;
+    int i, j, index, NClusters, numInCluster;
     int maxNumInCluster;
     double nebRad2, approxBoxWidth;
     double *visiblePos;
@@ -121,6 +122,12 @@ int findClusters(int NVisibleIn, int *visibleAtoms, double *pos, int *clusterArr
         visibleAtoms[NVisible] = index;
         clusterArray[NVisible] = clusterIndex;
         NAtomsClusterNew[clusterIndex]++;
+        
+        /* handle full scalars array */
+        for (j = 0; j < NScalars; j++)
+        {
+            fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+        }
         
         NVisible++;
     }
@@ -225,6 +232,7 @@ int prepareClusterToDrawHulls(int N, double *pos, double *cellDims, int *PBC, in
     }
     
     NClusters = 0;
+    numInCluster = 0;
     for (i=0; i<N; i++)
     {
         /* skip atom if already allocated */

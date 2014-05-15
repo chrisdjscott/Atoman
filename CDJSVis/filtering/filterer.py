@@ -1330,16 +1330,23 @@ class Filterer(object):
         minPos = np.zeros(3, np.float64)
         maxPos = copy.deepcopy(lattice.cellDims)
         
-        #TODO: modify full Scalars array here too
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
         
         clusters_c.findClusters(self.visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
-                                minPos, maxPos, minSize, maxSize, result)
+                                minPos, maxPos, minSize, maxSize, result, NScalars, fullScalars)
         
         NVisible = result[0]
         NClusters = result[1]
         
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        
         self.visibleAtoms.resize(NVisible, refcheck=False)
         atomCluster.resize(NVisible, refcheck=False)
+        
+        # store cluster indexes as scalars
+#         self.scalarsDict["Cluster"] = atomCluster
         
         # build cluster lists
         self.clusterList = []
@@ -1360,9 +1367,6 @@ class Filterer(object):
             clusterListIndex = clusterIndexMapper[clusterIndex]
             
             self.clusterList[clusterListIndex].indexes.append(atomIndex)
-        
-        #TODO: add cluster index as scalar (so can colour by cluster maybe?)
-        
     
     def clusterFilterDrawHulls(self, settings, hullPovFile):
         """
@@ -1521,6 +1525,10 @@ class Filterer(object):
                 self.logger.info("  Cluster %d (%d atoms)", count, len(cluster))
                 self.logger.info("    volume is %f; facet area is %f", volume, area)
                 
+                # store volume/facet area
+                cluster.volume = volume
+                cluster.facetArea = area
+                
                 count += 1
         
         elif filterSettings.calculateVolumesVoro:
@@ -1538,6 +1546,9 @@ class Filterer(object):
                 
                 self.logger.info("  Cluster %d (%d atoms)", count, len(cluster))
                 self.logger.info("    volume is %f", volume)
+                
+                # store volume
+                cluster.volume = volume
                 
                 count += 1
         

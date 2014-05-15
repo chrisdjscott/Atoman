@@ -16,6 +16,7 @@ from ..filtering import filterer
 from . import filterSettings
 from . import filterListOptions
 from . import utils
+from . import infoDialogs
 try:
     from .. import resources
 except ImportError:
@@ -181,31 +182,31 @@ class FilterList(QtGui.QWidget):
         self.quickAddCombo.addItem("Add property/filter ...")
         self.quickAddCombo.addItems(self.allFilters)
         self.quickAddCombo.currentIndexChanged[str].connect(self.quickAddComboAction)
-        row = QtGui.QHBoxLayout()
-        row.setAlignment(QtCore.Qt.AlignHCenter)
-        row.addWidget(self.quickAddCombo)
-        self.filterListLayout.addLayout(row)
+#         row = QtGui.QHBoxLayout()
+#         row.setAlignment(QtCore.Qt.AlignHCenter)
+#         row.addWidget(self.quickAddCombo)
+#         self.filterListLayout.addLayout(row)
         
         # add more buttons
-        addFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
-        addFilter.setStatusTip("Add new property/filter")
-        addFilter.setToolTip("Add new property/filter")
-        addFilter.clicked.connect(self.addFilter)
-        
-        removeFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
-        removeFilter.setStatusTip("Remove property/filter")
-        removeFilter.setToolTip("Remove property/filter")
-        removeFilter.clicked.connect(self.removeFilter)
-        
-        moveUp = QtGui.QPushButton(QtGui.QIcon(iconPath("go-up.svg")), "")
-        moveUp.setStatusTip("Move up")
-        moveUp.setToolTip("Move up")
-        moveUp.clicked.connect(self.moveFilterUpInList)
-        
-        moveDown = QtGui.QPushButton(QtGui.QIcon(iconPath("go-down.svg")), "")
-        moveDown.setStatusTip("Move down")
-        moveDown.setToolTip("Move down")
-        moveDown.clicked.connect(self.moveFilterDownInList)
+#         addFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
+#         addFilter.setStatusTip("Add new property/filter")
+#         addFilter.setToolTip("Add new property/filter")
+#         addFilter.clicked.connect(self.addFilter)
+#         
+#         removeFilter = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
+#         removeFilter.setStatusTip("Remove property/filter")
+#         removeFilter.setToolTip("Remove property/filter")
+#         removeFilter.clicked.connect(self.removeFilter)
+#         
+#         moveUp = QtGui.QPushButton(QtGui.QIcon(iconPath("go-up.svg")), "")
+#         moveUp.setStatusTip("Move up")
+#         moveUp.setToolTip("Move up")
+#         moveUp.clicked.connect(self.moveFilterUpInList)
+#         
+#         moveDown = QtGui.QPushButton(QtGui.QIcon(iconPath("go-down.svg")), "")
+#         moveDown.setStatusTip("Move down")
+#         moveDown.setToolTip("Move down")
+#         moveDown.clicked.connect(self.moveFilterDownInList)
         
         clearList = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-clear.svg")), "")
         clearList.setStatusTip("Clear current property/filter list")
@@ -217,20 +218,29 @@ class FilterList(QtGui.QWidget):
         applyList.setToolTip("Apply current property/filter list")
         applyList.clicked.connect(self.applyList)
         
-        buttonWidget = QtGui.QWidget()
-        buttonLayout = QtGui.QHBoxLayout(buttonWidget)
-        buttonLayout.setSpacing(0)
-        buttonLayout.setContentsMargins(0, 0, 0, 0)
-        buttonLayout.setAlignment(QtCore.Qt.AlignTop)
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignHCenter)
+        row.addWidget(self.quickAddCombo)
+        row.addStretch()
+        row.addWidget(clearList)
+        row.addWidget(applyList)
+        self.filterListLayout.addLayout(row)
         
-        buttonLayout.addWidget(addFilter)
-        buttonLayout.addWidget(removeFilter)
-        buttonLayout.addWidget(moveUp)
-        buttonLayout.addWidget(moveDown)
-        buttonLayout.addWidget(clearList)
-        buttonLayout.addWidget(applyList)
         
-        self.filterListLayout.addWidget(buttonWidget)
+#         buttonWidget = QtGui.QWidget()
+#         buttonLayout = QtGui.QHBoxLayout(buttonWidget)
+#         buttonLayout.setSpacing(0)
+#         buttonLayout.setContentsMargins(0, 0, 0, 0)
+#         buttonLayout.setAlignment(QtCore.Qt.AlignTop)
+#         
+#         buttonLayout.addWidget(addFilter)
+#         buttonLayout.addWidget(removeFilter)
+#         buttonLayout.addWidget(moveUp)
+#         buttonLayout.addWidget(moveDown)
+#         buttonLayout.addWidget(clearList)
+#         buttonLayout.addWidget(applyList)
+#         
+#         self.filterListLayout.addWidget(buttonWidget)
         
         # add other option like colour by height etc
         extraOptionsGroupBox = QtGui.QGroupBox("Additional filter list options")
@@ -294,6 +304,30 @@ class FilterList(QtGui.QWidget):
         
         else:
             self.driftCompensation = False
+    
+    def showClusterInfoWindow(self, clusterIndex):
+        """
+        Show info window for cluster
+        
+        """
+        self.logger.debug("Showing cluster info window for cluster %d", clusterIndex)
+        
+        # check if key already exists, if so use stored window
+        if clusterIndex in self.clusterInfoWindows:
+            window = self.clusterInfoWindows[clusterIndex]
+        
+        # otherwise make new window
+        else:
+            window = infoDialogs.ClusterInfoWindow(self.pipelinePage, self, clusterIndex, parent=self)
+            
+            # store window
+            self.clusterInfoWindows[clusterIndex] = window
+        
+        # position window
+        utils.positionWindow(window, window.size(), self.mainWindow.desktop, self)
+        
+        # show the window
+        window.show()
     
     def quickAddComboAction(self, text):
         """

@@ -42,17 +42,18 @@ elif osname == "Linux":
 # find clusters prototype
 _lib.findClusters.restype = c_int
 _lib.findClusters.argtypes = [c_int, POINTER(c_int), POINTER(c_double), POINTER(c_int), c_double, POINTER(c_double), POINTER(c_int), 
-                              POINTER(c_double), POINTER(c_double), c_int, c_int, POINTER(c_int)]
+                              POINTER(c_double), POINTER(c_double), c_int, c_int, POINTER(c_int), c_int, POINTER(c_double)]
 
 # find clusters
-def findClusters(visibleAtoms, pos, clusterArray, neighbourRadius, cellDims, PBC, minPos, maxPos, minClusterSize, maxClusterSize, results):
+def findClusters(visibleAtoms, pos, clusterArray, neighbourRadius, cellDims, PBC, minPos, maxPos, minClusterSize, maxClusterSize, results,
+                 NScalars, fullScalars):
     """
     Find clusters of atoms.
     
     """
     return _lib.findClusters(len(visibleAtoms), CPtrToInt(visibleAtoms), CPtrToDouble(pos), CPtrToInt(clusterArray), neighbourRadius,
                              CPtrToDouble(cellDims), CPtrToInt(PBC), CPtrToDouble(minPos), CPtrToDouble(maxPos), minClusterSize, 
-                             maxClusterSize, CPtrToInt(results))
+                             maxClusterSize, CPtrToInt(results), NScalars, CPtrToDouble(fullScalars))
 
 ################################################################################
 
