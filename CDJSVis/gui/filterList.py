@@ -279,7 +279,10 @@ class FilterList(QtGui.QWidget):
         
         # otherwise make new window
         else:
-            window = infoDialogs.ClusterInfoWindow(self.pipelinePage, self, clusterIndex, parent=self)
+            if self.defectFilterSelected:
+                window = infoDialogs.DefectClusterInfoWindow(self.pipelinePage, self, clusterIndex, parent=self)
+            else:
+                window = infoDialogs.ClusterInfoWindow(self.pipelinePage, self, clusterIndex, parent=self)
             
             # store window
             self.clusterInfoWindows[clusterIndex] = window
@@ -358,10 +361,16 @@ class FilterList(QtGui.QWidget):
         """
         self.logger.debug("Removing info windows")
         
+        # atom info windows
         keys = self.infoWindows.keys()
-        
         for key in keys:
             win = self.infoWindows.pop(key)
+            win.close()
+        
+        # cluster info windows
+        keys = self.clusterInfoWindows.keys()
+        for key in keys:
+            win = self.clusterInfoWindows.pop(key)
             win.close()
     
     def toggleScalarBar(self):

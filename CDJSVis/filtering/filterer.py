@@ -59,6 +59,11 @@ class Filterer(object):
         self.interstitialSpecieCount = []
         self.antisiteSpecieCount = []
         self.splitIntSpecieCount = []
+        self.vacancies = np.empty(0, np.int32)
+        self.interstitials = np.empty(0, np.int32)
+        self.antisites = np.empty(0, np.int32)
+        self.onAntisites = np.empty(0, np.int32)
+        self.splitInterstitials = np.empty(0, np.int32)
         
         self.driftVector = np.zeros(3, np.float64)
         
@@ -73,7 +78,7 @@ class Filterer(object):
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
         self.povrayAtomsWritten = False
-        self.clustersList = []
+        self.clusterList = []
     
     def removeActors(self):
         """
@@ -106,7 +111,7 @@ class Filterer(object):
         self.driftVector = np.zeros(3, np.float64)
         
         self.povrayAtomsWritten = False
-        self.clustersList = []
+        self.clusterList = []
     
     def hideActors(self):
         """
@@ -210,7 +215,7 @@ class Filterer(object):
                 self.displacementFilter(filterSettings)
             
             elif filterName == "Point defects":
-                interstitials, vacancies, antisites, onAntisites, splitInterstitials, clusterList = self.pointDefectFilter(filterSettings)
+                interstitials, vacancies, antisites, onAntisites, splitInterstitials = self.pointDefectFilter(filterSettings)
                 
                 self.interstitials = interstitials
                 self.vacancies = vacancies
@@ -281,11 +286,11 @@ class Filterer(object):
         if self.parent.defectFilterSelected:
             # render convex hulls
             if filterSettings.findClusters and filterSettings.drawConvexHulls:
-                self.pointDefectFilterDrawHulls(clusterList, filterSettings, hullFile)
+                self.pointDefectFilterDrawHulls(filterSettings, hullFile)
             
             # cluster volume
             if filterSettings.findClusters and filterSettings.calculateVolumes:
-                self.pointDefectFilterCalculateClusterVolumes(clusterList, filterSettings)
+                self.pointDefectFilterCalculateClusterVolumes(filterSettings)
             
             # render defects
             if filterSettings.findClusters and filterSettings.drawConvexHulls and filterSettings.hideDefects:
@@ -1087,8 +1092,8 @@ class Filterer(object):
                 self.logger.info("  Orientation of split int %d: (%.3f %.3f %.3f)", i, norm[0], norm[1], norm[2])
         
         # sort clusters here
-        clusterList = []
-        defectType = []
+        self.clusterList = []
+        clusterList = self.clusterList
         if settings.findClusters:
             NClusters = NDefectsByType[4]
             
@@ -1157,9 +1162,9 @@ class Filterer(object):
                 atomIndex = splitInterstitials[3*i+2]
                 clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
         
-        return interstitials, vacancies, antisites, onAntisites, splitInterstitials, clusterList
+        return interstitials, vacancies, antisites, onAntisites, splitInterstitials
     
-    def pointDefectFilterCalculateClusterVolumes(self, clusterList, settings):
+    def pointDefectFilterCalculateClusterVolumes(self, settings):
         """
         Calculate volumes of clusters
         
@@ -1169,6 +1174,7 @@ class Filterer(object):
         
         inputLattice = self.pipelinePage.inputState
         refLattice = self.pipelinePage.refState
+        clusterList = self.clusterList
         
         if settings.calculateVolumesHull:
             count = 0
@@ -1231,7 +1237,7 @@ class Filterer(object):
         else:
             self.logger.error("Method to calculate defect cluster volumes not specified")
     
-    def pointDefectFilterDrawHulls(self, clusterList, settings, hullPovFile):
+    def pointDefectFilterDrawHulls(self, settings, hullPovFile):
         """
         Draw convex hulls around defect volumes
         
@@ -1246,6 +1252,7 @@ class Filterer(object):
         
         inputLattice = self.pipelinePage.inputState
         refLattice = self.pipelinePage.refState
+        clusterList = self.clusterList
         
         # loop over clusters
         for cluster in clusterList:

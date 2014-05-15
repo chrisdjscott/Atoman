@@ -5,6 +5,8 @@ Additional routines to do with clusters (hulls, etc...)
 @author: Chris Scott
 
 """
+import logging
+
 import numpy as np
 import pyhull
 from scipy import spatial
@@ -220,6 +222,38 @@ class DefectCluster(object):
         self.splitInterstitials = []
         self.volume = None
         self.facetArea = None
+    
+    def belongsInCluster(self, defectType, defectIndex):
+        """
+        Check if the given defect belongs to this cluster
+        
+        defectType:
+            1 = vacancy
+            2 = interstitial
+            3 = antisite
+            4 = split interstitial
+        
+        """
+        logger = logging.getLogger(__name__)
+        logger.debug("Checking if defect belongs in cluster (%d, %d)", defectType, defectIndex)
+        
+        if defectType == 1 and defectIndex in self.vacancies:
+            logger.debug("Defect is in cluster (vacancy)")
+            return True
+        
+        elif defectType == 2 and defectIndex in self.interstitials:
+            logger.debug("Defect is in cluster (interstitial)")
+            return True
+        
+        elif defectType == 3 and defectIndex in self.antisites:
+            logger.debug("Defect is in cluster (antisite)")
+            return True
+        
+        elif defectType == 4 and defectIndex in self.splitInterstitials[::3]:
+            logger.debug("Defect is in cluster (split interstitial)")
+            return True
+        
+        return False
     
     def getNDefects(self):
         """

@@ -27,9 +27,10 @@ class ClusterListWidgetItem(QtGui.QListWidgetItem):
     Item for cluster info window list widget
     
     """
-    def __init__(self, atomIndex):
+    def __init__(self, atomIndex, defectType=None):
         super(ClusterListWidgetItem, self).__init__()
         self.atomIndex = atomIndex
+        self.defectType = defectType
 
 ################################################################################
 
@@ -70,8 +71,8 @@ class ClusterInfoWindow(QtGui.QDialog):
         
         # list widget
         self.listWidget = QtGui.QListWidget(self)
-        self.listWidget.setFixedHeight(175)
-        self.listWidget.setFixedWidth(300)
+        self.listWidget.setMinimumWidth(300)
+        self.listWidget.setMinimumHeight(175)
         layout.addWidget(self.listWidget)
         
         #TODO: open atom info window on right click select from context menu
@@ -81,7 +82,7 @@ class ClusterInfoWindow(QtGui.QDialog):
         for index in self.cluster:
             item = ClusterListWidgetItem(index)
             item.setText("Atom %d: %s (%.3f, %.3f, %.3f)" % (lattice.atomID[index], lattice.atomSym(index), lattice.pos[3*index], 
-                                                        lattice.pos[3*index+1], lattice.pos[3*index+2]))
+                                                             lattice.pos[3*index+1], lattice.pos[3*index+2]))
             self.listWidget.addItem(item)
         
         # close button
@@ -112,6 +113,187 @@ class ClusterInfoWindow(QtGui.QDialog):
         
         return self.windowID, highlighters
     
+    def closeEvent(self, event):
+        """
+        Override close event
+        
+        """
+        # remove highlighters
+        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
+        
+        event.accept()
+
+################################################################################
+
+class DefectClusterInfoWindow(QtGui.QDialog):
+    """
+    Defect cluster info window
+    
+    """
+    def __init__(self, pipelinePage, filterList, clusterIndex, parent=None):
+        super(DefectClusterInfoWindow, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
+        self.setWindowTitle("Cluster %d info" % clusterIndex)
+        self.windowID = uuid.uuid4()
+        
+        self.pipelinePage = pipelinePage
+        self.filterList = filterList
+        self.clusterIndex = clusterIndex
+        
+        inputState = self.pipelinePage.inputState
+        refState = self.pipelinePage.refState
+        
+        layout = QtGui.QVBoxLayout(self)
+        
+        # cluster
+        self.cluster = filterList.filterer.clusterList[clusterIndex]
+        
+        # volume
+        if self.cluster.volume is not None:
+            layout.addWidget(QtGui.QLabel("Volume: %f units^3" % self.cluster.volume))
+        
+        # facet area
+        if self.cluster.facetArea is not None:
+            layout.addWidget(QtGui.QLabel("Facet area: %f units^2" % self.cluster.facetArea))
+        
+        # label
+        layout.addWidget(QtGui.QLabel("Cluster defects (%d):" % self.cluster.getNDefects()))
+        
+        # list widget
+        self.listWidget = QtGui.QListWidget(self)
+        self.listWidget.setMinimumWidth(380)
+        self.listWidget.setMinimumHeight(200)
+        layout.addWidget(self.listWidget)
+        
+        #TODO: open atom info window on right click select from context menu
+        
+        
+        # populate list widget
+        for index in self.cluster.vacancies:
+            item = ClusterListWidgetItem(index, defectType=1)
+            item.setText("Vacancy %d: %s (%.3f, %.3f, %.3f)" % (refState.atomID[index], refState.atomSym(index), refState.pos[3*index], 
+                                                                refState.pos[3*index+1], refState.pos[3*index+2]))
+            self.listWidget.addItem(item)
+        
+        for index in self.cluster.interstitials:
+            item = ClusterListWidgetItem(index, defectType=2)
+            item.setText("Interstitial %d: %s (%.3f, %.3f, %.3f)" % (inputState.atomID[index], inputState.atomSym(index), inputState.pos[3*index], 
+                                                                     inputState.pos[3*index+1], inputState.pos[3*index+2]))
+            self.listWidget.addItem(item)
+        
+        for i in xrange(self.cluster.getNAntisites()):
+            index = self.cluster.antisites[i]
+            index1 = self.cluster.onAntisites[i]
+            
+            item = ClusterListWidgetItem(index, defectType=3)
+            item.setText("Antisite %d: %s on %s (%.3f, %.3f, %.3f)" % (refState.atomID[index], refState.atomSym(index1), refState.atomSym(index), 
+                                                                       refState.pos[3*index], refState.pos[3*index+1], refState.pos[3*index+2]))
+            self.listWidget.addItem(item)
+        
+        for i in xrange(self.cluster.getNSplitInterstitials()):
+            index = self.cluster.splitInterstitials[3*i]
+            index1 = self.cluster.splitInterstitials[3*i+1]
+            index2 = self.cluster.splitInterstitials[3*i+2]
+            item = ClusterListWidgetItem(index, defectType=4)
+            item.setText("Split interstitial %d: %s-%s (%.3f, %.3f, %.3f)" % (refState.atomID[index], refState.atomSym(index1), refState.atomSym(index2),
+                                                                              refState.pos[3*index], refState.pos[3*index+1], refState.pos[3*index+2]))
+            self.listWidget.addItem(item)
+    
+        # close button
+        row = QtGui.QHBoxLayout()
+        row.addStretch(1)
+        closeButton = QtGui.QPushButton("Close")
+        closeButton.clicked.connect(self.close)
+        closeButton.setAutoDefault(True)
+        row.addWidget(closeButton)
+        row.addStretch(1)
+        layout.addLayout(row)
+    
+    def getHighlighters(self):
+        """
+        Return highlighters for this defect cluster
+        
+        """
+        highlighters = []
+        
+        inputState = self.pipelinePage.inputState
+        refState = self.pipelinePage.refState
+        
+        for index in self.cluster.vacancies:
+            # radius
+            radius = refState.specieCovalentRadius[refState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # can do this because defect filter is always by itself
+            vacScaleSize = self.filterList.getCurrentFilterSettings()[0].vacScaleSize
+            radius *= vacScaleSize * 2.0
+            
+            # highlighter
+            highlighters.append(highlight.VacancyHighlighter(refState.atomPos(index), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+        
+        for index in self.cluster.interstitials:
+            # radius
+            radius = inputState.specieCovalentRadius[inputState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # highlighter
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(index), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+        
+        for i in xrange(self.cluster.getNAntisites()):
+            index = self.cluster.antisites[i]
+            index2 = self.cluster.onAntisites[i]
+            
+            #### highlight antisite ####
+            
+            # radius
+            radius = 2.0 * refState.specieCovalentRadius[refState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # highlight
+            highlighters.append(highlight.AntisiteHighlighter(refState.atomPos(index), radius, rgb=[1.0, 0.078, 0.576]))
+            
+            #### highlight occupying atom ####
+            
+            # radius
+            radius = inputState.specieCovalentRadius[inputState.specie[index2]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # highlight
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(index2), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+        
+        for i in xrange(self.cluster.getNSplitInterstitials()):
+            vacIndex = self.cluster.splitInterstitials[3*i]
+            int1Index = self.cluster.splitInterstitials[3*i+1]
+            int2Index = self.cluster.splitInterstitials[3*i+2]
+            
+            #### highlight vacancy ####
+            
+            # radius
+            radius = refState.specieCovalentRadius[refState.specie[vacIndex]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # can do this because defect filter is always by itself
+            vacScaleSize = self.filterList.getCurrentFilterSettings()[0].vacScaleSize
+            radius *= vacScaleSize * 2.0
+            
+            # highlight
+            highlighters.append(highlight.VacancyHighlighter(refState.atomPos(vacIndex), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+            
+            #### highlight int 1 ####
+            
+            # radius
+            radius = inputState.specieCovalentRadius[inputState.specie[int1Index]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # highlight
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(int1Index), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+            
+            #### highlight int 2 ####
+            
+            # radius
+            radius = inputState.specieCovalentRadius[inputState.specie[int2Index]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # highlight
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(int2Index), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+        
+        return self.windowID, highlighters
+
     def closeEvent(self, event):
         """
         Override close event
@@ -477,6 +659,33 @@ class DefectInfoWindow(QtGui.QDialog):
             
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("Orientation: (%f %f %f)" % (norm[0], norm[1], norm[2])))
+            layout.addLayout(row)
+        
+        # check if belongs to a cluster?
+        clusterIndex = None
+        for i, cluster in enumerate(filterList.filterer.clusterList):
+            if defectType == 1:
+                index = filterList.filterer.vacancies[defectIndex]
+            elif defectType == 2:
+                index = filterList.filterer.interstitials[defectIndex]
+            elif defectType == 3:
+                index = filterList.filterer.antisites[defectIndex]
+            elif defectType == 4:
+                index = filterList.filterer.splitInterstitials[3*defectIndex]
+            
+            if cluster.belongsInCluster(defectType, index):
+                clusterIndex = i
+                break
+        
+        # add button to show cluster info
+        if clusterIndex is not None:
+            clusterButton = QtGui.QPushButton("Cluster %d info" % clusterIndex)
+            clusterButton.clicked.connect(functools.partial(filterList.showClusterInfoWindow, clusterIndex))
+            clusterButton.setAutoDefault(False)
+            row = QtGui.QHBoxLayout()
+            row.addStretch()
+            row.addWidget(clusterButton)
+            row.addStretch()
             layout.addLayout(row)
         
         row = QtGui.QHBoxLayout()
