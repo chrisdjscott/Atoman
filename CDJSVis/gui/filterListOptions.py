@@ -972,7 +972,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         Change solid colour.
         
         """
-        col = QtGui.QColorDialog.getColor()
+        col = QtGui.QColorDialog.getColor(initial=self.solidColour, title="Set solid colour")
         
         if col.isValid():
             self.solidColour = col
@@ -980,7 +980,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
             
             self.solidColourRGB = (float(self.solidColour.red()) / 255.0, 
                                    float(self.solidColour.green()) / 255.0,
-                                   float(self.solidColour.blue()) / 255.0)   
+                                   float(self.solidColour.blue()) / 255.0)
     
     def setHeightToLattice(self):
         """

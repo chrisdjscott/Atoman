@@ -53,6 +53,12 @@ class ClusterInfoWindow(QtGui.QDialog):
         
         lattice = self.pipelinePage.inputState
         
+        # highlighter colour
+        self.highlightColour = QtGui.QColor(255, 20, 147)
+        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+                                   float(self.highlightColour.green()) / 255.0,
+                                   float(self.highlightColour.blue()) / 255.0]
+        
         layout = QtGui.QVBoxLayout(self)
         
         # cluster
@@ -85,15 +91,41 @@ class ClusterInfoWindow(QtGui.QDialog):
                                                              lattice.pos[3*index+1], lattice.pos[3*index+2]))
             self.listWidget.addItem(item)
         
+        # colour button
+        self.colourButton = QtGui.QPushButton("")
+        self.colourButton.setFixedWidth(60)
+        self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
+        self.colourButton.clicked.connect(self.changeHighlighterColour)
+        self.colourButton.setAutoDefault(False)
+        
         # close button
         row = QtGui.QHBoxLayout()
+        row.addWidget(self.colourButton)
         row.addStretch(1)
         closeButton = QtGui.QPushButton("Close")
         closeButton.clicked.connect(self.close)
         closeButton.setAutoDefault(True)
         row.addWidget(closeButton)
-        row.addStretch(1)
         layout.addLayout(row)
+    
+    def changeHighlighterColour(self):
+        """
+        Change highlighter colour
+        
+        """
+        col = QtGui.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
+        
+        if col.isValid():
+            self.highlightColour = col
+            self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
+            
+            self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+                                       float(self.highlightColour.green()) / 255.0,
+                                       float(self.highlightColour.blue()) / 255.0]
+            
+            # make change
+            self.removeHighlighters()
+            self.addHighlighters()
     
     def addHighlighters(self):
         """
@@ -109,7 +141,7 @@ class ClusterInfoWindow(QtGui.QDialog):
             radius = lattice.specieCovalentRadius[lattice.specie[atomIndex]] * self.filterList.displayOptions.atomScaleFactor
             
             # highlighter
-            highlighters.append(highlight.AtomHighlighter(lattice.atomPos(atomIndex), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+            highlighters.append(highlight.AtomHighlighter(lattice.atomPos(atomIndex), radius * 1.1, rgb=self.highlightColourRGB))
         
         self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, highlighters))
     
@@ -122,13 +154,20 @@ class ClusterInfoWindow(QtGui.QDialog):
         
         return super(ClusterInfoWindow, self).show()
     
+    def removeHighlighters(self):
+        """
+        Remove highlighters
+        
+        """
+        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
+    
     def closeEvent(self, event):
         """
         Override close event
         
         """
         # remove highlighters
-        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
+        self.removeHighlighters()
         
         event.accept()
 
@@ -153,6 +192,12 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         
         inputState = self.pipelinePage.inputState
         refState = self.pipelinePage.refState
+        
+        # highlighter colour
+        self.highlightColour = QtGui.QColor(255, 20, 147)
+        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+                                   float(self.highlightColour.green()) / 255.0,
+                                   float(self.highlightColour.blue()) / 255.0]
         
         layout = QtGui.QVBoxLayout(self)
         
@@ -209,16 +254,42 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             item.setText("Split interstitial %d: %s-%s (%.3f, %.3f, %.3f)" % (refState.atomID[index], refState.atomSym(index1), refState.atomSym(index2),
                                                                               refState.pos[3*index], refState.pos[3*index+1], refState.pos[3*index+2]))
             self.listWidget.addItem(item)
-    
+        
+        # colour button
+        self.colourButton = QtGui.QPushButton("")
+        self.colourButton.setFixedWidth(60)
+        self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
+        self.colourButton.clicked.connect(self.changeHighlighterColour)
+        self.colourButton.setAutoDefault(False)
+        
         # close button
         row = QtGui.QHBoxLayout()
+        row.addWidget(self.colourButton)
         row.addStretch(1)
         closeButton = QtGui.QPushButton("Close")
         closeButton.clicked.connect(self.close)
         closeButton.setAutoDefault(True)
         row.addWidget(closeButton)
-        row.addStretch(1)
         layout.addLayout(row)
+    
+    def changeHighlighterColour(self):
+        """
+        Change highlighter colour
+        
+        """
+        col = QtGui.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
+        
+        if col.isValid():
+            self.highlightColour = col
+            self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
+            
+            self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+                                       float(self.highlightColour.green()) / 255.0,
+                                       float(self.highlightColour.blue()) / 255.0]
+            
+            # make change
+            self.removeHighlighters()
+            self.addHighlighters()
     
     def addHighlighters(self):
         """
@@ -239,14 +310,14 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             radius *= vacScaleSize * 2.0
             
             # highlighter
-            highlighters.append(highlight.VacancyHighlighter(refState.atomPos(index), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+            highlighters.append(highlight.VacancyHighlighter(refState.atomPos(index), radius * 1.1, rgb=self.highlightColourRGB))
         
         for index in self.cluster.interstitials:
             # radius
             radius = inputState.specieCovalentRadius[inputState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
             
             # highlighter
-            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(index), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(index), radius * 1.1, rgb=self.highlightColourRGB))
         
         for i in xrange(self.cluster.getNAntisites()):
             index = self.cluster.antisites[i]
@@ -258,7 +329,7 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             radius = 2.0 * refState.specieCovalentRadius[refState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
             
             # highlight
-            highlighters.append(highlight.AntisiteHighlighter(refState.atomPos(index), radius, rgb=[1.0, 0.078, 0.576]))
+            highlighters.append(highlight.AntisiteHighlighter(refState.atomPos(index), radius, rgb=self.highlightColourRGB))
             
             #### highlight occupying atom ####
             
@@ -266,7 +337,7 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             radius = inputState.specieCovalentRadius[inputState.specie[index2]] * self.filterList.displayOptions.atomScaleFactor
             
             # highlight
-            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(index2), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(index2), radius * 1.1, rgb=self.highlightColourRGB))
         
         for i in xrange(self.cluster.getNSplitInterstitials()):
             vacIndex = self.cluster.splitInterstitials[3*i]
@@ -283,7 +354,7 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             radius *= vacScaleSize * 2.0
             
             # highlight
-            highlighters.append(highlight.VacancyHighlighter(refState.atomPos(vacIndex), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+            highlighters.append(highlight.VacancyHighlighter(refState.atomPos(vacIndex), radius * 1.1, rgb=self.highlightColourRGB))
             
             #### highlight int 1 ####
             
@@ -291,7 +362,7 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             radius = inputState.specieCovalentRadius[inputState.specie[int1Index]] * self.filterList.displayOptions.atomScaleFactor
             
             # highlight
-            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(int1Index), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(int1Index), radius * 1.1, rgb=self.highlightColourRGB))
             
             #### highlight int 2 ####
             
@@ -299,7 +370,7 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             radius = inputState.specieCovalentRadius[inputState.specie[int2Index]] * self.filterList.displayOptions.atomScaleFactor
             
             # highlight
-            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(int2Index), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(int2Index), radius * 1.1, rgb=self.highlightColourRGB))
         
         self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, highlighters))
     
@@ -312,13 +383,20 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         
         return super(DefectClusterInfoWindow, self).show()
     
+    def removeHighlighters(self):
+        """
+        Remove highlighters
+        
+        """
+        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
+    
     def closeEvent(self, event):
         """
         Override close event
         
         """
         # remove highlighters
-        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
+        self.removeHighlighters()
         
         event.accept()
 
@@ -344,6 +422,12 @@ class AtomInfoWindow(QtGui.QDialog):
         lattice = self.pipelinePage.inputState
         
         self.setWindowTitle("Atom info")
+        
+        # highlighter colour
+        self.highlightColour = QtGui.QColor(158, 0, 196)
+        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+                                   float(self.highlightColour.green()) / 255.0,
+                                   float(self.highlightColour.blue()) / 255.0]
         
         layout = QtGui.QVBoxLayout()
         
@@ -395,17 +479,43 @@ class AtomInfoWindow(QtGui.QDialog):
             row.addStretch()
             layout.addLayout(row)
         
+        # colour button
+        self.colourButton = QtGui.QPushButton("")
+        self.colourButton.setFixedWidth(60)
+        self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
+        self.colourButton.clicked.connect(self.changeHighlighterColour)
+        self.colourButton.setAutoDefault(False)
+        
         # close button
         row = QtGui.QHBoxLayout()
+        row.addWidget(self.colourButton)
         row.addStretch(1)
         closeButton = QtGui.QPushButton("Close")
         closeButton.clicked.connect(self.close)
         closeButton.setAutoDefault(True)
         row.addWidget(closeButton)
-        row.addStretch(1)
         layout.addLayout(row)
         
         self.setLayout(layout)
+    
+    def changeHighlighterColour(self):
+        """
+        Change highlighter colour
+        
+        """
+        col = QtGui.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
+        
+        if col.isValid():
+            self.highlightColour = col
+            self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
+            
+            self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+                                       float(self.highlightColour.green()) / 255.0,
+                                       float(self.highlightColour.blue()) / 255.0]
+            
+            # make change
+            self.removeHighlighters()
+            self.addHighlighters()
     
     def addHighlighters(self):
         """
@@ -419,7 +529,7 @@ class AtomInfoWindow(QtGui.QDialog):
         radius = lattice.specieCovalentRadius[lattice.specie[self.atomIndex]] * self.filterList.displayOptions.atomScaleFactor
         
         # highlighter
-        highlighter = highlight.AtomHighlighter(lattice.atomPos(self.atomIndex), radius * 1.1)
+        highlighter = highlight.AtomHighlighter(lattice.atomPos(self.atomIndex), radius * 1.1, rgb=self.highlightColourRGB)
         
         self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, [highlighter,]))
     
@@ -432,13 +542,20 @@ class AtomInfoWindow(QtGui.QDialog):
         
         return super(AtomInfoWindow, self).show()
     
+    def removeHighlighters(self):
+        """
+        Remove highlighters
+        
+        """
+        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
+    
     def closeEvent(self, event):
         """
         Override close event
         
         """
         # remove highlighters
-        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
+        self.removeHighlighters()
         
         event.accept()
 
@@ -466,6 +583,12 @@ class DefectInfoWindow(QtGui.QDialog):
         
         inputState = self.pipelinePage.inputState
         refState = self.pipelinePage.refState
+        
+        # highlighter colour
+        self.highlightColour = QtGui.QColor(158, 0, 196)
+        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+                                   float(self.highlightColour.green()) / 255.0,
+                                   float(self.highlightColour.blue()) / 255.0]
         
         vor = None
         voroKey = voronoiOptions.getVoronoiDictKey()
@@ -715,12 +838,20 @@ class DefectInfoWindow(QtGui.QDialog):
             row.addStretch()
             layout.addLayout(row)
         
+        # colour button
+        self.colourButton = QtGui.QPushButton("")
+        self.colourButton.setFixedWidth(60)
+        self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
+        self.colourButton.clicked.connect(self.changeHighlighterColour)
+        self.colourButton.setAutoDefault(False)
+        
+        # close button
         row = QtGui.QHBoxLayout()
+        row.addWidget(self.colourButton)
         row.addStretch(1)
         closeButton = QtGui.QPushButton("Close")
         closeButton.clicked.connect(self.close)
         row.addWidget(closeButton)
-        row.addStretch(1)
         layout.addLayout(row)
         
         self.setLayout(layout)
@@ -758,7 +889,7 @@ class DefectInfoWindow(QtGui.QDialog):
             radius *= vacScaleSize * 2.0
             
             # highlighter
-            highlighter = highlight.VacancyHighlighter(refState.atomPos(index), radius * 1.1)
+            highlighter = highlight.VacancyHighlighter(refState.atomPos(index), radius * 1.1, rgb=self.highlightColourRGB)
             
             highlighters.append(highlighter)
         
@@ -772,7 +903,7 @@ class DefectInfoWindow(QtGui.QDialog):
             radius = inputState.specieCovalentRadius[inputState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
             
             # highlighter
-            highlighter = highlight.AtomHighlighter(inputState.atomPos(index), radius * 1.1)
+            highlighter = highlight.AtomHighlighter(inputState.atomPos(index), radius * 1.1, rgb=self.highlightColourRGB)
             
             highlighters.append(highlighter)
         
@@ -790,7 +921,7 @@ class DefectInfoWindow(QtGui.QDialog):
             radius = 2.0 * refState.specieCovalentRadius[refState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
             
             # highlight
-            highlighter = highlight.AntisiteHighlighter(refState.atomPos(index), radius)
+            highlighter = highlight.AntisiteHighlighter(refState.atomPos(index), radius, rgb=self.highlightColourRGB)
             highlighters.append(highlighter)
             
             #### highlight occupying atom ####
@@ -799,7 +930,7 @@ class DefectInfoWindow(QtGui.QDialog):
             radius = inputState.specieCovalentRadius[inputState.specie[index2]] * self.filterList.displayOptions.atomScaleFactor
             
             # highlight
-            highlighter = highlight.AtomHighlighter(inputState.atomPos(index2), radius * 1.1)
+            highlighter = highlight.AtomHighlighter(inputState.atomPos(index2), radius * 1.1, rgb=self.highlightColourRGB)
             highlighters.append(highlighter)
         
         elif self.defectType == 4:
@@ -820,7 +951,7 @@ class DefectInfoWindow(QtGui.QDialog):
             radius *= vacScaleSize * 2.0
             
             # highlight
-            highlighter = highlight.VacancyHighlighter(refState.atomPos(vacIndex), radius * 1.1)
+            highlighter = highlight.VacancyHighlighter(refState.atomPos(vacIndex), radius * 1.1, rgb=self.highlightColourRGB)
             highlighters.append(highlighter)
             
             #### highlight int 1 ####
@@ -829,7 +960,7 @@ class DefectInfoWindow(QtGui.QDialog):
             radius = inputState.specieCovalentRadius[inputState.specie[int1Index]] * self.filterList.displayOptions.atomScaleFactor
             
             # highlight
-            highlighter = highlight.AtomHighlighter(inputState.atomPos(int1Index), radius * 1.1)
+            highlighter = highlight.AtomHighlighter(inputState.atomPos(int1Index), radius * 1.1, rgb=self.highlightColourRGB)
             highlighters.append(highlighter)
             
             #### highlight int 2 ####
@@ -838,10 +969,29 @@ class DefectInfoWindow(QtGui.QDialog):
             radius = inputState.specieCovalentRadius[inputState.specie[int2Index]] * self.filterList.displayOptions.atomScaleFactor
             
             # highlight
-            highlighter = highlight.AtomHighlighter(inputState.atomPos(int2Index), radius * 1.1)
+            highlighter = highlight.AtomHighlighter(inputState.atomPos(int2Index), radius * 1.1, rgb=self.highlightColourRGB)
             highlighters.append(highlighter)
         
         self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, highlighters))
+    
+    def changeHighlighterColour(self):
+        """
+        Change highlighter colour
+        
+        """
+        col = QtGui.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
+        
+        if col.isValid():
+            self.highlightColour = col
+            self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
+            
+            self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+                                       float(self.highlightColour.green()) / 255.0,
+                                       float(self.highlightColour.blue()) / 255.0]
+            
+            # make change
+            self.removeHighlighters()
+            self.addHighlighters()
     
     def show(self):
         """
@@ -852,12 +1002,19 @@ class DefectInfoWindow(QtGui.QDialog):
         
         return super(DefectInfoWindow, self).show()
     
+    def removeHighlighters(self):
+        """
+        Remove highlighters
+        
+        """
+        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
+    
     def closeEvent(self, event):
         """
         Close event
         
         """
         # remove highlighters
-        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
+        self.removeHighlighters()
         
         event.accept()
