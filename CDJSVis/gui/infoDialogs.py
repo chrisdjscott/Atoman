@@ -95,7 +95,7 @@ class ClusterInfoWindow(QtGui.QDialog):
         row.addStretch(1)
         layout.addLayout(row)
     
-    def getHighlighters(self):
+    def addHighlighters(self):
         """
         Return highlighters for this cluster
         
@@ -111,7 +111,16 @@ class ClusterInfoWindow(QtGui.QDialog):
             # highlighter
             highlighters.append(highlight.AtomHighlighter(lattice.atomPos(atomIndex), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
         
-        return self.windowID, highlighters
+        self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, highlighters))
+    
+    def show(self):
+        """
+        We override show() to first add highlighters to renderer windows
+        
+        """
+        self.addHighlighters()
+        
+        return super(ClusterInfoWindow, self).show()
     
     def closeEvent(self, event):
         """
@@ -211,7 +220,7 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         row.addStretch(1)
         layout.addLayout(row)
     
-    def getHighlighters(self):
+    def addHighlighters(self):
         """
         Return highlighters for this defect cluster
         
@@ -292,8 +301,17 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             # highlight
             highlighters.append(highlight.AtomHighlighter(inputState.atomPos(int2Index), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
         
-        return self.windowID, highlighters
-
+        self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, highlighters))
+    
+    def show(self):
+        """
+        We override show() to first add highlighters to renderer windows
+        
+        """
+        self.addHighlighters()
+        
+        return super(DefectClusterInfoWindow, self).show()
+    
     def closeEvent(self, event):
         """
         Override close event
@@ -389,9 +407,9 @@ class AtomInfoWindow(QtGui.QDialog):
         
         self.setLayout(layout)
     
-    def getHighlighters(self):
+    def addHighlighters(self):
         """
-        Return highlighter for this atom
+        Add highlighter for this atom
         
         """
         # lattice
@@ -403,7 +421,16 @@ class AtomInfoWindow(QtGui.QDialog):
         # highlighter
         highlighter = highlight.AtomHighlighter(lattice.atomPos(self.atomIndex), radius * 1.1)
         
-        return self.windowID, [highlighter,]
+        self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, [highlighter,]))
+    
+    def show(self):
+        """
+        We override show() to first add highlighters to renderer windows
+        
+        """
+        self.addHighlighters()
+        
+        return super(AtomInfoWindow, self).show()
     
     def closeEvent(self, event):
         """
@@ -707,9 +734,9 @@ class DefectInfoWindow(QtGui.QDialog):
         row.addWidget(QtGui.QLabel("Voronoi volume: %f" % vol))
         self.mainLayout.addLayout(row)
     
-    def getHighlighters(self):
+    def addHighlighters(self):
         """
-        Return highlighter for this defect
+        Add highlighters for this defect
         
         """
         highlighters = []
@@ -814,7 +841,16 @@ class DefectInfoWindow(QtGui.QDialog):
             highlighter = highlight.AtomHighlighter(inputState.atomPos(int2Index), radius * 1.1)
             highlighters.append(highlighter)
         
-        return self.windowID, highlighters
+        self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, highlighters))
+    
+    def show(self):
+        """
+        We override show() to first add highlighters to renderer windows
+        
+        """
+        self.addHighlighters()
+        
+        return super(DefectInfoWindow, self).show()
     
     def closeEvent(self, event):
         """

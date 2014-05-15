@@ -755,43 +755,25 @@ class PipelineForm(QtGui.QWidget):
         # check if key already exists, if so use stored window
         if windowKey in minSepFilterList.infoWindows:
             window = minSepFilterList.infoWindows[windowKey]
-            
-            # highlight
-            highlightersID, highlighters = window.getHighlighters()
-            
-            # add to renderers
-            self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
-            
-            # position window
-            utils.positionWindow(window, window.size(), self.mainWindow.desktop, self)
-            
-            # show window
-            window.show()
         
         # otherwise make new window
         else:
             if minSepType == 0:
                 # atom info window
-                infoWindow = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalars, minSepFilterList, parent=self)
+                window = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalars, minSepFilterList, parent=self)
             
             else:
                 # defect info window
-                infoWindow = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, minSepFilterList, parent=self)
-            
-            # highlighting
-            highlightersID, highlighters = infoWindow.getHighlighters()
-            
-            # add to renderers
-            self.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
-            
-            # position window
-            utils.positionWindow(infoWindow, infoWindow.sizeHint(), self.mainWindow.desktop, self)
-            
-            # show window
-            infoWindow.show()
+                window = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, minSepFilterList, parent=self)
             
             # store window for reuse
-            minSepFilterList.infoWindows[windowKey] = infoWindow
+            minSepFilterList.infoWindows[windowKey] = window
+        
+        # position window
+        utils.positionWindow(window, window.size(), self.mainWindow.desktop, self)
+        
+        # show window
+        window.show()
     
     def viewAtomClicked(self, minSepIndex, minSepType, minSepFilterList, minSepScalars, defList):
         """

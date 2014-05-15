@@ -287,12 +287,6 @@ class FilterList(QtGui.QWidget):
             # store window
             self.clusterInfoWindows[clusterIndex] = window
         
-        # highlighting
-        highlightersID, highlighters = window.getHighlighters()
-        
-        # add to renderers
-        self.pipelinePage.broadcastToRenderers("addHighlighters", (highlightersID, highlighters))
-        
         # position window
         utils.positionWindow(window, window.size(), self.mainWindow.desktop, self)
         

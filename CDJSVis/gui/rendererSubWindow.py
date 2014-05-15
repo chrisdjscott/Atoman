@@ -1049,7 +1049,6 @@ class RendererWindow(QtGui.QWidget):
         logger.debug("Removing highlighters from renderer %d", self.rendererIndex)
         
         if highlightersID not in self.highlighters:
-            logger.critical("Highlighters not in dict: this should not be possible!")
             return
         
         # get highlighters
@@ -1064,5 +1063,3 @@ class RendererWindow(QtGui.QWidget):
         
         # remove from dict
         self.highlighters.pop(highlightersID)
-        
-
