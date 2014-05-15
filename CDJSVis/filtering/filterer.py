@@ -208,7 +208,7 @@ class Filterer(object):
             if filterName == "Specie":
                 self.filterSpecie(filterSettings)
             
-            elif filterName == "Crop":
+            elif filterName == "Crop box":
                 self.cropFilter(filterSettings)
             
             elif filterName == "Displacement":
@@ -272,6 +272,11 @@ class Filterer(object):
                 self.NVis = len(self.visibleAtoms)
             
             self.logger.info("  %d visible atoms", self.NVis)
+        
+        # report total Voro volume if filter selected
+        if "Voronoi volume" in self.scalarsDict:
+            sumVoroVol = np.sum(self.scalarsDict["Voronoi volume"])
+            self.logger.info("Sum of visible Voronoi volumes = %f units^3", sumVoroVol)
         
         # time to apply filters
         applyFiltersTime = time.time() - applyFiltersTime
