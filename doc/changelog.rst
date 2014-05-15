@@ -2,12 +2,17 @@
 Changelog
 =========
 
-**dev**
+**v140515**
 
 * FFmpeg runs in thread pool
 * Defect clusters work with split interstitials
 * Calculating volumes of defect clusters works
 * Option to compute defect cluster volume using convex hull volume or sum of Voronoi volumes
+* If "Voronoi volume" calculator is selected, report the sum of visible atom's volumes
+* Remove some buttons from filter list (move up/down replaced by drag/drop; add/remove replaced by combo/right click)
+* Add cluster info windows and highlight atoms that are in the selected cluster
+* Atoms/defects that belong to a cluster have a link to the cluster info dialog on their info windows
+* Add option to all info windows to change the colour of the highlighters
 
 **v140513**
 
