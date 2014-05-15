@@ -22,6 +22,17 @@ except ImportError:
 
 ################################################################################
 
+class ClusterListWidgetItem(QtGui.QListWidgetItem):
+    """
+    Item for cluster info window list widget
+    
+    """
+    def __init__(self, atomIndex):
+        super(ClusterListWidgetItem, self).__init__()
+        self.atomIndex = atomIndex
+
+################################################################################
+
 class ClusterInfoWindow(QtGui.QDialog):
     """
     Cluster info window
@@ -63,15 +74,15 @@ class ClusterInfoWindow(QtGui.QDialog):
         self.listWidget.setFixedWidth(300)
         layout.addWidget(self.listWidget)
         
-        # populate list widget
+        #TODO: open atom info window on right click select from context menu
         
+        
+        # populate list widget
         for index in self.cluster:
-            item = QtGui.QListWidgetItem()
+            item = ClusterListWidgetItem(index)
             item.setText("Atom %d: %s (%.3f, %.3f, %.3f)" % (lattice.atomID[index], lattice.atomSym(index), lattice.pos[3*index], 
                                                         lattice.pos[3*index+1], lattice.pos[3*index+2]))
             self.listWidget.addItem(item)
-        
-        
         
         # close button
         row = QtGui.QHBoxLayout()
@@ -82,6 +93,34 @@ class ClusterInfoWindow(QtGui.QDialog):
         row.addWidget(closeButton)
         row.addStretch(1)
         layout.addLayout(row)
+    
+    def getHighlighters(self):
+        """
+        Return highlighters for this cluster
+        
+        """
+        # lattice
+        lattice = self.pipelinePage.inputState
+        
+        highlighters = []
+        for atomIndex in self.cluster:
+            # radius
+            radius = lattice.specieCovalentRadius[lattice.specie[atomIndex]] * self.filterList.displayOptions.atomScaleFactor
+            
+            # highlighter
+            highlighters.append(highlight.AtomHighlighter(lattice.atomPos(atomIndex), radius * 1.1, rgb=[1.0, 0.078, 0.576]))
+        
+        return self.windowID, highlighters
+    
+    def closeEvent(self, event):
+        """
+        Override close event
+        
+        """
+        # remove highlighters
+        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
+        
+        event.accept()
 
 ################################################################################
 
