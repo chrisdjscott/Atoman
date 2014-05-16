@@ -206,21 +206,23 @@ class AutoDetectReaderForm(GenericReaderForm):
         self.logger.debug("Opening SFTP browser (AUTO DETECT)")
         
         ok = self.parent.sftp_browser.exec_()
-        if ok and self.parent.sftp_browser.filename_remote is not None:
-            remotefn = self.parent.sftp_browser.filename_remote
-            localfn = self.parent.sftp_browser.filename_local
-            sftpPath = self.parent.sftp_browser.sftpPath
-            self.logger.info("Copied remote file (%s) to local machine", remotefn)
-            self.logger.debug("Local filename: '%s'", localfn)
-            self.logger.debug("SFTP path: '%s'", sftpPath)
+        if ok and len(self.parent.sftp_browser.filename_remote):
+            remotefns = self.parent.sftp_browser.filename_remote
+            localfns = self.parent.sftp_browser.filename_local
+            sftpPaths = self.parent.sftp_browser.sftpPath
             
-            # read file
-            status = self.openFile(filename=localfn, sftpPath=sftpPath)
+            for remotefn, localfn, sftpPath in zip(remotefns, localfns, sftpPaths):
+                self.logger.info("Opening remote file (%s) on local machine", remotefn)
+                self.logger.debug("Local filename: '%s'", localfn)
+                self.logger.debug("SFTP path: '%s'", sftpPath)
+                
+                # read file
+                status = self.openFile(filename=localfn, sftpPath=sftpPath)
+                
+                # remove local copy
+                self.cleanUnzipped(localfn, True)
             
-            # remove local copy
-            self.cleanUnzipped(localfn, True)
-            
-            # remove Roulette if exists
+            # remove Roulettes if exists
             rfns = glob.glob(os.path.join(self.mainWindow.tmpDirectory, "Roulette*.OUT"))
             for rfn in rfns:
                 os.unlink(rfn)

@@ -577,7 +577,7 @@ class SystemsDialog(QtGui.QDialog):
             abspathList = self.getAbspathList()
             
             if abspath in abspathList:
-                self.logger.info("This file has already been loaded (%s): not adding it again", filename)
+                self.logger.warning("This file has already been loaded (%s)", abspath)
                 
                 index = abspathList.index(abspath)
                 

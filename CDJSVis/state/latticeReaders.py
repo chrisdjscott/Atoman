@@ -475,18 +475,18 @@ class LbomdDatReader(GenericLatticeReader):
             if stepNumber is None:
                 stepNumber = rouletteIndex + 1
             state.kmcStep = stepNumber
-            self.logger.debug("Detected KMC step as: %d", state.kmcStep)
+            self.logger.info("Detected KMC step as: %d", state.kmcStep)
             
             # read simulation time
             simTime = utilities.getTimeFromRoulette(rouletteIndex, testpath=testpath)
             
             if simTime is not None:
                 state.simTime = simTime
-                self.logger.debug("Detected simulation time as: %f", state.simTime)
+                self.logger.info("Detected simulation time as: %f", state.simTime)
             
             # get barrier
             state.barrier = utilities.getBarrierFromRoulette(rouletteIndex, testpath=testpath)
             if state.barrier is not None:
-                self.logger.debug("Detected barrier as: %f", state.barrier)
+                self.logger.info("Detected barrier as: %f", state.barrier)
         
         return 0, state

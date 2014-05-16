@@ -88,6 +88,9 @@ class SFTPConnectionDialog(QtGui.QDialog):
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout.addWidget(buttonBox)
+        
+        # set focus on hostname line edit
+        hostnameLineEdit.setFocus()
     
     def usernameEdited(self, text):
         """
@@ -191,11 +194,9 @@ class SFTPBrowserDialog(QtGui.QDialog):
         exec_ override
         
         """
-        self.filename_remote = None
-        self.filename_local = None
-#         self.roulette_remote = None
-#         self.roulette_local = None
-        self.sftpPath = None
+        self.filename_remote = []
+        self.filename_local = []
+        self.sftpPath = []
         
         return super(SFTPBrowserDialog, self).exec_(*args, **kwargs)
     
@@ -207,17 +208,21 @@ class SFTPBrowserDialog(QtGui.QDialog):
         if self.stackedWidget.count() > 0:
             # check if file is selected
             browser = self.stackedWidget.currentWidget()
-            item = browser.listWidget.currentItem()
-            fn = str(item.text())
-            if item is not None and not item.is_dir:
-                self.logger.debug("Selecting item: '%s'", item.text())
-                self.filename_remote = str(browser.sftp.normalize(fn))
-                self.filename_source = None
-                self.filename_local = os.path.join(self.mainWindow.tmpDirectory, "%s" % item.text())
-                self.sftpPath = "%s:%s" % (browser.connectionID, self.filename_remote)
-                
-                # we also need to copy the file locally and store that path
-                browser.copySystem(self.filename_remote, self.filename_local)
+            items = browser.listWidget.selectedItems()
+            
+            for item in items:
+                fn = str(item.text())
+                if item is not None:
+                    self.logger.debug("Selecting item: '%s'", item.text())
+                    self.filename_remote.append(str(browser.sftp.normalize(fn)))
+                    self.filename_local.append(os.path.join(self.mainWindow.tmpDirectory, "%s" % item.text()))
+                    self.sftpPath.append("%s:%s" % (browser.connectionID, self.filename_remote[-1]))
+                    
+                    # we also need to copy the file locally and store that path
+                    browser.copySystem(self.filename_remote[-1], self.filename_local[-1])
+            
+                    # deselect
+                    item.setSelected(False)
         
         return super(SFTPBrowserDialog, self).accept(*args, **kwargs)
     
@@ -326,7 +331,7 @@ class SFTPBrowser(genericForm.GenericForm):
         # list widget
         self.listWidget = QtGui.QListWidget(self)
         self.listWidget.itemDoubleClicked.connect(self.itemDoubleClicked)
-        self.listWidget.currentRowChanged.connect(self.currentRowChanged)
+        self.listWidget.itemSelectionChanged.connect(self.itemSelectionChanged)
         row = self.newRow()
         row.addWidget(self.listWidget)
         
@@ -545,16 +550,37 @@ class SFTPBrowser(genericForm.GenericForm):
         else:
             self.parent.accept()
     
-    def currentRowChanged(self, row):
+    def itemSelectionChanged(self):
         """
-        Current row changed
+        Selection has changed
         
         """
-        item = self.listWidget.currentItem()
-        if row < 0 or item.is_dir:
-            self.parent.openButton.setEnabled(False)
-        else:
-            self.parent.openButton.setEnabled(True)
+        items = self.listWidget.selectedItems()
+        
+        if len(items):
+            # check if any files are selected
+            filesSelected = False
+            for item in items:
+                if not item.is_dir:
+                    filesSelected = True
+                    break
+            
+            # files were selected
+            if filesSelected:
+                # deselect directories
+                for item in items:
+                    if item.is_dir:
+                        item.setSelected(False)
+                
+                # enable extended selection and open button
+                self.listWidget.setSelectionMode(self.listWidget.ExtendedSelection)
+                self.parent.openButton.setEnabled(True)
+            
+            # no files selected
+            else:
+                # disable open button and set single selection only
+                self.parent.openButton.setEnabled(False)
+                self.listWidget.setSelectionMode(self.listWidget.SingleSelection)
     
     def get_home(self):
         """

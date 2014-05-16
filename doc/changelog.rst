@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**v140516**
+
+* Enable multiple item selection in SFTP browser
+
 **v140515**
 
 * FFmpeg runs in thread pool
