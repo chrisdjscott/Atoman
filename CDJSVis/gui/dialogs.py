@@ -440,6 +440,175 @@ class ConsoleWindow(QtGui.QDialog):
 
 ################################################################################
 
+class BondEditorSettingsForm(genericForm.GenericForm):
+    """
+    Settings for bond
+    
+    """
+    def __init__(self, parent, syma, symb, bondMin, bondMax):
+        super(BondEditorSettingsForm, self).__init__(parent, None, "%s - %s" % (syma, symb))
+        
+        self.syma = syma
+        self.symb = symb
+        self.bondMin = bondMin
+        self.bondMax = bondMax
+        
+        row = self.newRow()
+        row.addWidget(QtGui.QLabel("Bond min:"))
+        
+        bondMinSpin = QtGui.QDoubleSpinBox()
+        bondMinSpin.setSingleStep(0.1)
+        bondMinSpin.setMinimum(0.0)
+        bondMinSpin.setMaximum(99.99)
+        bondMinSpin.setValue(self.bondMin)
+        bondMinSpin.valueChanged.connect(self.bondMinChanged)
+        row.addWidget(bondMinSpin)
+        
+        row = self.newRow()
+        row.addWidget(QtGui.QLabel("Bond max:"))
+        
+        bondMaxSpin = QtGui.QDoubleSpinBox()
+        bondMaxSpin.setSingleStep(0.1)
+        bondMaxSpin.setMinimum(0.0)
+        bondMaxSpin.setMaximum(99.99)
+        bondMaxSpin.setValue(self.bondMax)
+        bondMaxSpin.valueChanged.connect(self.bondMaxChanged)
+        row.addWidget(bondMaxSpin)
+    
+    def updateBondData(self):
+        """
+        Update bond data in elements object
+        
+        """
+        logger = logging.getLogger(__name__)
+        logger.debug("Updating bond data: %s - %s : (%.2f, %.2f)" % (self.syma, self.symb, self.bondMin, self.bondMax))
+        
+        elements.bondDict[self.syma][self.symb] = (self.bondMin, self.bondMax)
+        elements.bondDict[self.symb][self.syma] = (self.bondMin, self.bondMax)
+        
+        self.parent.dirty = True
+        self.parent.modifiedList.add("%s - %s" % (self.syma, self.symb))
+    
+    def bondMinChanged(self, val):
+        """
+        Bond min changed
+        
+        """
+        self.bondMin = val
+        self.updateBondData()
+    
+    def bondMaxChanged(self, val):
+        """
+        Bond max changed
+        
+        """
+        self.bondMax = val
+        self.updateBondData()
+
+################################################################################
+
+class BondEditorDialog(QtGui.QDialog):
+    """
+    Bond editor dialog
+    
+    """
+    def __init__(self, parent=None):
+        super(BondEditorDialog, self).__init__(parent)
+        
+        self.iniWinFlags = self.windowFlags()
+        self.setWindowFlags(self.iniWinFlags | QtCore.Qt.WindowStaysOnTopHint)
+        
+        self.parent = parent
+        self.mainWindow = parent
+        self.setModal(0)
+        
+        self.setWindowTitle("Bonds editor")
+        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.dirty = False
+        self.modifiedList = set()
+        
+        layout = QtGui.QVBoxLayout(self)
+        layout.setAlignment(QtCore.Qt.AlignHCenter)
+#        layout.setContentsMargins(0, 0, 0, 0)
+#        layout.setSpacing(0)
+        
+        # combo box with pairs
+        self.bondsCombo = QtGui.QComboBox()
+        self.bondsCombo.currentIndexChanged.connect(self.setWidgetStack)
+        layout.addWidget(self.bondsCombo)
+        
+        # stacked widget
+        self.stackedWidget = QtGui.QStackedWidget()
+        layout.addWidget(self.stackedWidget)
+        
+        # list of elements
+#         elementsList = elements.listElements()
+        
+        # populate combo and stacked widget
+        bondDict = elements.bondDict
+        keyas = sorted(bondDict.keys())
+        for keya in keyas:
+            keybs = sorted(bondDict[keya].keys())
+            for keyb in keybs:
+                if keyb > keya:
+                    continue
+                
+                # min, max
+                bondMin, bondMax = bondDict[keya][keyb]
+                
+                # settings form
+                form = BondEditorSettingsForm(self, keya, keyb, bondMin, bondMax)
+                
+                # add
+                self.bondsCombo.addItem("%s - %s" % (keya, keyb))
+                self.stackedWidget.addWidget(form)
+        
+        # save button
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Save)
+        buttonBox.accepted.connect(self.saveChanges)
+        layout.addWidget(buttonBox)
+    
+    def saveChanges(self):
+        """
+        Save changes
+        
+        """
+        logger = logging.getLogger(__name__)
+        
+        if not self.dirty:
+            logger.info("No changes to save")
+        
+        else:
+            # show dialog to make sure user understands what is happening
+            text = "This will overwrite the bonds file, do you wish to continue?"
+            text += "\n"
+            text += "The following bonds have been modified:"
+#             text += "\n"
+            for bond in self.modifiedList:
+                text += "\n    %s" % bond
+            
+            ret = QtGui.QMessageBox.question(self, "Save bonds settings", text, QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel, 
+                                             QtGui.QMessageBox.Cancel)
+            
+            if ret == QtGui.QMessageBox.Ok:
+                fn = resourcePath("bonds.IN")
+                logger.debug("Overwriting bonds file: '%s'", fn)
+                elements.writeBonds(fn)
+                self.dirty = False
+                self.modifiedList.clear()
+    
+    def setWidgetStack(self, index):
+        """
+        Change stacked widget
+        
+        """
+        self.stackedWidget.setCurrentIndex(index)
+
+################################################################################
+
 class ElementEditor(QtGui.QDialog):
     """
     Dialog to edit element properties.

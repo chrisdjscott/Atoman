@@ -60,6 +60,13 @@ class Elements:
         
         f.close()
     
+    def listElements(self):
+        """
+        Return a list of elements
+        
+        """
+        return sorted(self.atomNameDict.keys())
+    
     def readBonds(self, filename):
         """
         Read bonds file.
@@ -125,8 +132,8 @@ class Elements:
                 sym = key
             
             string = "%-3d  %-6f  %-20s  %-2s  %-6f  %-6f  %-6f  %-6f\n" % (value, self.atomicMassDict[key], self.atomNameDict[key],
-                                                                           sym, self.covalentRadiusDict[key], self.RGBDict[key][0],
-                                                                           self.RGBDict[key][1], self.RGBDict[key][2])
+                                                                            sym, self.covalentRadiusDict[key], self.RGBDict[key][0],
+                                                                            self.RGBDict[key][1], self.RGBDict[key][2])
             
             f.write(string)
         

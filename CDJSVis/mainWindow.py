@@ -181,6 +181,9 @@ class MainWindow(QtGui.QMainWindow):
         # preferences dialog
         self.preferences = preferences.PreferencesDialog(parent=self)
         
+        # bonds editor
+        self.bondsEditor = dialogs.BondEditorDialog(parent=self)
+        
         # add file actions
         exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "system-log-out.svg", 
                                        "Exit application")
@@ -221,13 +224,18 @@ class MainWindow(QtGui.QMainWindow):
         openElementEditorAction = self.createAction("Element editor", slot=self.openElementEditor, icon="periodic-table-icon.png", 
                                                     tip="Show element editor")
         
+        # open bonds editor action
+        openBondsEditorAction = self.createAction("Bonds editor", slot=self.openBondsEditor, icon="bonding.jpg", 
+                                                  tip="Show bonds editor")
+        
         # default window size action
         defaultWindowSizeAction = self.createAction("Default size", slot=self.defaultWindowSize, icon="Window.png", 
                                                     tip="Resize window to default size")
         
         # add view menu
         viewMenu = self.menuBar().addMenu("&View")
-        self.addActions(viewMenu, (openConsoleAction, showImageViewerAction, openElementEditorAction, showPreferencesAction))
+        self.addActions(viewMenu, (openConsoleAction, showImageViewerAction, openElementEditorAction, openBondsEditorAction, 
+                                   showPreferencesAction))
         
         # add window menu
         windowMenu = self.menuBar().addMenu("&Window")
@@ -250,6 +258,7 @@ class MainWindow(QtGui.QMainWindow):
         viewToolbar.addAction(openConsoleAction)
         viewToolbar.addAction(showImageViewerAction)
         viewToolbar.addAction(openElementEditorAction)
+        viewToolbar.addAction(openBondsEditorAction)
         viewToolbar.addAction(showPreferencesAction)
         viewToolbar.addSeparator()
         
@@ -412,6 +421,13 @@ class MainWindow(QtGui.QMainWindow):
         self.imageViewer.hide()
         self.imageViewer.show()
     
+    def openBondsEditor(self):
+        """
+        Open bonds editor
+        
+        """
+        self.bondsEditor.show()
+    
     def openElementEditor(self):
         """
         Open element editor.
@@ -559,7 +575,7 @@ class MainWindow(QtGui.QMainWindow):
         Open a new instance of the main window
         
         """
-        mw = MainWindow()
+        mw = MainWindow(self.desktop)
         mw.setWindowIcon(QtGui.QIcon(iconPath("CDJSVis.ico")))
         mw.show()
     
