@@ -94,28 +94,35 @@ class Elements:
             bondMin = float(array[2])
             bondMax = float(array[3])
             
-            # ensure bondMin >= 0 and bondMax >= bondMin
-            bondMin = max(bondMin, 0)
-            bondMax = max(bondMin, bondMax)
-            
-            if len(keya) == 1:
-                keya += "_"
-            if len(keyb) == 1:
-                keyb += "_"
-            
-            if not keya in self.bondDict:
-                self.bondDict[keya] = {}
-            if not keyb in self.bondDict:
-                self.bondDict[keyb] = {}
-            
-            self.bondDict[keya][keyb] = (bondMin, bondMax)
-            self.bondDict[keyb][keya] = (bondMin, bondMax)
+            self.addBond(keya, keyb, bondMin, bondMax)
         
         f.close()
         
 #        for keya in self.bondDict:
 #            for keyb, val in self.bondDict[keya].items():
 #                print "%s - %s: %f -> %f" % (keya, keyb, val[0], val[1])
+    
+    def addBond(self, keya, keyb, bondMin, bondMax):
+        """
+        Add a new bond with given values
+        
+        """
+        # ensure bondMin >= 0 and bondMax >= bondMin
+        bondMin = max(bondMin, 0)
+        bondMax = max(bondMin, bondMax)
+        
+        if len(keya) == 1:
+            keya += "_"
+        if len(keyb) == 1:
+            keyb += "_"
+        
+        if not keya in self.bondDict:
+            self.bondDict[keya] = {}
+        if not keyb in self.bondDict:
+            self.bondDict[keyb] = {}
+        
+        self.bondDict[keya][keyb] = (bondMin, bondMax)
+        self.bondDict[keyb][keya] = (bondMin, bondMax)
     
     def write(self, filename):
         """

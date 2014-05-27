@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* Add dialog for editing bonds settings with ability to add new bond pairs
+
 **v140516**
 
 * Enable multiple item selection in SFTP browser

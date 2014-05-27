@@ -486,8 +486,7 @@ class BondEditorSettingsForm(genericForm.GenericForm):
         elements.bondDict[self.syma][self.symb] = (self.bondMin, self.bondMax)
         elements.bondDict[self.symb][self.syma] = (self.bondMin, self.bondMax)
         
-        self.parent.dirty = True
-        self.parent.modifiedList.add("%s - %s" % (self.syma, self.symb))
+        self.parent.settingModified("%s - %s" % (self.syma, self.symb))
     
     def bondMinChanged(self, val):
         """
@@ -507,6 +506,55 @@ class BondEditorSettingsForm(genericForm.GenericForm):
 
 ################################################################################
 
+class AddBondDialog(QtGui.QDialog):
+    """
+    Add bond dialog
+    
+    """
+    def __init__(self, parent=None):
+        super(AddBondDialog, self).__init__(parent)
+        
+        self.parent = parent
+        self.setModal(1)
+        
+        self.setWindowTitle("Add bond")
+        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        layout = QtGui.QVBoxLayout(self)
+        layout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        # list of elements
+        elementsList = elements.listElements()
+        
+        # row
+        row = QtGui.QHBoxLayout(self)
+        
+        # first combo
+        self.specieComboA = QtGui.QComboBox()
+        self.specieComboA.addItems(elementsList)
+        
+        # second combo
+        self.specieComboB = QtGui.QComboBox()
+        self.specieComboB.addItems(elementsList)
+        
+        # add to row
+        row.addWidget(self.specieComboA)
+        row.addWidget(QtGui.QLabel(" - "))
+        row.addWidget(self.specieComboB)
+        
+        # add to layout
+        layout.addLayout(row)
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        layout.addWidget(buttonBox)
+
+################################################################################
+
 class BondEditorDialog(QtGui.QDialog):
     """
     Bond editor dialog
@@ -521,6 +569,7 @@ class BondEditorDialog(QtGui.QDialog):
         self.parent = parent
         self.mainWindow = parent
         self.setModal(0)
+        self.logger = logging.getLogger(__name__)
         
         self.setWindowTitle("Bonds editor")
         self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
@@ -529,6 +578,7 @@ class BondEditorDialog(QtGui.QDialog):
         
         self.dirty = False
         self.modifiedList = set()
+        self.bondsSet = set()
         
         layout = QtGui.QVBoxLayout(self)
         layout.setAlignment(QtCore.Qt.AlignHCenter)
@@ -538,14 +588,19 @@ class BondEditorDialog(QtGui.QDialog):
         # combo box with pairs
         self.bondsCombo = QtGui.QComboBox()
         self.bondsCombo.currentIndexChanged.connect(self.setWidgetStack)
-        layout.addWidget(self.bondsCombo)
+        
+        # add button
+        addButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
+        addButton.clicked.connect(self.addBondClicked)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(self.bondsCombo)
+        row.addWidget(addButton)
+        layout.addLayout(row)
         
         # stacked widget
         self.stackedWidget = QtGui.QStackedWidget()
         layout.addWidget(self.stackedWidget)
-        
-        # list of elements
-#         elementsList = elements.listElements()
         
         # populate combo and stacked widget
         bondDict = elements.bondDict
@@ -559,17 +614,68 @@ class BondEditorDialog(QtGui.QDialog):
                 # min, max
                 bondMin, bondMax = bondDict[keya][keyb]
                 
-                # settings form
-                form = BondEditorSettingsForm(self, keya, keyb, bondMin, bondMax)
-                
                 # add
-                self.bondsCombo.addItem("%s - %s" % (keya, keyb))
-                self.stackedWidget.addWidget(form)
+                self.addBond(keya, keyb, bondMin, bondMax)
         
         # save button
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Save)
-        buttonBox.accepted.connect(self.saveChanges)
-        layout.addWidget(buttonBox)
+        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Save)
+        self.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
+        self.buttonBox.accepted.connect(self.saveChanges)
+        layout.addWidget(self.buttonBox)
+    
+    def addBond(self, syma, symb, bondMin=0.0, bondMax=0.0):
+        """
+        Add the bond to the combo and settings form to stacked widget
+        
+        """
+        # settings form
+        form = BondEditorSettingsForm(self, syma, symb, bondMin, bondMax)
+        
+        # add
+        text = "%s - %s" % (syma, symb)
+        self.bondsCombo.addItem(text)
+        self.bondsSet.add(text)
+        self.stackedWidget.addWidget(form)
+    
+    def addBondClicked(self):
+        """
+        Add a new bond
+        
+        """
+        # dialog
+        dlg = AddBondDialog(self)
+        ret = dlg.exec_()
+        if ret:
+            # check if already exists
+            syma = str(dlg.specieComboA.currentText())
+            symb = str(dlg.specieComboB.currentText())
+            
+            texta = "%s - %s" % (syma, symb)
+            textb = "%s - %s" % (symb, syma)
+            
+            if texta in self.bondsSet or textb in self.bondsSet:
+                pass
+            
+            else:
+                self.logger.info("Adding new bond: '%s - %s'", syma, symb)
+                
+                # add
+                self.addBond(syma, symb)
+                
+                # select
+                self.bondsCombo.setCurrentIndex(self.bondsCombo.count() - 1)
+                
+                # add to bond dict (elements)
+                elements.addBond(syma, symb, 0.0, 0.0)
+    
+    def settingModified(self, pairString):
+        """
+        Setting has been modified
+        
+        """
+        self.dirty = True
+        self.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(True)
+        self.modifiedList.add(pairString)
     
     def saveChanges(self):
         """
@@ -599,6 +705,7 @@ class BondEditorDialog(QtGui.QDialog):
                 elements.writeBonds(fn)
                 self.dirty = False
                 self.modifiedList.clear()
+                self.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
     
     def setWidgetStack(self, index):
         """

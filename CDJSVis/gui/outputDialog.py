@@ -1029,13 +1029,16 @@ class ImageTab(QtGui.QWidget):
             # movie generator object
             generator = MovieGenerator()
             
-            # runnable for sending to thread pool
-            runnable = threading_vis.GenericRunnable(generator, args=(os.getcwd(), ffmpeg, framerate, saveText, 
-                                                                      self.imageFormat, bitrate, outputprefix, 
-                                                                      outputsuffix))
+            # create movie
+            generator.run(os.getcwd(), ffmpeg, framerate, saveText, self.imageFormat, bitrate, outputprefix, outputsuffix)
             
-            # add to thread pool
-            QtCore.QThreadPool.globalInstance().start(runnable)
+            # runnable for sending to thread pool
+#             runnable = threading_vis.GenericRunnable(generator, args=(os.getcwd(), ffmpeg, framerate, saveText, 
+#                                                                       self.imageFormat, bitrate, outputprefix, 
+#                                                                       outputsuffix))
+#              
+#             # add to thread pool
+#             QtCore.QThreadPool.globalInstance().start(runnable)
         
         finally:
             os.chdir(CWD)
@@ -1047,6 +1050,9 @@ class MovieGenerator(QtCore.QObject):
     Call ffmpeg to generate a movie
     
     """
+    def __init__(self):
+        super(MovieGenerator, self).__init__()
+    
     def run(self, workDir, ffmpeg, framerate, saveText, imageFormat, bitrate, outputPrefix, outputSuffix):
         """
         Create movie
@@ -1064,14 +1070,19 @@ class MovieGenerator(QtCore.QObject):
             logger.debug("Command: '%s'", command)
             
             ffmpegTime = time.time()
-            process = subprocess.Popen(command, shell=True, executable="/bin/bash", stdin=subprocess.PIPE, 
-                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             
-            output, stderr = process.communicate()
-            status = process.poll()
+            status = os.system(command)
             if status:
-                logger.error("FFMPEG FAILED (%d)", status)
-                print stderr
+                logger.error("FFmpeg failed with status %d" % status)
+            
+#             process = subprocess.Popen(command, shell=False, stdin=subprocess.PIPE, 
+#                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#             
+#             output, stderr = process.communicate()
+#             status = process.poll()
+#             if status:
+#                 logger.error("FFMPEG FAILED (%d)", status)
+#                 print stderr
             
             ffmpegTime = time.time() - ffmpegTime
             logger.debug("FFmpeg time taken: %f s", ffmpegTime)
