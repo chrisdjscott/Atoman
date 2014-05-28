@@ -522,14 +522,17 @@ class AddBondDialog(QtGui.QDialog):
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtGui.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignHCenter)
         
         # list of elements
         elementsList = elements.listElements()
         
         # row
-        row = QtGui.QHBoxLayout(self)
+        row = QtGui.QWidget()
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setSpacing(0)
         
         # first combo
         self.specieComboA = QtGui.QComboBox()
@@ -540,18 +543,22 @@ class AddBondDialog(QtGui.QDialog):
         self.specieComboB.addItems(elementsList)
         
         # add to row
-        row.addWidget(self.specieComboA)
-        row.addWidget(QtGui.QLabel(" - "))
-        row.addWidget(self.specieComboB)
+        rowLayout.addStretch(1)
+        rowLayout.addWidget(self.specieComboA)
+        rowLayout.addWidget(QtGui.QLabel(" - "))
+        rowLayout.addWidget(self.specieComboB)
+        rowLayout.addStretch(1)
         
         # add to layout
-        layout.addLayout(row)
+        layout.addWidget(row)
         
         # button box
         buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout.addWidget(buttonBox)
+        
+        self.setLayout(layout)
 
 ################################################################################
 
@@ -569,7 +576,6 @@ class BondEditorDialog(QtGui.QDialog):
         self.parent = parent
         self.mainWindow = parent
         self.setModal(0)
-        self.logger = logging.getLogger(__name__)
         
         self.setWindowTitle("Bonds editor")
         self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
@@ -591,11 +597,16 @@ class BondEditorDialog(QtGui.QDialog):
         
         # add button
         addButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
+        addButton.setFixedWidth(35)
+        addButton.setToolTip("Add new bond pair")
+        addButton.setStatusTip("Add new bond pair")
         addButton.clicked.connect(self.addBondClicked)
         
         row = QtGui.QHBoxLayout()
+        row.addStretch(1)
         row.addWidget(self.bondsCombo)
         row.addWidget(addButton)
+        row.addStretch(1)
         layout.addLayout(row)
         
         # stacked widget
@@ -642,6 +653,8 @@ class BondEditorDialog(QtGui.QDialog):
         Add a new bond
         
         """
+        logger = logging.getLogger(__name__)
+        
         # dialog
         dlg = AddBondDialog(self)
         ret = dlg.exec_()
@@ -657,7 +670,7 @@ class BondEditorDialog(QtGui.QDialog):
                 pass
             
             else:
-                self.logger.info("Adding new bond: '%s - %s'", syma, symb)
+                logger.info("Adding new bond: '%s - %s'", syma, symb)
                 
                 # add
                 self.addBond(syma, symb)
