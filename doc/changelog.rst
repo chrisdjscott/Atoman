@@ -2,9 +2,10 @@
 Changelog
 =========
 
-**dev**
+**v140529**
 
 * Add dialog for editing bonds settings with ability to add new bond pairs
+* Add option to attempt to eliminate flicker across PBCs when running sequencer
 
 **v140516**
 

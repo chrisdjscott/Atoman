@@ -26,6 +26,7 @@ from ..visutils.utilities import iconPath
 from . import genericForm
 from ..visclibs import output as output_c
 from ..visclibs import rdf as rdf_c
+from ..visclibs import vectors as vectors_c
 from . import plotDialog
 
 try:
@@ -1367,6 +1368,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.interval = 1
         self.fileprefixText = "guess"
         self.overwrite = 0
+        self.flickerFlag = False
 #         self.createMovie = 1
         
         # layout
@@ -1496,17 +1498,24 @@ class ImageSequenceTab(QtGui.QWidget):
         mainLayout.addWidget(row)
         
         # overwrite check box
+#         row = QtGui.QWidget(self)
+#         rowLayout = QtGui.QHBoxLayout(row)
+# #        rowLayout.setSpacing(0)
+#         rowLayout.setContentsMargins(0, 0, 0, 0)
+#         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+#         self.overwriteCheck = QtGui.QCheckBox("Overwrite")
+#         self.overwriteCheck.stateChanged[int].connect(self.overwriteCheckChanged)
+#         rowLayout.addWidget(self.overwriteCheck)
+#         mainLayout.addWidget(row)
+        
+        # eliminate flicker check
         row = QtGui.QWidget(self)
         rowLayout = QtGui.QHBoxLayout(row)
-#        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        
-        self.overwriteCheck = QtGui.QCheckBox("Overwrite")
-        self.overwriteCheck.stateChanged[int].connect(self.overwriteCheckChanged)
-        
-        rowLayout.addWidget(self.overwriteCheck)
-        
+        self.flickerCheck = QtGui.QCheckBox("Eliminate flicker")
+        self.flickerCheck.stateChanged[int].connect(self.flickerCheckChanged)
+        rowLayout.addWidget(self.flickerCheck)
         mainLayout.addWidget(row)
         
         # create movie box
@@ -1704,6 +1713,7 @@ class ImageSequenceTab(QtGui.QWidget):
         
         # loop over files
         status = 0
+        previousPos = None
         try:
             count = 0
             for i in xrange(self.minIndex, self.maxIndex + self.interval, self.interval):
@@ -1753,6 +1763,11 @@ class ImageSequenceTab(QtGui.QWidget):
                 if status:
                     self.logger.error("Sequencer read file failed with status: %d" % status)
                     break
+                
+                # eliminate flicker across PBCs
+                if self.flickerFlag:
+                    self.eliminateFlicker(state, previousPos, pipelinePage)
+                    previousPos = copy.deepcopy(state.pos)
                 
                 # set input state on current pipeline
                 pipelinePage.inputState = state
@@ -1816,6 +1831,25 @@ class ImageSequenceTab(QtGui.QWidget):
                 # set cursor to normal
                 QtGui.QApplication.restoreOverrideCursor()
     
+    def eliminateFlicker(self, state, previousPos, pipelinePage):
+        """
+        Attempt to eliminate flicker across PBCs
+        
+        """
+        if previousPos is None or len(previousPos) != len(state.pos):
+            return
+        
+        pbc = pipelinePage.PBC
+        if not pbc[0] and not pbc[1] and not pbc[2]:
+            return
+        
+        logger = self.logger
+        logger.debug("Attempting to eliminate PBC flicker")
+        
+        count = vectors_c.eliminatePBCFlicker(state, previousPos, pbc)
+        
+        logger.debug("Modified: %d", count)
+    
     def warnFileNotPresent(self, filename, tag="first"):
         """
         Warn the first file is not present.
@@ -1831,6 +1865,17 @@ class ImageSequenceTab(QtGui.QWidget):
         msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
         msgBox.setIcon(QtGui.QMessageBox.Warning)
         msgBox.exec_()
+    
+    def flickerCheckChanged(self, state):
+        """
+        Flicker check changed
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.flickerFlag = False
+        
+        else:
+            self.flickerFlag = True
     
     def overwriteCheckChanged(self, val):
         """

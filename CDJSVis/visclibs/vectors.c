@@ -12,6 +12,51 @@
 #include "vectors.h"
 
 
+/*******************************************************************************
+ * eliminate pbc flicker
+ *******************************************************************************/
+int eliminatePBCFlicker(int NAtoms, double *pos, double *previousPos, double *cellDims, int *pbc)
+{
+    int i, j, count;
+    double sep, absSep, halfDims[3];
+    
+    
+    halfDims[0] = cellDims[0] * 0.5;
+    halfDims[1] = cellDims[1] * 0.5;
+    halfDims[2] = cellDims[2] * 0.5;
+    
+    count = 0;
+    for (i = 0; i < NAtoms; i++)
+    {
+        sep = atomicSeparation2(pos[3*i], pos[3*i+1], pos[3*i+2], previousPos[3*i], previousPos[3*i+1], previousPos[3*i+2], 
+                                cellDims[0], cellDims[1], cellDims[2], pbc[0], pbc[1], pbc[2]);
+        
+        for (j = 0; j < 3; j++)
+        {
+            if ((sep < 1.0) && (pos[3*i+j] < 1.0))
+            {
+                absSep = fabs(pos[3*i+j] - previousPos[3*i+j]);
+                if (absSep > halfDims[j])
+                {
+                    pos[3*i+j] += cellDims[j];
+                    count++;
+                }
+            }
+            
+            else if (sep < 1.0 && cellDims[j] - pos[3*i+j] < 1.0)
+            {
+                absSep = fabs(pos[3*i+j] - previousPos[3*i+j]);
+                if (absSep > halfDims[j])
+                {
+                    pos[3*i+j] -= cellDims[j];
+                    count++;
+                }
+            }
+        }
+    }
+    
+    return count;
+}
 
 /*******************************************************************************
  * Calc infinity norm of force array

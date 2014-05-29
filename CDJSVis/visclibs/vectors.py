@@ -78,4 +78,16 @@ def magnitude(vector):
     """
     return _lib.magnitude(len(vector), CPtrToDouble(vector))
 
+################################################################################
 
+# eliminatePBCFlicker prototype
+_lib.eliminatePBCFlicker.restype = c_int
+_lib.eliminatePBCFlicker.argtypes = [c_int, POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int)]
+
+# eliminatePBCFlicker
+def eliminatePBCFlicker(lattice, previousPos, pbc):
+    """
+    Find eliminatePBCFlicker of a vector.
+    
+    """
+    return _lib.eliminatePBCFlicker(lattice.NAtoms, CPtrToDouble(lattice.pos), CPtrToDouble(previousPos), CPtrToDouble(lattice.cellDims), CPtrToInt(pbc))
