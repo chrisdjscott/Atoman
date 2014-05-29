@@ -21,10 +21,12 @@ int eliminatePBCFlicker(int NAtoms, double *pos, double *previousPos, double *ce
     double sep, absSep, halfDims[3];
     
     
+    /* half of cellDims */
     halfDims[0] = cellDims[0] * 0.5;
     halfDims[1] = cellDims[1] * 0.5;
     halfDims[2] = cellDims[2] * 0.5;
     
+    /* loop over atoms */
     count = 0;
     for (i = 0; i < NAtoms; i++)
     {
@@ -33,7 +35,7 @@ int eliminatePBCFlicker(int NAtoms, double *pos, double *previousPos, double *ce
         
         for (j = 0; j < 3; j++)
         {
-            if ((sep < 1.0) && (pos[3*i+j] < 1.0))
+            if (sep < 1.0 && pos[3*i+j] < 1.0)
             {
                 absSep = fabs(pos[3*i+j] - previousPos[3*i+j]);
                 if (absSep > halfDims[j])
@@ -43,7 +45,7 @@ int eliminatePBCFlicker(int NAtoms, double *pos, double *previousPos, double *ce
                 }
             }
             
-            else if (sep < 1.0 && cellDims[j] - pos[3*i+j] < 1.0)
+            else if (sep < 1.0 && fabs(cellDims[j] - pos[3*i+j]) < 1.0)
             {
                 absSep = fabs(pos[3*i+j] - previousPos[3*i+j]);
                 if (absSep > halfDims[j])
