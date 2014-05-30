@@ -289,6 +289,9 @@ class MainWindow(QtGui.QMainWindow):
         # systems dialog
         self.systemsDialog = systemsDialog.SystemsDialog(self, self)
         
+        # element editor
+        self.elementEditor = dialogs.ElementEditor(parent=self)
+        
         # load input dialog
 #         self.loadInputDialog = inputDialog.InputDialog(self, self, None)
         
@@ -433,11 +436,7 @@ class MainWindow(QtGui.QMainWindow):
         Open element editor.
         
         """
-        if not self.systemsDialog.systems_list_widget.count() > 0:
-            return
-        
-        elementEditor = dialogs.ElementEditor(parent=self)
-        elementEditor.show()
+        self.elementEditor.show()
     
     def importElements(self):
         """
