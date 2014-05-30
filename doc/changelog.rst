@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* Element editor lets you change any elements settings, not just elements in loaded systems
+
 **v140529**
 
 * Add dialog for editing bonds settings with ability to add new bond pairs

@@ -316,7 +316,7 @@ class ConsoleWindow(QtGui.QDialog):
         level = int(settings.value("logging/console", logging.INFO))
         
         logger = logging.getLogger(__name__)
-        logger.setLevel(int(level))
+        handler.setLevel(int(level))
         logger.debug("Initial console window logging level: %s", logging.getLevelName(level))
         
         self.logger = logger
@@ -943,7 +943,7 @@ class ElementEditor(QtGui.QDialog):
             G = RGB[1]
             B = RGB[2]
             
-            logger.debug("Applying changes for '%s': rad %.3f; rgb <%.3f, %.3f, %.3f>", radius, R, G, B)
+            logger.debug("Applying changes for '%s': rad %.3f; rgb <%.3f, %.3f, %.3f>", sym, radius, R, G, B)
             
             latticeList = self.systemsDialog.getLatticeList()
             for latt in latticeList:
