@@ -669,7 +669,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         # vacancy radius option
         label = QtGui.QLabel("Vacancy radius ")
         self.vacRadSpinBox = QtGui.QDoubleSpinBox()
-        self.vacRadSpinBox.setSingleStep(0.01)
+        self.vacRadSpinBox.setSingleStep(0.1)
         self.vacRadSpinBox.setMinimum(0.01)
         self.vacRadSpinBox.setMaximum(10.0)
         self.vacRadSpinBox.setValue(self.vacancyRadius)

@@ -833,7 +833,7 @@ class ElementSettingsForm(genericForm.GenericForm):
 
 class ElementEditor(QtGui.QDialog):
     """
-    Bond editor dialog
+    Element editor dialog
     
     """
     def __init__(self, parent=None):
