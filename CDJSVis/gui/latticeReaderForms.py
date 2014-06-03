@@ -107,27 +107,33 @@ class GenericReaderForm(GenericForm):
         if not len(filenames):
             return None
         
-        for filename in filenames:
-            nwd, filename = os.path.split(filename)        
-            
-            # change to new working directory
-            if nwd != os.getcwd():
-                self.mainWindow.console.write("Changing to dir "+nwd)
-                os.chdir(nwd)
-                self.mainWindow.updateCWD()
-            
-            # remove zip extensions
-            if filename[-3:] == ".gz":
-                filename = filename[:-3]
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        
+        try:
+            for filename in filenames:
+                nwd, filename = os.path.split(filename)        
                 
-            elif filename[-4:] == ".bz2":
-                filename = filename[:-4]
-            
-            # open file
-            result = self.openFile(filename=filename)
-            
-            if result:
-                break
+                # change to new working directory
+                if nwd != os.getcwd():
+                    self.mainWindow.console.write("Changing to dir "+nwd)
+                    os.chdir(nwd)
+                    self.mainWindow.updateCWD()
+                
+                # remove zip extensions
+                if filename[-3:] == ".gz":
+                    filename = filename[:-3]
+                    
+                elif filename[-4:] == ".bz2":
+                    filename = filename[:-4]
+                
+                # open file
+                result = self.openFile(filename=filename)
+                
+                if result:
+                    break
+        
+        finally:
+            QtGui.QApplication.restoreOverrideCursor()
         
         return result
 
