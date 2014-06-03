@@ -8,6 +8,7 @@ Preferences dialog
 import os
 import sys
 import logging
+import datetime
 
 from PySide import QtGui, QtCore
 
@@ -58,6 +59,165 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
     
     def init(self):
         self.layout.addStretch(1)
+
+################################################################################
+
+class LogFileSettingsForm(GenericPreferencesSettingsForm):
+    """
+    Settings for creating a log file
+    
+    """
+    def __init__(self, parent):
+        super(LogFileSettingsForm, self).__init__(parent)
+        
+        self.logger = logging.getLogger(__name__+".LogFileSettingsForm")
+        
+        # settings object
+        settings = QtCore.QSettings()
+        
+        # default settings
+        self.createLogFile = bool(int(settings.value("logfile/create_log_file", 0)))
+        self.logDirectory = settings.value("logfile/directory", "/tmp")
+        self.logLevel = int(settings.value("logfile/level", logging.DEBUG))
+        
+        # create log file
+        createCheck = QtGui.QCheckBox("Create log file")
+        createCheck.setChecked(self.createLogFile)
+        createCheck.stateChanged.connect(self.createToggled)
+        rowLayout = self.newRow()
+        rowLayout.addWidget(createCheck)
+        
+        # directory
+        self.logDirLabel = QtGui.QLabel("Log dir: '%s'" % self.logDirectory)
+        row = self.newRow()
+        row.addWidget(self.logDirLabel)
+        
+        # directory dialog button
+        button = QtGui.QPushButton("Choose directory")
+        button.clicked.connect(self.showLogDirectoryDialog)
+        row = self.newRow()
+        row.addWidget(button)
+        
+        # logging levels
+        self.loggingLevels = {"CRITICAL": logging.CRITICAL,
+                              "ERROR": logging.ERROR,
+                              "WARNING": logging.WARNING,
+                              "INFO": logging.INFO,
+                              "DEBUG": logging.DEBUG}
+        
+        self.loggingLevelsSorted = ["CRITICAL",
+                                    "ERROR",
+                                    "WARNING",
+                                    "INFO",
+                                    "DEBUG"]
+        
+        # log file level
+        label = QtGui.QLabel("Level:")
+        levelCombo = QtGui.QComboBox()
+        levelCombo.addItems(self.loggingLevelsSorted)
+        levelIndex = self.getLevelIndex(self.logLevel)
+        levelCombo.setCurrentIndex(levelIndex)
+        levelCombo.currentIndexChanged[str].connect(self.logLevelChanged)
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(levelCombo)
+        
+        # create handler... (should be on main window!)
+        if self.createLogFile:
+            logfile = os.path.join(self.logDirectory, "CDJSVis-%s.log" % datetime.datetime.now().strftime("%y%m%d-%H%M%S"))
+            self.logger.info("Logging to file: '%s'", logfile)
+            
+            # handler
+            fh = logging.FileHandler(logfile)
+            fh.setLevel(logging.DEBUG)
+            
+            # formatter
+            formatter = logging.Formatter("%(levelname)s:%(name)s:%(funcName)s():%(lineno)d: %(message)s")
+            fh.setFormatter(formatter)
+            
+            # add to root logger
+            logging.getLogger().addHandler(fh)
+            
+            # write version first
+            
+    
+    def logLevelChanged(self, levelString):
+        """
+        Log level has changed
+        
+        """
+        level = self.loggingLevels[str(levelString)]
+        self.logger.debug("Log level (file) changed: %s (%d)", levelString, level)
+        
+        # change level on handler
+        
+        
+        # settings object
+        settings = QtCore.QSettings()
+        
+        # store
+        settings.setValue("logfile/level", level)
+        
+        
+        
+    
+    def getLevelIndex(self, level):
+        """
+        Get the level index in the list
+        
+        """
+        levelIndex = None
+        count = 0
+        for key in self.loggingLevelsSorted:
+            if self.loggingLevels[key] == level:
+                levelIndex = count
+                break
+            
+            count += 1
+        
+        return levelIndex
+    
+    def showLogDirectoryDialog(self):
+        """
+        Show dialog to choose log dir
+        
+        """
+        new_dir = QtGui.QFileDialog.getExistingDirectory(self, "Log directory", self.logDirectory)
+        
+        if new_dir and os.path.isdir(new_dir):
+            self.logDirectory = new_dir
+            self.logDirLabel.setText("Log dir: '%s" % new_dir)
+            
+            self.logger.debug("Log file directory changed: '%s'", new_dir)
+            
+            # settings object
+            settings = QtCore.QSettings()
+            
+            # store
+            settings.setValue("logfile/directory", self.logDirectory)
+            
+            self.logger.warning("Changes to log file directory will only take effect when the application is restarted")
+    
+    def createToggled(self, state):
+        """
+        Create check box toggled
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.createLogFile = False
+        else:
+            self.createLogFile = True
+        
+        self.logger.debug("Create log file toggled: %s", not state == QtCore.Qt.Unchecked)
+        
+        # settings object
+        settings = QtCore.QSettings()
+        
+        # store
+        settings.setValue("logfile/create_log_file", int(self.createLogFile))
+        
+        # start writing log file...
+        self.logger.warning("Changes to 'Create log file' will only take effect when the application is restarted")
 
 ################################################################################
 
@@ -641,6 +801,9 @@ class PreferencesDialog(QtGui.QDialog):
         
         # add toolbox to layout
         dlgLayout.addWidget(self.toolbox)
+        
+        self.logFileForm = LogFileSettingsForm(self)
+        self.toolbox.addItem(self.logFileForm, QtGui.QIcon(iconPath("accessories-text-editor.svg")), "Log file")
         
         # rendering tab
         self.renderingForm = RenderingSettingsForm(self)

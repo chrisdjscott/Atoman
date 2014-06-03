@@ -74,6 +74,8 @@
     <file>icons/Window.png</file>
     <file>icons/Drift.jpg</file>
     <file>icons/x-office-document.svg</file>
+    <file>icons/perspective-ava.svg</file>
+    <file>icons/accessories-text-editor.svg</file>
     <file>images/splash_loading.png</file>
 </qresource>
 </RCC>

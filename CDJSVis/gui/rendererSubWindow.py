@@ -62,6 +62,8 @@ class RendererWindow(QtGui.QWidget):
         self.leftClick = False
         self.rightClick = False
         
+        self.parallelProjection = False
+        
         # layout
         layout = QtGui.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -116,9 +118,12 @@ class RendererWindow(QtGui.QWidget):
         # camera settings
         cameraSettingsAction = self.createAction("Camera settings", slot=self.showCameraSettings, icon="cam.png", tip="Show camera settings")
         
+        # parallel projection action
+        projectionAction = self.createAction("Parallel projection", slot=self.toggleProjection, icon="perspective-ava.svg", tip="Parallel projection", checkable=True)
+        
         # add actions
         self.addActions(toolbar, (showCellAction, showAxesAction, backgroundColourAction, None, 
-                                  setCamToCellAction, rotateViewPoint, cameraSettingsAction, None, 
+                                  setCamToCellAction, rotateViewPoint, cameraSettingsAction, projectionAction, None, 
                                   openTextSelectorAction, showOutputDialogAction, None,
                                   aaUpAction, aaDownAction))
         
@@ -194,6 +199,26 @@ class RendererWindow(QtGui.QWidget):
         row.addWidget(self.analysisPipelineCombo)
         
         layout.addLayout(row)
+    
+    def toggleProjection(self):
+        """
+        Toggle projection
+        
+        """
+        if self.parallelProjection:
+            self.renderer.camera.ParallelProjectionOff()
+            self.parallelProjection = False
+        
+        else:
+            self.renderer.camera.ParallelProjectionOn()
+            
+            inp = self.getCurrentInputState()
+            s = (inp.cellDims[0] + inp.cellDims[1]) / 2.0
+            self.renderer.camera.SetParallelScale(s)
+            
+            self.parallelProjection = True
+        
+        self.renderer.reinit()
     
     def rotateViewPoint(self):
         """
