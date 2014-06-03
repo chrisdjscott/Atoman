@@ -24,7 +24,7 @@ import logging
 import re
 import errno
 
-from PySide import QtGui
+from PySide import QtGui, QtCore
 import paramiko
 logging.getLogger("paramiko").setLevel(logging.WARNING)
 
@@ -500,39 +500,45 @@ class SFTPBrowser(genericForm.GenericForm):
         """
         self.logger.debug("Listing directory")
         
-        # first clear the list widget
-        self.listWidget.clear()
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         
-        # add ".." to top of listing
-        item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("undo_64.png")), "..", True)
-        self.listWidget.addItem(item)
-        
-        # add files and directories
-        listdir = self.sftp.listdir()
-        listdir.sort()
-        for name in listdir:
-            if name.startswith(".") and not self.showHidden:
-                continue
+        try:
+            # first clear the list widget
+            self.listWidget.clear()
             
-            # file or directory
-            statout = self.sftp.stat(name)
-            if stat.S_ISDIR(statout.st_mode):
-                # list widget item
-                item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("folder.svg")), name, True)
-            
-            elif stat.S_ISREG(statout.st_mode):
-                # list widget item
-                item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("x-office-document.svg")), name, False)
-            
-            else:
-                logging.warning("Item in directory listing is neither file nor directory: '%s (%s)'", name, statout.st_mode)
-                continue
-            
-            # add to list widget
+            # add ".." to top of listing
+            item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("undo_64.png")), "..", True)
             self.listWidget.addItem(item)
+            
+            # add files and directories
+            listdir = self.sftp.listdir()
+            listdir.sort()
+            for name in listdir:
+                if name.startswith(".") and not self.showHidden:
+                    continue
+                
+                # file or directory
+                statout = self.sftp.stat(name)
+                if stat.S_ISDIR(statout.st_mode):
+                    # list widget item
+                    item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("folder.svg")), name, True)
+                
+                elif stat.S_ISREG(statout.st_mode):
+                    # list widget item
+                    item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("x-office-document.svg")), name, False)
+                
+                else:
+                    logging.warning("Item in directory listing is neither file nor directory: '%s (%s)'", name, statout.st_mode)
+                    continue
+                
+                # add to list widget
+                self.listWidget.addItem(item)
+            
+            # apply selected filter
+            self.applyFilterToItems()
         
-        # apply selected filter
-        self.applyFilterToItems()
+        finally:
+            QtGui.QApplication.restoreOverrideCursor()
     
     def itemDoubleClicked(self):
         """
