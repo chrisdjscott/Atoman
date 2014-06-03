@@ -2,11 +2,11 @@
 Changelog
 =========
 
-**dev**
+**v140603**
 
 * Element editor lets you change any elements settings, not just elements in loaded systems
 * Add option to do a rotation after sequencer has finished
-* Add option to toggle between parallel/perspective projective
+* Add option to toggle between parallel/perspective projection
 * Add option to write logging output to file
 
 **v140529**
