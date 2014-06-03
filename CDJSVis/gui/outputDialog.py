@@ -1367,8 +1367,9 @@ class ImageSequenceTab(QtGui.QWidget):
         self.maxIndex = 10
         self.interval = 1
         self.fileprefixText = "guess"
-        self.overwrite = 0
+        self.overwrite = False
         self.flickerFlag = False
+        self.rotateAfter = False
 #         self.createMovie = 1
         
         # layout
@@ -1518,6 +1519,16 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.addWidget(self.flickerCheck)
         mainLayout.addWidget(row)
         
+        # rotate at end
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setContentsMargins(0, 0, 0, 0)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        self.rotateAfterCheck = QtGui.QCheckBox("Rotate at end")
+        self.rotateAfterCheck.stateChanged[int].connect(self.rotateAfterCheckChanged)
+        rowLayout.addWidget(self.rotateAfterCheck)
+        mainLayout.addWidget(row)
+        
         # create movie box
         self.createMovieBox = CreateMovieBox(self)
         mainLayout.addWidget(self.createMovieBox)
@@ -1537,7 +1548,18 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.addWidget(startSequencerButton)
         
         mainLayout.addWidget(row)
+    
+    def rotateAfterCheckChanged(self, state):
+        """
+        Rotate after sequencer changed
         
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.rotateAfter = False
+        
+        else:
+            self.rotateAfter = True
+    
     def resetPrefix(self):
         """
         Reset the prefix to the one from 
@@ -1809,6 +1831,11 @@ class ImageSequenceTab(QtGui.QWidget):
                 progDialog.setValue(count)
                 
                 QtGui.QApplication.processEvents()
+            
+            # rotate?
+            if self.rotateAfter:
+                self.logger.debug("Running rotator after sequencer...")
+                self.parent.imageRotateTab.startRotator()
         
         finally:
             # reload original input
