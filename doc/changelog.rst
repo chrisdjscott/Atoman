@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**v140604**
+
+* Fix bug when rendering bonds and colouring by scalar value
+
 **v140603**
 
 * Element editor lets you change any elements settings, not just elements in loaded systems

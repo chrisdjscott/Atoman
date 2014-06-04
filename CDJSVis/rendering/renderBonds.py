@@ -11,7 +11,7 @@ import functools
 import numpy as np
 import vtk
 
-from .utils import setupLUT, getScalarsType
+from .utils import setupLUT, getScalarsType, setMapperScalarRange
 from .povutils import povrayBond
 
 
@@ -195,17 +195,7 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colour
     mapper = vtk.vtkPolyDataMapper()
     mapper.SetInputConnection(bondGlyphFilter.GetOutputPort())
     mapper.SetLookupTable(lut)
-    if colouringOptions.colourBy == "Specie":
-        mapper.SetScalarRange(0, NSpecies - 1)
-    
-    elif colouringOptions.colourBy == "Height":
-        mapper.SetScalarRange(colouringOptions.minVal, colouringOptions.maxVal)
-    
-    elif colouringOptions.colourBy == "Atom property":
-        mapper.SetScalarRange(colouringOptions.propertyMinSpin.value(), colouringOptions.propertyMaxSpin.value())
-    
-    else:
-        mapper.SetScalarRange(colouringOptions.scalarMinSpin.value(), colouringOptions.scalarMaxSpin.value())
+    setMapperScalarRange(mapper, colouringOptions, NSpecies)
     
     # actor
     actor = vtk.vtkActor()
