@@ -165,6 +165,9 @@ def setupLUT(specieList, specieRGB, colouringOptions):
     Setup the colour look up table
     
     """
+    logger = logging.getLogger(__name__)
+    logger.debug("Setting up LUT")
+    
     lut = vtk.vtkLookupTable()
     
     if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":

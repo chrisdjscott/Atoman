@@ -337,7 +337,7 @@ class PipelineForm(QtGui.QWidget):
         
         settings = self.mainWindow.preferences.renderingForm
         
-        if self.inputState.NAtoms < settings.maxAtomsAutoRun:
+        if self.inputState.NAtoms <= settings.maxAtomsAutoRun:
             self.runAllFilterLists()
     
     def refChanged(self, index):

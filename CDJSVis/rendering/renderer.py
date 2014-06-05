@@ -13,6 +13,7 @@ import logging
 import time
 import threading
 import Queue
+import uuid
 
 import numpy as np
 import vtk
@@ -42,7 +43,7 @@ class Renderer(object):
         self.renWin = self.parent.vtkRenWin
         
         self.log = self.parent.mainWindow.console.write
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__+".Renderer")
         
         # is the interactor initialised
         self.init = False
@@ -809,23 +810,47 @@ def povrayBond(pos, vector):
 
 ################################################################################
 
+class PovrayColouringOptions(object):
+    """
+    Dummy class for passing to thread (contains only what is required)
+    
+    """
+    def __init__(self, colouringOptions):
+        self.colourBy = colouringOptions.colourBy
+        self.atomPropertyType = colouringOptions.atomPropertyType
+        self.heightAxis = colouringOptions.heightAxis
+
+################################################################################
+
+class PovrayDisplayOptions(object):
+    """
+    Dummy class for passing to thread (contains only what is required)
+    
+    """
+    def __init__(self, displayOptions):
+        self.atomScaleFactor = displayOptions.atomScaleFactor
+
+################################################################################
+
 class PovRayAtomsWriter(QtCore.QObject):
     """
     Write POV-Ray atoms to file
     
     """
-    finished = QtCore.Signal(int, float)
+    finished = QtCore.Signal(int, float, str)
+    allDone = QtCore.Signal()
     
-    def __init__(self, filename, visibleAtoms, lattice, scalarsDict, colouringOptions, displayOptions, lut):
+    def __init__(self, filename, visibleAtoms, lattice, scalarsDict, colouringOptions, displayOptions, lut, uniqueId):
         super(PovRayAtomsWriter, self).__init__()
         
         self.filename = filename
         self.visibleAtoms = visibleAtoms
         self.lattice = lattice
         self.scalarsDict = scalarsDict
-        self.colouringOptions = colouringOptions
+        self.colouringOptions = PovrayColouringOptions(colouringOptions)
         self.lut = lut
-        self.displayOptions = displayOptions
+        self.displayOptions = PovrayDisplayOptions(displayOptions)
+        self.uniqueId = uniqueId
     
     def run(self):
         """
@@ -883,7 +908,8 @@ class PovRayAtomsWriter(QtCore.QObject):
         povtime = time.time() - povtime
         
         # emit finished signal
-        self.finished.emit(0, povtime)
+        self.finished.emit(0, povtime, str(self.uniqueId))
+        self.allDone.emit()
 
 ################################################################################
 
@@ -914,6 +940,9 @@ def getSpeciePosScalarVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOpt
     Split visible atoms pos/scalar arrays by specie
     
     """
+    logger = logging.getLogger(__name__)
+    logger.debug("Creating VTK specie arrays")
+    
     # specie counter
     NSpecies = len(lattice.specieList)
     specieCount = np.zeros(NSpecies, np.int32)
@@ -1007,18 +1036,22 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     # povray file and writer
     povtime = time.time()
     povFilePath = os.path.join(mainWindow.tmpDirectory, povFileName)
-    povAtomWriter = PovRayAtomsWriter(povFilePath, visibleAtoms, lattice, scalarsDict, colouringOptions, displayOptions, lut)
+    uniqueId = uuid.uuid4()
+    povAtomWriter = PovRayAtomsWriter(povFilePath, visibleAtoms, lattice, scalarsDict, colouringOptions, displayOptions, lut, uniqueId)
     
     # write pov atoms now if we're running sequencer, otherwise in separate thread
+    logger.debug("Preparing to write POV-Ray atoms (sequencer=%s) (%s)", sequencer, uniqueId)
     if sequencer:
         povAtomWriter.run()
     
     else:
         # connect finished slot
         povAtomWriter.finished.connect(povFinishedSlot)
+        povAtomWriter.allDone.connect(povAtomWriter.deleteLater)
     
         # create runner
         runnable = GenericRunnable(povAtomWriter)
+        runnable.setAutoDelete(False)
         
         # add to threadpool
         QtCore.QThreadPool.globalInstance().start(runnable)
@@ -1026,7 +1059,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     povtime = time.time() - povtime
     
     if sequencer:
-        povFinishedSlot(0, povtime)
+        povFinishedSlot(0, povtime, uniqueId)
     
     # now loop over species, making actors
     t1s = []

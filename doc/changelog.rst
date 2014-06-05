@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**v140605**
+
+* Fix bug to do with writing POV-Ray atoms/running Ffmpeg on thread pool
+
 **v140604**
 
 * Fix bug when rendering bonds and colouring by scalar value

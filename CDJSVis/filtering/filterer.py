@@ -369,7 +369,7 @@ class Filterer(object):
         runFiltersTime = time.time() - runFiltersTime
         self.logger.debug("Apply list total time: %f s", runFiltersTime)
     
-    def povrayAtomsWrittenSlot(self, status, povtime):
+    def povrayAtomsWrittenSlot(self, status, povtime, uniqueID):
         """
         POV-Ray atoms have been written
         
@@ -377,7 +377,7 @@ class Filterer(object):
         if not status:
             self.povrayAtomsWritten = True
         
-        self.logger.debug("Povray atoms written in %f s", povtime)
+        self.logger.debug("Povray atoms written in %f s (%s)", povtime, uniqueID)
     
     def voronoiNeighboursFilter(self, settings):
         """

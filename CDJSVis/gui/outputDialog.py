@@ -119,7 +119,7 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
         self.stackedWidget = QtGui.QStackedWidget()
         self.newRow().addWidget(self.stackedWidget)
         
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__+".ScalarsHistogramOptionsForm")
     
     def scalarsComboChanged(self, index):
         """
@@ -294,7 +294,7 @@ class PlotTab(QtGui.QWidget):
         self.layout.addStretch(1)
         
         # logging
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__+".PlotTab")
     
     def newRow(self):
         """
@@ -320,7 +320,7 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         self.scalarsID = scalarsID
         self.scalarsName = scalarsName
         self.scalarsArray = scalarsArray
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__+".GenericHistogramPlotForm")
         
         # scalar min/max
         self.scalarMin = np.min(scalarsArray)
@@ -499,7 +499,7 @@ class RDFForm(genericForm.GenericForm):
         self.parent = parent
         self.mainWindow = mainWindow
         self.rendererWindow = self.parent.rendererWindow
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__+".RDFForm")
         
         # defaults
         self.spec1 = "ALL"
@@ -849,7 +849,7 @@ class ImageTab(QtGui.QWidget):
     def __init__(self, parent, mainWindow, width):
         super(ImageTab, self).__init__(parent)
         
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__+".ImageTab")
         
         self.parent = parent
         self.mainWindow = mainWindow
@@ -996,13 +996,21 @@ class ImageTab(QtGui.QWidget):
             self.imageFormat = "jpg"
             self.JPEGCheck.setChecked(1)
     
+    def createMovieLogger(self, level, message):
+        """
+        Log message for create movie object
+        
+        """
+        logger = logging.getLogger(__name__)
+        method = getattr(logger, level, None)
+        if method is not None:
+            method(message)
+    
     def createMovie(self, saveDir, saveText, createMovieBox):
         """
         Create movie.
         
         """
-        log = self.mainWindow.console.write
-        
         settings = self.mainWindow.preferences.ffmpegForm
         ffmpeg = utilities.checkForExe(settings.pathToFFmpeg)
         if not ffmpeg:
@@ -1029,17 +1037,20 @@ class ImageTab(QtGui.QWidget):
             
             # movie generator object
             generator = MovieGenerator()
+            generator.log.connect(self.createMovieLogger)
+            generator.allDone.connect(generator.deleteLater)
             
             # create movie
-            generator.run(os.getcwd(), ffmpeg, framerate, saveText, self.imageFormat, bitrate, outputprefix, outputsuffix)
+#             generator.run(os.getcwd(), ffmpeg, framerate, saveText, self.imageFormat, bitrate, outputprefix, outputsuffix)
             
             # runnable for sending to thread pool
-#             runnable = threading_vis.GenericRunnable(generator, args=(os.getcwd(), ffmpeg, framerate, saveText, 
-#                                                                       self.imageFormat, bitrate, outputprefix, 
-#                                                                       outputsuffix))
-#              
-#             # add to thread pool
-#             QtCore.QThreadPool.globalInstance().start(runnable)
+            runnable = threading_vis.GenericRunnable(generator, args=(os.getcwd(), ffmpeg, framerate, saveText, 
+                                                                      self.imageFormat, bitrate, outputprefix, 
+                                                                      outputsuffix))
+            runnable.setAutoDelete(False)
+            
+            # add to thread pool
+            QtCore.QThreadPool.globalInstance().start(runnable)
         
         finally:
             os.chdir(CWD)
@@ -1051,6 +1062,9 @@ class MovieGenerator(QtCore.QObject):
     Call ffmpeg to generate a movie
     
     """
+    log = QtCore.Signal(str, str)
+    allDone = QtCore.Signal()
+    
     def __init__(self):
         super(MovieGenerator, self).__init__()
     
@@ -1067,29 +1081,26 @@ class MovieGenerator(QtCore.QObject):
                                                                        imageFormat, 25, bitrate, 
                                                                        outputPrefix, outputSuffix)
             
-            logger = logging.getLogger(__name__)
-            logger.debug("Command: '%s'", command)
+            self.log.emit("debug", 'Command: "%s"' % command)
             
             ffmpegTime = time.time()
             
-            status = os.system(command)
+            process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, 
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+             
+            output, stderr = process.communicate()
+            status = process.poll()
             if status:
-                logger.error("FFmpeg failed with status %d" % status)
-            
-#             process = subprocess.Popen(command, shell=False, stdin=subprocess.PIPE, 
-#                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#             
-#             output, stderr = process.communicate()
-#             status = process.poll()
-#             if status:
-#                 logger.error("FFMPEG FAILED (%d)", status)
-#                 print stderr
+                self.log.emit("error", "FFmpeg failed (%d)" % status)
+                self.log.emit("error", output)
+                self.log.emit("error", stderr)
             
             ffmpegTime = time.time() - ffmpegTime
-            logger.debug("FFmpeg time taken: %f s", ffmpegTime)
+            self.log.emit("debug", "FFmpeg time taken: %f s" % ffmpegTime)
         
         finally:
             os.chdir(owd)
+            self.allDone.emit()
 
 ################################################################################
 class SingleImageTab(QtGui.QWidget):
@@ -1359,7 +1370,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.width = width
         self.rendererWindow = self.parent.rendererWindow
         
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__+".ImageSequenceTab")
         
         # initial values
         self.numberFormat = "%04d"
@@ -1838,10 +1849,15 @@ class ImageSequenceTab(QtGui.QWidget):
                 self.parent.imageRotateTab.startRotator()
         
         finally:
+            self.logger.debug("Reloading original input")
+            
             # reload original input
             pipelinePage.inputState = origInput
             pipelinePage.postInputLoaded()
-            pipelinePage.runAllFilterLists()
+            
+            # run filter list if didn't auto run
+            if origInput.NAtoms > self.mainWindow.preferences.renderingForm.maxAtomsAutoRun:
+                pipelinePage.runAllFilterLists()
             
             # close progress dialog
             progDialog.close()
@@ -1988,6 +2004,8 @@ class ImageRotateTab(QtGui.QWidget):
         self.overwrite = 0
         self.degreesPerRotation = 5.0
         
+        self.logger = logging.getLogger(__name__+".ImageRotateTab")
+        
         # layout
         mainLayout = QtGui.QVBoxLayout(self)
 #        mainLayout.setContentsMargins(0, 0, 0, 0)
@@ -2095,8 +2113,7 @@ class ImageRotateTab(QtGui.QWidget):
         else:
             povray = ""
         
-        log = self.mainWindow.console.write
-        log("Running rotator", 0, 0)
+        self.logger.debug("Running rotator")
         
         # directory
         saveDir = str(self.outputFolder.text())
