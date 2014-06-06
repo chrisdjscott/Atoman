@@ -495,23 +495,23 @@ class AtomInfoWindow(QtGui.QDialog):
             row.addWidget(QtGui.QLabel("%s: %f" % (scalarType, scalar)))
             layout.addLayout(row)
         
-        # check if belongs to a cluster?
-        clusterIndex = None
+        # check if belongs to clusters
+        clusterIndexes = []
         for i, cluster in enumerate(filterList.filterer.clusterList):
             if atomIndex in cluster:
-                clusterIndex = i
-                break
+                clusterIndexes.append(i)
         
         # add button to show cluster info
-        if clusterIndex is not None:
-            clusterButton = QtGui.QPushButton("Cluster %d info" % clusterIndex)
-            clusterButton.clicked.connect(functools.partial(filterList.showClusterInfoWindow, clusterIndex))
-            clusterButton.setAutoDefault(False)
-            row = QtGui.QHBoxLayout()
-            row.addStretch()
-            row.addWidget(clusterButton)
-            row.addStretch()
-            layout.addLayout(row)
+        if len(clusterIndexes):
+            for clusterIndex in clusterIndexes:
+                clusterButton = QtGui.QPushButton("Cluster %d info" % clusterIndex)
+                clusterButton.clicked.connect(functools.partial(filterList.showClusterInfoWindow, clusterIndex))
+                clusterButton.setAutoDefault(False)
+                row = QtGui.QHBoxLayout()
+                row.addStretch()
+                row.addWidget(clusterButton)
+                row.addStretch()
+                layout.addLayout(row)
         
         # colour button
         self.colourButton = QtGui.QPushButton("")
