@@ -7,6 +7,8 @@ Render bonds
 """
 import os
 import functools
+import logging
+import time
 
 import numpy as np
 import vtk
@@ -63,6 +65,9 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colour
     Render bonds.
     
     """
+    renderBondsTime = time.time()
+    logger = logging.getLogger(__name__)
+    
     # SETTINGS
     bondThicknessVTK = bondsOptions.bondThicknessVTK
     bondThicknessPOV = bondsOptions.bondThicknessPOV
@@ -208,4 +213,135 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colour
     
     # close pov file
     fpov.close()
+    
+    # time taken
+    renderBondsTime = time.time() - renderBondsTime
+    logger.debug("Render bonds time: %f s", renderBondsTime)
 
+def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colouringOptions, povfile, 
+                              scalarsDict, bondVectorArray, bondsOptions):
+    """
+    Render displacement vectors
+    
+    """
+    renderBondsTime = time.time()
+    logger = logging.getLogger(__name__)
+    
+    # SETTINGS
+    bondThicknessVTK = bondsOptions.bondThicknessVTK
+    bondThicknessPOV = bondsOptions.bondThicknessPOV
+    bondNumSides = bondsOptions.bondNumSides
+    # END SETTINGS
+    
+    # scalar type
+    scalarType = getScalarsType(colouringOptions)
+    
+    # scalars array
+    if scalarType == 5:
+        scalars = scalarsDict[colouringOptions.colourBy]
+    else:
+        scalars = np.array([], dtype=np.float64)
+    
+    NVisible = len(visibleAtoms)
+    
+    # povray file
+    povFilePath = os.path.join(mainWindow.tmpDirectory, povfile)
+    fpov = open(povFilePath, "w")
+    
+    inputState = pipelinePage.inputState
+    
+    # make LUT
+    lut = setupLUT(inputState.specieList, inputState.specieRGB, colouringOptions)
+    
+    # number of species
+    NSpecies = len(inputState.specieList)
+    
+    # vtk array storing coords of bonds
+    bondCoords = vtk.vtkFloatArray()
+    bondCoords.SetNumberOfComponents(3)
+    bondCoords.SetNumberOfTuples(NVisible)
+    
+    # vtk array storing scalars (for lut)
+    bondScalars = vtk.vtkFloatArray()
+    bondScalars.SetNumberOfComponents(1)
+    bondScalars.SetNumberOfTuples(NVisible)
+    
+    # vtk array storing vectors (for tube)
+    bondVectors = vtk.vtkFloatArray()
+    bondVectors.SetNumberOfComponents(3)
+    bondVectors.SetNumberOfTuples(NVisible)
+    
+    # construct vtk bond arrays
+    pov_rgb = np.empty(3, np.float64)
+    for i in xrange(NVisible):
+        index = visibleAtoms[i]
+        
+        # scalar
+        scalar = getScalarValue(inputState, index, scalars, i, colouringOptions)
+        
+        # colour for povray
+        lut.GetColor(scalar, pov_rgb)
+        
+        # pos
+        xpos = inputState.pos[3*index]
+        ypos = inputState.pos[3*index+1]
+        zpos = inputState.pos[3*index+2]
+        
+        bondCoords.SetTuple3(i, xpos, ypos, zpos)
+        bondVectors.SetTuple3(i, bondVectorArray[3*i], bondVectorArray[3*i+1], bondVectorArray[3*i+2])
+        bondScalars.SetTuple1(i, scalar)
+        
+        # povray bond
+        fpov.write(povrayBond(inputState.pos[3*index:3*index+3], 
+                              inputState.pos[3*index:3*index+3] + bondVectorArray[3*i:3*i+3], 
+                              bondThicknessPOV, pov_rgb, 0.0))
+    
+    # points
+    bondPoints = vtk.vtkPoints()
+    bondPoints.SetData(bondCoords)
+    
+    # poly data
+    bondPolyData = vtk.vtkPolyData()
+    bondPolyData.SetPoints(bondPoints)
+    bondPolyData.GetPointData().SetScalars(bondScalars)
+    bondPolyData.GetPointData().SetVectors(bondVectors)
+    
+    # line source
+    lineSource = vtk.vtkLineSource()
+    
+    # tubes
+    tubes = vtk.vtkTubeFilter()
+    tubes.SetInputConnection(lineSource.GetOutputPort())
+    tubes.SetRadius(bondThicknessVTK)
+    tubes.SetNumberOfSides(bondNumSides)
+    tubes.UseDefaultNormalOn()
+    tubes.SetCapping(1)
+    tubes.SetDefaultNormal(0.577, 0.577, 0.577)
+    
+    # glyph filter
+    bondGlyphFilter = vtk.vtkProgrammableGlyphFilter()
+    bondGlyphFilter.SetGlyphMethod(functools.partial(bondGlyphMethod, bondGlyphFilter, lineSource))
+    bondGlyphFilter.SetSource(tubes.GetOutput())
+    bondGlyphFilter.SetInput(bondPolyData)
+    
+    # mapper
+    mapper = vtk.vtkPolyDataMapper()
+    mapper.SetInputConnection(bondGlyphFilter.GetOutputPort())
+    mapper.SetLookupTable(lut)
+    setMapperScalarRange(mapper, colouringOptions, NSpecies)
+    
+    # actor
+    actor = vtk.vtkActor()
+    actor.SetMapper(mapper)
+    actor.GetProperty().SetOpacity(1)
+    actor.GetProperty().SetLineWidth(bondThicknessVTK)
+    
+    # add to actors collection
+    actorsCollection.AddItem(actor)
+    
+    # close pov file
+    fpov.close()
+    
+    # time taken
+    renderBondsTime = time.time() - renderBondsTime
+    logger.debug("Render displacement vectors time: %f s", renderBondsTime)

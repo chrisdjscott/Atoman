@@ -54,3 +54,17 @@ def calculateBonds(NVisible, visibleAtoms, pos, specie, NSpecies, bondMinArray, 
                                  CPtrToDouble(bondMinArray), CPtrToDouble(bondMaxArray), approxBoxWidth, maxBondsPerAtom,
                                  CPtrToDouble(cellDims), CPtrToInt(PBC), CPtrToDouble(minPos), CPtrToDouble(maxPos),
                                  CPtrToInt(bondArray), CPtrToInt(NBondsArray), CPtrToDouble(bondVectorArray), CPtrToInt(bondSpecieCounter))
+
+# calculateDisplacementVectors prototype
+_bonds.calculateDisplacementVectors.restype = C.c_int
+_bonds.calculateDisplacementVectors.argtypes = [C.c_int, C.POINTER(C.c_int), C.POINTER(C.c_double), C.POINTER(C.c_double), C.POINTER(C.c_double),
+                                                C.POINTER(C.c_int), C.POINTER(C.c_double)]
+
+# calculateDisplacementVectors function
+def calculateDisplacementVectors(NVisible, visibleAtoms, pos, refPos, cellDims, PBC, bondVectorArray):
+    """
+    Calculate displacement vectors
+    
+    """
+    return _bonds.calculateDisplacementVectors(NVisible, CPtrToInt(visibleAtoms), CPtrToDouble(pos), CPtrToDouble(refPos), 
+                                               CPtrToDouble(cellDims), CPtrToInt(PBC), CPtrToDouble(bondVectorArray))

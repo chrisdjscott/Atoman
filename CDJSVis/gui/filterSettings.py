@@ -1388,7 +1388,76 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         
         self.minDisplacement = 1.2
         self.maxDisplacement = 1000.0
+        self.bondThicknessVTK = 0.4
+        self.bondThicknessPOV = 0.4
+        self.bondNumSides = 5
         
+        # draw displacement vector settings
+        self.drawVectorsGroup = QtGui.QGroupBox("Draw displacement vectors")
+        self.drawVectorsGroup.setCheckable(True)
+        self.drawVectorsGroup.setChecked(False)
+        self.drawVectorsGroup.setEnabled(False)
+        self.drawVectorsGroup.toggled.connect(self.drawVectorsChanged)
+        
+        grpLayout = QtGui.QVBoxLayout(self.drawVectorsGroup)
+        grpLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        # thickness
+        bondThicknessGroup = QtGui.QGroupBox("Bond thickness")
+        bondThicknessGroup.setAlignment(QtCore.Qt.AlignCenter)
+        bondThicknessLayout = QtGui.QVBoxLayout()
+        bondThicknessGroup.setLayout(bondThicknessLayout)
+        grpLayout.addWidget(bondThicknessGroup)
+        
+        # vtk
+        vtkThickSpin = QtGui.QDoubleSpinBox()
+        vtkThickSpin.setMinimum(0.01)
+        vtkThickSpin.setMaximum(10)
+        vtkThickSpin.setSingleStep(0.01)
+        vtkThickSpin.setValue(self.bondThicknessVTK)
+        vtkThickSpin.valueChanged.connect(self.vtkThickChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("VTK:"))
+        row.addWidget(vtkThickSpin)
+        bondThicknessLayout.addLayout(row)
+        
+        # pov
+        povThickSpin = QtGui.QDoubleSpinBox()
+        povThickSpin.setMinimum(0.01)
+        povThickSpin.setMaximum(10)
+        povThickSpin.setSingleStep(0.01)
+        povThickSpin.setValue(self.bondThicknessPOV)
+        povThickSpin.valueChanged.connect(self.povThickChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("POV:"))
+        row.addWidget(povThickSpin)
+        bondThicknessLayout.addLayout(row)
+        
+        # num sides group
+        numSidesGroup = QtGui.QGroupBox("Number of sides")
+        numSidesGroup.setAlignment(QtCore.Qt.AlignCenter)
+        numSidesLayout = QtGui.QVBoxLayout()
+        numSidesGroup.setLayout(numSidesLayout)
+        grpLayout.addWidget(numSidesGroup)
+        
+        # num sides
+        numSidesSpin = QtGui.QSpinBox()
+        numSidesSpin.setMinimum(3)
+        numSidesSpin.setMaximum(999)
+        numSidesSpin.setSingleStep(1)
+        numSidesSpin.setValue(self.bondNumSides)
+        numSidesSpin.valueChanged.connect(self.numSidesChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(numSidesSpin)
+        numSidesLayout.addLayout(row)
+        
+        row = self.newDisplayRow()
+        row.addWidget(self.drawVectorsGroup)
+        
+        # filtering group
         groupLayout = self.addFilteringGroupBox(slot=self.filteringToggled, checked=False)
         
         label = QtGui.QLabel("Min:")
@@ -1417,12 +1486,50 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         row.addWidget(self.maxDisplacementSpinBox)
         groupLayout.addLayout(row)
     
+    def numSidesChanged(self, val):
+        """
+        Number of sides changed.
+        
+        """
+        self.bondNumSides = val
+    
+    def vtkThickChanged(self, val):
+        """
+        VTK thickness changed.
+        
+        """
+        self.bondThicknessVTK = val
+    
+    def povThickChanged(self, val):
+        """
+        POV thickness changed.
+        
+        """
+        self.bondThicknessPOV = val
+    
+    def drawVectorsChanged(self, drawVectors):
+        """
+        Draw displacement vectors toggled
+        
+        """
+        self.drawDisplacementVectors = drawVectors
+        self.logger.debug("Draw displacement vectors: %r", self.drawDisplacementVectors)
+    
     def filteringToggled(self, arg):
         """
         Filtering toggled
         
         """
         self.filteringEnabled = arg
+        
+        if self.filteringEnabled:
+            self.logger.debug("Filtering has been enabled => enabling 'draw vectors' check")
+            self.drawVectorsGroup.setEnabled(True)
+        
+        else:
+            self.logger.debug("Filtering has been disabled => disabling 'draw vectors' check")
+            self.drawVectorsGroup.setChecked(False)
+            self.drawVectorsGroup.setEnabled(False)
     
     def setMinDisplacement(self, val):
         """

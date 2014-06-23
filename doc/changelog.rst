@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* Add option to draw displacement vector showing where displaced atoms have moved from
+
 **v140605**
 
 * Fix bug to do with writing POV-Ray atoms/running Ffmpeg on thread pool

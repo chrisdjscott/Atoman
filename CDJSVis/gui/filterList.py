@@ -563,6 +563,20 @@ class FilterList(QtGui.QWidget):
         msgBox.setIcon(QtGui.QMessageBox.Warning)
         msgBox.exec_()
     
+    def warnDisplacementFilter(self):
+        """
+        Displacement filter can only be used when number of atoms match
+        
+        """
+        message = "The Displacement filter can only be used when the reference and input number of atoms match!"
+        
+        msgBox = QtGui.QMessageBox(self)
+        msgBox.setText(message)
+        msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
+        msgBox.setIcon(QtGui.QMessageBox.Warning)
+        msgBox.exec_()
+    
     def addFilter(self, filterName=None):
         """
         Add new filter
@@ -591,6 +605,9 @@ class FilterList(QtGui.QWidget):
             
             elif self.listItems.count() > 0 and str(filterName) == "Point defects":
                 self.warnDefectFilter()
+            
+            elif str(filterName) == "Displacement" and self.pipelinePage.inputState.NAtoms != self.pipelinePage.refState.NAtoms:
+                self.warnDisplacementFilter()
             
             else:
                 # filter name

@@ -143,3 +143,29 @@ int calculateBonds(int NVisible, int *visibleAtoms, double *pos, int *specie, in
     return 0;
 }
 
+/*******************************************************************************
+ * Calculate displacement vectors
+ *******************************************************************************/
+int calculateDisplacementVectors(int NVisible, int *visibleAtoms, double *pos, double *refPos, double *cellDims, int *PBC, double *bondVectorArray)
+{
+    int i, index;
+    double sepVec[3];
+    
+    
+    for (i = 0; i < NVisible; i++)
+    {
+        index = visibleAtoms[i];
+        
+        /* separation vector */
+        atomSeparationVector(sepVec, pos[3*index], pos[3*index+1], pos[3*index+2], 
+                             refPos[3*index], refPos[3*index+1], refPos[3*index+2], 
+                             cellDims[0], cellDims[1], cellDims[2], 
+                             PBC[0], PBC[1], PBC[2]);
+        
+        bondVectorArray[3*i] = sepVec[0];
+        bondVectorArray[3*i+1] = sepVec[1];
+        bondVectorArray[3*i+2] = sepVec[2];
+    }
+    
+    return 0;
+}
