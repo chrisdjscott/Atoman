@@ -921,7 +921,112 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row = self.newDisplayRow()
         row.addWidget(vacForm)
         
+        self.drawDisplacementVectors = False
+        self.bondThicknessVTK = 0.4
+        self.bondThicknessPOV = 0.4
+        self.bondNumSides = 5
+        
+        # draw displacement vector settings
+        self.drawVectorsGroup = QtGui.QGroupBox("Draw displacement vectors")
+        self.drawVectorsGroup.setCheckable(True)
+        self.drawVectorsGroup.setChecked(False)
+        self.drawVectorsGroup.setEnabled(False)
+        self.drawVectorsGroup.toggled.connect(self.drawVectorsChanged)
+        
+        grpLayout = QtGui.QVBoxLayout(self.drawVectorsGroup)
+        grpLayout.setAlignment(QtCore.Qt.AlignTop)
+        grpLayout.setContentsMargins(0,0,0,0)
+        grpLayout.setSpacing(0)
+        
+        # thickness
+        bondThicknessGroup = QtGui.QGroupBox("Bond thickness")
+        bondThicknessGroup.setAlignment(QtCore.Qt.AlignCenter)
+        bondThicknessLayout = QtGui.QVBoxLayout()
+        bondThicknessLayout.setContentsMargins(0,0,0,0)
+        bondThicknessLayout.setSpacing(0)
+        bondThicknessGroup.setLayout(bondThicknessLayout)
+        grpLayout.addWidget(bondThicknessGroup)
+        
+        # vtk
+        vtkThickSpin = QtGui.QDoubleSpinBox()
+        vtkThickSpin.setMinimum(0.01)
+        vtkThickSpin.setMaximum(10)
+        vtkThickSpin.setSingleStep(0.01)
+        vtkThickSpin.setValue(self.bondThicknessVTK)
+        vtkThickSpin.valueChanged.connect(self.vtkThickChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("VTK:"))
+        row.addWidget(vtkThickSpin)
+        bondThicknessLayout.addLayout(row)
+        
+        # pov
+        povThickSpin = QtGui.QDoubleSpinBox()
+        povThickSpin.setMinimum(0.01)
+        povThickSpin.setMaximum(10)
+        povThickSpin.setSingleStep(0.01)
+        povThickSpin.setValue(self.bondThicknessPOV)
+        povThickSpin.valueChanged.connect(self.povThickChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("POV:"))
+        row.addWidget(povThickSpin)
+        bondThicknessLayout.addLayout(row)
+        
+        # num sides group
+        numSidesGroup = QtGui.QGroupBox("Number of sides")
+        numSidesGroup.setAlignment(QtCore.Qt.AlignCenter)
+        numSidesLayout = QtGui.QVBoxLayout()
+        numSidesLayout.setContentsMargins(0,0,0,0)
+        numSidesLayout.setSpacing(0)
+        numSidesGroup.setLayout(numSidesLayout)
+        grpLayout.addWidget(numSidesGroup)
+        
+        # num sides
+        numSidesSpin = QtGui.QSpinBox()
+        numSidesSpin.setMinimum(3)
+        numSidesSpin.setMaximum(999)
+        numSidesSpin.setSingleStep(1)
+        numSidesSpin.setValue(self.bondNumSides)
+        numSidesSpin.valueChanged.connect(self.numSidesChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(numSidesSpin)
+        numSidesLayout.addLayout(row)
+        
+        row = self.newDisplayRow()
+        row.addWidget(self.drawVectorsGroup)
+        
         self.refresh()
+    
+    def numSidesChanged(self, val):
+        """
+        Number of sides changed.
+        
+        """
+        self.bondNumSides = val
+    
+    def vtkThickChanged(self, val):
+        """
+        VTK thickness changed.
+        
+        """
+        self.bondThicknessVTK = val
+    
+    def povThickChanged(self, val):
+        """
+        POV thickness changed.
+        
+        """
+        self.bondThicknessPOV = val
+    
+    def drawVectorsChanged(self, drawVectors):
+        """
+        Draw displacement vectors toggled
+        
+        """
+        self.drawDisplacementVectors = drawVectors
+        self.logger.debug("Draw defect displacement vectors: %r", self.drawDisplacementVectors)
     
     def vacSpecularPowerChanged(self, val):
         """
@@ -1062,8 +1167,10 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         Refresh the specie list
         
         """
-        refSpecieList = self.pipelinePage.refState.specieList
-        inputSpecieList = self.pipelinePage.inputState.specieList
+        refState = self.pipelinePage.refState
+        inputState = self.pipelinePage.inputState
+        refSpecieList = refState.specieList
+        inputSpecieList = inputState.specieList
         
         for spec in refSpecieList:
             if spec not in self.specieList:
@@ -1080,7 +1187,12 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
                     self.specieBoxes[spec].setChecked(1)
         
         self.changedSpecie(0)
-
+        
+        if inputState.NAtoms == refState.NAtoms:
+            self.drawVectorsGroup.setEnabled(True)
+        else:
+            self.drawVectorsGroup.setEnabled(False)
+    
     def addSpecieCheck(self, specie):
         """
         Add check box for the given specie

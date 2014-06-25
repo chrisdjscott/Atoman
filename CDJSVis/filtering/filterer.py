@@ -1183,6 +1183,25 @@ class Filterer(object):
                 atomIndex = splitInterstitials[3*i+2]
                 clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
         
+        # draw displacement vectors
+        if settings.drawVectorsGroup.isEnabled() and settings.drawDisplacementVectors:
+            self.logger.debug("Drawing displacement vectors for interstitials (%d)", NInt)
+            
+            # need to make a unique list for interstitials and split intersitials and antisites
+            
+            
+            # calculate vectors
+            bondVectorArray = np.empty(3 * NInt, np.float64)
+            status = bonds_c.calculateDisplacementVectors(NInt, interstitials, inputLattice.pos, refLattice.pos, 
+                                                          refLattice.cellDims, self.pipelinePage.PBC, bondVectorArray)
+            
+            # pov file for bonds
+            povfile = "pipeline%d_intdispvects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
+            
+            # draw displacement vectors as bonds
+            renderBonds.renderDisplacementVectors(interstitials, self.mainWindow, self.pipelinePage, self.actorsCollection, 
+                                                  self.colouringOptions, povfile, self.scalarsDict, bondVectorArray, settings)
+        
         return interstitials, vacancies, antisites, onAntisites, splitInterstitials
     
     def pointDefectFilterCalculateClusterVolumes(self, settings):
