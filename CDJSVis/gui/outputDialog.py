@@ -1744,10 +1744,6 @@ class ImageSequenceTab(QtGui.QWidget):
         
         QtGui.QApplication.processEvents()
         
-        # movie creator
-        import vtk
-        movieWriter = vtk.vtkAVIWriter()
-        
         # loop over files
         status = 0
         previousPos = None
