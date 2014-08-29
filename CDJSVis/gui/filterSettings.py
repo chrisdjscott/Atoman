@@ -2428,3 +2428,37 @@ class BondOrderSettingsDialog(GenericSettingsDialog):
         
         """
         self.maxQ6 = val
+
+################################################################################
+class AdaptiveCommonNeighbourAnalysisSettingsDialog(GenericSettingsDialog):
+    """
+    Settings for adaptive common neighbour analysis
+    
+    """
+    def __init__(self, mainWindow, title, parent=None):
+        super(AdaptiveCommonNeighbourAnalysisSettingsDialog, self).__init__(title, parent)
+        
+        self.filterType = "Adaptive common neighbour analysis"
+        
+        self.maxBondDistance = 5.0
+        
+        label = QtGui.QLabel("Max bond distance:")
+        self.maxBondDistanceSpin = QtGui.QDoubleSpinBox()
+        self.maxBondDistanceSpin.setSingleStep(0.01)
+        self.maxBondDistanceSpin.setMinimum(2.0)
+        self.maxBondDistanceSpin.setMaximum(9.99)
+        self.maxBondDistanceSpin.setValue(self.maxBondDistance)
+        self.maxBondDistanceSpin.valueChanged[float].connect(self.setMaxBondDistance)
+        
+        row = self.newRow()
+        row.addWidget(label)
+        row.addWidget(self.maxBondDistanceSpin)
+        
+#         self.addLinkToHelpPage("usage/analysis/filters/bond_order.html")
+    
+    def setMaxBondDistance(self, val):
+        """
+        Set the max bond distance
+        
+        """
+        self.maxBondDistance = val

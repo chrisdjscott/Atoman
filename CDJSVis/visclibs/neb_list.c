@@ -132,3 +132,113 @@ void freeNeighbourList(struct NeighbourList *nebList, int size)
     
     free(nebList);
 }
+
+/*************************************************/
+
+struct NeighbourList2 * constructNeighbourList2(int NAtoms, double *pos, struct Boxes *boxes, double *cellDims, int *PBC, double maxSep2)
+{
+    int i, j, k, boxIndex, indexb, newsize;
+    int boxNebList[27];
+    double rxa, rya, rza, rxb, ryb, rzb, sep2;
+    struct NeighbourList2 *nebList;
+    
+    
+    /* allocate neb list */
+    nebList = malloc(NAtoms * sizeof(struct NeighbourList2));
+    if (nebList == NULL)
+    {
+        printf("ERROR: could not allocate nebList\n");
+        exit(88);
+    }
+    
+    /* initialise */
+    for (i = 0; i < NAtoms; i++)
+    {
+        nebList[i].chunk = 16;
+        nebList[i].neighbourCount = 0;
+    }
+    
+    /* loop over atoms */
+    for (i = 0; i < NAtoms; i++)
+    {
+        /* atom position */
+        rxa = pos[3*i];
+        rya = pos[3*i+1];
+        rza = pos[3*i+2];
+        
+        /* get box index of this atom */
+        boxIndex = boxIndexOfAtom(rxa, rya, rza, boxes);
+        
+        /* find neighbouring boxes */
+        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        
+        /* loop over box neighbourhood */
+        for (j=0; j<27; j++)
+        {
+            boxIndex = boxNebList[j];
+            
+            /* loop over atoms in box */
+            for (k=0; k<boxes->boxNAtoms[boxIndex]; k++)
+            {
+                indexb = boxes->boxAtoms[boxIndex][k];
+                
+                if (indexb == i) continue;
+                
+                /* atom position */
+                rxb = pos[3*indexb];
+                ryb = pos[3*indexb+1];
+                rzb = pos[3*indexb+2];
+                
+                /* separation */
+                sep2 = atomicSeparation2(rxa, rya, rza, rxb, ryb, rzb, cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
+                
+                /* check if neighbour */
+                if (sep2 < maxSep2)
+                {
+                    /* check if need to resize neighbour pointers */
+                    if (nebList[i].neighbourCount == 0)
+                    {
+                        nebList[i].neighbour = malloc(nebList[i].chunk * sizeof(struct Neighbour));
+                        if (nebList[i].neighbour == NULL)
+                        {
+                            printf("ERROR: could not allocate nebList[%d].neighbour\n", i);
+                            exit(50);
+                        }
+                    }
+                    else if (nebList[i].neighbourCount % nebList[i].chunk == 0)
+                    {
+                        newsize = nebList[i].neighbourCount + nebList[i].chunk;
+                        nebList[i].neighbour = realloc(nebList[i].neighbour, newsize * sizeof(struct Neighbour));
+                        if (nebList[i].neighbour == NULL)
+                        {
+                            printf("ERROR: could not allocate nebList[%d].neighbour\n", i);
+                            exit(50);
+                        }
+                    }
+                    
+                    /* add neighbour */
+                    nebList[i].neighbour[nebList[i].neighbourCount].index = indexb;
+                    nebList[i].neighbour[nebList[i].neighbourCount].sep2 = sep2;
+                    nebList[i].neighbourCount++;
+                }
+            }
+        }
+    }
+    
+    return nebList;
+}
+
+void freeNeighbourList2(struct NeighbourList2 *nebList, int size)
+{
+    int i;
+    
+    for (i = 0; i < size; i++)
+    {
+        if (nebList[i].neighbourCount > 0)
+        {
+            free(nebList[i].neighbour);
+        }
+    }
+    
+    free(nebList);
+}

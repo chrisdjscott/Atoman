@@ -20,6 +20,7 @@ from ..visclibs import defects as defects_c
 from ..visclibs import clusters as clusters_c
 from ..visclibs import bonds as bonds_c
 from ..visclibs import bond_order as bond_order_c
+from ..visclibs import acna
 from ..rendering import renderer
 from ..rendering import renderBonds
 from ..visutils import vectors
@@ -262,6 +263,9 @@ class Filterer(object):
             elif filterName == "Atom index":
                 self.atomIndexFilter(filterSettings)
             
+            elif filterName == "Adaptive common neighbour analysis":
+                self.adaptiveCommonNeighbourAnalysis(filterSettings)
+            
             # write to log
             if self.parent.defectFilterSelected:
                 self.NVis = len(interstitials) + len(vacancies) + len(antisites) + len(splitInterstitials)
@@ -488,6 +492,32 @@ class Filterer(object):
         scalarsQ6.resize(NVisible, refcheck=False)
         self.scalarsDict["Q4"] = scalarsQ4
         self.scalarsDict["Q6"] = scalarsQ6
+    
+    def adaptiveCommonNeighbourAnalysis(self, settings):
+        """
+        Adaptive common neighbour analysis
+        
+        """
+        inputState = self.pipelinePage.inputState
+        
+        # new scalars array
+        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
+        
+        NVisible = acna.adaptiveCommonNeighbourAnalysis(self.visibleAtoms, inputState.pos, scalars, inputState.minPos, inputState.maxPos, 
+                                                        inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.maxBondDistance)
+        
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        
+        # resize visible atoms
+        self.visibleAtoms.resize(NVisible, refcheck=False)
+
+        # store scalars
+        scalars.resize(NVisible, refcheck=False)
+        self.scalarsDict["ACNA"] = scalars
     
     def calculateVoronoi(self):
         """

@@ -63,21 +63,24 @@ class FilterList(QtGui.QWidget):
         self.clusterInfoWindows = {}
         
         # all available filters
-        self.allFilters = ["Specie", 
-                           "Point defects", 
-                           "Crop box", 
-                           "Cluster", 
-                           "Displacement",
-                           "Kinetic energy",
-                           "Potential energy",
-                           "Charge",
-                           "Crop sphere",
-                           "Slice",
-                           "Coordination number",
-                           "Voronoi neighbours",
-                           "Voronoi volume",
-                           "Bond order",
-                           "Atom index"]
+        self.allFilters = [
+            "Specie", 
+            "Point defects", 
+            "Crop box", 
+            "Cluster", 
+            "Displacement",
+            "Kinetic energy",
+            "Potential energy",
+            "Charge",
+            "Crop sphere",
+            "Slice",
+            "Coordination number",
+            "Voronoi neighbours",
+            "Voronoi volume",
+            "Bond order",
+            "Atom index",
+            "Adaptive common neighbour analysis",
+        ]
         self.allFilters.sort()
         
         self.visible = True
