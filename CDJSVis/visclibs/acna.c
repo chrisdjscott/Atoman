@@ -225,13 +225,24 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 		{
 			/* number of common neighbours */
 			numCommonNeighbours = findCommonNeighbours(neighbourArray, i, &commonNeighbours);
-			
 			printf("  %d: num common nebs = %d\n", i, numCommonNeighbours);
+			if (numCommonNeighbours != 4 && numCommonNeighbours != 5)
+				break;
+			
+			/* number of bonds among common neighbours */
+			
+			
+			
+			/* number of bonds in the longest continuous chain */
+			
 			
 		}
-		
-		
+		if (n421 == 12) return ATOM_STRUCTURE_FCC;
+		else if (n421 == 6 && n422 == 6) return ATOM_STRUCTURE_HCP;
+		else if (n555 == 12) return ATOM_STRUCTURE_ICOSAHEDRAL;
 	}
+	
+/* next we test for BCC (8 1NN + 6 2NN) */
 	
 	
 	
