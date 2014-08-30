@@ -11,18 +11,20 @@ SHELL = /bin/sh
 # mac, assumes latest macports python being used and setup correctly
 ifeq (Darwin, $(shell uname -s))
     # compiler flags
-    CCLINKFLAGS =   -bundle #-flat_namespace -undefined suppress
-	CCFLAGS =  -c -O3 -fPIC -Wall
+    CCLINKFLAGS = -bundle
+	CCFLAGS = -c -O3 -fPIC -Wall
 	CC = gcc
     INCLUDES = 
+    LIBS = -lgsl
 endif
     
 # linux - ubuntu or hydra
 ifeq (Linux, $(shell uname -s))
     # compiler flags
-    CCLINKFLAGS =   -shared # -flat_namespace
+    CCLINKFLAGS = -shared
 	CCFLAGS = -c -O3 -fPIC -Wall
 	CC = gcc
+	LIBS = -lgsl
 	
 	# different includes depending on OS
 	# default, eg Ubuntu
@@ -91,7 +93,7 @@ _bond_order.$(LIBSUFFIX) : bond_order.o neb_list.o utilities.o boxeslib.o
 	$(CC) $(CCLINKFLAGS) bond_order.o neb_list.o utilities.o boxeslib.o -o _bond_order.$(LIBSUFFIX)
 
 _acna.$(LIBSUFFIX) : acna.o neb_list.o utilities.o boxeslib.o
-	$(CC) $(CCLINKFLAGS) -lgsl acna.o neb_list.o utilities.o boxeslib.o -o _acna.$(LIBSUFFIX)
+	$(CC) $(CCLINKFLAGS) acna.o neb_list.o utilities.o boxeslib.o $(LIBS) -o _acna.$(LIBSUFFIX)
 
 # compile module
 boxeslib.o : boxeslib.c

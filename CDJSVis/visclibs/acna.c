@@ -164,7 +164,6 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 {
 	int i, j, nn, ok, visInd1, visInd2;
 	int numCommonNeighbours;
-	unsigned int neighbourArray[MAX_REQUIRED_NEBS] = {0};
 	double localScaling, localCutoff;
 	
 	
@@ -206,6 +205,7 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 		int n421 = 0;
 		int n422 = 0;
 		int n555 = 0;
+		unsigned int neighbourArray[MAX_REQUIRED_NEBS] = {0};
 		unsigned int commonNeighbours;
 		
 		/* determine bonding between neighbours, based on local cutoff */
@@ -244,22 +244,22 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
  *******************************************************************************/
 int findCommonNeighbours(unsigned int *neighbourArray, int neighbourIndex, unsigned int *commonNeighbours)
 {
-	unsigned int v;
-	
-	
+#ifdef __GNUC__
 	*commonNeighbours = neighbourArray[neighbourIndex];
 	
-#ifdef __GNUC__
 	/* Count the number of bits set in neighbor bit field. */
 	return __builtin_popcount(*commonNeighbours); // GNU g++ specific
 #else
+	unsigned int v;
+	
+	*commonNeighbours = neighbourArray[neighbourIndex];
+	
 	/* Count the number of bits set in neighbor bit field. */
 	v = *commonNeighbours - ((*commonNeighbours >> 1) & 0x55555555);
 	v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
 	return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
 #endif
 }
-
 
 /*******************************************************************************
  ** check if two neighbours are bonded
