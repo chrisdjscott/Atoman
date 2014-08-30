@@ -16,7 +16,7 @@ void freeNeighbourList(struct NeighbourList *, int);
 struct Neighbour
 {
     int index;
-    double sep2;
+    double separation;
 };
 
 struct NeighbourList2

@@ -7,6 +7,10 @@
 #include "neb_list.h"
 
 
+void addAtomToNebList(int, int, double, struct NeighbourList2 *);
+
+
+
 struct NeighbourList * constructNeighbourList(int NAtoms, double *pos, struct Boxes *boxes, double *cellDims, int *PBC, double maxSep2)
 {
     int i, j, k, boxIndex, indexb, newsize;
@@ -135,11 +139,43 @@ void freeNeighbourList(struct NeighbourList *nebList, int size)
 
 /*************************************************/
 
+void addAtomToNebList(int mainIndex, int nebIndex, double sep, struct NeighbourList2 *nebList)
+{
+	int newsize;
+	
+	
+	/* check if need to resize neighbour pointers */
+	if (nebList[mainIndex].neighbourCount == 0)
+	{
+		nebList[mainIndex].neighbour = malloc(nebList[mainIndex].chunk * sizeof(struct Neighbour));
+		if (nebList[mainIndex].neighbour == NULL)
+		{
+			printf("ERROR: could not allocate nebList[%d].neighbour\n", mainIndex);
+			exit(50);
+		}
+	}
+	else if (nebList[mainIndex].neighbourCount % nebList[mainIndex].chunk == 0)
+	{
+		newsize = nebList[mainIndex].neighbourCount + nebList[mainIndex].chunk;
+		nebList[mainIndex].neighbour = realloc(nebList[mainIndex].neighbour, newsize * sizeof(struct Neighbour));
+		if (nebList[mainIndex].neighbour == NULL)
+		{
+			printf("ERROR: could not allocate nebList[%d].neighbour\n", mainIndex);
+			exit(50);
+		}
+	}
+	
+	/* add neighbour */
+	nebList[mainIndex].neighbour[nebList[mainIndex].neighbourCount].index = nebIndex;
+	nebList[mainIndex].neighbour[nebList[mainIndex].neighbourCount].separation = sep;
+	nebList[mainIndex].neighbourCount++;
+}
+
 struct NeighbourList2 * constructNeighbourList2(int NAtoms, double *pos, struct Boxes *boxes, double *cellDims, int *PBC, double maxSep2)
 {
-    int i, j, k, boxIndex, indexb, newsize;
+    int i, j, k, boxIndex, indexb;
     int boxNebList[27];
-    double rxa, rya, rza, rxb, ryb, rzb, sep2;
+    double rxa, rya, rza, rxb, ryb, rzb, sep2, sep;
     struct NeighbourList2 *nebList;
     
     
@@ -182,7 +218,7 @@ struct NeighbourList2 * constructNeighbourList2(int NAtoms, double *pos, struct 
             {
                 indexb = boxes->boxAtoms[boxIndex][k];
                 
-                if (indexb == i) continue;
+                if (indexb <= i) continue;
                 
                 /* atom position */
                 rxb = pos[3*indexb];
@@ -195,31 +231,9 @@ struct NeighbourList2 * constructNeighbourList2(int NAtoms, double *pos, struct 
                 /* check if neighbour */
                 if (sep2 < maxSep2)
                 {
-                    /* check if need to resize neighbour pointers */
-                    if (nebList[i].neighbourCount == 0)
-                    {
-                        nebList[i].neighbour = malloc(nebList[i].chunk * sizeof(struct Neighbour));
-                        if (nebList[i].neighbour == NULL)
-                        {
-                            printf("ERROR: could not allocate nebList[%d].neighbour\n", i);
-                            exit(50);
-                        }
-                    }
-                    else if (nebList[i].neighbourCount % nebList[i].chunk == 0)
-                    {
-                        newsize = nebList[i].neighbourCount + nebList[i].chunk;
-                        nebList[i].neighbour = realloc(nebList[i].neighbour, newsize * sizeof(struct Neighbour));
-                        if (nebList[i].neighbour == NULL)
-                        {
-                            printf("ERROR: could not allocate nebList[%d].neighbour\n", i);
-                            exit(50);
-                        }
-                    }
-                    
-                    /* add neighbour */
-                    nebList[i].neighbour[nebList[i].neighbourCount].index = indexb;
-                    nebList[i].neighbour[nebList[i].neighbourCount].sep2 = sep2;
-                    nebList[i].neighbourCount++;
+                    sep = sqrt(sep2);
+                	addAtomToNebList(i, indexb, sep, nebList);
+                	addAtomToNebList(indexb, i, sep, nebList);
                 }
             }
         }
