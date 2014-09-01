@@ -4,6 +4,7 @@
  ** Copyright Chris Scott 2014
  *******************************************************************************/
 
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -21,6 +22,8 @@ int checkForNeighbourBond(int, int, struct NeighbourList2 *, double);
 void setNeighbourBond(unsigned int *, int, int, int);
 int findCommonNeighbours(unsigned int *, int, unsigned int *);
 int findNeighbourBonds(unsigned int *, unsigned int, int, unsigned int *);
+int calcMaxChainLength(unsigned int *, int);
+int getAdjacentBonds(unsigned int, unsigned int *, int *, unsigned int *, unsigned int);
 
 
 /*******************************************************************************
@@ -218,29 +221,40 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 			}
 		}
 		
-		printf("Finding common nebs\n");
 		for (i = 0; i < nn; i++)
 		{
 		    int numCommonNeighbours;
 		    int numNeighbourBonds;
+		    int maxChainLength;
 		    unsigned int commonNeighbours;
 		    unsigned int neighbourBonds[MAX_REQUIRED_NEBS*MAX_REQUIRED_NEBS] = {0};
 		    
 		    /* number of common neighbours */
+		    printf("Finding common nebs...\n");
 			numCommonNeighbours = findCommonNeighbours(neighbourArray, i, &commonNeighbours);
 			printf("  %d: num common nebs = %d\n", i, numCommonNeighbours);
 			if (numCommonNeighbours != 4 && numCommonNeighbours != 5)
 				break;
 			
 			/* number of bonds among common neighbours */
+			printf("Finding bonds among common nebs...\n");
 			numNeighbourBonds = findNeighbourBonds(neighbourArray, commonNeighbours, nn, neighbourBonds);
 			printf("  %d: num neighbour bonds = %d\n", i, numNeighbourBonds);
 			if (numNeighbourBonds != 2 && numNeighbourBonds != 5)
 			    break;
 			
 			/* number of bonds in the longest continuous chain */
-			
-			
+			printf("Finding longests chain of common neighbour bonds...\n");
+			maxChainLength = calcMaxChainLength(neighbourBonds, numNeighbourBonds);
+			printf("  %d: max chain length = %d\n", i, maxChainLength);
+			if (numCommonNeighbours == 4 && numNeighbourBonds == 2)
+			{
+			    if (maxChainLength == 1) n421++;
+			    else if (maxChainLength == 2) n422++;
+			    else break;
+			}
+			else if (numCommonNeighbours == 5 && numNeighbourBonds == 5 && maxChainLength == 5) n555++;
+			else break;
 		}
 		if (n421 == 12) return ATOM_STRUCTURE_FCC;
 		else if (n421 == 6 && n422 == 6) return ATOM_STRUCTURE_HCP;
@@ -254,6 +268,98 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 	
 	return ATOM_STRUCTURE_DISORDERED;
 }
+
+/*******************************************************************************
+ ** find all chains of bonds between common neighbours and determine the length
+ ** of the longest continuous chain
+ *******************************************************************************/
+int calcMaxChainLength(unsigned int *neighbourBonds, int numBonds)
+{
+    int maxChainLength;
+    
+    
+    maxChainLength = 0;
+    while (numBonds)
+    {
+        int clusterSize;
+        unsigned int atomsToProcess, atomsProcessed;
+        int dbgcnt = 0;
+        
+        
+        /* make a new cluster starting with the first remaining bond to be processed */
+        printf("DBG: num bonds = %d\n", numBonds);
+        numBonds--;
+        
+        /* initialise some variables */
+        atomsToProcess = neighbourBonds[numBonds];
+        atomsProcessed = 0;
+        clusterSize = 1;
+        
+        do 
+        {
+            unsigned int nextAtom;
+            /* determine number of trailing 0-bits in atomsToProcess
+             * starting with least significant bit position
+             */
+#if defined(__GNUC__)
+            int nextAtomIndex = __builtin_ctz(atomsToProcess);
+#elif defined(_MSC_VER)
+            unsigned long nextAtomIndex;
+            _BitScanForward(&nextAtomIndex, atomsToProcess);
+#else
+            #error "Your C compiler is not supported."
+#endif
+            if (nextAtomIndex < 0 || nextAtomIndex >= 32)
+            {
+                printf("nextAtomIndex error (%d)\n", nextAtomIndex);
+                exit(98);
+            }
+            
+            printf("DBG: doloop: nextAtomIndex = %d (num bonds = %d)\n", nextAtomIndex, numBonds);
+            
+            nextAtom = 1 << nextAtomIndex;
+            atomsProcessed |= nextAtom;
+            atomsProcessed &= ~nextAtom;
+            printf("DBG: calling getAdjacentBonds (%d, %d)\n", atomsToProcess, atomsProcessed);
+            clusterSize = getAdjacentBonds(nextAtom, neighbourBonds, &numBonds, &atomsToProcess, atomsProcessed);
+            
+            if (dbgcnt++ == 100) exit(88);
+        }
+        while (atomsToProcess);
+        
+        if (clusterSize > maxChainLength)
+            maxChainLength = clusterSize;
+    }
+    
+    return maxChainLength;
+}
+
+/*******************************************************************************
+ ** find all chains of bonds
+ *******************************************************************************/
+int getAdjacentBonds(unsigned int atom, unsigned int *bondsToProcess, int *numBonds, unsigned int *atomsToProcess, unsigned int atomsProcessed)
+{
+    int adjacentBonds, b;
+    
+    
+    adjacentBonds = 0;
+    for (b = *numBonds - 1; b >= 0; b--)
+    {
+        if (atom & *bondsToProcess)
+        {
+            ++adjacentBonds;
+//            *atomsToProcess |= *bondsToProcess & (~atomsProcessed);
+            *atomsToProcess = *atomsToProcess | (*bondsToProcess & (~atomsProcessed));
+            memmove(bondsToProcess, bondsToProcess + 1, sizeof(unsigned int) * b);
+            *numBonds = *numBonds - 1;
+            printf("och\n");
+        }
+        else ++bondsToProcess;
+    }
+    
+    return adjacentBonds;
+}
+
 
 /*******************************************************************************
  ** find bonds between common nearest neighbours
