@@ -90,7 +90,7 @@ _rendering.$(LIBSUFFIX) : rendering.o
 	$(CC) $(CCLINKFLAGS) rendering.o -o _rendering.$(LIBSUFFIX)
 
 _bond_order.$(LIBSUFFIX) : bond_order.o neb_list.o utilities.o boxeslib.o
-	$(CC) $(CCLINKFLAGS) bond_order.o neb_list.o utilities.o boxeslib.o -o _bond_order.$(LIBSUFFIX)
+	$(CC) $(CCLINKFLAGS) bond_order.o neb_list.o utilities.o boxeslib.o $(LIBS) -o _bond_order.$(LIBSUFFIX)
 
 _acna.$(LIBSUFFIX) : acna.o neb_list.o utilities.o boxeslib.o
 	$(CC) $(CCLINKFLAGS) acna.o neb_list.o utilities.o boxeslib.o $(LIBS) -o _acna.$(LIBSUFFIX)

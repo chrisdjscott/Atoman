@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "constants.h"
+#include <gsl/gsl_math.h>
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"
@@ -75,7 +75,7 @@ void Ylm(int l, int m, double theta, double phi, double *realYlm, double *imgYlm
     
     P_lm = plgndr(l, m, cos(theta));
     
-    factor = ((2.0 * (double) l + 1.0) * factorials[l-m]) / (4.0 * PI * factorials[l+m]);
+    factor = ((2.0 * (double) l + 1.0) * factorials[l-m]) / (4.0 * M_PI * factorials[l+m]);
     factor = sqrt(factor);
     
     *realYlm = factor * P_lm * cos((double) m * phi);
@@ -213,14 +213,14 @@ void calculate_Q(int NVisibleIn, struct AtomStructureResults *results)
         {
             sumQ6 += results[i].realQ6[m] * results[i].realQ6[m] + results[i].imgQ6[m] * results[i].imgQ6[m];
         }
-        results[i].Q6 = pow(((4.0 * PI / 13.0) * sumQ6), 0.5);
+        results[i].Q6 = pow(((4.0 * M_PI / 13.0) * sumQ6), 0.5);
         
         sumQ4 = 0.0;
         for (m = 0; m < 9; m++)
         {
             sumQ4 += results[i].realQ4[m] * results[i].realQ4[m] + results[i].imgQ4[m] * results[i].imgQ4[m];
         }
-        results[i].Q4 = pow(((4.0 * PI / 9.0) * sumQ4), 0.5);
+        results[i].Q4 = pow(((4.0 * M_PI / 9.0) * sumQ4), 0.5);
     }
 }
 

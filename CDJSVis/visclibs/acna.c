@@ -8,7 +8,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <gsl/gsl_math.h>
-#include "constants.h"
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"
