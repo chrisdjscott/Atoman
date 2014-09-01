@@ -20,6 +20,7 @@ int analyseAtom(int, struct NeighbourList2 *);
 int checkForNeighbourBond(int, int, struct NeighbourList2 *, double);
 void setNeighbourBond(unsigned int *, int, int, int);
 int findCommonNeighbours(unsigned int *, int, unsigned int *);
+int findNeighbourBonds(unsigned int *, unsigned int, int, unsigned int *);
 
 
 /*******************************************************************************
@@ -162,7 +163,6 @@ int adaptiveCommonNeighbourAnalysis(int NVisibleIn, int* visibleAtoms, int posDi
 int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 {
 	int i, j, nn, ok, visInd1, visInd2;
-	int numCommonNeighbours;
 	double localScaling, localCutoff;
 	
 	
@@ -205,7 +205,6 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 		int n422 = 0;
 		int n555 = 0;
 		unsigned int neighbourArray[MAX_REQUIRED_NEBS] = {0};
-		unsigned int commonNeighbours;
 		
 		/* determine bonding between neighbours, based on local cutoff */
 		for (i = 0; i < nn; i++)
@@ -222,15 +221,22 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 		printf("Finding common nebs\n");
 		for (i = 0; i < nn; i++)
 		{
-			/* number of common neighbours */
+		    int numCommonNeighbours;
+		    int numNeighbourBonds;
+		    unsigned int commonNeighbours;
+		    unsigned int neighbourBonds[MAX_REQUIRED_NEBS*MAX_REQUIRED_NEBS] = {0};
+		    
+		    /* number of common neighbours */
 			numCommonNeighbours = findCommonNeighbours(neighbourArray, i, &commonNeighbours);
 			printf("  %d: num common nebs = %d\n", i, numCommonNeighbours);
 			if (numCommonNeighbours != 4 && numCommonNeighbours != 5)
 				break;
 			
 			/* number of bonds among common neighbours */
-			
-			
+			numNeighbourBonds = findNeighbourBonds(neighbourArray, commonNeighbours, nn, neighbourBonds);
+			printf("  %d: num neighbour bonds = %d\n", i, numNeighbourBonds);
+			if (numNeighbourBonds != 2 && numNeighbourBonds != 5)
+			    break;
 			
 			/* number of bonds in the longest continuous chain */
 			
@@ -247,6 +253,50 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 	
 	
 	return ATOM_STRUCTURE_DISORDERED;
+}
+
+/*******************************************************************************
+ ** find bonds between common nearest neighbours
+ *******************************************************************************/
+int findNeighbourBonds(unsigned int *neighbourArray, unsigned int commonNeighbours, int numNeighbours, unsigned int *neighbourBonds)
+{
+    int ni1, n;
+    int numBonds;
+    int neb_size;
+    unsigned int nib[MAX_REQUIRED_NEBS] = {0};
+    int nibn;
+    unsigned int ni1b;
+    unsigned int b;
+    
+    
+    neb_size = MAX_REQUIRED_NEBS * MAX_REQUIRED_NEBS;
+    
+    numBonds = 0;
+    nibn = 0;
+    ni1b = 1;
+    for (ni1 = 0; ni1 < numNeighbours; ni1++, ni1b <<= 1)
+    {
+        if (commonNeighbours & ni1b)
+        {
+            b = commonNeighbours & neighbourArray[ni1];
+            for (n = 0; n < nibn; n++)
+            {
+                if (b & nib[n])
+                {
+                    if (numBonds > neb_size)
+                    {
+                        printf("ERROR: num bonds exceeds limit (findNeighbourBonds)\n");
+                        exit(58);
+                    }
+                    neighbourBonds[numBonds++] = ni1b | nib[n];
+                }
+            }
+            
+            nib[nibn++] = ni1b;
+        }
+    }
+    
+    return numBonds;
 }
 
 /*******************************************************************************
