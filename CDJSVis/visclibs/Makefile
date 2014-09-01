@@ -15,7 +15,7 @@ ifeq (Darwin, $(shell uname -s))
 	CCFLAGS = -c -O3 -fPIC -Wall
 	CC = gcc
     INCLUDES = 
-    LIBS = -lgsl
+    LIBS = -L/opt/local/lib -lgsl
 endif
     
 # linux - ubuntu or hydra

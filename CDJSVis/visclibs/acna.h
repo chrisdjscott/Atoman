@@ -1,4 +1,7 @@
 
+#ifndef ACNA_SET
+#define ACNA_SET
+
 int adaptiveCommonNeighbourAnalysis(int, int*, int, double*, int, double*, double*, double*, double*, int*, int, double*, double);
 
 #define MAX_REQUIRED_NEBS 14
@@ -14,3 +17,5 @@ enum AtomStructureType {
 	ATOM_STRUCTURE_SIGMA11_TILT1	= 5,
 	ATOM_STRUCTURE_SIGMA11_TILT2	= 6
 };
+
+#endif

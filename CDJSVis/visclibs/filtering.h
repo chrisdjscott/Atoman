@@ -1,4 +1,7 @@
 
+#ifndef FILTERING_SET
+#define FILTERING_SET
+
 int specieFilter(int, int *, int, int *, int, int *, int, double *);
 
 int sliceFilter(int, int *, int, double *, double, double, double, double, double, double, int, int, double *);
@@ -26,3 +29,5 @@ int Q4Filter(int, int*, int, double *, double, double, double, int, double *, do
 int calculate_drift_vector(int, double*, double*, double*, int*, double*);
 
 int atomIndexFilter(int, int*, int*, int, int, int, int, double*);
+
+#endif

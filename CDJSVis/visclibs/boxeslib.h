@@ -4,6 +4,9 @@
  ** Functions associated with spatially decomposing a system of atoms into boxes
  *******************************************************************************/
 
+#ifndef BOXESLIB_SET
+#define BOXESLIB_SET
+
 /* create structure for containing boxes data */
 struct Boxes
 {
@@ -36,3 +39,5 @@ void boxIJKIndices(int, int *, int, struct Boxes *);
 int boxIndexFromIJK(int, int, int, struct Boxes *);
 
 void getBoxNeighbourhood(int, int *, struct Boxes *);
+
+#endif

@@ -1,4 +1,7 @@
 
+#ifndef NEB_LIST_SET
+#define NEB_LIST_SET
+
 /* create structure for containing boxes data */
 struct NeighbourList
 {
@@ -29,3 +32,5 @@ struct NeighbourList2
 struct NeighbourList2 * constructNeighbourList2(int, double *, struct Boxes *, double *, int *, double);
 
 void freeNeighbourList2(struct NeighbourList2 *, int);
+
+#endif
