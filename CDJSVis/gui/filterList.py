@@ -79,7 +79,7 @@ class FilterList(QtGui.QWidget):
             "Voronoi volume",
             "Bond order",
             "Atom index",
-            "Adaptive common neighbour analysis",
+            "ACNA",
         ]
         self.allFilters.sort()
         
@@ -673,6 +673,7 @@ class FilterList(QtGui.QWidget):
         words = str(filterName).title().split()
         
         dialogName = "%sSettingsDialog" % "".join(words)
+        self.logger.debug("Creating settings dialog: '%s'", dialogName)
         
         formObject = getattr(filterSettings, dialogName, None)
         if formObject is not None:

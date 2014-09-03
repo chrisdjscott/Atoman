@@ -34,18 +34,9 @@ int compare_two_nebs(const void * a, const void * b)
     const struct Neighbour *n1 = a;
     const struct Neighbour *n2 = b;
     
-    if (n1->separation < n2->separation)
-    {
-        return -1;
-    }
-    else if (n1->separation > n2->separation)
-    {
-        return 1;
-    }
-    else
-    {
-        return 0;
-    }
+    if (n1->separation < n2->separation) return -1;
+    else if (n1->separation > n2->separation) return 1;
+    else return 0;
 }
 
 /*******************************************************************************
@@ -62,9 +53,7 @@ int adaptiveCommonNeighbourAnalysis(int NVisibleIn, int* visibleAtoms, int posDi
     struct NeighbourList2 *nebList;
     
     
-    printf("DEBUG: begin CLIB\n");
-    
-/* first we construct neighbour list for each atom, containing indexes and separation */
+/* first we construct neighbour list for each atom, containing indexes and separations */
     
     /* construct visible pos array */
     visiblePos = malloc(3 * NVisibleIn * sizeof(double));
@@ -96,40 +85,14 @@ int adaptiveCommonNeighbourAnalysis(int NVisibleIn, int* visibleAtoms, int posDi
     freeBoxes(boxes);
     free(visiblePos);
     
-    printf("atom 0 has %d nebs\n", nebList[0].neighbourCount);
-    
 /* now we order the neighbour lists by separation */
     
     /* if less than min neighbours, mark as disordered!!! */
     
+    
     /* sort neighbours by distance */
     for (i = 0; i < NVisibleIn; i++)
-    {
-//        if (i==0)
-//        {
-//            int j;
-//            
-//        	printf("NEBS %d:\n", i);
-//            for (j=0; j<nebList[i].neighbourCount; j++)
-//            {
-//                printf("  VIS %8d; SEP %lf\n", nebList[i].neighbour[j].index, nebList[i].neighbour[j].separation);
-//            }
-//        }
-        
         qsort(nebList[i].neighbour, nebList[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
-        
-        /* check sorted (debugging...) */
-//        if (i==0)
-//        {
-//            int j;
-//        	
-//        	printf("NEBS %d:\n", i);
-//            for (j=0; j<nebList[i].neighbourCount; j++)
-//            {
-//                printf("  VIS %8d; SEP %lf\n", nebList[i].neighbour[j].index, nebList[i].neighbour[j].separation);
-//            }
-//        }
-    }
     
 /* classify atoms */
     
@@ -137,26 +100,16 @@ int adaptiveCommonNeighbourAnalysis(int NVisibleIn, int* visibleAtoms, int posDi
     {
     	atomStructure = analyseAtom(i, nebList);
     	scalars[i] = (double) atomStructure;
-    	
-    	/* debugging */
-//    	printf("structure[%d] = %d (FCC = %d; BCC = %d)\n", i, atomStructure, ATOM_STRUCTURE_FCC, ATOM_STRUCTURE_BCC);
-//    	printf("DEBUG: only doing 1st atom for now...\n");
-//    	break;
     }
-    
-    
-    
     
 /* there should be option to only show atoms of specific structure type */
     
-    NVisible = 0;
+    NVisible = NVisibleIn;
     
     
 /* tidy up */
     
     freeNeighbourList2(nebList, NVisibleIn);
-    
-    printf("DEBUG: end CLIB\n");
     
     return NVisible;
 }
@@ -269,7 +222,7 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
     if (nebList[mainIndex].neighbourCount < nn)
         return ATOM_STRUCTURE_DISORDERED;
     
-    /* compute local cutoff (formula from paper) */
+    /* compute local cutoff */
     localScaling = 0.0;
     for (i = 0; i < 8; i++)
     {
@@ -285,19 +238,6 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
     localScalingSum /= 6.0;
     
     localCutoff = (1.0 + M_SQRT2) / 4.0 * (2.0 / M_SQRT3 * localScaling + localScalingSum); // divide by 4 not 2 as in the paper
-    
-    /* compute local cutoff */
-//    localScaling = 0.0;
-//    for (i = 0; i < 8; i++)
-//    {
-//        localScaling += nebList[mainIndex].neighbour[i].separation / sqrt(3.0/4.0);
-//    }
-//    for (i = 8; i < 14; i++)
-//    {
-//        localScaling += nebList[mainIndex].neighbour[i].separation;
-//    }
-//    localScaling = localScaling / nn;
-//    localCutoff = (1.0 + M_SQRT2) / 2.0 * localScaling;
     
     /* at this point I feel like we should check that the 12 NN are within localCutoff ????? */
     ok = 1;
@@ -518,15 +458,11 @@ int checkForNeighbourBond(int visInd1, int visInd2, struct NeighbourList2 *nebLi
 	int i, bonded;
 	
 	
-//	printf("Checking if bonded %d - %d\n", visInd1, visInd2);
-	
 	bonded = 0;
 	for (i = 0; i < nebList[visInd1].neighbourCount; i++)
 	{
 		if (nebList[visInd1].neighbour[i].index == visInd2 && nebList[visInd1].neighbour[i].separation <= cutoff)
 		{
-//			printf("  bonded: sep = %lf (cut = %lf)\n", nebList[visInd1].neighbour[i].separation, cutoff);
-			
 			bonded = 1;
 			break;
 		}

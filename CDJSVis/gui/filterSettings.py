@@ -2430,15 +2430,15 @@ class BondOrderSettingsDialog(GenericSettingsDialog):
         self.maxQ6 = val
 
 ################################################################################
-class AdaptiveCommonNeighbourAnalysisSettingsDialog(GenericSettingsDialog):
+class AcnaSettingsDialog(GenericSettingsDialog):
     """
     Settings for adaptive common neighbour analysis
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(AdaptiveCommonNeighbourAnalysisSettingsDialog, self).__init__(title, parent)
+        super(AcnaSettingsDialog, self).__init__(title, parent)
         
-        self.filterType = "Adaptive common neighbour analysis"
+        self.filterType = "ACNA"
         
         self.maxBondDistance = 5.0
         
@@ -2454,7 +2454,7 @@ class AdaptiveCommonNeighbourAnalysisSettingsDialog(GenericSettingsDialog):
         row.addWidget(label)
         row.addWidget(self.maxBondDistanceSpin)
         
-#         self.addLinkToHelpPage("usage/analysis/filters/bond_order.html")
+        self.addLinkToHelpPage("usage/analysis/filters/acna.html")
     
     def setMaxBondDistance(self, val):
         """

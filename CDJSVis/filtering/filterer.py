@@ -263,7 +263,7 @@ class Filterer(object):
             elif filterName == "Atom index":
                 self.atomIndexFilter(filterSettings)
             
-            elif filterName == "Adaptive common neighbour analysis":
+            elif filterName == "ACNA":
                 self.adaptiveCommonNeighbourAnalysis(filterSettings)
             
             # write to log
