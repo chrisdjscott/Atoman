@@ -23,7 +23,7 @@ void setNeighbourBond(unsigned int *, int, int, int);
 int findCommonNeighbours(unsigned int *, int, unsigned int *);
 int findNeighbourBonds(unsigned int *, unsigned int, int, unsigned int *);
 int calcMaxChainLength(unsigned int *, int);
-int getAdjacentBonds(unsigned int, unsigned int *, int *, unsigned int *, unsigned int);
+int getAdjacentBonds(unsigned int, unsigned int *, int *, unsigned int *, unsigned int *);
 
 
 /*******************************************************************************
@@ -266,6 +266,7 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 	
 	
 	
+	
 	return ATOM_STRUCTURE_DISORDERED;
 }
 
@@ -283,11 +284,9 @@ int calcMaxChainLength(unsigned int *neighbourBonds, int numBonds)
     {
         int clusterSize;
         unsigned int atomsToProcess, atomsProcessed;
-        int dbgcnt = 0;
         
         
         /* make a new cluster starting with the first remaining bond to be processed */
-        printf("DBG: num bonds = %d\n", numBonds);
         numBonds--;
         
         /* initialise some variables */
@@ -315,15 +314,10 @@ int calcMaxChainLength(unsigned int *neighbourBonds, int numBonds)
                 exit(98);
             }
             
-            printf("DBG: doloop: nextAtomIndex = %d (num bonds = %d)\n", nextAtomIndex, numBonds);
-            
             nextAtom = 1 << nextAtomIndex;
             atomsProcessed |= nextAtom;
-            atomsProcessed &= ~nextAtom;
-            printf("DBG: calling getAdjacentBonds (%d, %d)\n", atomsToProcess, atomsProcessed);
-            clusterSize = getAdjacentBonds(nextAtom, neighbourBonds, &numBonds, &atomsToProcess, atomsProcessed);
-            
-            if (dbgcnt++ == 100) exit(88);
+            atomsToProcess &= ~nextAtom;
+            clusterSize += getAdjacentBonds(nextAtom, neighbourBonds, &numBonds, &atomsToProcess, &atomsProcessed);
         }
         while (atomsToProcess);
         
@@ -337,7 +331,7 @@ int calcMaxChainLength(unsigned int *neighbourBonds, int numBonds)
 /*******************************************************************************
  ** find all chains of bonds
  *******************************************************************************/
-int getAdjacentBonds(unsigned int atom, unsigned int *bondsToProcess, int *numBonds, unsigned int *atomsToProcess, unsigned int atomsProcessed)
+int getAdjacentBonds(unsigned int atom, unsigned int *bondsToProcess, int *numBonds, unsigned int *atomsToProcess, unsigned int *atomsProcessed)
 {
     int adjacentBonds, b;
     
@@ -348,11 +342,10 @@ int getAdjacentBonds(unsigned int atom, unsigned int *bondsToProcess, int *numBo
         if (atom & *bondsToProcess)
         {
             ++adjacentBonds;
-//            *atomsToProcess |= *bondsToProcess & (~atomsProcessed);
-            *atomsToProcess = *atomsToProcess | (*bondsToProcess & (~atomsProcessed));
+//            *atomsToProcess |= *bondsToProcess & (~*atomsProcessed);
+            *atomsToProcess = *atomsToProcess | (*bondsToProcess & (~*atomsProcessed));
             memmove(bondsToProcess, bondsToProcess + 1, sizeof(unsigned int) * b);
             *numBonds = *numBonds - 1;
-            printf("och\n");
         }
         else ++bondsToProcess;
     }
