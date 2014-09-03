@@ -139,8 +139,9 @@ int adaptiveCommonNeighbourAnalysis(int NVisibleIn, int* visibleAtoms, int posDi
     	scalars[i] = (double) atomStructure;
     	
     	/* debugging */
-    	printf("DEBUG: only doing 1st atom for now...\n");
-    	break;
+//    	printf("structure[%d] = %d (FCC = %d; BCC = %d)\n", i, atomStructure, ATOM_STRUCTURE_FCC, ATOM_STRUCTURE_BCC);
+//    	printf("DEBUG: only doing 1st atom for now...\n");
+//    	break;
     }
     
     
@@ -167,6 +168,7 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 {
 	int i, j, nn, ok, visInd1, visInd2;
 	double localScaling, localCutoff;
+	double localScalingSum;
 	
 	
 	/* check we have the minimum number of neighbours */
@@ -204,9 +206,9 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 	
 	if (ok)
 	{
-		int n421 = 0;
-		int n422 = 0;
-		int n555 = 0;
+		int n421;
+		int n422;
+		int n555;
 		unsigned int neighbourArray[MAX_REQUIRED_NEBS] = {0};
 		
 		/* determine bonding between neighbours, based on local cutoff */
@@ -221,6 +223,9 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 			}
 		}
 		
+		n421 = 0;
+		n422 = 0;
+		n555 = 0;
 		for (i = 0; i < nn; i++)
 		{
 		    int numCommonNeighbours;
@@ -230,23 +235,17 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 		    unsigned int neighbourBonds[MAX_REQUIRED_NEBS*MAX_REQUIRED_NEBS] = {0};
 		    
 		    /* number of common neighbours */
-		    printf("Finding common nebs...\n");
 			numCommonNeighbours = findCommonNeighbours(neighbourArray, i, &commonNeighbours);
-			printf("  %d: num common nebs = %d\n", i, numCommonNeighbours);
 			if (numCommonNeighbours != 4 && numCommonNeighbours != 5)
 				break;
 			
 			/* number of bonds among common neighbours */
-			printf("Finding bonds among common nebs...\n");
 			numNeighbourBonds = findNeighbourBonds(neighbourArray, commonNeighbours, nn, neighbourBonds);
-			printf("  %d: num neighbour bonds = %d\n", i, numNeighbourBonds);
 			if (numNeighbourBonds != 2 && numNeighbourBonds != 5)
 			    break;
 			
 			/* number of bonds in the longest continuous chain */
-			printf("Finding longests chain of common neighbour bonds...\n");
 			maxChainLength = calcMaxChainLength(neighbourBonds, numNeighbourBonds);
-			printf("  %d: max chain length = %d\n", i, maxChainLength);
 			if (numCommonNeighbours == 4 && numNeighbourBonds == 2)
 			{
 			    if (maxChainLength == 1) n421++;
@@ -263,9 +262,100 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 	
 /* next we test for BCC (8 1NN + 6 2NN) */
 	
-	
-	
-	
+	/* number of neighbours to test for */
+    nn = 14;
+    
+    /* check enough nebs */
+    if (nebList[mainIndex].neighbourCount < nn)
+        return ATOM_STRUCTURE_DISORDERED;
+    
+    /* compute local cutoff (formula from paper) */
+    localScaling = 0.0;
+    for (i = 0; i < 8; i++)
+    {
+        localScaling += nebList[mainIndex].neighbour[i].separation;
+    }
+    localScaling /= 8.0;
+    
+    localScalingSum = 0.0;
+    for (i = 8; i < 14; i++)
+    {
+        localScalingSum += nebList[mainIndex].neighbour[i].separation;
+    }
+    localScalingSum /= 6.0;
+    
+    localCutoff = (1.0 + M_SQRT2) / 4.0 * (2.0 / M_SQRT3 * localScaling + localScalingSum); // divide by 4 not 2 as in the paper
+    
+    /* compute local cutoff */
+//    localScaling = 0.0;
+//    for (i = 0; i < 8; i++)
+//    {
+//        localScaling += nebList[mainIndex].neighbour[i].separation / sqrt(3.0/4.0);
+//    }
+//    for (i = 8; i < 14; i++)
+//    {
+//        localScaling += nebList[mainIndex].neighbour[i].separation;
+//    }
+//    localScaling = localScaling / nn;
+//    localCutoff = (1.0 + M_SQRT2) / 2.0 * localScaling;
+    
+    /* at this point I feel like we should check that the 12 NN are within localCutoff ????? */
+    ok = 1;
+    for (i = 0; i < nn; i++)
+    {
+        if (nebList[mainIndex].neighbour[i].separation > localCutoff)
+        {
+            ok = 0;
+            break;
+        }
+    }
+    
+    if (ok)
+    {
+        int n444;
+        int n666;
+        unsigned int neighbourArray[MAX_REQUIRED_NEBS] = {0};
+        
+        /* determine bonding between neighbours, based on local cutoff */
+        for (i = 0; i < nn; i++)
+        {
+            visInd1 = nebList[mainIndex].neighbour[i].index;
+            setNeighbourBond(neighbourArray, i, i, 0);
+            for (j = i + 1; j < nn; j++)
+            {
+                visInd2 = nebList[mainIndex].neighbour[j].index;
+                setNeighbourBond(neighbourArray, i, j, checkForNeighbourBond(visInd1, visInd2, nebList, localCutoff));
+            }
+        }
+        
+        n444 = 0;
+        n666 = 0;
+        for (i = 0; i < nn; i++)
+        {
+            int numCommonNeighbours;
+            int numNeighbourBonds;
+            int maxChainLength;
+            unsigned int commonNeighbours;
+            unsigned int neighbourBonds[MAX_REQUIRED_NEBS*MAX_REQUIRED_NEBS] = {0};
+            
+            /* number of common neighbours */
+            numCommonNeighbours = findCommonNeighbours(neighbourArray, i, &commonNeighbours);
+            if (numCommonNeighbours != 4 && numCommonNeighbours != 6)
+                break;
+            
+            /* number of bonds among common neighbours */
+            numNeighbourBonds = findNeighbourBonds(neighbourArray, commonNeighbours, nn, neighbourBonds);
+            if (numNeighbourBonds != 4 && numNeighbourBonds != 6)
+                break;
+            
+            /* number of bonds in the longest continuous chain */
+            maxChainLength = calcMaxChainLength(neighbourBonds, numNeighbourBonds);
+            if (numCommonNeighbours == 4 && numNeighbourBonds == 4 && maxChainLength == 4) n444++;
+            else if (numCommonNeighbours == 6 && numNeighbourBonds == 6 && maxChainLength == 6) n666++;
+            else break;
+        }
+        if (n666 == 8 && n444 == 6) return ATOM_STRUCTURE_BCC;
+    }
 	
 	return ATOM_STRUCTURE_DISORDERED;
 }
