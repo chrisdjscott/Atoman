@@ -264,7 +264,7 @@ class Filterer(object):
                 self.atomIndexFilter(filterSettings)
             
             elif filterName == "ACNA":
-                self.adaptiveCommonNeighbourAnalysis(filterSettings)
+                self.acnaFilter(filterSettings)
             
             # write to log
             if self.parent.defectFilterSelected:
@@ -493,7 +493,7 @@ class Filterer(object):
         self.scalarsDict["Q4"] = scalarsQ4
         self.scalarsDict["Q6"] = scalarsQ6
     
-    def adaptiveCommonNeighbourAnalysis(self, settings):
+    def acnaFilter(self, settings):
         """
         Adaptive common neighbour analysis
         
