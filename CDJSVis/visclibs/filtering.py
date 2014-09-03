@@ -218,24 +218,6 @@ def voronoiNeighboursFilter(visibleAtoms, numNebsArray, minNebs, maxNebs, scalar
 
 ################################################################################
 
-# Q4 filter prototype
-_lib.Q4Filter.restype = c_int
-_lib.Q4Filter.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_double, c_double, c_double, c_int, POINTER(c_double), 
-                          POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int), c_int, POINTER(c_double), c_int]
-
-# Q4 filter
-def Q4Filter(visibleAtoms, pos, minQ4, maxQ4, maxBondDistance, scalars, minPos, maxPos, cellDims, PBC, NScalars, fullScalars, 
-             filteringEnabled):
-    """
-    Q4 filter.
-    
-    """
-    return _lib.Q4Filter(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), minQ4, maxQ4, maxBondDistance, 
-                         len(scalars), CPtrToDouble(scalars), CPtrToDouble(minPos), CPtrToDouble(maxPos), CPtrToDouble(cellDims), 
-                         CPtrToInt(PBC), NScalars, CPtrToDouble(fullScalars), int(filteringEnabled))
-
-################################################################################
-
 # calculate_drift_vector prototype
 _lib.calculate_drift_vector.restype = c_int
 _lib.calculate_drift_vector.argtypes = [c_int, POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int), POINTER(c_double)]
