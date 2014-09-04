@@ -1368,6 +1368,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.availableText.addItem("Energy barrier")
         self.availableText.addItem("Defect count")
         self.selectedText.addItem("Defect specie count")
+        self.selectedText.addItem("ACNA structure count")
         
         # add settings
         self.textSettings = {}

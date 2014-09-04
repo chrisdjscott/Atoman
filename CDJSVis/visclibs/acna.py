@@ -41,14 +41,15 @@ elif osname == "Linux":
 # adaptiveCommonNeighbourAnalysis filter prototype
 _lib.adaptiveCommonNeighbourAnalysis.restype = c_int
 _lib.adaptiveCommonNeighbourAnalysis.argtypes = [c_int, POINTER(c_int), c_int, POINTER(c_double), c_int, POINTER(c_double), 
-                                                 POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int), c_int, POINTER(c_double),  c_double]
+                                                 POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int), c_int, 
+                                                 POINTER(c_double),  c_double, POINTER(c_int)]
 
 # adaptiveCommonNeighbourAnalysis filter
-def adaptiveCommonNeighbourAnalysis(visibleAtoms, pos, scalars, minPos, maxPos, cellDims, PBC, NScalars, fullScalars, maxBondDistance):
+def adaptiveCommonNeighbourAnalysis(visibleAtoms, pos, scalars, minPos, maxPos, cellDims, PBC, NScalars, fullScalars, maxBondDistance, counters):
     """
     adaptiveCommonNeighbourAnalysis filter.
     
     """
     return _lib.adaptiveCommonNeighbourAnalysis(len(visibleAtoms), CPtrToInt(visibleAtoms), len(pos), CPtrToDouble(pos), 
                                                 len(scalars), CPtrToDouble(scalars), CPtrToDouble(minPos), CPtrToDouble(maxPos), CPtrToDouble(cellDims), 
-                                                CPtrToInt(PBC), NScalars, CPtrToDouble(fullScalars), maxBondDistance)
+                                                CPtrToInt(PBC), NScalars, CPtrToDouble(fullScalars), maxBondDistance, CPtrToInt(counters))

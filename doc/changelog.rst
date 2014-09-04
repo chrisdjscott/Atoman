@@ -6,6 +6,7 @@ Changelog
 
 * Add option to draw displacement vector showing where displaced atoms have moved from
 * Use spherical harmonics function from GSL library in bond order filter
+* Add adaptive common neighbour analysis
 
 **v140605**
 

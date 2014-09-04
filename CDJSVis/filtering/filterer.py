@@ -80,6 +80,17 @@ class Filterer(object):
         self.scalarBar_black_bg = None
         self.povrayAtomsWritten = False
         self.clusterList = []
+        
+        self.structureCounterDicts = {}
+        self.knownStructures = [
+            "disorderd",
+            "FCC",
+            "HCP",
+            "BCC",
+            "icosahedral",
+            "sigma11_tilt1",
+            "sigma11_tilt2",
+        ]
     
     def removeActors(self):
         """
@@ -113,6 +124,7 @@ class Filterer(object):
         
         self.povrayAtomsWritten = False
         self.clusterList = []
+        self.structureCounterDicts = {}
     
     def hideActors(self):
         """
@@ -506,8 +518,12 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # counter array
+        counters = np.zeros(7, np.int32)
+        
         NVisible = acna.adaptiveCommonNeighbourAnalysis(self.visibleAtoms, inputState.pos, scalars, inputState.minPos, inputState.maxPos, 
-                                                        inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.maxBondDistance)
+                                                        inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.maxBondDistance,
+                                                        counters)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -518,6 +534,13 @@ class Filterer(object):
         # store scalars
         scalars.resize(NVisible, refcheck=False)
         self.scalarsDict["ACNA"] = scalars
+        
+        # store counters
+        d = {}
+        for i, structure in enumerate(self.knownStructures):
+            if counters[i] > 0:
+                d[structure] = counters[i]
+        self.structureCounterDicts["ACNA structure count"] = d
     
     def calculateVoronoi(self):
         """

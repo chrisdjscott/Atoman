@@ -2,7 +2,7 @@
 #ifndef ACNA_SET
 #define ACNA_SET
 
-int adaptiveCommonNeighbourAnalysis(int, int*, int, double*, int, double*, double*, double*, double*, int*, int, double*, double);
+int adaptiveCommonNeighbourAnalysis(int, int*, int, double*, int, double*, double*, double*, double*, int*, int, double*, double, int*);
 
 #define MAX_REQUIRED_NEBS 14
 #define MIN_REQUIRED_NEBS 12

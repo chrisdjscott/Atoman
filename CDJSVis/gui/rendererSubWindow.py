@@ -772,6 +772,16 @@ class RendererWindow(QtGui.QWidget):
             for i, cnt in enumerate(visSpecCount):
                 self.onScreenInfo["Visible specie count"].append("%d %s" % (cnt, specieList[i]))
         
+        # structure counters
+        for filterList in filterLists:
+            for key, structureCounterDict in filterList.filterer.structureCounterDicts.iteritems():
+                self.logger.debug("Adding on-screen info for structure counter: '%s'", key)
+                self.onScreenInfo[key] = []
+                
+                for structure in sorted(structureCounterDict.keys()):
+                    self.logger.debug("  %d %s" % (structureCounterDict[structure], structure))
+                    self.onScreenInfo[key].append("%d %s" % (structureCounterDict[structure], structure))
+        
         # defects counts
         defectFilterActive = False
         NVac = 0
@@ -940,6 +950,28 @@ class RendererWindow(QtGui.QWidget):
                         
                         # add actor
                         actor = vtkRenderWindowText(lineToAdd, 20, xpos, ypos, r, g, b)
+                        
+                        if settings.textPosition == "Top left":
+                            topyLeft -= 20
+                        else:
+                            topyRight -= 20
+                        
+                        self.onScreenInfoActors.AddItem(actor)
+                
+                elif type(line) is list:
+                    for subl in line:
+                        r = g = b = 0
+                        r, g, b = self.checkTextRGB(r, g, b)
+                        
+                        if settings.textPosition == "Top left":
+                            xpos = topxLeft
+                            ypos = topyLeft
+                        else:
+                            xpos = topxRight
+                            ypos = topyRight
+                        
+                        # add actor
+                        actor = vtkRenderWindowText(subl, 20, xpos, ypos, r, g, b)
                         
                         if settings.textPosition == "Top left":
                             topyLeft -= 20

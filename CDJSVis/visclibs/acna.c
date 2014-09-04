@@ -44,7 +44,7 @@ int compare_two_nebs(const void * a, const void * b)
  *******************************************************************************/
 int adaptiveCommonNeighbourAnalysis(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, int scalarsDim, double *scalars, 
                                     double *minPos, double *maxPos, double *cellDims, int *PBC, int NScalars, double *fullScalars,
-                                    double maxBondDistance)
+                                    double maxBondDistance, int *counters)
 {
     int i, NVisible, index;
     int atomStructure;
@@ -100,6 +100,7 @@ int adaptiveCommonNeighbourAnalysis(int NVisibleIn, int* visibleAtoms, int posDi
     {
     	atomStructure = analyseAtom(i, nebList);
     	scalars[i] = (double) atomStructure;
+    	counters[atomStructure]++;
     }
     
 /* there should be option to only show atoms of specific structure type */
