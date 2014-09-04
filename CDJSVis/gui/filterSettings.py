@@ -12,7 +12,9 @@ Dialogs must be named like: FilterNameSettingsDialog
 """
 import sys
 import logging
+import functools
 
+import numpy as np
 from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
@@ -2441,6 +2443,7 @@ class AcnaSettingsDialog(GenericSettingsDialog):
         self.filterType = "ACNA"
         
         self.maxBondDistance = 5.0
+        self.filteringEnabled = False
         
         label = QtGui.QLabel("Max bond distance:")
         self.maxBondDistanceSpin = QtGui.QDoubleSpinBox()
@@ -2450,11 +2453,43 @@ class AcnaSettingsDialog(GenericSettingsDialog):
         self.maxBondDistanceSpin.setValue(self.maxBondDistance)
         self.maxBondDistanceSpin.valueChanged[float].connect(self.setMaxBondDistance)
         
+        
         row = self.newRow()
         row.addWidget(label)
         row.addWidget(self.maxBondDistanceSpin)
         
+        self.newRow()
+        
+        # structures group box
+        grpLayout = self.addFilteringGroupBox(title="Filter by structure", slot=self.filteringToggled, checked=False)
+        
+        filterer = self.parent.filterer
+        for i, structure in enumerate(filterer.knownStructures):
+            cb = QtGui.QCheckBox(structure)
+            cb.setChecked(True)
+            cb.stateChanged.connect(functools.partial(self.visToggled, i))
+            grpLayout.addWidget(cb)
+        
+        self.structureVisibility = np.ones(len(filterer.knownStructures), dtype=np.int32)
+        
         self.addLinkToHelpPage("usage/analysis/filters/acna.html")
+    
+    def visToggled(self, index, checkState):
+        """
+        Visibility toggled for one structure type
+        
+        """
+        if checkState == QtCore.Qt.Unchecked:
+            self.structureVisibility[index] = 0
+        else:
+            self.structureVisibility[index] = 1
+    
+    def filteringToggled(self, arg):
+        """
+        Filtering toggled
+        
+        """
+        self.filteringEnabled = arg
     
     def setMaxBondDistance(self, val):
         """

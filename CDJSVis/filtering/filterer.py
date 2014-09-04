@@ -523,7 +523,7 @@ class Filterer(object):
         
         NVisible = acna.adaptiveCommonNeighbourAnalysis(self.visibleAtoms, inputState.pos, scalars, inputState.minPos, inputState.maxPos, 
                                                         inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.maxBondDistance,
-                                                        counters)
+                                                        counters, settings.filteringEnabled, settings.structureVisibility)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
