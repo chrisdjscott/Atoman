@@ -8,78 +8,33 @@
 #include <stdlib.h>
 #include <math.h>
 #include <gsl/gsl_math.h>
+#include <gsl/gsl_sf_legendre.h>
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"
 #include "bond_order.h"
 
-double plgndr(int, int, double);
+//double plgndr(int, int, double);
 void Ylm(int, int, double, double, double*, double*);
 void convertToSphericalCoordinates(double, double, double, double, double*, double*);
 void complex_qlm(int, int*, struct NeighbourList*, double*, double*, int*, struct AtomStructureResults*);
 void calculate_Q(int, struct AtomStructureResults*);
-const double factorials[] = {1.0, 1.0, 2.0, 6.0, 24.0, 120.0, 720.0, 5040.0, 40320.0, 362880.0, 3628800, 39916800.0, 479001600.0};
 
-
-/*******************************************************************************
- ** plgndr from Numerical Recipes in C, page 254
- *******************************************************************************/
-double plgndr(int l, int m, double x)
-{
-    double fact,pll,pmm,pmmp1,somx2;
-    int i,ll;
-    
-    if (m < 0 || m > l || fabs(x) > 1.0)
-    {
-        printf("Bad arguments in routine plgndr\n");
-        exit(35);
-    }
-    
-    pmm=1.0;
-    if (m > 0)
-    {
-        somx2=sqrt((1.0-x)*(1.0+x));
-        fact=1.0;
-        for (i=1;i<=m;i++)
-        {
-            pmm *= -fact*somx2;
-            fact += 2.0;
-        }
-    }
-    if (l == m)
-        return pmm;
-    else
-    {
-        pmmp1=x*(2*m+1)*pmm;
-        if (l == (m+1))
-            return pmmp1;
-        else
-        {
-            for (ll=m+2;ll<=l;ll++)
-            {
-                pll=(x*(2*ll-1)*pmmp1-(ll+m-1)*pmm)/(ll-m);
-                pmm=pmmp1;
-                pmmp1=pll;
-            }
-            return pll;
-        }
-    }
-}
 
 /*******************************************************************************
  ** Compute Y_lm (spherical harmonics)
  *******************************************************************************/
 void Ylm(int l, int m, double theta, double phi, double *realYlm, double *imgYlm)
 {
-    double factor, P_lm;
+    double factor, arg;
     
-    P_lm = plgndr(l, m, cos(theta));
     
-    factor = ((2.0 * (double) l + 1.0) * factorials[l-m]) / (4.0 * M_PI * factorials[l+m]);
-    factor = sqrt(factor);
+    /* call GSL spherical P_lm function */
+    factor = gsl_sf_legendre_sphPlm(l, m, cos(theta));
     
-    *realYlm = factor * P_lm * cos((double) m * phi);
-    *imgYlm = factor * P_lm * sin((double) m * phi);
+    arg = (double) m * phi;
+    *realYlm = factor * cos(arg);
+    *imgYlm = factor * sin(arg);
 }
 
 /*******************************************************************************
