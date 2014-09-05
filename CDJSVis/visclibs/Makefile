@@ -24,7 +24,7 @@ ifeq (Linux, $(shell uname -s))
     CCLINKFLAGS = -shared
 	CCFLAGS = -c -O3 -fPIC -Wall
 	CC = gcc
-	LIBS = -lgsl
+	LIBS = -lgsl -lgslcblas
 	
 	# different includes depending on OS
 	# default, eg Ubuntu
