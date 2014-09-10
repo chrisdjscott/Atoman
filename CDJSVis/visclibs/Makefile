@@ -14,8 +14,8 @@ ifeq (Darwin, $(shell uname -s))
     CCLINKFLAGS = -bundle
 	CCFLAGS = -c -O3 -fPIC -Wall
 	CC = gcc
-    INCLUDES = 
-    LIBS = -L/opt/local/lib -lgsl
+    INCLUDES = -I/opt/local/include
+    LIBS = -L/opt/local/lib -lgsl -lgslcblas
 endif
     
 # linux - ubuntu or hydra
