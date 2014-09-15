@@ -4,18 +4,19 @@
  ** Copyright Chris Scott 2014
  *******************************************************************************/
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
+#include <numpy/arrayobject.h>
 #include <math.h>
 #include <gsl/gsl_math.h>
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"
+#include "array_utils.h"
 #include "acna.h"
 
 
 /* function prototypes */
+static PyObject* adaptiveCommonNeighbourAnalysis(PyObject*, PyObject*);
 static int compare_two_nebs(const void *, const void *);
 static int analyseAtom(int, struct NeighbourList2 *);
 static int checkForNeighbourBond(int, int, struct NeighbourList2 *, double);
@@ -42,16 +43,66 @@ static int compare_two_nebs(const void * a, const void * b)
 /*******************************************************************************
  ** perform adaptive common neighbour analysis
  *******************************************************************************/
-int adaptiveCommonNeighbourAnalysis(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, int scalarsDim, double *scalars, 
-                                    double *minPos, double *maxPos, double *cellDims, int *PBC, int NScalars, double *fullScalars,
-                                    double maxBondDistance, int *counters, int filteringEnabled, int *structureVisibility)
+static PyObject*
+adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
 {
+    int NVisibleIn, *visibleAtoms, posDim, scalarsDim, *PBC, NScalars, *counters, filteringEnabled, *structureVisibility;
+    double *pos, *scalars, *minPos, *maxPos, *cellDims, *fullScalars, maxBondDistance;
+    PyArrayObject *posIn, *visibleAtomsIn, *PBCIn, *countersIn, *structureVisibilityIn, *scalarsIn, minPosIn, maxPosIn, cellDimsIn, fullScalarsIn; 
+    
     int i, NVisible, index;
     int atomStructure;
     double *visiblePos, approxBoxWidth, maxSep2;
     struct Boxes *boxes;
     struct NeighbourList2 *nebList;
     
+/* parse and check arguments from Python */
+    
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!dO!dO!dO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn, 
+            &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, 
+            &PyArray_Type, &fullScalarsIn, &maxBondDistance, &PyArray_Type, &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn))
+        return NULL;
+    
+    if (not_intVector(visibleAtomsIn))
+        return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_doubleVector(posIn))
+        return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(scalarsIn))
+        return NULL;
+    scalars = pyvector_to_Cptr_double(scalarsIn);
+    
+    if (not_doubleVector(minPosIn))
+        return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_doubleVector(maxPosIn))
+        return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_doubleVector(cellDimsIn))
+        return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_intVector(PBCIn))
+        return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
+    
+    if (not_doubleVector(fullScalarsIn))
+        return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_intVector(countersIn))
+        return NULL;
+    counters = pyvector_to_Cptr_int(countersIn);
+    
+    if (not_intVector(structureVisibilityIn))
+        return NULL;
+    structureVisibility = pyvector_to_Cptr_int(structureVisibilityIn);
     
 /* first we construct neighbour list for each atom, containing indexes and separations */
     
