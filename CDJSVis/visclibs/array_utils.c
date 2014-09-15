@@ -1,6 +1,7 @@
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
+#include "array_utils.h"
 
 
 static double **ptrvector_double(long);
@@ -8,18 +9,12 @@ static double **ptrvector_double(long);
 
 double *pyvector_to_Cptr_double(PyArrayObject *vectin)
 {
-    int n;
-    
-    n = vectin->dimensions[0];
     return (double *) vectin->data;
 }
 
 
 int *pyvector_to_Cptr_int(PyArrayObject *vectin)
 {
-    int n;
-    
-    n = vectin->dimensions[0];
     return (int *) vectin->data;
 }
 
@@ -70,7 +65,7 @@ double **pymatrix_to_Cptrs_double(PyArrayObject *arrayin)
     
     n = arrayin->dimensions[0];
     m = arrayin->dimensions[1];
-    c = ptrvector(n);
+    c = ptrvector_double(n);
     a = (double *) arrayin->data;
     for (i = 0; i < n; i++)
         c[i] = a + i * m;

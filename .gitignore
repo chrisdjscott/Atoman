@@ -10,3 +10,4 @@
 *~
 *-exported.IN
 build/
+*.log

@@ -27,6 +27,60 @@ static int calcMaxChainLength(unsigned int *, int);
 static int getAdjacentBonds(unsigned int, unsigned int *, int *, unsigned int *, unsigned int *);
 
 
+
+
+static struct PyMethodDef methods[] = {
+    {"adaptiveCommonNeighbourAnalysis", adaptiveCommonNeighbourAnalysis, METH_VARARGS, "Run Adaptive Common Neighbour Analysis"},
+    {NULL, NULL, 0, NULL}
+};
+
+PyMODINIT_FUNC
+initacna(void)
+{
+    (void)Py_InitModule("acna", methods);
+    import_array();
+}
+
+
+////////////////////////////////////////////////
+
+//static double *pyvector_to_Cptr_double(PyArrayObject *vectin)
+//{
+//    return (double *) vectin->data;
+//}
+//
+//
+//static int *pyvector_to_Cptr_int(PyArrayObject *vectin)
+//{
+//    return (int *) vectin->data;
+//}
+//
+//
+//static int not_doubleVector(PyArrayObject *vectin)
+//{
+//    if (vectin->descr->type_num != NPY_FLOAT64 || vectin->nd != 1)
+//    {
+//        PyErr_SetString(PyExc_ValueError, "In not_doubleVector: vector must be of type float and 1 dimensional");
+//        return 1;
+//    }
+//    
+//    return 0;
+//}
+//
+//
+//static int not_intVector(PyArrayObject *vectin)
+//{
+//    if (vectin->descr->type_num != NPY_INT32 || vectin->nd != 1)
+//    {
+//        PyErr_SetString(PyExc_ValueError, "In not_intVector: vector must be of type int and 1 dimensional");
+//        return 1;
+//    }
+//    
+//    return 0;
+//}
+
+//////////////////////////////////////
+
 /*******************************************************************************
  ** Function that compares two elements in a neighbour list
  *******************************************************************************/
@@ -46,9 +100,10 @@ static int compare_two_nebs(const void * a, const void * b)
 static PyObject*
 adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
 {
-    int NVisibleIn, *visibleAtoms, posDim, scalarsDim, *PBC, NScalars, *counters, filteringEnabled, *structureVisibility;
+    int NVisibleIn, *visibleAtoms, *PBC, NScalars, *counters, filteringEnabled, *structureVisibility;
     double *pos, *scalars, *minPos, *maxPos, *cellDims, *fullScalars, maxBondDistance;
-    PyArrayObject *posIn, *visibleAtomsIn, *PBCIn, *countersIn, *structureVisibilityIn, *scalarsIn, minPosIn, maxPosIn, cellDimsIn, fullScalarsIn; 
+    PyArrayObject *posIn, *visibleAtomsIn, *PBCIn, *countersIn, *structureVisibilityIn;
+    PyArrayObject *scalarsIn, minPosIn, maxPosIn, cellDimsIn, fullScalarsIn; 
     
     int i, NVisible, index;
     int atomStructure;
@@ -63,45 +118,35 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
             &PyArray_Type, &fullScalarsIn, &maxBondDistance, &PyArray_Type, &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn))
         return NULL;
     
-    if (not_intVector(visibleAtomsIn))
-        return NULL;
+    if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
     NVisibleIn = (int) visibleAtomsIn->dimensions[0];
     
-    if (not_doubleVector(posIn))
-        return NULL;
+    if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
     
-    if (not_doubleVector(scalarsIn))
-        return NULL;
+    if (not_doubleVector(scalarsIn)) return NULL;
     scalars = pyvector_to_Cptr_double(scalarsIn);
     
-    if (not_doubleVector(minPosIn))
-        return NULL;
+    if (not_doubleVector(minPosIn)) return NULL;
     minPos = pyvector_to_Cptr_double(minPosIn);
     
-    if (not_doubleVector(maxPosIn))
-        return NULL;
+    if (not_doubleVector(maxPosIn)) return NULL;
     maxPos = pyvector_to_Cptr_double(maxPosIn);
     
-    if (not_doubleVector(cellDimsIn))
-        return NULL;
+    if (not_doubleVector(cellDimsIn)) return NULL;
     cellDims = pyvector_to_Cptr_double(cellDimsIn);
     
-    if (not_intVector(PBCIn))
-        return NULL;
+    if (not_intVector(PBCIn)) return NULL;
     PBC = pyvector_to_Cptr_int(PBCIn);
     
-    if (not_doubleVector(fullScalarsIn))
-        return NULL;
+    if (not_doubleVector(fullScalarsIn)) return NULL;
     fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
     
-    if (not_intVector(countersIn))
-        return NULL;
+    if (not_intVector(countersIn)) return NULL;
     counters = pyvector_to_Cptr_int(countersIn);
     
-    if (not_intVector(structureVisibilityIn))
-        return NULL;
+    if (not_intVector(structureVisibilityIn)) return NULL;
     structureVisibility = pyvector_to_Cptr_int(structureVisibilityIn);
     
 /* first we construct neighbour list for each atom, containing indexes and separations */
@@ -175,7 +220,7 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
     freeNeighbourList2(nebList, NVisibleIn);
     
-    return NVisible;
+    return Py_BuildValue("i", NVisible);
 }
 
 /*******************************************************************************
