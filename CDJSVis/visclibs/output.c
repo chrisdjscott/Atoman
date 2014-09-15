@@ -11,15 +11,15 @@
 #include "output.h"
 
 
-void addPOVRAYSphere(FILE *, double, double, double, double, double, double, double);
-void addPOVRAYCube(FILE *, double, double, double, double, double, double, double, double);
-void addPOVRAYCellFrame(FILE *, double, double, double, double, double, double, double, double, double);
+static void addPOVRAYSphere(FILE *, double, double, double, double, double, double, double);
+static void addPOVRAYCube(FILE *, double, double, double, double, double, double, double, double);
+static void addPOVRAYCellFrame(FILE *, double, double, double, double, double, double, double, double, double);
 
 
 /*******************************************************************************
  ** write sphere to pov-ray file
  *******************************************************************************/
-void addPOVRAYSphere(FILE *fp, double xpos, double ypos, double zpos, double radius, double R, double G, double B)
+static void addPOVRAYSphere(FILE *fp, double xpos, double ypos, double zpos, double radius, double R, double G, double B)
 {
     fprintf(fp, "sphere { <%lf,%lf,%lf>, %lf pigment { color rgb <%lf,%lf,%lf> } finish { ambient %f phong %f } }\n",
             xpos, ypos, zpos, radius, R, G, B, 0.25, 0.9);
@@ -29,7 +29,7 @@ void addPOVRAYSphere(FILE *fp, double xpos, double ypos, double zpos, double rad
 /*******************************************************************************
  ** write cube to pov-ray file
  *******************************************************************************/
-void addPOVRAYCube(FILE *fp, double xpos, double ypos, double zpos, double radius, double R, double G, double B, double transparency)
+static void addPOVRAYCube(FILE *fp, double xpos, double ypos, double zpos, double radius, double R, double G, double B, double transparency)
 {
     fprintf(fp, "box { <%lf,%lf,%lf>,<%lf,%lf,%lf> pigment { color rgbt <%lf,%lf,%lf,%lf> } finish {diffuse %lf ambient %lf phong %lf } }\n",
             xpos - radius, ypos - radius, zpos - radius, xpos + radius, ypos + radius, zpos + radius, R, G, B,
@@ -40,8 +40,8 @@ void addPOVRAYCube(FILE *fp, double xpos, double ypos, double zpos, double radiu
 /*******************************************************************************
  ** write cell frame to pov-ray file
  *******************************************************************************/
-void addPOVRAYCellFrame(FILE *fp, double xposa, double yposa, double zposa, double xposb, double yposb, double zposb, 
-                        double R, double G, double B)
+static void addPOVRAYCellFrame(FILE *fp, double xposa, double yposa, double zposa, double xposb, double yposb, double zposb, 
+                               double R, double G, double B)
 {
     fprintf( fp, "#declare R = 0.1;\n" );
     fprintf( fp, "#declare myObject = union {\n" );

@@ -16,20 +16,20 @@
 
 
 /* function prototypes */
-int compare_two_nebs(const void *, const void *);
-int analyseAtom(int, struct NeighbourList2 *);
-int checkForNeighbourBond(int, int, struct NeighbourList2 *, double);
-void setNeighbourBond(unsigned int *, int, int, int);
-int findCommonNeighbours(unsigned int *, int, unsigned int *);
-int findNeighbourBonds(unsigned int *, unsigned int, int, unsigned int *);
-int calcMaxChainLength(unsigned int *, int);
-int getAdjacentBonds(unsigned int, unsigned int *, int *, unsigned int *, unsigned int *);
+static int compare_two_nebs(const void *, const void *);
+static int analyseAtom(int, struct NeighbourList2 *);
+static int checkForNeighbourBond(int, int, struct NeighbourList2 *, double);
+static void setNeighbourBond(unsigned int *, int, int, int);
+static int findCommonNeighbours(unsigned int *, int, unsigned int *);
+static int findNeighbourBonds(unsigned int *, unsigned int, int, unsigned int *);
+static int calcMaxChainLength(unsigned int *, int);
+static int getAdjacentBonds(unsigned int, unsigned int *, int *, unsigned int *, unsigned int *);
 
 
 /*******************************************************************************
  ** Function that compares two elements in a neighbour list
  *******************************************************************************/
-int compare_two_nebs(const void * a, const void * b)
+static int compare_two_nebs(const void * a, const void * b)
 {
     const struct Neighbour *n1 = a;
     const struct Neighbour *n2 = b;
@@ -130,7 +130,7 @@ int adaptiveCommonNeighbourAnalysis(int NVisibleIn, int* visibleAtoms, int posDi
 /*******************************************************************************
  ** classify atom
  *******************************************************************************/
-int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
+static int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 {
 	int i, j, nn, ok, visInd1, visInd2;
 	double localScaling, localCutoff;
@@ -317,7 +317,7 @@ int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
  ** find all chains of bonds between common neighbours and determine the length
  ** of the longest continuous chain
  *******************************************************************************/
-int calcMaxChainLength(unsigned int *neighbourBonds, int numBonds)
+static int calcMaxChainLength(unsigned int *neighbourBonds, int numBonds)
 {
     int maxChainLength;
     
@@ -374,7 +374,7 @@ int calcMaxChainLength(unsigned int *neighbourBonds, int numBonds)
 /*******************************************************************************
  ** find all chains of bonds
  *******************************************************************************/
-int getAdjacentBonds(unsigned int atom, unsigned int *bondsToProcess, int *numBonds, unsigned int *atomsToProcess, unsigned int *atomsProcessed)
+static int getAdjacentBonds(unsigned int atom, unsigned int *bondsToProcess, int *numBonds, unsigned int *atomsToProcess, unsigned int *atomsProcessed)
 {
     int adjacentBonds, b;
     
@@ -400,7 +400,7 @@ int getAdjacentBonds(unsigned int atom, unsigned int *bondsToProcess, int *numBo
 /*******************************************************************************
  ** find bonds between common nearest neighbours
  *******************************************************************************/
-int findNeighbourBonds(unsigned int *neighbourArray, unsigned int commonNeighbours, int numNeighbours, unsigned int *neighbourBonds)
+static int findNeighbourBonds(unsigned int *neighbourArray, unsigned int commonNeighbours, int numNeighbours, unsigned int *neighbourBonds)
 {
     int ni1, n;
     int numBonds;
@@ -444,7 +444,7 @@ int findNeighbourBonds(unsigned int *neighbourArray, unsigned int commonNeighbou
 /*******************************************************************************
  ** find common neighbours
  *******************************************************************************/
-int findCommonNeighbours(unsigned int *neighbourArray, int neighbourIndex, unsigned int *commonNeighbours)
+static int findCommonNeighbours(unsigned int *neighbourArray, int neighbourIndex, unsigned int *commonNeighbours)
 {
 #ifdef __GNUC__
 	*commonNeighbours = neighbourArray[neighbourIndex];
@@ -466,7 +466,7 @@ int findCommonNeighbours(unsigned int *neighbourArray, int neighbourIndex, unsig
 /*******************************************************************************
  ** check if two neighbours are bonded
  *******************************************************************************/
-int checkForNeighbourBond(int visInd1, int visInd2, struct NeighbourList2 *nebList, double cutoff)
+static int checkForNeighbourBond(int visInd1, int visInd2, struct NeighbourList2 *nebList, double cutoff)
 {
 	int i, bonded;
 	
@@ -487,7 +487,7 @@ int checkForNeighbourBond(int visInd1, int visInd2, struct NeighbourList2 *nebLi
 /*******************************************************************************
  ** set neighbour bond
  *******************************************************************************/
-void setNeighbourBond(unsigned int *neighbourArray, int index1, int index2, int bonded)
+static void setNeighbourBond(unsigned int *neighbourArray, int index1, int index2, int bonded)
 {
 	if (bonded)
 	{

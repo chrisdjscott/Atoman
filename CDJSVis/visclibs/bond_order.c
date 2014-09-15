@@ -15,16 +15,16 @@
 #include "bond_order.h"
 
 //double plgndr(int, int, double);
-void Ylm(int, int, double, double, double*, double*);
-void convertToSphericalCoordinates(double, double, double, double, double*, double*);
-void complex_qlm(int, int*, struct NeighbourList*, double*, double*, int*, struct AtomStructureResults*);
-void calculate_Q(int, struct AtomStructureResults*);
+static void Ylm(int, int, double, double, double*, double*);
+static void convertToSphericalCoordinates(double, double, double, double, double*, double*);
+static void complex_qlm(int, int*, struct NeighbourList*, double*, double*, int*, struct AtomStructureResults*);
+static void calculate_Q(int, struct AtomStructureResults*);
 
 
 /*******************************************************************************
  ** Compute Y_lm (spherical harmonics)
  *******************************************************************************/
-void Ylm(int l, int m, double theta, double phi, double *realYlm, double *imgYlm)
+static void Ylm(int l, int m, double theta, double phi, double *realYlm, double *imgYlm)
 {
     double factor, arg;
     
@@ -40,7 +40,7 @@ void Ylm(int l, int m, double theta, double phi, double *realYlm, double *imgYlm
 /*******************************************************************************
  ** Convert to spherical coordinates
  *******************************************************************************/
-void convertToSphericalCoordinates(double xdiff, double ydiff, double zdiff, double sep, double *phi, double *theta)
+static void convertToSphericalCoordinates(double xdiff, double ydiff, double zdiff, double sep, double *phi, double *theta)
 {
     *theta = acos(zdiff / sep);
     *phi = atan2(ydiff, xdiff);
@@ -49,7 +49,7 @@ void convertToSphericalCoordinates(double xdiff, double ydiff, double zdiff, dou
 /*******************************************************************************
  ** Compute complex q_lm (sum over eq. 3 from Stutowski paper), for each atom
  *******************************************************************************/
-void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList *nebList, double *pos, double *cellDims, int *PBC, struct AtomStructureResults *results)
+static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList *nebList, double *pos, double *cellDims, int *PBC, struct AtomStructureResults *results)
 {
     int i, index, index2, visIndex2, m, visIndex;
     double realYlm, complexYlm;
@@ -155,7 +155,7 @@ void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList *nebLis
 /*******************************************************************************
  ** calculate Q4/6 from complex q_lm's
  *******************************************************************************/
-void calculate_Q(int NVisibleIn, struct AtomStructureResults *results)
+static void calculate_Q(int NVisibleIn, struct AtomStructureResults *results)
 {
     int i, m;
     double sumQ6, sumQ4;

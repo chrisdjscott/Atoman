@@ -12,13 +12,13 @@
 #include "input.h"
 
 
-int specieIndex(char*, int, char*);
+static int specieIndex(char*, int, char*);
 
 
 /*******************************************************************************
  * Update specie list and counter
  *******************************************************************************/
-int specieIndex(char* sym, int NSpecies, char* specieList)
+static int specieIndex(char* sym, int NSpecies, char* specieList)
 {
     int index, j, comp;
     

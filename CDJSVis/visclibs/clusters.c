@@ -12,9 +12,9 @@
 #include "clusters.h"
 
 
-int findNeighbours(int, int, int, int *, double *, double, struct Boxes *, double *, int *);
-int findNeighboursUnapplyPBC(int, int, int, int, int *, double *, double, double *, int *, int *);
-void setAppliedPBCs(int *, int *);
+static int findNeighbours(int, int, int, int *, double *, double, struct Boxes *, double *, int *);
+static int findNeighboursUnapplyPBC(int, int, int, int, int *, double *, double, double *, int *, int *);
+static void setAppliedPBCs(int *, int *);
 
 
 /*******************************************************************************
@@ -158,8 +158,8 @@ int findClusters(int NVisibleIn, int *visibleAtoms, double *pos, int *clusterArr
 /*******************************************************************************
  * recursive search for neighbouring defects
  *******************************************************************************/
-int findNeighbours(int index, int clusterID, int numInCluster, int* atomCluster, double *pos, double maxSep2, 
-                   struct Boxes *boxes, double *cellDims, int *PBC)
+static int findNeighbours(int index, int clusterID, int numInCluster, int* atomCluster, double *pos, double maxSep2, 
+                          struct Boxes *boxes, double *cellDims, int *PBC)
 {
     int i, j, index2;
     int boxIndex, boxNebList[27];
@@ -264,8 +264,8 @@ int prepareClusterToDrawHulls(int N, double *pos, double *cellDims, int *PBC, in
 /*******************************************************************************
  * recursive search for neighbouring defects unapplying PBCs as going along
  *******************************************************************************/
-int findNeighboursUnapplyPBC(int NAtoms, int index, int clusterID, int numInCluster, int* atomCluster, double *pos, double maxSep2, 
-                             double *cellDims, int *PBC, int *appliedPBCs)
+static int findNeighboursUnapplyPBC(int NAtoms, int index, int clusterID, int numInCluster, int* atomCluster, double *pos, double maxSep2, 
+                                    double *cellDims, int *PBC, int *appliedPBCs)
 {
     int j, index2;
     double sep2;
@@ -321,7 +321,7 @@ int findNeighboursUnapplyPBC(int NAtoms, int index, int clusterID, int numInClus
 /*******************************************************************************
  * set applied PBC
  *******************************************************************************/
-void setAppliedPBCs(int *PBC, int *appliedPBCs)
+static void setAppliedPBCs(int *PBC, int *appliedPBCs)
 {
     if (PBC[0] == 1 && PBC[1] == 0 && PBC[2] == 0)
     {

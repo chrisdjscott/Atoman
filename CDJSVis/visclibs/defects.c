@@ -12,8 +12,8 @@
 #include "defects.h"
 
 
-int findDefectClusters(int, double *, int *, int *, struct Boxes *, double, double *, int *);
-int findDefectNeighbours(int, int, int, int *, double *, struct Boxes *, double, double *, int *);
+static int findDefectClusters(int, double *, int *, int *, struct Boxes *, double, double *, int *);
+static int findDefectNeighbours(int, int, int, int *, double *, struct Boxes *, double, double *, int *);
 
 
 
@@ -816,8 +816,8 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
 /*******************************************************************************
  * put defects into clusters
  *******************************************************************************/
-int findDefectClusters(int NDefects, double *defectPos, int *defectCluster, int *NDefectsCluster, struct Boxes *boxes, double maxSep, 
-                       double *cellDims, int *PBC)
+static int findDefectClusters(int NDefects, double *defectPos, int *defectCluster, int *NDefectsCluster, struct Boxes *boxes, double maxSep, 
+                              double *cellDims, int *PBC)
 {
     int i, maxNumInCluster;
     int NClusters, numInCluster;
@@ -865,8 +865,8 @@ int findDefectClusters(int NDefects, double *defectPos, int *defectCluster, int 
 /*******************************************************************************
  * recursive search for neighbouring defects
  *******************************************************************************/
-int findDefectNeighbours(int index, int clusterID, int numInCluster, int* atomCluster, double *pos, struct Boxes *boxes, 
-                         double maxSep2, double *cellDims, int *PBC)
+static int findDefectNeighbours(int index, int clusterID, int numInCluster, int* atomCluster, double *pos, struct Boxes *boxes, 
+                                double maxSep2, double *cellDims, int *PBC)
 {
     int i, j, index2;
     int boxIndex, boxNebList[27];
