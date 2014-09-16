@@ -11,6 +11,8 @@
 
 
 static PyObject* readLatticeLBOMD(PyObject*, PyObject*);
+static PyObject* readRef(PyObject*, PyObject*);
+static PyObject* readLBOMDXYZ(PyObject*, PyObject*);
 static int specieIndex(char*, int, char*);
 
 
@@ -19,6 +21,8 @@ static int specieIndex(char*, int, char*);
  *******************************************************************************/
 static struct PyMethodDef methods[] = {
     {"readLatticeLBOMD", readLatticeLBOMD, METH_VARARGS, "Read LBOMD lattice format file"},
+    {"readRef", readRef, METH_VARARGS, "Read LBOMD animation reference format file"},
+    {"readLBOMDXYZ", readLBOMDXYZ, METH_VARARGS, "Read LBOMD XYZ format file"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -59,9 +63,24 @@ static int specieIndex(char* sym, int NSpecies, char* specieList)
 /*******************************************************************************
 ** read animation-reference file
 *******************************************************************************/
-int readRef(char* file, int* atomID, int* specie, double* pos, double* charge, double* KE, double* PE, double* force, 
-            char* specieList_c, int* specieCount_c, double* maxPos, double* minPos)
+static PyObject*
+readRef(PyObject *self, PyObject *args)
 {
+	char *file, *specieList_c;
+	int *atomID, *specie, *specieCount_c;
+	double *pos, *charge, *maxPos, *minPos, *KE, *PE, *force;
+	PyArrayObject *atomIDIn=NULL;
+	PyArrayObject *specieIn=NULL;
+	PyArrayObject *posIn=NULL;
+	PyArrayObject *chargeIn=NULL;
+	PyArrayObject *specieList_cIn=NULL;
+	PyArrayObject *specieCount_cIn=NULL;
+	PyArrayObject *maxPosIn=NULL;
+	PyArrayObject *minPosIn=NULL;
+	PyArrayObject *KEIn=NULL;
+	PyArrayObject *PEIn=NULL;
+	PyArrayObject *forceIn=NULL;
+	
     int i, NAtoms, specInd, stat;
     FILE *INFILE;
     double xdim, ydim, zdim;
@@ -69,11 +88,50 @@ int readRef(char* file, int* atomID, int* specie, double* pos, double* charge, d
     char* specieList;
     double xpos, ypos, zpos;
     double xforce, yforce, zforce;
-    int id, index;
+    int id, index, NSpecies;
     double ketemp, petemp, chargetemp;
-    int NSpecies;
     
+    /* parse and check arguments from Python */
+	if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!O!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &specieIn, 
+			&PyArray_Type, &posIn, &PyArray_Type, &chargeIn, &PyArray_Type, &KEIn, &PyArray_Type, &PEIn, 
+			&PyArray_Type, &forceIn, &PyArray_Type, &specieList_cIn, &PyArray_Type, 
+			&specieCount_cIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &minPosIn))
+		return NULL;
+	
+	if (not_intVector(atomIDIn)) return NULL;
+	atomID = pyvector_to_Cptr_int(atomIDIn);
+	
+	if (not_doubleVector(posIn)) return NULL;
+	pos = pyvector_to_Cptr_double(posIn);
+	
+	if (not_doubleVector(chargeIn)) return NULL;
+	charge = pyvector_to_Cptr_double(chargeIn);
+	
+	if (not_doubleVector(KEIn)) return NULL;
+	KE = pyvector_to_Cptr_double(KEIn);
+	
+	if (not_doubleVector(PEIn)) return NULL;
+	PE = pyvector_to_Cptr_double(PEIn);
+	
+	if (not_doubleVector(forceIn)) return NULL;
+	force = pyvector_to_Cptr_double(forceIn);
+	
+	if (not_doubleVector(minPosIn)) return NULL;
+	minPos = pyvector_to_Cptr_double(minPosIn);
+	
+	if (not_doubleVector(maxPosIn)) return NULL;
+	maxPos = pyvector_to_Cptr_double(maxPosIn);
+	
+	if (not_intVector(specieCount_cIn)) return NULL;
+	specieCount_c = pyvector_to_Cptr_int(specieCount_cIn);
+	
+	if (not_intVector(specieIn)) return NULL;
+	specie = pyvector_to_Cptr_int(specieIn);
+	
+	// no test yet for nx2 char*
+	specieList_c = pyvector_to_Cptr_char(specieList_cIn);
     
+	/* open file */
     INFILE = fopen( file, "r" );
     if (INFILE == NULL)
     {
@@ -83,12 +141,10 @@ int readRef(char* file, int* atomID, int* specie, double* pos, double* charge, d
     }
     
     stat = fscanf(INFILE, "%d", &NAtoms);
-    if (stat != 1)
-        return -3;
+    if (stat != 1) return Py_BuildValue("i", -3);
     
     stat = fscanf(INFILE, "%lf%lf%lf", &xdim, &ydim, &zdim);
-    if (stat != 3)
-        return -3;
+    if (stat != 3) return Py_BuildValue("i", -3);
     
     specieList = malloc(3 * sizeof(char));
     
@@ -102,8 +158,7 @@ int readRef(char* file, int* atomID, int* specie, double* pos, double* charge, d
     for (i=0; i<NAtoms; i++)
     {
         stat = fscanf(INFILE, "%d%s%lf%lf%lf%lf%lf%lf%lf%lf%lf", &id, symtemp, &xpos, &ypos, &zpos, &ketemp, &petemp, &xforce, &yforce, &zforce, &chargetemp);
-        if (stat != 11)
-            return -3;
+        if (stat != 11) return Py_BuildValue("i", -3);
         
         /* index for storage is (id-1) */
         index = id - 1;
@@ -147,30 +202,12 @@ int readRef(char* file, int* atomID, int* specie, double* pos, double* charge, d
         specieCount_c[specInd]++;
                 
         /* max and min positions */
-        if ( xpos > maxPos[0] )
-        {
-            maxPos[0] = xpos;
-        }
-        if ( ypos > maxPos[1] )
-        {
-            maxPos[1] = ypos;
-        }
-        if ( zpos > maxPos[2] )
-        {
-            maxPos[2] = zpos;
-        }
-        if ( xpos < minPos[0] )
-        {
-            minPos[0] = xpos;
-        }
-        if ( ypos < minPos[1] )
-        {
-            minPos[1] = ypos;
-        }
-        if ( zpos < minPos[2] )
-        {
-            minPos[2] = zpos;
-        }
+        if ( xpos > maxPos[0] ) maxPos[0] = xpos;
+        if ( ypos > maxPos[1] ) maxPos[1] = ypos;
+        if ( zpos > maxPos[2] ) maxPos[2] = zpos;
+        if ( xpos < minPos[0] ) minPos[0] = xpos;
+        if ( ypos < minPos[1] ) minPos[1] = ypos;
+        if ( zpos < minPos[2] ) minPos[2] = zpos;
     }
     
     fclose(INFILE);
@@ -181,22 +218,63 @@ int readRef(char* file, int* atomID, int* specie, double* pos, double* charge, d
     
     free(specieList);
     
-    return 0;
+    return Py_BuildValue("i", 0);
 }
 
 
 /*******************************************************************************
 ** read xyz input file
 *******************************************************************************/
-int readLBOMDXYZ(char* file, int* atomID, double* pos, double* charge, double* KE, double* PE, 
-                 double* force, double* maxPos, double* minPos, int xyzformat)
+static PyObject*
+readLBOMDXYZ(PyObject *self, PyObject *args)
 {
+	char *file;
+	int *atomID, xyzformat;
+	double *pos, *charge, *maxPos, *minPos, *KE, *PE, *force;
+	PyArrayObject *atomIDIn=NULL;
+	PyArrayObject *posIn=NULL;
+	PyArrayObject *chargeIn=NULL;
+	PyArrayObject *maxPosIn=NULL;
+	PyArrayObject *minPosIn=NULL;
+	PyArrayObject *KEIn=NULL;
+	PyArrayObject *PEIn=NULL;
+	PyArrayObject *forceIn=NULL;
+	
     FILE *INFILE;
     int i, index, id, NAtoms, stat;
     double simTime, xpos, ypos, zpos;
     double chargetmp, KEtmp, PEtmp;
 //    double xfor, yfor, zfor;
     
+    /* parse and check arguments from Python */
+	if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!i", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &posIn, 
+			&PyArray_Type, &chargeIn, &PyArray_Type, &KEIn, &PyArray_Type, &PEIn, &PyArray_Type, &forceIn, 
+			&PyArray_Type, &maxPosIn, &PyArray_Type, &minPosIn, &xyzformat))
+		return NULL;
+	
+	if (not_intVector(atomIDIn)) return NULL;
+	atomID = pyvector_to_Cptr_int(atomIDIn);
+	
+	if (not_doubleVector(posIn)) return NULL;
+	pos = pyvector_to_Cptr_double(posIn);
+	
+	if (not_doubleVector(chargeIn)) return NULL;
+	charge = pyvector_to_Cptr_double(chargeIn);
+	
+	if (not_doubleVector(KEIn)) return NULL;
+	KE = pyvector_to_Cptr_double(KEIn);
+	
+	if (not_doubleVector(PEIn)) return NULL;
+	PE = pyvector_to_Cptr_double(PEIn);
+	
+	if (not_doubleVector(forceIn)) return NULL;
+	force = pyvector_to_Cptr_double(forceIn);
+	
+	if (not_doubleVector(minPosIn)) return NULL;
+	minPos = pyvector_to_Cptr_double(minPosIn);
+	
+	if (not_doubleVector(maxPosIn)) return NULL;
+	maxPos = pyvector_to_Cptr_double(maxPosIn);
     
     /* open file */
     INFILE = fopen(file, "r");
@@ -209,12 +287,10 @@ int readLBOMDXYZ(char* file, int* atomID, double* pos, double* charge, double* K
     
     /* read header */
     stat = fscanf(INFILE, "%d", &NAtoms);
-    if (stat != 1)
-        return -3;
+    if (stat != 1) return Py_BuildValue("i", -3);
     
     stat = fscanf(INFILE, "%lf", &simTime);
-    if (stat != 1)
-        return -3;
+    if (stat != 1) return Py_BuildValue("i", -3);
         
     /* read atoms */
     minPos[0] = 1000000;
@@ -228,14 +304,12 @@ int readLBOMDXYZ(char* file, int* atomID, double* pos, double* charge, double* K
         if (xyzformat == 0)
         {
             stat = fscanf(INFILE, "%d %lf %lf %lf %lf %lf", &id, &xpos, &ypos, &zpos, &KEtmp, &PEtmp);
-            if (stat != 6)
-                return -3;
+            if (stat != 6) return Py_BuildValue("i", -3);
         }
         else if (xyzformat == 1)
         {
             stat = fscanf(INFILE, "%d%lf%lf%lf%lf%lf%lf", &id, &xpos, &ypos, &zpos, &KEtmp, &PEtmp, &chargetmp);
-            if (stat != 7)
-                return -3;
+            if (stat != 7) return Py_BuildValue("i", -3);
         }
         
         index = id - 1;
@@ -250,41 +324,20 @@ int readLBOMDXYZ(char* file, int* atomID, double* pos, double* charge, double* K
         KE[index] = KEtmp;
         PE[index] = PEtmp;
         
-        if (xyzformat == 1)
-        {
-            charge[index] = chargetmp;
-        }
+        if (xyzformat == 1) charge[index] = chargetmp;
         
         /* max and min positions */
-        if ( xpos > maxPos[0] )
-        {
-            maxPos[0] = xpos;
-        }
-        if ( ypos > maxPos[1] )
-        {
-            maxPos[1] = ypos;
-        }
-        if ( zpos > maxPos[2] )
-        {
-            maxPos[2] = zpos;
-        }
-        if ( xpos < minPos[0] )
-        {
-            minPos[0] = xpos;
-        }
-        if ( ypos < minPos[1] )
-        {
-            minPos[1] = ypos;
-        }
-        if ( zpos < minPos[2] )
-        {
-            minPos[2] = zpos;
-        }
+        if ( xpos > maxPos[0] ) maxPos[0] = xpos;
+        if ( ypos > maxPos[1] ) maxPos[1] = ypos;
+        if ( zpos > maxPos[2] ) maxPos[2] = zpos;
+        if ( xpos < minPos[0] ) minPos[0] = xpos;
+        if ( ypos < minPos[1] ) minPos[1] = ypos;
+        if ( zpos < minPos[2] ) minPos[2] = zpos;
     }
     
     fclose(INFILE);
     
-    return 0;
+    return Py_BuildValue("i", 0);
 }
 
 
