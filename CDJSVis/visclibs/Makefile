@@ -53,7 +53,7 @@ endif
 
 LIBFILES = _bonds.$(LIBSUFFIX) _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX) _output.$(LIBSUFFIX) \
 		   _picker.$(LIBSUFFIX) _clusters.$(LIBSUFFIX) _defects.$(LIBSUFFIX) _vectors.$(LIBSUFFIX) _rendering.$(LIBSUFFIX) \
-		   _bond_order.$(LIBSUFFIX) _acna.$(LIBSUFFIX)
+		   _bond_order.$(LIBSUFFIX)
 
 # target
 all : $(LIBFILES)
@@ -91,9 +91,6 @@ _rendering.$(LIBSUFFIX) : rendering.o
 
 _bond_order.$(LIBSUFFIX) : bond_order.o neb_list.o utilities.o boxeslib.o
 	$(CC) $(CCLINKFLAGS) bond_order.o neb_list.o utilities.o boxeslib.o $(LIBS) -o _bond_order.$(LIBSUFFIX)
-
-_acna.$(LIBSUFFIX) : acna.o neb_list.o utilities.o boxeslib.o
-	$(CC) $(CCLINKFLAGS) acna.o neb_list.o utilities.o boxeslib.o $(LIBS) -o _acna.$(LIBSUFFIX)
 
 # compile module
 boxeslib.o : boxeslib.c
@@ -137,9 +134,6 @@ neb_list.o : neb_list.c
 
 bond_order.o : bond_order.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) bond_order.c
-
-acna.o : acna.c 
-	$(CC) $(CCFLAGS) $(INCLUDES) acna.c
 
 # clean
 clean:
