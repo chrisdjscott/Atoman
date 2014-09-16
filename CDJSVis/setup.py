@@ -7,6 +7,7 @@ def configuration(parent_package='', top_path=None):
     config.add_subpackage("filtering")
     config.add_subpackage("gui")
     config.add_subpackage("lattice_gen")
+    config.add_subpackage("plotting")
     config.add_subpackage("rendering")
     config.add_subpackage("state")
     config.add_subpackage("visclibs")

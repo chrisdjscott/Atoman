@@ -5,7 +5,6 @@ The output tab for the main toolbar
 @author: Chris Scott
 
 """
-
 import os
 import sys
 import shutil
@@ -25,9 +24,9 @@ from ..visutils import threading_vis
 from ..visutils.utilities import iconPath
 from . import genericForm
 from ..visclibs import output as output_c
-from ..visclibs import rdf as rdf_c
+from ..plotting import rdf as rdf_c
 from ..visclibs import vectors as vectors_c
-from . import plotDialog
+from ..plotting import plotDialog
 
 try:
     from .. import resources
