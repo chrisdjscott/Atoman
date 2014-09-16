@@ -1,19 +1,36 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2011
+ ** Copyright Chris Scott 2014
  ** IO routines written in C to improve performance
  *******************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
+#include <numpy/arrayobject.h>
 #include <math.h>
-#include <errno.h>
-#include "input.h"
+#include "array_utils.h"
 
 
+static PyObject* readLatticeLBOMD(PyObject*, PyObject*);
 static int specieIndex(char*, int, char*);
 
+
+/*******************************************************************************
+ ** List of python methods available in this module
+ *******************************************************************************/
+static struct PyMethodDef methods[] = {
+    {"readLatticeLBOMD", readLatticeLBOMD, METH_VARARGS, "Read LBOMD lattice format file"},
+    {NULL, NULL, 0, NULL}
+};
+
+/*******************************************************************************
+ ** Module initialisation function
+ *******************************************************************************/
+PyMODINIT_FUNC
+init_input(void)
+{
+    (void)Py_InitModule("_input", methods);
+    import_array();
+}
 
 /*******************************************************************************
  * Update specie list and counter
@@ -274,9 +291,21 @@ int readLBOMDXYZ(char* file, int* atomID, double* pos, double* charge, double* K
 /*******************************************************************************
  * Read LBOMD lattice file
  *******************************************************************************/
-int readLatticeLBOMD(char* file, int* atomID, int* specie, double* pos, double* charge, char* specieList_c, 
-                     int* specieCount_c, double* maxPos, double* minPos)
+static PyObject*
+readLatticeLBOMD(PyObject *self, PyObject *args)
 {
+    char *file, *specieList_c;
+    int *atomID, *specie, *specieCount_c;
+    double *pos, *charge, *maxPos, *minPos;
+    PyArrayObject *atomIDIn=NULL;
+    PyArrayObject *specieIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *chargeIn=NULL;
+    PyArrayObject *specieList_cIn=NULL;
+    PyArrayObject *specieCount_cIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    PyArrayObject *minPosIn=NULL;
+    
     FILE *INFILE;
     int i, NAtoms, specInd;
     double xdim, ydim, zdim;
@@ -285,6 +314,36 @@ int readLatticeLBOMD(char* file, int* atomID, int* specie, double* pos, double* 
     double xpos, ypos, zpos, chargetemp;
     int NSpecies, stat;
     
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &specieIn, 
+            &PyArray_Type, &posIn, &PyArray_Type, &chargeIn, &PyArray_Type, &specieList_cIn, &PyArray_Type, 
+            &specieCount_cIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &minPosIn))
+        return NULL;
+    
+    if (not_intVector(atomIDIn)) return NULL;
+    atomID = pyvector_to_Cptr_int(atomIDIn);
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(chargeIn)) return NULL;
+    charge = pyvector_to_Cptr_double(chargeIn);
+    
+    if (not_doubleVector(minPosIn)) return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_doubleVector(maxPosIn)) return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_intVector(specieCount_cIn)) return NULL;
+    specieCount_c = pyvector_to_Cptr_int(specieCount_cIn);
+    
+    if (not_intVector(specieIn)) return NULL;
+    specie = pyvector_to_Cptr_int(specieIn);
+    
+    // no test yet for nx2 char*
+    specieList_c = pyvector_to_Cptr_char(specieList_cIn);
     
     /* open file */
     INFILE = fopen( file, "r" );
@@ -298,11 +357,11 @@ int readLatticeLBOMD(char* file, int* atomID, int* specie, double* pos, double* 
     /* read header */
     stat = fscanf( INFILE, "%d", &NAtoms );
     if (stat != 1)
-        return -3;
+        return Py_BuildValue("i", -3);
     
     stat = fscanf(INFILE, "%lf %lf %lf", &xdim, &ydim, &zdim);
     if (stat != 3)
-        return -3;
+        return Py_BuildValue("i", -3);
     
     /* allocate specieList */
     specieList = malloc( 3 * sizeof(char) );
@@ -319,7 +378,7 @@ int readLatticeLBOMD(char* file, int* atomID, int* specie, double* pos, double* 
     {
         stat = fscanf(INFILE, "%s %lf %lf %lf %lf", symtemp, &xpos, &ypos, &zpos, &chargetemp);
         if (stat != 5)
-            return -3;
+            return Py_BuildValue("i", -3);
         
         /* atom ID */
         atomID[i] = i + 1;
@@ -355,30 +414,12 @@ int readLatticeLBOMD(char* file, int* atomID, int* specie, double* pos, double* 
         specieCount_c[specInd]++;
                 
         /* max and min positions */
-        if ( xpos > maxPos[0] )
-        {
-            maxPos[0] = xpos;
-        }
-        if ( ypos > maxPos[1] )
-        {
-            maxPos[1] = ypos;
-        }
-        if ( zpos > maxPos[2] )
-        {
-            maxPos[2] = zpos;
-        }
-        if ( xpos < minPos[0] )
-        {
-            minPos[0] = xpos;
-        }
-        if ( ypos < minPos[1] )
-        {
-            minPos[1] = ypos;
-        }
-        if ( zpos < minPos[2] )
-        {
-            minPos[2] = zpos;
-        }
+        if ( xpos > maxPos[0] ) maxPos[0] = xpos;
+        if ( ypos > maxPos[1] ) maxPos[1] = ypos;
+        if ( zpos > maxPos[2] ) maxPos[2] = zpos;
+        if ( xpos < minPos[0] ) minPos[0] = xpos;
+        if ( ypos < minPos[1] ) minPos[1] = ypos;
+        if ( zpos < minPos[2] ) minPos[2] = zpos;
     }
     
     fclose(INFILE);
@@ -389,6 +430,6 @@ int readLatticeLBOMD(char* file, int* atomID, int* specie, double* pos, double* 
         
     free(specieList);
     
-    return 0;
+    return Py_BuildValue("i", 0);
 }
 

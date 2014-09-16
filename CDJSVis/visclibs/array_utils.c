@@ -19,6 +19,11 @@ int *pyvector_to_Cptr_int(PyArrayObject *vectin)
 }
 
 
+char *pyvector_to_Cptr_char(PyArrayObject *vectin)
+{
+    return (char *) vectin->data;
+}
+
 int not_doubleVector(PyArrayObject *vectin)
 {
     if (vectin->descr->type_num != NPY_FLOAT64)// || vectin->nd != 1)

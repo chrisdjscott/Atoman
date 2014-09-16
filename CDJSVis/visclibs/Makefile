@@ -51,7 +51,7 @@ ifeq (Linux, $(shell uname -s))
 	LIBSUFFIX = so
 endif
 
-LIBFILES = _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX) _output.$(LIBSUFFIX) \
+LIBFILES = _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _output.$(LIBSUFFIX) \
 		   _picker.$(LIBSUFFIX) _defects.$(LIBSUFFIX) _vectors.$(LIBSUFFIX) _rendering.$(LIBSUFFIX) \
 
 # target
@@ -63,9 +63,6 @@ _rdf.$(LIBSUFFIX) : rdf.o boxeslib.o utilities.o
 
 _filtering.$(LIBSUFFIX) : filtering.o boxeslib.o utilities.o
 	$(CC) $(CCLINKFLAGS) filtering.o utilities.o boxeslib.o -o _filtering.$(LIBSUFFIX)
-
-_input.$(LIBSUFFIX) : input.o
-	$(CC) $(CCLINKFLAGS) input.o -o _input.$(LIBSUFFIX)
 
 _output.$(LIBSUFFIX) : output.o
 	$(CC) $(CCLINKFLAGS) output.o -o _output.$(LIBSUFFIX)
@@ -94,9 +91,6 @@ rdf.o : rdf.c
 
 filtering.o : filtering.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) filtering.c 
-
-input.o : input.c 
-	$(CC) $(CCFLAGS) $(INCLUDES) input.c
 
 output.o : output.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) output.c

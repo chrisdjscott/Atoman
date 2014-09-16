@@ -4,6 +4,7 @@
 
 double *pyvector_to_Cptr_double(PyArrayObject*);
 int *pyvector_to_Cptr_int(PyArrayObject*);
+char *pyvector_to_Cptr_char(PyArrayObject*);
 int not_doubleVector(PyArrayObject*);
 int not_intVector(PyArrayObject*);
 
