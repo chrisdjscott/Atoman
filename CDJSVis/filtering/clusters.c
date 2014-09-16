@@ -1,29 +1,64 @@
 /*******************************************************************************
- ** Copyright Chris Scott 2012
+ ** Copyright Chris Scott 2014
  ** Find clusters of atoms
  *******************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
+#include <numpy/arrayobject.h>
 #include <math.h>
 #include "boxeslib.h"
 #include "utilities.h"
-#include "clusters.h"
+#include "array_utils.h"
 
 
+static PyObject* findClusters(PyObject*, PyObject *);
+static PyObject* prepareClusterToDrawHulls(PyObject*, PyObject*);
 static int findNeighbours(int, int, int, int *, double *, double, struct Boxes *, double *, int *);
 static int findNeighboursUnapplyPBC(int, int, int, int, int *, double *, double, double *, int *, int *);
 static void setAppliedPBCs(int *, int *);
 
 
 /*******************************************************************************
+ ** List of python methods available in this module
+ *******************************************************************************/
+static struct PyMethodDef methods[] = {
+    {"findClusters", findClusters, METH_VARARGS, "Find clusters of (visible) atoms"},
+    {"prepareClusterToDrawHulls", prepareClusterToDrawHulls, METH_VARARGS, "Prepare clusters for drawing convex hulls"},
+    {NULL, NULL, 0, NULL}
+};
+
+/*******************************************************************************
+ ** Module initialisation function
+ *******************************************************************************/
+PyMODINIT_FUNC
+init_clusters(void)
+{
+    (void)Py_InitModule("_clusters", methods);
+    import_array();
+}
+
+/*******************************************************************************
  * Find clusters
  *******************************************************************************/
-int findClusters(int NVisibleIn, int *visibleAtoms, double *pos, int *clusterArray, double neighbourRad, double *cellDims, 
-                 int *PBC, double *minPos, double *maxPos, int minClusterSize, int maxClusterSize, int *results, 
-                 int NScalars, double *fullScalars)
+static PyObject*
+findClusters(PyObject *self, PyObject *args)
 {
+    int NVisibleIn, *visibleAtoms, *clusterArray, *PBC, minClusterSize, maxClusterSize, *results, NScalars;
+    double *pos, neighbourRad, *cellDims, *minPos, *maxPos, *fullScalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *clusterArrayIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *minPosIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    PyArrayObject *resultsIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    
+//int findClusters(int NVisibleIn, int *visibleAtoms, double *pos, int *clusterArray, double neighbourRad, double *cellDims, 
+//                 int *PBC, double *minPos, double *maxPos, int minClusterSize, int maxClusterSize, int *results, 
+//                 int NScalars, double *fullScalars)
+//{
     int i, j, index, NClusters, numInCluster;
     int maxNumInCluster;
     double nebRad2, approxBoxWidth;
@@ -34,6 +69,41 @@ int findClusters(int NVisibleIn, int *visibleAtoms, double *pos, int *clusterArr
     int NVisible, count;
     
     
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "O!O!O!dO!O!O!O!iiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &clusterArrayIn, 
+            &neighbourRad, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, &minClusterSize, 
+            &maxClusterSize, &PyArray_Type, &resultsIn, &NScalars, &PyArray_Type, &fullScalarsIn))
+        return NULL;
+    
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_intVector(clusterArrayIn)) return NULL;
+    clusterArray = pyvector_to_Cptr_int(clusterArrayIn);
+    
+    if (not_doubleVector(minPosIn)) return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_doubleVector(maxPosIn)) return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_intVector(resultsIn)) return NULL;
+    results = pyvector_to_Cptr_int(resultsIn);
+    
+    /* construct visible pos array */
     visiblePos = malloc(3 * NVisibleIn * sizeof(double));
     if (visiblePos == NULL)
     {
@@ -151,7 +221,7 @@ int findClusters(int NVisibleIn, int *visibleAtoms, double *pos, int *clusterArr
     freeBoxes(boxes);
     free(visiblePos);
     
-    return 0;
+    return Py_BuildValue("i", 0);
 }
 
 
@@ -208,13 +278,38 @@ static int findNeighbours(int index, int clusterID, int numInCluster, int* atomC
 /*******************************************************************************
  * Prepare cluster to draw hulls (ie unapply PBCs)
  *******************************************************************************/
-int prepareClusterToDrawHulls(int N, double *pos, double *cellDims, int *PBC, int *appliedPBCs, double neighbourRadius)
+static PyObject*
+prepareClusterToDrawHulls(PyObject *self, PyObject *args)
 {
+    int N, *PBC, *appliedPBCs;
+    double *pos, *cellDims, neighbourRadius;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *appliedPBCsIn=NULL;
+    
     int i, numInCluster, NClusters;
     int *clusterArray;
     double nebRad2;
     
-
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "iO!O!O!O!d", &N, &PyArray_Type, &posIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, 
+            &PyArray_Type, &appliedPBCsIn, &neighbourRadius))
+        return NULL;
+    
+    if (not_intVector(appliedPBCsIn)) return NULL;
+    appliedPBCs = pyvector_to_Cptr_int(appliedPBCsIn);
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
+    
     /* is there any point boxing this? don't think so */
     
     nebRad2 = neighbourRadius * neighbourRadius;
@@ -257,7 +352,7 @@ int prepareClusterToDrawHulls(int N, double *pos, double *cellDims, int *PBC, in
     
     free(clusterArray);
     
-    return 0;
+    return Py_BuildValue("i", 0);
 }
 
 
@@ -351,6 +446,4 @@ static void setAppliedPBCs(int *PBC, int *appliedPBCs)
     {
         appliedPBCs[6] = 1;
     }
-    
-    
 }

@@ -28,7 +28,12 @@ def configuration(parent_package='', top_path=None):
     config.add_extension("bonds", 
                          ["bonds.c", "../visclibs/utilities.c",
                           "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
-                         include_dirs=[incdir, "/opt/local/include"])
+                         include_dirs=[incdir])
+    
+    config.add_extension("_clusters", 
+                         ["clusters.c", "../visclibs/utilities.c",
+                          "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
+                         include_dirs=[incdir])
     
     return config
 

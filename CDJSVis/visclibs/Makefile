@@ -52,7 +52,7 @@ ifeq (Linux, $(shell uname -s))
 endif
 
 LIBFILES = _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX) _output.$(LIBSUFFIX) \
-		   _picker.$(LIBSUFFIX) _clusters.$(LIBSUFFIX) _defects.$(LIBSUFFIX) _vectors.$(LIBSUFFIX) _rendering.$(LIBSUFFIX) \
+		   _picker.$(LIBSUFFIX) _defects.$(LIBSUFFIX) _vectors.$(LIBSUFFIX) _rendering.$(LIBSUFFIX) \
 
 # target
 all : $(LIBFILES)
@@ -72,9 +72,6 @@ _output.$(LIBSUFFIX) : output.o
 
 _picker.$(LIBSUFFIX) : picker.o boxeslib.o utilities.o
 	$(CC) $(CCLINKFLAGS) picker.o utilities.o boxeslib.o -o _picker.$(LIBSUFFIX)
-
-_clusters.$(LIBSUFFIX) : clusters.o boxeslib.o utilities.o
-	$(CC) $(CCLINKFLAGS) clusters.o utilities.o boxeslib.o -o _clusters.$(LIBSUFFIX)
 
 _defects.$(LIBSUFFIX) : defects.o boxeslib.o utilities.o
 	$(CC) $(CCLINKFLAGS) defects.o utilities.o boxeslib.o -o _defects.$(LIBSUFFIX)
@@ -106,9 +103,6 @@ output.o : output.c
 
 picker.o : picker.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) picker.c
-
-clusters.o : clusters.c 
-	$(CC) $(CCFLAGS) $(INCLUDES) clusters.c
 
 defects.o : defects.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) defects.c
