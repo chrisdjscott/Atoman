@@ -25,6 +25,11 @@ def configuration(parent_package='', top_path=None):
                          libraries=["gsl", "gslcblas"],
                          include_dirs=[incdir, "/opt/local/include"])
     
+    config.add_extension("bonds", 
+                         ["bonds.c", "../visclibs/utilities.c",
+                          "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
+                         include_dirs=[incdir, "/opt/local/include"])
+    
     return config
 
 if __name__ == "__main__":

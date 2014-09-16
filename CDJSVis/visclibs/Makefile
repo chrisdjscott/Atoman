@@ -51,16 +51,13 @@ ifeq (Linux, $(shell uname -s))
 	LIBSUFFIX = so
 endif
 
-LIBFILES = _bonds.$(LIBSUFFIX) _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX) _output.$(LIBSUFFIX) \
+LIBFILES = _filtering.$(LIBSUFFIX) _rdf.$(LIBSUFFIX) _input.$(LIBSUFFIX) _output.$(LIBSUFFIX) \
 		   _picker.$(LIBSUFFIX) _clusters.$(LIBSUFFIX) _defects.$(LIBSUFFIX) _vectors.$(LIBSUFFIX) _rendering.$(LIBSUFFIX) \
 
 # target
 all : $(LIBFILES)
 
 # create object file
-_bonds.$(LIBSUFFIX) : bonds.o boxeslib.o utilities.o
-	$(CC) $(CCLINKFLAGS) bonds.o boxeslib.o utilities.o -o _bonds.$(LIBSUFFIX)
-
 _rdf.$(LIBSUFFIX) : rdf.o boxeslib.o utilities.o
 	$(CC) $(CCLINKFLAGS) rdf.o boxeslib.o utilities.o -o _rdf.$(LIBSUFFIX)
 
@@ -94,9 +91,6 @@ boxeslib.o : boxeslib.c
 
 utilities.o : utilities.c
 	$(CC) $(CCFLAGS) $(INCLUDES) utilities.c
-
-bonds.o : bonds.c 
-	$(CC) $(CCFLAGS) $(INCLUDES) bonds.c
 
 rdf.o : rdf.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) rdf.c

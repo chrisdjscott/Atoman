@@ -21,7 +21,7 @@ int *pyvector_to_Cptr_int(PyArrayObject *vectin)
 
 int not_doubleVector(PyArrayObject *vectin)
 {
-    if (vectin->descr->type_num != NPY_FLOAT64 || vectin->nd != 1)
+    if (vectin->descr->type_num != NPY_FLOAT64)// || vectin->nd != 1)
     {
         PyErr_SetString(PyExc_ValueError, "In not_doubleVector: vector must be of type float and 1 dimensional");
         return 1;
@@ -33,7 +33,7 @@ int not_doubleVector(PyArrayObject *vectin)
 
 int not_intVector(PyArrayObject *vectin)
 {
-    if (vectin->descr->type_num != NPY_INT32 || vectin->nd != 1)
+    if (vectin->descr->type_num != NPY_INT32)// || vectin->nd != 1)
     {
         PyErr_SetString(PyExc_ValueError, "In not_intVector: vector must be of type int and 1 dimensional");
         return 1;
