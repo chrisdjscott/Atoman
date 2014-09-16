@@ -4,22 +4,52 @@
  ** Copyright Chris Scott 2014
  *******************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
+#include <numpy/arrayobject.h>
 #include <math.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_sf_legendre.h>
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"
-#include "bond_order.h"
+#include "array_utils.h"
 
-//double plgndr(int, int, double);
+
+struct AtomStructureResults
+{
+    double Q6;
+    double Q4;
+    double realQ4[9];
+    double imgQ4[9];
+    double realQ6[13];
+    double imgQ6[13];
+};
+
+
+static PyObject* bondOrderFilter(PyObject*, PyObject*);
 static void Ylm(int, int, double, double, double*, double*);
 static void convertToSphericalCoordinates(double, double, double, double, double*, double*);
 static void complex_qlm(int, int*, struct NeighbourList*, double*, double*, int*, struct AtomStructureResults*);
 static void calculate_Q(int, struct AtomStructureResults*);
 
+
+/*******************************************************************************
+ ** List of python methods available in this module
+ *******************************************************************************/
+static struct PyMethodDef methods[] = {
+    {"bondOrderFilter", bondOrderFilter, METH_VARARGS, "Run the bond order filter (calculates Steinhardt order parameters)"},
+    {NULL, NULL, 0, NULL}
+};
+
+/*******************************************************************************
+ ** Module initialisation function
+ *******************************************************************************/
+PyMODINIT_FUNC
+initbond_order(void)
+{
+    (void)Py_InitModule("bond_order", methods);
+    import_array();
+}
 
 /*******************************************************************************
  ** Compute Y_lm (spherical harmonics)
@@ -187,11 +217,22 @@ static void calculate_Q(int NVisibleIn, struct AtomStructureResults *results)
 /*******************************************************************************
  ** bond order filter
  *******************************************************************************/
-int bondOrderFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, double maxBondDistance, 
-                    int scalarsDim, double *scalarsQ4, double *scalarsQ6, double *minPos, double *maxPos, double *cellDims, int *PBC, 
-                    int NScalars, double *fullScalars, int filterQ4Enabled, double minQ4, double maxQ4, int filterQ6Enabled, 
-                    double minQ6, double maxQ6)
+static PyObject*
+bondOrderFilter(PyObject *self, PyObject *args)
 {
+    int NVisibleIn, *visibleAtoms, *PBC, NScalars, filterQ4Enabled, filterQ6Enabled;
+    double maxBondDistance, *scalarsQ4, *scalarsQ6, *minPos, *maxPos, *cellDims;
+    double *pos, *fullScalars, minQ4, maxQ4, minQ6, maxQ6;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *scalarsQ4In=NULL;
+    PyArrayObject *scalarsQ6In=NULL;
+    PyArrayObject *minPosIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    
     int i, j, index, NVisible;
     int maxSep2;
     double approxBoxWidth, q4, q6;
@@ -200,6 +241,40 @@ int bondOrderFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, 
     struct NeighbourList *nebList;
     struct AtomStructureResults *results;
     
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "O!O!dO!O!O!O!O!O!iO!iddidd", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &maxBondDistance, 
+            &PyArray_Type, &scalarsQ4In, &PyArray_Type, &scalarsQ6In, &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, 
+            &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, &PyArray_Type, &fullScalarsIn, &filterQ4Enabled, &minQ4, 
+            &maxQ4, &filterQ6Enabled, &minQ6, &maxQ6))
+            return NULL;
+    
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(scalarsQ4In)) return NULL;
+    scalarsQ4 = pyvector_to_Cptr_double(scalarsQ4In);
+    
+    if (not_doubleVector(scalarsQ6In)) return NULL;
+    scalarsQ6 = pyvector_to_Cptr_double(scalarsQ6In);
+    
+    if (not_doubleVector(minPosIn)) return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_doubleVector(maxPosIn)) return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
     
     /* construct visible pos array */
     visiblePos = malloc(3 * NVisibleIn * sizeof(double));
@@ -278,5 +353,5 @@ int bondOrderFilter(int NVisibleIn, int* visibleAtoms, int posDim, double *pos, 
     freeNeighbourList(nebList, NVisibleIn);
     free(results);
     
-    return NVisible;
+    return Py_BuildValue("i", NVisible);
 }

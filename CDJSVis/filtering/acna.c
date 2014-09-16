@@ -12,7 +12,21 @@
 #include "neb_list.h"
 #include "utilities.h"
 #include "array_utils.h"
-#include "acna.h"
+
+
+#define MAX_REQUIRED_NEBS 14
+#define MIN_REQUIRED_NEBS 12
+
+/* structure types */
+enum AtomStructureType {
+    ATOM_STRUCTURE_DISORDERED       = 0,
+    ATOM_STRUCTURE_FCC              = 1,
+    ATOM_STRUCTURE_HCP              = 2,
+    ATOM_STRUCTURE_BCC              = 3,
+    ATOM_STRUCTURE_ICOSAHEDRAL      = 4,
+    ATOM_STRUCTURE_SIGMA11_TILT1    = 5,
+    ATOM_STRUCTURE_SIGMA11_TILT2    = 6
+};
 
 
 /* function prototypes */
@@ -28,13 +42,18 @@ static int getAdjacentBonds(unsigned int, unsigned int *, int *, unsigned int *,
 
 
 
-
+/*******************************************************************************
+ ** List of python methods available in this module
+ *******************************************************************************/
 static struct PyMethodDef methods[] = {
     {"adaptiveCommonNeighbourAnalysis", adaptiveCommonNeighbourAnalysis, METH_VARARGS, "Run Adaptive Common Neighbour Analysis"},
     {NULL, NULL, 0, NULL}
 };
 
 
+/*******************************************************************************
+ ** Module initialisation function
+ *******************************************************************************/
 PyMODINIT_FUNC
 initacna(void)
 {
