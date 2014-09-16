@@ -19,6 +19,7 @@ rm -rf build/ dist/ *.log
 cd ..
 
 python setup.py doc
+python setup3.py build_ext --inplace
 
 cd pyinstaller
 

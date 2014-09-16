@@ -28,7 +28,7 @@ exe = EXE(pyz,
           upx=True,
           console=False)
 
-coll = COLLECT( exe,
+coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
                a.datas,
