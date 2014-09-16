@@ -34,6 +34,7 @@ static struct PyMethodDef methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+
 PyMODINIT_FUNC
 initacna(void)
 {
@@ -41,45 +42,6 @@ initacna(void)
     import_array();
 }
 
-
-////////////////////////////////////////////////
-
-//static double *pyvector_to_Cptr_double(PyArrayObject *vectin)
-//{
-//    return (double *) vectin->data;
-//}
-//
-//
-//static int *pyvector_to_Cptr_int(PyArrayObject *vectin)
-//{
-//    return (int *) vectin->data;
-//}
-//
-//
-//static int not_doubleVector(PyArrayObject *vectin)
-//{
-//    if (vectin->descr->type_num != NPY_FLOAT64 || vectin->nd != 1)
-//    {
-//        PyErr_SetString(PyExc_ValueError, "In not_doubleVector: vector must be of type float and 1 dimensional");
-//        return 1;
-//    }
-//    
-//    return 0;
-//}
-//
-//
-//static int not_intVector(PyArrayObject *vectin)
-//{
-//    if (vectin->descr->type_num != NPY_INT32 || vectin->nd != 1)
-//    {
-//        PyErr_SetString(PyExc_ValueError, "In not_intVector: vector must be of type int and 1 dimensional");
-//        return 1;
-//    }
-//    
-//    return 0;
-//}
-
-//////////////////////////////////////
 
 /*******************************************************************************
  ** Function that compares two elements in a neighbour list
@@ -102,10 +64,18 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
 {
     int NVisibleIn, *visibleAtoms, *PBC, NScalars, *counters, filteringEnabled, *structureVisibility;
     double *pos, *scalars, *minPos, *maxPos, *cellDims, *fullScalars, maxBondDistance;
-    PyArrayObject *posIn, *visibleAtomsIn, *PBCIn, *countersIn, *structureVisibilityIn;
-    PyArrayObject *scalarsIn, minPosIn, maxPosIn, cellDimsIn, fullScalarsIn; 
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *countersIn=NULL;
+    PyArrayObject *structureVisibilityIn=NULL;
+    PyArrayObject *scalarsIn=NULL;
+    PyArrayObject *minPosIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
     
-    int i, NVisible, index;
+    int i, j, NVisible, index;
     int atomStructure;
     double *visiblePos, approxBoxWidth, maxSep2;
     struct Boxes *boxes;
@@ -113,7 +83,7 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
 /* parse and check arguments from Python */
     
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!dO!dO!dO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!iO!dO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn, 
             &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, 
             &PyArray_Type, &fullScalarsIn, &maxBondDistance, &PyArray_Type, &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn))
         return NULL;
@@ -211,6 +181,12 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
             {
                 visibleAtoms[NVisible] = visibleAtoms[i];
                 scalars[NVisible++] = scalars[i];
+                
+                /* handle full scalars array */
+                for (j = 0; j < NScalars; j++)
+                {
+                    fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+                }
             }
         }
     }
