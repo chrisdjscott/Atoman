@@ -52,7 +52,7 @@ ifeq (Linux, $(shell uname -s))
 endif
 
 LIBFILES = _filtering.$(LIBSUFFIX) _output.$(LIBSUFFIX) \
-		   _picker.$(LIBSUFFIX) _vectors.$(LIBSUFFIX) _rendering.$(LIBSUFFIX) \
+		   _vectors.$(LIBSUFFIX) _rendering.$(LIBSUFFIX) \
 
 # target
 all : $(LIBFILES)
@@ -63,9 +63,6 @@ _filtering.$(LIBSUFFIX) : filtering.o boxeslib.o utilities.o
 
 _output.$(LIBSUFFIX) : output.o
 	$(CC) $(CCLINKFLAGS) output.o -o _output.$(LIBSUFFIX)
-
-_picker.$(LIBSUFFIX) : picker.o boxeslib.o utilities.o
-	$(CC) $(CCLINKFLAGS) picker.o utilities.o boxeslib.o -o _picker.$(LIBSUFFIX)
 
 _vectors.$(LIBSUFFIX) : vectors.o utilities.o
 	$(CC) $(CCLINKFLAGS) vectors.o utilities.o -o _vectors.$(LIBSUFFIX)
@@ -85,9 +82,6 @@ filtering.o : filtering.c
 
 output.o : output.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) output.c
-
-picker.o : picker.c 
-	$(CC) $(CCFLAGS) $(INCLUDES) picker.c
 
 vectors.o : vectors.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) vectors.c
