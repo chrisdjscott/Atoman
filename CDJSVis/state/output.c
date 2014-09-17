@@ -223,7 +223,7 @@ writePOVRAYDefects(PyObject *self, PyObject *args)
     
     if (not_intVector(splitIntsIn)) return NULL;
     splitInts = pyvector_to_Cptr_int(splitIntsIn);
-    splitIntsDim = (int) splitIntsIn->dimensions[0];
+    splitIntsDim = ((int) splitIntsIn->dimensions[0]) / 3;
     
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
