@@ -16,7 +16,7 @@ import vtk
 from PySide import QtGui
 
 from ..visclibs import filtering as filtering_c
-from ..visclibs import defects as defects_c
+from . import _defects as defects_c
 from . import _clusters as clusters_c
 from . import bonds as bonds_c
 from . import bond_order as bond_order

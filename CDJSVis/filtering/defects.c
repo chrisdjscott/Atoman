@@ -1,32 +1,84 @@
 /*******************************************************************************
- ** Copyright Chris Scott 2012
+ ** Copyright Chris Scott 2014
  ** Find defects
  *******************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
+#include <numpy/arrayobject.h>
 #include <math.h>
 #include "boxeslib.h"
 #include "utilities.h"
-#include "defects.h"
+#include "array_utils.h"
 
 
+static PyObject* findDefects(PyObject*, PyObject*);
 static int findDefectClusters(int, double *, int *, int *, struct Boxes *, double, double *, int *);
 static int findDefectNeighbours(int, int, int, int *, double *, struct Boxes *, double, double *, int *);
 
 
+/*******************************************************************************
+ ** List of python methods available in this module
+ *******************************************************************************/
+static struct PyMethodDef methods[] = {
+    {"findDefects", findDefects, METH_VARARGS, "Find point defects"},
+    {NULL, NULL, 0, NULL}
+};
+
+/*******************************************************************************
+ ** Module initialisation function
+ *******************************************************************************/
+PyMODINIT_FUNC
+init_defects(void)
+{
+    (void)Py_InitModule("_defects", methods);
+    import_array();
+}
 
 /*******************************************************************************
  * Search for defects and return the sub-system surrounding them
  *******************************************************************************/
-int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefectsType, int* vacancies, int* interstitials, int* antisites, 
-                int* onAntisites, int exclSpecInputDim, int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, char* specieList, 
-                int* specie, double* pos, int refNAtoms, char* specieListRef, int* specieRef, double* refPosIn, double *cellDims, int *PBC, 
-                double vacancyRadius, double *minPos, double *maxPos, int findClustersFlag, double clusterRadius, int *defectCluster, int NSpecies, 
-                int *vacSpecCount, int *intSpecCount, int *antSpecCount, int *onAntSpecCount, int* splitIntSpecCount, int minClusterSize, 
-                int maxClusterSize, int *splitInterstitials, int identifySplits, int driftCompensation, double *driftVector)
+static PyObject*
+findDefects(PyObject *self, PyObject *args)
 {
+    char *specieList, *specieListRef;
+    int includeVacs, includeInts, includeAnts, *NDefectsType, *vacancies, *interstitials, *antisites, *onAntisites;
+    int exclSpecInputDim, *exclSpecInput, exclSpecRefDim, *exclSpecRef, NAtoms, *specie, refNAtoms, *PBC, *specieRef;
+    int findClustersFlag, *defectCluster, NSpecies, *vacSpecCount, *intSpecCount, *antSpecCount, *onAntSpecCount;
+    int *splitIntSpecCount, minClusterSize, maxClusterSize, *splitInterstitials, identifySplits, driftCompensation;
+    double *pos, *refPosIn, *cellDims, vacancyRadius, *minPos, *maxPos, clusterRadius, *driftVector;
+    PyArrayObject *specieListIn=NULL;
+    PyArrayObject *specieListRefIn=NULL;
+    PyArrayObject *NDefectsTypeIn=NULL;
+    PyArrayObject *vacanciesIn=NULL;
+    PyArrayObject *interstitialsIn=NULL;
+    PyArrayObject *antisitesIn=NULL;
+    PyArrayObject *onAntisitesIn=NULL;
+    PyArrayObject *exclSpecInputIn=NULL;
+    PyArrayObject *exclSpecRefIn=NULL;
+    PyArrayObject *specieIn=NULL;
+    PyArrayObject *specieRefIn=NULL;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *defectClusterIn=NULL;
+    PyArrayObject *vacSpecCountIn=NULL;
+    PyArrayObject *intSpecCountIn=NULL;
+    PyArrayObject *antSpecCountIn=NULL;
+    PyArrayObject *onAntSpecCountIn=NULL;
+    PyArrayObject *splitIntSpecCountIn=NULL;
+    PyArrayObject *splitInterstitialsIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *refPosIn_np=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *minPosIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    PyArrayObject *driftVectorIn=NULL;
+    
+//int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefectsType, int* vacancies, int* interstitials, int* antisites, 
+//                int* onAntisites, int exclSpecInputDim, int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, char* specieList, 
+//                int* specie, double* pos, int refNAtoms, char* specieListRef, int* specieRef, double* refPosIn, double *cellDims, int *PBC, 
+//                double vacancyRadius, double *minPos, double *maxPos, int findClustersFlag, double clusterRadius, int *defectCluster, int NSpecies, 
+//                int *vacSpecCount, int *intSpecCount, int *antSpecCount, int *onAntSpecCount, int* splitIntSpecCount, int minClusterSize, 
+//                int maxClusterSize, int *splitInterstitials, int identifySplits, int driftCompensation, double *driftVector)
+//{
     int i, exitLoop, k, j, index;
     double vacRad2;
     int boxNebList[27], index2;
@@ -48,7 +100,95 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
     double *refPos;
     
     
-    /* drift compensation? */
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "iiiO!O!O!O!O!O!O!iO!O!O!iO!O!O!O!O!dO!O!idO!O!O!O!O!O!iiO!iiO!", &includeVacs, &includeInts, &includeAnts,
+            &PyArray_Type, &NDefectsTypeIn, &PyArray_Type, &vacanciesIn, &PyArray_Type, &interstitialsIn, &PyArray_Type, &antisitesIn,
+            &PyArray_Type, &onAntisitesIn, &PyArray_Type, &exclSpecInputIn, &PyArray_Type, &exclSpecRefIn, &NAtoms, &PyArray_Type, 
+            &specieListIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &refNAtoms, &PyArray_Type, &specieListRefIn, &PyArray_Type, 
+            &specieRefIn, &PyArray_Type, &refPosIn_np, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &vacancyRadius, &PyArray_Type, 
+            &minPosIn, &PyArray_Type, &maxPosIn, &findClustersFlag, &clusterRadius, &PyArray_Type, &defectClusterIn, &PyArray_Type, 
+            &vacSpecCountIn, &PyArray_Type, &intSpecCountIn, &PyArray_Type, &antSpecCountIn, &PyArray_Type, &onAntSpecCountIn, 
+            &PyArray_Type, &splitIntSpecCountIn, &minClusterSize, &maxClusterSize, &PyArray_Type, &splitInterstitialsIn, &identifySplits,
+            &driftCompensation, &PyArray_Type, &driftVectorIn))
+        return NULL;
+    
+    if (not_intVector(NDefectsTypeIn)) return NULL;
+    NDefectsType = pyvector_to_Cptr_int(NDefectsTypeIn);
+    
+    if (not_intVector(vacanciesIn)) return NULL;
+    vacancies = pyvector_to_Cptr_int(vacanciesIn);
+    
+    if (not_intVector(interstitialsIn)) return NULL;
+    interstitials = pyvector_to_Cptr_int(interstitialsIn);
+    
+    if (not_intVector(antisitesIn)) return NULL;
+    antisites = pyvector_to_Cptr_int(antisitesIn);
+    
+    if (not_intVector(onAntisitesIn)) return NULL;
+    onAntisites = pyvector_to_Cptr_int(onAntisitesIn);
+    
+    if (not_intVector(exclSpecInputIn)) return NULL;
+    exclSpecInput = pyvector_to_Cptr_int(exclSpecInputIn);
+    exclSpecInputDim = (int) exclSpecInputIn->dimensions[0];
+    
+    if (not_intVector(exclSpecRefIn)) return NULL;
+    exclSpecRef = pyvector_to_Cptr_int(exclSpecRefIn);
+    exclSpecRefDim = (int) exclSpecRefIn->dimensions[0];
+    
+    specieList = pyvector_to_Cptr_char(specieListIn);
+    
+    if (not_intVector(specieIn)) return NULL;
+    specie = pyvector_to_Cptr_int(specieIn);
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    specieListRef = pyvector_to_Cptr_char(specieListRefIn);
+    
+    if (not_intVector(specieRefIn)) return NULL;
+    specieRef = pyvector_to_Cptr_int(specieRefIn);
+    
+    if (not_doubleVector(refPosIn_np)) return NULL;
+    refPosIn = pyvector_to_Cptr_double(refPosIn_np);
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+        
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
+    
+    if (not_doubleVector(minPosIn)) return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_doubleVector(maxPosIn)) return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_intVector(defectClusterIn)) return NULL;
+    defectCluster = pyvector_to_Cptr_int(defectClusterIn);
+    
+    if (not_intVector(vacSpecCountIn)) return NULL;
+    vacSpecCount = pyvector_to_Cptr_int(vacSpecCountIn);
+    NSpecies = (int) vacSpecCountIn->dimensions[0];
+    
+    if (not_intVector(intSpecCountIn)) return NULL;
+    intSpecCount = pyvector_to_Cptr_int(intSpecCountIn);
+    
+    if (not_intVector(antSpecCountIn)) return NULL;
+    antSpecCount = pyvector_to_Cptr_int(antSpecCountIn);
+    
+    if (not_intVector(onAntSpecCountIn)) return NULL;
+    onAntSpecCount = pyvector_to_Cptr_int(onAntSpecCountIn);
+    
+    if (not_intVector(splitIntSpecCountIn)) return NULL;
+    splitIntSpecCount = pyvector_to_Cptr_int(splitIntSpecCountIn);
+    
+    if (not_intVector(splitInterstitialsIn)) return NULL;
+    splitInterstitials = pyvector_to_Cptr_int(splitInterstitialsIn);
+    
+    if (not_doubleVector(driftVectorIn)) return NULL;
+    driftVector = pyvector_to_Cptr_double(driftVectorIn);
+    
+    /* drift compensation */
     if (driftCompensation)
     {
         refPos = malloc(3 * refNAtoms * sizeof(double));
@@ -744,10 +884,7 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
         count = 0;
         for (i=0; i<NClusters; i++)
         {
-            if (NDefectsClusterNew[i] > 0)
-            {
-                count++;
-            }
+            if (NDefectsClusterNew[i] > 0) count++;
         }
         NClusters = count;
         
@@ -800,16 +937,10 @@ int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefects
         splitIntSpecCount[specie[index]*NSpecies+specie[index2]]++;
     }
     
-    if (driftCompensation)
-    {
-        free(refPos);
-    }
-    else
-    {
-        refPos = NULL;
-    }
+    if (driftCompensation) free(refPos);
+    else refPos = NULL;
     
-    return 0;
+    return Py_BuildValue("i", 0);
 }
 
 

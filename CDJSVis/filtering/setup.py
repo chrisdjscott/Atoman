@@ -35,6 +35,11 @@ def configuration(parent_package='', top_path=None):
                           "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
                          include_dirs=[incdir])
     
+    config.add_extension("_defects", 
+                         ["defects.c", "../visclibs/utilities.c",
+                          "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
+                         include_dirs=[incdir])
+    
     return config
 
 if __name__ == "__main__":
