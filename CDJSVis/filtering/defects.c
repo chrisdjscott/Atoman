@@ -72,13 +72,6 @@ findDefects(PyObject *self, PyObject *args)
     PyArrayObject *maxPosIn=NULL;
     PyArrayObject *driftVectorIn=NULL;
     
-//int findDefects(int includeVacs, int includeInts, int includeAnts, int* NDefectsType, int* vacancies, int* interstitials, int* antisites, 
-//                int* onAntisites, int exclSpecInputDim, int* exclSpecInput, int exclSpecRefDim, int* exclSpecRef, int NAtoms, char* specieList, 
-//                int* specie, double* pos, int refNAtoms, char* specieListRef, int* specieRef, double* refPosIn, double *cellDims, int *PBC, 
-//                double vacancyRadius, double *minPos, double *maxPos, int findClustersFlag, double clusterRadius, int *defectCluster, int NSpecies, 
-//                int *vacSpecCount, int *intSpecCount, int *antSpecCount, int *onAntSpecCount, int* splitIntSpecCount, int minClusterSize, 
-//                int maxClusterSize, int *splitInterstitials, int identifySplits, int driftCompensation, double *driftVector)
-//{
     int i, exitLoop, k, j, index;
     double vacRad2;
     int boxNebList[27], index2;
