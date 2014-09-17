@@ -51,7 +51,7 @@ ifeq (Linux, $(shell uname -s))
 	LIBSUFFIX = so
 endif
 
-LIBFILES = _filtering.$(LIBSUFFIX) _rendering.$(LIBSUFFIX) \
+LIBFILES = _filtering.$(LIBSUFFIX)
 
 # target
 all : $(LIBFILES)
@@ -59,9 +59,6 @@ all : $(LIBFILES)
 # create object file
 _filtering.$(LIBSUFFIX) : filtering.o boxeslib.o utilities.o
 	$(CC) $(CCLINKFLAGS) filtering.o utilities.o boxeslib.o -o _filtering.$(LIBSUFFIX)
-
-_rendering.$(LIBSUFFIX) : rendering.o
-	$(CC) $(CCLINKFLAGS) rendering.o -o _rendering.$(LIBSUFFIX)
 
 # compile module
 boxeslib.o : boxeslib.c
@@ -72,9 +69,6 @@ utilities.o : utilities.c
 
 filtering.o : filtering.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) filtering.c 
-
-rendering.o : rendering.c 
-	$(CC) $(CCFLAGS) $(INCLUDES) rendering.c
 
 neb_list.o : neb_list.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) neb_list.c

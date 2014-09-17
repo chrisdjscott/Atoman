@@ -27,9 +27,7 @@ from . import axes
 from . import cell
 from .utils import setRes, setupLUT, getScalar, setMapperScalarRange, makeScalarBar, getScalarsType
 from . import utils
-from ..visclibs import rendering as c_rendering
 from . import _rendering
-from ..visclibs import numpy_utils
 from ..visutils.threading_vis import GenericRunnable
 
 
@@ -966,37 +964,25 @@ def getSpeciePosScalarVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOpt
     else:
         scalarsArray = np.array([], dtype=np.float64)
     
-    # allocator
-#     alloc = numpy_utils.Allocator(storeAsList=True)
-#       
-#     # call C lib
-#     c_rendering.splitVisAtomsBySpecie(visibleAtoms, NSpecies, lattice.specie, specieCount, lattice.pos, lattice.PE, lattice.KE, 
-#                                       lattice.charge, scalarsArray, scalarType, colouringOptions.heightAxis, alloc.cfunc)
-#        
-#     # arrays
-#     speciePosArrays = alloc.allocated_arrays[::2]
-#     specieScalarArrays = alloc.allocated_arrays[1::2]
-#     assert len(speciePosArrays) == NSpecies
-#     assert len(specieScalarArrays) == NSpecies
-    
     # call C lib
     resultList = _rendering.splitVisAtomsBySpecie(visibleAtoms, NSpecies, lattice.specie, specieCount, lattice.pos, lattice.PE, lattice.KE, 
                                                   lattice.charge, scalarsArray, scalarType, colouringOptions.heightAxis)
-      
-    speciePosArrays2 = []
-    specieScalarArrays2 = []
+    
+    # check result
+    speciePosArrays = []
+    specieScalarArrays = []
     for sposarr, sscalarr in resultList:
-        speciePosArrays2.append(sposarr)
-        specieScalarArrays2.append(sscalarr)
-    assert len(speciePosArrays2) == NSpecies
-    assert len(specieScalarArrays2) == NSpecies
+        speciePosArrays.append(sposarr)
+        specieScalarArrays.append(sscalarr)
+    assert len(speciePosArrays) == NSpecies
+    assert len(specieScalarArrays) == NSpecies
     
     # make points from numpy array
     atomPointsList = []
     atomScalarsList = []
     for specInd in xrange(NSpecies):
-        specPos = speciePosArrays2[specInd]
-        specScalar = specieScalarArrays2[specInd]
+        specPos = speciePosArrays[specInd]
+        specScalar = specieScalarArrays[specInd]
         
         points = vtk.vtkPoints()
         points.SetData(numpy_support.numpy_to_vtk(specPos, deep=1))
