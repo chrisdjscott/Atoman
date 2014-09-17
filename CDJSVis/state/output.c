@@ -4,17 +4,38 @@
  ** IO routines written in C to improve performance
  *******************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-#include "output.h"
+#include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
+#include <numpy/arrayobject.h>
+#include "array_utils.h"
 
 
+//static PyObject* writePOVRAYAtoms(PyObject*, PyObject*);
+static PyObject* writePOVRAYDefects(PyObject*, PyObject*);
+static PyObject* writeLattice(PyObject*, PyObject*);
 static void addPOVRAYSphere(FILE *, double, double, double, double, double, double, double);
 static void addPOVRAYCube(FILE *, double, double, double, double, double, double, double, double);
 static void addPOVRAYCellFrame(FILE *, double, double, double, double, double, double, double, double, double);
 
+
+/*******************************************************************************
+ ** List of python methods available in this module
+ *******************************************************************************/
+static struct PyMethodDef methods[] = {
+//    {"writePOVRAYAtoms", writePOVRAYAtoms, METH_VARARGS, "Write atoms to POV-Ray file"},
+    {"writePOVRAYDefects", writePOVRAYDefects, METH_VARARGS, "Write defects to POV-Ray file"},
+    {"writeLattice", writeLattice, METH_VARARGS, "Write (visible) atoms to lattice file"},
+    {NULL, NULL, 0, NULL}
+};
+
+/*******************************************************************************
+ ** Module initialisation function
+ *******************************************************************************/
+PyMODINIT_FUNC
+init_output(void)
+{
+    (void)Py_InitModule("_output", methods);
+    import_array();
+}
 
 /*******************************************************************************
  ** write sphere to pov-ray file
@@ -75,83 +96,158 @@ static void addPOVRAYCellFrame(FILE *fp, double xposa, double yposa, double zpos
 /*******************************************************************************
  ** write visible atoms to pov-ray file
  *******************************************************************************/
-int writePOVRAYAtoms(char* filename, int NVisible, int *visibleAtoms, int* specie, double* pos, 
-                     double* specieCovRad, double* PE, double* KE, double* charge, double* scalars, 
-                     int scalarType, int heightAxis, rgbcalc_t rgbcalc)
-{
-    int i, index, specieIndex;
-    double *rgb, scalar;
-    FILE *OUTFILE;
-    
-    /* open file */
-    OUTFILE = fopen(filename, "w");
-    if (OUTFILE == NULL)
-    {
-        printf("ERROR: could not open file: %s\n", filename);
-        printf("       reason: %s\n", strerror(errno));
-        exit(35);
-    }
-    
-    printf("Scalar type %d\n", scalarType);
-    
-    /* loop over visible atoms */
-    for (i=0; i<NVisible; i++)
-    {
-        index = visibleAtoms[i];
-        specieIndex = specie[index];
-        
-        /* scalar */
-        if (scalarType == 0)
-        {
-            scalar = specieIndex;
-        }
-        else if (scalarType == 1)
-        {
-            scalar = pos[3*index+heightAxis];
-        }
-        else if (scalarType == 2)
-        {
-            scalar = KE[index];
-        }
-        else if (scalarType == 3)
-        {
-            scalar = PE[index];
-        }
-        else if (scalarType == 4)
-        {
-            scalar = charge[index];
-        }
-        else
-        {
-            scalar = scalars[i];
-        }
-        
-        /* get rgb */
-        rgb = rgbcalc(scalar);
-        
-        printf("VIS ATOM %d; scalar %lf; rgb (%lf, %lf, %lf)\n", index, scalar, rgb[0], rgb[1], rgb[2]);
-        
-        /* write atom */
-        addPOVRAYSphere(OUTFILE, - pos[3*index], pos[3*index+1], pos[3*index+2], 
-                        specieCovRad[specieIndex], rgb[0], rgb[1], rgb[2]);
-    }
-    
-    fclose(OUTFILE);
-    
-    return 0;
-}
+//static PyObject*
+//writePOVRAYAtoms(PyObject *self, PyObject *args)
+//{
+//    char *filename;
+//    int *visibleAtoms, *specie, scalarType, heightAxis, 
+//    double *pos, *specieCovRad, *PE, *KE, *charge, *scalars;
+//    
+//    
+////int writePOVRAYAtoms(char* filename, int NVisible, int *visibleAtoms, int* specie, double* pos, 
+////                     double* specieCovRad, double* PE, double* KE, double* charge, double* scalars, 
+////                     int scalarType, int heightAxis, rgbcalc_t rgbcalc)
+////{
+//    int i, index, specieIndex;
+//    double *rgb, scalar;
+//    FILE *OUTFILE;
+//    
+//    /* open file */
+//    OUTFILE = fopen(filename, "w");
+//    if (OUTFILE == NULL)
+//    {
+//        printf("ERROR: could not open file: %s\n", filename);
+//        printf("       reason: %s\n", strerror(errno));
+//        exit(35);
+//    }
+//    
+//    printf("Scalar type %d\n", scalarType);
+//    
+//    /* loop over visible atoms */
+//    for (i=0; i<NVisible; i++)
+//    {
+//        index = visibleAtoms[i];
+//        specieIndex = specie[index];
+//        
+//        /* scalar */
+//        if (scalarType == 0)
+//        {
+//            scalar = specieIndex;
+//        }
+//        else if (scalarType == 1)
+//        {
+//            scalar = pos[3*index+heightAxis];
+//        }
+//        else if (scalarType == 2)
+//        {
+//            scalar = KE[index];
+//        }
+//        else if (scalarType == 3)
+//        {
+//            scalar = PE[index];
+//        }
+//        else if (scalarType == 4)
+//        {
+//            scalar = charge[index];
+//        }
+//        else
+//        {
+//            scalar = scalars[i];
+//        }
+//        
+//        /* get rgb */
+//        rgb = rgbcalc(scalar);
+//        
+//        printf("VIS ATOM %d; scalar %lf; rgb (%lf, %lf, %lf)\n", index, scalar, rgb[0], rgb[1], rgb[2]);
+//        
+//        /* write atom */
+//        addPOVRAYSphere(OUTFILE, - pos[3*index], pos[3*index+1], pos[3*index+2], 
+//                        specieCovRad[specieIndex], rgb[0], rgb[1], rgb[2]);
+//    }
+//    
+//    fclose(OUTFILE);
+//    
+//    return 0;
+//}
 
 
 /*******************************************************************************
  ** write defects to povray file
  *******************************************************************************/
-int writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int *ints, int antsDim, int *ants, int onAntsDim, int *onAnts,
-                       int *specie, double *pos, int *refSpecie, double *refPos, double *specieRGB, double *specieCovRad, double *refSpecieRGB,
-                       double* refSpecieCovRad, int splitIntsDim, int *splitInts)
+static PyObject*
+writePOVRAYDefects(PyObject *self, PyObject *args)
 {
+    char *filename;
+    int vacsDim, *vacs, intsDim, *ints, antsDim, *ants, onAntsDim, *onAnts, *specie, *refSpecie, splitIntsDim, *splitInts;  
+    double *pos, *refPos, *specieRGB, *specieCovRad, *refSpecieRGB, *refSpecieCovRad;
+    PyArrayObject *vacsIn=NULL;
+    PyArrayObject *intsIn=NULL;
+    PyArrayObject *antsIn=NULL;
+    PyArrayObject *onAntsIn=NULL;
+    PyArrayObject *specieIn=NULL;
+    PyArrayObject *refSpecieIn=NULL;
+    PyArrayObject *splitIntsIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *refPosIn=NULL;
+    PyArrayObject *specieRGBIn=NULL;
+    PyArrayObject *specieCovRadIn=NULL;
+    PyArrayObject *refSpecieRGBIn=NULL;
+    PyArrayObject *refSpecieCovRadIn=NULL;
+    
     int i, index, specieIndex;
     FILE *OUTFILE;
-
+    
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!O!O!O!O!O!", &filename, &PyArray_Type, &vacsIn, &PyArray_Type, &intsIn, &PyArray_Type, &antsIn,
+            &PyArray_Type, &onAntsIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &PyArray_Type, &refSpecieIn, &PyArray_Type, &refPosIn,
+            &PyArray_Type, &specieRGBIn, &PyArray_Type, &specieCovRadIn, &PyArray_Type, &refSpecieRGBIn, &PyArray_Type, &refSpecieCovRadIn,
+            &PyArray_Type, &splitIntsIn))
+        return NULL;
+    
+    if (not_intVector(vacsIn)) return NULL;
+    vacs = pyvector_to_Cptr_int(vacsIn);
+    vacsDim = (int) vacsIn->dimensions[0];
+    
+    if (not_intVector(intsIn)) return NULL;
+    ints = pyvector_to_Cptr_int(intsIn);
+    intsDim = (int) intsIn->dimensions[0];
+    
+    if (not_intVector(antsIn)) return NULL;
+    ants = pyvector_to_Cptr_int(antsIn);
+    antsDim = (int) antsIn->dimensions[0];
+    
+    if (not_intVector(onAntsIn)) return NULL;
+    onAnts = pyvector_to_Cptr_int(onAntsIn);
+    onAntsDim = (int) onAntsIn->dimensions[0];
+    
+    if (not_intVector(splitIntsIn)) return NULL;
+    splitInts = pyvector_to_Cptr_int(splitIntsIn);
+    splitIntsDim = (int) splitIntsIn->dimensions[0];
+    
+    if (not_intVector(specieIn)) return NULL;
+    specie = pyvector_to_Cptr_int(specieIn);
+    
+    if (not_intVector(refSpecieIn)) return NULL;
+    refSpecie = pyvector_to_Cptr_int(refSpecieIn);
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(refPosIn)) return NULL;
+    refPos = pyvector_to_Cptr_double(refPosIn);
+    
+    if (not_doubleVector(specieRGBIn)) return NULL;
+    specieRGB = pyvector_to_Cptr_double(specieRGBIn);
+    
+    if (not_doubleVector(refSpecieRGBIn)) return NULL;
+    refSpecieRGB = pyvector_to_Cptr_double(refSpecieRGBIn);
+    
+    if (not_doubleVector(specieCovRadIn)) return NULL;
+    specieCovRad = pyvector_to_Cptr_double(specieCovRadIn);
+    
+    if (not_doubleVector(refSpecieCovRadIn)) return NULL;
+    refSpecieCovRad = pyvector_to_Cptr_double(refSpecieCovRadIn);
 
     /* open file */
     OUTFILE = fopen(filename, "w");
@@ -238,24 +334,60 @@ int writePOVRAYDefects(char *filename, int vacsDim, int *vacs, int intsDim, int 
 
     fclose(OUTFILE);
     
-    return 0;
+    return Py_BuildValue("i", 0);
 }
 
 /*******************************************************************************
 ** write lattice file
 *******************************************************************************/
-int writeLattice(char* file, int NAtoms, int NVisible, int *visibleAtoms, double *cellDims, 
-                 char* specieList, int* specie, double* pos, double* charge, int writeFullLattice)
+static PyObject*
+writeLattice(PyObject *self, PyObject *args)
 {
+    char *filename, *specieList;
+    int NAtoms, NVisible, *visibleAtoms, *specie, writeFullLattice;
+    double *cellDims, *pos, *charge;
+    PyArrayObject *specieListIn=NULL;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *specieIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *chargeIn=NULL;
+
     int i, index, NAtomsWrite;
     FILE *OUTFILE;
     char symtemp[3];
     
     
-    OUTFILE = fopen(file, "w");
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!i", &filename, &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &cellDimsIn, 
+            &PyArray_Type, &specieListIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &PyArray_Type, &chargeIn,
+            &writeFullLattice))
+        return NULL;
+    
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisible = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_intVector(specieIn)) return NULL;
+    specie = pyvector_to_Cptr_int(specieIn);
+    NAtoms = (int) specieIn->dimensions[0];
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_doubleVector(chargeIn)) return NULL;
+    charge = pyvector_to_Cptr_double(chargeIn);
+    
+    specieList = pyvector_to_Cptr_char(specieListIn);
+    
+    /* open file */
+    OUTFILE = fopen(filename, "w");
     if (OUTFILE == NULL)
     {
-        printf("ERROR: could not open file: %s\n", file);
+        printf("ERROR: could not open file: %s\n", filename);
         printf("       reason: %s\n", strerror(errno));
         exit(35);
     } 
@@ -292,7 +424,5 @@ int writeLattice(char* file, int NAtoms, int NVisible, int *visibleAtoms, double
         
     fclose(OUTFILE);
     
-    return 0;
+    return Py_BuildValue("i", 0);
 }
-
-

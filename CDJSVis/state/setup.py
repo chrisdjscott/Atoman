@@ -15,6 +15,10 @@ def configuration(parent_package='', top_path=None):
                          ["input.c", "../visclibs/array_utils.c"],
                          include_dirs=[incdir])
     
+    config.add_extension("_output", 
+                         ["output.c", "../visclibs/array_utils.c"],
+                         include_dirs=[incdir])
+    
     return config
 
 if __name__ == "__main__":

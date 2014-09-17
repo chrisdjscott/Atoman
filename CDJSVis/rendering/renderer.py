@@ -22,7 +22,7 @@ from PIL import Image
 from PySide import QtGui, QtCore
 
 from ..visutils import utilities
-from ..visclibs import output as output_c
+from ..state import _output as output_c
 from . import axes
 from . import cell
 from .utils import setRes, setupLUT, getScalar, setMapperScalarRange, makeScalarBar, getScalarsType
@@ -30,6 +30,7 @@ from . import utils
 from ..visclibs import rendering as c_rendering
 from ..visclibs import numpy_utils
 from ..visutils.threading_vis import GenericRunnable
+from ImImagePlugin import LUT
 
 
 ################################################################################
@@ -912,6 +913,15 @@ class PovRayAtomsWriter(QtCore.QObject):
         self.allDone.emit()
 
 ################################################################################
+
+class RGBCallBackClass2(object):
+    def __init__(self, lut):
+        self.lut = lut
+    
+    def getRGB(self, scalar):
+        rgb = np.empty(3, np.float64)
+        self.lut.GetColor(scalar, rgb)
+        return rgb
 
 def writePovrayAtoms(filename, visibleAtoms, lattice, scalarsDict, colouringOptions, lut):
     """

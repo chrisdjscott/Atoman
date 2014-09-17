@@ -51,8 +51,7 @@ ifeq (Linux, $(shell uname -s))
 	LIBSUFFIX = so
 endif
 
-LIBFILES = _filtering.$(LIBSUFFIX) _output.$(LIBSUFFIX) \
-		   _vectors.$(LIBSUFFIX) _rendering.$(LIBSUFFIX) \
+LIBFILES = _filtering.$(LIBSUFFIX) _vectors.$(LIBSUFFIX) _rendering.$(LIBSUFFIX) \
 
 # target
 all : $(LIBFILES)
@@ -60,9 +59,6 @@ all : $(LIBFILES)
 # create object file
 _filtering.$(LIBSUFFIX) : filtering.o boxeslib.o utilities.o
 	$(CC) $(CCLINKFLAGS) filtering.o utilities.o boxeslib.o -o _filtering.$(LIBSUFFIX)
-
-_output.$(LIBSUFFIX) : output.o
-	$(CC) $(CCLINKFLAGS) output.o -o _output.$(LIBSUFFIX)
 
 _vectors.$(LIBSUFFIX) : vectors.o utilities.o
 	$(CC) $(CCLINKFLAGS) vectors.o utilities.o -o _vectors.$(LIBSUFFIX)
@@ -79,9 +75,6 @@ utilities.o : utilities.c
 
 filtering.o : filtering.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) filtering.c 
-
-output.o : output.c 
-	$(CC) $(CCFLAGS) $(INCLUDES) output.c
 
 vectors.o : vectors.c 
 	$(CC) $(CCFLAGS) $(INCLUDES) vectors.c

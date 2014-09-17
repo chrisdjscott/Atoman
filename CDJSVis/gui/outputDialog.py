@@ -23,7 +23,7 @@ from ..visutils import utilities
 from ..visutils import threading_vis
 from ..visutils.utilities import iconPath
 from . import genericForm
-from ..visclibs import output as output_c
+from ..state import _output as output_c
 from ..plotting import rdf as rdf_c
 from ..visclibs import vectors as vectors_c
 from ..plotting import plotDialog
