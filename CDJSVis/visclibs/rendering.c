@@ -11,7 +11,8 @@
 /*******************************************************************************
  ** Split visible atoms by specie (position and scalar)
  *******************************************************************************/
-int splitVisAtomsBySpecie(int NVisible, int* visibleAtoms, int NSpecies, int* specieArray, int* specieCount, double* pos, double* PE, double* KE, double* charge, double* scalars, int scalarType, int heightAxis, allocator_t allocator)
+int splitVisAtomsBySpecie(int NVisible, int* visibleAtoms, int NSpecies, int* specieArray, int* specieCount, double* pos, 
+        double* PE, double* KE, double* charge, double* scalars, int scalarType, int heightAxis, allocator_t allocator)
 {
     int i, j, index, specie, count;
     int numpyDims[1], numpyDims2[2];

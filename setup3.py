@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import os
+import glob
+import sys
 
 
 def configuration(parent_package='', top_path=None):
@@ -17,7 +20,32 @@ def configuration(parent_package='', top_path=None):
     
     return config
 
+def do_clean():
+    cwd = os.getcwd()
+    os.chdir("CDJSVis")
+    for root, dirs, files in os.walk(os.getcwd()):
+        if "Makefile" in files:
+            cmd = "make clean"
+            os.chdir(root)
+            print "(cd %s; %s)" % (root, cmd)
+            print cmd
+            os.system(cmd)
+        
+        so_files = glob.glob(os.path.join(root, "*.so"))
+        for so_file in so_files:
+            print "rm %s" % os.path.join(root, so_file)
+            os.unlink(so_file)
+        
+        if "resources.py" in files:
+            os.unlink(os.path.join(root, "resources.py"))
+    
+    os.chdir(cwd)
+
 def setup_package():
+    # clean?
+    if "clean" in sys.argv:
+        do_clean()
+    
     # srcpath stuff?
     
     
