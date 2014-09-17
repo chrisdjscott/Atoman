@@ -25,7 +25,7 @@ from ..visutils.utilities import iconPath
 from . import genericForm
 from ..state import _output as output_c
 from ..plotting import rdf as rdf_c
-from ..visclibs import vectors as vectors_c
+from ..algebra import _vectors as vectors_c
 from ..plotting import plotDialog
 
 try:
@@ -1888,7 +1888,7 @@ class ImageSequenceTab(QtGui.QWidget):
         logger = self.logger
         logger.debug("Attempting to eliminate PBC flicker")
         
-        count = vectors_c.eliminatePBCFlicker(state, previousPos, pbc)
+        count = vectors_c.eliminatePBCFlicker(state.NAtoms, state.pos, previousPos, state.cellDims, pbc)
         
         logger.debug("Modified: %d", count)
     

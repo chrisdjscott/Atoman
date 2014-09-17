@@ -23,7 +23,7 @@ from . import bond_order as bond_order
 from . import acna
 from ..rendering import renderer
 from ..rendering import renderBonds
-from ..visutils import vectors
+from ..algebra import vectors
 from . import clusters
 from ..state.atoms import elements
 from . import voronoi
