@@ -55,10 +55,6 @@ findClusters(PyObject *self, PyObject *args)
     PyArrayObject *resultsIn=NULL;
     PyArrayObject *fullScalarsIn=NULL;
     
-//int findClusters(int NVisibleIn, int *visibleAtoms, double *pos, int *clusterArray, double neighbourRad, double *cellDims, 
-//                 int *PBC, double *minPos, double *maxPos, int minClusterSize, int maxClusterSize, int *results, 
-//                 int NScalars, double *fullScalars)
-//{
     int i, j, index, NClusters, numInCluster;
     int maxNumInCluster;
     double nebRad2, approxBoxWidth;
