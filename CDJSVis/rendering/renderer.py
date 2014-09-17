@@ -31,7 +31,6 @@ from ..visclibs import rendering as c_rendering
 from . import _rendering
 from ..visclibs import numpy_utils
 from ..visutils.threading_vis import GenericRunnable
-from ImImagePlugin import LUT
 
 
 ################################################################################
