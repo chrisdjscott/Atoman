@@ -15,7 +15,7 @@ from PySide import QtGui, QtCore
 from . import genericForm
 from ..visutils.utilities import iconPath, resourcePath
 from ..visutils import utilities
-from ..md import forces
+# from ..md import forces
 
 try:
     from .. import resources
@@ -687,36 +687,37 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
         logger = logging.getLogger(__name__)
         
         # settings object
-        settings = QtCore.QSettings()
-        
-        # default settings
-        self.forcesConfig = forces.ForceConfig()
-        self.forcesConfig.log = self.parent.parent.console.write
-        
-        # path to md dir
-        self.pathToMDDir = str(settings.value("forces/pathToMDDir", ""))
-        if len(self.pathToMDDir) and not os.path.isdir(self.pathToMDDir):
-            self.pathToMDDir = ""
-        logger.debug("Path to MD dir ini: '%s'", self.pathToMDDir)
-        
-        if not len(self.pathToMDDir):
-            self.forcesConfig.md_dir = resourcePath("", dirname="md")
-        
-        else:
-            self.forcesConfig.md_dir = self.pathToMDDir
-        
-        logger.debug("Config path to MD dir ini: '%s'", self.forcesConfig.md_dir)
-        
-        # interface type
-        self.interfaceType = str(settings.value("forces/interface", "LBOMD"))
-        logger.debug("Force interface ini: '%s'", self.interfaceType)
-        
-        self.forcesConfig.md_type = self.interfaceType
+#         settings = QtCore.QSettings()
+#         
+#         # default settings
+#         self.forcesConfig = forces.ForceConfig()
+#         self.forcesConfig.log = self.parent.parent.console.write
+#         
+#         # path to md dir
+#         self.pathToMDDir = str(settings.value("forces/pathToMDDir", ""))
+#         if len(self.pathToMDDir) and not os.path.isdir(self.pathToMDDir):
+#             self.pathToMDDir = ""
+#         logger.debug("Path to MD dir ini: '%s'", self.pathToMDDir)
+#         
+#         if not len(self.pathToMDDir):
+#             self.forcesConfig.md_dir = resourcePath("", dirname="md")
+#         
+#         else:
+#             self.forcesConfig.md_dir = self.pathToMDDir
+#         
+#         logger.debug("Config path to MD dir ini: '%s'", self.forcesConfig.md_dir)
+#         
+#         # interface type
+#         self.interfaceType = str(settings.value("forces/interface", "LBOMD"))
+#         logger.debug("Force interface ini: '%s'", self.interfaceType)
+#         
+#         self.forcesConfig.md_type = self.interfaceType
         
         # path to povray
+        self.pathToMDDir = "<not implemented>"
         pathToMDDirLineEdit = QtGui.QLineEdit(self.pathToMDDir)
-        pathToMDDirLineEdit.textChanged.connect(self.pathToMDDirChanged)
-        pathToMDDirLineEdit.editingFinished.connect(self.pathToMDDirEdited)
+#         pathToMDDirLineEdit.textChanged.connect(self.pathToMDDirChanged)
+#         pathToMDDirLineEdit.editingFinished.connect(self.pathToMDDirEdited)
         
         rowLayout = self.newRow()
         rowLayout.addWidget(QtGui.QLabel("Path to MD dir:"))
@@ -730,7 +731,7 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
         
         interfaceCombo = QtGui.QComboBox()
         interfaceCombo.addItem("LBOMD")
-        interfaceCombo.currentIndexChanged[str].connect(self.interfaceChanged)
+#         interfaceCombo.currentIndexChanged[str].connect(self.interfaceChanged)
         rowLayout.addWidget(interfaceCombo)
         
         self.init()

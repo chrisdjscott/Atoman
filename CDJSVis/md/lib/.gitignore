@@ -1,8 +1,0 @@
-# ignore python compiled files
-*.pyc
-
-!*.so
-
-.project
-.pydevproject
-.DS_Store

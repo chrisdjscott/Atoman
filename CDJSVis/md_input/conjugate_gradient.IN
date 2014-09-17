@@ -1,5 +1,0 @@
-5.0E-01     /* accuracy in line search: epsilon_linesearch (A) 
-force       /* monitor convergence in : energy (energ) ; force (force) : < 5 characters>
-1.0E-04     /* termination criterion  : epsilon_force (infinity norm) (ev/A)
-1.0E-08     /* termination criterion  : epsilon_energy (eV)
-
