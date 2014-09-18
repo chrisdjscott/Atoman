@@ -23,8 +23,8 @@ This is a list of third-party python modules that this code requires to run.  Th
 
 In order to be able to use all features the following programmes should be installed:
 
-*   POV-Ray (for offline rendering of images; looks better)
-*   Ffmpeg (for creating movies; sequencer and rotator)
+*   [POV-Ray](http://www.povray.org/) (for offline rendering of images; looks better)
+*   [Ffmpeg](https://www.ffmpeg.org/) (for creating movies; sequencer and rotator)
 
 If these are not installed in default system locations you can set the paths to where they are installed in the preference dialog.
 
@@ -40,7 +40,7 @@ which will build all the C extensions in place and also build the documentation.
 
 Then you can add the `/path/to/CDJSVis` directory to you PYTHONPATH and PATH and run CDJSVis.py.
 
-## Building .app (Mac OS X)
+## Building application (Mac OS X)
 
-On Mac OS X you can build a .app application using [PyInstaller](http://www.pyinstaller.org/). Simply change to the pyinstaller/ directory and run `./build.sh`.
+On Mac OS X you can build a .app application using [PyInstaller](http://www.pyinstaller.org/). Simply change to the pyinstaller/ directory and run `./build.sh` (you may need to edit the path to pyinstaller.py).
 
