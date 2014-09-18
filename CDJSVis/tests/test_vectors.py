@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from ..visclibs import vectors
+from ..algebra import _vectors
 
 
 ################################################################################
@@ -23,7 +23,7 @@ class TestVectors(unittest.TestCase):
         
         """
         vect = np.asarray([1.8, 5.4, 2.2, 0.0, 0.2], dtype=np.float64)
-        mag = vectors.magnitude(vect)
+        mag = _vectors.magnitude(vect)
         self.assertAlmostEqual(mag, 6.1057350089895)
     
     def test_magnitudeCfNump(self):
@@ -32,7 +32,7 @@ class TestVectors(unittest.TestCase):
         
         """
         vect = np.random.rand(100)
-        mag = vectors.magnitude(vect)
+        mag = _vectors.magnitude(vect)
         self.assertAlmostEqual(mag, np.linalg.norm(vect))
     
     def test_separationMagnitude(self):
@@ -45,7 +45,7 @@ class TestVectors(unittest.TestCase):
         p1 = np.asarray([1.0, 1.0, 1.0], dtype=np.float64)
         p2 = np.asarray([11.0, 5.0, 0.0], dtype=np.float64)
         
-        sepMag = vectors.separationMagnitude(p1, p2, cellDims, np.ones(3, np.int32))
+        sepMag = _vectors.separationMagnitude(p1, p2, cellDims, np.ones(3, np.int32))
         
         self.assertAlmostEqual(sepMag, 10.81665383)
     
@@ -59,7 +59,7 @@ class TestVectors(unittest.TestCase):
         p1 = np.asarray([1.0, 1.0, 1.0], dtype=np.float64)
         p2 = np.asarray([99, 99, 99], dtype=np.float64)
         
-        sepMag = vectors.separationMagnitude(p1, p2, cellDims, np.ones(3, np.int32))
+        sepMag = _vectors.separationMagnitude(p1, p2, cellDims, np.ones(3, np.int32))
         
         self.assertAlmostEqual(sepMag, 3.464101615)
     
@@ -75,7 +75,7 @@ class TestVectors(unittest.TestCase):
         
         sepVec = np.empty(3, np.float64)
         
-        status = vectors.separationVector(sepVec, p1, p2, cellDims, np.ones(3, np.int32))
+        status = _vectors.separationVector(sepVec, p1, p2, cellDims, np.ones(3, np.int32))
         
         self.assertEqual(status, 0)
         self.assertEqual(sepVec[0], 10)
@@ -94,7 +94,7 @@ class TestVectors(unittest.TestCase):
         
         sepVec = np.empty(3, np.float64)
         
-        status = vectors.separationVector(sepVec, p1, p2, cellDims, np.ones(3, np.int32))
+        status = _vectors.separationVector(sepVec, p1, p2, cellDims, np.ones(3, np.int32))
         
         self.assertEqual(status, 0)
         self.assertEqual(sepVec[0], -2)

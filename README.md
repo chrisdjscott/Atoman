@@ -19,6 +19,12 @@ This is a list of third-party python modules that this code requires to run.  Th
 * [Sphinx](http://sphinx-doc.org/)
 * [nose](https://nose.readthedocs.org/en/latest/) (testing)
 
+### Other libraries
+
+This code also requires the following libraries to be installed:
+
+* [GSL](http://www.gnu.org/software/gsl/) - GNU Scientific Library
+
 ### Other software
 
 In order to be able to use all features the following programmes should be installed:

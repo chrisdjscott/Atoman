@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 
 from ..lattice_gen import lattice_gen_fcc, lattice_gen_bcc
-from ..visclibs import acna
+from ..filtering import acna
 from ..filtering import filterer
 
 

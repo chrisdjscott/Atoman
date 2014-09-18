@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from ..visclibs import filtering
+from ..filtering import _filtering
 
 
 ################################################################################
@@ -29,14 +29,14 @@ class TestSpecieFilterC(unittest.TestCase):
         
         visibleAtoms = np.arange(N, dtype=np.int32)
         visibleSpecieArray = np.asarray([1], dtype=np.int32)
-        nvis = filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
+        nvis = _filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
         self.assertEqual(nvis, 2)
         self.assertEqual(visibleAtoms[0], 2)
         self.assertEqual(visibleAtoms[1], 4)
         
         visibleAtoms = np.arange(N, dtype=np.int32)
         visibleSpecieArray = np.asarray([0], dtype=np.int32)
-        nvis = filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
+        nvis = _filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
         self.assertEqual(nvis, 3)
         self.assertEqual(visibleAtoms[0], 0)
         self.assertEqual(visibleAtoms[1], 1)
@@ -44,7 +44,7 @@ class TestSpecieFilterC(unittest.TestCase):
         
         visibleAtoms = np.arange(N, dtype=np.int32)
         visibleSpecieArray = np.asarray([0,1], dtype=np.int32)
-        nvis = filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
+        nvis = _filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
         self.assertEqual(nvis, 5)
         self.assertEqual(visibleAtoms[0], 0)
         self.assertEqual(visibleAtoms[1], 1)
@@ -53,7 +53,7 @@ class TestSpecieFilterC(unittest.TestCase):
         self.assertEqual(visibleAtoms[4], 4)
         
         visibleSpecieArray = np.asarray([], dtype=np.int32)
-        nvis = filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
+        nvis = _filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
         self.assertEqual(nvis, 0)
     
     def test_specieFilterFullScalars(self):
@@ -68,7 +68,7 @@ class TestSpecieFilterC(unittest.TestCase):
         visibleAtoms = np.arange(N, dtype=np.int32)
         visibleSpecieArray = np.asarray([0], dtype=np.int32)
         fullScalars = np.arange(NScalars*N, dtype=np.float64)
-        nvis = filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
+        nvis = _filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
         self.assertEqual(nvis, 3)
         self.assertEqual(visibleAtoms[0], 0)
         self.assertEqual(visibleAtoms[1], 1)
@@ -83,7 +83,7 @@ class TestSpecieFilterC(unittest.TestCase):
         visibleAtoms = np.arange(N, dtype=np.int32)
         visibleSpecieArray = np.asarray([1], dtype=np.int32)
         fullScalars = np.arange(NScalars*N, dtype=np.float64)
-        nvis = filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
+        nvis = _filtering.specieFilter(visibleAtoms, visibleSpecieArray, specieArray, NScalars, fullScalars)
         self.assertEqual(nvis, 2)
         self.assertEqual(visibleAtoms[0], 2)
         self.assertEqual(visibleAtoms[1], 4)
