@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
 
+"""
+Setup script for CDJSVis
+
+@author: Chris Scott
+
+"""
 import os
 import glob
 import sys

@@ -26,7 +26,7 @@ In order to be able to use all features the following programmes should be insta
 *   [POV-Ray](http://www.povray.org/) (for offline rendering of images; looks better)
 *   [Ffmpeg](https://www.ffmpeg.org/) (for creating movies; sequencer and rotator)
 
-If these are not installed in default system locations you can set the paths to where they are installed in the preference dialog.
+If these are not installed in default system locations you can set the paths to where they are installed in the preferences dialog.
 
 ## Installation
 
