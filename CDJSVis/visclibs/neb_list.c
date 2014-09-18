@@ -7,7 +7,7 @@
 #include "neb_list.h"
 
 
-void addAtomToNebList(int, int, double, struct NeighbourList2 *);
+static void addAtomToNebList(int, int, double, struct NeighbourList2 *);
 
 
 
@@ -139,7 +139,7 @@ void freeNeighbourList(struct NeighbourList *nebList, int size)
 
 /*************************************************/
 
-void addAtomToNebList(int mainIndex, int nebIndex, double sep, struct NeighbourList2 *nebList)
+static void addAtomToNebList(int mainIndex, int nebIndex, double sep, struct NeighbourList2 *nebList)
 {
 	int newsize;
 	

@@ -761,20 +761,7 @@ class MainWindow(QtGui.QMainWindow):
                 f.readline()
                 f.readline()
                 f.readline()
-                
-                line = f.readline().strip()
-                array = line.split()
-                try:
-                    # simulation identity
-                    simIdentity = array[0]
-                    
-                    # update labels with simulation identity
-#                     self.loadInputDialog.lbomdXyzWidget_input.updateFileLabelCustom("%s%04d.xyz" % (simIdentity, 0), isRef=False)
-#                     for rw in self.rendererWindows:
-#                         rw.outputDialog.imageTab.imageSequenceTab.fileprefix.setText(simIdentity)
-                
-                except IndexError:
-                    logger.warning("Index error 1 (check lbomd.IN format)")
+                f.readline()
                 
                 line = f.readline().strip()
                 array = line.split()
@@ -783,24 +770,6 @@ class MainWindow(QtGui.QMainWindow):
                     PBC[0] = int(array[0])
                     PBC[1] = int(array[1])
                     PBC[2] = int(array[2])
-                    
-#                     if PBC[0]:
-#                         self.loadInputDialog.PBCXCheckBox.setCheckState(QtCore.Qt.Checked)
-#                     
-#                     else:
-#                         self.loadInputDialog.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
-#                     
-#                     if PBC[1]:
-#                         self.loadInputDialog.PBCYCheckBox.setCheckState(QtCore.Qt.Checked)
-#                     
-#                     else:
-#                         self.loadInputDialog.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
-#                     
-#                     if PBC[2]:
-#                         self.loadInputDialog.PBCZCheckBox.setCheckState(QtCore.Qt.Checked)
-#                     
-#                     else:
-#                         self.loadInputDialog.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
                 
                 except IndexError:
                     logger.warning("Index error 2 (check lbomd.IN format)")
@@ -856,14 +825,8 @@ class MainWindow(QtGui.QMainWindow):
         self.setCurrentRefFile(filename)
         self.refLoaded = 1
         
-#         self.inputState.clone(self.refState)
-        
         for rw in self.rendererWindows:
             rw.renderer.postRefRender()
-        
-#         self.loadInputDialog.loadRefBox.hide()
-#         self.loadInputDialog.clearRefBox.show()
-#         self.loadInputDialog.loadInputBox.show()
         
         for rw in self.rendererWindows:
             rw.textSelector.refresh()
@@ -876,7 +839,6 @@ class MainWindow(QtGui.QMainWindow):
         self.setCurrentInputFile(filename)
         self.inputLoaded = 1
         
-#         self.mainToolbar.loadInputForm.hide()
         self.mainToolbar.analysisPipelinesForm.show()
         
         for filterPage in self.mainToolbar.pipelineList:
@@ -922,13 +884,6 @@ class MainWindow(QtGui.QMainWindow):
         
         self.mainToolbar.analysisPipelinesForm.hide()
         self.mainToolbar.loadInputForm.show()
-        
-#         self.loadInputDialog.loadInputBox.hide()
-#         self.loadInputDialog.clearRefBox.hide()
-#         self.loadInputDialog.loadRefBox.show()
-#         
-#         self.loadInputDialog.lbomdXyzWidget_ref.refLoaded = False
-#         self.loadInputDialog.lbomdXyzWidget_input.refLoaded = False
     
     def displayWarning(self, message):
         """

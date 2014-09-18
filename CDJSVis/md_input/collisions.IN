@@ -1,5 +1,0 @@
-2 3 5        /* INDX (TYPICALLY: 235 or 153)
-0.0       /* PROJECTIL_KE (in eV)
-T            /* SEARCH_FOR_PKA (PKA = PRIMARY KNOCK-ON ATOM)
-0.2 0.2 0.2  /* approximate PKA_SITE in lattice units (x*LX,y*LY,z*LZ)
-Pu           /* PKA atom symbol

@@ -1505,6 +1505,7 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         self.bondThicknessVTK = 0.4
         self.bondThicknessPOV = 0.4
         self.bondNumSides = 5
+        self.drawDisplacementVectors = False
         
         # draw displacement vector settings
         self.drawVectorsGroup = QtGui.QGroupBox("Draw displacement vectors")

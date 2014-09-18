@@ -5,7 +5,6 @@ The output tab for the main toolbar
 @author: Chris Scott
 
 """
-
 import os
 import sys
 import shutil
@@ -24,10 +23,10 @@ from ..visutils import utilities
 from ..visutils import threading_vis
 from ..visutils.utilities import iconPath
 from . import genericForm
-from ..visclibs import output as output_c
-from ..visclibs import rdf as rdf_c
-from ..visclibs import vectors as vectors_c
-from . import plotDialog
+from ..state import _output as output_c
+from ..plotting import rdf as rdf_c
+from ..algebra import _vectors as vectors_c
+from ..plotting import plotDialog
 
 try:
     from .. import resources
@@ -1889,7 +1888,7 @@ class ImageSequenceTab(QtGui.QWidget):
         logger = self.logger
         logger.debug("Attempting to eliminate PBC flicker")
         
-        count = vectors_c.eliminatePBCFlicker(state, previousPos, pbc)
+        count = vectors_c.eliminatePBCFlicker(state.NAtoms, state.pos, previousPos, state.cellDims, pbc)
         
         logger.debug("Modified: %d", count)
     

@@ -25,7 +25,7 @@ from ..visutils.utilities import iconPath
 from . import filterList
 from ..rendering.text import vtkRenderWindowText
 from ..visutils import utilities
-from ..visclibs import picker as picker_c
+from . import picker as picker_c
 from . import infoDialogs
 from . import utils
 from ..rendering import highlight

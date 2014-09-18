@@ -12,7 +12,7 @@ import logging
 import numpy as np
 import vtk
 
-from ..visutils import vectors
+from ..algebra import vectors
 from .utils import setupLUT, getScalar, setMapperScalarRange, getScalarsType
 from ..filtering import clusters
 

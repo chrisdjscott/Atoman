@@ -10,7 +10,7 @@ import logging
 import numpy as np
 
 from .atoms import elements
-from ..md import forces
+# from ..md import forces
 
 
 ################################################################################
@@ -199,11 +199,13 @@ class Lattice(object):
         Calculate force on lattice.
         
         """
-        if type(forceConfig) is not forces.ForceConfig:
-            print "FORCE CONFIG WRONG TYPE"
-            return 113
-        
-        return forces.calc_force(self, forceConfig)
+        pass
+    
+#         if type(forceConfig) is not forces.ForceConfig:
+#             print "FORCE CONFIG WRONG TYPE"
+#             return 113
+#         
+#         return forces.calc_force(self, forceConfig)
     
     def atomPos(self, index):
         """

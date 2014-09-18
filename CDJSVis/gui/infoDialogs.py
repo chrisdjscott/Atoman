@@ -11,7 +11,7 @@ import functools
 
 from PySide import QtGui, QtCore
 
-from ..visutils import vectors
+from ..algebra import vectors
 from ..rendering import highlight
 
 try:

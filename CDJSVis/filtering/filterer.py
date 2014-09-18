@@ -15,15 +15,15 @@ import numpy as np
 import vtk
 from PySide import QtGui
 
-from ..visclibs import filtering as filtering_c
-from ..visclibs import defects as defects_c
-from ..visclibs import clusters as clusters_c
-from ..visclibs import bonds as bonds_c
-from ..visclibs import bond_order as bond_order_c
-from ..visclibs import acna
+from . import _filtering as filtering_c
+from . import _defects as defects_c
+from . import _clusters as clusters_c
+from . import bonds as bonds_c
+from . import bond_order as bond_order
+from . import acna
 from ..rendering import renderer
 from ..rendering import renderBonds
-from ..visutils import vectors
+from ..algebra import vectors
 from . import clusters
 from ..state.atoms import elements
 from . import voronoi
@@ -499,7 +499,7 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
-        NVisible = bond_order_c.bondOrderFilter(self.visibleAtoms, inputState.pos, settings.maxBondDistance, scalarsQ4, scalarsQ6, inputState.minPos, 
+        NVisible = bond_order.bondOrderFilter(self.visibleAtoms, inputState.pos, settings.maxBondDistance, scalarsQ4, scalarsQ6, inputState.minPos, 
                                                 inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.filterQ4Enabled, 
                                                 settings.minQ4, settings.maxQ4, settings.filterQ6Enabled, settings.minQ6, settings.maxQ6)
         
@@ -692,7 +692,7 @@ class Filterer(object):
         NBondsArray = np.zeros(self.NVis, np.int32)
         bondVectorArray = np.empty(3 * size, np.float64)
         
-        status = bonds_c.calculateBonds(self.NVis, self.visibleAtoms, inputState.pos, inputState.specie, len(specieList), bondMinArray, bondMaxArray, 
+        status = bonds_c.calculateBonds(self.visibleAtoms, inputState.pos, inputState.specie, len(specieList), bondMinArray, bondMaxArray, 
                                         maxBond, maxBondsPerAtom, inputState.cellDims, self.pipelinePage.PBC, inputState.minPos, inputState.maxPos, 
                                         bondArray, NBondsArray, bondVectorArray, bondSpecieCounter)
         
@@ -896,7 +896,7 @@ class Filterer(object):
                 
                 # calculate vectors
                 bondVectorArray = np.empty(3 * NVisible, np.float64)
-                status = bonds_c.calculateDisplacementVectors(NVisible, self.visibleAtoms, inputState.pos, refState.pos, 
+                status = bonds_c.calculateDisplacementVectors(self.visibleAtoms, inputState.pos, refState.pos, 
                                                               refState.cellDims, self.pipelinePage.PBC, bondVectorArray)
                 
                 # pov file for bonds
@@ -1255,7 +1255,7 @@ class Filterer(object):
             
             # calculate vectors
             bondVectorArray = np.empty(3 * NInt, np.float64)
-            status = bonds_c.calculateDisplacementVectors(NInt, interstitials, inputLattice.pos, refLattice.pos, 
+            status = bonds_c.calculateDisplacementVectors(interstitials, inputLattice.pos, refLattice.pos, 
                                                           refLattice.cellDims, self.pipelinePage.PBC, bondVectorArray)
             
             # pov file for bonds

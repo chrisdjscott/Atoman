@@ -16,8 +16,13 @@ import logging
 
 from PySide import QtGui, QtCore
 
-from .. import globalsModule
-
+# set where to look for executables when os.getenv("PATH")
+# returns something less than expected (eg when running
+# pyinstaller executable)
+EXTENDED_PATH = [
+    "/opt/local/bin",
+    "/usr/local/bin",
+]
 
 ################################################################################
 
@@ -248,7 +253,7 @@ def checkForExe(exe):
             exepath = exe
     
         else:
-            for syspath in globalsModule.PATH:
+            for syspath in EXTENDED_PATH:
                 if os.path.exists(os.path.join(syspath, exe)):
                     found = 1
                     break
@@ -282,7 +287,7 @@ def checkForExeGlob(exe):
         exepath = matches[0]
     
     else:
-        for syspath in globalsModule.PATH:
+        for syspath in EXTENDED_PATH:
             matches = glob.glob(os.path.join(syspath, exe))
             if len(matches):
                 found = 1

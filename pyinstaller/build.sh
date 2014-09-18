@@ -12,13 +12,12 @@ VERSION=$(git describe)
 echo "BUILDING: CDJSVis $VERSION"
 echo "__version__ = \"$VERSION\"" > ../CDJSVis/visutils/version_freeze.py
 
-#TODO: automatically add env rthook to pyinstaller!
-
-rm -rf build/ dist/ *.log
+#rm -rf build/ dist/ *.log
 
 cd ..
 
-python setup.py doc
+# build_sphinx also runs 'build_ext --inplace'
+python setup.py build_sphinx
 
 cd pyinstaller
 
