@@ -44,3 +44,7 @@ Then you can add the `/path/to/CDJSVis` directory to you PYTHONPATH and PATH and
 
 On Mac OS X you can build a .app application using [PyInstaller](http://www.pyinstaller.org/). Simply change to the pyinstaller/ directory and run `./build.sh` (you may need to edit the path to pyinstaller.py).
 
+## Running the tests
+
+Currently there are not many tests, but you should run the ones that are there. Change to the `CDJSVis/tests` directory and run `nosetests -v`.
+
