@@ -59,15 +59,6 @@ pickObject(PyObject *self, PyObject *args)
     PyArrayObject *refSpecieCovRadIn=NULL;
     PyArrayObject *resultIn=NULL;
     
-//def pickObject(visibleAtoms, vacs, ints, onAnts, splits, pickPos, pos, refPos, PBC, cellDims, minPos, maxPos, specie, refSpecie,
-//               specieCovRad, refSpecieCovRad, result):
-//int pickObject(int visibleAtomsDim, int *visibleAtoms, int vacsDim, int *vacs, int intsDim, int *ints, 
-//               int onAntsDim, int *onAnts, int splitsDim, int *splits, int pickPosDim, double *pickPos,
-//               int posDim, double *pos, int refPosDim, double *refPos, int PBCDim, int *PBC, 
-//               int cellDimsDim, double *cellDims, int minPosDim, double *minPos, int maxPosDim, double *maxPos,
-//               int specieDim, int* specie, int refSpecieDim, int *refSpecie, int specieCovRadDim, double* specieCovRad,
-//               int refSpecieCovRadDim, double* refSpecieCovRad, int resultDim, double *result)
-//{
     int i, k, index, boxIndex;
     int boxNebList[27], realIndex;
     int minSepIndex, NVis, count;
