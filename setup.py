@@ -108,7 +108,7 @@ def do_clean():
     for root, dirs, files in os.walk(os.getcwd()):
         so_files = glob.glob(os.path.join(root, "*.so"))
         for so_file in so_files:
-            print "rm %s" % os.path.join(root, so_file)
+            print "rm CDJSVis/%s" % os.path.relpath(so_file)
             os.unlink(so_file)
         
         if "resources.py" in files:
@@ -166,6 +166,10 @@ def setup_package():
     metadata["configuration"] = configuration
     
     setup(**metadata)
+    
+    if "clean" in sys.argv and os.path.isdir("build"):
+        print "rm -rf build/"
+        shutil.rmtree("build")
 
 if __name__ == "__main__":
     setup_package()
