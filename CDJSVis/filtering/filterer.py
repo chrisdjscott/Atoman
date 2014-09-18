@@ -38,6 +38,16 @@ class Filterer(object):
     Contains list of subfilters to be performed in order.
     
     """
+    knownStructures = [
+        "disorderd",
+        "FCC",
+        "HCP",
+        "BCC",
+        "icosahedral",
+        "sigma11_tilt1",
+        "sigma11_tilt2",
+    ]
+    
     def __init__(self, parent):
         self.parent = parent
         self.filterTab = parent.filterTab
