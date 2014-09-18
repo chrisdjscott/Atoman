@@ -24,23 +24,14 @@ def main():
         # walk
         for dirpath, dirnames, filenames in os.walk(os.getcwd()):
             os.chdir(dirpath)
-            if "Makefile" in filenames:
-                command = "make clean"
-                print command
-                os.system(command)
+            command = "rm -f *.pyc *.pyo"
+            print command
+            os.system(command)
             
-            else:
-                command = "rm -f *.pyc *.pyo"
+            if "resources.py" in filenames:
+                command = "rm -f resources.py"
                 print command
                 os.system(command)
-                
-                if "resources.py" in filenames:
-                    command = "rm -f resources.py"
-                    print command
-                    os.system(command)
-                
-                if "LBOMDInterface.so" in filenames:
-                    os.unlink("LBOMDInterface.so")
     
     else:
         # compile resource file
@@ -65,13 +56,6 @@ def main():
             os.system(command)
         
             os.chdir("..")
-        
-        # compile C libs
-        os.chdir(os.path.join("CDJSVis", "visclibs"))
-        command = "make"
-        print command
-        os.system(command)
-        os.chdir("../..")
         
         # build sphinx doc
         os.chdir("doc")
