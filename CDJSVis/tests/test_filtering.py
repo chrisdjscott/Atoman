@@ -12,7 +12,7 @@ from ..filtering import _filtering
 
 ################################################################################
 
-class TestSpecieFilterC(unittest.TestCase):
+class TestSpecieFilter(unittest.TestCase):
     """
     Test specie filter
     
@@ -91,3 +91,29 @@ class TestSpecieFilterC(unittest.TestCase):
         self.assertEqual(fullScalars[1], 4)
         self.assertEqual(fullScalars[5], 7)
         self.assertEqual(fullScalars[6], 9)
+
+################################################################################
+
+class TestCalculateDrift(unittest.TestCase):
+    """
+    Test calculate drift vector
+    
+    """
+    def test_calculateDrift(self):
+        """
+        Calculate drift vector
+        
+        """
+        N = 2
+        p = np.asarray([2.0, 0.0, 99.0, 98.0, 1.0, 1.0], dtype=np.float64)
+        r = np.asarray([3.0, 0.5, 1.0, 97.0, 99.0, 0.5], dtype=np.float64)
+        cellDims = np.asarray([100, 100, 100], dtype=np.float64)
+        pbc = np.ones(3, np.int32)
+        driftVector = np.zeros(3, np.float64)
+        
+        ret = _filtering.calculate_drift_vector(N, p, r, cellDims, pbc, driftVector)
+        
+        self.assertEqual(ret, 0)
+        self.assertEqual(driftVector[0], 0.0)
+        self.assertEqual(driftVector[1], 0.75)
+        self.assertEqual(driftVector[2], -0.75)
