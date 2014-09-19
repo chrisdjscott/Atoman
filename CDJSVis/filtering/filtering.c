@@ -214,7 +214,7 @@ sliceFilter(PyObject *self, PyObject *args)
 	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
     
     /* normalise (xn, yn, zn) */
-    mag = sqrt(x0 * x0 + y0 * y0 + z0 * z0);
+    mag = sqrt(xn * xn + yn * yn + zn * zn);
     xn = xn / mag;
     yn = yn / mag;
     zn = zn / mag;
