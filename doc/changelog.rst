@@ -8,6 +8,7 @@ Changelog
 * Use spherical harmonics function from GSL library in bond order filter
 * Add adaptive common neighbour analysis
 * Convert all ctypes C libraries to C extensions
+* Add option to write csv file containing plot data
 
 **v140605**
 

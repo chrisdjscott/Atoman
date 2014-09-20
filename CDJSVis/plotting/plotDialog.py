@@ -7,6 +7,7 @@ Plot dialog.
 """
 import sys
 import traceback
+import logging
 
 from PySide import QtGui, QtCore
 import matplotlib
@@ -86,6 +87,9 @@ class PlotDialog(QtGui.QDialog):
             try:
                 # plot
                 plotMethod(*plotArgs, **plotKwargs)
+                
+                # store plot args for later use
+                self.plotArgs = plotArgs
             
             except Exception as e:
                 self.mainWindow.displayError("Matplotlib plot failed with following error:\n\n%s" % "".join(traceback.format_exception(*sys.exc_info())))
@@ -118,17 +122,67 @@ class PlotDialog(QtGui.QDialog):
         # draw canvas
         self.canvas.draw()
         
+        # write to file button
+        writeDataButton = QtGui.QPushButton("Write csv")
+        writeDataButton.setAutoDefault(False)
+        writeDataButton.clicked.connect(self.writeData)
+        writeDataButton.setToolTip("Write csv file containing plot data")
+        
+        # row
+        row = QtGui.QHBoxLayout()
+        row.addWidget(self.mplToolbar)
+        row.addWidget(writeDataButton)
+        
         # layout
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.canvas)
-        vbox.addWidget(self.mplToolbar)
+        vbox.addLayout(row)
         
         self.mainWidget.setLayout(vbox)
+    
+    def writeData(self):
+        """
+        Write data to csv file
         
+        """
+        logger = logging.getLogger(__name__)
+        
+        if hasattr(self, "plotArgs"):
+            showError = False
+            plotArgs = list(self.plotArgs)
+            if len(plotArgs) == 2:
+                try:
+                    l0 = len(plotArgs[0]) 
+                    l1 = len(plotArgs[1])
+                
+                except TypeError:
+                    showError = True
+                
+                else:
+                    if l0 == l1:
+                        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')[0]
+                        
+                        logger.debug("Writing data to csv file: '%s'", filename)
+                        
+                        #TODO: use numpy method?
+                        
+                        f = open(filename, "w")
+                        for x, y in zip(plotArgs[0], plotArgs[1]):
+                            f.write("%r, %r\n" % (x, y))
+                        f.close()
+                    
+                    else:
+                        showError = True
+            
+            else:
+                showError = True
+            
+            if showError:
+                self.mainWindow.displayError("Write data not implemented for this type of plot!\n\nFor histograms try selecting 'show as fraction'")
+    
     def closeEvent(self, event):
         """
         Override close event.
         
         """
         self.done(0)
-
