@@ -1,6 +1,8 @@
 
 /*******************************************************************************
  ** Adaptive Common Neighbour Analysis (Stutowski...)
+ ** A. Stutowski. Modelling Simul. Mater. Sci. Eng. 20 (2012) 045021
+ ** Adapted from http://asa.ovito.org/
  ** Copyright Chris Scott 2014
  *******************************************************************************/
 
