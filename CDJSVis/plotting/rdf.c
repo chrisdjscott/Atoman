@@ -55,6 +55,7 @@ calculateRDF(PyObject *self, PyObject *args)
     double approxBoxWidth, sep2, sep;
     double avgAtomDensity, shellVolume;
     double ini, fin, interval;
+    double start2, finish2;
     struct Boxes *boxes;
     
     
@@ -90,8 +91,8 @@ calculateRDF(PyObject *self, PyObject *args)
 	if (not_intVector(PBCIn)) return NULL;
 	PBC = pyvector_to_Cptr_int(PBCIn);
     
-    /* approx box width??? */
-//    approxBoxWidth = 5.0; // must be at least interval I guess? or finish!!!
+    /* approx box width */
+	/* may not be any point boxing... */
     approxBoxWidth = finish;
     
     /* box atoms */
@@ -99,6 +100,9 @@ calculateRDF(PyObject *self, PyObject *args)
     putAtomsInBoxes(NAtoms, pos, boxes);
     
     interval = (finish - start) / ((double) num);
+    
+    start2 = start * start;
+    finish2 = finish * finish;
     
     /* loop over atoms */
     for (i=0; i<NVisible; i++)
@@ -123,6 +127,8 @@ calculateRDF(PyObject *self, PyObject *args)
             {
                 index2 = boxes->boxAtoms[boxIndex][k];
                 
+                if (index2 <= index) continue;
+                
                 /* skip if not selected specie */
                 if (specieID2 >= 0 && specie[index2] != specieID2) continue;
                 
@@ -130,15 +136,14 @@ calculateRDF(PyObject *self, PyObject *args)
                 sep2 = atomicSeparation2(pos[3*index], pos[3*index+1], pos[3*index+2], 
                                          pos[3*index2], pos[3*index2+1], pos[3*index2+2], 
                                          cellDims[0], cellDims[1], cellDims[2], 
-                                         PBC[0], PBC[1], PBC[2] );
-                
-                sep = sqrt(sep2);
+                                         PBC[0], PBC[1], PBC[2]);
                 
                 /* put in bin */
-                if (sep >= start && sep < finish)
+                if (sep2 >= start2 && sep2 < finish2)
                 {
+                    sep = sqrt(sep2);
                     binIndex = (int) ((sep - start) / interval);
-                    rdf[binIndex]++;
+                    rdf[binIndex] += 2;
                 }
             }
         }
