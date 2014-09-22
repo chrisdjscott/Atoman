@@ -46,11 +46,15 @@ which will build all the C extensions in place and also build the documentation.
 
 Then you can add the `/path/to/CDJSVis` directory to you PYTHONPATH and PATH and run CDJSVis.py.
 
+## Running the tests
+
+Currently there are not many tests, but you should run the ones that are there. To run the tests you should run
+
+```sh
+python setup.py test
+```
+
 ## Building application (Mac OS X)
 
 On Mac OS X you can build a .app application using [PyInstaller](http://www.pyinstaller.org/). Simply change to the pyinstaller/ directory and run `./build.sh` (you may need to edit the path to pyinstaller.py).
-
-## Running the tests
-
-Currently there are not many tests, but you should run the ones that are there. Change to the `CDJSVis/tests` directory and run `nosetests -v`.
 

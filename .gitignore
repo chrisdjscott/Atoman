@@ -12,3 +12,4 @@
 *-exported.IN
 build/
 *.log
+CDJSVis.egg-info/

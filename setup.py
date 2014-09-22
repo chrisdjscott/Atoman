@@ -13,7 +13,9 @@ import subprocess
 import shutil
 
 from CDJSVis.visutils import utilities
+from CDJSVis.visutils import version
 
+VERSION = version.getVersion()
 
 try:
     from sphinx.setup_command import BuildDoc
@@ -95,9 +97,8 @@ if not PYRCC:
 
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
-    from CDJSVis.visutils import version
     
-    config = Configuration(None, parent_package, top_path, version=version.getVersion())
+    config = Configuration(None, parent_package, top_path, version=VERSION)
     config.set_options(ignore_setup_xxx_py=True,
                        assume_default_configuration=True,
                        delegate_options_to_subpackages=True,
@@ -125,8 +126,9 @@ def do_clean():
     
     os.chdir(cwd)
     
-    print "rm -rf doc/_build"
-    shutil.rmtree(os.path.join("doc", "_build"))
+    if os.path.isdir("doc/_build"):
+        print "rm -rf doc/_build"
+        shutil.rmtree(os.path.join("doc", "_build"))
 
 def setup_package():
     # clean?
@@ -155,27 +157,44 @@ def setup_package():
         maintainer = "Chris Scott",
         maintainer_email = "chris@chrisdjscott.co.uk",
         description = "CDJSVis Atomistic Visualisation and Analysis Library",
-#         long_description = "",
+         long_description = "CDJSVis Atomistic Visualisation and Analysis Library",
         url = "http://chrisdjscott.com",
         author = "Chris Scott",
         author_email = "chris@chrisdjscott.co.uk",
 #         download_url = "",
-#         license = "BSD",
+         license = "BSD",
 #         classifiers = "",
         platforms = ["Linux", "Mac OS-X"],
 #         test_suite = "",
         cmdclass = cmdclass,
     )
     
-    from numpy.distutils.core import setup
+    if len(sys.argv) >= 2 and ('--help' in sys.argv[1:] or sys.argv[1] in ('--help-commands', 'egg_info', 
+                                                                           '--version', 'clean', 'nosetests',
+                                                                           'test')):
+        try:
+            from setuptools import setup
+        except ImportError:
+            from distutils.core import setup
+        
+        metadata['version'] = VERSION
+        metadata['test_suite'] = "nose.collector"
     
-    metadata["configuration"] = configuration
+    else:
+        from numpy.distutils.core import setup
     
+        metadata["configuration"] = configuration
+    
+    # run setup
     setup(**metadata)
     
-    if "clean" in sys.argv and os.path.isdir("build"):
-        print "rm -rf build/"
-        shutil.rmtree("build")
+    if "clean" in sys.argv:
+        if os.path.isdir("build"):
+            print "rm -rf build/"
+            shutil.rmtree("build")
+        if os.path.isdir("CDJSVis.egg-info"):
+            print "rm -rf CDJSVis.egg-info/"
+            shutil.rmtree("CDJSVis.egg-info")
 
 if __name__ == "__main__":
     setup_package()
