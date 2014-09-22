@@ -81,6 +81,16 @@ class Lattice(object):
         self.kmcStep = None
         self.voronoiDict = {}
     
+    def density(self):
+        """
+        Return density of lattice
+        
+        """
+        vol = self.volume()
+        if vol == 0:
+            return
+        return self.NAtoms / vol
+    
     def volume(self):
         """
         Return volume of lattice
