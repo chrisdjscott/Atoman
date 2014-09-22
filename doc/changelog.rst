@@ -2,6 +2,11 @@
 Changelog
 =========
 
+**dev**
+
+* Show progress dialog when applying lists and calculating RDF
+* Display error if try to compute RDF out to distance greater than half the cell dimensions
+
 **v140922**
 
 * Add option to draw displacement vector showing where displaced atoms have moved from

@@ -27,6 +27,7 @@ from ..state import _output as output_c
 from ..plotting import rdf as rdf_c
 from ..algebra import _vectors as vectors_c
 from ..plotting import plotDialog
+from . import utils
 
 try:
     from .. import resources
@@ -663,10 +664,17 @@ class RDFForm(genericForm.GenericForm):
         # prelims
         rdfArray = np.zeros(self.NBins, np.float64)
         
-        # then calculate
-        rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.minPos,
-                           inputLattice.maxPos, inputLattice.cellDims, pp.PBC, self.binMin, self.binMax, self.NBins,
-                           rdfArray)
+        # show progress dialog
+        progDiag = utils.showProgressDialog("Calculating RDF", "Calculating RDF...", self)
+        
+        try:
+            # then calculate
+            rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.minPos,
+                               inputLattice.maxPos, inputLattice.cellDims, pp.PBC, self.binMin, self.binMax, self.NBins,
+                               rdfArray)
+        
+        finally:
+            utils.cancelProgressDialog(progDiag)
         
         # then plot
         interval = (self.binMax - self.binMin) / float(self.NBins)

@@ -108,4 +108,33 @@ def positionWindow(window, windowSize, desktop, parentWidget, offset=30, border=
     
     window.setGeometry(QtCore.QRect(windowPoint, window.size()))
 
+################################################################################
 
+def showProgressDialog(title, label, parent, overrideCursor=True):
+    """
+    Show (and return) a progress dialog
+    
+    """
+    progress = QtGui.QProgressDialog(parent=parent)
+    progress.setWindowModality(QtCore.Qt.WindowModal)
+    progress.setWindowTitle(title)
+    progress.setLabelText(label)
+    progress.setRange(0, 0)
+    progress.setMinimumDuration(0)
+    progress.setModal(True)
+    QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+    progress.show()
+    
+    return progress
+
+################################################################################
+
+def cancelProgressDialog(progress, overrideCursor=True):
+    """
+    Cancel progress dialog
+    
+    """
+    progress.cancel()
+    
+    if overrideCursor:
+        QtGui.QApplication.restoreOverrideCursor()
