@@ -11,7 +11,7 @@ import logging
 
 from PySide import QtGui, QtCore
 #from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from ..QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from .QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import numpy as np
 
