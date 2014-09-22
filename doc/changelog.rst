@@ -2,7 +2,7 @@
 Changelog
 =========
 
-**dev**
+**v140922**
 
 * Add option to draw displacement vector showing where displaced atoms have moved from
 * Use spherical harmonics function from GSL library in bond order filter
