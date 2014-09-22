@@ -45,7 +45,8 @@ findDefects(PyObject *self, PyObject *args)
     int exclSpecInputDim, *exclSpecInput, exclSpecRefDim, *exclSpecRef, NAtoms, *specie, refNAtoms, *PBC, *specieRef;
     int findClustersFlag, *defectCluster, NSpecies, *vacSpecCount, *intSpecCount, *antSpecCount, *onAntSpecCount;
     int *splitIntSpecCount, minClusterSize, maxClusterSize, *splitInterstitials, identifySplits, driftCompensation;
-    double *pos, *refPosIn, *cellDims, vacancyRadius, *minPos, *maxPos, clusterRadius, *driftVector;
+    int acnaArrayDim;
+    double *pos, *refPosIn, *cellDims, vacancyRadius, *minPos, *maxPos, clusterRadius, *driftVector *acnaArray;
     PyArrayObject *specieListIn=NULL;
     PyArrayObject *specieListRefIn=NULL;
     PyArrayObject *NDefectsTypeIn=NULL;
@@ -71,6 +72,7 @@ findDefects(PyObject *self, PyObject *args)
     PyArrayObject *minPosIn=NULL;
     PyArrayObject *maxPosIn=NULL;
     PyArrayObject *driftVectorIn=NULL;
+    PyArrayObject *acnaArrayIn=NULL;
     
     int i, exitLoop, k, j, index;
     double vacRad2;
@@ -102,7 +104,7 @@ findDefects(PyObject *self, PyObject *args)
             &minPosIn, &PyArray_Type, &maxPosIn, &findClustersFlag, &clusterRadius, &PyArray_Type, &defectClusterIn, &PyArray_Type, 
             &vacSpecCountIn, &PyArray_Type, &intSpecCountIn, &PyArray_Type, &antSpecCountIn, &PyArray_Type, &onAntSpecCountIn, 
             &PyArray_Type, &splitIntSpecCountIn, &minClusterSize, &maxClusterSize, &PyArray_Type, &splitInterstitialsIn, &identifySplits,
-            &driftCompensation, &PyArray_Type, &driftVectorIn))
+            &driftCompensation, &PyArray_Type, &driftVectorIn, &PyArray_Type, &acnaArrayIn))
         return NULL;
     
     if (not_intVector(NDefectsTypeIn)) return NULL;
@@ -180,6 +182,10 @@ findDefects(PyObject *self, PyObject *args)
     
     if (not_doubleVector(driftVectorIn)) return NULL;
     driftVector = pyvector_to_Cptr_double(driftVectorIn);
+    
+    if (not_doubleVector(acnaArrayIn)) return NULL;
+    acnaArray = pyvector_to_Cptr_double(acnaArrayIn);
+    acnaArrayDim = (int) acnaArrayIn->dimensions[0];
     
     /* drift compensation */
     if (driftCompensation)
@@ -573,6 +579,27 @@ findDefects(PyObject *self, PyObject *args)
     }
     
 //    printf("NVACS %d; NINTS %d; NSPLITINTS %d\n", NVacancies, NInterstitials, NSplitInterstitials);
+    
+    /* use ACNA array, if provided, to refine defects */
+    if (acnaArrayDim)
+    {
+        int numChanges = 0; // only recreate arrays if changes happened
+        
+        /* first make defect pos and box */
+        
+        
+        /* loop over vacancies and see if there is a single neighbouring intersitial */
+        
+        
+        /* if so check ACNA for FCC (hardcoded for now, not good...) */
+        
+        
+        /* could also check extending local vac rad and see if that helps... */
+        
+        
+        /* recreate vacancies/interstitials arrays */
+        
+    }
     
     /* exclude defect types and species here... */
     if (!includeInts)

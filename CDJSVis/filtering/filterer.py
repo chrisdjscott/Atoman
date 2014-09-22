@@ -1039,13 +1039,16 @@ class Filterer(object):
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
     
-    def pointDefectFilter(self, settings):
+    def pointDefectFilter(self, settings, acnaArray=None):
         """
         Point defects filter
         
         """
         inputLattice = self.pipelinePage.inputState
         refLattice = self.pipelinePage.refState
+        
+        if acnaArray is None or len(acnaArray) != inputLattice.NAtoms:
+            acnaArray = np.empty(0, np.float64)
         
         # set up arrays
         interstitials = np.empty(inputLattice.NAtoms, np.int32)
@@ -1111,7 +1114,7 @@ class Filterer(object):
                                        refLattice.pos, refLattice.cellDims, self.pipelinePage.PBC, settings.vacancyRadius, minPos, maxPos, 
                                        settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
                                        onAntSpecCount, splitIntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials, 
-                                       settings.identifySplitInts, self.parent.driftCompensation, self.driftVector)
+                                       settings.identifySplitInts, self.parent.driftCompensation, self.driftVector, acnaArray)
         
         # summarise
         NDef = NDefectsByType[0]
