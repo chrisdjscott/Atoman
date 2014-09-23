@@ -11,13 +11,14 @@ This is a list of third-party python modules that this code requires to run.  Th
 * [NumPy](http://www.numpy.org/)
 * [SciPy](http://www.scipy.org/)
 * [Matplotlib](http://matplotlib.org/)
-* [PySide](https://pypi.python.org/pypi/PySide) (Python bindings to the Qt GUI framework)
+* [PySide](https://pypi.python.org/pypi/PySide) (Python bindings to the Qt GUI framework, including pyside-rcc)
 * Python Imaging Library ([PIL](http://www.pythonware.com/products/pil/))
 * [pyhull](http://pythonhosted.org/pyhull/)
 * [pyvoro](https://pypi.python.org/pypi/pyvoro)
 * [VTK](http://www.vtk.org/) Python bindings
 * [Sphinx](http://sphinx-doc.org/)
 * [nose](https://nose.readthedocs.org/en/latest/) (testing)
+* [Paramiko](http://www.paramiko.org/)
 
 ### Other libraries
 
