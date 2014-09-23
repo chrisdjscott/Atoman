@@ -717,6 +717,53 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         self.newRow()
         
+        # use acna options
+        self.useAcna = False
+        self.useAcnaGroup = QtGui.QGroupBox("Use ACNA")
+        self.useAcnaGroup.setCheckable(True)
+        self.useAcnaGroup.setChecked(False)
+        self.useAcnaGroup.setAlignment(QtCore.Qt.AlignHCenter)
+        self.useAcnaGroup.toggled.connect(self.useAcnaToggled)
+        
+        useAcnaLayout = QtGui.QVBoxLayout(self.useAcnaGroup)
+        useAcnaLayout.setAlignment(QtCore.Qt.AlignTop)
+        useAcnaLayout.setContentsMargins(0, 0, 0, 0)
+        useAcnaLayout.setSpacing(0)
+        
+        row = self.newRow()
+        row.addWidget(self.useAcnaGroup)
+        
+        self.acnaMaxBondDistance = 5.0
+        label = QtGui.QLabel("Max bond distance: ")
+        maxBondDistanceSpin = QtGui.QDoubleSpinBox()
+        maxBondDistanceSpin.setSingleStep(0.1)
+        maxBondDistanceSpin.setMinimum(2.0)
+        maxBondDistanceSpin.setMaximum(9.99)
+        maxBondDistanceSpin.setValue(self.acnaMaxBondDistance)
+        maxBondDistanceSpin.valueChanged[float].connect(self.setAcnaMaxBondDistance)
+        
+        row = genericForm.FormRow()
+        row.addWidget(label)
+        row.addWidget(maxBondDistanceSpin)
+        useAcnaLayout.addWidget(row)
+        
+        # acna ideal structure ...
+        self.acnaStructureType = 1
+        label = QtGui.QLabel("Structure: ")
+        structureCombo = QtGui.QComboBox()
+        filterer = self.parent.filterer
+        structureCombo.addItems(filterer.knownStructures)
+        structureCombo.setCurrentIndex(self.acnaStructureType)
+        structureCombo.currentIndexChanged.connect(self.acnaStructureTypeChanged)
+        
+        row = genericForm.FormRow()
+        row.addWidget(label)
+        row.addWidget(structureCombo)
+        useAcnaLayout.addWidget(row)
+        
+        
+        self.newRow()
+        
         # find clusters group box
         self.findClustersGroupBox = QtGui.QGroupBox("Find clusters")
         self.findClustersGroupBox.setCheckable(True)
@@ -1000,6 +1047,27 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row.addWidget(self.drawVectorsGroup)
         
         self.refresh()
+    
+    def acnaStructureTypeChanged(self, index):
+        """
+        ACNA structure type has changed
+        
+        """
+        self.acnaStructureType = index
+    
+    def setAcnaMaxBondDistance(self, val):
+        """
+        Set max bond distance for ACNA
+        
+        """
+        self.acnaMaxBondDistance = val
+    
+    def useAcnaToggled(self, state):
+        """
+        Use ACNA toggled
+        
+        """
+        self.useAcna = state
     
     def numSidesChanged(self, val):
         """

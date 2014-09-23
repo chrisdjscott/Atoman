@@ -1366,7 +1366,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.availableText.addItem("KMC step")
         self.availableText.addItem("Simulation time")
         self.availableText.addItem("Energy barrier")
-        self.availableText.addItem("Defect count")
+        self.selectedText.addItem("Defect count")
         self.selectedText.addItem("Defect specie count")
         self.selectedText.addItem("ACNA structure count")
         

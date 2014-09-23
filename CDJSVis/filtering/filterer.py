@@ -92,15 +92,15 @@ class Filterer(object):
         self.clusterList = []
         
         self.structureCounterDicts = {}
-        self.knownStructures = [
-            "disorderd",
-            "FCC",
-            "HCP",
-            "BCC",
-            "icosahedral",
-            "sigma11_tilt1",
-            "sigma11_tilt2",
-        ]
+#         self.knownStructures = [
+#             "disordered",
+#             "FCC",
+#             "HCP",
+#             "BCC",
+#             "icosahedral",
+#             "sigma11_tilt1",
+#             "sigma11_tilt2",
+#         ]
     
     def removeActors(self):
         """
@@ -1047,7 +1047,32 @@ class Filterer(object):
         inputLattice = self.pipelinePage.inputState
         refLattice = self.pipelinePage.refState
         
-        if acnaArray is None or len(acnaArray) != inputLattice.NAtoms:
+        if settings.useAcna:
+            self.logger.debug("Computing ACNA from point defects filter...")
+            
+            # dummy visible atoms and scalars arrays
+            visAtoms = np.arange(inputLattice.NAtoms, dtype=np.int32)
+            acnaArray = np.empty(inputLattice.NAtoms, np.float64)
+            NScalars = 0
+            fullScalars = np.empty(NScalars, np.float64)
+            structVis = np.ones(len(self.knownStructures), np.int32)
+            
+            # counter array
+            counters = np.zeros(7, np.int32)
+            
+            acna.adaptiveCommonNeighbourAnalysis(visAtoms, inputLattice.pos, acnaArray, inputLattice.minPos, inputLattice.maxPos, 
+                                                 inputLattice.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, 
+                                                 settings.acnaMaxBondDistance, counters, 0, structVis) 
+            
+            # store counters
+            d = {}
+            for i, structure in enumerate(self.knownStructures):
+                if counters[i] > 0:
+                    d[structure] = counters[i]
+            
+            self.logger.debug("  %r", d)
+        
+        elif acnaArray is None or len(acnaArray) != inputLattice.NAtoms:
             acnaArray = np.empty(0, np.float64)
         
         # set up arrays

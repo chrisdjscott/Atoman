@@ -9,6 +9,7 @@
 #include "boxeslib.h"
 #include "utilities.h"
 #include "array_utils.h"
+#include "atom_structure.h"
 
 
 static PyObject* findDefects(PyObject*, PyObject*);
@@ -46,7 +47,7 @@ findDefects(PyObject *self, PyObject *args)
     int findClustersFlag, *defectCluster, NSpecies, *vacSpecCount, *intSpecCount, *antSpecCount, *onAntSpecCount;
     int *splitIntSpecCount, minClusterSize, maxClusterSize, *splitInterstitials, identifySplits, driftCompensation;
     int acnaArrayDim;
-    double *pos, *refPosIn, *cellDims, vacancyRadius, *minPos, *maxPos, clusterRadius, *driftVector *acnaArray;
+    double *pos, *refPosIn, *cellDims, vacancyRadius, *minPos, *maxPos, clusterRadius, *driftVector, *acnaArray;
     PyArrayObject *specieListIn=NULL;
     PyArrayObject *specieListRefIn=NULL;
     PyArrayObject *NDefectsTypeIn=NULL;
@@ -96,7 +97,7 @@ findDefects(PyObject *self, PyObject *args)
     
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "iiiO!O!O!O!O!O!O!iO!O!O!iO!O!O!O!O!dO!O!idO!O!O!O!O!O!iiO!iiO!", &includeVacs, &includeInts, &includeAnts,
+    if (!PyArg_ParseTuple(args, "iiiO!O!O!O!O!O!O!iO!O!O!iO!O!O!O!O!dO!O!idO!O!O!O!O!O!iiO!iiO!O!", &includeVacs, &includeInts, &includeAnts,
             &PyArray_Type, &NDefectsTypeIn, &PyArray_Type, &vacanciesIn, &PyArray_Type, &interstitialsIn, &PyArray_Type, &antisitesIn,
             &PyArray_Type, &onAntisitesIn, &PyArray_Type, &exclSpecInputIn, &PyArray_Type, &exclSpecRefIn, &NAtoms, &PyArray_Type, 
             &specieListIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &refNAtoms, &PyArray_Type, &specieListRefIn, &PyArray_Type, 
@@ -584,21 +585,147 @@ findDefects(PyObject *self, PyObject *args)
     if (acnaArrayDim)
     {
         int numChanges = 0; // only recreate arrays if changes happened
+        double maxSep, maxSep2;
+        
+        
+//        printf("DEBUG: checking defects using ACNA...\n");
         
         /* first make defect pos and box */
+        /* build positions array of all defects */
+        defectPos = malloc(3 * NInterstitials * sizeof(double));
+        if (defectPos == NULL)
+        {
+            printf("ERROR: could not allocate defectPos\n");
+            exit(50);
+        }
         
+        /* add defects positions: int then split */
+        count = 0;
+        for (i=0; i<NInterstitials; i++)
+        {
+            index = interstitials[i];
+            
+            defectPos[3*count] = pos[3*index];
+            defectPos[3*count+1] = pos[3*index+1];
+            defectPos[3*count+2] = pos[3*index+2];
+            
+            count++;
+        }
+        
+        /* max separation */
+        maxSep = 2.0 * vacancyRadius;
+        maxSep2 = maxSep * maxSep;
+        
+        /* box defects */
+        approxBoxWidth = maxSep;
+        boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
+        putAtomsInBoxes(NInterstitials, defectPos, boxes);
         
         /* loop over vacancies and see if there is a single neighbouring intersitial */
+        for (i = 0; i < NVacancies; i++)
+        {
+            int vacIndex, intIndex;
+            int nebIntCount = 0;
+            int foundIndex, foundIntIndex;
+            double foundSep2;
+            
+            vacIndex = vacancies[i];
+            
+            refxpos = refPos[3*vacIndex];
+            refypos = refPos[3*vacIndex+1];
+            refzpos = refPos[3*vacIndex+2];
+            
+            /* get box index of this atom */
+            boxIndex = boxIndexOfAtom(refxpos, refypos, refzpos, boxes);
+            
+            /* find neighbouring boxes */
+            getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+                    
+            /* loop over neighbouring boxes */
+            exitLoop = 0;
+            for (j = 0; j < 27; j++)
+            {
+                if (exitLoop) break;
+                
+                checkBox = boxNebList[j];
+                
+                /* now loop over all reference atoms in the box */
+                for (k = 0; k < boxes->boxNAtoms[checkBox]; k++)
+                {
+                    intIndex = boxes->boxAtoms[checkBox][k];
+                    index = interstitials[intIndex];
+                    
+                    /* pos of interstitial */
+                    xpos = pos[3*index];
+                    ypos = pos[3*index+1];
+                    zpos = pos[3*index+2];
+                    
+                    /* separation */
+                    sep2 = atomicSeparation2(refxpos, refypos, refzpos, xpos, ypos, zpos, 
+                                             cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
+                    
+                    if (sep2 < maxSep2)
+                    {
+                        if (++nebIntCount > 1)
+                        {
+                            exitLoop = 1;
+                            break;
+                        }
+                        
+                        foundIndex = index;
+                        foundIntIndex = intIndex;
+                        foundSep2 = sep2;
+                    }
+                }
+            }
+            
+            if (nebIntCount == 1)
+            {
+                int acnaVal;
+                
+//                printf("DEBUG: found 1 neb for vac; checking acna val\n");
+                
+                /* check ACNA for FCC (hardcoded for now, not good...) */
+                acnaVal = acnaArray[foundIndex];
+//                printf("DEBUG:   acna val is %d (%d)\n", acnaVal, ATOM_STRUCTURE_FCC);
+                if (acnaVal == ATOM_STRUCTURE_FCC)
+                {
+//                    printf("DEBUG:   this should not be a Frenkel pair... (sep = %lf)\n", sqrt(foundSep2));
+                    
+                    vacancies[i] = -1;
+                    interstitials[foundIntIndex] = -1;
+                    
+                    numChanges++;
+                }
+                
+                /* could also check extending local vac rad and see if that helps... */
+                
+                
+            }
+            
+            
+        }
         
-        
-        /* if so check ACNA for FCC (hardcoded for now, not good...) */
-        
-        
-        /* could also check extending local vac rad and see if that helps... */
-        
+        /* free */
+        freeBoxes(boxes);
+        free(defectPos);
         
         /* recreate vacancies/interstitials arrays */
-        
+//        printf("DEBUG: num changes = %d\n", numChanges);
+        if (numChanges)
+        {
+            /* recreate interstitials array */
+            count = 0;
+            for (i = 0; i < NInterstitials; i++)
+                if (interstitials[i] != -1) interstitials[count++] = interstitials[i];
+            NInterstitials = count;
+            
+            /* recreate vacancies array */
+            count = 0;
+            for (i = 0; i < NVacancies; i++)
+                if (vacancies[i] != -1) vacancies[count++] = vacancies[i];
+            NVacancies = count;
+        }
     }
     
     /* exclude defect types and species here... */
