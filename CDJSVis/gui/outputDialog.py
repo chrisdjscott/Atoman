@@ -27,6 +27,7 @@ from ..state import _output as output_c
 from ..plotting import rdf as rdf_c
 from ..algebra import _vectors as vectors_c
 from ..plotting import plotDialog
+from . import utils
 
 try:
     from .. import resources
@@ -622,6 +623,24 @@ class RDFForm(genericForm.GenericForm):
         """
         self.logger.info("Plotting RDF for visible atoms")
         
+        # lattice and pipeline page
+        inputLattice = self.rendererWindow.getCurrentInputState()
+        pp = self.rendererWindow.getCurrentPipelinePage()
+        
+        # check system size
+        warnDims = []
+        if pp.PBC[0] and self.binMax > inputLattice.cellDims[0] / 2.0:
+            warnDims.append("x")
+        if pp.PBC[1] and self.binMax > inputLattice.cellDims[1] / 2.0:
+            warnDims.append("y")
+        if pp.PBC[2] and self.binMax > inputLattice.cellDims[2] / 2.0:
+            warnDims.append("z")
+        
+        if len(warnDims):
+            msg = "The maximum radius you have requested is greater than half the box length in the %s direction(s)!" % ", ".join(warnDims)
+            self.mainWindow.displayError(msg)
+            return
+        
         # first gather vis atoms
         visibleAtoms = self.rendererWindow.gatherVisibleAtoms()
                     
@@ -630,7 +649,6 @@ class RDFForm(genericForm.GenericForm):
             return
         
         # then determine species
-        inputLattice = self.rendererWindow.getCurrentInputState()
         specieList = inputLattice.specieList
         
         if self.spec1 == "ALL":
@@ -646,19 +664,21 @@ class RDFForm(genericForm.GenericForm):
         # prelims
         rdfArray = np.zeros(self.NBins, np.float64)
         
-        # pbcs
-        pp = self.rendererWindow.getCurrentPipelinePage()
+        # show progress dialog
+        progDiag = utils.showProgressDialog("Calculating RDF", "Calculating RDF...", self)
         
-        # then calculate
-        rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.minPos,
-                           inputLattice.maxPos, inputLattice.cellDims, pp.PBC, self.binMin, self.binMax, self.NBins,
-                           rdfArray)
-                
+        try:
+            # then calculate
+            rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.minPos,
+                               inputLattice.maxPos, inputLattice.cellDims, pp.PBC, self.binMin, self.binMax, self.NBins,
+                               rdfArray)
+        
+        finally:
+            utils.cancelProgressDialog(progDiag)
+        
         # then plot
         interval = (self.binMax - self.binMin) / float(self.NBins)
         xn = np.arange(self.binMin + interval / 2.0, self.binMax, interval, dtype=np.float64)
-        
-        #TODO: option to write to file?
         
         # prepare to plot
         settingsDict = {}

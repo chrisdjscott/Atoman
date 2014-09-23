@@ -463,24 +463,33 @@ class PipelineForm(QtGui.QWidget):
         # set scalar bar false
         self.scalarBarAdded = False
         
-        count = 0
-        for filterList in self.filterLists:
-            self.logger.info("  Running filter list %d", count)
-            
-            if filterList.isStaticList():
-                self.logger.info("    Static filter list: skipping")
-            
-            else:
-                filterList.filterer.runFilters(sequencer=sequencer)
-            
-            count += 1
+        # progress dialog
+        if not sequencer:
+            progDiag = utils.showProgressDialog("Applying lists", "Applying lists...", self)
         
-        self.refreshOnScreenInfo()
+        try:
+            count = 0
+            for filterList in self.filterLists:
+                self.logger.info("  Running filter list %d", count)
+                
+                if filterList.isStaticList():
+                    self.logger.info("    Static filter list: skipping")
+                
+                else:
+                    filterList.filterer.runFilters(sequencer=sequencer)
+                
+                count += 1
+            
+            self.refreshOnScreenInfo()
+            
+            # refresh plot options
+            for rw in self.rendererWindows:
+                if rw.currentPipelineIndex == self.pipelineIndex:
+                    rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
         
-        # refresh plot options
-        for rw in self.rendererWindows:
-            if rw.currentPipelineIndex == self.pipelineIndex:
-                rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
+        finally:
+            if not sequencer:
+                utils.cancelProgressDialog(progDiag)
         
         self.mainWindow.setStatus("Ready")
     

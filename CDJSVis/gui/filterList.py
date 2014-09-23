@@ -438,10 +438,16 @@ class FilterList(QtGui.QWidget):
         Run filters in this list.
         
         """
-        # apply filters
-        self.filterer.runFilters()
+        progDiag = utils.showProgressDialog("Applying list", "Applying list...", self)
         
-        self.filterTab.refreshOnScreenInfo()
+        try:
+            # apply filters
+            self.filterer.runFilters()
+            
+            self.filterTab.refreshOnScreenInfo()
+        
+        finally:
+            utils.cancelProgressDialog(progDiag)
     
     def getCurrentFilterSettings(self):
         """

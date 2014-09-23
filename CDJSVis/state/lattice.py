@@ -81,6 +81,23 @@ class Lattice(object):
         self.kmcStep = None
         self.voronoiDict = {}
     
+    def density(self):
+        """
+        Return density of lattice
+        
+        """
+        vol = self.volume()
+        if vol == 0:
+            return
+        return self.NAtoms / vol
+    
+    def volume(self):
+        """
+        Return volume of lattice
+        
+        """
+        return self.cellDims[0] * self.cellDims[1] * self.cellDims[2]
+    
     def addSpecie(self, sym, count=None):
         """
         Add specie to specie list
