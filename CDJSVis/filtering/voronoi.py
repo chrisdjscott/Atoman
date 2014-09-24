@@ -84,21 +84,25 @@ class VoronoiResult(object):
 
 ################################################################################
 
-def computeVoronoi(lattice, voronoiOptions, PBC, log=None):
+def computeVoronoi(lattice, voronoiOptions, PBC):
     """
     Compute Voronoi
     
     """
-    return computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log)
+    res = computeVoronoiPyvoro(lattice, voronoiOptions, PBC)
+    
+    computeVoronoiScipy(lattice, PBC)
+    
+    return res
 
 ################################################################################
 
-def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
+def computeVoronoiPyvoro(lattice, voronoiOptions, PBC):
     """
     Compute Voronoi
     
     """
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__+".computeVoronoiPyvoro")
     
     vorotime = time.time()
     
@@ -109,11 +113,13 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
     logger.info("  Using radii: %s", voronoiOptions.useRadii)
     
     # make points
+    ptsTime = time.time()
     pts = np.empty((lattice.NAtoms, 3), dtype=np.float64)
     for i in xrange(lattice.NAtoms):
         pts[i][0] = lattice.atomPos(i)[0]
         pts[i][1] = lattice.atomPos(i)[1]
         pts[i][2] = lattice.atomPos(i)[2]
+    ptsTime = time.time() - ptsTime
     
     # boundary
     upper = np.empty(3, np.float64)
@@ -137,14 +143,18 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
         radii = []
     
     # call pyvoro
+    callTime = time.time()
     pyvoro_result = pyvoro.compute_voronoi(pts,
                                            [[lower[0], upper[0]], [lower[1], upper[1]], [lower[2], upper[2]]],
                                            voronoiOptions.dispersion,
                                            radii=radii,
                                            periodic=[bool(PBC[0]), bool(PBC[1]), bool(PBC[2])])
+    callTime = time.time() - callTime
     
     # create result object
+    resTime = time.time()
     vor = VoronoiResult(pyvoro_result, PBC)
+    resTime = time.time() - resTime
     
     # save to file
     if voronoiOptions.outputToFile:
@@ -178,19 +188,25 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC, log=None):
     
     vorotime = time.time() - vorotime
     logger.debug("  Compute Voronoi time: %f", vorotime)
+    logger.debug("    Make points time: %f", ptsTime)
+    logger.debug("    Call time: %f", callTime)
+    logger.debug("    Make result time: %f", resTime)
     
     return vor
 
 ################################################################################
 
-def computeVoronoiScipy(lattice, log=None):
+def computeVoronoiScipy(lattice, PBC):
     """
     Compute Voronoi
     
     """
+    logger = logging.getLogger(__name__+".computeVoronoiSciPy")
+    
     vorotime = time.time()
-    print "COMPUTING VORONOI"
-    print "NATOMS", lattice.NAtoms
+    logger.info("Computing Voronoi (SciPy)")
+    logger.debug("NAtoms = %d", lattice.NAtoms)
+    logger.debug("PBC = %r", PBC)
      
     # make points
     pts = np.empty((lattice.NAtoms, 3), dtype=np.float64)
@@ -199,8 +215,13 @@ def computeVoronoiScipy(lattice, log=None):
         pts[i][1] = lattice.atomPos(i)[1]
         pts[i][2] = lattice.atomPos(i)[2]
     
+    from . import _voronoi
+    skin = 6.0
+    pts2 = _voronoi.makeVoronoiPoints(lattice.pos, lattice.cellDims, PBC, skin)
+    print "LEN PTS2", len(pts2)
+    
     # compute
-    vor = Voronoi(pts)
+    vor = Voronoi(pts2)
      
     print vor
      
@@ -232,8 +253,6 @@ def computeVoronoiScipy(lattice, log=None):
         pass
     
     vorotime = time.time() - vorotime
-    print "SCIPY VORO TIME", vorotime
-      
-    log("SCIPY VORO TIME: %f" % vorotime)
+    logger.debug("  Compute Voronoi time: %f", vorotime)
     
     return vor

@@ -572,7 +572,7 @@ class Filterer(object):
         
         # compute voronoi regions
         if compute:
-            voroResult = voronoi.computeVoronoi(inputState, self.voronoiOptions, PBC, log=self.log)
+            voroResult = voronoi.computeVoronoi(inputState, self.voronoiOptions, PBC)
             
             # store result
             inputState.voronoiDict[voroKey] = voroResult
