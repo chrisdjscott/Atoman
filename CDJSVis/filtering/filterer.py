@@ -39,7 +39,7 @@ class Filterer(object):
     
     """
     knownStructures = [
-        "disorderd",
+        "disordered",
         "FCC",
         "HCP",
         "BCC",

@@ -19,6 +19,9 @@ cd ..
 # build_sphinx also runs 'build_ext --inplace'
 python setup.py build_sphinx
 
+# run tests
+python setup.py test
+
 cd pyinstaller
 
 python ${PYINSTALLER_PATH} CDJSVis.spec
