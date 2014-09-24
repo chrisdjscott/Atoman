@@ -12,6 +12,9 @@ import numpy as np
 from scipy.spatial import Voronoi
 import pyvoro
 
+from . import _voronoi
+from . import clusters
+
 
 ################################################################################
 
@@ -91,7 +94,12 @@ def computeVoronoi(lattice, voronoiOptions, PBC):
     """
     res = computeVoronoiPyvoro(lattice, voronoiOptions, PBC)
     
-    computeVoronoiScipy(lattice, PBC)
+    vor, vols = computeVoronoiScipy(lattice, PBC)
+    
+#     import math
+#     for i in xrange(lattice.NAtoms):
+#         if math.fabs(vols[i] - res.atomVolume(i)) > 1e-5:
+#             print "VOLDIFF(%d): %.10f <-> %.10f" % (i, vols[i], res.atomVolume(i))
     
     return res
 
@@ -203,56 +211,69 @@ def computeVoronoiScipy(lattice, PBC):
     """
     logger = logging.getLogger(__name__+".computeVoronoiSciPy")
     
+    skin = 5.0 # should be passed in
+    
     vorotime = time.time()
     logger.info("Computing Voronoi (SciPy)")
     logger.debug("NAtoms = %d", lattice.NAtoms)
     logger.debug("PBC = %r", PBC)
+    logger.debug("Skin = %f", skin)
      
-    # make points
-    pts = np.empty((lattice.NAtoms, 3), dtype=np.float64)
-    for i in xrange(lattice.NAtoms):
-        pts[i][0] = lattice.atomPos(i)[0]
-        pts[i][1] = lattice.atomPos(i)[1]
-        pts[i][2] = lattice.atomPos(i)[2]
+    ptsTime = time.time()
+    pts = _voronoi.makeVoronoiPoints(lattice.pos, lattice.cellDims, PBC, skin)
+    ptsTime = time.time() - ptsTime
+    print "LEN PTS2", len(pts)
     
-    from . import _voronoi
-    skin = 6.0
-    pts2 = _voronoi.makeVoronoiPoints(lattice.pos, lattice.cellDims, PBC, skin)
-    print "LEN PTS2", len(pts2)
+#     f = open("vorolattice.dat", "w")
+#     f.write("%d\n" % len(pts))
+#     f.write("%f %f %f\n" % tuple(lattice.cellDims))
+#     for i in xrange(len(pts)):
+#         f.write("Au %f %f %f 0.0\n" % (pts[i][0], pts[i][1], pts[i][2]))
+#     f.close()
     
     # compute
-    vor = Voronoi(pts2)
-     
-    print vor
-     
-    assert len(vor.point_region) == lattice.NAtoms
-      
-    # atom near middle (3768)
-    index = 3768
-    assert index < lattice.NAtoms
-     
-    assert vor.point_region[index] != -1
-     
-    # point_region is index of that atoms region (in regions array)
-    print "REGION OF %d: %d" % (index, vor.point_region[index])
-    regionIndex = vor.point_region[index]
-     
-    # each element of region array holds array of indexes of vertices that make this region
-    region = vor.regions[regionIndex]
-    print "REGION:", len(region), region
-     
-    ok = True
-    for vertid in region:
-        if vertid == -1:
-            ok = False
-            break
-     
-    if not ok:
-        print "ERROR: UNBOUNDED REGION"
-    else:
-        pass
+    compTime = time.time()
+    vor = Voronoi(pts)
+    compTime = time.time() - compTime
+    assert len(vor.point_region) == len(pts)
+    
+    # calculate volumes (this is probably slow!; just testing at the moment)
+    volsTime = time.time()
+    volumes = np.empty(lattice.NAtoms, np.float64)
+    for i in xrange(lattice.NAtoms):
+        # point region is index of this atoms region (in regions array)
+        regionIndex = vor.point_region[i]
+        
+        # each element of region array holds array of indices of vertices that make this region
+        region = vor.regions[regionIndex]
+        
+        # check if Voronoi region is unbounded (shouldn't happen!)
+        # and construct pts array (should be in C!)
+        pts = []
+        unbounded = False
+        for vertid in region:
+            if vertid == -1:
+                unbounded = True
+                break
+            
+            pts.append(vor.vertices[vertid])
+        
+        if unbounded:
+            logger.warning("Atom %d Voronoi region is unbounded", i)
+            volume = 0.0
+        
+        else:
+            # calculate volume of convex hull of region vertices
+            volume, _ = clusters.findConvexHullVolume(len(region), pts, posIsPts=True)
+        
+        # store volume
+        volumes[i] = volume
+    volsTime = time.time() - volsTime
     
     vorotime = time.time() - vorotime
     logger.debug("  Compute Voronoi time: %f", vorotime)
+    logger.debug("    Make pts time: %f", ptsTime)
+    logger.debug("    Compute time: %f", compTime)
+    logger.debug("    Volumes time: %f", volsTime)
     
-    return vor
+    return vor, volumes

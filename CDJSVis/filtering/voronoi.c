@@ -1,7 +1,7 @@
 
 /*******************************************************************************
  ** Copyright Chris Scott 2014
- ** Calculate bonds
+ ** Helper methods for computing Voronoi cells/volumes
  *******************************************************************************/
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
@@ -85,19 +85,21 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
                 
                 if (ryb)
                 {
-                    addCount++;
+                    addCount += 2;
                     
-                    if (rzb) addCount++;
+                    if (rzb) addCount += 4;
                 }
-                else if (rzb) addCount++;
+                else if (rzb) addCount += 2;
             }
             
             else if (ryb)
             {
                 addCount++;
                 
-                if (rzb) addCount++;
+                if (rzb) addCount += 2;
             }
+            
+            else if (rzb) addCount++;
         }
         
         printf("Adding %d ghost atoms (skin = %lf)\n", addCount, skin);
@@ -136,7 +138,7 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
             
             if (rxb)
             {
-                rxmod = (rx < halfDims[0]) ? 1 * halfDims[0] : -1 * halfDims[0];
+                rxmod = (rx < halfDims[0]) ? cellDims[0] : -1 * cellDims[0];
                 
                 DIND2(pts, count, 0) = rx + rxmod;
                 DIND2(pts, count, 1) = ry;
@@ -144,24 +146,44 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
                 
                 if (ryb)
                 {
-                    rymod = (ry < halfDims[1]) ? 1 * halfDims[1] : -1 * halfDims[1];
+                    rymod = (ry < halfDims[1]) ? cellDims[1] : -1 * cellDims[1];
                     
                     DIND2(pts, count, 0) = rx + rxmod;
                     DIND2(pts, count, 1) = ry + rymod;
                     DIND2(pts, count++, 2) = rz;
                     
+                    DIND2(pts, count, 0) = rx;
+					DIND2(pts, count, 1) = ry + rymod;
+					DIND2(pts, count++, 2) = rz;
+                    
                     if (rzb)
                     {
-                        rzmod = (rz < halfDims[2]) ? 1 * halfDims[2] : -1 * halfDims[2];
+                        rzmod = (rz < halfDims[2]) ? cellDims[2] : -1 * cellDims[2];
                         
                         DIND2(pts, count, 0) = rx + rxmod;
                         DIND2(pts, count, 1) = ry + rymod;
                         DIND2(pts, count++, 2) = rz + rzmod;
+                        
+                        DIND2(pts, count, 0) = rx;
+						DIND2(pts, count, 1) = ry + rymod;
+						DIND2(pts, count++, 2) = rz + rzmod;
+						
+						DIND2(pts, count, 0) = rx + rxmod;
+						DIND2(pts, count, 1) = ry;
+						DIND2(pts, count++, 2) = rz + rzmod;
+						
+						DIND2(pts, count, 0) = rx;
+						DIND2(pts, count, 1) = ry;
+						DIND2(pts, count++, 2) = rz + rzmod;
                     }
                 }
                 else if (rzb)
                 {
-                    rzmod = (rz < halfDims[2]) ? 1 * halfDims[2] : -1 * halfDims[2];
+                    rzmod = (rz < halfDims[2]) ? cellDims[2] : -1 * cellDims[2];
+                    
+                    DIND2(pts, count, 0) = rx;
+					DIND2(pts, count, 1) = ry;
+					DIND2(pts, count++, 2) = rz + rzmod;
                     
                     DIND2(pts, count, 0) = rx + rxmod;
                     DIND2(pts, count, 1) = ry;
@@ -171,7 +193,7 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
             
             else if (ryb)
             {
-                rymod = (ry < halfDims[1]) ? 1 * halfDims[1] : -1 * halfDims[1];
+                rymod = (ry < halfDims[1]) ? cellDims[1] : -1 * cellDims[1];
                 
                 DIND2(pts, count, 0) = rx;
                 DIND2(pts, count, 1) = ry + rymod;
@@ -179,13 +201,26 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
                 
                 if (rzb)
                 {
-                    rzmod = (rz < halfDims[2]) ? 1 * halfDims[2] : -1 * halfDims[2];
+                    rzmod = (rz < halfDims[2]) ? cellDims[2] : -1 * cellDims[2];
                     
                     DIND2(pts, count, 0) = rx;
-                    DIND2(pts, count, 1) = ry + rymod;
+                    DIND2(pts, count, 1) = ry;
                     DIND2(pts, count++, 2) = rz + rzmod;
+                    
+                    DIND2(pts, count, 0) = rx;
+					DIND2(pts, count, 1) = ry + rymod;
+					DIND2(pts, count++, 2) = rz + rzmod;
                 }
             }
+            
+            else if (rzb)
+			{
+				rzmod = (rz < halfDims[2]) ? cellDims[2] : -1 * cellDims[2];
+				
+				DIND2(pts, count, 0) = rx;
+				DIND2(pts, count, 1) = ry;
+				DIND2(pts, count++, 2) = rz + rzmod;
+			}
         }
         
         return PyArray_Return(pts);
