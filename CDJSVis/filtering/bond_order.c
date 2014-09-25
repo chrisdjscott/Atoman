@@ -87,8 +87,6 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
     double looptime;
     
     
-    looptime = omp_get_wtime();
-    
     /* loop over atoms */
 #pragma omp parallel for
     for (visIndex = 0; visIndex < NVisibleIn; visIndex++)
@@ -200,10 +198,6 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
             results[visIndex].imgQ4[m+4] = img_part / ((double) nebList[visIndex].neighbourCount);
         }
     }
-    
-    looptime = omp_get_wtime() - looptime;
-    
-    printf("DEBUG: loop time = %lf s\n", looptime);
 }
 
 /*******************************************************************************
