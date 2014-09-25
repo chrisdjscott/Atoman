@@ -11,6 +11,7 @@
 
 
 static PyObject* makeVoronoiPoints(PyObject*, PyObject*);
+static PyObject* computeVolumes(PyObject*, PyObject*);
 
 
 /*******************************************************************************
@@ -18,6 +19,7 @@ static PyObject* makeVoronoiPoints(PyObject*, PyObject*);
  *******************************************************************************/
 static struct PyMethodDef methods[] = {
     {"makeVoronoiPoints", makeVoronoiPoints, METH_VARARGS, "Make points array for passing to Voronoi method"},
+    {"computeVolumes", computeVolumes, METH_VARARGS, "Compute Voronoi volumes of the atoms"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -32,7 +34,7 @@ init_voronoi(void)
 }
 
 /*******************************************************************************
- * Calculate bonds
+ * Make points array for passing to Voronoi method
  *******************************************************************************/
 static PyObject*
 makeVoronoiPoints(PyObject *self, PyObject *args)
@@ -246,3 +248,19 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
         return PyArray_Return(pts);
     }
 }
+
+/*******************************************************************************
+ * Compute Voronoi volumes of atoms
+ *******************************************************************************/
+static PyObject*
+computeVolumes(PyObject *self, PyObject *args)
+{
+    int NAtoms, int *point_region, 
+    
+    
+    
+    
+    
+    
+}
+
