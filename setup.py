@@ -11,11 +11,16 @@ import glob
 import sys
 import subprocess
 import shutil
+import platform
 
 from CDJSVis.visutils import utilities
 from CDJSVis.visutils import version
 
 VERSION = version.getVersion()
+
+# if on Mac we have to force gcc (for openmp...)
+if platform.system() == "Darwin":
+    os.environ["CC"] = "gcc"
 
 try:
     from sphinx.setup_command import BuildDoc
