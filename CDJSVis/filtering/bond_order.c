@@ -10,6 +10,7 @@
 #include <math.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_sf_legendre.h>
+#include <omp.h>
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"
@@ -82,15 +83,19 @@ static void convertToSphericalCoordinates(double xdiff, double ydiff, double zdi
  *******************************************************************************/
 static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList *nebList, double *pos, double *cellDims, int *PBC, struct AtomStructureResults *results)
 {
-    int i, index, index2, visIndex2, m, visIndex;
-    double realYlm, complexYlm;
-    double xpos1, ypos1, zpos1, xpos2, ypos2, zpos2;
-    double sepVec[3], theta, phi, real_part, img_part;
+    int visIndex;
+    double looptime;
     
+    
+    looptime = omp_get_wtime();
     
     /* loop over atoms */
+#pragma omp parallel for
     for (visIndex = 0; visIndex < NVisibleIn; visIndex++)
     {
+        int index, m;
+        double xpos1, ypos1, zpos1;
+        
         /* pos 1 */
         index = visibleAtoms[visIndex];
         xpos1 = pos[3*index];
@@ -100,10 +105,17 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
         /* loop over m, l = 6 */
         for (m = -6; m < 7; m++)
         {
+            int i;
+            double real_part, img_part;
+            
             real_part = 0.0;
             img_part = 0.0;
             for (i = 0; i < nebList[visIndex].neighbourCount; i++)
             {
+                int visIndex2, index2;
+                double xpos2, ypos2, zpos2, sepVec[3];
+                double theta, phi, realYlm, complexYlm;
+                
                 /* pos 2 */
                 visIndex2 = nebList[visIndex].neighbour[i];
                 index2 = visibleAtoms[visIndex2];
@@ -142,10 +154,17 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
         /* loop over m, l = 4 */
         for (m = -4; m < 5; m++)
         {
+            int i;
+            double real_part, img_part;
+            
             real_part = 0.0;
             img_part = 0.0;
             for (i = 0; i < nebList[visIndex].neighbourCount; i++)
             {
+                int visIndex2, index2;
+                double xpos2, ypos2, zpos2, sepVec[3];
+                double theta, phi, realYlm, complexYlm;
+                
                 /* pos 2 */
                 visIndex2 = nebList[visIndex].neighbour[i];
                 index2 = visibleAtoms[visIndex2];
@@ -181,6 +200,10 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
             results[visIndex].imgQ4[m+4] = img_part / ((double) nebList[visIndex].neighbourCount);
         }
     }
+    
+    looptime = omp_get_wtime() - looptime;
+    
+    printf("DEBUG: loop time = %lf s\n", looptime);
 }
 
 /*******************************************************************************

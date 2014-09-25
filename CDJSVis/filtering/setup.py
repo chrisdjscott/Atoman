@@ -22,8 +22,10 @@ def configuration(parent_package='', top_path=None):
                          ["bond_order.c", "../visclibs/utilities.c",
                           "../visclibs/boxeslib.c", "../visclibs/neb_list.c",
                           "../visclibs/array_utils.c"],
-                         libraries=["gsl", "gslcblas"],
-                         include_dirs=[incdir, "/opt/local/include"])
+                         libraries=["gsl", "gslcblas", "gomp"],
+                         include_dirs=[incdir, "/opt/local/include"],
+                         extra_compile_args=['-fopenmp'])
+#                          extra_link_args=['-lgomp'])
     
     config.add_extension("bonds", 
                          ["bonds.c", "../visclibs/utilities.c",
