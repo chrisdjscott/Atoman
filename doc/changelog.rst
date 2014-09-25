@@ -10,6 +10,7 @@ Changelog
 * Parallelised some sections of C extensions using OpenMP
    * Spherical harmonics loop in bond_order filter
    * RDF loop
+   * ACNA sort/structure loops
 
 **v140922**
 

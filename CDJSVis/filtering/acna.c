@@ -10,6 +10,7 @@
 #include <numpy/arrayobject.h>
 #include <math.h>
 #include <gsl/gsl_math.h>
+#include <omp.h>
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"
@@ -86,8 +87,7 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *fullScalarsIn=NULL;
     
-    int i, j, NVisible, index;
-    int atomStructure;
+    int i, NVisible;
     double *visiblePos, approxBoxWidth, maxSep2;
     struct Boxes *boxes;
     struct NeighbourList2 *nebList;
@@ -142,6 +142,8 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
     for (i=0; i<NVisibleIn; i++)
     {
+        int index;
+        
         index = visibleAtoms[i];
         
         visiblePos[3*i] = pos[3*index];
@@ -168,15 +170,20 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
     
     /* sort neighbours by distance */
+#pragma omp parallel for
     for (i = 0; i < NVisibleIn; i++)
         qsort(nebList[i].neighbour, nebList[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
     
 /* classify atoms */
     
+#pragma omp parallel for
     for (i = 0; i < NVisibleIn; i++)
     {
-    	atomStructure = analyseAtom(i, nebList);
+    	int atomStructure;
+        
+        atomStructure = analyseAtom(i, nebList);
     	scalars[i] = (double) atomStructure;
+#pragma omp atomic
     	counters[atomStructure]++;
     }
     
@@ -187,9 +194,13 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
         NVisible = 0;
         for (i = 0; i < NVisibleIn; i++)
         {
+            int atomStructure;
+            
             atomStructure = (int) scalars[i];
             if (structureVisibility[atomStructure])
             {
+                int j;
+                
                 visibleAtoms[NVisible] = visibleAtoms[i];
                 scalars[NVisible++] = scalars[i];
                 
