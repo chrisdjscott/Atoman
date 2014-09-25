@@ -8,7 +8,7 @@
 
 using namespace voro;
 
-static void processCell(voronoicell_neighbor&, int, double*, int*);
+static void processCell(voronoicell_neighbor&, int, double*, double*, int*);
 
 
 /*******************************************************************************
@@ -48,7 +48,7 @@ extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *P
 	c_loop_all cl(con);
 	if (cl.start()) do if (con.compute_cell(c,cl)) {
 	  i = cl.pid();
-	  processCell(c, i, volumes, nebCounts);
+	  processCell(c, i, pos, volumes, nebCounts);
 	} while (cl.inc());
     
     return 0;
@@ -57,7 +57,7 @@ extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *P
 /*******************************************************************************
  * Process cell; compute volume, num neighbours, facets etc.
  *******************************************************************************/
-static void processCell(voronoicell_neighbor &c, int i, double *volumes, int *nebCounts)
+static void processCell(voronoicell_neighbor &c, int i, double *pos, double *volumes, int *nebCounts)
 {
 	std::vector<int> neigh;
 	
@@ -67,4 +67,17 @@ static void processCell(voronoicell_neighbor &c, int i, double *volumes, int *ne
 	// number of cell faces (should add threshold)
 	c.neighbors(neigh);
 	nebCounts[i] = neigh.size();
+	
+	// faces/facets??
+	std::vector<double> vertices;
+	c.vertices(pos[3*i], pos[3*i+1], pos[3*i+2], vertices);
+	
+	std::vector<int> faceVertices;
+	c.face_vertices(faceVertices);
+	
+	printf("vertices size %d\n", vertices.size());
+	printf("faceVertices size %d\n", faceVertices.size());
+	
+	
+	
 }
