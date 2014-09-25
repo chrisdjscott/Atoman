@@ -276,3 +276,16 @@ def computeVoronoiScipy(lattice, PBC):
     logger.debug("    Volumes time: %f", volsTime)
     
     return vor, volumes
+
+################################################################################
+
+def computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC):
+    """
+    Compute Voronoi using Voro++
+    
+    """
+    
+    
+    
+    
+    

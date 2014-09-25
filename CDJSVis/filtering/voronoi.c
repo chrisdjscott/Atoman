@@ -8,10 +8,12 @@
 #include <numpy/arrayobject.h>
 #include <math.h>
 #include "array_utils.h"
+#include "voro_iface.h"
 
 
 static PyObject* makeVoronoiPoints(PyObject*, PyObject*);
-static PyObject* computeVolumes(PyObject*, PyObject*);
+//static PyObject* computeVolumes(PyObject*, PyObject*);
+static PyObject* computeVoronoiVoroPlusPlus(PyObject*, PyObject*);
 
 
 /*******************************************************************************
@@ -19,7 +21,8 @@ static PyObject* computeVolumes(PyObject*, PyObject*);
  *******************************************************************************/
 static struct PyMethodDef methods[] = {
     {"makeVoronoiPoints", makeVoronoiPoints, METH_VARARGS, "Make points array for passing to Voronoi method"},
-    {"computeVolumes", computeVolumes, METH_VARARGS, "Compute Voronoi volumes of the atoms"},
+//    {"computeVolumes", computeVolumes, METH_VARARGS, "Compute Voronoi volumes of the atoms"},
+    {"computeVoronoiVoroPlusPlus", computeVoronoiVoroPlusPlus, METH_VARARGS, "Compute Voronoi volumes of the atoms using Voro++ interface"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -252,15 +255,111 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
 /*******************************************************************************
  * Compute Voronoi volumes of atoms
  *******************************************************************************/
+//static PyObject*
+//computeVolumes(PyObject *self, PyObject *args)
+//{
+//    int NAtoms, int *point_region, 
+//    
+//    
+//    
+//    
+//    
+//    
+//}
+
+/*******************************************************************************
+ * Compute Voronoi using Voro++
+ *******************************************************************************/
 static PyObject*
-computeVolumes(PyObject *self, PyObject *args)
+computeVoronoiVoroPlusPlus(PyObject *self, PyObject *args)
 {
-    int NAtoms, int *point_region, 
+    int *specie, *PBC, *nebCounts, NAtoms, useRadii;
+    double *pos, *minPos, *maxPos, *cellDims, *specieCovalentRadius, dispersion, *volumes;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *minPosIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *specieCovalentRadiusIn=NULL;
+    PyArrayObject *volumesIn=NULL;
+    PyArrayObject *specieIn=NULL;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *nebCountsIn=NULL;
+    int i;
+    double bound_lo[3], bound_hi[3];
+    double *radii;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!diO!O!", &PyArray_Type, &posIn, &PyArray_Type, &minPosIn, &PyArray_Type, 
+            &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &specieIn, &PyArray_Type, 
+            &specieCovalentRadiusIn, &dispersion, &useRadii, &PyArray_Type, &volumesIn, &PyArray_Type, &nebCountsIn))
+        return NULL;
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    NAtoms = ((int) posIn->dimensions[0]) / 3;
+    
+    if (not_doubleVector(minPosIn)) return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_doubleVector(maxPosIn)) return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_doubleVector(specieCovalentRadiusIn)) return NULL;
+    specieCovalentRadius = pyvector_to_Cptr_double(specieCovalentRadiusIn);
+    
+    if (not_doubleVector(volumesIn)) return NULL;
+    volumes = pyvector_to_Cptr_double(volumesIn);
+    
+    if (not_intVector(specieIn)) return NULL;
+    specie = pyvector_to_Cptr_int(specieIn);
+    
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
+    
+    if (not_intVector(nebCountsIn)) return NULL;
+    nebCounts = pyvector_to_Cptr_int(nebCountsIn);
+    
+    /* prepare for Voro call */
+    for (i = 0; i < 3; i++)
+    {
+        if (PBC[i])
+        {
+            bound_lo[i] = 0.0;
+            bound_hi[i] = cellDims[i];
+        }
+        else
+        {
+            bound_lo[i] = minPos[i] - dispersion;
+            bound_hi[i] = maxPos[i] + dispersion;
+        }
+    }
+    
+    if (useRadii)
+    {
+        radii = malloc(NAtoms * sizeof(double));
+        if (radii == NULL)
+        {
+            printf("ERROR: could not allocate radii\n");
+            exit(55);
+        }
+        for (i = 0; i < NAtoms; i++)
+            radii[i] = specieCovalentRadius[specie[i]];
+    }
     
     
     
     
     
     
+    
+    
+    
+    if (useRadii) free(radii);
+    
+    return Py_BuildValue("i", 0);
 }
+
 

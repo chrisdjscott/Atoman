@@ -46,8 +46,9 @@ def configuration(parent_package='', top_path=None):
                          include_dirs=[incdir])
     
     config.add_extension("_voronoi", 
-                         ["voronoi.c", "../visclibs/array_utils.c"],
-                         include_dirs=[incdir])
+                         ["voronoi.c", "voro_iface.cpp", "../visclibs/array_utils.c"],
+                         libraries=["voro++"],
+                         include_dirs=[incdir, "/usr/local/include/voro++"])
     
     return config
 
