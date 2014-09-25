@@ -222,7 +222,6 @@ def computeVoronoiScipy(lattice, PBC):
     ptsTime = time.time()
     pts = _voronoi.makeVoronoiPoints(lattice.pos, lattice.cellDims, PBC, skin)
     ptsTime = time.time() - ptsTime
-    print "LEN PTS2", len(pts)
     
 #     f = open("vorolattice.dat", "w")
 #     f.write("%d\n" % len(pts))
