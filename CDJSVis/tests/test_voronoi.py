@@ -4,6 +4,9 @@ Unit tests for Voronoi tessellation
 
     - test calculate Voronoi
     - test VoronoiResult class
+    
+    ***** test that sum of voro volumes == volume of lattice *****
+    
 
 """
 import os

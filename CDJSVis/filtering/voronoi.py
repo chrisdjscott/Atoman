@@ -94,12 +94,15 @@ def computeVoronoi(lattice, voronoiOptions, PBC):
     """
     res = computeVoronoiPyvoro(lattice, voronoiOptions, PBC)
     
-    vor, vols = computeVoronoiScipy(lattice, PBC)
+    vor, vols1 = computeVoronoiScipy(lattice, PBC)
     
-#     import math
-#     for i in xrange(lattice.NAtoms):
-#         if math.fabs(vols[i] - res.atomVolume(i)) > 1e-5:
-#             print "VOLDIFF(%d): %.10f <-> %.10f" % (i, vols[i], res.atomVolume(i))
+    vols, nebCnts = computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC)
+    
+    import math
+    print "***** CHECKING VOLS"
+    for i in xrange(lattice.NAtoms):
+        if math.fabs(vols[i] - res.atomVolume(i)) > 1e-5:
+            print "VOLDIFF(%d): %.10f <-> %.10f" % (i, vols[i], res.atomVolume(i))
     
     return res
 
@@ -283,9 +286,37 @@ def computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC):
     """
     Compute Voronoi using Voro++
     
+        if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!diO!O!", &PyArray_Type, &posIn, &PyArray_Type, &minPosIn, &PyArray_Type, 
+            &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &specieIn, &PyArray_Type, 
+            &specieCovalentRadiusIn, &dispersion, &useRadii, &PyArray_Type, &volumesIn, &PyArray_Type, &nebCountsIn))
+        return NULL;
+
+    
     """
+    logger = logging.getLogger(__name__+".computeVoronoiVoro++")
     
+    vorotime = time.time()
     
+    logger.info("Computing Voronoi (voro++)")
+    logger.debug("  NAtoms: %d", lattice.NAtoms)
+    logger.info("  Dispersion is: %f", voronoiOptions.dispersion)
+    logger.info("  PBCs are: %s %s %s", bool(PBC[0]), bool(PBC[1]), bool(PBC[2]))
+    logger.info("  Using radii: %s", voronoiOptions.useRadii)
     
+    # make arrays for results
+    volumes = np.empty(lattice.NAtoms, np.float64)
+    nebCounts = np.zeros(lattice.NAtoms, np.int32)
     
+    # call c lib
+    callTime = time.time()
+    retval = _voronoi.computeVoronoiVoroPlusPlus(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims,
+                                                 PBC, lattice.specie, lattice.specieCovalentRadius, 
+                                                 voronoiOptions.dispersion, voronoiOptions.useRadii, volumes,
+                                                 nebCounts)
+    callTime = time.time() - callTime
     
+    vorotime = time.time() - vorotime
+    logger.debug("  Compute Voronoi time: %f", vorotime)
+    logger.debug("    Compute time: %f", callTime)
+    
+    return volumes, nebCounts
