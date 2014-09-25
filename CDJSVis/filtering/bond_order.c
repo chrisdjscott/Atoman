@@ -84,7 +84,6 @@ static void convertToSphericalCoordinates(double xdiff, double ydiff, double zdi
 static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList *nebList, double *pos, double *cellDims, int *PBC, struct AtomStructureResults *results)
 {
     int visIndex;
-    double looptime;
     
     
     /* loop over atoms */

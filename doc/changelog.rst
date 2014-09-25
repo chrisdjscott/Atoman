@@ -7,6 +7,9 @@ Changelog
 * Show progress dialog when applying lists and calculating RDF
 * Display error if try to compute RDF out to distance greater than half the cell dimensions
 * Add option to use ACNA filter within point defects filter, to refine defect detection
+* Parallelised some sections of C extensions using OpenMP
+   * Spherical harmonics loop in bond_order filter
+   * RDF loop
 
 **v140922**
 

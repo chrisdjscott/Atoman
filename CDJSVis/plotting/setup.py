@@ -14,7 +14,8 @@ def configuration(parent_package='', top_path=None):
     config.add_extension("rdf", 
                          ["rdf.c", "../visclibs/utilities.c",
                           "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
-                         libraries=["gsl", "gslcblas"],
+                         libraries=["gsl", "gslcblas", "gomp"],
+                         extra_compile_args=["-fopenmp"],
                          include_dirs=[incdir, "/opt/local/include"])
     
     return config
