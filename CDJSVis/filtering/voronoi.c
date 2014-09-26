@@ -284,6 +284,7 @@ computeVoronoiVoroPlusPlus(PyObject *self, PyObject *args)
     PyArrayObject *specieIn=NULL;
     PyArrayObject *PBCIn=NULL;
     PyArrayObject *nebCountsIn=NULL;
+    PyObject *resultList=NULL;
     int i, status;
     double bound_lo[3], bound_hi[3];
     double *radii;
@@ -349,9 +350,12 @@ computeVoronoiVoroPlusPlus(PyObject *self, PyObject *args)
             radii[i] = specieCovalentRadius[specie[i]];
     }
     
+    /* allocate result list */
+    resultList = PyList_New(NAtoms);
+    
     /* call voro++ wrapper */
     /* need to pass extra stuff eventually, eg radii etc... */
-    status = computeVoronoiVoroPlusPlusWrapper(NAtoms, pos, PBC, bound_lo, bound_hi, volumes, nebCounts);
+    status = computeVoronoiVoroPlusPlusWrapper(NAtoms, pos, PBC, bound_lo, bound_hi, volumes, nebCounts, resultList);
     
     
     
@@ -361,7 +365,7 @@ computeVoronoiVoroPlusPlus(PyObject *self, PyObject *args)
     
     if (useRadii) free(radii);
     
-    return Py_BuildValue("i", 0);
+    return resultList;
 }
 
 

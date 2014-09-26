@@ -49,7 +49,6 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
     
     int i, j, index, specie, count;
     int numpyDims[1], numpyDims2[2];
-//    double *speciePos, *specieScalars;
     double scalar;
     PyObject *list=NULL;
     
@@ -103,16 +102,13 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
         PyArrayObject *specieScalars = NULL;
         PyObject *tuple = NULL;
         
-        
         /* allocate position array */
         numpyDims2[0] = specieCount[i];
         numpyDims2[1] = 3;
-//        speciePos = (double*) allocator("", 2, numpyDims2, 'd');
         speciePos = (PyArrayObject *) PyArray_FromDims(2, numpyDims2, NPY_FLOAT64);
         
         /* allocate position array */
         numpyDims[0] = specieCount[i];
-//        specieScalars = (double*) allocator("", 1, numpyDims, 'd');
         specieScalars = (PyArrayObject *) PyArray_FromDims(1, numpyDims, NPY_FLOAT64);
         
         /* loop over atoms */
@@ -125,9 +121,6 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
             if (specie == i)
             {
                 /* position */
-//                speciePos[3*count+0] = pos[3*index+0];
-//                speciePos[3*count+1] = pos[3*index+1];
-//                speciePos[3*count+2] = pos[3*index+2];
                 DIND2(speciePos, count, 0) = pos[3*index+0];
                 DIND2(speciePos, count, 1) = pos[3*index+1];
                 DIND2(speciePos, count, 2) = pos[3*index+2];
@@ -140,7 +133,6 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
                 else if (scalarType == 4) scalar = charge[index];
                 else scalar = scalars[j];
                 
-//                specieScalars[count] = scalar;
                 DIND1(specieScalars, count) = scalar;
                 
                 count++;
@@ -154,10 +146,6 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
         
         /* store in list (setItem steals ownership of tuple!?) */
         PyList_SetItem(list, i, tuple);
-        
-        /* deref */
-//        speciePos = NULL;
-//        specieScalars = NULL;
     }
     
     return list;

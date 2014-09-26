@@ -96,13 +96,16 @@ def computeVoronoi(lattice, voronoiOptions, PBC):
     
     vor, vols1 = computeVoronoiScipy(lattice, PBC)
     
-    vols, nebCnts = computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC)
+    res2 = computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC)
     
     import math
-    print "***** CHECKING VOLS"
+    print "***** CHECKING VOLS/NUMNEBS"
     for i in xrange(lattice.NAtoms):
-        if math.fabs(vols[i] - res.atomVolume(i)) > 1e-5:
-            print "VOLDIFF(%d): %.10f <-> %.10f" % (i, vols[i], res.atomVolume(i))
+        if math.fabs(res2.atomVolume(i) - res.atomVolume(i)) > 1e-5:
+            print "VOLDIFF(%d): %.10f <-> %.10f" % (i, res2.atomVolume(i), res.atomVolume(i))
+        
+        if res.atomNumNebs(i) != res2.atomNumNebs(i):
+            print "NUMNEBDIFF(%d): %d <-> %d" % (i, res2.atomNumNebs(i), res.atomNumNebs(i))
     
     return res
 
@@ -166,6 +169,21 @@ def computeVoronoiPyvoro(lattice, voronoiOptions, PBC):
     resTime = time.time()
     vor = VoronoiResult(pyvoro_result, PBC)
     resTime = time.time() - resTime
+    
+    
+#     verts = vor.atomVertices(412)
+#     print "NUM VERTICES 412 = ", len(verts)
+#     faces = vor.atomFaces(412)
+#     print "NUM FACES 412 = ", len(faces)
+#     cnt = 0
+#     for face in faces:
+#         cnt += len(face)
+#     print "TOT VERTS FACES 412 = ", cnt
+#     for face in faces:
+#         print "-"
+#         for vind in face:
+#             print "  ", vind, verts[vind]
+#     
     
     # save to file
     if voronoiOptions.outputToFile:
@@ -309,14 +327,25 @@ def computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC):
     
     # call c lib
     callTime = time.time()
-    retval = _voronoi.computeVoronoiVoroPlusPlus(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims,
-                                                 PBC, lattice.specie, lattice.specieCovalentRadius, 
-                                                 voronoiOptions.dispersion, voronoiOptions.useRadii, volumes,
-                                                 nebCounts)
+    voroList = _voronoi.computeVoronoiVoroPlusPlus(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims,
+                                                   PBC, lattice.specie, lattice.specieCovalentRadius, 
+                                                   voronoiOptions.dispersion, voronoiOptions.useRadii, volumes,
+                                                   nebCounts)
     callTime = time.time() - callTime
+    
+    # create result object
+    resTime = time.time()
+    vor = VoronoiResult(voroList, PBC)
+    resTime = time.time() - resTime
+    
+    
+    for i in xrange(lattice.NAtoms):
+        assert voroList[i]["volume"] == volumes[i]
+    
     
     vorotime = time.time() - vorotime
     logger.debug("  Compute Voronoi time: %f", vorotime)
     logger.debug("    Compute time: %f", callTime)
+    logger.debug("    Build result time: %f", resTime)
     
-    return volumes, nebCounts
+    return vor
