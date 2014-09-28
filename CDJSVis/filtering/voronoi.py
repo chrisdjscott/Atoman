@@ -321,27 +321,17 @@ def computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC):
     logger.info("  PBCs are: %s %s %s", bool(PBC[0]), bool(PBC[1]), bool(PBC[2]))
     logger.info("  Using radii: %s", voronoiOptions.useRadii)
     
-    # make arrays for results
-    volumes = np.empty(lattice.NAtoms, np.float64)
-    nebCounts = np.zeros(lattice.NAtoms, np.int32)
-    
     # call c lib
     callTime = time.time()
     voroList = _voronoi.computeVoronoiVoroPlusPlus(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims,
                                                    PBC, lattice.specie, lattice.specieCovalentRadius, 
-                                                   voronoiOptions.dispersion, voronoiOptions.useRadii, volumes,
-                                                   nebCounts)
+                                                   voronoiOptions.dispersion, voronoiOptions.useRadii)
     callTime = time.time() - callTime
     
     # create result object
     resTime = time.time()
     vor = VoronoiResult(voroList, PBC)
     resTime = time.time() - resTime
-    
-    
-    for i in xrange(lattice.NAtoms):
-        assert voroList[i]["volume"] == volumes[i]
-    
     
     vorotime = time.time() - vorotime
     logger.debug("  Compute Voronoi time: %f", vorotime)

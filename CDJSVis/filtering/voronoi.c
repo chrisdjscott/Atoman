@@ -273,26 +273,24 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
 static PyObject*
 computeVoronoiVoroPlusPlus(PyObject *self, PyObject *args)
 {
-    int *specie, *PBC, *nebCounts, NAtoms, useRadii;
-    double *pos, *minPos, *maxPos, *cellDims, *specieCovalentRadius, dispersion, *volumes;
+    int *specie, *PBC, NAtoms, useRadii;
+    double *pos, *minPos, *maxPos, *cellDims, *specieCovalentRadius, dispersion;
     PyArrayObject *posIn=NULL;
     PyArrayObject *minPosIn=NULL;
     PyArrayObject *maxPosIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *specieCovalentRadiusIn=NULL;
-    PyArrayObject *volumesIn=NULL;
     PyArrayObject *specieIn=NULL;
     PyArrayObject *PBCIn=NULL;
-    PyArrayObject *nebCountsIn=NULL;
     PyObject *resultList=NULL;
     int i, status;
     double bound_lo[3], bound_hi[3];
     double *radii;
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!diO!O!", &PyArray_Type, &posIn, &PyArray_Type, &minPosIn, &PyArray_Type, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!di", &PyArray_Type, &posIn, &PyArray_Type, &minPosIn, &PyArray_Type, 
             &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &specieIn, &PyArray_Type, 
-            &specieCovalentRadiusIn, &dispersion, &useRadii, &PyArray_Type, &volumesIn, &PyArray_Type, &nebCountsIn))
+            &specieCovalentRadiusIn, &dispersion, &useRadii))
         return NULL;
     
     if (not_doubleVector(posIn)) return NULL;
@@ -311,17 +309,11 @@ computeVoronoiVoroPlusPlus(PyObject *self, PyObject *args)
     if (not_doubleVector(specieCovalentRadiusIn)) return NULL;
     specieCovalentRadius = pyvector_to_Cptr_double(specieCovalentRadiusIn);
     
-    if (not_doubleVector(volumesIn)) return NULL;
-    volumes = pyvector_to_Cptr_double(volumesIn);
-    
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
     
     if (not_intVector(PBCIn)) return NULL;
     PBC = pyvector_to_Cptr_int(PBCIn);
-    
-    if (not_intVector(nebCountsIn)) return NULL;
-    nebCounts = pyvector_to_Cptr_int(nebCountsIn);
     
     /* prepare for Voro call */
     for (i = 0; i < 3; i++)
@@ -355,7 +347,7 @@ computeVoronoiVoroPlusPlus(PyObject *self, PyObject *args)
     
     /* call voro++ wrapper */
     /* need to pass extra stuff eventually, eg radii etc... */
-    status = computeVoronoiVoroPlusPlusWrapper(NAtoms, pos, PBC, bound_lo, bound_hi, volumes, nebCounts, resultList);
+    status = computeVoronoiVoroPlusPlusWrapper(NAtoms, pos, PBC, bound_lo, bound_hi, useRadii, radii, resultList);
     
     
     

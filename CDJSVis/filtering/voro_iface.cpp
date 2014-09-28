@@ -9,14 +9,14 @@
 
 using namespace voro;
 
-static void processAtomCell(voronoicell_neighbor&, int, double*, double*, int*, PyObject*);
+static void processAtomCell(voronoicell_neighbor&, int, double*, PyObject*);
 
 
 /*******************************************************************************
  * Main interface function to be called from C
  *******************************************************************************/
-extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *PBC, double *bound_lo, double *bound_hi, 
-        double *volumes, int *nebCounts, PyObject *resultList)
+extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *PBC, 
+		double *bound_lo, double *bound_hi, int useRadii, double *radii, PyObject *resultList)
 {
     int i;
 	
@@ -31,34 +31,68 @@ extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *P
         printf("DEBUG: n[%d] = %lf\n", i, n[i]);
     }
     
-    /* initialise voro++ container, preallocates 8 atoms per cell */
+    // voro cell with neighbour information
     voronoicell_neighbor c;
     
-    // monodisperse voro++ container
-	container con(bound_lo[0], bound_hi[0],
-				  bound_lo[1], bound_hi[1],
-				  bound_lo[2], bound_hi[2],
-				  int(n[0]),int(n[1]),int(n[2]),
-				  bool(PBC[0]), bool(PBC[1]), bool(PBC[2]), 8); 
-
-	// pass coordinates for local and ghost atoms to voro++
-	for (i = 0; i < NAtoms; i++)
-		con.put(i, pos[3*i], pos[3*i+1], pos[3*i+2]);
-
-	// invoke voro++ and fetch results for owned atoms in group
-	c_loop_all cl(con);
-	if (cl.start()) do if (con.compute_cell(c,cl)) {
-	  i = cl.pid();
-	  processAtomCell(c, i, pos, volumes, nebCounts, resultList);
-	} while (cl.inc());
-    
+    // use radii or not
+    if (useRadii)
+    {
+    	/* initialise voro++ container, preallocates 8 atoms per cell */
+    	container_poly con(bound_lo[0], bound_hi[0],
+					       bound_lo[1], bound_hi[1],
+					       bound_lo[2], bound_hi[2],
+					       int(n[0]),int(n[1]),int(n[2]),
+					       bool(PBC[0]), bool(PBC[1]), bool(PBC[2]), 8); 
+	
+		// pass coordinates for local and ghost atoms to voro++
+		for (i = 0; i < NAtoms; i++)
+			con.put(i, pos[3*i], pos[3*i+1], pos[3*i+2], radii[i]);
+		
+		// invoke voro++ and fetch results for owned atoms in group
+		int count = 0;
+		c_loop_all cl(con);
+		if (cl.start()) do if (con.compute_cell(c,cl))
+		{
+		    i = cl.pid();
+		    processAtomCell(c, i, pos, resultList);
+		    count++;
+		} while (cl.inc());
+		
+		printf("DEBUG: COUNT = %d (%d atoms)\n", count, NAtoms);
+    }
+    else
+    {
+    	/* initialise voro++ container, preallocates 8 atoms per cell */
+    	container con(bound_lo[0], bound_hi[0],
+					  bound_lo[1], bound_hi[1],
+					  bound_lo[2], bound_hi[2],
+					  int(n[0]),int(n[1]),int(n[2]),
+					  bool(PBC[0]), bool(PBC[1]), bool(PBC[2]), 8); 
+	
+		// pass coordinates for local and ghost atoms to voro++
+		for (i = 0; i < NAtoms; i++)
+			con.put(i, pos[3*i], pos[3*i+1], pos[3*i+2]);
+		
+		// invoke voro++ and fetch results for owned atoms in group
+		int count = 0;
+		c_loop_all cl(con);
+		if (cl.start()) do if (con.compute_cell(c,cl))
+		{
+			i = cl.pid();
+			processAtomCell(c, i, pos, resultList);
+			count++;
+		} while (cl.inc());
+		
+		printf("DEBUG: COUNT = %d (%d atoms)\n", count, NAtoms);
+    }
+	
     return 0;
 }
 
 /*******************************************************************************
  * Process cell; compute volume, num neighbours, facets etc.
  *******************************************************************************/
-static void processAtomCell(voronoicell_neighbor &c, int i, double *pos, double *volumes, int *nebCounts, PyObject *resultList)
+static void processAtomCell(voronoicell_neighbor &c, int i, double *pos, PyObject *resultList)
 {
 	/* create dictionary for this atoms results */
 	PyObject *dict=NULL;
@@ -66,8 +100,6 @@ static void processAtomCell(voronoicell_neighbor &c, int i, double *pos, double 
 	
 	// volume
 	double vol = c.volume();
-	volumes[i] = vol;
-	
 	PyObject *volPy=NULL;
 	volPy = PyFloat_FromDouble(vol);
 	PyDict_SetItemString(dict, "volume", volPy);
@@ -76,8 +108,7 @@ static void processAtomCell(voronoicell_neighbor &c, int i, double *pos, double 
 	// number of cell faces (should add threshold)
 	std::vector<int> neighbours;
 	c.neighbors(neighbours);
-	nebCounts[i] = neighbours.size();
-	
+//	nebCounts[i] = neighbours.size();
 	
 	// vertices
 	std::vector<double> vertices;
@@ -152,8 +183,8 @@ static void processAtomCell(voronoicell_neighbor &c, int i, double *pos, double 
 	ypos = PyFloat_FromDouble(pos[3*i+1]);
 	zpos = PyFloat_FromDouble(pos[3*i+2]);
 	PyList_SetItem(origPos, 0, xpos);
-	PyList_SetItem(origPos, 1, xpos);
-	PyList_SetItem(origPos, 2, xpos);
+	PyList_SetItem(origPos, 1, ypos);
+	PyList_SetItem(origPos, 2, zpos);
 	PyDict_SetItemString(dict, "original", origPos);
 	
 	/* add dict to result list (steals ref to dict) */
