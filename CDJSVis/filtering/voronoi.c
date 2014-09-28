@@ -114,6 +114,35 @@ Voronoi_atomVolume(Voronoi *self, PyObject *args)
 }
 
 /*******************************************************************************
+ ** Return number of neighbours of an atom
+ *******************************************************************************/
+static PyObject*
+Voronoi_atomNumNebs(Voronoi *self, PyObject *args)
+{
+    int atomIndex;
+    int numNebs;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "i", &atomIndex))
+        return NULL;
+    
+    /* check index within range */
+    if (atomIndex >= self->voroResultSize)
+    {
+        char msg[64];
+        
+        sprintf(msg, "Index is out of range (%d >= %d)", atomIndex, self->voroResultSize);
+        PyErr_SetString(PyExc_IndexError, msg);
+        return NULL;
+    }
+    
+    /* get volume */
+    numNebs = self->voroResult[atomIndex].numNeighbours;
+    
+    return Py_BuildValue("i", numNebs);
+}
+
+/*******************************************************************************
  * Compute Voronoi using Voro++
  *******************************************************************************/
 static PyObject*
@@ -224,6 +253,9 @@ static PyMethodDef Voronoi_methods[] = {
     },
     {"computeVoronoi", (PyCFunction)Voronoi_computeVoronoi, METH_VARARGS, 
             "Compute Voronoi volumes of the atoms using Voro++ interface"
+    },
+    {"atomNumNebs", (PyCFunction)Voronoi_atomNumNebs, METH_VARARGS, 
+            "Return the number of neighbours of the given atom"
     },
 //    {"volumesArray", 
 //    

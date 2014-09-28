@@ -104,8 +104,8 @@ def computeVoronoi(lattice, voronoiOptions, PBC):
         if math.fabs(res2.atomVolume(i) - res.atomVolume(i)) > 1e-5:
             print "VOLDIFF(%d): %.10f <-> %.10f" % (i, res2.atomVolume(i), res.atomVolume(i))
         
-#         if res.atomNumNebs(i) != res2.atomNumNebs(i):
-#             print "NUMNEBDIFF(%d): %d <-> %d" % (i, res2.atomNumNebs(i), res.atomNumNebs(i))
+        if res.atomNumNebs(i) != res2.atomNumNebs(i):
+            print "NUMNEBDIFF(%d): %d <-> %d" % (i, res2.atomNumNebs(i), res.atomNumNebs(i))
     
     return res
 
