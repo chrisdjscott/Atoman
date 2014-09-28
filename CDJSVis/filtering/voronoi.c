@@ -5,23 +5,153 @@
  *******************************************************************************/
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
+#include <structmember.h>
 #include <numpy/arrayobject.h>
 #include <math.h>
 #include "array_utils.h"
 #include "voro_iface.h"
 
+/*******************************************************************************
+ ** Define object structure
+ *******************************************************************************/
+typedef struct {
+    PyObject_HEAD
+    vorores_t *voroResult;
+    int voroResultSize;
+} Voronoi;
 
+/*******************************************************************************
+ ** function prototypes
+ *******************************************************************************/
 static PyObject* makeVoronoiPoints(PyObject*, PyObject*);
-//static PyObject* computeVolumes(PyObject*, PyObject*);
 static PyObject* computeVoronoiVoroPlusPlus(PyObject*, PyObject*);
+static PyObject* Voronoi_atomVolume(Voronoi*, PyObject*);
 
+
+/*******************************************************************************
+ ** Deallocation
+ *******************************************************************************/
+static void
+Voronoi_dealloc(Voronoi* self)
+{
+    if (self->voroResultSize > 0)
+    {
+    	/* free... */
+    	
+    }
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+/*******************************************************************************
+ ** New Voronoi object
+ *******************************************************************************/
+static PyObject *
+Voronoi_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    Voronoi *self;
+
+    self = (Voronoi *)type->tp_alloc(type, 0);
+    if (self != NULL)
+    {
+        /* set size = 0 initially */
+    	self->voroResultSize = 0;
+    }
+
+    return (PyObject *)self;
+}
+
+/*******************************************************************************
+ ** Return volume of atom
+ *******************************************************************************/
+static PyObject*
+Voronoi_atomVolume(Voronoi *self, PyObject *args)
+{
+	int atomIndex;
+	double volume;
+	
+	/* parse and check arguments from Python */
+	if (!PyArg_ParseTuple(args, "i", &atomIndex))
+		return NULL;
+	
+	/* check index within range */
+	if (atomIndex >= self->voroResultSize)
+	{
+		char msg[64];
+		
+		sprintf(msg, "Index is out of range (%d >= %d)", atomIndex, self->voroResultSize);
+		PyErr_SetString(PyExc_IndexError, msg);
+		return NULL;
+	}
+	
+	/* get volume */
+	volume = self->voroResult[atomIndex].volume;
+	
+	return Py_BuildValue("d", volume);
+}
+
+/*******************************************************************************
+ ** List of methods on VoronoiResult object
+ *******************************************************************************/
+static PyMethodDef Voronoi_methods[] = {
+    {"atomVolume", (PyCFunction)Voronoi_atomVolume, METH_VARARGS, 
+    		"Return the volume of the given atom"
+    },
+//    {"volumesArray", 
+//    
+//    }
+    {NULL}  /* Sentinel */
+};
+
+/*******************************************************************************
+ ** Voronoi object type
+ *******************************************************************************/
+static PyTypeObject VoronoiType = {
+	PyObject_HEAD_INIT(NULL)
+	0,                         			/*ob_size*/
+	"_voronoi.Voronoi",  				/*tp_name*/
+	sizeof(Voronoi),     				/*tp_basicsize*/
+	0,                         			/*tp_itemsize*/
+	(destructor)Voronoi_dealloc,	 	/*tp_dealloc*/
+	0,                         			/*tp_print*/
+	0,                         			/*tp_getattr*/
+	0,                         			/*tp_setattr*/
+	0,                         			/*tp_compare*/
+	0,                         			/*tp_repr*/
+	0,                         			/*tp_as_number*/
+	0,                         			/*tp_as_sequence*/
+	0,                         			/*tp_as_mapping*/
+	0,                         			/*tp_hash */
+	0,                         			/*tp_call*/
+	0,                         			/*tp_str*/
+	0,                         			/*tp_getattro*/
+	0,                         			/*tp_setattro*/
+	0,                         			/*tp_as_buffer*/
+	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+	"Voronoi objects",   	        	/* tp_doc */
+	0,		               				/* tp_traverse */
+	0,		               				/* tp_clear */
+	0,		              				/* tp_richcompare */
+	0,		               				/* tp_weaklistoffset */
+	0,		               				/* tp_iter */
+	0,		               				/* tp_iternext */
+	Voronoi_methods,    		        /* tp_methods */
+	0,			             			/* tp_members */
+	0,                         			/* tp_getset */
+	0,                         			/* tp_base */
+	0,                         			/* tp_dict */
+	0,                         			/* tp_descr_get */
+	0,                         			/* tp_descr_set */
+	0,                         			/* tp_dictoffset */
+	0,      							/* tp_init */
+	0,                        	        /* tp_alloc */
+	Voronoi_new,						/* tp_new */
+};
 
 /*******************************************************************************
  ** List of python methods available in this module
  *******************************************************************************/
 static struct PyMethodDef methods[] = {
     {"makeVoronoiPoints", makeVoronoiPoints, METH_VARARGS, "Make points array for passing to Voronoi method"},
-//    {"computeVolumes", computeVolumes, METH_VARARGS, "Compute Voronoi volumes of the atoms"},
     {"computeVoronoiVoroPlusPlus", computeVoronoiVoroPlusPlus, METH_VARARGS, "Compute Voronoi volumes of the atoms using Voro++ interface"},
     {NULL, NULL, 0, NULL}
 };
@@ -32,8 +162,17 @@ static struct PyMethodDef methods[] = {
 PyMODINIT_FUNC
 init_voronoi(void)
 {
-    (void)Py_InitModule("_voronoi", methods);
+    PyObject *m;
+    
+    VoronoiType.tp_new = PyType_GenericNew;
+	if (PyType_Ready(&VoronoiType) < 0)
+		return;
+	
+	m = Py_InitModule3("_voronoi", methods, "Module for computing Voronoi cells of atoms");
     import_array();
+    
+    Py_INCREF(&VoronoiType);
+    PyModule_AddObject(m, "Voronoi", (PyObject *)&VoronoiType);
 }
 
 /*******************************************************************************
@@ -253,21 +392,6 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
 }
 
 /*******************************************************************************
- * Compute Voronoi volumes of atoms
- *******************************************************************************/
-//static PyObject*
-//computeVolumes(PyObject *self, PyObject *args)
-//{
-//    int NAtoms, int *point_region, 
-//    
-//    
-//    
-//    
-//    
-//    
-//}
-
-/*******************************************************************************
  * Compute Voronoi using Voro++
  *******************************************************************************/
 static PyObject*
@@ -346,7 +470,6 @@ computeVoronoiVoroPlusPlus(PyObject *self, PyObject *args)
     resultList = PyList_New(NAtoms);
     
     /* call voro++ wrapper */
-    /* need to pass extra stuff eventually, eg radii etc... */
     status = computeVoronoiVoroPlusPlusWrapper(NAtoms, pos, PBC, bound_lo, bound_hi, useRadii, radii, resultList);
     
     
