@@ -24,9 +24,18 @@ typedef struct {
  ** function prototypes
  *******************************************************************************/
 static PyObject* makeVoronoiPoints(PyObject*, PyObject*);
-static PyObject* computeVoronoiVoroPlusPlus(PyObject*, PyObject*);
+static void free_vorores(int, vorores_t*);
+static PyObject* Voronoi_computeVoronoi(Voronoi*, PyObject*);
 static PyObject* Voronoi_atomVolume(Voronoi*, PyObject*);
 
+/*******************************************************************************
+ ** free vorores pointer
+ *******************************************************************************/
+static void
+free_vorores(int size, vorores_t *vorores)
+{
+	free(vorores);
+}
 
 /*******************************************************************************
  ** Deallocation
@@ -37,7 +46,8 @@ Voronoi_dealloc(Voronoi* self)
     if (self->voroResultSize > 0)
     {
     	/* free... */
-    	
+    	free_vorores(self->voroResultSize, self->voroResult);
+    	self->voroResultSize = 0;
     }
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -90,11 +100,117 @@ Voronoi_atomVolume(Voronoi *self, PyObject *args)
 }
 
 /*******************************************************************************
+ * Compute Voronoi using Voro++
+ *******************************************************************************/
+static PyObject*
+Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
+{
+    int *specie, *PBC, NAtoms, useRadii;
+    double *pos, *minPos, *maxPos, *cellDims, *specieCovalentRadius, dispersion;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *minPosIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *specieCovalentRadiusIn=NULL;
+    PyArrayObject *specieIn=NULL;
+    PyArrayObject *PBCIn=NULL;
+    int i, status;
+    double bound_lo[3], bound_hi[3];
+    double *radii;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!di", &PyArray_Type, &posIn, &PyArray_Type, &minPosIn, &PyArray_Type, 
+            &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &specieIn, &PyArray_Type, 
+            &specieCovalentRadiusIn, &dispersion, &useRadii))
+        return NULL;
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    NAtoms = ((int) posIn->dimensions[0]) / 3;
+    
+    if (not_doubleVector(minPosIn)) return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_doubleVector(maxPosIn)) return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_doubleVector(specieCovalentRadiusIn)) return NULL;
+    specieCovalentRadius = pyvector_to_Cptr_double(specieCovalentRadiusIn);
+    
+    if (not_intVector(specieIn)) return NULL;
+    specie = pyvector_to_Cptr_int(specieIn);
+    
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
+    
+    /* prepare for Voro call */
+    for (i = 0; i < 3; i++)
+    {
+        if (PBC[i])
+        {
+            bound_lo[i] = 0.0;
+            bound_hi[i] = cellDims[i];
+        }
+        else
+        {
+            bound_lo[i] = minPos[i] - dispersion;
+            bound_hi[i] = maxPos[i] + dispersion;
+        }
+    }
+    
+    if (useRadii)
+    {
+        radii = malloc(NAtoms * sizeof(double));
+        if (radii == NULL)
+        {
+            printf("ERROR: could not allocate radii\n");
+            exit(55);
+        }
+        for (i = 0; i < NAtoms; i++)
+            radii[i] = specieCovalentRadius[specie[i]];
+    }
+    
+    /* deallocate if ran previously */
+    free_vorores(self->voroResultSize, self->voroResult);
+    self->voroResultSize = 0;
+    
+    /* allocate result list */
+//    resultList = PyList_New(NAtoms);
+    
+    self->voroResult = malloc(NAtoms * sizeof(vorores_t));
+    if (self->voroResult == NULL)
+    {
+    	PyErr_SetString(PyExc_RuntimeError, "Could not allocate voroResult pointer");
+		return NULL;
+    }
+    self->voroResultSize = NAtoms;
+    
+    /* call voro++ wrapper */
+    status = computeVoronoiVoroPlusPlusWrapper(NAtoms, pos, PBC, bound_lo, bound_hi, useRadii, radii, self->voroResult);
+    
+    
+    
+    
+    
+    
+    
+    if (useRadii) free(radii);
+    
+    return Py_BuildValue("i", 0);
+}
+
+/*******************************************************************************
  ** List of methods on VoronoiResult object
  *******************************************************************************/
 static PyMethodDef Voronoi_methods[] = {
     {"atomVolume", (PyCFunction)Voronoi_atomVolume, METH_VARARGS, 
     		"Return the volume of the given atom"
+    },
+    {"computeVoronoi", (PyCFunction)Voronoi_computeVoronoi, METH_VARARGS, 
+    		"Compute Voronoi volumes of the atoms using Voro++ interface"
     },
 //    {"volumesArray", 
 //    
@@ -152,7 +268,6 @@ static PyTypeObject VoronoiType = {
  *******************************************************************************/
 static struct PyMethodDef methods[] = {
     {"makeVoronoiPoints", makeVoronoiPoints, METH_VARARGS, "Make points array for passing to Voronoi method"},
-    {"computeVoronoiVoroPlusPlus", computeVoronoiVoroPlusPlus, METH_VARARGS, "Compute Voronoi volumes of the atoms using Voro++ interface"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -390,97 +505,3 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
         return PyArray_Return(pts);
     }
 }
-
-/*******************************************************************************
- * Compute Voronoi using Voro++
- *******************************************************************************/
-static PyObject*
-computeVoronoiVoroPlusPlus(PyObject *self, PyObject *args)
-{
-    int *specie, *PBC, NAtoms, useRadii;
-    double *pos, *minPos, *maxPos, *cellDims, *specieCovalentRadius, dispersion;
-    PyArrayObject *posIn=NULL;
-    PyArrayObject *minPosIn=NULL;
-    PyArrayObject *maxPosIn=NULL;
-    PyArrayObject *cellDimsIn=NULL;
-    PyArrayObject *specieCovalentRadiusIn=NULL;
-    PyArrayObject *specieIn=NULL;
-    PyArrayObject *PBCIn=NULL;
-    PyObject *resultList=NULL;
-    int i, status;
-    double bound_lo[3], bound_hi[3];
-    double *radii;
-    
-    /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!di", &PyArray_Type, &posIn, &PyArray_Type, &minPosIn, &PyArray_Type, 
-            &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &specieIn, &PyArray_Type, 
-            &specieCovalentRadiusIn, &dispersion, &useRadii))
-        return NULL;
-    
-    if (not_doubleVector(posIn)) return NULL;
-    pos = pyvector_to_Cptr_double(posIn);
-    NAtoms = ((int) posIn->dimensions[0]) / 3;
-    
-    if (not_doubleVector(minPosIn)) return NULL;
-    minPos = pyvector_to_Cptr_double(minPosIn);
-    
-    if (not_doubleVector(maxPosIn)) return NULL;
-    maxPos = pyvector_to_Cptr_double(maxPosIn);
-    
-    if (not_doubleVector(cellDimsIn)) return NULL;
-    cellDims = pyvector_to_Cptr_double(cellDimsIn);
-    
-    if (not_doubleVector(specieCovalentRadiusIn)) return NULL;
-    specieCovalentRadius = pyvector_to_Cptr_double(specieCovalentRadiusIn);
-    
-    if (not_intVector(specieIn)) return NULL;
-    specie = pyvector_to_Cptr_int(specieIn);
-    
-    if (not_intVector(PBCIn)) return NULL;
-    PBC = pyvector_to_Cptr_int(PBCIn);
-    
-    /* prepare for Voro call */
-    for (i = 0; i < 3; i++)
-    {
-        if (PBC[i])
-        {
-            bound_lo[i] = 0.0;
-            bound_hi[i] = cellDims[i];
-        }
-        else
-        {
-            bound_lo[i] = minPos[i] - dispersion;
-            bound_hi[i] = maxPos[i] + dispersion;
-        }
-    }
-    
-    if (useRadii)
-    {
-        radii = malloc(NAtoms * sizeof(double));
-        if (radii == NULL)
-        {
-            printf("ERROR: could not allocate radii\n");
-            exit(55);
-        }
-        for (i = 0; i < NAtoms; i++)
-            radii[i] = specieCovalentRadius[specie[i]];
-    }
-    
-    /* allocate result list */
-    resultList = PyList_New(NAtoms);
-    
-    /* call voro++ wrapper */
-    status = computeVoronoiVoroPlusPlusWrapper(NAtoms, pos, PBC, bound_lo, bound_hi, useRadii, radii, resultList);
-    
-    
-    
-    
-    
-    
-    
-    if (useRadii) free(radii);
-    
-    return resultList;
-}
-
-
