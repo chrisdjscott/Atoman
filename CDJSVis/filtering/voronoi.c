@@ -34,7 +34,7 @@ static PyObject* Voronoi_atomVolume(Voronoi*, PyObject*);
 static void
 free_vorores(int size, vorores_t *vorores)
 {
-	free(vorores);
+    free(vorores);
 }
 
 /*******************************************************************************
@@ -45,9 +45,9 @@ Voronoi_dealloc(Voronoi* self)
 {
     if (self->voroResultSize > 0)
     {
-    	/* free... */
-    	free_vorores(self->voroResultSize, self->voroResult);
-    	self->voroResultSize = 0;
+        /* free... */
+        free_vorores(self->voroResultSize, self->voroResult);
+        self->voroResultSize = 0;
     }
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -64,7 +64,7 @@ Voronoi_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (self != NULL)
     {
         /* set size = 0 initially */
-    	self->voroResultSize = 0;
+        self->voroResultSize = 0;
     }
 
     return (PyObject *)self;
@@ -76,27 +76,27 @@ Voronoi_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static PyObject*
 Voronoi_atomVolume(Voronoi *self, PyObject *args)
 {
-	int atomIndex;
-	double volume;
-	
-	/* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "i", &atomIndex))
-		return NULL;
-	
-	/* check index within range */
-	if (atomIndex >= self->voroResultSize)
-	{
-		char msg[64];
-		
-		sprintf(msg, "Index is out of range (%d >= %d)", atomIndex, self->voroResultSize);
-		PyErr_SetString(PyExc_IndexError, msg);
-		return NULL;
-	}
-	
-	/* get volume */
-	volume = self->voroResult[atomIndex].volume;
-	
-	return Py_BuildValue("d", volume);
+    int atomIndex;
+    double volume;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "i", &atomIndex))
+        return NULL;
+    
+    /* check index within range */
+    if (atomIndex >= self->voroResultSize)
+    {
+        char msg[64];
+        
+        sprintf(msg, "Index is out of range (%d >= %d)", atomIndex, self->voroResultSize);
+        PyErr_SetString(PyExc_IndexError, msg);
+        return NULL;
+    }
+    
+    /* get volume */
+    volume = self->voroResult[atomIndex].volume;
+    
+    return Py_BuildValue("d", volume);
 }
 
 /*******************************************************************************
@@ -183,8 +183,8 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
     self->voroResult = malloc(NAtoms * sizeof(vorores_t));
     if (self->voroResult == NULL)
     {
-    	PyErr_SetString(PyExc_RuntimeError, "Could not allocate voroResult pointer");
-		return NULL;
+        PyErr_SetString(PyExc_RuntimeError, "Could not allocate voroResult pointer");
+        return NULL;
     }
     self->voroResultSize = NAtoms;
     
@@ -207,10 +207,10 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
  *******************************************************************************/
 static PyMethodDef Voronoi_methods[] = {
     {"atomVolume", (PyCFunction)Voronoi_atomVolume, METH_VARARGS, 
-    		"Return the volume of the given atom"
+            "Return the volume of the given atom"
     },
     {"computeVoronoi", (PyCFunction)Voronoi_computeVoronoi, METH_VARARGS, 
-    		"Compute Voronoi volumes of the atoms using Voro++ interface"
+            "Compute Voronoi volumes of the atoms using Voro++ interface"
     },
 //    {"volumesArray", 
 //    
@@ -222,45 +222,45 @@ static PyMethodDef Voronoi_methods[] = {
  ** Voronoi object type
  *******************************************************************************/
 static PyTypeObject VoronoiType = {
-	PyObject_HEAD_INIT(NULL)
-	0,                         			/*ob_size*/
-	"_voronoi.Voronoi",  				/*tp_name*/
-	sizeof(Voronoi),     				/*tp_basicsize*/
-	0,                         			/*tp_itemsize*/
-	(destructor)Voronoi_dealloc,	 	/*tp_dealloc*/
-	0,                         			/*tp_print*/
-	0,                         			/*tp_getattr*/
-	0,                         			/*tp_setattr*/
-	0,                         			/*tp_compare*/
-	0,                         			/*tp_repr*/
-	0,                         			/*tp_as_number*/
-	0,                         			/*tp_as_sequence*/
-	0,                         			/*tp_as_mapping*/
-	0,                         			/*tp_hash */
-	0,                         			/*tp_call*/
-	0,                         			/*tp_str*/
-	0,                         			/*tp_getattro*/
-	0,                         			/*tp_setattro*/
-	0,                         			/*tp_as_buffer*/
-	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-	"Voronoi objects",   	        	/* tp_doc */
-	0,		               				/* tp_traverse */
-	0,		               				/* tp_clear */
-	0,		              				/* tp_richcompare */
-	0,		               				/* tp_weaklistoffset */
-	0,		               				/* tp_iter */
-	0,		               				/* tp_iternext */
-	Voronoi_methods,    		        /* tp_methods */
-	0,			             			/* tp_members */
-	0,                         			/* tp_getset */
-	0,                         			/* tp_base */
-	0,                         			/* tp_dict */
-	0,                         			/* tp_descr_get */
-	0,                         			/* tp_descr_set */
-	0,                         			/* tp_dictoffset */
-	0,      							/* tp_init */
-	0,                        	        /* tp_alloc */
-	Voronoi_new,						/* tp_new */
+    PyObject_HEAD_INIT(NULL)
+    0,                                  /*ob_size*/
+    "_voronoi.Voronoi",                 /*tp_name*/
+    sizeof(Voronoi),                    /*tp_basicsize*/
+    0,                                  /*tp_itemsize*/
+    (destructor)Voronoi_dealloc,        /*tp_dealloc*/
+    0,                                  /*tp_print*/
+    0,                                  /*tp_getattr*/
+    0,                                  /*tp_setattr*/
+    0,                                  /*tp_compare*/
+    0,                                  /*tp_repr*/
+    0,                                  /*tp_as_number*/
+    0,                                  /*tp_as_sequence*/
+    0,                                  /*tp_as_mapping*/
+    0,                                  /*tp_hash */
+    0,                                  /*tp_call*/
+    0,                                  /*tp_str*/
+    0,                                  /*tp_getattro*/
+    0,                                  /*tp_setattro*/
+    0,                                  /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    "Voronoi objects",                  /* tp_doc */
+    0,                                  /* tp_traverse */
+    0,                                  /* tp_clear */
+    0,                                  /* tp_richcompare */
+    0,                                  /* tp_weaklistoffset */
+    0,                                  /* tp_iter */
+    0,                                  /* tp_iternext */
+    Voronoi_methods,                    /* tp_methods */
+    0,                                  /* tp_members */
+    0,                                  /* tp_getset */
+    0,                                  /* tp_base */
+    0,                                  /* tp_dict */
+    0,                                  /* tp_descr_get */
+    0,                                  /* tp_descr_set */
+    0,                                  /* tp_dictoffset */
+    0,                                  /* tp_init */
+    0,                                  /* tp_alloc */
+    Voronoi_new,                        /* tp_new */
 };
 
 /*******************************************************************************
@@ -280,10 +280,10 @@ init_voronoi(void)
     PyObject *m;
     
     VoronoiType.tp_new = PyType_GenericNew;
-	if (PyType_Ready(&VoronoiType) < 0)
-		return;
-	
-	m = Py_InitModule3("_voronoi", methods, "Module for computing Voronoi cells of atoms");
+    if (PyType_Ready(&VoronoiType) < 0)
+        return;
+    
+    m = Py_InitModule3("_voronoi", methods, "Module for computing Voronoi cells of atoms");
     import_array();
     
     Py_INCREF(&VoronoiType);
@@ -412,8 +412,8 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
                     DIND2(pts, count++, 2) = rz;
                     
                     DIND2(pts, count, 0) = rx;
-					DIND2(pts, count, 1) = ry + rymod;
-					DIND2(pts, count++, 2) = rz;
+                    DIND2(pts, count, 1) = ry + rymod;
+                    DIND2(pts, count++, 2) = rz;
                     
                     if (rzb)
                     {
@@ -424,16 +424,16 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
                         DIND2(pts, count++, 2) = rz + rzmod;
                         
                         DIND2(pts, count, 0) = rx;
-						DIND2(pts, count, 1) = ry + rymod;
-						DIND2(pts, count++, 2) = rz + rzmod;
-						
-						DIND2(pts, count, 0) = rx + rxmod;
-						DIND2(pts, count, 1) = ry;
-						DIND2(pts, count++, 2) = rz + rzmod;
-						
-						DIND2(pts, count, 0) = rx;
-						DIND2(pts, count, 1) = ry;
-						DIND2(pts, count++, 2) = rz + rzmod;
+                        DIND2(pts, count, 1) = ry + rymod;
+                        DIND2(pts, count++, 2) = rz + rzmod;
+                        
+                        DIND2(pts, count, 0) = rx + rxmod;
+                        DIND2(pts, count, 1) = ry;
+                        DIND2(pts, count++, 2) = rz + rzmod;
+                        
+                        DIND2(pts, count, 0) = rx;
+                        DIND2(pts, count, 1) = ry;
+                        DIND2(pts, count++, 2) = rz + rzmod;
                     }
                 }
                 else if (rzb)
@@ -441,8 +441,8 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
                     rzmod = (rz < halfDims[2]) ? cellDims[2] : -1 * cellDims[2];
                     
                     DIND2(pts, count, 0) = rx;
-					DIND2(pts, count, 1) = ry;
-					DIND2(pts, count++, 2) = rz + rzmod;
+                    DIND2(pts, count, 1) = ry;
+                    DIND2(pts, count++, 2) = rz + rzmod;
                     
                     DIND2(pts, count, 0) = rx + rxmod;
                     DIND2(pts, count, 1) = ry;
@@ -467,19 +467,19 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
                     DIND2(pts, count++, 2) = rz + rzmod;
                     
                     DIND2(pts, count, 0) = rx;
-					DIND2(pts, count, 1) = ry + rymod;
-					DIND2(pts, count++, 2) = rz + rzmod;
+                    DIND2(pts, count, 1) = ry + rymod;
+                    DIND2(pts, count++, 2) = rz + rzmod;
                 }
             }
             
             else if (rzb)
-			{
-				rzmod = (rz < halfDims[2]) ? cellDims[2] : -1 * cellDims[2];
-				
-				DIND2(pts, count, 0) = rx;
-				DIND2(pts, count, 1) = ry;
-				DIND2(pts, count++, 2) = rz + rzmod;
-			}
+            {
+                rzmod = (rz < halfDims[2]) ? cellDims[2] : -1 * cellDims[2];
+                
+                DIND2(pts, count, 0) = rx;
+                DIND2(pts, count, 1) = ry;
+                DIND2(pts, count++, 2) = rz + rzmod;
+            }
         }
         
         return PyArray_Return(pts);
