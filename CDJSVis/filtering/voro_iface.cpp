@@ -1,10 +1,10 @@
 
-#include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
+//#include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 //#include <numpy/arrayobject.h>
+#include "stdlib.h"
 #include "math.h"
 #include "voro_iface.h"
 #include "voro++.hh"
-
 #include <vector>
 
 using namespace voro;
@@ -105,79 +105,70 @@ extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *P
  *******************************************************************************/
 static int processAtomCell(voronoicell_neighbor &c, int i, double *pos, vorores_t *voroResult)
 {
-    // volume
+    /* initialise result */
+    voroResult[i].numFaces = 0;
+    voroResult[i].numNeighbours = 0;
+    voroResult[i].numVertices = 0;
+    
+    /* volume */
     voroResult[i].volume = c.volume();
     
-    // number of neighbours (should add threshold)
+    /* number of neighbours (should add threshold) */
     std::vector<int> neighbours;
     c.neighbors(neighbours);
-    voroResult[i].numNeighbours = neighbours.size();
+    int nnebs = neighbours.size(); // this will change if add threshold...
+    voroResult[i].neighbours = (int*) malloc(nnebs * sizeof(int));
+    if (voroResult[i].neighbours == NULL) return -1;
+    for (int j = 0; j < nnebs; j++)
+        voroResult[i].neighbours[j] = neighbours[j];
+    voroResult[i].numNeighbours = nnebs;
     
-    // vertices
+    /* vertices */
     std::vector<double> vertices;
     c.vertices(pos[3*i], pos[3*i+1], pos[3*i+2], vertices);
     int nvertices = c.p;
-    voroResult->vertices = (double*) malloc(3 * nvertices * sizeof(double));
-    if (voroResult->vertices == NULL) return -1;
+    voroResult[i].vertices = (double*) malloc(3 * nvertices * sizeof(double));
+    if (voroResult[i].vertices == NULL) return -1;
     for (int j = 0; j < nvertices; j++)
     {
-        voroResult->vertices[3*j] = vertices[3*j];
-        voroResult->vertices[3*j+1] = vertices[3*j+1];
-        voroResult->vertices[3*j+2] = vertices[3*j+2];
+        int j3 = 3 * j;
+        voroResult[i].vertices[j3] = vertices[j3];
+        voroResult[i].vertices[j3+1] = vertices[j3+1];
+        voroResult[i].vertices[j3+2] = vertices[j3+2];
     }
+    voroResult[i].numVertices = nvertices;
     
-    // faces
+    /* faces */
     std::vector<int> faceVertices;
     c.face_vertices(faceVertices);
     int nfaces = c.number_of_faces();
     
-//  PyObject *facesList=NULL;
-//  facesList = PyList_New(nfaces);
+    voroResult[i].numFaceVertices = (int*) calloc(nfaces, sizeof(int));
+    if (voroResult[i].numFaceVertices == NULL) return -1;
+    
+    voroResult[i].faceVertices = (int**) malloc(nfaces * sizeof(int*));
+    if (voroResult[i].faceVertices == NULL) return -1;
+    
+    voroResult[i].numFaces = nfaces;
+    
     int count = 0;
     for (int j = 0; j < nfaces; j++)
     {
-//      PyObject *facedict=NULL;
-//      facedict = PyDict_New();
-        
         int nfaceverts = faceVertices[count++];
-//      PyObject *vertlist=NULL;
-//      vertlist = PyList_New(nfaceverts);
+        
+        /* allocate space for this faces vertices */
+        voroResult[i].faceVertices[j] = (int*) malloc(nfaceverts * sizeof(int));
+        if (voroResult[i].faceVertices[j] == NULL) return -1;
+        voroResult[i].numFaceVertices[j] = nfaceverts;
+        
         for (int k = 0; k < nfaceverts; k++)
-        {
-//          PyObject *vertindPy=NULL;
-//          vertindPy = PyInt_FromLong(long(faceVertices[count++]));
-//          PyList_SetItem(vertlist, k, vertindPy);
-        }
-//      PyDict_SetItemString(facedict, "vertices", vertlist);
-//      Py_DECREF(vertlist);
-        
-//      PyObject *adjCellIndex=NULL;
-//      adjCellIndex = PyInt_FromLong(long(neighbours[j]));
-//      PyDict_SetItemString(facedict, "adjacent_cell", adjCellIndex);
-//      Py_DECREF(adjCellIndex);
-        
-//      PyList_SetItem(facesList, j, facedict);
+            voroResult[i].faceVertices[j][k] = faceVertices[count++];
     }
-//  PyDict_SetItemString(dict, "faces", facesList);
-//  Py_DECREF(facesList);
     
-    // original position
-//  PyObject *origPos=NULL;
-//  origPos = PyList_New(3);
-//  PyObject *xpos=NULL;
-//  PyObject *ypos=NULL;
-//  PyObject *zpos=NULL;
-//  xpos = PyFloat_FromDouble(pos[3*i]);
-//  ypos = PyFloat_FromDouble(pos[3*i+1]);
-//  zpos = PyFloat_FromDouble(pos[3*i+2]);
-//  PyList_SetItem(origPos, 0, xpos);
-//  PyList_SetItem(origPos, 1, ypos);
-//  PyList_SetItem(origPos, 2, zpos);
-//  PyDict_SetItemString(dict, "original", origPos);
-    
-    /* add dict to result list (steals ref to dict) */
-//  PyList_SetItem(resultList, i, dict);
+    /* original position */
+    voroResult[i].originalPos[0] = pos[3*i];
+    voroResult[i].originalPos[1] = pos[3*i+1];
+    voroResult[i].originalPos[2] = pos[3*i+2];
     
     return 0;
 }
-

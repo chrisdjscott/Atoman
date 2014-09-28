@@ -94,7 +94,7 @@ def computeVoronoi(lattice, voronoiOptions, PBC):
     """
     res = computeVoronoiPyvoro(lattice, voronoiOptions, PBC)
     
-    vor, vols1 = computeVoronoiScipy(lattice, PBC)
+#    vor, vols1 = computeVoronoiScipy(lattice, PBC)
     
     res2 = computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC)
     
@@ -104,8 +104,8 @@ def computeVoronoi(lattice, voronoiOptions, PBC):
         if math.fabs(res2.atomVolume(i) - res.atomVolume(i)) > 1e-5:
             print "VOLDIFF(%d): %.10f <-> %.10f" % (i, res2.atomVolume(i), res.atomVolume(i))
         
-        if res.atomNumNebs(i) != res2.atomNumNebs(i):
-            print "NUMNEBDIFF(%d): %d <-> %d" % (i, res2.atomNumNebs(i), res.atomNumNebs(i))
+#         if res.atomNumNebs(i) != res2.atomNumNebs(i):
+#             print "NUMNEBDIFF(%d): %d <-> %d" % (i, res2.atomNumNebs(i), res.atomNumNebs(i))
     
     return res
 
@@ -321,21 +321,17 @@ def computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC):
     logger.info("  PBCs are: %s %s %s", bool(PBC[0]), bool(PBC[1]), bool(PBC[2]))
     logger.info("  Using radii: %s", voronoiOptions.useRadii)
     
+    # Voronoi object
+    vor = _voronoi.Voronoi() #TODO: store info on vor obj, eg. useRadii, etc...
+    
     # call c lib
     callTime = time.time()
-    voroList = _voronoi.computeVoronoiVoroPlusPlus(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims,
-                                                   PBC, lattice.specie, lattice.specieCovalentRadius, 
-                                                   voronoiOptions.dispersion, voronoiOptions.useRadii)
+    vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
+                       lattice.specieCovalentRadius, voronoiOptions.dispersion, voronoiOptions.useRadii)
     callTime = time.time() - callTime
-    
-    # create result object
-    resTime = time.time()
-    vor = VoronoiResult(voroList, PBC)
-    resTime = time.time() - resTime
     
     vorotime = time.time() - vorotime
     logger.debug("  Compute Voronoi time: %f", vorotime)
     logger.debug("    Compute time: %f", callTime)
-    logger.debug("    Build result time: %f", resTime)
     
     return vor

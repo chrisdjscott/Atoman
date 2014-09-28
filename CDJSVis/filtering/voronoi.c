@@ -24,31 +24,44 @@ typedef struct {
  ** function prototypes
  *******************************************************************************/
 static PyObject* makeVoronoiPoints(PyObject*, PyObject*);
-static void free_vorores(int, vorores_t*);
+static void free_vorores(Voronoi*);
 static PyObject* Voronoi_computeVoronoi(Voronoi*, PyObject*);
 static PyObject* Voronoi_atomVolume(Voronoi*, PyObject*);
 
 /*******************************************************************************
  ** free vorores pointer
  *******************************************************************************/
-static void
-free_vorores(int size, vorores_t *vorores)
+static void free_vorores(Voronoi *self)
 {
-    free(vorores);
+    int i;
+    
+    for (i = 0; i < self->voroResultSize; i++)
+    {
+        if (self->voroResult[i].numFaces > 0)
+        {
+            int j;
+            
+            for (j = 0; j < self->voroResult[i].numFaces; j++)
+                free(self->voroResult[i].faceVertices[j]);
+            free(self->voroResult[i].faceVertices);
+            free(self->voroResult[i].numFaceVertices);
+        }
+        free(self->voroResult[i].neighbours);
+        free(self->voroResult[i].vertices);
+    }
+    
+    free(self->voroResult);
+    self->voroResult = NULL;
+    self->voroResultSize = 0;
 }
 
 /*******************************************************************************
  ** Deallocation
  *******************************************************************************/
-static void
+static void 
 Voronoi_dealloc(Voronoi* self)
 {
-    if (self->voroResultSize > 0)
-    {
-        /* free... */
-        free_vorores(self->voroResultSize, self->voroResult);
-        self->voroResultSize = 0;
-    }
+    free_vorores(self);
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -65,6 +78,7 @@ Voronoi_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     {
         /* set size = 0 initially */
         self->voroResultSize = 0;
+        self->voroResult = NULL;
     }
 
     return (PyObject *)self;
@@ -174,12 +188,9 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
     }
     
     /* deallocate if ran previously */
-    free_vorores(self->voroResultSize, self->voroResult);
-    self->voroResultSize = 0;
+    free_vorores(self);
     
-    /* allocate result list */
-//    resultList = PyList_New(NAtoms);
-    
+    /* allocate structure for holding results */
     self->voroResult = malloc(NAtoms * sizeof(vorores_t));
     if (self->voroResult == NULL)
     {
@@ -191,11 +202,13 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
     /* call voro++ wrapper */
     status = computeVoronoiVoroPlusPlusWrapper(NAtoms, pos, PBC, bound_lo, bound_hi, useRadii, radii, self->voroResult);
     
-    
-    
-    
-    
-    
+    /* if status if positive we should dealloc everything and return error */
+    if (status)
+    {
+        free_vorores(self);
+        PyErr_SetString(PyExc_RuntimeError, "Error creating VoronoiResult structure");
+        return NULL;
+    }
     
     if (useRadii) free(radii);
     
@@ -203,7 +216,7 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
 }
 
 /*******************************************************************************
- ** List of methods on VoronoiResult object
+ ** List of methods on Voronoi object
  *******************************************************************************/
 static PyMethodDef Voronoi_methods[] = {
     {"atomVolume", (PyCFunction)Voronoi_atomVolume, METH_VARARGS, 
