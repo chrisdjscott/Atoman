@@ -32,6 +32,8 @@ static PyObject* Voronoi_atomNebList(Voronoi*, PyObject*);
 static PyObject* Voronoi_getInputAtomPos(Voronoi*, PyObject*);
 static PyObject* Voronoi_atomVertices(Voronoi*, PyObject*);
 static PyObject* Voronoi_atomFaces(Voronoi*, PyObject*);
+static PyObject* Voronoi_atomVolumesArray(Voronoi*);
+static PyObject* Voronoi_atomNumNebsArray(Voronoi*);
 
 /*******************************************************************************
  ** free vorores pointer
@@ -116,6 +118,28 @@ Voronoi_atomVolume(Voronoi *self, PyObject *args)
 }
 
 /*******************************************************************************
+ ** Return array of atom volumes
+ *******************************************************************************/
+static PyObject*
+Voronoi_atomVolumesArray(Voronoi *self)
+{
+    int i, size, dims[1];
+    PyArrayObject *volumes=NULL;
+    
+    /* allocate volumes array */
+    size = self->voroResultSize;
+    dims[0] = size;
+    volumes = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_FLOAT64);
+    if (volumes == NULL) return NULL;
+    
+    /* populate with volumes */
+    for (i = 0; i < size; i++)
+        DIND1(volumes, i) = self->voroResult[i].volume;
+    
+    return PyArray_Return(volumes);
+}
+
+/*******************************************************************************
  ** Return number of neighbours of an atom
  *******************************************************************************/
 static PyObject*
@@ -151,6 +175,46 @@ Voronoi_atomNumNebs(Voronoi *self, PyObject *args)
     numNebs = self->voroResult[atomIndex].numNeighbours;
     
     return Py_BuildValue("i", numNebs);
+}
+
+/*******************************************************************************
+ ** Return array of number of neighbours for each atom
+ *******************************************************************************/
+static PyObject*
+Voronoi_atomNumNebsArray(Voronoi *self)
+{
+    int i, size, dims[1];
+    PyArrayObject *nebsArray=NULL;
+    
+    /* allocate numpy array */
+    size = self->voroResultSize;
+    dims[0] = size;
+    nebsArray = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_INT32);
+    if (nebsArray == NULL) return NULL;
+    
+    /* loop over atoms */
+    for (i = 0; i < size; i++)
+    {
+        int j, numNebs;
+        
+        numNebs = self->voroResult[i].numNeighbours;
+        
+        /* check not infinite cell */
+        for (j = 0; j < numNebs; j++)
+        {
+            if (self->voroResult[i].neighbours[j] < 0)
+            {
+                Py_DECREF(nebsArray);
+                PyErr_SetString(PyExc_RuntimeError, "Negative neighbour index (infinite cell?)");
+                return NULL;
+            }
+        }
+        
+        /* add to array */
+        IIND1(nebsArray, i) = numNebs;
+    }
+    
+    return PyArray_Return(nebsArray);
 }
 
 /*******************************************************************************
@@ -466,9 +530,12 @@ static PyMethodDef Voronoi_methods[] = {
     {"atomFaces", (PyCFunction)Voronoi_atomFaces, METH_VARARGS, 
                             "Return the list of indexes of the vertices that make up the faces of an atoms Voronoi cell"
     },
-//    {"volumesArray", 
-//    
-//    }
+    {"atomVolumesArray", (PyCFunction)Voronoi_atomVolumesArray, METH_NOARGS, 
+                "Return array of atom volumes"
+    },
+    {"atomNumNebsArray", (PyCFunction)Voronoi_atomNumNebsArray, METH_NOARGS, 
+                    "Return array of number of neighbours of atoms"
+    },
     {NULL}  /* Sentinel */
 };
 

@@ -430,7 +430,7 @@ class Filterer(object):
         NScalars, fullScalars = self.makeFullScalarsArray()
         
         # make array of neighbours
-        num_nebs_array = np.asarray([vor.atomNumNebs(i) for i in xrange(inputState.NAtoms)], dtype=np.int32)
+        num_nebs_array = vor.atomNumNebsArray()
         
         NVisible = filtering_c.voronoiNeighboursFilter(self.visibleAtoms, num_nebs_array, settings.minVoroNebs, settings.maxVoroNebs, 
                                                        scalars, NScalars, fullScalars, settings.filteringEnabled)
@@ -470,7 +470,7 @@ class Filterer(object):
         NScalars, fullScalars = self.makeFullScalarsArray()
         
         # make array of volumes
-        atom_volumes = np.asarray([vor.atomVolume(i) for i in xrange(inputState.NAtoms)], dtype=np.float64)
+        atom_volumes = vor.atomVolumesArray()
         
         NVisible = filtering_c.voronoiVolumeFilter(self.visibleAtoms, atom_volumes, settings.minVoroVol, settings.maxVoroVol, 
                                                    scalars, NScalars, fullScalars, settings.filteringEnabled)
