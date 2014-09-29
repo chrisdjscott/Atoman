@@ -12,7 +12,7 @@
 #include "voro_iface.h"
 
 /*******************************************************************************
- ** Define object structure
+ ** Define Voronoi object structure
  *******************************************************************************/
 typedef struct {
     PyObject_HEAD
@@ -27,6 +27,11 @@ static PyObject* makeVoronoiPoints(PyObject*, PyObject*);
 static void free_vorores(Voronoi*);
 static PyObject* Voronoi_computeVoronoi(Voronoi*, PyObject*);
 static PyObject* Voronoi_atomVolume(Voronoi*, PyObject*);
+static PyObject* Voronoi_atomNumNebs(Voronoi*, PyObject*);
+static PyObject* Voronoi_atomNebList(Voronoi*, PyObject*);
+static PyObject* Voronoi_getInputAtomPos(Voronoi*, PyObject*);
+static PyObject* Voronoi_atomVertices(Voronoi*, PyObject*);
+static PyObject* Voronoi_atomFaces(Voronoi*, PyObject*);
 
 /*******************************************************************************
  ** free vorores pointer
@@ -37,15 +42,12 @@ static void free_vorores(Voronoi *self)
     
     for (i = 0; i < self->voroResultSize; i++)
     {
-        if (self->voroResult[i].numFaces > 0)
-        {
-            int j;
-            
-            for (j = 0; j < self->voroResult[i].numFaces; j++)
-                free(self->voroResult[i].faceVertices[j]);
-            free(self->voroResult[i].faceVertices);
-            free(self->voroResult[i].numFaceVertices);
-        }
+        int j;
+        
+        for (j = 0; j < self->voroResult[i].numFaces; j++)
+            free(self->voroResult[i].faceVertices[j]);
+        free(self->voroResult[i].faceVertices);
+        free(self->voroResult[i].numFaceVertices);
         free(self->voroResult[i].neighbours);
         free(self->voroResult[i].vertices);
     }
@@ -119,8 +121,7 @@ Voronoi_atomVolume(Voronoi *self, PyObject *args)
 static PyObject*
 Voronoi_atomNumNebs(Voronoi *self, PyObject *args)
 {
-    int atomIndex;
-    int numNebs;
+    int i, atomIndex, numNebs;
     
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "i", &atomIndex))
@@ -136,10 +137,206 @@ Voronoi_atomNumNebs(Voronoi *self, PyObject *args)
         return NULL;
     }
     
-    /* get volume */
+    /* check not infinite cell */
+    for (i = 0; i < self->voroResult[atomIndex].numNeighbours; i++)
+    {
+        if (self->voroResult[atomIndex].neighbours[i] < 0)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Negative neighbour index (infinite cell?)");
+            return NULL;
+        }
+    }
+    
+    /* get number of neighbours */
     numNebs = self->voroResult[atomIndex].numNeighbours;
     
     return Py_BuildValue("i", numNebs);
+}
+
+/*******************************************************************************
+ ** Return neighbours of an atom
+ *******************************************************************************/
+static PyObject*
+Voronoi_atomNebList(Voronoi *self, PyObject *args)
+{
+    int i, atomIndex, numNebs, dims[1];
+    PyArrayObject *atomNebs=NULL;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "i", &atomIndex))
+        return NULL;
+    
+    /* check index within range */
+    if (atomIndex >= self->voroResultSize)
+    {
+        char msg[64];
+        
+        sprintf(msg, "Index is out of range (%d >= %d)", atomIndex, self->voroResultSize);
+        PyErr_SetString(PyExc_IndexError, msg);
+        return NULL;
+    }
+    
+    /* allocate numpy array */
+    numNebs = self->voroResult[atomIndex].numNeighbours;
+    dims[0] = numNebs;
+    atomNebs = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_INT32);
+    if (atomNebs == NULL) return NULL;
+    
+    /* populate array */
+    for (i = 0; i < numNebs; i++)
+    {
+        int nebidx;
+        
+        /* return exception if negative neighbour (infinite cell??) */
+        nebidx = self->voroResult[atomIndex].neighbours[i];
+        if (nebidx < 0)
+        {
+            Py_DECREF(atomNebs);
+            PyErr_SetString(PyExc_RuntimeError, "Negative neighbour index (infinite cell?)");
+            return NULL;
+        }
+        
+        IIND1(atomNebs, i) = nebidx;
+    }
+    
+    return PyArray_Return(atomNebs);
+}
+
+/*******************************************************************************
+ ** Return position of input atom
+ *******************************************************************************/
+static PyObject*
+Voronoi_getInputAtomPos(Voronoi *self, PyObject *args)
+{
+    int atomIndex, dims[1];
+    PyArrayObject *pos=NULL;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "i", &atomIndex))
+        return NULL;
+    
+    /* check index within range */
+    if (atomIndex >= self->voroResultSize)
+    {
+        char msg[64];
+        
+        sprintf(msg, "Index is out of range (%d >= %d)", atomIndex, self->voroResultSize);
+        PyErr_SetString(PyExc_IndexError, msg);
+        return NULL;
+    }
+    
+    /* allocate numpy array */
+    dims[0] = 3;
+    pos = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_FLOAT64);
+    if (pos == NULL) return NULL;
+    
+    /* populate array */
+    DIND1(pos, 0) = self->voroResult[atomIndex].originalPos[0];
+    DIND1(pos, 1) = self->voroResult[atomIndex].originalPos[1];
+    DIND1(pos, 2) = self->voroResult[atomIndex].originalPos[2];
+    
+    return PyArray_Return(pos);
+}
+
+/*******************************************************************************
+ ** Return vertices of an atoms Voronoi cell
+ *******************************************************************************/
+static PyObject*
+Voronoi_atomVertices(Voronoi *self, PyObject *args)
+{
+    int i, nverts, atomIndex, dims[2];
+    PyArrayObject *vertices=NULL;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "i", &atomIndex))
+        return NULL;
+    
+    /* check index within range */
+    if (atomIndex >= self->voroResultSize)
+    {
+        char msg[64];
+        
+        sprintf(msg, "Index is out of range (%d >= %d)", atomIndex, self->voroResultSize);
+        PyErr_SetString(PyExc_IndexError, msg);
+        return NULL;
+    }
+    
+    /* allocate numpy array */
+    nverts = self->voroResult[atomIndex].numVertices;
+    dims[0] = nverts;
+    dims[1] = 3;
+    vertices = (PyArrayObject *) PyArray_FromDims(2, dims, NPY_FLOAT64);
+    if (vertices == NULL) return NULL;
+    
+    /* populate array */
+    for (i = 0; i < nverts; i++)
+    {
+        DIND2(vertices, i, 0) = self->voroResult[atomIndex].vertices[3*i];
+        DIND2(vertices, i, 1) = self->voroResult[atomIndex].vertices[3*i+1];
+        DIND2(vertices, i, 2) = self->voroResult[atomIndex].vertices[3*i+2];
+    }
+    
+    return PyArray_Return(vertices);
+}
+
+/*******************************************************************************
+ ** Return the faces of the Voronoi cell of the given atom, as a list of 
+ ** indexes of its vertices
+ *******************************************************************************/
+static PyObject*
+Voronoi_atomFaces(Voronoi *self, PyObject *args)
+{
+    int i, atomIndex, nfaces;
+    PyObject *faceList=NULL;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "i", &atomIndex))
+        return NULL;
+    
+    /* check index within range */
+    if (atomIndex >= self->voroResultSize)
+    {
+        char msg[64];
+        
+        sprintf(msg, "Index is out of range (%d >= %d)", atomIndex, self->voroResultSize);
+        PyErr_SetString(PyExc_IndexError, msg);
+        return NULL;
+    }
+    
+    /* check not infinite cell */
+    for (i = 0; i < self->voroResult[atomIndex].numNeighbours; i++)
+    {
+        if (self->voroResult[atomIndex].neighbours[i] < 0)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Negative neighbour index (infinite cell?)");
+            return NULL;
+        }
+    }
+    
+    /* allocate list and loop over faces */
+    nfaces = self->voroResult[atomIndex].numFaces;
+    faceList = PyList_New(nfaces);
+    for (i = 0; i < nfaces; i++)
+    {
+        int j, nverts, dims[1];
+        PyArrayObject *vertArray=NULL;
+        
+        /* number of vertices making up this face */
+        nverts = self->voroResult[atomIndex].numFaceVertices[i];
+        
+        /* allocate numpy array for storing vertices */
+        dims[0] = nverts;
+        vertArray = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_INT32);
+        
+        /* add vertices to array */
+        for (j = 0; j < nverts; j++)
+            IIND1(vertArray, j) = self->voroResult[atomIndex].faceVertices[i][j];
+        
+        /* add array to list */
+        PyList_SetItem(faceList, i, PyArray_Return(vertArray));
+    }
+    
+    return faceList;
 }
 
 /*******************************************************************************
@@ -257,6 +454,18 @@ static PyMethodDef Voronoi_methods[] = {
     {"atomNumNebs", (PyCFunction)Voronoi_atomNumNebs, METH_VARARGS, 
             "Return the number of neighbours of the given atom"
     },
+    {"atomNebList", (PyCFunction)Voronoi_atomNebList, METH_VARARGS, 
+                "Return the neighbours of the given atom"
+    },
+    {"getInputAtomPos", (PyCFunction)Voronoi_getInputAtomPos, METH_VARARGS, 
+                    "Return the original position of the given atom"
+    },
+    {"atomVertices", (PyCFunction)Voronoi_atomVertices, METH_VARARGS, 
+                        "Return the positions of the vertices of the Voronoi cell of the given atom"
+    },
+    {"atomFaces", (PyCFunction)Voronoi_atomFaces, METH_VARARGS, 
+                            "Return the list of indexes of the vertices that make up the faces of an atoms Voronoi cell"
+    },
 //    {"volumesArray", 
 //    
 //    }
@@ -288,7 +497,7 @@ static PyTypeObject VoronoiType = {
     0,                                  /*tp_setattro*/
     0,                                  /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "Voronoi objects",                  /* tp_doc */
+    "Object for computing the Voronoi cells of atoms in a Lattice", /* tp_doc */
     0,                                  /* tp_traverse */
     0,                                  /* tp_clear */
     0,                                  /* tp_richcompare */

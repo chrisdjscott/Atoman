@@ -92,22 +92,7 @@ def computeVoronoi(lattice, voronoiOptions, PBC):
     Compute Voronoi
     
     """
-    res = computeVoronoiPyvoro(lattice, voronoiOptions, PBC)
-    
-#    vor, vols1 = computeVoronoiScipy(lattice, PBC)
-    
-    res2 = computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC)
-    
-    import math
-    print "***** CHECKING VOLS/NUMNEBS"
-    for i in xrange(lattice.NAtoms):
-        if math.fabs(res2.atomVolume(i) - res.atomVolume(i)) > 1e-5:
-            print "VOLDIFF(%d): %.10f <-> %.10f" % (i, res2.atomVolume(i), res.atomVolume(i))
-        
-        if res.atomNumNebs(i) != res2.atomNumNebs(i):
-            print "NUMNEBDIFF(%d): %d <-> %d" % (i, res2.atomNumNebs(i), res.atomNumNebs(i))
-    
-    return res
+    return computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC)
 
 ################################################################################
 
