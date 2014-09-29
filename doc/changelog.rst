@@ -7,6 +7,7 @@ Changelog
 * Show progress dialog when applying lists and calculating RDF
 * Display error if try to compute RDF out to distance greater than half the cell dimensions
 * Add option to use ACNA filter within point defects filter, to refine defect detection
+* Write C extension interface to Voro++ => big improvement to speed of Voronoi calculations
 
 **v140922**
 
