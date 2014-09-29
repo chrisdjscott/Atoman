@@ -7,6 +7,7 @@
 #include <numpy/arrayobject.h>
 #include <math.h>
 #include <gsl/gsl_math.h>
+#include <omp.h>
 #include "boxeslib.h"
 #include "utilities.h"
 #include "array_utils.h"
@@ -50,9 +51,9 @@ calculateRDF(PyObject *self, PyObject *args)
 	PyArrayObject *cellDimsIn=NULL;
 	PyArrayObject *rdfIn=NULL;
 	
-    int i, j, k, index, index2, boxIndex;
-    int boxNebList[27], fullShellCount, binIndex;
-    double approxBoxWidth, sep2, sep;
+    int i;
+    int fullShellCount;
+    double approxBoxWidth;
     double avgAtomDensity, shellVolume;
     double ini, fin, interval;
     double start2, finish2;
@@ -105,8 +106,11 @@ calculateRDF(PyObject *self, PyObject *args)
     finish2 = finish * finish;
     
     /* loop over atoms */
+#pragma omp parallel for
     for (i=0; i<NVisible; i++)
     {
+        int j, index, boxIndex, boxNebList[27];
+        
         index = visibleAtoms[i];
         
         /* skip if not selected specie */
@@ -121,10 +125,15 @@ calculateRDF(PyObject *self, PyObject *args)
         /* loop over box neighbourhood */
         for (j=0; j<27; j++)
         {
+            int k;
+            
             boxIndex = boxNebList[j];
             
             for (k=0; k<boxes->boxNAtoms[boxIndex]; k++)
             {
+                int index2;
+                double sep2;
+                
                 index2 = boxes->boxAtoms[boxIndex][k];
                 
                 if (index2 <= index) continue;
@@ -141,8 +150,12 @@ calculateRDF(PyObject *self, PyObject *args)
                 /* put in bin */
                 if (sep2 >= start2 && sep2 < finish2)
                 {
+                    int binIndex;
+                    double sep;
+                    
                     sep = sqrt(sep2);
                     binIndex = (int) ((sep - start) / interval);
+#pragma omp atomic
                     rdf[binIndex] += 2;
                 }
             }
