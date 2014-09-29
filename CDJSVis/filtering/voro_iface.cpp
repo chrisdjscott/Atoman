@@ -31,7 +31,7 @@ extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *P
     {
         n[i] = round(n[i] * pow(double(NAtoms) / (V * 8.0), 0.333333));
         n[i] = n[i] == 0 ? 1 : n[i];
-        printf("DEBUG: n[%d] = %lf\n", i, n[i]);
+//        printf("DEBUG: n[%d] = %lf\n", i, n[i]);
     }
     
     // voro cell with neighbour information
@@ -61,7 +61,7 @@ extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *P
             count++;
         } while (cl.inc());
         
-        printf("DEBUG: COUNT = %d (%d atoms)\n", count, NAtoms);
+//        printf("DEBUG: COUNT = %d (%d atoms)\n", count, NAtoms);
     }
     else
     {
@@ -94,7 +94,7 @@ extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *P
             
             count++;
         } while (cl.inc());
-        printf("DEBUG: COUNT = %d (%d atoms)\n", count, NAtoms);
+//        printf("DEBUG: COUNT = %d (%d atoms)\n", count, NAtoms);
         
         /* return error */
         if (errcnt) return -1;

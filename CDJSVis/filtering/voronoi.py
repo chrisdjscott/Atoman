@@ -289,12 +289,6 @@ def computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC):
     """
     Compute Voronoi using Voro++
     
-        if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!diO!O!", &PyArray_Type, &posIn, &PyArray_Type, &minPosIn, &PyArray_Type, 
-            &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &specieIn, &PyArray_Type, 
-            &specieCovalentRadiusIn, &dispersion, &useRadii, &PyArray_Type, &volumesIn, &PyArray_Type, &nebCountsIn))
-        return NULL;
-
-    
     """
     logger = logging.getLogger(__name__+".computeVoronoiVoro++")
     

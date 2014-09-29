@@ -46,8 +46,6 @@ class Lattice(object):
         self.KE = np.empty(0, np.float64)
         self.PE = np.empty(0, np.float64)
         self.charge = np.empty(0, np.float64)
-        
-        self.voronoiDict = {}
     
     def reset(self, NAtoms):
         """

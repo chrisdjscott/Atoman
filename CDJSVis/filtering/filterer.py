@@ -90,6 +90,7 @@ class Filterer(object):
         self.scalarBar_black_bg = None
         self.povrayAtomsWritten = False
         self.clusterList = []
+        self.voronoi = None
         
         self.structureCounterDicts = {}
 #         self.knownStructures = [
@@ -135,6 +136,7 @@ class Filterer(object):
         self.povrayAtomsWritten = False
         self.clusterList = []
         self.structureCounterDicts = {}
+        self.voronoi = None
     
     def hideActors(self):
         """
@@ -410,8 +412,6 @@ class Filterer(object):
         Voronoi neighbours filter
         
         """
-        inputState = self.pipelinePage.inputState
-        
         # calculate Voronoi tessellation
         status = self.calculateVoronoi()
         
@@ -420,8 +420,7 @@ class Filterer(object):
             self.visibleAtoms.resize(0, refcheck=False)
             return status
         
-        voroKey = self.voronoiOptions.getVoronoiDictKey()
-        vor = inputState.voronoiDict[voroKey]
+        vor = self.voronoi
         
         # new scalars array
         scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
@@ -450,8 +449,6 @@ class Filterer(object):
         Voronoi volume filter
         
         """
-        inputState = self.pipelinePage.inputState
-        
         # calculate Voronoi tessellation
         status = self.calculateVoronoi()
         
@@ -460,8 +457,7 @@ class Filterer(object):
             self.visibleAtoms.resize(0, refcheck=False)
             return status
         
-        voroKey = self.voronoiOptions.getVoronoiDictKey()
-        vor = inputState.voronoiDict[voroKey]
+        vor = self.voronoi
         
         # new scalars array
         scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
@@ -558,24 +554,9 @@ class Filterer(object):
         
         """
         PBC = self.pipelinePage.PBC
-#         if not PBC[0] or not PBC[1] or not PBC[2]:
-#             msg = "ERROR: Voronoi only works with PBCs currently"
-#             print msg
-#             self.log(msg)
-#             return 1
-        
         inputState = self.pipelinePage.inputState
-        
-        # first see if we need to compute
-        voroKey = self.voronoiOptions.getVoronoiDictKey()
-        compute = voroKey not in inputState.voronoiDict
-        
-        # compute voronoi regions
-        if compute:
-            voroResult = voronoi.computeVoronoi(inputState, self.voronoiOptions, PBC)
-            
-            # store result
-            inputState.voronoiDict[voroKey] = voroResult
+        if self.voronoi is None:
+            self.voronoi = voronoi.computeVoronoi(inputState, self.voronoiOptions, PBC)
         
         return 0
     
@@ -586,14 +567,9 @@ class Filterer(object):
         """
         inputState = self.pipelinePage.inputState
         
-        # first see if we need to compute
-        voroKey = self.voronoiOptions.getVoronoiDictKey()
-        
-        if voroKey not in inputState.voronoiDict:
-            status = self.calculateVoronoi()
-            
-            if status:
-                return status
+        status = self.calculateVoronoi()
+        if status:
+            return status
         
         if not len(self.visibleAtoms):
             return 2
@@ -613,7 +589,7 @@ class Filterer(object):
         voroFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_voro%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID)))
         
         # get actors for vis atoms only!
-        renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.pipelinePage.inputState.voronoiDict[voroKey], 
+        renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.voronoi, 
                                                self.colouringOptions, self.voronoiOptions, self.actorsCollection, 
                                                voroFile, self.scalarsDict, log=self.log)
     
@@ -1333,9 +1309,7 @@ class Filterer(object):
         elif settings.calculateVolumesVoro:
             # compute Voronoi
             self.calculateVoronoi()
-            
-            voroKey = self.voronoiOptions.getVoronoiDictKey()
-            vor = inputLattice.voronoiDict[voroKey]
+            vor = self.voronoi
             
             count = 0
             for cluster in clusterList:
@@ -1672,9 +1646,7 @@ class Filterer(object):
         elif filterSettings.calculateVolumesVoro:
             # compute Voronoi
             self.calculateVoronoi()
-            
-            voroKey = self.voronoiOptions.getVoronoiDictKey()
-            vor = lattice.voronoiDict[voroKey]
+            vor = self.voronoi
             
             count = 0
             for cluster in self.clusterList:
