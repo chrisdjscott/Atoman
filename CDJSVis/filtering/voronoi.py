@@ -296,7 +296,6 @@ def computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC):
     
     logger.info("Computing Voronoi (voro++)")
     logger.debug("  NAtoms: %d", lattice.NAtoms)
-    logger.info("  Dispersion is: %f", voronoiOptions.dispersion)
     logger.info("  PBCs are: %s %s %s", bool(PBC[0]), bool(PBC[1]), bool(PBC[2]))
     logger.info("  Using radii: %s", voronoiOptions.useRadii)
     
@@ -306,7 +305,7 @@ def computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC):
     # call c lib
     callTime = time.time()
     vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
-                       lattice.specieCovalentRadius, voronoiOptions.dispersion, voronoiOptions.useRadii)
+                       lattice.specieCovalentRadius, voronoiOptions.useRadii)
     callTime = time.time() - callTime
     
     vorotime = time.time() - vorotime

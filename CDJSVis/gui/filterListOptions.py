@@ -66,18 +66,18 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         row.addWidget(self.displayVoronoiCheck)
         
         # dispersion
-        label = QtGui.QLabel("Dispersion:")
-        
-        self.dispersionSpin = QtGui.QDoubleSpinBox()
-        self.dispersionSpin.setMinimum(0.1)
-        self.dispersionSpin.setMaximum(99.9)
-        self.dispersionSpin.setSingleStep(0.1)
-        self.dispersionSpin.setValue(self.dispersion)
-        self.dispersionSpin.valueChanged.connect(self.dispersionChanged)
-        
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.dispersionSpin)
+#         label = QtGui.QLabel("Dispersion:")
+#         
+#         self.dispersionSpin = QtGui.QDoubleSpinBox()
+#         self.dispersionSpin.setMinimum(0.1)
+#         self.dispersionSpin.setMaximum(99.9)
+#         self.dispersionSpin.setSingleStep(0.1)
+#         self.dispersionSpin.setValue(self.dispersion)
+#         self.dispersionSpin.valueChanged.connect(self.dispersionChanged)
+#         
+#         row = self.newRow()
+#         row.addWidget(label)
+#         row.addWidget(self.dispersionSpin)
         
         # use radii
         self.useRadiiCheck = QtGui.QCheckBox("Use radii")
@@ -127,7 +127,7 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         row = self.newRow()
         row.addWidget(saveToFileGroup)
         
-        label = QtGui.QLabel("""<qt>See <a href="https://github.com/joe-jordan/pyvoro/blob/master/README.md">here</a> and <a href="http://math.lbl.gov/voro++/about.html">here</a> for info</qt>""")
+        label = QtGui.QLabel("""<qt>See <a href="http://math.lbl.gov/voro++/about.html">here</a> for info about Voro++</qt>""")
         label.setOpenExternalLinks(True)
         label.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse)
         row = self.newRow()

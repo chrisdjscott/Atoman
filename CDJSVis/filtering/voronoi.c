@@ -409,8 +409,9 @@ Voronoi_atomFaces(Voronoi *self, PyObject *args)
 static PyObject*
 Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
 {
+    const double cellSkin = 10.0; // cell skin for when not using PBCs
     int *specie, *PBC, NAtoms, useRadii;
-    double *pos, *minPos, *maxPos, *cellDims, *specieCovalentRadius, dispersion;
+    double *pos, *minPos, *maxPos, *cellDims, *specieCovalentRadius;
     PyArrayObject *posIn=NULL;
     PyArrayObject *minPosIn=NULL;
     PyArrayObject *maxPosIn=NULL;
@@ -423,9 +424,9 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
     double *radii;
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!di", &PyArray_Type, &posIn, &PyArray_Type, &minPosIn, &PyArray_Type, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!i", &PyArray_Type, &posIn, &PyArray_Type, &minPosIn, &PyArray_Type, 
             &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &specieIn, &PyArray_Type, 
-            &specieCovalentRadiusIn, &dispersion, &useRadii))
+            &specieCovalentRadiusIn, &useRadii))
         return NULL;
     
     if (not_doubleVector(posIn)) return NULL;
@@ -460,8 +461,8 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
         }
         else
         {
-            bound_lo[i] = minPos[i] - dispersion;
-            bound_hi[i] = maxPos[i] + dispersion;
+            bound_lo[i] = minPos[i] - cellSkin;
+            bound_hi[i] = maxPos[i] + cellSkin;
         }
     }
     
@@ -470,8 +471,8 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
         radii = malloc(NAtoms * sizeof(double));
         if (radii == NULL)
         {
-            printf("ERROR: could not allocate radii\n");
-            exit(55);
+            PyErr_SetString(PyExc_RuntimeError, "Could not allocate radii pointer");
+            return NULL;
         }
         for (i = 0; i < NAtoms; i++)
             radii[i] = specieCovalentRadius[specie[i]];
@@ -492,10 +493,11 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
     /* call voro++ wrapper */
     status = computeVoronoiVoroPlusPlusWrapper(NAtoms, pos, PBC, bound_lo, bound_hi, useRadii, radii, self->voroResult);
     
-    /* if status if positive we should dealloc everything and return error */
+    /* if status, we should dealloc everything and return error */
     if (status)
     {
         free_vorores(self);
+        if (useRadii) free(radii);
         PyErr_SetString(PyExc_RuntimeError, "Error creating VoronoiResult structure");
         return NULL;
     }
