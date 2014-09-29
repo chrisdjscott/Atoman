@@ -502,7 +502,8 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
     
     if (useRadii) free(radii);
     
-    return Py_BuildValue("i", 0);
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 /*******************************************************************************
