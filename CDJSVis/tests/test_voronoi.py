@@ -2,29 +2,18 @@
 """
 Unit tests for Voronoi tessellation
 
-    - test calculate Voronoi
-    - test VoronoiResult class
+    - test Voronoi class
 
 """
 import os
 import unittest
 import tempfile
 import shutil
-   
-from ..state import latticeReaders
-from ..filtering import voronoi
-   
 
-################################################################################
+import numpy as np
 
-def log_output(*args, **kwargs):
-    print args[0]
-
-def log_warning(*args, **kwargs):
-    print "DISPLAY WARNING: %s" % args[0]
-
-def log_error(*args, **kwargs):
-    print "DISPLAY ERROR: %s" % args[0]
+from ..state.latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
+from ..filtering import _voronoi
 
 ################################################################################
    
@@ -33,35 +22,138 @@ def path_to_file(path):
    
 ################################################################################
    
-# class TestComputeVoronoi(unittest.TestCase):
-#     """
-#     Test computeVoronoi
-#        
-#     """
-#     def setUp(self):
-#         # tmp dir
-#         self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
-#         
-#         # create reader
-#         reader = latticeReaders.LbomdDatReader(self.tmpLocation, log_output, log_warning, log_error)
-#         
-#         self.lattice = reader.readFile(path_to_file("testVolume.dat"))
-#     
-#     def tearDown(self):
-#         # remove tmp dir
-#         shutil.rmtree(self.tmpLocation)
-#         
-#         self.lattice = None
-#     
-#     def test_voronoiSuccess(self):
+class TestVoronoi(unittest.TestCase):
+    """
+    Test Voronoi
+        
+    """
+    def setUp(self):
+        # tmp dir
+        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+         
+        # create reader
+        reader = LbomdDatReader(self.tmpLocation, basic_log, basic_displayWarning, basic_displayError)
+         
+        status, self.lattice = reader.readFile(path_to_file("lattice.dat"))
+        if status:
+            self.fail("Error reading in Lattice")
+     
+    def tearDown(self):
+        # remove tmp dir
+        shutil.rmtree(self.tmpLocation)
+         
+        self.lattice = None
+     
+    def test_voronoiSumVolumes(self):
+        """
+        Voronoi volume sum
+            
+        """
+        lattice = self.lattice
+        
+        vor = _voronoi.Voronoi()
+        
+        PBC = np.ones(3, np.int32)
+        useRadii = 0
+        vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
+                           lattice.specieCovalentRadius, useRadii)
+        
+        vols = vor.atomVolumesArray()
+        volsum = np.sum(vols)
+        
+        V = self.lattice.volume()
+        
+        self.assertAlmostEqual(volsum, V)
+    
+    def test_voronoiSumVolumesRadii(self):
+        """
+        Voronoi volume sum (radii)
+            
+        """
+        lattice = self.lattice
+        
+        vor = _voronoi.Voronoi()
+        
+        PBC = np.ones(3, np.int32)
+        useRadii = 1
+        vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
+                           lattice.specieCovalentRadius, useRadii)
+        
+        vols = vor.atomVolumesArray()
+        volsum = np.sum(vols)
+        
+        V = self.lattice.volume()
+        
+        self.assertAlmostEqual(volsum, V)
+    
+#     def test_resultOrder(self):
 #         """
-#         Voronoi (pyvoro) successful
-#            
+#         Voronoi result order
+#         
 #         """
-#         vor = voronoi.computeVoronoi(lattice, voronoiOptions, PBC, log)
         
+################################################################################
+   
+class TestVoronoi2(unittest.TestCase):
+    """
+    Test Voronoi2
         
+    """
+    def setUp(self):
+        # tmp dir
+        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+         
+        # create reader
+        reader = LbomdDatReader(self.tmpLocation, basic_log, basic_displayWarning, basic_displayError)
+         
+        status, self.lattice = reader.readFile(path_to_file("kenny_lattice.dat"))
+        if status:
+            self.fail("Error reading in Lattice")
+     
+    def tearDown(self):
+        # remove tmp dir
+        shutil.rmtree(self.tmpLocation)
+         
+        self.lattice = None
+     
+    def test_voronoiSumVolumes(self):
+        """
+        Voronoi volume sum 2
+            
+        """
+        lattice = self.lattice
         
+        vor = _voronoi.Voronoi()
         
-
-
+        PBC = np.ones(3, np.int32)
+        useRadii = 0
+        vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
+                           lattice.specieCovalentRadius, useRadii)
+        
+        vols = vor.atomVolumesArray()
+        volsum = np.sum(vols)
+        
+        V = self.lattice.volume()
+        
+        self.assertAlmostEqual(volsum, V)
+    
+    def test_voronoiSumVolumesRadii(self):
+        """
+        Voronoi volume sum (radii) 2
+            
+        """
+        lattice = self.lattice
+        
+        vor = _voronoi.Voronoi()
+        
+        PBC = np.ones(3, np.int32)
+        useRadii = 1
+        vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
+                           lattice.specieCovalentRadius, useRadii)
+        
+        vols = vor.atomVolumesArray()
+        volsum = np.sum(vols)
+        
+        V = self.lattice.volume()
+        
+        self.assertAlmostEqual(volsum, V)

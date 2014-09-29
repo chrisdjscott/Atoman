@@ -31,15 +31,20 @@ def findConvexHullFacets(N, pos):
 
 
 ################################################################################
-def findConvexHullVolume(N, pos):
+def findConvexHullVolume(N, pos, posIsPts=False):
     """
     Find convex hull of given points
     
     """
     # construct pts list
-    pts = []
-    for i in xrange(N):
-        pts.append([pos[3*i], pos[3*i+1], pos[3*i+2]])
+    if posIsPts:
+        pts = pos
+    
+    else:
+        #TODO: this should be written in C!
+        pts = []
+        for i in xrange(N):
+            pts.append([pos[3*i], pos[3*i+1], pos[3*i+2]])
     
     # call pyhull library
     output = pyhull.qconvex("Qt FA", pts)

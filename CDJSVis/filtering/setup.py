@@ -45,6 +45,13 @@ def configuration(parent_package='', top_path=None):
                           "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
                          include_dirs=[incdir])
     
+    config.add_extension("_voronoi", 
+                         ["voronoi.c", "voro_iface.cpp", 
+                          "voro++/src/voro++.cc",
+                          "../visclibs/array_utils.c"],
+                         libraries=[],
+                         include_dirs=[incdir, "voro++/src"])
+    
     return config
 
 if __name__ == "__main__":
