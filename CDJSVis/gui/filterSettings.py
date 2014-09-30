@@ -1579,7 +1579,6 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         self.drawVectorsGroup = QtGui.QGroupBox("Draw displacement vectors")
         self.drawVectorsGroup.setCheckable(True)
         self.drawVectorsGroup.setChecked(False)
-        self.drawVectorsGroup.setEnabled(False)
         self.drawVectorsGroup.toggled.connect(self.drawVectorsChanged)
         
         grpLayout = QtGui.QVBoxLayout(self.drawVectorsGroup)
@@ -1704,15 +1703,6 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         
         """
         self.filteringEnabled = arg
-        
-        if self.filteringEnabled:
-            self.logger.debug("Filtering has been enabled => enabling 'draw vectors' check")
-            self.drawVectorsGroup.setEnabled(True)
-        
-        else:
-            self.logger.debug("Filtering has been disabled => disabling 'draw vectors' check")
-            self.drawVectorsGroup.setChecked(False)
-            self.drawVectorsGroup.setEnabled(False)
     
     def setMinDisplacement(self, val):
         """

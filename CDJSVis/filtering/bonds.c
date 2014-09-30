@@ -240,14 +240,15 @@ calculateDisplacementVectors(PyObject *self, PyObject *args)
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *PBCIn=NULL;
     PyArrayObject *bondVectorArrayIn=NULL;
+    PyArrayObject *drawBondVector=NULL;
     
-    int i, index;
+    int i, index, numBonds;
     double sepVec[3];
     
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &refPosIn, 
-            &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &bondVectorArrayIn))
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &refPosIn, 
+            &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &bondVectorArrayIn, &PyArray_Type, &drawBondVector))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -269,7 +270,10 @@ calculateDisplacementVectors(PyObject *self, PyObject *args)
     if (not_intVector(PBCIn)) return NULL;
     PBC = pyvector_to_Cptr_int(PBCIn);
     
+    if (not_intVector(drawBondVector)) return NULL;
+    
     /* main loop */
+    numBonds = 0;
     for (i = 0; i < NVisible; i++)
     {
         index = visibleAtoms[i];
@@ -283,7 +287,17 @@ calculateDisplacementVectors(PyObject *self, PyObject *args)
         bondVectorArray[3*i] = sepVec[0];
         bondVectorArray[3*i+1] = sepVec[1];
         bondVectorArray[3*i+2] = sepVec[2];
+        
+        if (sepVec[0] < 1e-2 && sepVec[1] < 1e-2 && sepVec[2] < 1e-2)
+        {
+            IIND1(drawBondVector, i) = 0;
+        }
+        else 
+        {
+            IIND1(drawBondVector, i) = 1;
+            numBonds++;
+        }
     }
     
-    return Py_BuildValue("i", 0);
+    return Py_BuildValue("i", numBonds);
 }

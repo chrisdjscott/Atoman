@@ -872,15 +872,20 @@ class Filterer(object):
                 
                 # calculate vectors
                 bondVectorArray = np.empty(3 * NVisible, np.float64)
-                status = bonds_c.calculateDisplacementVectors(self.visibleAtoms, inputState.pos, refState.pos, 
-                                                              refState.cellDims, self.pipelinePage.PBC, bondVectorArray)
+                drawBondVector = np.empty(NVisible, np.int32)
+                numBonds = bonds_c.calculateDisplacementVectors(self.visibleAtoms, inputState.pos, refState.pos, 
+                                                                refState.cellDims, self.pipelinePage.PBC, bondVectorArray,
+                                                                drawBondVector)
+                
+                self.logger.debug("  Number of displacement vectors to draw = %d (/ %d)", numBonds, len(self.visibleAtoms))
                 
                 # pov file for bonds
                 povfile = "pipeline%d_dispvects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
                 
                 # draw displacement vectors as bonds
                 renderBonds.renderDisplacementVectors(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsCollection, 
-                                                      self.colouringOptions, povfile, self.scalarsDict, bondVectorArray, settings)
+                                                      self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
+                                                      drawBondVector, settings)
     
     def atomIndexFilter(self, settings):
         """

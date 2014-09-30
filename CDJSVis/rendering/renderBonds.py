@@ -219,7 +219,7 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colour
     logger.debug("Render bonds time: %f s", renderBondsTime)
 
 def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colouringOptions, povfile, 
-                              scalarsDict, bondVectorArray, bondsOptions):
+                              scalarsDict, numBonds, bondVectorArray, drawBondVector, bondsOptions):
     """
     Render displacement vectors
     
@@ -259,21 +259,25 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsColl
     # vtk array storing coords of bonds
     bondCoords = vtk.vtkFloatArray()
     bondCoords.SetNumberOfComponents(3)
-    bondCoords.SetNumberOfTuples(NVisible)
+    bondCoords.SetNumberOfTuples(numBonds)
     
     # vtk array storing scalars (for lut)
     bondScalars = vtk.vtkFloatArray()
     bondScalars.SetNumberOfComponents(1)
-    bondScalars.SetNumberOfTuples(NVisible)
+    bondScalars.SetNumberOfTuples(numBonds)
     
     # vtk array storing vectors (for tube)
     bondVectors = vtk.vtkFloatArray()
     bondVectors.SetNumberOfComponents(3)
-    bondVectors.SetNumberOfTuples(NVisible)
+    bondVectors.SetNumberOfTuples(numBonds)
     
     # construct vtk bond arrays
     pov_rgb = np.empty(3, np.float64)
+    count = 0
     for i in xrange(NVisible):
+        if not drawBondVector[i]:
+            continue
+        
         index = visibleAtoms[i]
         
         # scalar
@@ -287,14 +291,16 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsColl
         ypos = inputState.pos[3*index+1]
         zpos = inputState.pos[3*index+2]
         
-        bondCoords.SetTuple3(i, xpos, ypos, zpos)
-        bondVectors.SetTuple3(i, bondVectorArray[3*i], bondVectorArray[3*i+1], bondVectorArray[3*i+2])
-        bondScalars.SetTuple1(i, scalar)
+        bondCoords.SetTuple3(count, xpos, ypos, zpos)
+        bondVectors.SetTuple3(count, bondVectorArray[3*i], bondVectorArray[3*i+1], bondVectorArray[3*i+2])
+        bondScalars.SetTuple1(count, scalar)
         
         # povray bond
         fpov.write(povrayBond(inputState.pos[3*index:3*index+3], 
                               inputState.pos[3*index:3*index+3] + bondVectorArray[3*i:3*i+3], 
                               bondThicknessPOV, pov_rgb, 0.0))
+        
+        count += 1
     
     # points
     bondPoints = vtk.vtkPoints()
