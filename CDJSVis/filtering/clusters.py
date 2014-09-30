@@ -221,6 +221,7 @@ class DefectCluster(object):
     """
     def __init__(self):
         self.vacancies = []
+        self.vacAsIndex = []
         self.interstitials = []
         self.antisites = []
         self.onAntisites = []

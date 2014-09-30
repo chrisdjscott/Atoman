@@ -1205,6 +1205,7 @@ class Filterer(object):
                 clusterListIndex = clusterIndexMapper[clusterIndex]
                 
                 clusterList[clusterListIndex].vacancies.append(atomIndex)
+                clusterList[clusterListIndex].vacAsIndex.append(i)
             
             for i in xrange(NInt):
                 atomIndex = interstitials[i]
@@ -1308,8 +1309,7 @@ class Filterer(object):
         
         elif settings.calculateVolumesVoro:
             # compute Voronoi
-            self.calculateVoronoi()
-            vor = self.voronoi
+            vor = voronoi.computeVoronoiDefects(inputLattice, refLattice, self.vacancies, self.voronoiOptions, self.pipelinePage.PBC)
             
             count = 0
             for cluster in clusterList:
@@ -1330,6 +1330,12 @@ class Filterer(object):
                 # add volumes of on antisite atoms
                 for i in xrange(cluster.getNAntisites()):
                     index = cluster.onAntisites[i]
+                    volume += vor.atomVolume(index)
+                
+                # add volumes of vacancies
+                for i in xrange(cluster.getNVacancies()):
+                    vacind = cluster.vacAsIndex[i]
+                    index = inputLattice.NAtoms + vacind
                     volume += vor.atomVolume(index)
                 
                 cluster.volume = volume

@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* When using Voronoi volumes to compute volume of defect cluster, sum volumes of vacancies as well as interstitials/antisites
+
 **v140929**
 
 * Show progress dialog when applying lists and calculating RDF
