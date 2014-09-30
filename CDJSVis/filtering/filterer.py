@@ -79,6 +79,7 @@ class Filterer(object):
         self.driftVector = np.zeros(3, np.float64)
         
         self.actorsCollection = vtk.vtkActorCollection()
+        self.traceActorsCollection = vtk.vtkActorCollection()
         
         self.colouringOptions = self.parent.colouringOptions
         self.bondsOptions = self.parent.bondsOptions
@@ -103,7 +104,7 @@ class Filterer(object):
 #             "sigma11_tilt2",
 #         ]
     
-    def removeActors(self):
+    def removeActors(self, sequencer=False):
         """
         Remove actors.
         
@@ -111,6 +112,8 @@ class Filterer(object):
         self.hideActors()
         
         self.actorsCollection = vtk.vtkActorCollection()
+        if not sequencer:
+            self.traceActorsCollection = vtk.vtkActorCollection()
         
         self.scalarsDict = {}
         self.scalarBar_white_bg = None
@@ -155,6 +158,18 @@ class Filterer(object):
             
             actor = self.actorsCollection.GetNextItem()
         
+        self.traceActorsCollection.InitTraversal()
+        actor = self.traceActorsCollection.GetNextItem()
+        while actor is not None:
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                    try:
+                        rw.vtkRen.RemoveActor(actor)
+                    except:
+                        pass
+            
+            actor = self.traceActorsCollection.GetNextItem()
+        
         for rw in self.rendererWindows:
             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
                 rw.vtkRenWinInteract.ReInitialize()
@@ -178,6 +193,17 @@ class Filterer(object):
             
             actor = self.actorsCollection.GetNextItem()
         
+        self.traceActorsCollection.InitTraversal()
+        actor = self.traceActorsCollection.GetNextItem()
+        while actor is not None:
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                    try:
+                        rw.vtkRen.AddActor(actor)
+                    except:
+                        pass
+            
+            actor = self.traceActorsCollection.GetNextItem()
         
         for rw in self.rendererWindows:
             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
@@ -195,7 +221,7 @@ class Filterer(object):
         
         # remove actors
         if not self.parent.isPersistentList():
-            self.removeActors()
+            self.removeActors(sequencer=sequencer)
         
         # first set up visible atoms arrays
         NAtoms = self.pipelinePage.inputState.NAtoms
@@ -886,6 +912,10 @@ class Filterer(object):
                 renderBonds.renderDisplacementVectors(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsCollection, 
                                                       self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
                                                       drawBondVector, settings)
+            
+            # trace
+            if settings.trace:
+                
     
     def atomIndexFilter(self, settings):
         """
