@@ -246,6 +246,13 @@ class FilterList(QtGui.QWidget):
         
         groupLayout.addWidget(self.voronoiOptionsButton)
         
+        # Voronoi options
+        self.traceOptions = filterListOptions.TraceOptionsWindow(self.mainWindow, parent=self)
+        self.traceOptionsButton = QtGui.QPushButton("Trace options")
+        self.traceOptionsButton.clicked.connect(self.showTraceOptions)
+        
+        groupLayout.addWidget(self.traceOptionsButton)
+        
         self.filterListLayout.addWidget(extraOptionsGroupBox)
         
         # the filterer (does the filtering)
@@ -391,6 +398,14 @@ class FilterList(QtGui.QWidget):
         """
         self.voronoiOptions.hide()
         self.voronoiOptions.show()
+    
+    def showTraceOptions(self):
+        """
+        Show the trace options window.
+        
+        """
+        self.traceOptions.hide()
+        self.traceOptions.show()
     
     def showDisplayOptions(self):
         """

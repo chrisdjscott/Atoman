@@ -38,6 +38,7 @@ class Filterer(object):
     Contains list of subfilters to be performed in order.
     
     """
+    # this must correspond to "atom_structures.h"
     knownStructures = [
         "disordered",
         "FCC",
@@ -79,12 +80,15 @@ class Filterer(object):
         self.driftVector = np.zeros(3, np.float64)
         
         self.actorsCollection = vtk.vtkActorCollection()
-        self.traceActorsCollection = vtk.vtkActorCollection()
+        
+        self.traceDict = {}
+        self.previousPosForTrace = None
         
         self.colouringOptions = self.parent.colouringOptions
         self.bondsOptions = self.parent.bondsOptions
         self.displayOptions = self.parent.displayOptions
         self.voronoiOptions = self.parent.voronoiOptions
+        self.traceOptions = self.parent.traceOptions
         self.scalarBarAdded = False
         self.scalarsDict = {}
         self.scalarBar_white_bg = None
@@ -113,7 +117,8 @@ class Filterer(object):
         
         self.actorsCollection = vtk.vtkActorCollection()
         if not sequencer:
-            self.traceActorsCollection = vtk.vtkActorCollection()
+            self.traceDict = {}
+            self.previousPosForTrace = None
         
         self.scalarsDict = {}
         self.scalarBar_white_bg = None
@@ -158,18 +163,6 @@ class Filterer(object):
             
             actor = self.actorsCollection.GetNextItem()
         
-        self.traceActorsCollection.InitTraversal()
-        actor = self.traceActorsCollection.GetNextItem()
-        while actor is not None:
-            for rw in self.rendererWindows:
-                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                    try:
-                        rw.vtkRen.RemoveActor(actor)
-                    except:
-                        pass
-            
-            actor = self.traceActorsCollection.GetNextItem()
-        
         for rw in self.rendererWindows:
             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
                 rw.vtkRenWinInteract.ReInitialize()
@@ -192,18 +185,6 @@ class Filterer(object):
                         pass
             
             actor = self.actorsCollection.GetNextItem()
-        
-        self.traceActorsCollection.InitTraversal()
-        actor = self.traceActorsCollection.GetNextItem()
-        while actor is not None:
-            for rw in self.rendererWindows:
-                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                    try:
-                        rw.vtkRen.AddActor(actor)
-                    except:
-                        pass
-            
-            actor = self.traceActorsCollection.GetNextItem()
         
         for rw in self.rendererWindows:
             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
@@ -242,6 +223,8 @@ class Filterer(object):
         
         # run filters
         applyFiltersTime = time.time()
+        drawDisplacementVectors = False
+        displacementSettings = None
         filterName = ""
         currentFilters = self.parent.getCurrentFilterNames()
         currentSettings = self.parent.getCurrentFilterSettings()
@@ -264,6 +247,8 @@ class Filterer(object):
             
             elif filterName == "Displacement":
                 self.displacementFilter(filterSettings)
+                drawDisplacementVectors = filterSettings.drawDisplacementVectors
+                displacementSettings = filterSettings
             
             elif filterName == "Point defects":
                 interstitials, vacancies, antisites, onAntisites, splitInterstitials = self.pointDefectFilter(filterSettings)
@@ -391,6 +376,14 @@ class Filterer(object):
                                                                                                                      sequencer=sequencer)
                 
                 self.visibleSpecieCount = visSpecCount
+            
+            # do displacement vectors on visible atoms
+            if drawDisplacementVectors:
+                self.renderDisplacementVectors(displacementSettings)
+            
+            # render trace
+            if self.traceOptions.drawTraceVectors:
+                self.renderTrace()
             
             if self.bondsOptions.drawBonds:
                 # find bonds
@@ -855,6 +848,41 @@ class Filterer(object):
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
     
+    def renderDisplacementVectors(self, settings):
+        """
+        Compute and render displacement vectors for visible atoms
+        
+        """
+        inputState = self.pipelinePage.inputState
+        refState = self.pipelinePage.refState
+        
+        if inputState.NAtoms != refState.NAtoms:
+            self.logger.warning("Cannot render displacement vectors with different numbers of input and reference atoms: skipping")
+            return
+        
+        # number of visible atoms
+        NVisible = len(self.visibleAtoms)
+        
+        # draw displacement vectors
+        self.logger.debug("Drawing displacement vectors")
+        
+        # calculate vectors
+        bondVectorArray = np.empty(3 * NVisible, np.float64)
+        drawBondVector = np.empty(NVisible, np.int32)
+        numBonds = bonds_c.calculateDisplacementVectors(self.visibleAtoms, inputState.pos, refState.pos, 
+                                                        refState.cellDims, self.pipelinePage.PBC, bondVectorArray,
+                                                        drawBondVector)
+        
+        self.logger.debug("  Number of displacement vectors to draw = %d (/ %d)", numBonds, len(self.visibleAtoms))
+        
+        # pov file for bonds
+        povfile = "pipeline%d_dispvects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
+        
+        # draw displacement vectors as bonds
+        renderBonds.renderDisplacementVectors(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsCollection, 
+                                              self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
+                                              drawBondVector, settings)
+    
     def displacementFilter(self, settings):
         """
         Displacement filter
@@ -891,31 +919,46 @@ class Filterer(object):
             # store scalars
             scalars.resize(NVisible, refcheck=False)
             self.scalarsDict["Displacement"] = scalars
+    
+    def renderTrace(self):
+        """
+        Render trace vectors
+        
+        """
+        self.logger.debug("Computing trace...")
+        
+        inputState = self.pipelinePage.inputState
+        refState = self.pipelinePage.refState
+        settings = self.traceOptions
+        NVisible = len(self.visibleAtoms)
+        
+        # trace
+        if self.previousPosForTrace is None:
+            self.previousPosForTrace = refState.pos
+        
+        if len(self.previousPosForTrace) == len(inputState.pos):
+            # trace atoms that have moved...
+            # first we calculate displacement vectors between current and last position
+            bondVectorArray = np.empty(3 * NVisible, np.float64)
+            drawBondVector = np.empty(NVisible, np.int32)
+            numBonds = bonds_c.calculateDisplacementVectors(self.visibleAtoms, inputState.pos, self.previousPosForTrace, 
+                                                            refState.cellDims, self.pipelinePage.PBC, bondVectorArray,
+                                                            drawBondVector)
             
-            # draw displacement vectors
-            if settings.drawDisplacementVectors:
-                self.logger.debug("Drawing displacement vectors")
-                
-                # calculate vectors
-                bondVectorArray = np.empty(3 * NVisible, np.float64)
-                drawBondVector = np.empty(NVisible, np.int32)
-                numBonds = bonds_c.calculateDisplacementVectors(self.visibleAtoms, inputState.pos, refState.pos, 
-                                                                refState.cellDims, self.pipelinePage.PBC, bondVectorArray,
-                                                                drawBondVector)
-                
-                self.logger.debug("  Number of displacement vectors to draw = %d (/ %d)", numBonds, len(self.visibleAtoms))
-                
-                # pov file for bonds
-                povfile = "pipeline%d_dispvects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
-                
-                # draw displacement vectors as bonds
-                renderBonds.renderDisplacementVectors(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsCollection, 
-                                                      self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
-                                                      drawBondVector, settings)
+            # pov file for trace
+            povfile = "pipeline%d_trace%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
             
-            # trace
-            if settings.trace:
-                
+            # render trace vectors
+            self.traceDict = renderBonds.renderTraceVectors(self.visibleAtoms, self.mainWindow, self.pipelinePage, 
+                                                            self.actorsCollection, self.colouringOptions, povfile, 
+                                                            self.scalarsDict, numBonds, bondVectorArray, drawBondVector, 
+                                                            settings, self.traceDict)
+        
+        else:
+            self.logger.warning("Cannot compute trace with differing number of atoms between steps (undefined behaviour!)")
+        
+        # store pos for next step
+        self.previousPosForTrace = copy.deepcopy(inputState.pos)
     
     def atomIndexFilter(self, settings):
         """
