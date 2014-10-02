@@ -361,6 +361,144 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsColl
 
 ################################################################################
 
+def renderTraceVectors2(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colouringOptions, povfile, 
+                        scalarsDict, numBonds, previousPos, drawTrace, bondsOptions, traceDict):
+    """
+    Render trace vectors
+    
+    """
+    renderBondsTime = time.time()
+    logger = logging.getLogger(__name__)
+    logger.debug("Rendering trace vectors...")
+    
+    # SETTINGS
+    bondThicknessVTK = bondsOptions.bondThicknessVTK
+    bondThicknessPOV = bondsOptions.bondThicknessPOV
+    bondNumSides = bondsOptions.bondNumSides
+    # END SETTINGS
+    
+    inputState = pipelinePage.inputState
+    NVisible = len(visibleAtoms)
+    
+    # scalar type
+    scalarType = getScalarsType(colouringOptions)
+    
+    # scalars array
+    if scalarType == 5:
+        scalars = scalarsDict[colouringOptions.colourBy]
+    else:
+        scalars = np.array([], dtype=np.float64)
+    
+    # reconstruct trace dict
+    newd = {}
+    for i in xrange(NVisible):
+        # if atom is already in, we just append new pos (previous is already there)
+        # otherwise we append previous and new
+        index = visibleAtoms[i]
+        if index in traceDict:
+            newd[index] = traceDict[index]
+            if drawTrace[i]:
+                curpos = copy.deepcopy(inputState.atomPos(index))
+                curscl = getScalarValue(inputState, index, scalars, i, colouringOptions)
+                newd[index].append((curpos, curscl))
+        
+        else:
+            if drawTrace[i]:
+                newd[index] = []
+                curscl = getScalarValue(inputState, index, scalars, i, colouringOptions)
+                curpos = copy.deepcopy(previousPos[3*index:3*index+3])
+                newd[index].append((curpos, curscl))
+                curpos = copy.deepcopy(inputState.atomPos(index))
+                newd[index].append((curpos, curscl))
+    
+    # get size
+    size = 0
+    for key in newd.keys():
+        pointsList = newd[key]
+        size += len(pointsList)
+    logger.debug("Trace points size = %d", size)
+    
+    if size < 2:
+        logger.debug("Returning as not enough points to trace")
+        return newd
+    
+    # arrays
+    traceCoords = np.empty((size, 3), np.float64)
+    traceScalars = np.empty(size, np.float64)
+    
+    # povray file
+    povFilePath = os.path.join(mainWindow.tmpDirectory, povfile)
+    fpov = open(povFilePath, "w")
+    
+    # populate
+    count = 0
+    lines = vtk.vtkCellArray()
+    for key in newd.keys():
+        atomList = newd[key]
+        lines.InsertNextCell(len(atomList))
+        for mypos, myscalar in atomList:
+            traceCoords[count][:] = mypos[:]
+            traceScalars[count] = myscalar
+            
+            lines.InsertCellPoint(count)
+            
+            count += 1
+            
+            # write POV-Ray vector
+#             lut.GetColor(myscal, pov_rgb)
+#             fpov.write(povrayBond(mypos, 
+#                                   mypos + mybvect, 
+#                                   bondThicknessPOV, pov_rgb, 0.0))
+    
+    # close pov file
+    fpov.close()
+    
+    # points
+    points = vtk.vtkPoints()
+    points.SetData(numpy_support.numpy_to_vtk(traceCoords, deep=1))
+    
+    # polydata
+    polydata = vtk.vtkPolyData()
+    polydata.SetPoints(points)
+    polydata.SetLines(lines)
+    polydata.GetPointData().SetScalars(numpy_support.numpy_to_vtk(traceScalars, deep=1))
+    
+    # tubes
+    tubes = vtk.vtkTubeFilter()
+    tubes.SetInput(polydata)
+    tubes.SetRadius(bondThicknessVTK)
+    tubes.SetNumberOfSides(bondNumSides)
+    tubes.SetCapping(1)
+    
+    # make LUT
+    lut = setupLUT(inputState.specieList, inputState.specieRGB, colouringOptions)
+    
+    # number of species
+    NSpecies = len(inputState.specieList)
+    
+    # mapper
+    mapper = vtk.vtkPolyDataMapper()
+    mapper.SetInputConnection(tubes.GetOutputPort())
+    mapper.SetLookupTable(lut)
+    setMapperScalarRange(mapper, colouringOptions, NSpecies)
+    
+    # actor
+    actor = vtk.vtkActor()
+    actor.SetMapper(mapper)
+    actor.GetProperty().SetOpacity(1)
+    actor.GetProperty().SetLineWidth(bondThicknessVTK)
+    
+    # add to actors collection
+    actorsCollection.AddItem(actor)
+    
+    # time taken
+    renderBondsTime = time.time() - renderBondsTime
+    logger.debug("Render trace vectors time: %f s", renderBondsTime)
+    
+    return newd
+
+################################################################################
+
 def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colouringOptions, povfile, 
                        scalarsDict, numBonds, bondVectorArray, drawBondVector, bondsOptions, traceDict):
     """
@@ -469,9 +607,9 @@ def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsCollection,
     tubes.SetInputConnection(lineSource.GetOutputPort())
     tubes.SetRadius(bondThicknessVTK)
     tubes.SetNumberOfSides(bondNumSides)
-    tubes.UseDefaultNormalOn()
+#     tubes.UseDefaultNormalOn()
     tubes.SetCapping(1)
-    tubes.SetDefaultNormal(0.577, 0.577, 0.577)
+#     tubes.SetDefaultNormal(0.577, 0.577, 0.577)
     
     # glyph filter
     glyphFilter = vtk.vtkProgrammableGlyphFilter()

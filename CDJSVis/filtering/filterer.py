@@ -940,10 +940,10 @@ class Filterer(object):
             # trace atoms that have moved...
             # first we calculate displacement vectors between current and last position
             bondVectorArray = np.empty(3 * NVisible, np.float64)
-            drawBondVector = np.empty(NVisible, np.int32)
+            drawTrace = np.empty(NVisible, np.int32)
             numBonds = bonds_c.calculateDisplacementVectors(self.visibleAtoms, inputState.pos, self.previousPosForTrace, 
                                                             refState.cellDims, self.pipelinePage.PBC, bondVectorArray,
-                                                            drawBondVector)
+                                                            drawTrace)
             
             # pov file for trace
             povfile = "pipeline%d_trace%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
@@ -951,8 +951,12 @@ class Filterer(object):
             # render trace vectors
             self.traceDict = renderBonds.renderTraceVectors(self.visibleAtoms, self.mainWindow, self.pipelinePage, 
                                                             self.actorsCollection, self.colouringOptions, povfile, 
-                                                            self.scalarsDict, numBonds, bondVectorArray, drawBondVector, 
+                                                            self.scalarsDict, numBonds, bondVectorArray, drawTrace, 
                                                             settings, self.traceDict)
+            
+#             self.traceDict = renderBonds.renderTraceVectors2(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsCollection, 
+#                                                              self.colouringOptions, povfile, self.scalarsDict, numBonds, 
+#                                                              self.previousPosForTrace, drawTrace, settings, self.traceDict)
         
         else:
             self.logger.warning("Cannot compute trace with differing number of atoms between steps (undefined behaviour!)")

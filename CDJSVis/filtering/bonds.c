@@ -241,10 +241,7 @@ calculateDisplacementVectors(PyObject *self, PyObject *args)
     PyArrayObject *PBCIn=NULL;
     PyArrayObject *bondVectorArrayIn=NULL;
     PyArrayObject *drawBondVector=NULL;
-    
-    int i, index, numBonds;
-    double sepVec[3];
-    
+    int i, numBonds;
     
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &refPosIn, 
@@ -276,6 +273,9 @@ calculateDisplacementVectors(PyObject *self, PyObject *args)
     numBonds = 0;
     for (i = 0; i < NVisible; i++)
     {
+        int index;
+        double sepVec[3], sep2;
+        
         index = visibleAtoms[i];
         
         /* separation vector */
@@ -288,7 +288,8 @@ calculateDisplacementVectors(PyObject *self, PyObject *args)
         bondVectorArray[3*i+1] = sepVec[1];
         bondVectorArray[3*i+2] = sepVec[2];
         
-        if (sepVec[0] < 1e-2 && sepVec[1] < 1e-2 && sepVec[2] < 1e-2)
+        sep2 = sepVec[0] * sepVec[0] + sepVec[1] * sepVec[1] + sepVec[2] * sepVec[2];
+        if (sep2 < 0.04) // don't show displacements smaller than 0.2
         {
             IIND1(drawBondVector, i) = 0;
         }
