@@ -1,5 +1,7 @@
 # CDJSVis README file
 
+This file is aimed at people wanting to run the code from source. If you are running a prebuilt .app application then the only section that concerns you is the [Other software](http://magrid-server-5.lut.ac.uk/macdjs/CDJSVis/tree/master#other-software) section below.
+
 ## Requirements
 
 This code requires [Python 2.7](http://www.python.org/download/releases/2.7/) to run.  It depends on a number of Python modules/libraries and also some other programmes.
