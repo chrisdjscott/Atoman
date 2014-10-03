@@ -21,15 +21,15 @@ The following python modules must be installed to build the code from source:
     * NumPy
     * SciPy
     * Matplotlib
-    * PySide
+    * PySide (with pyside-rcc)
     * PIL
     * Pyhull
-    * pyvoro
+    * Paramiko
 
 In addition, the following programmes must also be installed:
 
     * Qt4
-    * VTK
+    * VTK (python bindings)
 
 The programmes mentioned for the :ref:`precompiled_version_requirements` should also be installed to get full functionality.
 

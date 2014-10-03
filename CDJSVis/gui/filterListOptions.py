@@ -1,8 +1,6 @@
 
 """
-Options for filter lists.
-
-@author: Chris Scott
+Additional options for filter lists.
 
 """
 import sys
@@ -26,7 +24,17 @@ except ImportError:
 
 class VoronoiOptionsWindow(QtGui.QDialog):
     """
-    Options for Voronoi tesselation
+    Voronoi tesselation computations are carried out using `Voro++ 
+    <http://math.lbl.gov/voro++/>`_. A Python extension 
+    was written to provide direct access to Voro++ from the Python code.
+    
+    * Ticking "Display Voronoi cells" will render the Voronoi cells around all visible
+      atoms.  
+    * Ticking "Use radii" will perform a radical Voronoi tesselation (or Laguerre 
+      tessellation). More information can be found on the `Voro++ 
+      <http://math.lbl.gov/voro++/about.html>`_ website.
+    * There is also an option to save the volumes and number of neighbours to a file
+      during the computation.
     
     """
     def __init__(self, mainWindow, parent=None):

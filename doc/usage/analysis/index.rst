@@ -17,9 +17,10 @@ Analysis
     filters/bond_order
 
 
-Each filter list also contains the following options.
+Each filter list also contains some additional options:
 
-   * Colouring options
-   * Bonds options
-   * Display options
-   * Voronoi options
+.. toctree::
+    :maxdepth: 1
+    
+    filterListOptions
+
