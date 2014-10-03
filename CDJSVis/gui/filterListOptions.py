@@ -442,13 +442,6 @@ class BondsOptionsWindow(QtGui.QDialog):
         # logger
         self.logger = logging.getLogger(__name__+".BondsOptionsWindow")
         
-        # current species set
-        self.currentSpecies = set()
-        self.bondChecksList = []
-        self.bondPairDrawStatus = []
-        self.bondPairsList = []
-        self.NBondPairs = 0
-        
         # options
         self.drawBonds = False
         self.bondThicknessPOV = 0.2
@@ -467,7 +460,6 @@ class BondsOptionsWindow(QtGui.QDialog):
         self.drawBondsGroup.setChecked(False)
         self.drawBondsGroup.setAlignment(QtCore.Qt.AlignCenter)
         self.drawBondsGroup.toggled.connect(self.drawBondsToggled)
-        
         layout.addWidget(self.drawBondsGroup)
         
         self.groupLayout = QtGui.QVBoxLayout()
