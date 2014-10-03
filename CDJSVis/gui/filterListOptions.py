@@ -24,15 +24,15 @@ except ImportError:
 
 class VoronoiOptionsWindow(QtGui.QDialog):
     """
-    Voronoi tesselation computations are carried out using `Voro++ 
+    Voronoi tessellation computations are carried out using `Voro++ 
     <http://math.lbl.gov/voro++/>`_. A Python extension 
     was written to provide direct access to Voro++ from the Python code.
     
     * Ticking "Display Voronoi cells" will render the Voronoi cells around all visible
       atoms.  
-    * Ticking "Use radii" will perform a radical Voronoi tesselation (or Laguerre 
-      tessellation). More information can be found on the `Voro++ 
-      <http://math.lbl.gov/voro++/about.html>`_ website.
+    * Ticking "Use radii" will perform a radical Voronoi tessellation (or Laguerre 
+      tessellation). More information can be found on the `Voro++ website 
+      <http://math.lbl.gov/voro++/about.html>`_.
     * There is also an option to save the volumes and number of neighbours to a file
       during the computation.
     
@@ -229,7 +229,12 @@ class VoronoiOptionsWindow(QtGui.QDialog):
 
 class DisplayOptionsWindow(QtGui.QDialog):
     """
-    Display options for filter list.
+    Display options for a filter list.
+    
+    * "Atom size scale factor" scales the radii of the atoms by the selected amount
+    * The "Sphere resolution" settings determine how the atoms (spheres) are drawn.
+      There are three defaults: "low", "medium" and "high, or you can enter the 
+      settings manually.  In the formula "N" is the number of visible spheres.
     
     """
     def __init__(self, mainWindow, parent=None):
@@ -407,7 +412,17 @@ class DisplayOptionsWindow(QtGui.QDialog):
 
 class BondsOptionsWindow(QtGui.QDialog):
     """
-    Bond options for filter list.
+    Selecting "Draw bonds" will result in bonds being drawn between visible 
+    atoms from this filter list. You must also select the bonds you want to 
+    draw from the list (eg. "Pu-Pu" or "Pu-Ga"). 
+    
+    The "Bond thickness" settings determine the size of the bonds when they are
+    rendered.  "VTK" is the onscreen rendering while "POV" is used during 
+    POV-Ray rendering.
+    
+    The "Number of sides" settings determines how many sides make up the tube
+    used to render the bond.  A higher setting will look better but will be 
+    much slower to render and interact with.
     
     """
     def __init__(self, mainWindow, parent=None):
@@ -619,7 +634,23 @@ class BondsOptionsWindow(QtGui.QDialog):
 
 class ColouringOptionsWindow(QtGui.QDialog):
     """
-    Window for displaying colouring options for filter list
+    By default the following colouring options are available:
+    
+      * **Specie**: colour by atom specie
+      * **Height**: colour by the x, y or z coordinate
+      * **Solid colour**: colour all atoms in the filter list by the selected
+        colour
+      * **Atom property**: colour by on of the available atom properties: 
+        "Kinetic energy", "Potential energy" or "Charge"
+    
+    If you add filters/calculators that calculate scalar properties of the 
+    system, for example "Displacement" or "Bond order", then there will also
+    be an option to colour by these scalar values (you must "Apply lists" 
+    after adding these calculators before they appear in the combo box).
+    
+    There are options to set the min/max values for colouring; and option to
+    set these min/max values to the range of the chosen scalar and and option
+    to set the text that appears on the scalar bar.
     
     """
     def __init__(self, parent=None):
@@ -1051,7 +1082,18 @@ class ColouringOptionsWindow(QtGui.QDialog):
 
 class TraceOptionsWindow(QtGui.QDialog):
     """
-    Options for Trace
+    This feature is currently in development...
+    
+    The trace options settings allow you to track the movement of the visible 
+    atoms within the filter list.  This will calculate the displacement of all
+    visible atoms and draw a tube/bond from their initial locations to their
+    current positions. 
+    
+    * The "Bond thickness" option specifies the thickness of the bond during 
+      onscreen rendering ("VTK") or offline/POV-Ray rendering ("POV")
+    * The "Number of sides" option determines how many sides make up the tube
+      used to render the bond.  A higher setting will look better but will be 
+      much slower to render and interact with.
     
     """
     def __init__(self, mainWindow, parent=None):

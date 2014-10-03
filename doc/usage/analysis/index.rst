@@ -15,6 +15,7 @@ Analysis
    
     filters/acna
     filters/bond_order
+    filters/cluster
 
 
 Each filter list also contains some additional options:
