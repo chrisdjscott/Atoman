@@ -2,7 +2,7 @@
 Changelog
 =========
 
-**dev**
+**v141003**
 
 * When using Voronoi volumes to compute volume of defect cluster, sum volumes of vacancies as well as interstitials/antisites
 * Add option to trace the positions of atoms in a filter list
