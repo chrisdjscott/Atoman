@@ -13,7 +13,7 @@ import itertools
 
 import numpy as np
 import vtk
-from PySide import QtGui
+from PySide import QtGui, QtCore
 
 from . import _filtering as filtering_c
 from . import _defects as defects_c
@@ -634,12 +634,12 @@ class Filterer(object):
         calcBonds = False
         maxBond = -1
         drawList = []
-        for i in xrange(self.bondsOptions.NBondPairs):
-            pair = self.bondsOptions.bondPairsList[i]
-            drawPair = self.bondsOptions.bondPairDrawStatus[i]
+        for i in xrange(self.bondsOptions.bondsList.count()):
+            item = self.bondsOptions.bondsList.item(i)
             
-            if drawPair:
-                syma, symb = pair
+            if item.checkState() == QtCore.Qt.Checked:
+                syma = item.syma
+                symb = item.symb
                 
                 # check if in current specie list and if so what indexes
                 if syma in specieList:
@@ -674,7 +674,7 @@ class Filterer(object):
                         
                         drawList.append("%s-%s" % (syma, symb))
                         
-                        self.logger.info("    Pair: %s - %s; bond range: %f -> %f", pair[0], pair[1], bondMin, bondMax)
+                        self.logger.info("    Pair: %s - %s; bond range: %f -> %f", syma, symb, bondMin, bondMax)
         
         if not calcBonds:
             self.logger.info("    No bonds to calculate")

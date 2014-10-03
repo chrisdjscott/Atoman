@@ -439,6 +439,9 @@ class BondsOptionsWindow(QtGui.QDialog):
         
         self.mainWindow = mainWindow
         
+        # logger
+        self.logger = logging.getLogger(__name__+".BondsOptionsWindow")
+        
         # current species set
         self.currentSpecies = set()
         self.bondChecksList = []
@@ -471,6 +474,11 @@ class BondsOptionsWindow(QtGui.QDialog):
 #        self.groupLayout.setSpacing(0)
 #        self.groupLayout.setContentsMargins(0, 0, 0, 0)
         self.groupLayout.setAlignment(QtCore.Qt.AlignTop)
+        
+        self.bondsList = QtGui.QListWidget(self)
+        self.bondsList.setFixedHeight(100)
+        self.bondsList.setFixedWidth(120)
+        self.groupLayout.addWidget(self.bondsList)
         
         self.drawBondsGroup.setLayout(self.groupLayout)
         
@@ -563,55 +571,6 @@ class BondsOptionsWindow(QtGui.QDialog):
         else:
             self.parent.bondsOptionsButton.setText("Bonds options: Off")
     
-    def addSpecie(self, sym):
-        """
-        Add specie to bonding options.
-        
-        """
-        # first test if already added
-        if sym in self.currentSpecies:
-            return
-        
-        # add to set
-        self.currentSpecies.add(sym)
-        
-        # now add line(s) to group box
-        for symb in self.currentSpecies:
-            # check box
-            check = QtGui.QCheckBox("  %s - %s" % (sym, symb))
-            check.stateChanged.connect(functools.partial(self.checkStateChanged, len(self.bondPairDrawStatus)))
-            self.bondChecksList.append(check)
-            
-            # draw status
-            self.bondPairDrawStatus.append(False)
-            
-            # label
-#            label = QtGui.QLabel("%s - %s" % (sym, symb))
-            
-            # pair
-            pair = (sym, symb)
-            self.bondPairsList.append(pair)
-            
-            # row
-            row = QtGui.QHBoxLayout()
-            row.addWidget(check)
-#            row.addWidget(label)
-            
-            self.groupLayout.addLayout(row)
-            
-            self.NBondPairs += 1
-    
-    def checkStateChanged(self, index, state):
-        """
-        Check state changed.
-        
-        """
-        if state == 2:
-            self.bondPairDrawStatus[index] = True
-        
-        else:
-            self.bondPairDrawStatus[index] = False
-    
     def refresh(self):
         """
         Refresh available bonds.
@@ -621,14 +580,72 @@ class BondsOptionsWindow(QtGui.QDialog):
         
         """
         inputState = self.parent.filterTab.inputState
-        
         if inputState is None:
             return
         
-        for specie in inputState.specieList:
-            self.addSpecie(specie)
+        self.logger.debug("Refreshing bonds options (%d - %d)", self.parent.pipelinePage.pipelineIndex, self.parent.tab)
+        
+        specieList = inputState.specieList
+        
+        # set of added pairs
+        currentPairs = set()
+        
+        # remove pairs that don't exist
+        num = self.bondsList.count()
+        for i in xrange(num - 1, -1, -1):
+            item = self.bondsList.item(i)
+            
+            # make this 'and' so that if a lattice is missing one specie we still
+            # keep the pair in case it comes back later... 
+            if item.syma not in specieList and item.symb not in specieList:
+                self.logger.debug("  Removing bond option: %s - %s", item.syma, item.symb)
+                self.bondsList.takeItem(i) # does this delete it?
+            
+            else:
+                currentPairs.add("%s - %s" % (item.syma, item.symb))
+                currentPairs.add("%s - %s" % (item.symb, item.syma))
+        
+        # add pairs that aren't already added
+        for i in xrange(len(inputState.specieList)):
+            for j in xrange(i, len(inputState.specieList)):
+                p1 = "%s - %s" % (specieList[i], specieList[j])
+                p2 = "%s - %s" % (specieList[j], specieList[i])
+                if p1 in currentPairs:
+                    self.logger.debug("  Keeping bond option: %s", p1)
+                
+                elif p2 in currentPairs:
+                    self.logger.debug("  Keeping bond option: %s", p2)
+                
+                else:
+                    self.logger.debug("  Adding bond option: %s", p1)
+                    item = BondListItem(specieList[i], specieList[j])
+                    self.bondsList.addItem(item)
 
+################################################################################
 
+class BondListItem(QtGui.QListWidgetItem):
+    """
+    Item in the bonds list widget.
+    
+    """
+    def __init__(self, syma, symb):
+        super(BondListItem, self).__init__()
+        
+        # add check box
+        self.setFlags(self.flags() | QtCore.Qt.ItemIsUserCheckable)
+        
+        # don't allow it to be selected
+        self.setFlags(self.flags() & ~QtCore.Qt.ItemIsSelectable)
+        
+        # set unchecked initially
+        self.setCheckState(QtCore.Qt.Unchecked)
+        
+        # store bond pair
+        self.syma = syma
+        self.symb = symb
+        
+        # set text
+        self.setText("%s - %s" % (syma, symb))
 
 ################################################################################
 

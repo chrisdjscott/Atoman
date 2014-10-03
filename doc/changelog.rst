@@ -6,6 +6,8 @@ Changelog
 
 * When using Voronoi volumes to compute volume of defect cluster, sum volumes of vacancies as well as interstitials/antisites
 * Add option to trace the positions of atoms in a filter list
+* Use list widget for bonds options (better when lots of different specie types)
+* Only add bond options for species present in the current lattice
 
 **v140929**
 
