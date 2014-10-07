@@ -8,3 +8,4 @@ Usage
    input/index
    analysis/index
    output/index
+   preferences

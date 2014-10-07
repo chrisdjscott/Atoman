@@ -41,6 +41,7 @@ static PyObject*
 calculateRDF(PyObject *self, PyObject *args)
 {
 	int NVisible, *visibleAtoms, NAtoms, *specie, specieID1, specieID2, *PBC, num;
+	int OMP_NUM_THREADS;
 	double *pos, *minPos, *maxPos, *cellDims, start, finish, *rdf;
 	PyArrayObject *visibleAtomsIn=NULL;
 	PyArrayObject *specieIn=NULL;
@@ -61,9 +62,10 @@ calculateRDF(PyObject *self, PyObject *args)
     
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!O!iiO!O!O!O!ddiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &specieIn,
+	if (!PyArg_ParseTuple(args, "O!O!O!iiO!O!O!O!ddiO!i", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &specieIn,
 			&PyArray_Type, &posIn, &specieID1, &specieID2, &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, 
-			&PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &start, &finish, &num, &PyArray_Type, &rdfIn))
+			&PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &start, &finish, &num, &PyArray_Type, &rdfIn, 
+			&OMP_NUM_THREADS))
 		return NULL;
 	
 	if (not_intVector(visibleAtomsIn)) return NULL;
@@ -92,6 +94,9 @@ calculateRDF(PyObject *self, PyObject *args)
 	if (not_intVector(PBCIn)) return NULL;
 	PBC = pyvector_to_Cptr_int(PBCIn);
     
+	/* set number of openmp threads to use */
+    omp_set_num_threads(OMP_NUM_THREADS);
+	
     /* approx box width */
 	/* may not be any point boxing... */
     approxBoxWidth = finish;
@@ -106,7 +111,7 @@ calculateRDF(PyObject *self, PyObject *args)
     finish2 = finish * finish;
     
     /* loop over atoms */
-#pragma omp parallel for
+    #pragma omp parallel for
     for (i=0; i<NVisible; i++)
     {
         int j, index, boxIndex, boxNebList[27];
@@ -155,7 +160,7 @@ calculateRDF(PyObject *self, PyObject *args)
                     
                     sep = sqrt(sep2);
                     binIndex = (int) ((sep - start) / interval);
-#pragma omp atomic
+                    #pragma omp atomic
                     rdf[binIndex] += 2;
                 }
             }

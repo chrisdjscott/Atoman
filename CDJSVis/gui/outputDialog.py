@@ -667,11 +667,14 @@ class RDFForm(genericForm.GenericForm):
         # show progress dialog
         progDiag = utils.showProgressDialog("Calculating RDF", "Calculating RDF...", self)
         
+        # num threads
+        ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
+        
         try:
             # then calculate
             rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.minPos,
                                inputLattice.maxPos, inputLattice.cellDims, pp.PBC, self.binMin, self.binMax, self.NBins,
-                               rdfArray)
+                               rdfArray, ompNumThreads)
         
         finally:
             utils.cancelProgressDialog(progDiag)

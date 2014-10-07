@@ -1,6 +1,6 @@
 
 """
-Preferences dialog
+Preferences dialog.
 
 @author: Chris Scott
 
@@ -9,6 +9,7 @@ import os
 import sys
 import logging
 import datetime
+import multiprocessing as mp
 
 from PySide import QtGui, QtCore
 
@@ -64,7 +65,18 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
 
 class LogFileSettingsForm(GenericPreferencesSettingsForm):
     """
-    Settings for creating a log file
+    Settings for creating a log file (for debugging).  Options that can be set
+    on this form are:
+    
+    **Create log file**
+        Create a log file. This setting persists when you close and reopen the
+        application, so you can get a log file with everything from startup.
+    
+    **Log dir**
+        Directory to place log files into.
+    
+    **Level**
+        The logging level (should be self-explanatory).
     
     """
     def __init__(self, parent):
@@ -223,7 +235,12 @@ class LogFileSettingsForm(GenericPreferencesSettingsForm):
 
 class RenderingSettingsForm(GenericPreferencesSettingsForm):
     """
-    Rendering settings form for preferences dialog.
+    Rendering settings form for the preferences dialog. Options that can be set on this form
+    are:
+    
+    **Max atoms auto run**
+        If the number of atoms in the selected input file is less that this value then the
+        filter/calculator lists run automatically after the system is loaded.
     
     """
     def __init__(self, parent):
@@ -265,7 +282,17 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
 
 class FfmpegSettingsForm(GenericPreferencesSettingsForm):
     """
-    FFMPEG settings form for preferences dialog.
+    FFmpeg settings form for the preferences dialog. Options that can be set on this form
+    are:
+    
+    **Path to FFmpeg**
+        Specify the path to the "ffmpeg" executable.  If FFmpeg is installed in a default location,
+        for example "/usr/bin", then you can just write "ffmpeg" in the box (or whatever you FFmpeg
+        executable is called). Otherwise, you should specify the full path, eg 
+        "/opt/somewhere/bin/ffmpeg".
+    
+    **Bitrate**
+        Here you can specify the bitrate to use when creating movies using FFmpeg.
     
     """
     def __init__(self, parent):
@@ -338,7 +365,31 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
 
 class PovraySettingsForm(GenericPreferencesSettingsForm):
     """
-    POV-Ray settings form for preferences dialog.
+    POV-Ray settings form for the preferences dialog. Options that can be set on this form
+    are:
+    
+    **Path to POV-Ray**
+        Specify the path to the "povray" executable.  If POV-Ray is installed in a default location,
+        for example "/usr/bin", then you can just write "povray" in the box (or whatever you POV-Ray
+        executable is called). Otherwise, you should specify the full path, eg 
+        "/opt/somewhere/bin/povray".
+    
+    **Overlay image**
+        Here you can specify whether or not to overlay on screen information onto the generated POV-Ray
+        image.  Examples of things that will be overlayed onto the POV-Ray image are on-screen text and 
+        the scalar bar.
+    
+    **Shadowless**
+        Use the shadowless option when rendering POV-Ray images.
+    
+    **Dimensions**
+        The dimensions of the POV-Ray image
+    
+    **View angle**
+        The view angle to use when creating the POV-Ray image
+    
+    **Cell frame radius**
+        The radius of the lattice cell frame to use in POV-Ray images
     
     """
     def __init__(self, parent):
@@ -511,7 +562,20 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
 
 class MatplotlibSettingsForm(GenericPreferencesSettingsForm):
     """
-    Matplotlib settings.
+    Matplotlib settings for the preferences dialog. Options that can be set on this
+    form are:
+    
+    **Fig size**
+        The size of the Matplotlib figure
+    
+    **Dpi**
+        The dpi value to use when creating the Matplotlib figure
+    
+    **Show grid**
+        Whether or not to show a grid on the Matplotlib figures
+    
+    **Font size**
+        Set the font sizes for different labels on the Matplotlib figure
     
     """
     def __init__(self, parent):
@@ -679,6 +743,8 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
     """
     Forces settings form for preferences dialog.
     
+    *This is not implemented currently!*
+    
     """
     def __init__(self, parent):
         super(ForcesSettingsForm, self).__init__(parent)
@@ -775,9 +841,69 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
 
 ################################################################################
 
+class GeneralSettingsForm(GenericPreferencesSettingsForm):
+    """
+    General settings form for preferences dialog. Options that can be set on this form
+    are:
+    
+    **OMP_NUM_THREADS**
+        This sets the number of threads that will be used in parts of the C extensions
+        that are parallelised using OpenMP. At present this is only relevant in a few
+        places, for example the "Bond order" and "ACNA" filters and RDF plotting. The 
+        default is "0" which will run on all available threads.
+    
+    """
+    def __init__(self, parent):
+        super(GeneralSettingsForm, self).__init__(parent)
+        
+        # logging
+        self.logger = logging.getLogger(__name__+".ForcesSettingsForm")
+        
+        # settings object
+        self.settings = QtCore.QSettings()
+        
+        # initial value
+        maxthread = mp.cpu_count()
+        ini = int(self.settings.value("omp/numThreads", 0))
+        if ini > maxthread:
+            ini = maxthread
+        self.maxNumThreads = maxthread
+        self.ompNumThreadsChanged(ini)
+        self.logger.debug("Initial value of OMP_NUM_THREADS = %d", self.openmpNumThreads)
+        
+        # omp number of threads to use
+        ompNumThreadsSpin = QtGui.QSpinBox()
+        ompNumThreadsSpin.setMinimum(0)
+        ompNumThreadsSpin.setMaximum(maxthread)
+        ompNumThreadsSpin.setValue(ini)
+        ompNumThreadsSpin.valueChanged.connect(self.ompNumThreadsChanged)
+        
+        rowLayout = self.newRow()
+        rowLayout.addWidget(QtGui.QLabel("OMP_NUM_THREADS: "))
+        rowLayout.addWidget(ompNumThreadsSpin)
+        
+        self.init()
+    
+    def ompNumThreadsChanged(self, n):
+        """
+        Number of OpenMP threads has been changed
+        
+        """
+        if n == 0:
+            self.logger.debug("OMP_NUM_THREADS CHANGED TO: %d (%d)", n, self.maxNumThreads)
+            self.openmpNumThreads = self.maxNumThreads
+        
+        else:
+            self.logger.debug("OMP_NUM_THREADS CHANGED TO: %d", n)
+            self.openmpNumThreads = n
+        
+        self.settings.setValue("omp/numThreads", n)
+
+################################################################################
+
 class PreferencesDialog(QtGui.QDialog):
     """
-    Preferences dialog.
+    A number of global application settings can be configured on the Preferences dialog.
     
     """
     def __init__(self, parent=None):
@@ -790,7 +916,7 @@ class PreferencesDialog(QtGui.QDialog):
         
         self.setWindowTitle("Preferences")
         self.setWindowIcon(QtGui.QIcon(iconPath("applications-system.svg")))
-        self.resize(320, 380)
+        self.resize(320, 520)
         
         self.buttonCount = 0
         
@@ -803,6 +929,11 @@ class PreferencesDialog(QtGui.QDialog):
         # add toolbox to layout
         dlgLayout.addWidget(self.toolbox)
         
+        # general settings
+        self.generalForm = GeneralSettingsForm(self)
+        self.toolbox.addItem(self.generalForm, QtGui.QIcon(iconPath("applications-system.svg")), "General")
+        
+        # log file settings
         self.logFileForm = LogFileSettingsForm(self)
         self.toolbox.addItem(self.logFileForm, QtGui.QIcon(iconPath("accessories-text-editor.svg")), "Log file")
         
@@ -825,3 +956,28 @@ class PreferencesDialog(QtGui.QDialog):
         # forces tab
         self.forcesForm = ForcesSettingsForm(self)
         self.toolbox.addItem(self.forcesForm, QtGui.QIcon(iconPath("capital_f.gif")), "Forces")
+        
+        # help button (links to help page on preferences dialog)
+        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "Show help")
+        helpButton.setToolTip("Show help page")
+        helpButton.setFixedWidth(150)
+        helpButton.setAutoDefault(0)
+        helpButton.clicked.connect(self.loadHelpPage)
+        self.helpPage = "usage/preferences.html"
+        
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignHCenter)
+        row.addWidget(helpButton)
+        dlgLayout.addLayout(row)
+        
+    
+    def loadHelpPage(self):
+        """
+        Load the help page
+        
+        """
+        if self.helpPage is None:
+            return
+        
+        self.parent.helpWindow.loadPage(self.helpPage)
+        self.parent.showHelp()

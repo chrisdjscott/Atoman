@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* Add option to set how many OpenMP threads will be used in C extensions
+
 **v141003**
 
 * When using Voronoi volumes to compute volume of defect cluster, sum volumes of vacancies as well as interstitials/antisites

@@ -514,9 +514,12 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # num threads
+        ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
+        
         NVisible = bond_order.bondOrderFilter(self.visibleAtoms, inputState.pos, settings.maxBondDistance, scalarsQ4, scalarsQ6, inputState.minPos, 
                                                 inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.filterQ4Enabled, 
-                                                settings.minQ4, settings.maxQ4, settings.filterQ6Enabled, settings.minQ6, settings.maxQ6)
+                                                settings.minQ4, settings.maxQ4, settings.filterQ6Enabled, settings.minQ6, settings.maxQ6, ompNumThreads)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -543,12 +546,15 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # number of openmp threads
+        ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
+        
         # counter array
         counters = np.zeros(7, np.int32)
         
         NVisible = acna.adaptiveCommonNeighbourAnalysis(self.visibleAtoms, inputState.pos, scalars, inputState.minPos, inputState.maxPos, 
                                                         inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.maxBondDistance,
-                                                        counters, settings.filteringEnabled, settings.structureVisibility)
+                                                        counters, settings.filteringEnabled, settings.structureVisibility, ompNumThreads)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -1115,12 +1121,15 @@ class Filterer(object):
             fullScalars = np.empty(NScalars, np.float64)
             structVis = np.ones(len(self.knownStructures), np.int32)
             
+            # number of threads
+            ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
+            
             # counter array
             counters = np.zeros(7, np.int32)
             
             acna.adaptiveCommonNeighbourAnalysis(visAtoms, inputLattice.pos, acnaArray, inputLattice.minPos, inputLattice.maxPos, 
                                                  inputLattice.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, 
-                                                 settings.acnaMaxBondDistance, counters, 0, structVis) 
+                                                 settings.acnaMaxBondDistance, counters, 0, structVis, ompNumThreads) 
             
             # store counters
             d = {}

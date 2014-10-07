@@ -75,6 +75,7 @@ static PyObject*
 adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
 {
     int NVisibleIn, *visibleAtoms, *PBC, NScalars, *counters, filteringEnabled, *structureVisibility;
+    int OMP_NUM_THREADS;
     double *pos, *scalars, *minPos, *maxPos, *cellDims, *fullScalars, maxBondDistance;
     PyArrayObject *posIn=NULL;
     PyArrayObject *visibleAtomsIn=NULL;
@@ -94,9 +95,10 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
 /* parse and check arguments from Python */
     
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!iO!dO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!iO!dO!iO!i", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn, 
             &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, 
-            &PyArray_Type, &fullScalarsIn, &maxBondDistance, &PyArray_Type, &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn))
+            &PyArray_Type, &fullScalarsIn, &maxBondDistance, &PyArray_Type, &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn,
+            &OMP_NUM_THREADS))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -129,6 +131,9 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
     if (not_intVector(structureVisibilityIn)) return NULL;
     structureVisibility = pyvector_to_Cptr_int(structureVisibilityIn);
+    
+    /* set number of openmp threads to use */
+    omp_set_num_threads(OMP_NUM_THREADS);
     
 /* first we construct neighbour list for each atom, containing indexes and separations */
     
@@ -170,20 +175,20 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
     
     /* sort neighbours by distance */
-#pragma omp parallel for
+    #pragma omp parallel for
     for (i = 0; i < NVisibleIn; i++)
         qsort(nebList[i].neighbour, nebList[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
     
 /* classify atoms */
     
-#pragma omp parallel for
+    #pragma omp parallel for
     for (i = 0; i < NVisibleIn; i++)
     {
     	int atomStructure;
         
         atomStructure = analyseAtom(i, nebList);
     	scalars[i] = (double) atomStructure;
-#pragma omp atomic
+        #pragma omp atomic
     	counters[atomStructure]++;
     }
     

@@ -27,7 +27,6 @@ struct AtomStructureResults
     double imgQ6[13];
 };
 
-
 static PyObject* bondOrderFilter(PyObject*, PyObject*);
 static void Ylm(int, int, double, double, double*, double*);
 static void convertToSphericalCoordinates(double, double, double, double, double*, double*);
@@ -87,7 +86,7 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
     
     
     /* loop over atoms */
-#pragma omp parallel for
+    #pragma omp parallel for
     for (visIndex = 0; visIndex < NVisibleIn; visIndex++)
     {
         int index, m;
@@ -238,6 +237,7 @@ static PyObject*
 bondOrderFilter(PyObject *self, PyObject *args)
 {
     int NVisibleIn, *visibleAtoms, *PBC, NScalars, filterQ4Enabled, filterQ6Enabled;
+    int OMP_NUM_THREADS;
     double maxBondDistance, *scalarsQ4, *scalarsQ6, *minPos, *maxPos, *cellDims;
     double *pos, *fullScalars, minQ4, maxQ4, minQ6, maxQ6;
     PyArrayObject *posIn=NULL;
@@ -259,10 +259,10 @@ bondOrderFilter(PyObject *self, PyObject *args)
     struct AtomStructureResults *results;
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!dO!O!O!O!O!O!iO!iddidd", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &maxBondDistance, 
+    if (!PyArg_ParseTuple(args, "O!O!dO!O!O!O!O!O!iO!iddiddi", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &maxBondDistance, 
             &PyArray_Type, &scalarsQ4In, &PyArray_Type, &scalarsQ6In, &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, 
             &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, &PyArray_Type, &fullScalarsIn, &filterQ4Enabled, &minQ4, 
-            &maxQ4, &filterQ6Enabled, &minQ6, &maxQ6))
+            &maxQ4, &filterQ6Enabled, &minQ6, &maxQ6, &OMP_NUM_THREADS))
             return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -292,6 +292,9 @@ bondOrderFilter(PyObject *self, PyObject *args)
     
     if (not_doubleVector(fullScalarsIn)) return NULL;
     fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    /* set number of openmp threads to use */
+    omp_set_num_threads(OMP_NUM_THREADS);
     
     /* construct visible pos array */
     visiblePos = malloc(3 * NVisibleIn * sizeof(double));
