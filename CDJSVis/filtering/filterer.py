@@ -1546,7 +1546,7 @@ class Filterer(object):
         atomCluster.resize(NVisible, refcheck=False)
         
         # store cluster indexes as scalars
-#         self.scalarsDict["Cluster"] = atomCluster
+        self.scalarsDict["Cluster"] = np.asarray(atomCluster, dtype=np.float64)
         
         # build cluster lists
         self.clusterList = []
