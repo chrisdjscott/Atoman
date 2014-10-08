@@ -102,6 +102,66 @@ class TestBondOrderBCC(unittest.TestCase):
         # check Q4 (all atoms same in perfect lattice...) (or should I check them all)
         for i in xrange(NVis):
             self.assertAlmostEqual(0.511, scalarsQ6[i], places=3)
+    
+    def test_bondOrderBCCQ4_4threads(self):
+        """
+        Bond order bcc Q4 (4 threads)
+        
+        """
+        # arguments
+        visibleAtoms = np.arange(self.lattice.NAtoms, dtype=np.int32)
+        maxBondDistance = 4.0
+        scalarsQ4 = np.zeros(self.lattice.NAtoms, np.float64)
+        scalarsQ6 = np.zeros(self.lattice.NAtoms, np.float64)
+        filterQ4Enabled = 0
+        minQ4 = 0.0
+        maxQ4 = 0.0
+        filterQ6Enabled = 0
+        minQ6 = 0.0
+        maxQ6 = 0.0
+        
+        # call bond order filter
+        nthreads = 4
+        NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
+                                          self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+        
+        # make sure num visible is same
+        self.assertEqual(NVis, self.lattice.NAtoms)
+        
+        # check Q4 (all atoms same in perfect lattice...) (or should I check them all)
+        for i in xrange(NVis):
+            self.assertAlmostEqual(0.036, scalarsQ4[i], places=3)
+    
+    def test_bondOrderBCCQ6_4threads(self):
+        """
+        Bond order bcc Q6 (4 threads)
+        
+        """
+        # arguments
+        visibleAtoms = np.arange(self.lattice.NAtoms, dtype=np.int32)
+        maxBondDistance = 4.0
+        scalarsQ4 = np.zeros(self.lattice.NAtoms, np.float64)
+        scalarsQ6 = np.zeros(self.lattice.NAtoms, np.float64)
+        filterQ4Enabled = 0
+        minQ4 = 0.0
+        maxQ4 = 0.0
+        filterQ6Enabled = 0
+        minQ6 = 0.0
+        maxQ6 = 0.0
+        
+        # call bond order filter
+        nthreads = 4
+        NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
+                                          self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+        
+        # make sure num visible is same
+        self.assertEqual(NVis, self.lattice.NAtoms)
+        
+        # check Q4 (all atoms same in perfect lattice...) (or should I check them all)
+        for i in xrange(NVis):
+            self.assertAlmostEqual(0.511, scalarsQ6[i], places=3)
 
 ################################################################################
 
@@ -184,6 +244,66 @@ class TestBondOrderFCC(unittest.TestCase):
         
         # call bond order filter
         nthreads = 1
+        NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
+                                          self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+        
+        # make sure num visible is same
+        self.assertEqual(NVis, self.lattice.NAtoms)
+        
+        # check Q4 (all atoms same in perfect lattice...) (or should I check them all)
+        for i in xrange(NVis):
+            self.assertAlmostEqual(0.575, scalarsQ6[i], places=3)
+    
+    def test_bondOrderFCCQ4_4threads(self):
+        """
+        Bond order fcc Q4 (4 threads)
+        
+        """
+        # arguments
+        visibleAtoms = np.arange(self.lattice.NAtoms, dtype=np.int32)
+        maxBondDistance = 3.8
+        scalarsQ4 = np.zeros(self.lattice.NAtoms, np.float64)
+        scalarsQ6 = np.zeros(self.lattice.NAtoms, np.float64)
+        filterQ4Enabled = 0
+        minQ4 = 0.0
+        maxQ4 = 0.0
+        filterQ6Enabled = 0
+        minQ6 = 0.0
+        maxQ6 = 0.0
+        
+        # call bond order filter
+        nthreads = 4
+        NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
+                                          self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+        
+        # make sure num visible is same
+        self.assertEqual(NVis, self.lattice.NAtoms)
+        
+        # check Q4 (all atoms same in perfect lattice...) (or should I check them all)
+        for i in xrange(NVis):
+            self.assertAlmostEqual(0.191, scalarsQ4[i], places=3)
+    
+    def test_bondOrderFCCQ6_4threads(self):
+        """
+        Bond order fcc Q6 (4 threads)
+        
+        """
+        # arguments
+        visibleAtoms = np.arange(self.lattice.NAtoms, dtype=np.int32)
+        maxBondDistance = 3.8
+        scalarsQ4 = np.zeros(self.lattice.NAtoms, np.float64)
+        scalarsQ6 = np.zeros(self.lattice.NAtoms, np.float64)
+        filterQ4Enabled = 0
+        minQ4 = 0.0
+        maxQ4 = 0.0
+        filterQ6Enabled = 0
+        minQ6 = 0.0
+        maxQ6 = 0.0
+        
+        # call bond order filter
+        nthreads = 4
         NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
                                           self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
                                           filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
