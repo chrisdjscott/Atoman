@@ -55,8 +55,9 @@ class TestVoronoi(unittest.TestCase):
         
         PBC = np.ones(3, np.int32)
         useRadii = 0
+        fthresh = 0.1
         vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
-                           lattice.specieCovalentRadius, useRadii)
+                           lattice.specieCovalentRadius, useRadii, fthresh)
         
         vols = vor.atomVolumesArray()
         volsum = np.sum(vols)
@@ -76,8 +77,9 @@ class TestVoronoi(unittest.TestCase):
         
         PBC = np.ones(3, np.int32)
         useRadii = 1
+        fthresh = 0.1
         vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
-                           lattice.specieCovalentRadius, useRadii)
+                           lattice.specieCovalentRadius, useRadii, fthresh)
         
         vols = vor.atomVolumesArray()
         volsum = np.sum(vols)
@@ -127,8 +129,9 @@ class TestVoronoi2(unittest.TestCase):
         
         PBC = np.ones(3, np.int32)
         useRadii = 0
+        fthresh = 0.1
         vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
-                           lattice.specieCovalentRadius, useRadii)
+                           lattice.specieCovalentRadius, useRadii, fthresh)
         
         vols = vor.atomVolumesArray()
         volsum = np.sum(vols)
@@ -148,8 +151,9 @@ class TestVoronoi2(unittest.TestCase):
         
         PBC = np.ones(3, np.int32)
         useRadii = 1
+        fthresh = 0.1
         vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
-                           lattice.specieCovalentRadius, useRadii)
+                           lattice.specieCovalentRadius, useRadii, fthresh)
         
         vols = vor.atomVolumesArray()
         volsum = np.sum(vols)

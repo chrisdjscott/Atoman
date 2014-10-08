@@ -33,6 +33,10 @@ class VoronoiOptionsWindow(QtGui.QDialog):
     * Ticking "Use radii" will perform a radical Voronoi tessellation (or Laguerre 
       tessellation). More information can be found on the `Voro++ website 
       <http://math.lbl.gov/voro++/about.html>`_.
+    * "Face area threshold" is used when determining the number of Voronoi 
+      neighbours. This is done by counting the number of faces of the Voronoi
+      cell. Faces with an area less than "Face area threshold" are ignored in
+      this calculation. A value of 0.1 seems to work well for most systems.
     * There is also an option to save the volumes and number of neighbours to a file
       during the computation.
     
@@ -59,6 +63,7 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         self.opacity = 0.8
         self.outputToFile = False
         self.outputFilename = "voronoi.csv"
+        self.faceAreaThreshold = 0.1
         
         # layout
         self.contentLayout = QtGui.QVBoxLayout(self)
@@ -73,26 +78,25 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         row = self.newRow()
         row.addWidget(self.displayVoronoiCheck)
         
-        # dispersion
-#         label = QtGui.QLabel("Dispersion:")
-#         
-#         self.dispersionSpin = QtGui.QDoubleSpinBox()
-#         self.dispersionSpin.setMinimum(0.1)
-#         self.dispersionSpin.setMaximum(99.9)
-#         self.dispersionSpin.setSingleStep(0.1)
-#         self.dispersionSpin.setValue(self.dispersion)
-#         self.dispersionSpin.valueChanged.connect(self.dispersionChanged)
-#         
-#         row = self.newRow()
-#         row.addWidget(label)
-#         row.addWidget(self.dispersionSpin)
-        
         # use radii
         self.useRadiiCheck = QtGui.QCheckBox("Use radii")
         self.useRadiiCheck.stateChanged.connect(self.useRadiiChanged)
         
         row = self.newRow()
         row.addWidget(self.useRadiiCheck)
+        
+        # face area threshold
+        faceThreshSpin = QtGui.QDoubleSpinBox()
+        faceThreshSpin.setMinimum(0.0)
+        faceThreshSpin.setMaximum(1.0)
+        faceThreshSpin.setSingleStep(0.1)
+        faceThreshSpin.setDecimals(1)
+        faceThreshSpin.setValue(self.faceAreaThreshold)
+        faceThreshSpin.valueChanged.connect(self.faceAreaThresholdChanged)
+        
+        row = self.newRow()
+        row.addWidget(QtGui.QLabel("Face area threshold:"))
+        row.addWidget(faceThreshSpin)
         
         # opacity
         label = QtGui.QLabel("Opacity:")
@@ -135,11 +139,37 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         row = self.newRow()
         row.addWidget(saveToFileGroup)
         
+        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "Show help")
+        helpButton.setToolTip("Show help page")
+        helpButton.setAutoDefault(0)
+        helpButton.clicked.connect(self.loadHelpPage)
+        row = self.newRow()
+        row.addWidget(helpButton)
+        self.helpPage = "usage/analysis/filterListOptions.html#voronoi-options"
+        
         label = QtGui.QLabel("""<qt>See <a href="http://math.lbl.gov/voro++/about.html">here</a> for info about Voro++</qt>""")
         label.setOpenExternalLinks(True)
         label.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse)
         row = self.newRow()
         row.addWidget(label)
+    
+    def loadHelpPage(self):
+        """
+        Load the help page
+        
+        """
+        if self.helpPage is None:
+            return
+        
+        self.mainWindow.helpWindow.loadPage(self.helpPage)
+        self.mainWindow.showHelp()
+    
+    def faceAreaThresholdChanged(self, val):
+        """
+        Face area threshold has changed.
+        
+        """
+        self.faceAreaThreshold = val
     
     def getVoronoiDictKey(self):
         """

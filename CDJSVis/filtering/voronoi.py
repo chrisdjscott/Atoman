@@ -294,7 +294,7 @@ def computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC):
     
     vorotime = time.time()
     
-    logger.info("Computing Voronoi (voro++)")
+    logger.info("Computing Voronoi")
     logger.debug("  NAtoms: %d", lattice.NAtoms)
     logger.debug("  PBCs are: %s %s %s", bool(PBC[0]), bool(PBC[1]), bool(PBC[2]))
     logger.debug("  Using radii: %s", voronoiOptions.useRadii)
@@ -305,7 +305,7 @@ def computeVoronoiVoroPlusPlus(lattice, voronoiOptions, PBC):
     # call c lib
     callTime = time.time()
     vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
-                       lattice.specieCovalentRadius, voronoiOptions.useRadii)
+                       lattice.specieCovalentRadius, voronoiOptions.useRadii, voronoiOptions.faceAreaThreshold)
     callTime = time.time() - callTime
     
     vorotime = time.time() - vorotime
@@ -325,7 +325,7 @@ def computeVoronoiDefects(lattice, refLattice, vacancies, voronoiOptions, PBC):
     
     vorotime = time.time()
     
-    logger.info("Computing Voronoi (defects; voro++)")
+    logger.info("Computing Voronoi")
     logger.debug("  NAtoms: %d; NVacancies: %d", lattice.NAtoms, len(vacancies))
     logger.debug("  PBCs are: %s %s %s", bool(PBC[0]), bool(PBC[1]), bool(PBC[2]))
     logger.debug("  Using radii: %s", voronoiOptions.useRadii)
@@ -357,7 +357,7 @@ def computeVoronoiDefects(lattice, refLattice, vacancies, voronoiOptions, PBC):
     # call c lib
     callTime = time.time()
     vor.computeVoronoi(pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, specie, 
-                       lattice.specieCovalentRadius, voronoiOptions.useRadii)    
+                       lattice.specieCovalentRadius, voronoiOptions.useRadii, voronoiOptions.faceAreaThreshold)    
     callTime = time.time() - callTime
     
     vorotime = time.time() - vorotime

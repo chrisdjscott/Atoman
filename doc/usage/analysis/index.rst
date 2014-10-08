@@ -11,7 +11,7 @@ Analysis
 .. automodule:: CDJSVis.gui.pipelineForm
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
    
     filters/acna
     filters/bond_order
@@ -21,7 +21,7 @@ Analysis
 Each filter list also contains some additional options:
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     
     filterListOptions
 

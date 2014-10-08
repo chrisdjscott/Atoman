@@ -411,7 +411,7 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
 {
     const double cellSkin = 10.0; // cell skin for when not using PBCs
     int *specie, *PBC, NAtoms, useRadii;
-    double *pos, *minPos, *maxPos, *cellDims, *specieCovalentRadius;
+    double *pos, *minPos, *maxPos, *cellDims, *specieCovalentRadius, faceAreaThreshold;
     PyArrayObject *posIn=NULL;
     PyArrayObject *minPosIn=NULL;
     PyArrayObject *maxPosIn=NULL;
@@ -421,12 +421,12 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
     PyArrayObject *PBCIn=NULL;
     int i, status;
     double bound_lo[3], bound_hi[3];
-    double *radii;
+    double *radii=NULL;
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!i", &PyArray_Type, &posIn, &PyArray_Type, &minPosIn, &PyArray_Type, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!id", &PyArray_Type, &posIn, &PyArray_Type, &minPosIn, &PyArray_Type, 
             &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &specieIn, &PyArray_Type, 
-            &specieCovalentRadiusIn, &useRadii))
+            &specieCovalentRadiusIn, &useRadii, &faceAreaThreshold))
         return NULL;
     
     if (not_doubleVector(posIn)) return NULL;
@@ -491,7 +491,7 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
     self->voroResultSize = NAtoms;
     
     /* call voro++ wrapper */
-    status = computeVoronoiVoroPlusPlusWrapper(NAtoms, pos, PBC, bound_lo, bound_hi, useRadii, radii, self->voroResult);
+    status = computeVoronoiVoroPlusPlusWrapper(NAtoms, pos, PBC, bound_lo, bound_hi, useRadii, radii, faceAreaThreshold, self->voroResult);
     
     /* if status, we should dealloc everything and return error */
     if (status)

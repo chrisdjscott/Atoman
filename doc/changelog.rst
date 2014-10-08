@@ -5,6 +5,7 @@ Changelog
 **dev**
 
 * Add option to set how many OpenMP threads will be used in C extensions
+* Add face area threshold option when computing Voronoi neighbours
 
 **v141003**
 

@@ -12,14 +12,15 @@
 
 using namespace voro;
 
-static int processAtomCell(voronoicell_neighbor&, int, double*, vorores_t*);
+static int processAtomCell(voronoicell_neighbor&, int, double*, double, vorores_t*);
 
 
 /*******************************************************************************
  * Main interface function to be called from C
  *******************************************************************************/
 extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *PBC, 
-        double *bound_lo, double *bound_hi, int useRadii, double *radii, vorores_t *voroResult)
+        double *bound_lo, double *bound_hi, int useRadii, double *radii, 
+        double faceAreaThreshold, vorores_t *voroResult)
 {
     int i;
     
@@ -57,7 +58,7 @@ extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *P
         if (cl.start()) do if (con.compute_cell(c,cl))
         {
             i = cl.pid();
-            processAtomCell(c, i, pos, voroResult);
+            processAtomCell(c, i, pos, faceAreaThreshold, voroResult);
             count++;
         } while (cl.inc());
         
@@ -85,7 +86,7 @@ extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *P
             int retval;
             
             i = cl.pid();
-            retval = processAtomCell(c, i, pos, voroResult);
+            retval = processAtomCell(c, i, pos, faceAreaThreshold, voroResult);
             
             if (retval)
             {
@@ -106,7 +107,7 @@ extern "C" int computeVoronoiVoroPlusPlusWrapper(int NAtoms, double *pos, int *P
 /*******************************************************************************
  * Process cell; compute volume, num neighbours, facets etc.
  *******************************************************************************/
-static int processAtomCell(voronoicell_neighbor &c, int i, double *pos, vorores_t *voroResult)
+static int processAtomCell(voronoicell_neighbor &c, int i, double *pos, double fthresh, vorores_t *voroResult)
 {
     /* initialise result */
     voroResult[i].numFaces = 0;
@@ -116,15 +117,35 @@ static int processAtomCell(voronoicell_neighbor &c, int i, double *pos, vorores_
     /* volume */
     voroResult[i].volume = c.volume();
     
-    /* number of neighbours (should add threshold) */
+    /* number of neighbours */
     std::vector<int> neighbours;
     c.neighbors(neighbours);
-    int nnebs = neighbours.size(); // this will change if add threshold...
+    unsigned int nnebs = neighbours.size();
     voroResult[i].neighbours = (int*) malloc(nnebs * sizeof(int));
     if (voroResult[i].neighbours == NULL) return -1;
-    for (int j = 0; j < nnebs; j++)
-        voroResult[i].neighbours[j] = neighbours[j];
-    voroResult[i].numNeighbours = nnebs;
+    if (fthresh > 0)
+    {
+        /* area of faces */
+        std::vector<double> narea;
+        c.face_areas(narea);
+        
+        if (nnebs != narea.size()) printf("****************VOROERROR!\n");
+        
+        int nnebstrue = 0;
+        for (unsigned int j = 0; j < nnebs; j++)
+        {
+            if (narea[j] > fthresh) voroResult[i].neighbours[nnebstrue++] = neighbours[j];
+        }
+        
+        voroResult[i].neighbours = (int*) realloc(voroResult[i].neighbours, nnebstrue * sizeof(int));
+        voroResult[i].numNeighbours = nnebstrue;
+    }
+    else
+    {
+        for (unsigned int j = 0; j < nnebs; j++)
+            voroResult[i].neighbours[j] = neighbours[j];
+        voroResult[i].numNeighbours = nnebs;
+    }
     
     /* vertices */
     std::vector<double> vertices;
