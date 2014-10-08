@@ -58,9 +58,10 @@ class TestACNABCC(unittest.TestCase):
         counters = np.zeros(7, np.int32)
         
         # call bond order filter
+        nthreads = 1
         NVis = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, self.lattice.pos, scalars, self.lattice.minPos, self.lattice.maxPos, 
                                                     self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
-                                                    maxBondDistance, counters, filteringEnabled, structureVisibility)
+                                                    maxBondDistance, counters, filteringEnabled, structureVisibility, nthreads)
         
         # make sure num visible is same
         self.assertEqual(NVis, self.lattice.NAtoms)
@@ -115,9 +116,10 @@ class TestACNAFCC(unittest.TestCase):
         counters = np.zeros(7, np.int32)
          
         # call bond order filter
+        nthreads = 1
         NVis = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, self.lattice.pos, scalars, self.lattice.minPos, self.lattice.maxPos, 
                                                     self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
-                                                    maxBondDistance, counters, filteringEnabled, structureVisibility)
+                                                    maxBondDistance, counters, filteringEnabled, structureVisibility, nthreads)
         
         # make sure num visible is same
         self.assertEqual(NVis, self.lattice.NAtoms)
