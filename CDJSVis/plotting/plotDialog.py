@@ -162,14 +162,15 @@ class PlotDialog(QtGui.QDialog):
                     if l0 == l1:
                         filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')[0]
                         
-                        logger.debug("Writing data to csv file: '%s'", filename)
-                        
-                        #TODO: use numpy method?
-                        
-                        f = open(filename, "w")
-                        for x, y in zip(plotArgs[0], plotArgs[1]):
-                            f.write("%r, %r\n" % (x, y))
-                        f.close()
+                        if len(filename):
+                            logger.debug("Writing data to csv file: '%s'", filename)
+                            
+                            #TODO: use numpy method?
+                            
+                            f = open(filename, "w")
+                            for x, y in zip(plotArgs[0], plotArgs[1]):
+                                f.write("%r, %r\n" % (x, y))
+                            f.close()
                     
                     else:
                         showError = True
