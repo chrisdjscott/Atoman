@@ -131,13 +131,13 @@ static int processAtomCell(voronoicell_neighbor &c, int i, double *pos, double f
         
         if (nnebs != narea.size()) printf("****************VOROERROR!\n");
         
-        int nnebstrue = 0;
+        unsigned int nnebstrue = 0;
         for (unsigned int j = 0; j < nnebs; j++)
         {
             if (narea[j] > fthresh) voroResult[i].neighbours[nnebstrue++] = neighbours[j];
         }
         
-        voroResult[i].neighbours = (int*) realloc(voroResult[i].neighbours, nnebstrue * sizeof(int));
+        if (nnebs != nnebstrue) voroResult[i].neighbours = (int*) realloc(voroResult[i].neighbours, nnebstrue * sizeof(int));
         voroResult[i].numNeighbours = nnebstrue;
     }
     else
