@@ -10,6 +10,7 @@ import logging
 import numpy as np
 
 from .atoms import elements
+from ..algebra import vectors
 # from ..md import forces
 
 
@@ -46,6 +47,37 @@ class Lattice(object):
         self.KE = np.empty(0, np.float64)
         self.PE = np.empty(0, np.float64)
         self.charge = np.empty(0, np.float64)
+    
+    def atomSeparation(self, index1, index2, pbc):
+        """
+        Calculate the separation between two atoms.
+        
+        Parameters
+        ----------
+        index1, index2 : integer
+            Indexes of the atoms you want to calculate the separation
+            between.
+
+        
+        Returns
+        -------
+        atomSeparation : float
+            The separation between the two atoms. This function will
+            return 'None' if the indexes are out of range.
+        
+        Raises
+        ------
+        IndexError
+            If the specified indexes are too large.
+        
+        """
+        if index1 < self.NAtoms and index2 < self.NAtoms:
+            atomSeparation = vectors.separation(self.atomPos(index1), self.atomPos(index2), self.cellDims, pbc)
+        
+        else:
+            raise IndexError("Atom index(es) out of range: (%d or %d) >= %d" % (index1, index2, self.NAtoms))
+        
+        return atomSeparation
     
     def reset(self, NAtoms):
         """

@@ -748,6 +748,21 @@ class PipelineForm(QtGui.QWidget):
                 # show the info window
                 self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalars, defList)
     
+    def checkIfAtomVisible(self, index):
+        """
+        Check if the selected atom is visible in one of the filter lists.
+        
+        """
+        visible = False
+        visibleFilterList = None
+        for filterList in self.filterLists:
+            if index in filterList.filterer.visibleAtoms:
+                visible = True
+                visibleFilterList = filterList
+                break
+        
+        return visible, visibleFilterList
+    
     def showInfoWindow(self, minSepIndex, minSepType, minSepFilterList, minSepScalars, defList):
         """
         Show info window

@@ -8,11 +8,13 @@ Info dialogs
 import sys
 import uuid
 import functools
+import logging
 
 from PySide import QtGui, QtCore
 
 from ..algebra import vectors
 from ..rendering import highlight
+from . import utils
 
 try:
     from .. import resources
@@ -170,6 +172,165 @@ class ClusterInfoWindow(QtGui.QDialog):
         self.addHighlighters()
         
         return super(ClusterInfoWindow, self).show()
+    
+    def removeHighlighters(self):
+        """
+        Remove highlighters
+        
+        """
+        self.pipelinePage.broadcastToRenderers("removeHighlighters", (self.windowID,))
+    
+    def closeEvent(self, event):
+        """
+        Override close event
+        
+        """
+        # remove highlighters
+        self.removeHighlighters()
+        
+        event.accept()
+
+################################################################################
+
+class NeighbourListWidgetItem(QtGui.QListWidgetItem):
+    """
+    Item for neighbours info window list widget
+    
+    """
+    def __init__(self, atomIndex, separation):
+        super(NeighbourListWidgetItem, self).__init__()
+        self.atomIndex = atomIndex
+        self.separation = separation
+
+################################################################################
+
+class AtomNeighboursInfoWindow(QtGui.QDialog):
+    """
+    Neighbours info window
+    
+    """
+    def __init__(self, pipelinePage, atomIndex, nebList, nebFilterList, title, parent=None):
+        super(AtomNeighboursInfoWindow, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
+        self.windowID = uuid.uuid4()
+        
+        self.pipelinePage = pipelinePage
+        self.atomIndex = atomIndex
+        self.nebList = nebList
+        self.nebFilterList = nebFilterList
+        
+        lattice = self.pipelinePage.inputState
+        
+        self.setWindowTitle(title)
+        
+        # highlighter colour
+        self.highlightColour = QtGui.QColor(255, 20, 147)
+        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+                                   float(self.highlightColour.green()) / 255.0,
+                                   float(self.highlightColour.blue()) / 255.0]
+        
+        layout = QtGui.QVBoxLayout(self)
+        
+        # label
+        layout.addWidget(QtGui.QLabel("Neighbours (%d):" % len(self.nebList)))
+        
+        # list widget
+        self.listWidget = QtGui.QListWidget(self)
+        self.listWidget.setMinimumWidth(300)
+        self.listWidget.setMinimumHeight(175)
+        layout.addWidget(self.listWidget)
+        
+        #TODO: open atom info window on right click select from context menu
+        
+        
+        # populate list widget
+        for index in self.nebList:
+            sep = lattice.atomSeparation(atomIndex, index, self.pipelinePage.PBC)
+            item = NeighbourListWidgetItem(index, sep)
+            item.setText("Atom %d: %s; Separation = %f" % (lattice.atomID[index], lattice.atomSym(index), sep))
+            self.listWidget.addItem(item)
+        
+        # colour button
+        self.colourButton = QtGui.QPushButton("")
+        self.colourButton.setFixedWidth(60)
+        self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
+        self.colourButton.clicked.connect(self.changeHighlighterColour)
+        self.colourButton.setAutoDefault(False)
+        self.highlightCheck = QtGui.QCheckBox("Highlight")
+        self.highlightCheck.setChecked(True)
+        self.highlightCheck.stateChanged.connect(self.highlightChanged)
+        
+        # close button
+        row = QtGui.QHBoxLayout()
+        row.addWidget(self.colourButton)
+        row.addWidget(self.highlightCheck)
+        row.addStretch(1)
+        closeButton = QtGui.QPushButton("Close")
+        closeButton.clicked.connect(self.close)
+        closeButton.setAutoDefault(True)
+        row.addWidget(closeButton)
+        layout.addLayout(row)
+    
+    def highlightChanged(self, state):
+        """
+        Highlight check changed
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.removeHighlighters()
+            self.colourButton.setEnabled(False)
+        
+        else:
+            self.addHighlighters()
+            self.colourButton.setEnabled(True)
+    
+    def changeHighlighterColour(self):
+        """
+        Change highlighter colour
+        
+        """
+        col = QtGui.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
+        
+        if col.isValid():
+            self.highlightColour = col
+            self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
+            
+            self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+                                       float(self.highlightColour.green()) / 255.0,
+                                       float(self.highlightColour.blue()) / 255.0]
+            
+            # make change
+            self.removeHighlighters()
+            self.addHighlighters()
+    
+    def addHighlighters(self):
+        """
+        Return highlighters for this atoms neighbour list
+        
+        """
+        # lattice
+        lattice = self.pipelinePage.inputState
+        
+        highlighters = []
+        for i, atomIndex in enumerate(self.nebList):
+            # radius
+            radius = lattice.specieCovalentRadius[lattice.specie[atomIndex]] * self.nebFilterList[i].displayOptions.atomScaleFactor
+            
+            # highlighter
+            highlighters.append(highlight.AtomHighlighter(lattice.atomPos(atomIndex), radius * 1.1, rgb=self.highlightColourRGB))
+        
+        self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, highlighters))
+    
+    def show(self):
+        """
+        We override show() to first add highlighters to renderer windows
+        
+        """
+        self.addHighlighters()
+        
+        return super(AtomNeighboursInfoWindow, self).show()
     
     def removeHighlighters(self):
         """
@@ -452,10 +613,15 @@ class AtomInfoWindow(QtGui.QDialog):
         self.pipelinePage = pipelinePage
         self.atomIndex = atomIndex
         self.filterList = filterList
+        self.neighbourInfoWindow = None
         
         lattice = self.pipelinePage.inputState
         
         self.setWindowTitle("Atom info")
+        
+        # logger
+        self.logger = logging.getLogger(__name__+".AtomInfoWindow")
+        self.logger.debug("Constructing info window for atom %d (%d)", lattice.atomID[atomIndex], atomIndex)
         
         # highlighter colour
         self.highlightColour = QtGui.QColor(158, 0, 196)
@@ -494,6 +660,35 @@ class AtomInfoWindow(QtGui.QDialog):
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("%s: %f" % (scalarType, scalar)))
             layout.addLayout(row)
+        
+        # add Voronoi neighbour info (if available)
+        voro = filterList.filterer.voronoi
+        self.voroNebList = []
+        self.voroNebFilterList = []
+        if voro is not None:
+            voroNebList = voro.atomNebList(atomIndex)
+            self.logger.debug("Voro neighbours exists: len = %d", len(voroNebList))
+            
+            # only show visible neighbours
+            for nebIndex in voroNebList:
+                self.logger.debug("Checking if neighbour %d (%d) is visible", lattice.atomID[nebIndex], nebIndex)
+                
+                visible, visFiltList = pipelinePage.checkIfAtomVisible(nebIndex)
+                if visible:
+                    self.logger.debug("Atom %d (%d) is visible; adding to neb list", lattice.atomID[nebIndex], nebIndex)
+                    self.voroNebList.append(nebIndex)
+                    self.voroNebFilterList.append(visFiltList)
+            
+            if len(self.voroNebList):
+                # add button
+                nebButton = QtGui.QPushButton("Neighbour list")
+                nebButton.clicked.connect(self.showVoroNeighbourInfoWindow)
+                nebButton.setAutoDefault(False)
+                row = QtGui.QHBoxLayout()
+                row.addStretch()
+                row.addWidget(nebButton)
+                row.addStretch()
+                layout.addLayout(row)
         
         # check if belongs to clusters
         clusterIndexes = []
@@ -535,6 +730,23 @@ class AtomInfoWindow(QtGui.QDialog):
         layout.addLayout(row)
         
         self.setLayout(layout)
+    
+    def showVoroNeighbourInfoWindow(self):
+        """
+        Show the Voronoi neighbour info window
+        
+        """
+        # make the window if it doesn't exist
+        if self.neighbourInfoWindow is None:
+            title = "Voronoi neighbours of atom %d" % self.pipelinePage.inputState.atomID[self.atomIndex]
+            self.neighbourInfoWindow = AtomNeighboursInfoWindow(self.pipelinePage, self.atomIndex, self.voroNebList, 
+                                                                self.voroNebFilterList, title, parent=self)
+        
+        # position window
+        utils.positionWindow(self.neighbourInfoWindow, self.neighbourInfoWindow.size(), self.pipelinePage.mainWindow.desktop, self)
+        
+        # show the window
+        self.neighbourInfoWindow.show()
     
     def changeHighlighterColour(self):
         """
@@ -605,6 +817,9 @@ class AtomInfoWindow(QtGui.QDialog):
         Override close event
         
         """
+        if self.neighbourInfoWindow is not None:
+            self.neighbourInfoWindow.close()
+        
         # remove highlighters
         self.removeHighlighters()
         
