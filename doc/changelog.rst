@@ -2,11 +2,14 @@
 Changelog
 =========
 
+**dev**
+
+* Add neighbour info window - shows information (separation, etc) about an atoms neighbours
+
 **v141008**
 
 * Add option to set how many OpenMP threads will be used in C extensions
 * Add face area threshold option when computing Voronoi neighbours
-* Add neighbour info window - shows information (separation, etc) about an atoms neighbours
 
 **v141003**
 
