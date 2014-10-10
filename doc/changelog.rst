@@ -6,6 +6,7 @@ Changelog
 
 * Add neighbour info window - shows information (separation, etc) about an atoms neighbours
 * Display number of clusters on screen (if there are any clusters)
+* Add option to plot the cluster size distribution
 
 **v141008**
 

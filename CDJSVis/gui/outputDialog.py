@@ -256,6 +256,17 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
                 
                 # add
                 self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
+            
+            # add cluster distribution too
+            if len(filterList.filterer.clusterList):
+                # cluster sizes
+                clusterSizes = np.asarray([len(c) for c in filterList.filterer.clusterList])
+                
+                # make unique id
+                scalarsID = "Cluster size (%s)" % filterListID
+                
+                # add
+                self.addScalarPlotOptions(scalarsID, "Cluster size", clusterSizes)
         
         # hide if no plots, otherwise show
         if self.numScalarsPlots > 0:
@@ -364,6 +375,8 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         binWidthSpin.setValue(self.binWidth)
         binWidthSpin.valueChanged.connect(self.binWidthChanged)
         self.binStack.addWidget(binWidthSpin)
+        
+        binCombo.setCurrentIndex(1)
         
         # row
         row = self.newRow()
@@ -477,7 +490,7 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         
         else:
             # y label
-            settingsDict["ylabel"] = "N"
+            settingsDict["ylabel"] = "Number"
             
             # histogram plot
             dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "%s histogram" % self.scalarsID, "hist", 
