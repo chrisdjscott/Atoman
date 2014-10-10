@@ -1369,6 +1369,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.selectedText.addItem("Defect count")
         self.selectedText.addItem("Defect specie count")
         self.selectedText.addItem("ACNA structure count")
+        self.selectedText.addItem("Cluster count")
         
         # add settings
         self.textSettings = {}

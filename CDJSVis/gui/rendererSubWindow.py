@@ -732,19 +732,18 @@ class RendererWindow(QtGui.QWidget):
         if inputState is None:
             inputState = Lattice()
         
-        # atom count doesn't change
-        if "Atom count" not in self.onScreenInfo:
-            self.onScreenInfo["Atom count"] = "%d atoms" % inputState.NAtoms
+        # atom count
+        self.onScreenInfo["Atom count"] = "%d atoms" % inputState.NAtoms
         
-        # sim time doesn't change
-        if "Simulation time" not in self.onScreenInfo:
-            self.onScreenInfo["Simulation time"] = utilities.simulationTimeLine(inputState.simTime)
+        # sim time
+        self.onScreenInfo["Simulation time"] = utilities.simulationTimeLine(inputState.simTime)
         
-        # barrier doesn't change
-        if "Energy barrier" not in self.onScreenInfo and inputState.barrier is not None:
+        # barrier
+        if inputState.barrier is not None:
             self.onScreenInfo["Energy barrier"] = "Barrier: %f eV" % inputState.barrier
         
-        if "KMC step" not in self.onScreenInfo and inputState.kmcStep is not None:
+        # KMC step
+        if inputState.kmcStep is not None:
             self.onScreenInfo["KMC step"] = "Step: %d" % inputState.kmcStep
         
         # filter lists
@@ -753,10 +752,17 @@ class RendererWindow(QtGui.QWidget):
         # visible counts always recalculated
         visCountActive = False
         visCount = 0
+        numClusters = 0
         for filterList in filterLists:
-            if filterList.visible and not filterList.defectFilterSelected:
-                visCountActive = True
-                visCount += filterList.filterer.NVis
+            if filterList.visible:
+                if not filterList.defectFilterSelected:
+                    visCountActive = True
+                    visCount += filterList.filterer.NVis
+                
+                numClusters += len(filterList.filterer.clusterList)
+        
+        if numClusters:
+            self.onScreenInfo["Cluster count"] = "%d clusters" % numClusters
         
         if visCountActive:
             self.onScreenInfo["Visible count"] = "%d visible" % visCount

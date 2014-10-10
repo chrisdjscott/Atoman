@@ -5,6 +5,7 @@ Changelog
 **dev**
 
 * Add neighbour info window - shows information (separation, etc) about an atoms neighbours
+* Display number of clusters on screen (if there are any clusters)
 
 **v141008**
 
