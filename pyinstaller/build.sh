@@ -12,9 +12,12 @@ VERSION=$(git describe)
 echo "BUILDING: CDJSVis $VERSION"
 echo "__version__ = \"$VERSION\"" > ../CDJSVis/visutils/version_freeze.py
 
-#rm -rf build/ dist/ *.log
+rm -rf build/ dist/ *.log
 
 cd ..
+
+# start with a clean
+python setup.py clean
 
 # build_sphinx also runs 'build_ext --inplace'
 python setup.py build_sphinx
