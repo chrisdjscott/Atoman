@@ -347,9 +347,12 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         self.scalarsArray = scalarsArray
         self.logger = logging.getLogger(__name__+".GenericHistogramPlotForm")
         
-        # scalar min/max
+        # scalar stats
         self.scalarMin = np.min(scalarsArray)
         self.scalarMax = np.max(scalarsArray)
+        self.scalarMean = np.mean(scalarsArray)
+        self.scalarSTD = np.std(scalarsArray)
+        self.scalarSE = self.scalarSTD / math.sqrt(len(scalarsArray))
         
         # default 
         self.useNumBins = True
@@ -357,11 +360,15 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         self.binWidth = 1.0
         self.showAsFraction = False
         
-        # min/max labels
+        # stats labels
         row = self.newRow()
         row.addWidget(QtGui.QLabel("Min: %f" % self.scalarMin))
         row = self.newRow()
         row.addWidget(QtGui.QLabel("Max: %f" % self.scalarMax))
+        row = self.newRow()
+        row.addWidget(QtGui.QLabel("Mean: %f" % self.scalarMean))
+        row = self.newRow()
+        row.addWidget(QtGui.QLabel("STD: %f; SE: %f" % (self.scalarSTD, self.scalarSE)))
         
         # num bins/bin width combo
         binCombo = QtGui.QComboBox()

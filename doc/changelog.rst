@@ -7,6 +7,7 @@ Changelog
 * Add option to plot distribution of cluster volumes, if they have been calculated
 * Fix plotting distribution of defect clusters
 * Make Voronoi volume method the default way to calculate cluster volumes
+* Show mean, standard deviation and standard error on histogram plot forms
 
 **v141010**
 
