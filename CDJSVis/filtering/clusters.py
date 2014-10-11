@@ -261,6 +261,9 @@ class DefectCluster(object):
         
         return False
     
+    def __len__(self):
+        return self.getNDefects()
+    
     def getNDefects(self):
         """
         Return total number of defects.
