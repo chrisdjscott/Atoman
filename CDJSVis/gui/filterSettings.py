@@ -658,8 +658,8 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.hullCol[2] = 1
         self.hullOpacity = 0.5
         self.calculateVolumes = False
-        self.calculateVolumesVoro = False
-        self.calculateVolumesHull = True
+        self.calculateVolumesVoro = True
+        self.calculateVolumesHull = False
         self.drawConvexHulls = 0
         self.hideDefects = 0
         self.identifySplitInts = 1
@@ -900,7 +900,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.convHullVolRadio = QtGui.QRadioButton("Use volume of convex hull", parent=self.calcVolsGroup)
         self.convHullVolRadio.toggled.connect(self.calcVolsChanged)
         self.voroVolRadio = QtGui.QRadioButton("Sum Voronoi volumes", parent=self.calcVolsGroup)
-        self.convHullVolRadio.setChecked(True)
+        self.voroVolRadio.setChecked(True)
         
         calcVolsLayout.addWidget(self.convHullVolRadio)
         calcVolsLayout.addWidget(self.voroVolRadio)
@@ -1353,8 +1353,8 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.drawConvexHulls = 0
         self.neighbourRadius = 5.0
         self.calculateVolumes = False
-        self.calculateVolumesVoro = False
-        self.calculateVolumesHull = True
+        self.calculateVolumesVoro = True
+        self.calculateVolumesHull = False
         self.hullCol = [0]*3
         self.hullCol[2] = 1
         self.hullOpacity = 0.5
@@ -1472,7 +1472,7 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.voroVolRadio = QtGui.QRadioButton("Sum Voronoi volumes", parent=self.calcVolsGroup)
 #         self.voroVolRadio.toggled.connect(self.calcVolsChanged)
         
-        self.convHullVolRadio.setChecked(True)
+        self.voroVolRadio.setChecked(True)
         
         calcVolsLayout.addWidget(self.convHullVolRadio)
         calcVolsLayout.addWidget(self.voroVolRadio)
