@@ -257,16 +257,30 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
                 # add
                 self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
             
-            # add cluster distribution too
+            # add cluster size/volume distributions too
             if len(filterList.filterer.clusterList):
-                # cluster sizes
-                clusterSizes = np.asarray([len(c) for c in filterList.filterer.clusterList])
+                clusterSizes = []
+                clusterVolumes = []
+                haveVolumes = True
+                for c in filterList.filterer.clusterList:
+                    # cluster sizes
+                    clusterSizes.append(len(c))
+                    
+                    # cluster volumes
+                    if c.volume is not None:
+                        clusterVolumes.append(c.volume)
+                    
+                    else:
+                        haveVolumes = False
                 
-                # make unique id
+                # plot cluster size
                 scalarsID = "Cluster size (%s)" % filterListID
+                self.addScalarPlotOptions(scalarsID, "Cluster size", np.asarray(clusterSizes, dtype=np.float64))
                 
-                # add
-                self.addScalarPlotOptions(scalarsID, "Cluster size", clusterSizes)
+                if haveVolumes:
+                    # plot volumes
+                    scalarsID = "Cluster volume (%s)" % filterListID
+                    self.addScalarPlotOptions(scalarsID, "Cluster volume", np.asarray(clusterVolumes, dtype=np.float64))
         
         # hide if no plots, otherwise show
         if self.numScalarsPlots > 0:

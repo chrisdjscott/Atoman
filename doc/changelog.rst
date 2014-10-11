@@ -2,6 +2,12 @@
 Changelog
 =========
 
+**dev**
+
+* Add option to plot distribution of cluster volumes, if they have been calculated
+* Fix plotting distribution of defect clusters
+* Make Voronoi volume method the default way to calculate cluster volumes
+
 **v141010**
 
 * Add neighbour info window - shows information (separation, etc) about an atoms neighbours
