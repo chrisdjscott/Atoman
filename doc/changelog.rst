@@ -2,7 +2,7 @@
 Changelog
 =========
 
-**dev**
+**v141013**
 
 * Add option to plot distribution of cluster volumes, if they have been calculated
 * Fix plotting distribution of defect clusters
