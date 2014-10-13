@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* Fix bug in defect filter when using ACNA to refine results (seg fault)
+
 **v141013**
 
 * Add option to plot distribution of cluster volumes, if they have been calculated

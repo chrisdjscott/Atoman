@@ -626,8 +626,9 @@ findDefects(PyObject *self, PyObject *args)
         {
             int vacIndex, intIndex;
             int nebIntCount = 0;
-            int foundIndex, foundIntIndex;
-            double foundSep2;
+            int foundIndex = -1;
+            int foundIntIndex = -1;
+//            double foundSep2;
             
             vacIndex = vacancies[i];
             
@@ -640,7 +641,7 @@ findDefects(PyObject *self, PyObject *args)
             
             /* find neighbouring boxes */
             getBoxNeighbourhood(boxIndex, boxNebList, boxes);
-                    
+            
             /* loop over neighbouring boxes */
             exitLoop = 0;
             for (j = 0; j < 27; j++)
@@ -654,6 +655,9 @@ findDefects(PyObject *self, PyObject *args)
                 {
                     intIndex = boxes->boxAtoms[checkBox][k];
                     index = interstitials[intIndex];
+                    
+                    /* skip if this interstitial has already been detected as lattice atom */
+                    if (index < 0) continue;
                     
                     /* pos of interstitial */
                     xpos = pos[3*index];
@@ -674,7 +678,7 @@ findDefects(PyObject *self, PyObject *args)
                         
                         foundIndex = index;
                         foundIntIndex = intIndex;
-                        foundSep2 = sep2;
+//                        foundSep2 = sep2;
                     }
                 }
             }
@@ -686,7 +690,7 @@ findDefects(PyObject *self, PyObject *args)
 //                printf("DEBUG: found 1 neb for vac; checking acna val\n");
                 
                 /* check ACNA for FCC (hardcoded for now, not good...) */
-                acnaVal = acnaArray[foundIndex];
+                acnaVal = (int) acnaArray[foundIndex];
 //                printf("DEBUG:   acna val is %d (%d)\n", acnaVal, ATOM_STRUCTURE_FCC);
                 if (acnaVal == ATOM_STRUCTURE_FCC)
                 {
