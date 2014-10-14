@@ -1370,6 +1370,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.selectedText.addItem("Defect specie count")
         self.selectedText.addItem("ACNA structure count")
         self.selectedText.addItem("Cluster count")
+        self.selectedText.addItem("Temperature")
         
         # add settings
         self.textSettings = {}
@@ -1380,14 +1381,17 @@ class OnScreenInfoDialog(QtGui.QDialog):
             
             self.textSettings[text] = TextSettingsDialog(text, self)
             
-            if text == "Simulation time":
-                self.textSettings[text].textPosition = "Top right"
+            if text == "Simulation time" or text == "Energy barrier" or text == "KMC step" or text == "Temperature":
+                self.textSettings[text].positionComboBox.setCurrentIndex(1)
         
         for i in xrange(self.availableText.count()):
             item = self.availableText.item(i)
             text = str(item.text())
             
             self.textSettings[text] = TextSettingsDialog(text, self)
+            
+            if text == "Simulation time" or text == "Energy barrier" or text == "KMC step" or text == "Temperature":
+                self.textSettings[text].positionComboBox.setCurrentIndex(1)
         
         # connect
         self.selectedText.itemDoubleClicked.connect(self.showTextSettingsDialog)

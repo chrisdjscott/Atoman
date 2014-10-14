@@ -27,6 +27,7 @@ class Lattice(object):
         self.simTime = None
         self.barrier = None
         self.kmcStep = None
+        self.temperature = None
         
         self.cellDims = np.empty(3, np.float64)
         
@@ -109,6 +110,26 @@ class Lattice(object):
         self.simTime = None
         self.barrier = None
         self.kmcStep = None
+        self.temperature = None
+    
+    def calcTemperature(self, NMoving=None):
+        """
+        Calculate temperature in K
+        
+        """
+        if NMoving is None:
+            NMoving = self.NAtoms
+        
+        keSum = np.sum(self.KE)
+        
+        if keSum == 0:
+            temperature = None
+        
+        else:
+            boltzmann = 8.6173324e-5
+            temperature = 2.0 * keSum / (3.0 * boltzmann * NMoving)
+        
+        return temperature
     
     def density(self):
         """
@@ -321,6 +342,7 @@ class Lattice(object):
         self.simTime = lattice.simTime
         self.barrier = lattice.barrier
         self.kmcStep = lattice.kmcStep
+        self.temperature = lattice.temperature
         
         # copy dims
         self.cellDims[0] = lattice.cellDims[0]

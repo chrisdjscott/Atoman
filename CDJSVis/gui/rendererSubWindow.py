@@ -747,6 +747,15 @@ class RendererWindow(QtGui.QWidget):
         if inputState.kmcStep is not None:
             self.onScreenInfo["KMC step"] = "Step: %d" % inputState.kmcStep
         
+        # lattice temperature
+        if inputState.temperature is None:
+            temperature = inputState.calcTemperature()
+        else:
+            temperature = inputState.temperature
+        
+        if temperature is not None:
+            self.onScreenInfo["Temperature"] = "%.1f K" % temperature
+        
         # filter lists
         filterLists = self.getFilterLists()
         
