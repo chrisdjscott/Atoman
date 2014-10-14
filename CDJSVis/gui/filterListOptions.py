@@ -488,14 +488,14 @@ class BondsOptionsWindow(QtGui.QDialog):
         self.drawBondsGroup = QtGui.QGroupBox("Draw bonds")
         self.drawBondsGroup.setCheckable(True)
         self.drawBondsGroup.setChecked(False)
-        self.drawBondsGroup.setAlignment(QtCore.Qt.AlignCenter)
+#         self.drawBondsGroup.setAlignment(QtCore.Qt.AlignCenter)
         self.drawBondsGroup.toggled.connect(self.drawBondsToggled)
         layout.addWidget(self.drawBondsGroup)
         
         self.groupLayout = QtGui.QVBoxLayout()
 #        self.groupLayout.setSpacing(0)
 #        self.groupLayout.setContentsMargins(0, 0, 0, 0)
-        self.groupLayout.setAlignment(QtCore.Qt.AlignTop)
+        self.groupLayout.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
         
         self.bondsList = QtGui.QListWidget(self)
         self.bondsList.setFixedHeight(100)
