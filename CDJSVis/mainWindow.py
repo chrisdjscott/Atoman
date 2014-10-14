@@ -930,6 +930,9 @@ class MainWindow(QtGui.QMainWindow):
         msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
         msgBox.setIcon(QtGui.QMessageBox.Information)
         msgBox.exec_()
+        
+#         dlg = dialogs.AboutMeDialog(parent=self)
+#         dlg.exec_()
     
     def createAction(self, text, slot=None, shortcut=None, icon=None,
                      tip=None, checkable=False, signal="triggered()"):

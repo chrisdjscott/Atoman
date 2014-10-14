@@ -1491,6 +1491,65 @@ class NotifyFeatureWindow(QtGui.QDialog):
 
 ################################################################################
 
+class AboutMeDialog(QtGui.QMessageBox):
+    """
+    About me dialog.
+    
+    """
+    def __init__(self, parent=None):
+        super(AboutMeDialog, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
+        from ..visutils.version import getVersion
+        import datetime
+        import paramiko
+        import matplotlib
+        import platform
+        import PySide
+        import vtk
+        import scipy
+        version = getVersion()
+        
+        self.setWindowTitle("CDJSVis %s" % version)
+        
+        # message box layout (grid layout)
+        l = self.layout()
+        
+        self.setText("""<p><b>CDJSVis</b> %s</p>
+                          <p>Copyright &copy; %d Chris Scott</p>
+                          <p>This application can be used to visualise atomistic simulations.</p>
+                          <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
+                             by Marc Robinson.</p>""" % (
+                          version, datetime.date.today().year))
+        
+        packageList = QtGui.QListWidget()
+        
+        packageList.addItem("Python %s" % platform.python_version())
+        packageList.addItem("Qt %s" % QtCore.__version__)
+        packageList.addItem("PySide %s" % PySide.__version__)
+        packageList.addItem("VTK %s" % vtk.vtkVersion.GetVTKVersion())
+        packageList.addItem("NumPy %s" % np.__version__)
+        packageList.addItem("SciPy %s" % scipy.__version__)
+        packageList.addItem("Matplotlib %s" % matplotlib.__version__)
+        packageList.addItem("Paramiko %s" % paramiko.__version__)
+        
+        
+        # Hide the default button
+        button = l.itemAtPosition( l.rowCount() - 1, 1 ).widget()
+        l.removeWidget(button)
+        
+        # add list widget to layout
+        l.addWidget(packageList, l.rowCount(), 1, 1, l.columnCount(), QtCore.Qt.AlignHCenter)
+        
+        # add widget back in
+        l.addWidget(button, l.rowCount(), 1, 1, 1, QtCore.Qt.AlignRight)
+        
+        self.setStandardButtons(QtGui.QMessageBox.Ok)
+        self.setIcon(QtGui.QMessageBox.Information)
+
+################################################################################
+
 class ConfirmCloseDialog(QtGui.QDialog):
     """
     Confirm close dialog.
