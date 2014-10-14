@@ -736,7 +736,8 @@ class RendererWindow(QtGui.QWidget):
         self.onScreenInfo["Atom count"] = "%d atoms" % inputState.NAtoms
         
         # sim time
-        self.onScreenInfo["Simulation time"] = utilities.simulationTimeLine(inputState.simTime)
+        if inputState.simTime is not None:
+            self.onScreenInfo["Simulation time"] = utilities.simulationTimeLine(inputState.simTime)
         
         # barrier
         if inputState.barrier is not None:

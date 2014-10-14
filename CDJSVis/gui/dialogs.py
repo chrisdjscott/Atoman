@@ -1364,7 +1364,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.selectedText.addItem("Visible count")
         self.availableText.addItem("Visible specie count")
         self.availableText.addItem("KMC step")
-        self.availableText.addItem("Simulation time")
+        self.selectedText.addItem("Simulation time")
         self.availableText.addItem("Energy barrier")
         self.selectedText.addItem("Defect count")
         self.selectedText.addItem("Defect specie count")
@@ -1379,6 +1379,9 @@ class OnScreenInfoDialog(QtGui.QDialog):
             text = str(item.text())
             
             self.textSettings[text] = TextSettingsDialog(text, self)
+            
+            if text == "Simulation time":
+                self.textSettings[text].textPosition = "Top right"
         
         for i in xrange(self.availableText.count()):
             item = self.availableText.item(i)

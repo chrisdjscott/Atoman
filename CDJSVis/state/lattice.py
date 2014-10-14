@@ -24,7 +24,7 @@ class Lattice(object):
     def __init__(self):
         self.NAtoms = 0
         
-        self.simTime = 0.0
+        self.simTime = None
         self.barrier = None
         self.kmcStep = None
         
@@ -106,10 +106,9 @@ class Lattice(object):
          
         self.cellDims = np.zeros(3, np.float64)
         
-        self.simTime = 0.0
+        self.simTime = None
         self.barrier = None
         self.kmcStep = None
-        self.voronoiDict = {}
     
     def density(self):
         """
@@ -327,8 +326,6 @@ class Lattice(object):
         self.cellDims[0] = lattice.cellDims[0]
         self.cellDims[1] = lattice.cellDims[1]
         self.cellDims[2] = lattice.cellDims[2]
-        
-        self.voronoiDict = lattice.voronoiDict
         
         # specie stuff
         NSpecies = len(lattice.specieList)
