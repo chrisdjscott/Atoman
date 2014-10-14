@@ -681,32 +681,35 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row.addWidget(label)
         row.addWidget(self.vacRadSpinBox)
         
-        self.newRow()
+#         self.newRow()
         
         # defect type options
-        label = QtGui.QLabel("Visible types:")
+        visTypesGroup = QtGui.QGroupBox("Visible types")
+        visTypesGroup.setAlignment(QtCore.Qt.AlignHCenter)
         row = self.newRow()
-        row.addWidget(label)
+        row.addWidget(visTypesGroup)
+        
+        visTypesLayout = QtGui.QVBoxLayout(visTypesGroup)
+        visTypesLayout.setAlignment(QtCore.Qt.AlignTop)
+        visTypesLayout.setContentsMargins(0, 0, 0, 0)
+        visTypesLayout.setSpacing(0)
         
         self.intTypeCheckBox = QtGui.QCheckBox(" Interstitials")
         self.intTypeCheckBox.setChecked(1)
         self.intTypeCheckBox.stateChanged[int].connect(self.intVisChanged)
-        row = self.newRow()
-        row.addWidget(self.intTypeCheckBox)
+        visTypesLayout.addWidget(self.intTypeCheckBox)
         
         self.vacTypeCheckBox = QtGui.QCheckBox(" Vacancies   ")
         self.vacTypeCheckBox.setChecked(1)
         self.vacTypeCheckBox.stateChanged[int].connect(self.vacVisChanged)
-        row = self.newRow()
-        row.addWidget(self.vacTypeCheckBox)
+        visTypesLayout.addWidget(self.vacTypeCheckBox)
         
         self.antTypeCheckBox = QtGui.QCheckBox(" Antisites    ")
         self.antTypeCheckBox.setChecked(1)
         self.antTypeCheckBox.stateChanged[int].connect(self.antVisChanged)
-        row = self.newRow()
-        row.addWidget(self.antTypeCheckBox)
+        visTypesLayout.addWidget(self.antTypeCheckBox)
         
-        self.newRow()
+#         self.newRow()
         
         # identify split ints check box
         self.identifySplitsCheck = QtGui.QCheckBox(" Identify split interstitials")
@@ -715,14 +718,14 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row = self.newRow()
         row.addWidget(self.identifySplitsCheck)
         
-        self.newRow()
+#         self.newRow()
         
         # use acna options
         self.useAcna = False
         self.useAcnaGroup = QtGui.QGroupBox("Use ACNA")
         self.useAcnaGroup.setCheckable(True)
         self.useAcnaGroup.setChecked(False)
-        self.useAcnaGroup.setAlignment(QtCore.Qt.AlignHCenter)
+#         self.useAcnaGroup.setAlignment(QtCore.Qt.AlignHCenter)
         self.useAcnaGroup.toggled.connect(self.useAcnaToggled)
         
         useAcnaLayout = QtGui.QVBoxLayout(self.useAcnaGroup)
@@ -761,14 +764,13 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row.addWidget(structureCombo)
         useAcnaLayout.addWidget(row)
         
-        
-        self.newRow()
+#         self.newRow()
         
         # find clusters group box
         self.findClustersGroupBox = QtGui.QGroupBox("Find clusters")
         self.findClustersGroupBox.setCheckable(True)
         self.findClustersGroupBox.setChecked(False)
-        self.findClustersGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
+#         self.findClustersGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
         self.findClustersGroupBox.toggled.connect(self.findClustersChanged)
         
         findClustersLayout = QtGui.QVBoxLayout(self.findClustersGroupBox)
@@ -819,7 +821,34 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row.addWidget(self.maxNumSpinBox)
         findClustersLayout.addWidget(row)
         
-        self.newRow()
+        # calculate volume group box
+        self.calcVolsGroup = QtGui.QGroupBox("Calculate volumes")
+        self.calcVolsGroup.setCheckable(True)
+        self.calcVolsGroup.setChecked(False)
+#         self.calcVolsGroup.setAlignment(QtCore.Qt.AlignHCenter)
+        self.calcVolsGroup.toggled.connect(self.calcVolsChanged)
+        
+        calcVolsLayout = QtGui.QVBoxLayout(self.calcVolsGroup)
+        calcVolsLayout.setAlignment(QtCore.Qt.AlignTop)
+        calcVolsLayout.setContentsMargins(0, 0, 0, 0)
+        calcVolsLayout.setSpacing(0)
+        
+        # radio buttons
+        self.convHullVolRadio = QtGui.QRadioButton("Use volume of convex hull", parent=self.calcVolsGroup)
+        self.convHullVolRadio.toggled.connect(self.calcVolsChanged)
+        self.voroVolRadio = QtGui.QRadioButton("Sum Voronoi volumes", parent=self.calcVolsGroup)
+        self.voroVolRadio.setChecked(True)
+        
+        calcVolsLayout.addWidget(self.convHullVolRadio)
+        calcVolsLayout.addWidget(self.voroVolRadio)
+        
+        self.newDisplayRow()
+        
+        row = genericForm.FormRow()
+        row.addWidget(self.calcVolsGroup)
+        findClustersLayout.addWidget(self.calcVolsGroup)
+        
+#         self.newRow()
         
         label = QtGui.QLabel("Visible species:")
         row = self.newRow()
@@ -883,32 +912,6 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         row = genericForm.FormRow()
         row.addWidget(self.hideAtomsCheckBox)
         drawHullsLayout.addWidget(row)
-        
-        # calculate volume group box
-        self.calcVolsGroup = QtGui.QGroupBox("Calculate volumes")
-        self.calcVolsGroup.setCheckable(True)
-        self.calcVolsGroup.setChecked(False)
-#         self.calcVolsGroup.setAlignment(QtCore.Qt.AlignHCenter)
-        self.calcVolsGroup.toggled.connect(self.calcVolsChanged)
-        
-        calcVolsLayout = QtGui.QVBoxLayout(self.calcVolsGroup)
-        calcVolsLayout.setAlignment(QtCore.Qt.AlignTop)
-        calcVolsLayout.setContentsMargins(0, 0, 0, 0)
-        calcVolsLayout.setSpacing(0)
-        
-        # radio buttons
-        self.convHullVolRadio = QtGui.QRadioButton("Use volume of convex hull", parent=self.calcVolsGroup)
-        self.convHullVolRadio.toggled.connect(self.calcVolsChanged)
-        self.voroVolRadio = QtGui.QRadioButton("Sum Voronoi volumes", parent=self.calcVolsGroup)
-        self.voroVolRadio.setChecked(True)
-        
-        calcVolsLayout.addWidget(self.convHullVolRadio)
-        calcVolsLayout.addWidget(self.voroVolRadio)
-        
-        self.newDisplayRow()
-        
-        row = self.newDisplayRow()
-        row.addWidget(self.calcVolsGroup)
         
         # vac display settings
         vacForm = genericForm.GenericForm(self, 0, "Vac display settings")
@@ -1462,7 +1465,8 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         calcVolsLayout.setContentsMargins(0, 0, 0, 0)
         calcVolsLayout.setSpacing(0)
         
-        row = self.newDisplayRow()
+        self.newRow()
+        row = self.newRow()
         row.addWidget(self.calcVolsGroup)
         
         # radio buttons
