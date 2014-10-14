@@ -22,8 +22,10 @@ The following python modules must be installed to build the code from source:
     * SciPy
     * Matplotlib
     * PySide (with pyside-rcc)
-    * PIL
-    * Pyhull
+    * Pillow
+    * Paramiko
+    * Sphinx
+    * nose
     * Paramiko
 
 In addition, the following programmes must also be installed:
