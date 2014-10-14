@@ -20,6 +20,7 @@ from PySide import QtGui, QtCore
 from ..visutils.utilities import iconPath
 from . import genericForm
 from ..rendering import slicePlane
+from ..state.atoms import elements
 try:
     from .. import resources
 except ImportError:
@@ -230,92 +231,71 @@ class SpecieSettingsDialog(GenericSettingsDialog):
         
         self.filterType = "Specie"
         
-        self.specieList = []
-        self.specieBoxes = {}
-        self.specieRows = {}
-        self.visibleSpecieList = []
-        self.allSpeciesSelected = True
-        
-        self.allSpeciesBox = QtGui.QCheckBox("All")
-        self.allSpeciesBox.setChecked(1)
-        self.connect(self.allSpeciesBox, QtCore.SIGNAL('stateChanged(int)'), self.allSpeciesBoxChanged)
+        # specie list
+        self.specieList = QtGui.QListWidget(self)
+#         self.specieList.setFixedHeight(100)
+        self.specieList.setFixedWidth(200)
         row = self.newRow()
-        row.addWidget(self.allSpeciesBox)
-        
-        self.newRow()
+        row.addWidget(self.specieList)
         
         self.refresh()
     
-    def allSpeciesBoxChanged(self, val):
+    def getVisibleSpecieList(self):
         """
-        
+        Return list of visible species
         
         """
-        if self.allSpeciesBox.isChecked():
-            self.allSpeciesSelected = True
-            
-            for specie in self.specieList:
-                self.specieBoxes[specie].setChecked(1)
-            
-        else:
-            self.allSpeciesSelected = False
+        visibleSpecieList = []
+        for i in xrange(self.specieList.count()):
+            item = self.specieList.item(i)
+            if item.checkState() == QtCore.Qt.Checked:
+                visibleSpecieList.append(item.symbol)
         
-#        self.changedSpecie(0)
-        
+        return visibleSpecieList
+    
     def refresh(self):
         """
         Refresh the specie list
         
         """
+        self.logger.debug("Refreshing specie filter options")
+        
         inputSpecieList = self.pipelinePage.inputState.specieList
         refSpecieList = self.pipelinePage.refState.specieList
         
-        for spec in refSpecieList:
-            if spec not in self.specieList:
-                self.specieList.append(spec)
-                self.addSpecieCheck(spec)
-                if self.allSpeciesSelected:
-                    self.specieBoxes[spec].setChecked(1)
+        # set of added species
+        currentSpecies = set()
         
-        for spec in inputSpecieList:
-            if spec not in self.specieList:                
-                self.specieList.append(spec)
-                self.addSpecieCheck(spec)
-                if self.allSpeciesSelected:
-                    self.specieBoxes[spec].setChecked(1)
+        # remove species that don't exist
+        num = self.specieList.count()
+        for i in xrange(num - 1, -1, -1):
+            item = self.specieList.item(i)
+            
+            # remove if doesn't exist in both ref and input
+            if item.symbol not in inputSpecieList and item.symbol not in refSpecieList:
+                self.logger.debug("  Removing specie option: %s", item.symbol)
+                self.specieList.takeItem(i) # does this delete it?
+            
+            else:
+                currentSpecies.add(item.symbol)
         
-        self.changedSpecie(0)
-
-    def addSpecieCheck(self, specie):
-        """
-        Add check box for the given specie
+        # unique species from ref/input
+        combinedSpecieList = list(inputSpecieList) + list(refSpecieList)
+        uniqueCurrentSpecies = set(combinedSpecieList)
         
-        """
-        self.specieBoxes[specie] = QtGui.QCheckBox(str(specie))
-        
-        self.connect(self.specieBoxes[specie], QtCore.SIGNAL('stateChanged(int)'), self.changedSpecie)
-        
-        row = self.newRow()
-        row.addWidget(self.specieBoxes[specie])
-        
-        self.specieRows[specie] = row
-    
-    def changedSpecie(self, val):
-        """
-        Changed visibility of a specie.
-        
-        """
-        self.visibleSpecieList = []
-        for specie in self.specieList:
-            if self.specieBoxes[specie].isChecked():
-                self.visibleSpecieList.append(specie)
-        
-        if len(self.visibleSpecieList) != len(self.specieList):
-            self.allSpeciesBox.setChecked(0)
-            self.allSpeciesSelected = False
-
+        # add species that aren't already added
+        for sym in uniqueCurrentSpecies:
+            if sym in currentSpecies:
+                self.logger.debug("  Keeping specie option: %s", sym)
+            
+            else:
+                self.logger.debug("  Adding specie option: %s", sym)
+                name = elements.atomName(sym)
+                item = SpecieListItem(sym, name=name)
+                self.specieList.addItem(item)
 
 ################################################################################
+
 class CropBoxSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
         super(CropBoxSettingsDialog, self).__init__(title, parent)
@@ -634,13 +614,13 @@ class CropSphereSettingsDialog(GenericSettingsDialog):
         
 ################################################################################
 
-class DefectSpecieListItem(QtGui.QListWidgetItem):
+class SpecieListItem(QtGui.QListWidgetItem):
     """
-    Item in the bonds list widget.
+    Item in a specie list widget.
     
     """
-    def __init__(self, symbol):
-        super(DefectSpecieListItem, self).__init__()
+    def __init__(self, symbol, name=None):
+        super(SpecieListItem, self).__init__()
         
         # add check box
         self.setFlags(self.flags() | QtCore.Qt.ItemIsUserCheckable)
@@ -655,7 +635,11 @@ class DefectSpecieListItem(QtGui.QListWidgetItem):
         self.symbol = symbol
         
         # set text
-        self.setText("%s" % symbol)
+        if name is not None:
+            self.setText("%s - %s" % (symbol, name))
+        
+        else:
+            self.setText("%s" % symbol)
 
 ################################################################################
 
@@ -1309,9 +1293,6 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         combinedSpecieList = list(inputSpecieList) + list(refSpecieList)
         uniqueCurrentSpecies = set(combinedSpecieList)
         
-        print "COMB", combinedSpecieList
-        print "UNIQ", uniqueCurrentSpecies
-        
         # add species that aren't already added
         for sym in uniqueCurrentSpecies:
             if sym in currentSpecies:
@@ -1319,7 +1300,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
             
             else:
                 self.logger.debug("  Adding specie option: %s", sym)
-                item = DefectSpecieListItem(sym)
+                item = SpecieListItem(sym)
                 self.specieList.addItem(item)
         
         # enable/disable draw vectors

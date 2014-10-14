@@ -829,19 +829,15 @@ class Filterer(object):
         Filter by specie
         
         """
-        if settings.allSpeciesSelected:
-            visSpecArray = np.arange(len(self.pipelinePage.inputState.specieList), dtype=np.int32)
+        visibleSpecieList = settings.getVisibleSpecieList()
+        specieList = self.pipelinePage.inputState.specieList
         
-        else:
-            visSpecArray = np.empty(len(settings.visibleSpecieList), np.int32)
-            count = 0
-            for i in xrange(len(self.pipelinePage.inputState.specieList)):
-                if self.pipelinePage.inputState.specieList[i] in settings.visibleSpecieList:
-                    visSpecArray[count] = i
-                    count += 1
-        
-            if count != len(visSpecArray):
-                visSpecArray.resize(count)
+        # make visible specie array
+        visSpecArray = []
+        for i, sym in enumerate(specieList):
+            if sym in visibleSpecieList:
+                visSpecArray.append(i)
+        visSpecArray = np.asarray(visSpecArray, dtype=np.int32)
         
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
