@@ -632,8 +632,33 @@ class CropSphereSettingsDialog(GenericSettingsDialog):
         """
         self.zCentre = val
         
+################################################################################
+
+class DefectSpecieListItem(QtGui.QListWidgetItem):
+    """
+    Item in the bonds list widget.
+    
+    """
+    def __init__(self, symbol):
+        super(DefectSpecieListItem, self).__init__()
+        
+        # add check box
+        self.setFlags(self.flags() | QtCore.Qt.ItemIsUserCheckable)
+        
+        # don't allow it to be selected
+        self.setFlags(self.flags() & ~QtCore.Qt.ItemIsSelectable)
+        
+        # set unchecked initially
+        self.setCheckState(QtCore.Qt.Checked)
+        
+        # store bond pair
+        self.symbol = symbol
+        
+        # set text
+        self.setText("%s" % symbol)
 
 ################################################################################
+
 class PointDefectsSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
         super(PointDefectsSettingsDialog, self).__init__(title, parent)
@@ -641,12 +666,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.filterType = "Point defects"
         
         # settings
-        self.vacancyRadius = 1.2
-        self.specieList = []
-        self.visibleSpecieList = []
-        self.specieRows = {}
-        self.specieBoxes = {}
-        self.allSpeciesSelected = True
+        self.vacancyRadius = 1.3
         self.showInterstitials = 1
         self.showAntisites = 1
         self.showVacancies = 1
@@ -850,15 +870,27 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
 #         self.newRow()
         
-        label = QtGui.QLabel("Visible species:")
+        # filter species group
+        self.filterSpecies = False
+        self.filterSpeciesGroup = QtGui.QGroupBox("Filter species")
+        self.filterSpeciesGroup.setCheckable(True)
+        self.filterSpeciesGroup.setChecked(self.filterSpecies)
+        self.filterSpeciesGroup.toggled.connect(self.filterSpeciesToggled)
         row = self.newRow()
-        row.addWidget(label)
+        row.addWidget(self.filterSpeciesGroup)
         
-        self.allSpeciesBox = QtGui.QCheckBox("All")
-        self.allSpeciesBox.setChecked(1)
-        self.allSpeciesBox.stateChanged[int].connect(self.allSpeciesBoxChanged)
-        row = self.newRow()
-        row.addWidget(self.allSpeciesBox)
+        filterSpeciesGroupLayout = QtGui.QVBoxLayout()
+#        filterSpeciesGroupLayout.setSpacing(0)
+#        filterSpeciesGroupLayout.setContentsMargins(0, 0, 0, 0)
+        filterSpeciesGroupLayout.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
+        self.filterSpeciesGroup.setLayout(filterSpeciesGroupLayout)
+        
+        self.specieList = QtGui.QListWidget(self)
+        self.specieList.setFixedHeight(100)
+        self.specieList.setFixedWidth(120)
+        filterSpeciesGroupLayout.addWidget(self.specieList)
+        
+        self.filterSpeciesGroup.setLayout(filterSpeciesGroupLayout)
         
         # draw hulls group box
         self.drawHullsGroupBox = QtGui.QGroupBox(" Draw convex hulls")
@@ -1219,79 +1251,82 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         else:
             self.showAntisites = 0
     
-    def allSpeciesBoxChanged(self, val):
+    def filterSpeciesToggled(self, filterSpecies):
         """
-        
+        Filter species toggled
         
         """
-        if self.allSpeciesBox.isChecked():
-            self.allSpeciesSelected = True
-            
-            for specie in self.specieList:
-                self.specieBoxes[specie].setChecked(1)
-            
+        self.filterSpecies = filterSpecies
+    
+    def getVisibleSpecieList(self):
+        """
+        Return list of visible species
+        
+        """
+        visibleSpecieList = []
+        if self.filterSpecies:
+            for i in xrange(self.specieList.count()):
+                item = self.specieList.item(i)
+                if item.checkState() == QtCore.Qt.Checked:
+                    visibleSpecieList.append(item.symbol)
+        
         else:
-            self.allSpeciesSelected = False
+            for i in xrange(self.specieList.count()):
+                item = self.specieList.item(i)
+                visibleSpecieList.append(item.symbol)
         
-#        self.changedSpecie(0)
-        
+        return visibleSpecieList
+    
     def refresh(self):
         """
         Refresh the specie list
         
         """
+        self.logger.debug("Refreshing point defect filter options")
+        
         refState = self.pipelinePage.refState
         inputState = self.pipelinePage.inputState
         refSpecieList = refState.specieList
         inputSpecieList = inputState.specieList
         
-        for spec in refSpecieList:
-            if spec not in self.specieList:
-                self.specieList.append(spec)
-                self.addSpecieCheck(spec)
-                if self.allSpeciesSelected:
-                    self.specieBoxes[spec].setChecked(1)
+        # set of added species
+        currentSpecies = set()
         
-        for spec in inputSpecieList:
-            if spec not in self.specieList:                
-                self.specieList.append(spec)
-                self.addSpecieCheck(spec)
-                if self.allSpeciesSelected:
-                    self.specieBoxes[spec].setChecked(1)
+        # remove species that don't exist
+        num = self.specieList.count()
+        for i in xrange(num - 1, -1, -1):
+            item = self.specieList.item(i)
+            
+            # remove if doesn't exist both ref and input
+            if item.symbol not in inputSpecieList and item.symbol not in refSpecieList:
+                self.logger.debug("  Removing specie option: %s", item.symbol)
+                self.specieList.takeItem(i) # does this delete it?
+            
+            else:
+                currentSpecies.add(item.symbol)
         
-        self.changedSpecie(0)
+        # unique species from ref/input
+        combinedSpecieList = list(inputSpecieList) + list(refSpecieList)
+        uniqueCurrentSpecies = set(combinedSpecieList)
         
+        print "COMB", combinedSpecieList
+        print "UNIQ", uniqueCurrentSpecies
+        
+        # add species that aren't already added
+        for sym in uniqueCurrentSpecies:
+            if sym in currentSpecies:
+                self.logger.debug("  Keeping specie option: %s", sym)
+            
+            else:
+                self.logger.debug("  Adding specie option: %s", sym)
+                item = DefectSpecieListItem(sym)
+                self.specieList.addItem(item)
+        
+        # enable/disable draw vectors
         if inputState.NAtoms == refState.NAtoms:
             self.drawVectorsGroup.setEnabled(True)
         else:
             self.drawVectorsGroup.setEnabled(False)
-    
-    def addSpecieCheck(self, specie):
-        """
-        Add check box for the given specie
-        
-        """
-        self.specieBoxes[specie] = QtGui.QCheckBox(str(specie))
-        self.specieBoxes[specie].stateChanged[int].connect(self.changedSpecie)
-        
-        row = self.newRow()
-        row.addWidget(self.specieBoxes[specie])
-        
-        self.specieRows[specie] = row
-    
-    def changedSpecie(self, val):
-        """
-        Changed visibility of a specie.
-        
-        """
-        self.visibleSpecieList = []
-        for specie in self.specieList:
-            if self.specieBoxes[specie].isChecked():
-                self.visibleSpecieList.append(specie)
-        
-        if len(self.visibleSpecieList) != len(self.specieList):
-            self.allSpeciesBox.setChecked(0)
-            self.allSpeciesSelected = False
     
     def drawHullsChanged(self, drawHulls):
         """

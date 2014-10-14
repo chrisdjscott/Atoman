@@ -1157,28 +1157,19 @@ class Filterer(object):
         onAntisites = np.empty(refLattice.NAtoms, np.int32)
         
         # set up excluded specie arrays
-        if settings.allSpeciesSelected:
-            exclSpecsInput = np.zeros(0, np.int32)
-            exclSpecsRef = np.zeros(0, np.int32)
+        visibleSpecieList = settings.getVisibleSpecieList()
         
-        else:
-            exclSpecs = []
-            for i in xrange(len(inputLattice.specieList)):
-                spec = inputLattice.specieList[i]
-                if spec not in settings.visibleSpecieList:
-                    exclSpecs.append(i)
-            exclSpecsInput = np.empty(len(exclSpecs), np.int32)
-            for i in xrange(len(exclSpecs)):
-                exclSpecsInput[i] = exclSpecs[i]
-            
-            exclSpecs = []
-            for i in xrange(len(refLattice.specieList)):
-                spec = refLattice.specieList[i]
-                if spec not in settings.visibleSpecieList:
-                    exclSpecs.append(i)
-            exclSpecsRef = np.empty(len(exclSpecs), np.int32)
-            for i in xrange(len(exclSpecs)):
-                exclSpecsRef[i] = exclSpecs[i]
+        exclSpecsInput = []
+        for i, spec in enumerate(inputLattice.specieList):
+            if spec not in visibleSpecieList:
+                exclSpecsInput.append(i)
+        exclSpecsInput = np.asarray(exclSpecsInput, dtype=np.int32)
+        
+        exclSpecsRef = []
+        for i, spec in enumerate(refLattice.specieList):
+            if spec not in visibleSpecieList:
+                exclSpecsRef.append(i)
+        exclSpecsRef = np.asarray(exclSpecsRef, dtype=np.int32)
         
         # specie counter arrays
         vacSpecCount = np.zeros( len(refLattice.specieList), np.int32 )
