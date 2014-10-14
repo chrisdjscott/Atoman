@@ -10,17 +10,21 @@ This code requires [Python 2.7](http://www.python.org/download/releases/2.7/) to
 
 This is a list of third-party python modules that this code requires to run.  They can be installed in a variety of ways, such as with [MacPorts](http://www.macports.org/), [pip](https://pypi.python.org/pypi/pip), [apt-get](http://en.wikipedia.org/wiki/Advanced_Packaging_Tool) or similar.
 
+Required:
+
 * [NumPy](http://www.numpy.org/)
 * [SciPy](http://www.scipy.org/)
 * [Matplotlib](http://matplotlib.org/)
-* [PySide](https://pypi.python.org/pypi/PySide) (Python bindings to the Qt GUI framework, including pyside-rcc)
-* Python Imaging Library ([PIL](http://www.pythonware.com/products/pil/))
-* [pyhull](http://pythonhosted.org/pyhull/)
-* [pyvoro](https://pypi.python.org/pypi/pyvoro)
-* [VTK](http://www.vtk.org/) Python bindings
+* [PySide](https://pypi.python.org/pypi/PySide) (including 'pyside-rcc' (commonly included in 'pyside-tools' or similar))
+* [Pillow](https://pillow.readthedocs.org/)
+* [VTK](http://www.vtk.org/) (with the Python bindings enabled)
 * [Sphinx](http://sphinx-doc.org/)
 * [nose](https://nose.readthedocs.org/en/latest/) (testing)
 * [Paramiko](http://www.paramiko.org/)
+
+Optional:
+
+* [pyhull](http://pythonhosted.org/pyhull/) (Optional, for computing facet areas of convex hulls)
 
 ### Other libraries
 
@@ -47,7 +51,7 @@ python setup.py build_sphinx
 
 which will build all the C extensions in place and also build the documentation.
 
-Then you can add the `/path/to/CDJSVis` directory to you PYTHONPATH and PATH and run CDJSVis.py.
+Then you can add the `/path/to/CDJSVis` directory to you PYTHONPATH and PATH and run CDJSVis.py from anywhere.
 
 ## Running the tests
 

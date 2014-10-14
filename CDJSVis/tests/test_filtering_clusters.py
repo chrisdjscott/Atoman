@@ -45,6 +45,11 @@ class TestClusters(unittest.TestCase):
         Convex hull facet area
            
         """
+        try:
+            import pyhull
+        except ImportError:
+            self.skipTest("Pyhull (optional) is not available so cannot compute facet area.")
+        
         # make points
         N = 8
         pts = [0,0,0,

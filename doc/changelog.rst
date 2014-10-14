@@ -5,6 +5,7 @@ Changelog
 **dev**
 
 * Fix bug in defect filter when using ACNA to refine results (seg fault)
+* Make pyhull an optional dependency
 
 **v141013**
 

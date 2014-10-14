@@ -8,11 +8,16 @@ Additional routines to do with clusters (hulls, etc...)
 import logging
 
 import numpy as np
-import pyhull
 from scipy import spatial
-
+# pyhull is optional
+try:
+    import pyhull
+    PYHULL_LOADED = True
+except ImportError:
+    PYHULL_LOADED = False
 
 ################################################################################
+
 def findConvexHullFacets(N, pos):
     """
     Find convex hull of given points
@@ -29,23 +34,38 @@ def findConvexHullFacets(N, pos):
     
     return facets
 
+################################################################################
+
+def tetrahedron_volume(a, b, c, d):
+    return np.abs(np.einsum('ij,ij->i', a-d, np.cross(b-d, c-d))) / 6
 
 ################################################################################
-def findConvexHullVolume(N, pos, posIsPts=False):
+
+def convex_hull_volume(pts):
+    ch = spatial.ConvexHull(pts)
+    dt = spatial.Delaunay(pts[ch.vertices])
+    tets = dt.points[dt.simplices]
+    return np.sum(tetrahedron_volume(tets[:, 0], tets[:, 1],
+                                     tets[:, 2], tets[:, 3]))
+
+################################################################################
+
+def convex_hull_volume_bis(pts):
     """
-    Find convex hull of given points
+    See `here <http://stackoverflow.com/questions/24733185/volume-of-convex-hull-with-qhull-from-scipy>`_.
     
     """
-    # construct pts list
-    if posIsPts:
-        pts = pos
-    
-    else:
-        #TODO: this should be written in C!
-        pts = []
-        for i in xrange(N):
-            pts.append([pos[3*i], pos[3*i+1], pos[3*i+2]])
-    
+    ch = spatial.ConvexHull(pts)
+
+    simplices = np.column_stack((np.repeat(ch.vertices[0], ch.nsimplex),
+                                 ch.simplices))
+    tets = ch.points[simplices]
+    return np.sum(tetrahedron_volume(tets[:, 0], tets[:, 1],
+                                     tets[:, 2], tets[:, 3]))
+
+################################################################################
+
+def convex_hull_volume_pyhull(pts):
     # call pyhull library
     output = pyhull.qconvex("Qt FA", pts)
     
@@ -72,8 +92,37 @@ def findConvexHullVolume(N, pos, posIsPts=False):
     
     return volume, facetArea
 
+################################################################################
+
+def findConvexHullVolume(N, pos, posIsPts=False):
+    """
+    Find convex hull of given points
+    
+    """
+    # construct pts list
+    if posIsPts:
+        pts = pos
+    
+    else:
+        #TODO: this should be written in C!
+        pts = np.empty((N, 3), dtype=np.float64)
+        for i in xrange(N):
+            i3 = 3 * i
+            pts[i][0] = pos[i3]
+            pts[i][1] = pos[i3+1]
+            pts[i][2] = pos[i3+2]
+    
+    if PYHULL_LOADED:
+        volume, facetArea = convex_hull_volume_pyhull(pts)
+    
+    else:
+        volume = convex_hull_volume_bis(pts)
+        facetArea = None
+    
+    return volume, facetArea
 
 ################################################################################
+
 def applyPBCsToCluster(clusterPos, cellDims, appliedPBCs):
     """
     Apply PBCs to cluster.

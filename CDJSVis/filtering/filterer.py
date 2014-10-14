@@ -1394,7 +1394,8 @@ class Filterer(object):
                     cluster.volume, cluster.facetArea = clusters.findConvexHullVolume(NDefects, clusterPos)
                 
                 self.logger.info("  Cluster %d (%d defects)", count, cluster.getNDefects())
-                self.logger.info("    volume is %f; facet area is %f", cluster.volume, cluster.facetArea)
+                if cluster.facetArea is not None:
+                    self.logger.info("    volume is %f; facet area is %f", cluster.volume, cluster.facetArea)
                 
                 count += 1
         
@@ -1732,7 +1733,8 @@ class Filterer(object):
                     volume, area = clusters.findConvexHullVolume(len(cluster), clusterPos)
                 
                 self.logger.info("  Cluster %d (%d atoms)", count, len(cluster))
-                self.logger.info("    volume is %f; facet area is %f", volume, area)
+                if area is not None:
+                    self.logger.info("    volume is %f; facet area is %f", volume, area)
                 
                 # store volume/facet area
                 cluster.volume = volume
