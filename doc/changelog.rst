@@ -2,11 +2,11 @@
 Changelog
 =========
 
-**dev**
+**v141015**
 
 * Fix bug in defect filter when using ACNA to refine results (seg fault)
 * Make pyhull an optional dependency
-* Only add specie options for current species (point defect filter settings)
+* Only add specie options for current species (point defect/specie filters)
 
 **v141013**
 
