@@ -2,6 +2,12 @@
 Changelog
 =========
 
+**dev**
+
+* Rewrite on-screen info dialog
+   - Change layout
+   - Add option to customise the text
+
 **v141015**
 
 * Fix bug in defect filter when using ACNA to refine results (seg fault)

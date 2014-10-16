@@ -18,6 +18,7 @@ import numpy as np
 from ..visutils.utilities import iconPath, resourcePath
 from ..visutils import utilities
 from . import dialogs
+from . import onScreenInfoDialog
 from ..rendering import renderer
 from .outputDialog import OutputDialog
 from ..rendering.text import vtkRenderWindowText
@@ -181,7 +182,7 @@ class RendererWindow(QtGui.QWidget):
             self.outputDialog.rdfTab.refresh()
         
         # text selector
-        self.textSelector = dialogs.OnScreenInfoDialog(self.mainWindow, index, parent=self)
+        self.textSelector = onScreenInfoDialog.OnScreenInfoDialog(self.mainWindow, index, parent=self)
         
         # view point rotate dialog
         self.rotateViewPointDialog = dialogs.RotateViewPointDialog(self, parent=self)
@@ -716,14 +717,15 @@ class RendererWindow(QtGui.QWidget):
         if self.getCurrentRefState() is None:
             return
         
+        self.logger.debug("Refreshing on screen info")
+        
         textSel = self.textSelector
-        selectedText = textSel.selectedText
-        textSettings = textSel.textSettings
+        selectedText = textSel.selectedText()
         
         self.onScreenInfo = {}
         self.removeOnScreenInfo()
         
-        if not selectedText.count():
+        if not len(selectedText):
             return
         
         inputState = self.getCurrentInputState()
@@ -733,19 +735,19 @@ class RendererWindow(QtGui.QWidget):
             inputState = Lattice()
         
         # atom count
-        self.onScreenInfo["Atom count"] = "%d atoms" % inputState.NAtoms
+        self.onScreenInfo["Atom count"] = (inputState.NAtoms,)
         
         # sim time
         if inputState.simTime is not None:
-            self.onScreenInfo["Simulation time"] = utilities.simulationTimeLine(inputState.simTime)
+            self.onScreenInfo["Simulation time"] = tuple(utilities.simulationTimeLine(inputState.simTime).split())
         
         # barrier
         if inputState.barrier is not None:
-            self.onScreenInfo["Energy barrier"] = "Barrier: %f eV" % inputState.barrier
+            self.onScreenInfo["Energy barrier"] = (inputState.barrier,)
         
         # KMC step
         if inputState.kmcStep is not None:
-            self.onScreenInfo["KMC step"] = "Step: %d" % inputState.kmcStep
+            self.onScreenInfo["KMC step"] = (inputState.kmcStep,)
         
         # lattice temperature
         if inputState.temperature is None:
@@ -754,7 +756,7 @@ class RendererWindow(QtGui.QWidget):
             temperature = inputState.temperature
         
         if temperature is not None:
-            self.onScreenInfo["Temperature"] = "%.1f K" % temperature
+            self.onScreenInfo["Temperature"] = (temperature,)
         
         # filter lists
         filterLists = self.getFilterLists()
@@ -772,10 +774,10 @@ class RendererWindow(QtGui.QWidget):
                 numClusters += len(filterList.filterer.clusterList)
         
         if numClusters:
-            self.onScreenInfo["Cluster count"] = "%d clusters" % numClusters
+            self.onScreenInfo["Cluster count"] = (numClusters,)
         
         if visCountActive:
-            self.onScreenInfo["Visible count"] = "%d visible" % visCount
+            self.onScreenInfo["Visible count"] = (visCount,)
         
             visSpecCount = np.zeros(len(inputState.specieList), np.int32)
             for filterList in filterLists:
@@ -786,7 +788,7 @@ class RendererWindow(QtGui.QWidget):
             specieList = inputState.specieList
             self.onScreenInfo["Visible specie count"] = []
             for i, cnt in enumerate(visSpecCount):
-                self.onScreenInfo["Visible specie count"].append("%d %s" % (cnt, specieList[i]))
+                self.onScreenInfo["Visible specie count"].append((cnt, specieList[i]))
         
         # structure counters
         for filterList in filterLists:
@@ -796,7 +798,7 @@ class RendererWindow(QtGui.QWidget):
                 
                 for structure in sorted(structureCounterDict.keys()):
                     self.logger.debug("  %d %s" % (structureCounterDict[structure], structure))
-                    self.onScreenInfo[key].append("%d %s" % (structureCounterDict[structure], structure))
+                    self.onScreenInfo[key].append((structureCounterDict[structure], structure))
         
         # defects counts
         defectFilterActive = False
@@ -846,13 +848,13 @@ class RendererWindow(QtGui.QWidget):
             self.onScreenInfo["Defect count"] = []
             
             if showVacs:
-                self.onScreenInfo["Defect count"].append("%d vacancies" % (NVac,))
+                self.onScreenInfo["Defect count"].append((NVac, "vacancies"))
             
             if showInts:
-                self.onScreenInfo["Defect count"].append("%d interstitials" % (NInt,))
+                self.onScreenInfo["Defect count"].append((NInt, "interstitials"))
             
             if showAnts:
-                self.onScreenInfo["Defect count"].append("%d antisites" % (NAnt,))
+                self.onScreenInfo["Defect count"].append((NAnt, "antisites"))
             
             specListInput = inputState.specieList
             specListRef = refState.specieList
@@ -863,11 +865,11 @@ class RendererWindow(QtGui.QWidget):
             
             if showVacs:
                 for i, cnt in enumerate(vacSpecCount):
-                    self.onScreenInfo["Defect specie count"].append(["%d %s vacancies" % (cnt, specListRef[i]), specRGBRef[i]])
+                    self.onScreenInfo["Defect specie count"].append([(cnt, specListRef[i], "vacancies"), specRGBRef[i]])
             
             if showInts:
                 for i, cnt in enumerate(intSpecCount):
-                    self.onScreenInfo["Defect specie count"].append(["%d %s interstitials" % (cnt, specListInput[i]), specRGBInput[i]])
+                    self.onScreenInfo["Defect specie count"].append([(cnt, specListInput[i], "interstitials"), specRGBInput[i]])
                 
                 if defectsSettings.identifySplitInts:
                     for i in xrange(len(specListInput)):
@@ -879,14 +881,14 @@ class RendererWindow(QtGui.QWidget):
                                 N = splitSpecCount[i][j] + splitSpecCount[j][i]
                                 rgb = (specRGBInput[i] + specRGBInput[j]) / 2.0
                             
-                            self.onScreenInfo["Defect specie count"].append(["%d %s-%s split ints" % (N, specListInput[i], specListInput[j]), rgb])
+                            self.onScreenInfo["Defect specie count"].append([(N, "%s-%s" % (specListInput[i], specListInput[j]), "split ints"), rgb])
             
             if showAnts:
                 for i in xrange(len(specListRef)):
                     for j in xrange(len(specListInput)):
                         if i == j:
                             continue
-                        self.onScreenInfo["Defect specie count"].append(["%d %s on %s antisites" % (antSpecCount[i][j], specListInput[j], specListRef[i]), specRGBRef[i]])
+                        self.onScreenInfo["Defect specie count"].append([(antSpecCount[i][j], "%s on %s" % (specListInput[j], specListRef[i]), "antisites"), specRGBRef[i]])
         
         # alignment/position stuff
         topyLeft = self.vtkRenWinInteract.height() - 5
@@ -895,10 +897,9 @@ class RendererWindow(QtGui.QWidget):
         topxRight = self.vtkRenWinInteract.width() - 220
         
         # loop over selected text
-        for i in xrange(selectedText.count()):
-            item = selectedText.item(i)
-            item = str(item.text())
-            settings = textSettings[item]
+        for i in xrange(len(selectedText)):
+            settings = selectedText[i]
+            item = settings.title
             
             try:
                 line = self.onScreenInfo[item]
@@ -912,17 +913,20 @@ class RendererWindow(QtGui.QWidget):
                         r, g, b = inputState.specieRGB[j]
                         r, g, b = self.checkTextRGB(r, g, b)
                         
-                        if settings.textPosition == "Top left":
+                        if settings.position == "Top left":
                             xpos = topxLeft
                             ypos = topyLeft
                         else:
                             xpos = topxRight
                             ypos = topyRight
                         
-                        # add actor
-                        actor = vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
+                        # make text string
+                        text = settings.makeText(specline)
                         
-                        if settings.textPosition == "Top left":
+                        # add actor
+                        actor = vtkRenderWindowText(text, 20, xpos, ypos, r, g, b)
+                        
+                        if settings.position == "Top left":
                             topyLeft -= 20
                         else:
                             topyRight -= 20
@@ -934,17 +938,20 @@ class RendererWindow(QtGui.QWidget):
                         r = g = b = 0
                         r, g, b = self.checkTextRGB(r, g, b)
                         
-                        if settings.textPosition == "Top left":
+                        if settings.position == "Top left":
                             xpos = topxLeft
                             ypos = topyLeft
                         else:
                             xpos = topxRight
                             ypos = topyRight
                         
-                        # add actor
-                        actor = vtkRenderWindowText(specline, 20, xpos, ypos, r, g, b)
+                        # make text string
+                        text = settings.makeText(specline)
                         
-                        if settings.textPosition == "Top left":
+                        # add actor
+                        actor = vtkRenderWindowText(text, 20, xpos, ypos, r, g, b)
+                        
+                        if settings.position == "Top left":
                             topyLeft -= 20
                         else:
                             topyRight -= 20
@@ -953,21 +960,24 @@ class RendererWindow(QtGui.QWidget):
                 
                 elif item == "Defect specie count":
                     for array in line:
-                        lineToAdd = array[0]
+                        lineArgs = array[0]
                         r, g, b = array[1]
                         r, g, b = self.checkTextRGB(r, g, b)
                         
-                        if settings.textPosition == "Top left":
+                        if settings.position == "Top left":
                             xpos = topxLeft
                             ypos = topyLeft
                         else:
                             xpos = topxRight
                             ypos = topyRight
                         
-                        # add actor
-                        actor = vtkRenderWindowText(lineToAdd, 20, xpos, ypos, r, g, b)
+                        # make text string
+                        text = settings.makeText(lineArgs)
                         
-                        if settings.textPosition == "Top left":
+                        # add actor
+                        actor = vtkRenderWindowText(text, 20, xpos, ypos, r, g, b)
+                        
+                        if settings.position == "Top left":
                             topyLeft -= 20
                         else:
                             topyRight -= 20
@@ -979,17 +989,20 @@ class RendererWindow(QtGui.QWidget):
                         r = g = b = 0
                         r, g, b = self.checkTextRGB(r, g, b)
                         
-                        if settings.textPosition == "Top left":
+                        if settings.position == "Top left":
                             xpos = topxLeft
                             ypos = topyLeft
                         else:
                             xpos = topxRight
                             ypos = topyRight
                         
-                        # add actor
-                        actor = vtkRenderWindowText(subl, 20, xpos, ypos, r, g, b)
+                        # make text string
+                        text = settings.makeText(subl)
                         
-                        if settings.textPosition == "Top left":
+                        # add actor
+                        actor = vtkRenderWindowText(text, 20, xpos, ypos, r, g, b)
+                        
+                        if settings.position == "Top left":
                             topyLeft -= 20
                         else:
                             topyRight -= 20
@@ -1000,17 +1013,20 @@ class RendererWindow(QtGui.QWidget):
                     r = g = b = 0
                     r, g, b = self.checkTextRGB(r, g, b)
                     
-                    if settings.textPosition == "Top left":
+                    if settings.position == "Top left":
                         xpos = topxLeft
                         ypos = topyLeft
                     else:
                         xpos = topxRight
                         ypos = topyRight
                     
-                    # add actor
-                    actor = vtkRenderWindowText(line, 20, xpos, ypos, r, g, b)
+                    # make text string
+                    text = settings.makeText(line)
                     
-                    if settings.textPosition == "Top left":
+                    # add actor
+                    actor = vtkRenderWindowText(text, 20, xpos, ypos, r, g, b)
+                    
+                    if settings.position == "Top left":
                         topyLeft -= 20
                     else:
                         topyRight -= 20
