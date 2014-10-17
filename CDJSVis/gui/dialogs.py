@@ -1183,17 +1183,29 @@ class NotifyFeatureWindow(QtGui.QDialog):
     def __init__(self, parent=None):
         super(NotifyFeatureWindow, self).__init__(parent)
         
-        self.notificationID = "help_updated"
+        self.notificationID = "onscreeninfo_updated"
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         self.setFixedWidth(300)
         
-        self.setModal(1)
         self.setWindowTitle("New features")
         
         layout = QtGui.QVBoxLayout(self)
         
-        dialogText = "<p>I've started rewriting the help section so if you aren't sure how something works please look there first; if that doesn't help ask me.</p>"
+        # image
+        pic = QtGui.QLabel()
+        pic.resize(200, 200)
+        pic.setPixmap(QtGui.QPixmap(iconPath("preferences-desktop-font.svg")))
+        row = QtGui.QHBoxLayout()
+        row.setAlignment(QtCore.Qt.AlignHCenter)
+        row.addWidget(pic)
+        layout.addLayout(row)
+        
+        # text
+        dialogText = """<p>Check out the new 'on screen text' options.<ul><li>Double click the 
+                        items to change settings</li><li>Items that are ticked are only displayed if 
+                        they are available.</li><li>All format specifiers must be used</li><li>Entering
+                        and incorrect format will just use the default</li></ul></p>"""
         
         # label
         label = QtGui.QLabel(dialogText)
@@ -1201,6 +1213,8 @@ class NotifyFeatureWindow(QtGui.QDialog):
         row = QtGui.QHBoxLayout()
         row.addWidget(label)
         layout.addLayout(row)
+        
+        layout.addStretch()
         
         # show message next time
         self.dontShowAgainCheck = QtGui.QCheckBox("Do not show this again")

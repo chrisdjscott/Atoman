@@ -684,9 +684,6 @@ class RendererWindow(QtGui.QWidget):
         Show the text selector.
         
         """
-        if self.getCurrentRefState() is None:
-            return
-        
         self.textSelector.hide()
         self.textSelector.show()
     
