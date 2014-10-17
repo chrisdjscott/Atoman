@@ -856,10 +856,7 @@ class DefectInfoWindow(QtGui.QDialog):
                                    float(self.highlightColour.green()) / 255.0,
                                    float(self.highlightColour.blue()) / 255.0]
         
-        vor = None
-        voroKey = voronoiOptions.getVoronoiDictKey()
-        if voroKey in inputState.voronoiDict:
-            vor = inputState.voronoiDict[voroKey]
+        vor = filterList.filterer.voronoi
         
         self.setWindowTitle("Defect info")
         

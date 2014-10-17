@@ -219,7 +219,6 @@ class Lattice(object):
         if pos[2] > self.maxPos[1]:
             self.maxPos[2] = pos[2]
         
-        self.voronoiDict = {}
         self.NAtoms += 1
     
     def removeAtom(self, index):
@@ -242,8 +241,6 @@ class Lattice(object):
         
         self.KE = np.delete(self.KE, index)
         self.PE = np.delete(self.PE, index)
-        
-        self.voronoiDict = {}
     
     def removeSpecie(self, index):
         """
