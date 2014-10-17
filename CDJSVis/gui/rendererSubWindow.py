@@ -756,7 +756,7 @@ class RendererWindow(QtGui.QWidget):
             temperature = inputState.temperature
         
         if temperature is not None:
-            self.onScreenInfo["Temperature"] = (temperature,)
+            self.onScreenInfo["Temperature"] = ("%.3f" % temperature,)
         
         # filter lists
         filterLists = self.getFilterLists()
