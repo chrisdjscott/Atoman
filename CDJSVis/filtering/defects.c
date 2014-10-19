@@ -75,22 +75,15 @@ findDefects(PyObject *self, PyObject *args)
     PyArrayObject *driftVectorIn=NULL;
     PyArrayObject *acnaArrayIn=NULL;
     
-    int i, exitLoop, k, j, index;
+    int i;
     double vacRad2;
-    int boxNebList[27], index2;
-    char symtemp[3], symtemp2[3];
-    double xpos, ypos, zpos;
-    int checkBox, refIndex, comp, boxIndex;
-    double refxpos, refypos, refzpos;
-    double sep2;
     int NDefects, NAntisites, NInterstitials, NVacancies;
     int *NDefectsCluster, *NDefectsClusterNew;
     int *possibleVacancy, *possibleInterstitial;
     int *possibleAntisite, *possibleOnAntisite;
-    int skip, count, NClusters, clusterIndex, vacCount;
-    double approxBoxWidth, splitIntRad;
+    int NClusters, vacCount;
+    double approxBoxWidth;
     struct Boxes *boxes;
-    double *defectPos;
     int NVacNew, NIntNew, NAntNew, NSplitNew, numInCluster;
     int NSplitInterstitials, *defectClusterSplit, splitIndexes[3];
     double *refPos;
@@ -191,6 +184,8 @@ findDefects(PyObject *self, PyObject *args)
     /* drift compensation */
     if (driftCompensation)
     {
+        printf("  Applying drift compensation\n");
+
         refPos = malloc(3 * refNAtoms * sizeof(double));
         if (refPos == NULL)
         {
@@ -200,9 +195,11 @@ findDefects(PyObject *self, PyObject *args)
         
         for (i = 0; i < refNAtoms; i++)
         {
-            refPos[3*i] = refPosIn[3*i] + driftVector[0];
-            refPos[3*i+1] = refPosIn[3*i+1] + driftVector[1];
-            refPos[3*i+2] = refPosIn[3*i+2] + driftVector[2];
+            int i3 = 3 * i;
+
+            refPos[i3] = refPosIn[i3] + driftVector[0];
+            refPos[i3+1] = refPosIn[i3] + driftVector[1];
+            refPos[i3+2] = refPosIn[i3] + driftVector[2];
         }
     }
     else
@@ -218,31 +215,31 @@ findDefects(PyObject *self, PyObject *args)
     
     /* box reference atoms */
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-    putAtomsInBoxes(refNAtoms, refPos, boxes);
+    putAtomsInBoxes(NAtoms, pos, boxes);
     
     /* allocate local arrays for checking atoms */
-    possibleVacancy = malloc( refNAtoms * sizeof(int) );
+    possibleVacancy = malloc(refNAtoms * sizeof(int));
     if (possibleVacancy == NULL)
     {
         printf("ERROR: Boxes: could not allocate possibleVacancy\n");
         exit(1);
     }
     
-    possibleInterstitial = malloc( NAtoms * sizeof(int) );
+    possibleInterstitial = malloc(NAtoms * sizeof(int));
     if (possibleInterstitial == NULL)
     {
         printf("ERROR: Boxes: could not allocate possibleInterstitial\n");
         exit(1);
     }
     
-    possibleAntisite = malloc( refNAtoms * sizeof(int) );
+    possibleAntisite = malloc(refNAtoms * sizeof(int));
     if (possibleAntisite == NULL)
     {
         printf("ERROR: Boxes: could not allocate possibleAntisite\n");
         exit(1);
     }
     
-    possibleOnAntisite = malloc( refNAtoms * sizeof(int) );
+    possibleOnAntisite = malloc(refNAtoms * sizeof(int));
     if (possibleOnAntisite == NULL)
     {
         printf("ERROR: Boxes: could not allocate possibleOnAntisite\n");
@@ -250,11 +247,11 @@ findDefects(PyObject *self, PyObject *args)
     }
     
     /* initialise arrays */
-    for ( i=0; i<NAtoms; i++ )
+    for (i = 0; i < NAtoms; i++)
     {
         possibleInterstitial[i] = 1;
     }
-    for ( i=0; i<refNAtoms; i++ )
+    for (i = 0; i < refNAtoms; i++)
     {
         possibleVacancy[i] = 1;
         possibleAntisite[i] = 1;
@@ -262,88 +259,110 @@ findDefects(PyObject *self, PyObject *args)
     
     vacRad2 = vacancyRadius * vacancyRadius;
     
-    /* loop over all input atoms */
-    for ( i=0; i<NAtoms; i++ )
-    {        
-        xpos = pos[3*i];
-        ypos = pos[3*i+1];
-        zpos = pos[3*i+2];
-        
+    /* loop over reference sites */
+    for (i = 0; i < refNAtoms; i++)
+    {
+        int boxNebList[27], boxIndex, j;
+        int nearestIndex = -1;
+        int occupancyCount = 0;
+        double refxpos, refypos, refzpos;
+        double nearestSep2 = 9999.0;
+
+        refxpos = refPos[3*i];
+        refypos = refPos[3*i+1];
+        refzpos = refPos[3*i+2];
+
         /* get box index of this atom */
-        boxIndex = boxIndexOfAtom(xpos, ypos, zpos, boxes);
-        
+        boxIndex = boxIndexOfAtom(refxpos, refypos, refzpos, boxes);
+
         /* find neighbouring boxes */
         getBoxNeighbourhood(boxIndex, boxNebList, boxes);
-                
+
         /* loop over neighbouring boxes */
-        exitLoop = 0;
-        for ( j=0; j<27; j++ )
+        for (j = 0; j < 27; j++)
         {
-            if (exitLoop)
-            {
-                break;
-            }
-            
+            int checkBox, k;
+
             checkBox = boxNebList[j];
-            
-            /* now loop over all reference atoms in the box */
-            for ( k=0; k<boxes->boxNAtoms[checkBox]; k++ )
+
+            /* loop over all input atoms in the box */
+            for (k = 0; k < boxes->boxNAtoms[checkBox]; k++)
             {
-                refIndex = boxes->boxAtoms[checkBox][k];
-                
-                /* if this vacancy has already been filled then skip to the next one */
-                if ( possibleVacancy[refIndex] == 0 )
-                {
-                    continue;
-                }
-                
-                refxpos = refPos[3*refIndex];
-                refypos = refPos[3*refIndex+1];
-                refzpos = refPos[3*refIndex+2];
-                
+                int index;
+                double xpos, ypos, zpos, sep2;
+
+                /* index of this input atom */
+                index = boxes->boxAtoms[checkBox][k];
+
+                /* atom position */
+                xpos = pos[3*index];
+                ypos = pos[3*index+1];
+                zpos = pos[3*index+2];
+
                 /* atomic separation of possible vacancy and possible interstitial */
-                sep2 = atomicSeparation2( xpos, ypos, zpos, refxpos, refypos, refzpos, 
-                                          cellDims[0], cellDims[1], cellDims[2], 
-                                          PBC[0], PBC[1], PBC[2] );
-                
+                sep2 = atomicSeparation2(xpos, ypos, zpos, refxpos, refypos, refzpos,
+                                         cellDims[0], cellDims[1], cellDims[2],
+                                         PBC[0], PBC[1], PBC[2]);
+
                 /* if within vacancy radius, is it an antisite or normal lattice point */
-                if ( sep2 < vacRad2 )
+                if (sep2 < vacRad2)
                 {
-                    /* compare symbols */
-                    symtemp[0] = specieList[2*specie[i]];
-                    symtemp[1] = specieList[2*specie[i]+1];
-                    symtemp[2] = '\0';
-                    
-                    symtemp2[0] = specieListRef[2*specieRef[refIndex]];
-                    symtemp2[1] = specieListRef[2*specieRef[refIndex]+1];
-                    symtemp2[2] = '\0';
-                    
-                    comp = strcmp( symtemp, symtemp2 );
-                    if ( comp == 0 )
+                    /* check whether this is the closest atom to this vacancy */
+                    if (sep2 < nearestSep2)
                     {
-                        /* match, so not antisite */
-                        possibleAntisite[refIndex] = 0;
+                        /* assume that the vacancy radius is chosen so that atoms cannot belong to multiple sites */
+                        if (!possibleInterstitial[index])
+                        {
+                            PyErr_SetString(PyExc_RuntimeError, "Input atom associated with multiple reference sites.");
+                            return NULL;
+                        }
+
+                        nearestSep2 = sep2;
+                        nearestIndex = index;
+                        occupancyCount++;
                     }
-                    else
-                    {
-                        possibleOnAntisite[refIndex] = i;
-                    }
-                    
-                    /* not an interstitial or vacancy */
-                    possibleInterstitial[i] = 0;
-                    possibleVacancy[refIndex] = 0;
-                    
-                    /* no need to check further for this (no longer) possible interstitial */
-                    exitLoop = 1;
-                    break;
                 }
             }
+        }
+
+        /* classify */
+        if (nearestIndex != -1)
+        {
+            char symtemp[3], symtemp2[3];
+            int comp;
+
+            /* this site is filled; now we check if antisite or normal site */
+            symtemp[0] = specieList[2*specie[nearestIndex]];
+            symtemp[1] = specieList[2*specie[nearestIndex]+1];
+            symtemp[2] = '\0';
+
+            symtemp2[0] = specieListRef[2*specieRef[i]];
+            symtemp2[1] = specieListRef[2*specieRef[i]+1];
+            symtemp2[2] = '\0';
+
+            comp = strcmp(symtemp, symtemp2);
+            if (comp == 0)
+            {
+                /* match, so not antisite */
+                possibleAntisite[i] = 0;
+            }
+            else
+            {
+                possibleOnAntisite[i] = nearestIndex;
+            }
+
+            /* not an interstitial or vacancy */
+            possibleInterstitial[nearestIndex] = 0;
+            possibleVacancy[i] = 0;
+
+            if (occupancyCount > 1)
+                printf("INFO: Occupancy for site %d = %d\n", i, occupancyCount);
         }
     }
     
     /* free box arrays */
     freeBoxes(boxes);
-        
+
     /* now classify defects */
     NVacancies = 0;
     NInterstitials = 0;
@@ -351,66 +370,26 @@ findDefects(PyObject *self, PyObject *args)
     NSplitInterstitials = 0;
     for ( i=0; i<refNAtoms; i++ )
     {
-//        skip = 0;
-//        for (j=0; j<exclSpecRefDim; j++)
-//        {
-//            if (specieRef[i] == exclSpecRef[j])
-//            {
-//                skip = 1;
-//            }
-//        }
-//        
-//        if (skip == 1)
-//        {
-//            continue;
-//        }
-        
         /* vacancies */
         if (possibleVacancy[i] == 1)
         {
-//            if (includeVacs == 1)
-//            {
-                vacancies[NVacancies] = i;
-                NVacancies++;
-//            }
+            vacancies[NVacancies++] = i;
         }
         
         /* antisites */
-        else if (possibleAntisite[i] == 1) //&& (includeAnts == 1) )
+        else if (possibleAntisite[i] == 1)
         {
             antisites[NAntisites] = i;
-            onAntisites[NAntisites] = possibleOnAntisite[i];
-            NAntisites++;
+            onAntisites[NAntisites++] = possibleOnAntisite[i];
         }
     }
     
-//    if (includeInts == 1)
-//    {
-        for ( i=0; i<NAtoms; i++ )
-        {
-//            skip = 0;
-//            for (j=0; j<exclSpecInputDim; j++)
-//            {
-//                if (specie[i] == exclSpecInput[j])
-//                {
-//                    skip = 1;
-//                    break;
-//                }
-//            }
-//            
-//            if (skip == 1)
-//            {
-//                continue;
-//            }
-                        
-            /* interstitials */
-            if (possibleInterstitial[i] == 1)
-            {
-                interstitials[NInterstitials] = i;
-                NInterstitials++;
-            }
-        }
-//    }
+    for ( i=0; i<NAtoms; i++ )
+    {
+        /* interstitials */
+        if (possibleInterstitial[i] == 1)
+            interstitials[NInterstitials++] = i;
+    }
     
     /* free arrays */
     free(possibleVacancy);
@@ -421,6 +400,9 @@ findDefects(PyObject *self, PyObject *args)
     /* look for split interstitials */
     if (identifySplits && NVacancies > 0 && NInterstitials > 1)
     {
+        int count;
+        double *defectPos, splitIntRad;
+
 //        printf("IDENTIFYING SPLIT INTS\n");
         
         /* build positions array of all defects */
@@ -434,8 +416,10 @@ findDefects(PyObject *self, PyObject *args)
         
         /* add defects positions: vac then int then ant */
         count = 0;
-        for (i=0; i<NVacancies; i++)
+        for (i = 0; i < NVacancies; i++)
         {
+            int index;
+
             index = vacancies[i];
             
             defectPos[3*count] = refPos[3*index];
@@ -447,6 +431,8 @@ findDefects(PyObject *self, PyObject *args)
         
         for (i=0; i<NInterstitials; i++)
         {
+            int index;
+
             index = interstitials[i];
             
             defectPos[3*count] = pos[3*index];
@@ -498,6 +484,8 @@ findDefects(PyObject *self, PyObject *args)
         {
             if (NDefectsCluster[i] == 3)
             {
+                int j;
+
                 /* check if 2 interstitials and 1 vacancy */
 //                printf("  POSSIBLE SPLIT INTERSTITIAL\n");
                 
@@ -525,10 +513,14 @@ findDefects(PyObject *self, PyObject *args)
                     count = 1;
                     for (j=0; j<3; j++)
                     {
+                        int index;
+
                         index = splitIndexes[j];
                         
                         if (index < NVacancies)
                         {
+                            int index2;
+
                             index2 = vacancies[index];
                             vacancies[index] = -1;
                             splitInterstitials[3*NSplitInterstitials] = index2;
@@ -536,6 +528,8 @@ findDefects(PyObject *self, PyObject *args)
                         }
                         else
                         {
+                            int index2;
+
                             index2 = interstitials[index - NVacancies];
                             interstitials[index - NVacancies] = -1;
                             splitInterstitials[3*NSplitInterstitials+count] = index2;
@@ -585,7 +579,8 @@ findDefects(PyObject *self, PyObject *args)
     if (acnaArrayDim)
     {
         int numChanges = 0; // only recreate arrays if changes happened
-        double maxSep, maxSep2;
+        int count;
+        double maxSep, maxSep2, *defectPos;
         
         
 //        printf("DEBUG: checking defects using ACNA...\n");
@@ -603,6 +598,8 @@ findDefects(PyObject *self, PyObject *args)
         count = 0;
         for (i=0; i<NInterstitials; i++)
         {
+            int index;
+
             index = interstitials[i];
             
             defectPos[3*count] = pos[3*index];
@@ -624,10 +621,12 @@ findDefects(PyObject *self, PyObject *args)
         /* loop over vacancies and see if there is a single neighbouring intersitial */
         for (i = 0; i < NVacancies; i++)
         {
-            int vacIndex, intIndex;
+            int vacIndex, j, exitLoop;
+            int boxNebList[27] , boxIndex;
             int nebIntCount = 0;
             int foundIndex = -1;
             int foundIntIndex = -1;
+            double refxpos, refypos, refzpos;
 //            double foundSep2;
             
             vacIndex = vacancies[i];
@@ -646,6 +645,8 @@ findDefects(PyObject *self, PyObject *args)
             exitLoop = 0;
             for (j = 0; j < 27; j++)
             {
+                int k, checkBox;
+
                 if (exitLoop) break;
                 
                 checkBox = boxNebList[j];
@@ -653,6 +654,9 @@ findDefects(PyObject *self, PyObject *args)
                 /* now loop over all reference atoms in the box */
                 for (k = 0; k < boxes->boxNAtoms[checkBox]; k++)
                 {
+                    int index, intIndex;
+                    double xpos, ypos, zpos, sep2;
+
                     intIndex = boxes->boxAtoms[checkBox][k];
                     index = interstitials[intIndex];
                     
@@ -718,6 +722,8 @@ findDefects(PyObject *self, PyObject *args)
 //        printf("DEBUG: num changes = %d\n", numChanges);
         if (numChanges)
         {
+            int count;
+
             /* recreate interstitials array */
             count = 0;
             for (i = 0; i < NInterstitials; i++)
@@ -743,6 +749,8 @@ findDefects(PyObject *self, PyObject *args)
         NIntNew = 0;
         for (i=0; i<NInterstitials; i++)
         {
+            int index, j, skip;
+
             index = interstitials[i];
             
             skip = 0;
@@ -773,6 +781,8 @@ findDefects(PyObject *self, PyObject *args)
         NVacNew = 0;
         for (i=0; i<NVacancies; i++)
         {
+            int index, j, skip;
+
             index = vacancies[i];
             
             skip = 0;
@@ -804,6 +814,9 @@ findDefects(PyObject *self, PyObject *args)
     /* find clusters of defects */
     if (findClustersFlag)
     {
+        int count;
+        double *defectPos;
+
         /* build positions array of all defects */
         NDefects = NVacancies + NInterstitials + NAntisites + 3 * NSplitInterstitials;
         defectPos = malloc(3 * NDefects * sizeof(double));
@@ -817,6 +830,8 @@ findDefects(PyObject *self, PyObject *args)
         count = 0;
         for (i=0; i<NVacancies; i++)
         {
+            int index;
+
             index = vacancies[i];
             
             defectPos[3*count] = refPos[3*index];
@@ -828,6 +843,8 @@ findDefects(PyObject *self, PyObject *args)
         
         for (i=0; i<NInterstitials; i++)
         {
+            int index;
+
             index = interstitials[i];
             
             defectPos[3*count] = pos[3*index];
@@ -839,6 +856,8 @@ findDefects(PyObject *self, PyObject *args)
         
         for (i=0; i<NAntisites; i++)
         {
+            int index;
+
             index = antisites[i];
             
             defectPos[3*count] = refPos[3*index];
@@ -850,6 +869,8 @@ findDefects(PyObject *self, PyObject *args)
         
         for (i=0; i<NSplitInterstitials; i++)
         {
+            int index;
+
             index = splitInterstitials[3*i];
             defectPos[3*count] = refPos[3*index];
             defectPos[3*count+1] = refPos[3*index+1];
@@ -895,6 +916,8 @@ findDefects(PyObject *self, PyObject *args)
         /* first we have to adjust the number of atoms in clusters containing split interstitials */
         for (i=0; i<NSplitInterstitials; i++)
         {
+            int j, index, clusterIndex;
+
             /* assume all lone defects forming split interstitial are in same cluster; maybe should check!? */
             j = NVacancies + NInterstitials + NAntisites;
             clusterIndex = defectCluster[j + 3 * i];
@@ -919,6 +942,8 @@ findDefects(PyObject *self, PyObject *args)
         NVacNew = 0;
         for (i=0; i<NVacancies; i++)
         {
+            int index, clusterIndex;
+
             clusterIndex = defectCluster[i];
             index = vacancies[i];
             
@@ -945,6 +970,8 @@ findDefects(PyObject *self, PyObject *args)
         NIntNew = 0;
         for (i=0; i<NInterstitials; i++)
         {
+            int index, clusterIndex;
+
             clusterIndex = defectCluster[NVacancies+i];
             index = interstitials[i];
             
@@ -971,6 +998,8 @@ findDefects(PyObject *self, PyObject *args)
         NAntNew = 0;
         for (i=0; i<NAntisites; i++)
         {
+            int index, index2, clusterIndex;
+
             clusterIndex = defectCluster[NVacancies+NInterstitials+i];
             index = antisites[i];
             index2 = onAntisites[i];
@@ -999,6 +1028,8 @@ findDefects(PyObject *self, PyObject *args)
         NSplitNew = 0;
         for (i=0; i<NSplitInterstitials; i++)
         {
+            int j, clusterIndex;
+
             /* assume all lone defects forming split interstitial are in same cluster */
             j = NVacancies + NInterstitials + NAntisites;
             clusterIndex = defectCluster[j + 3 * i];
@@ -1061,18 +1092,24 @@ findDefects(PyObject *self, PyObject *args)
     /* specie counters */
     for (i=0; i<NVacancies; i++)
     {
+        int index;
+
         index = vacancies[i];
         vacSpecCount[specieRef[index]]++;
     }
     
     for (i=0; i<NInterstitials; i++)
     {
+        int index;
+
         index = interstitials[i];
         intSpecCount[specie[index]]++;
     }
     
     for (i=0; i<NAntisites; i++)
     {
+        int index, index2;
+
         index = antisites[i];
         antSpecCount[specieRef[index]]++;
         
@@ -1082,6 +1119,8 @@ findDefects(PyObject *self, PyObject *args)
     
     for (i=0; i<NSplitInterstitials; i++)
     {
+        int index, index2;
+
         index = splitInterstitials[3*i+1];
         index2 = splitInterstitials[3*i+2];
         
