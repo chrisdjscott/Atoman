@@ -184,8 +184,6 @@ findDefects(PyObject *self, PyObject *args)
     /* drift compensation */
     if (driftCompensation)
     {
-        printf("  Applying drift compensation\n");
-
         refPos = malloc(3 * refNAtoms * sizeof(double));
         if (refPos == NULL)
         {
@@ -198,8 +196,8 @@ findDefects(PyObject *self, PyObject *args)
             int i3 = 3 * i;
 
             refPos[i3] = refPosIn[i3] + driftVector[0];
-            refPos[i3+1] = refPosIn[i3] + driftVector[1];
-            refPos[i3+2] = refPosIn[i3] + driftVector[2];
+            refPos[i3+1] = refPosIn[i3+1] + driftVector[1];
+            refPos[i3+2] = refPosIn[i3+2] + driftVector[2];
         }
     }
     else
@@ -265,12 +263,13 @@ findDefects(PyObject *self, PyObject *args)
         int boxNebList[27], boxIndex, j;
         int nearestIndex = -1;
         int occupancyCount = 0;
+        int i3 = 3 * i;
         double refxpos, refypos, refzpos;
         double nearestSep2 = 9999.0;
 
-        refxpos = refPos[3*i];
-        refypos = refPos[3*i+1];
-        refzpos = refPos[3*i+2];
+        refxpos = refPos[i3];
+        refypos = refPos[i3+1];
+        refzpos = refPos[i3+2];
 
         /* get box index of this atom */
         boxIndex = boxIndexOfAtom(refxpos, refypos, refzpos, boxes);
@@ -278,6 +277,8 @@ findDefects(PyObject *self, PyObject *args)
         /* find neighbouring boxes */
         getBoxNeighbourhood(boxIndex, boxNebList, boxes);
 
+//        printf("Checking site %d for occupancy (%lf, %lf, %lf)\n", i, refxpos, refypos, refzpos);
+        
         /* loop over neighbouring boxes */
         for (j = 0; j < 27; j++)
         {
@@ -288,16 +289,17 @@ findDefects(PyObject *self, PyObject *args)
             /* loop over all input atoms in the box */
             for (k = 0; k < boxes->boxNAtoms[checkBox]; k++)
             {
-                int index;
+                int index, index3;
                 double xpos, ypos, zpos, sep2;
 
                 /* index of this input atom */
                 index = boxes->boxAtoms[checkBox][k];
 
                 /* atom position */
-                xpos = pos[3*index];
-                ypos = pos[3*index+1];
-                zpos = pos[3*index+2];
+                index3 = 3 * index;
+                xpos = pos[index3];
+                ypos = pos[index3+1];
+                zpos = pos[index3+2];
 
                 /* atomic separation of possible vacancy and possible interstitial */
                 sep2 = atomicSeparation2(xpos, ypos, zpos, refxpos, refypos, refzpos,
@@ -307,13 +309,17 @@ findDefects(PyObject *self, PyObject *args)
                 /* if within vacancy radius, is it an antisite or normal lattice point */
                 if (sep2 < vacRad2)
                 {
+//                    printf("  Input atom %d within vac rad: sep = %lf (%lf, %lf, %lf)\n", index, sqrt(sep2), xpos, ypos, zpos);
+                    
                     /* check whether this is the closest atom to this vacancy */
                     if (sep2 < nearestSep2)
                     {
                         /* assume that the vacancy radius is chosen so that atoms cannot belong to multiple sites */
                         if (!possibleInterstitial[index])
                         {
-                            PyErr_SetString(PyExc_RuntimeError, "Input atom associated with multiple reference sites.");
+                            char errstring[256];
+                            sprintf(errstring, "Input atom associated with multiple reference sites (index = %d, site = %d).", index, i);
+                            PyErr_SetString(PyExc_RuntimeError, errstring);
                             return NULL;
                         }
 
@@ -330,6 +336,8 @@ findDefects(PyObject *self, PyObject *args)
         {
             char symtemp[3], symtemp2[3];
             int comp;
+            
+//            printf("Classifying site %d: nearest index = %d (sep = %lf)\n", i, nearestIndex, sqrt(nearestSep2));
 
             /* this site is filled; now we check if antisite or normal site */
             symtemp[0] = specieList[2*specie[nearestIndex]];
@@ -355,8 +363,8 @@ findDefects(PyObject *self, PyObject *args)
             possibleInterstitial[nearestIndex] = 0;
             possibleVacancy[i] = 0;
 
-            if (occupancyCount > 1)
-                printf("INFO: Occupancy for site %d = %d\n", i, occupancyCount);
+//            if (occupancyCount > 1)
+//                printf("INFO: Occupancy for site %d = %d\n", i, occupancyCount);
         }
     }
     
