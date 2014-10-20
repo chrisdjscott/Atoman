@@ -407,6 +407,9 @@ class MainWindow(QtGui.QMainWindow):
         self.subWinCount += 1
         
         self.mdiArea.tileSubWindows()
+        
+        for rw in self.rendererWindows:
+            rw.outputDialog.imageTab.imageSequenceTab.refreshLinkedRenderers()
     
     def showPreferences(self):
         """
@@ -622,7 +625,10 @@ class MainWindow(QtGui.QMainWindow):
                 self.rendererWindowsSubWin.pop(i)
             
             else:
-                i += 1 
+                i += 1
+        
+        for rw in self.rendererWindows:
+            rw.outputDialog.imageTab.imageSequenceTab.refreshLinkedRenderers()
     
     def confirmCloseEvent(self):
         """

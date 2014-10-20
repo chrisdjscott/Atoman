@@ -18,6 +18,7 @@ import time
 
 import numpy as np
 from PySide import QtGui, QtCore
+from PIL import Image
 
 from ..visutils import utilities
 from ..visutils import threading_vis
@@ -1062,7 +1063,7 @@ class ImageTab(QtGui.QWidget):
         if method is not None:
             method(message)
     
-    def createMovie(self, saveDir, saveText, createMovieBox):
+    def createMovie(self, saveDir, inputText, createMovieBox, prefix=None):
         """
         Create movie.
         
@@ -1073,43 +1074,31 @@ class ImageTab(QtGui.QWidget):
             utilities.warnExeNotFound(self, "%s (FFmpeg)" % (settings.pathToFFmpeg,))
             return 2
         
-        CWD = os.getcwd()
-        try:
-            os.chdir(saveDir)
-        except OSError:
-            return 1
-        
-        try:
-            # settings
-            settings = self.mainWindow.preferences.ffmpegForm
-            framerate = createMovieBox.framerate
-            bitrate = settings.bitrate
+        # settings
+        settings = self.mainWindow.preferences.ffmpegForm
+        framerate = createMovieBox.framerate
+        bitrate = settings.bitrate
+        if prefix is None:
             outputprefix = createMovieBox.prefix
-            outputsuffix = createMovieBox.suffix
-            
-            saveText = os.path.basename(saveText)
-            
-            self.logger.info("Creating movie file: %s.%s", outputprefix, outputsuffix)
-            
-            # movie generator object
-            generator = MovieGenerator()
-            generator.log.connect(self.createMovieLogger)
-            generator.allDone.connect(generator.deleteLater)
-            
-            # create movie
-#             generator.run(os.getcwd(), ffmpeg, framerate, saveText, self.imageFormat, bitrate, outputprefix, outputsuffix)
-            
-            # runnable for sending to thread pool
-            runnable = threading_vis.GenericRunnable(generator, args=(os.getcwd(), ffmpeg, framerate, saveText, 
-                                                                      self.imageFormat, bitrate, outputprefix, 
-                                                                      outputsuffix))
-            runnable.setAutoDelete(False)
-            
-            # add to thread pool
-            QtCore.QThreadPool.globalInstance().start(runnable)
+        else:
+            outputprefix = prefix
+        outputprefix = os.path.join(saveDir, outputprefix)
+        outputsuffix = createMovieBox.suffix
         
-        finally:
-            os.chdir(CWD)
+        self.logger.info("Creating movie file: %s.%s", outputprefix, outputsuffix)
+        
+        # movie generator object
+        generator = MovieGenerator()
+        generator.log.connect(self.createMovieLogger)
+        generator.allDone.connect(generator.deleteLater)
+        
+        # runnable for sending to thread pool
+        runnable = threading_vis.GenericRunnable(generator, args=(ffmpeg, framerate, inputText, self.imageFormat, 
+                                                                  bitrate, outputprefix, outputsuffix))
+        runnable.setAutoDelete(False)
+        
+        # add to thread pool
+        QtCore.QThreadPool.globalInstance().start(runnable)
 
 ################################################################################
 
@@ -1124,14 +1113,11 @@ class MovieGenerator(QtCore.QObject):
     def __init__(self):
         super(MovieGenerator, self).__init__()
     
-    def run(self, workDir, ffmpeg, framerate, saveText, imageFormat, bitrate, outputPrefix, outputSuffix):
+    def run(self, ffmpeg, framerate, saveText, imageFormat, bitrate, outputPrefix, outputSuffix):
         """
         Create movie
         
         """
-        owd = os.getcwd()
-        os.chdir(workDir)
-        
         try:
             command = "'%s' -r %d -y -i %s.%s -r %d -b %dk '%s.%s'" % (ffmpeg, framerate, saveText, 
                                                                        imageFormat, 25, bitrate, 
@@ -1155,7 +1141,6 @@ class MovieGenerator(QtCore.QObject):
             self.log.emit("debug", "FFmpeg time taken: %f s" % ffmpegTime)
         
         finally:
-            os.chdir(owd)
             self.allDone.emit()
 
 ################################################################################
@@ -1584,17 +1569,36 @@ class ImageSequenceTab(QtGui.QWidget):
         self.flickerCheck = QtGui.QCheckBox("Eliminate flicker")
         self.flickerCheck.stateChanged[int].connect(self.flickerCheckChanged)
         rowLayout.addWidget(self.flickerCheck)
-        mainLayout.addWidget(row)
+#         mainLayout.addWidget(row)
         
         # rotate at end
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setContentsMargins(0, 0, 0, 0)
-        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+#         row = QtGui.QWidget(self)
+#         rowLayout = QtGui.QHBoxLayout(row)
+#         rowLayout.setContentsMargins(0, 0, 0, 0)
+#         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        rowLayout.addStretch()
         self.rotateAfterCheck = QtGui.QCheckBox("Rotate at end")
         self.rotateAfterCheck.stateChanged[int].connect(self.rotateAfterCheckChanged)
         rowLayout.addWidget(self.rotateAfterCheck)
         mainLayout.addWidget(row)
+        
+        # link to other renderer combo
+        self.linkedRenderWindowIndex = None
+        self.linkedRendererCombo = QtGui.QComboBox()
+        self.linkedRendererCombo.currentIndexChanged.connect(self.linkedRendererChanged)
+        row = QtGui.QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setAlignment(QtCore.Qt.AlignHCenter)
+        row.addWidget(QtGui.QLabel("Linked render window:"))
+        row.addWidget(self.linkedRendererCombo)
+        mainLayout.addLayout(row)
+        
+        # populate
+        self.linkedRendererCombo.addItem("<Off>")
+        myrwi = self.rendererWindow.rendererIndex
+        rws = [rw for rw in self.mainWindow.rendererWindows if rw.rendererIndex != myrwi]
+        print "LEN", len(self.mainWindow.rendererWindows), len(rws)
+        self.linkedRendererCombo.addItems(rws)
         
         # create movie box
         self.createMovieBox = CreateMovieBox(self)
@@ -1615,6 +1619,60 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.addWidget(startSequencerButton)
         
         mainLayout.addWidget(row)
+    
+    def refreshLinkedRenderers(self):
+        """
+        Refresh the linked renderers combo
+        
+        """
+        # clear
+        self.linkedRendererCombo.clear()
+        self.linkedRenderWindowIndex = None
+        
+        # populate
+        self.linkedRendererCombo.addItem("<Off>")
+        
+        myrwi = self.rendererWindow.rendererIndex
+        rws = [str(rw.rendererIndex) for rw in self.mainWindow.rendererWindows if rw.rendererIndex != myrwi]
+        assert len(self.mainWindow.rendererWindows) == len(rws) + 1
+        
+        self.linkedRendererCombo.addItems(rws)
+    
+    def linkedRendererChanged(self, currentText):
+        """
+        Linked renderer changed
+        
+        """
+        if self.linkedRendererCombo.currentIndex() > 0:
+            index = int(currentText)
+            
+            rw2 = None
+            for rwIndex, rw in enumerate(self.mainWindow.rendererWindows):
+                if rw.rendererIndex == index:
+                    rw2 = rw
+                    break
+            
+            if rw2 is None:
+                self.logger.error("Cannot find linked render window (%d)", index)
+                self.linkedRenderWindowIndex = None
+                return
+            
+            # do some checks
+            if rw2.currentPipelineIndex == self.rendererWindow.currentPipelineIndex:
+                if rw2.vtkRenWinInteract.size().height() == self.rendererWindow.vtkRenWinInteract.size().height():
+                    self.linkedRenderWindowIndex = rwIndex
+                    return rw2
+                
+                else:
+                    self.logger.error("Cannot select linked render window %d; heights do not match", index)
+                    self.linkedRendererCombo.setCurrentIndex(0)
+            
+            else:
+                self.logger.error("Cannote select linked render window %d; cannot handle different pipelines yet (ask me...)", index)
+                self.linkedRendererCombo.setCurrentIndex(0)
+        
+        else:
+            self.linkedRenderWindowIndex = None
     
     def rotateAfterCheckChanged(self, state):
         """
@@ -1790,6 +1848,15 @@ class ImageSequenceTab(QtGui.QWidget):
         
         saveText = os.path.join(saveDir, "%s%s" % (str(self.fileprefix.text()), self.numberFormat))
         
+        # check if linked
+        rw2 = None
+        if self.linkedRenderWindowIndex is not None:
+            # make sure still ok to use this index
+            rw2 = self.linkedRendererChanged(self.linkedRendererCombo.currentText())
+        
+        if rw2 is not None:
+            saveText2 = saveText + "_2"
+        
         # progress dialog
         NSteps = int((self.maxIndex - self.minIndex) / self.interval) + 1
         progDialog = QtGui.QProgressDialog("Running sequencer...", "Cancel", self.minIndex, NSteps)
@@ -1876,12 +1943,41 @@ class ImageSequenceTab(QtGui.QWidget):
                         os.unlink(currentFile)
                     return
                 
-                saveName = saveText % (count,)
+                saveName = saveText % count
                 self.logger.info("  Saving image: '%s'", saveName)
                 
                 # now save image
                 filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, saveName, 1, povray=povray)
                 
+                # linked image
+                if rw2 is not None:
+                    saveName2 = saveText2 % count
+                    self.logger.info("  Saving linked image: '%s'", saveName2)
+                    
+                    filename2 = rw2.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, saveName2, 1, povray=povray)
+                    
+                    # merge the files
+                    mergeFn = os.path.join(saveDir, "merge%d.%s" % (i, self.parent.imageFormat))
+                    self.logger.debug("Merging the files together: '%s'", mergeFn)
+                    
+                    # read images
+                    im1 = Image.open(filename)
+                    im2 = Image.open(filename2)
+                    
+                    assert im1.size[1] == im2.size[1], "Image sizes do not match: %r != %r" % (im1.size, im2.size)
+                    
+                    # new empty image
+                    newSize = (im1.size[0] + im2.size[0], im1.size[1])
+                    newIm = Image.new('RGB', newSize)
+                    
+                    # paste images
+                    newIm.paste(im1, (0, 0))
+                    newIm.paste(im2, (im1.size[0], 0))
+                    
+                    # save
+                    newIm.save(mergeFn)
+                
+                # increment output counter
                 count += 1
                 
                 # exit if cancelled
@@ -1898,6 +1994,22 @@ class ImageSequenceTab(QtGui.QWidget):
                 progDialog.setValue(count)
                 
                 QtGui.QApplication.processEvents()
+            
+            # create movie
+            if not status and self.createMovieBox.isChecked():
+                # show wait cursor
+#                 QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+                
+                try:
+                    self.parent.createMovie(saveDir, saveText, self.createMovieBox)
+                    
+                    if rw2 is not None:
+                        self.parent.createMovie(saveDir, os.path.join(saveDir, "merge%d"), self.createMovieBox, prefix="merged")
+                
+                finally:
+                    # set cursor to normal
+#                     QtGui.QApplication.restoreOverrideCursor()
+                    pass
             
             # rotate?
             if self.rotateAfter:
@@ -1918,17 +2030,7 @@ class ImageSequenceTab(QtGui.QWidget):
             # close progress dialog
             progDialog.close()
         
-        # create movie
-        if not status and self.createMovieBox.isChecked():
-            # show wait cursor
-            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
-            
-            try:
-                self.parent.createMovie(saveDir, saveText, self.createMovieBox)
-            
-            finally:
-                # set cursor to normal
-                QtGui.QApplication.restoreOverrideCursor()
+        
     
     def eliminateFlicker(self, state, previousPos, pipelinePage):
         """
