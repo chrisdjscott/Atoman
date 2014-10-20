@@ -1585,7 +1585,7 @@ class ImageSequenceTab(QtGui.QWidget):
         # link to other renderer combo
         self.linkedRenderWindowIndex = None
         self.linkedRendererCombo = QtGui.QComboBox()
-        self.linkedRendererCombo.currentIndexChanged.connect(self.linkedRendererChanged)
+        self.linkedRendererCombo.currentIndexChanged[str].connect(self.linkedRendererChanged)
         row = QtGui.QHBoxLayout()
         row.setContentsMargins(0, 0, 0, 0)
         row.setAlignment(QtCore.Qt.AlignHCenter)
@@ -1596,8 +1596,7 @@ class ImageSequenceTab(QtGui.QWidget):
         # populate
         self.linkedRendererCombo.addItem("<Off>")
         myrwi = self.rendererWindow.rendererIndex
-        rws = [rw for rw in self.mainWindow.rendererWindows if rw.rendererIndex != myrwi]
-        print "LEN", len(self.mainWindow.rendererWindows), len(rws)
+        rws = [str(rw.rendererIndex) for rw in self.mainWindow.rendererWindows if rw.rendererIndex != myrwi]
         self.linkedRendererCombo.addItems(rws)
         
         # create movie box
@@ -1625,6 +1624,8 @@ class ImageSequenceTab(QtGui.QWidget):
         Refresh the linked renderers combo
         
         """
+        self.logger.debug("Refreshing linked renderer options")
+        
         # clear
         self.linkedRendererCombo.clear()
         self.linkedRenderWindowIndex = None
