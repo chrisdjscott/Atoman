@@ -18,6 +18,9 @@ from CDJSVis.visutils import version
 
 VERSION = version.getVersion()
 
+# write version to freeze file
+open(os.path.join("CDJSVis", "visutils", "version_freeze.py"), "w").write("__version__ = '%s'\n" % VERSION)
+
 # if on Mac we have to force gcc (for openmp...)
 if platform.system() == "Darwin":
     os.environ["CC"] = "gcc"
