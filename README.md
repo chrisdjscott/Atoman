@@ -43,23 +43,46 @@ If these are not installed in default system locations you can set the paths to 
 
 ## Installation
 
-The recommended way to install the code is to change into the root directory and run
+You can either build the code in-place or install it into the Python site-packages directory (both using the setup.py script).
+
+### Installing to Python site-packages
+
+Build the documentation (includes inplace build of extensions):
 
 ```sh
 python setup.py build_sphinx
 ```
 
-which will build all the C extensions in place and also build the documentation.
-
-Then you can add the `/path/to/CDJSVis` directory to you PYTHONPATH and PATH and run CDJSVis.py from anywhere.
-
-## Running the tests
-
-Currently there are not many tests, but you should run the ones that are there. To run the tests you should run
+and verify the tests run with no errors:
 
 ```sh
 python setup.py test
 ```
+
+Then run:
+
+```sh
+python setup.py build
+python setup.py install
+```
+
+In you are not using a virtual environment you may need to `sudo` the last (install) command.
+
+### In-place build
+
+Build the documentation (includes inplace build of extensions):
+
+```sh
+python setup.py build_sphinx
+```
+
+and verify the tests run with no errors:
+
+```sh
+python setup.py test
+```
+
+Then you can add the `/path/to/CDJSVis` directory to you PYTHONPATH and PATH and run cdjsvis.py from anywhere.
 
 ## Building application (Mac OS X)
 
