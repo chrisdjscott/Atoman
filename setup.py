@@ -111,7 +111,7 @@ def configuration(parent_package='', top_path=None):
                        quiet=True)
     
     config.add_subpackage("CDJSVis")
-    config.add_scripts(["CDJSVis.py"])
+    config.add_scripts(["cdjsvis.py"])
     
     return config
 
@@ -126,7 +126,12 @@ def do_clean():
         
         if "resources.py" in files:
             os.unlink(os.path.join(root, "resources.py"))
-        
+       
+        pyc_files = glob.glob(os.path.join(root, "*.pyc"))
+        for pyc_file in pyc_files:
+#            print "rm CDJSVis/%s" % os.path.relpath(pyc_file)
+            os.unlink(pyc_file)
+
 #         cmd = "rm -f %s %s" % (os.path.join(root, "*.pyc"), os.path.join(root, "*.pyo"))
 #         print cmd
     
