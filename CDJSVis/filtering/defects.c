@@ -325,8 +325,9 @@ findDefects(PyObject *self, PyObject *args)
 
                         nearestSep2 = sep2;
                         nearestIndex = index;
-                        occupancyCount++;
                     }
+                    
+                    occupancyCount++;
                 }
             }
         }
