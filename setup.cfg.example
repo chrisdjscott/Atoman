@@ -1,10 +1,14 @@
 
+[build_ext]
+#inplace = 1
+
+
+# Nothing should need to be changed below here #
+
+
 [build_sphinx]
 source-dir = doc
 build-dir = doc/_build
 
 [nosetests]
 where = CDJSVis/tests
-
-[build_ext]
-inplace = 1

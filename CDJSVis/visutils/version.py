@@ -39,7 +39,11 @@ def getVersion():
             
             status = proc.poll()
             if status:
-                version = "vUNKNOWN"
+                try:
+                    from . import version_freeze
+                    version = version_freeze.__version__
+                except ImportError:
+                    version = "vUNKNOWN"
             else:
                 version = stdout.strip()
         

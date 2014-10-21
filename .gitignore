@@ -13,3 +13,4 @@
 build/
 *.log
 CDJSVis.egg-info/
+setup.cfg
