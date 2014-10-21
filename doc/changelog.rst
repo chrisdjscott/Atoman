@@ -2,11 +2,14 @@
 Changelog
 =========
 
-**dev**
+**v141021**
 
 * Rewrite on-screen info dialog
    - Change layout
    - Add option to customise the text
+* Fix bug when clicking defect (introduced in last version)
+* Add ability to render two render windows side by side (same pipeline only for now)
+* Can now be installed using 'python setup.py install' like any other Python package
 
 **v141015**
 
