@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* Make paramiko optional
+
 **v141021**
 
 * Rewrite on-screen info dialog

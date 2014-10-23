@@ -25,8 +25,12 @@ import re
 import errno
 
 from PySide import QtGui, QtCore
-import paramiko
-logging.getLogger("paramiko").setLevel(logging.WARNING)
+try:
+    import paramiko
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
+    PARAMIKO_LOADED = True
+except ImportError:
+    PARAMIKO_LOADED = False
 
 from . import genericForm
 from .. import resources

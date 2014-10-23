@@ -209,6 +209,10 @@ class AutoDetectReaderForm(GenericReaderForm):
         Open SFTP browser
         
         """
+        if self.parent.sftp_browser is None:
+            self.mainWindow.displayError("Paramiko must be installed to use the SFTP browser")
+            return
+        
         self.logger.debug("Opening SFTP browser (AUTO DETECT)")
         
         ok = self.parent.sftp_browser.exec_()

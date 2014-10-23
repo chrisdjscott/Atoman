@@ -1,6 +1,6 @@
 # CDJSVis README file
 
-This file is aimed at people wanting to run the code from source. If you are running a prebuilt .app application then the only section that concerns you is the [Other software](http://magrid-server-5.lut.ac.uk/macdjs/CDJSVis/tree/master#other-software) section below.
+This file is aimed at people wanting to run the code from source. If you are running a prebuilt '.app' application then the only section that concerns you is the [Other software](http://magrid-server-5.lut.ac.uk/macdjs/CDJSVis/tree/master#other-software) section below.
 
 ## Requirements
 
@@ -20,11 +20,11 @@ Required:
 * [VTK](http://www.vtk.org/) (with the Python bindings enabled)
 * [Sphinx](http://sphinx-doc.org/)
 * [nose](https://nose.readthedocs.org/en/latest/) (testing)
-* [Paramiko](http://www.paramiko.org/)
 
 Optional:
 
-* [pyhull](http://pythonhosted.org/pyhull/) (Optional, for computing facet areas of convex hulls)
+* [Paramiko](http://www.paramiko.org/) - for loading files via the SFTP file browser
+* [pyhull](http://pythonhosted.org/pyhull/) - for computing facet areas of convex hulls
 
 ### Other libraries
 
@@ -43,42 +43,42 @@ If these are not installed in default system locations you can set the paths to 
 
 ## Installation
 
-You can either build the code in-place or install it into the Python site-packages directory (both using the setup.py script).
+You can either build the code in-place or install it into the Python site-packages directory, for example within a [virtualenv](http://virtualenv.readthedocs.org/en/latest/).
 
 ### Installing to Python site-packages
 
 Build the documentation (includes inplace build of extensions):
 
-```sh
+```
 python setup.py build_sphinx
 ```
 
 and verify the tests run with no errors:
 
-```sh
+```
 python setup.py test
 ```
 
 Then run:
 
-```sh
+```
 python setup.py build
 python setup.py install
 ```
 
-In you are not using a virtual environment you may need to `sudo` the last (install) command.
+If you are not using a virtual environment you may need to `sudo` the last (install) command.
 
 ### In-place build
 
 Build the documentation (includes inplace build of extensions):
 
-```sh
+```
 python setup.py build_sphinx
 ```
 
 and verify the tests run with no errors:
 
-```sh
+```
 python setup.py test
 ```
 

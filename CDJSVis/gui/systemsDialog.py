@@ -134,7 +134,10 @@ class LoadSystemForm(GenericForm):
         self.mainToolbar = mainToolbar
         
         # sftp browser
-        self.sftp_browser = sftpDialog.SFTPBrowserDialog(self.mainWindow, parent=self)
+        if sftpDialog.PARAMIKO_LOADED:
+            self.sftp_browser = sftpDialog.SFTPBrowserDialog(self.mainWindow, parent=self)
+        else:
+            self.sftp_browser = None
         
         # ordered list of keys
         self.readerFormsKeys = [
