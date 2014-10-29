@@ -83,6 +83,8 @@ class MainWindow(QtGui.QMainWindow):
         Show the feature notification window
         
         """
+        return
+        
         settings = QtCore.QSettings()
         
         dlg = dialogs.NotifyFeatureWindow(self)
