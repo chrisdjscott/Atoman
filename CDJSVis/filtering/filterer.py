@@ -1193,7 +1193,7 @@ class Filterer(object):
                                        refLattice.pos, refLattice.cellDims, self.pipelinePage.PBC, settings.vacancyRadius, minPos, maxPos, 
                                        settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
                                        onAntSpecCount, splitIntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials, 
-                                       settings.identifySplitInts, self.parent.driftCompensation, self.driftVector, acnaArray)
+                                       settings.identifySplitInts, self.parent.driftCompensation, self.driftVector, acnaArray, settings.acnaStructureType)
         
         # summarise
         NDef = NDefectsByType[0]

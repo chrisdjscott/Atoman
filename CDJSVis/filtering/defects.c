@@ -46,7 +46,7 @@ findDefects(PyObject *self, PyObject *args)
     int exclSpecInputDim, *exclSpecInput, exclSpecRefDim, *exclSpecRef, NAtoms, *specie, refNAtoms, *PBC, *specieRef;
     int findClustersFlag, *defectCluster, NSpecies, *vacSpecCount, *intSpecCount, *antSpecCount, *onAntSpecCount;
     int *splitIntSpecCount, minClusterSize, maxClusterSize, *splitInterstitials, identifySplits, driftCompensation;
-    int acnaArrayDim;
+    int acnaArrayDim, acnaStructureType;
     double *pos, *refPosIn, *cellDims, vacancyRadius, *minPos, *maxPos, clusterRadius, *driftVector, *acnaArray;
     PyArrayObject *specieListIn=NULL;
     PyArrayObject *specieListRefIn=NULL;
@@ -90,7 +90,7 @@ findDefects(PyObject *self, PyObject *args)
     
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "iiiO!O!O!O!O!O!O!iO!O!O!iO!O!O!O!O!dO!O!idO!O!O!O!O!O!iiO!iiO!O!", &includeVacs, &includeInts, &includeAnts,
+    if (!PyArg_ParseTuple(args, "iiiO!O!O!O!O!O!O!iO!O!O!iO!O!O!O!O!dO!O!idO!O!O!O!O!O!iiO!iiO!O!i", &includeVacs, &includeInts, &includeAnts,
             &PyArray_Type, &NDefectsTypeIn, &PyArray_Type, &vacanciesIn, &PyArray_Type, &interstitialsIn, &PyArray_Type, &antisitesIn,
             &PyArray_Type, &onAntisitesIn, &PyArray_Type, &exclSpecInputIn, &PyArray_Type, &exclSpecRefIn, &NAtoms, &PyArray_Type, 
             &specieListIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &refNAtoms, &PyArray_Type, &specieListRefIn, &PyArray_Type, 
@@ -98,7 +98,7 @@ findDefects(PyObject *self, PyObject *args)
             &minPosIn, &PyArray_Type, &maxPosIn, &findClustersFlag, &clusterRadius, &PyArray_Type, &defectClusterIn, &PyArray_Type, 
             &vacSpecCountIn, &PyArray_Type, &intSpecCountIn, &PyArray_Type, &antSpecCountIn, &PyArray_Type, &onAntSpecCountIn, 
             &PyArray_Type, &splitIntSpecCountIn, &minClusterSize, &maxClusterSize, &PyArray_Type, &splitInterstitialsIn, &identifySplits,
-            &driftCompensation, &PyArray_Type, &driftVectorIn, &PyArray_Type, &acnaArrayIn))
+            &driftCompensation, &PyArray_Type, &driftVectorIn, &PyArray_Type, &acnaArrayIn, &acnaStructureType))
         return NULL;
     
     if (not_intVector(NDefectsTypeIn)) return NULL;
@@ -705,7 +705,7 @@ findDefects(PyObject *self, PyObject *args)
                 /* check ACNA for FCC (hardcoded for now, not good...) */
                 acnaVal = (int) acnaArray[foundIndex];
 //                printf("DEBUG:   acna val is %d (%d)\n", acnaVal, ATOM_STRUCTURE_FCC);
-                if (acnaVal == ATOM_STRUCTURE_FCC)
+                if (acnaVal == acnaStructureType)
                 {
 //                    printf("DEBUG:   this should not be a Frenkel pair... (sep = %lf)\n", sqrt(foundSep2));
                     
