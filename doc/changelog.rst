@@ -2,9 +2,10 @@
 Changelog
 =========
 
-**dev**
+**v141031**
 
 * Make paramiko optional
+* Selected ACNA value from point defect filter was not being used
 
 **v141021**
 
