@@ -8,7 +8,7 @@ import subprocess
 
 __version__ = subprocess.Popen(["git", "describe"], stdout=subprocess.PIPE).communicate()[0].strip()
 
-a = Analysis(['../CDJSVis.py'],
+a = Analysis(['../cdjsvis.py'],
              pathex=[],
              hiddenimports=[],
              hookspath=None)

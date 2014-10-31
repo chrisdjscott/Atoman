@@ -98,15 +98,6 @@ class Filterer(object):
         self.voronoi = None
         
         self.structureCounterDicts = {}
-#         self.knownStructures = [
-#             "disordered",
-#             "FCC",
-#             "HCP",
-#             "BCC",
-#             "icosahedral",
-#             "sigma11_tilt1",
-#             "sigma11_tilt2",
-#         ]
     
     def removeActors(self, sequencer=False):
         """
