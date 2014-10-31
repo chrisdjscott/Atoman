@@ -118,8 +118,8 @@ def calculateDefectClusterVolumes(inputLattice, refLattice, vacancies, clusterLi
         
         cluster.volume = volume
         
-        logger.debug("  Cluster %d (%d defects)", count, cluster.getNDefects())
-        logger.debug("    volume is %f", volume)
+        logging.debug("  Cluster %d (%d defects)", count, cluster.getNDefects())
+        logging.debug("    volume is %f", volume)
         
         count += 1
 
