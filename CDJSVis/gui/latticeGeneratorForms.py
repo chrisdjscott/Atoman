@@ -155,7 +155,6 @@ class GenericLatticeGeneratorForm(GenericForm):
         Number of unit cells changed.
         
         """
-        print "VAL", val
         self.generatorArgs.NCells[0] = val
     
     def numUnitCellsYChanged(self, val):
