@@ -466,19 +466,24 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         """
         self.logger.debug("Plotting '%s'", self.scalarsID)
         
-        scalars = self.scalarsArray
-        minVal = math.floor(self.scalarMin)
-        maxVal = math.ceil(self.scalarMax)
-        
-        if maxVal == minVal:
+        if self.scalarMax == self.scalarMin:
             self.logger.error("Max val == min val; not plotting histogram")
             return
+        
+        scalars = self.scalarsArray
+        minVal = self.scalarMin
+        maxVal = self.scalarMax
         
         # number of bins
         if self.useNumBins:
             numBins = self.numBins
         else:
             binWidth = self.binWidth
+            
+            # min
+            tmp = int(minVal / binWidth)
+            assert tmp * binWidth <= minVal and (tmp + 1) * binWidth > minVal
+            minVal = tmp * binWidth
             
             # max
             maxVal = minVal
