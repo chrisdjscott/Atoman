@@ -464,6 +464,7 @@ class PipelineForm(QtGui.QWidget):
         self.scalarBarAdded = False
         
         # progress dialog
+        sequencer = True
         if not sequencer:
             progDiag = utils.showProgressDialog("Applying lists", "Applying lists...", self)
         
