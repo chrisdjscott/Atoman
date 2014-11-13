@@ -180,7 +180,7 @@ class MainWindow(QtGui.QMainWindow):
         self.imageViewer = dialogs.ImageViewer(self, parent=self)
         
         # preferences dialog
-        self.preferences = preferences.PreferencesDialog(parent=self)
+        self.preferences = preferences.PreferencesDialog(self, parent=self)
         
         # bonds editor
         self.bondsEditor = dialogs.BondEditorDialog(parent=self)

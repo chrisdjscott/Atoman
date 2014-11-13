@@ -882,7 +882,39 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         rowLayout.addWidget(QtGui.QLabel("OMP_NUM_THREADS: "))
         rowLayout.addWidget(ompNumThreadsSpin)
         
+        # disable mouse wheel
+        disableMouseWheel = int(self.settings.value("mouse/disableWheel", 1))
+        self.disableMouseWheel = bool(disableMouseWheel)
+        self.logger.debug("Disable mouse wheel (initial value): %s", self.disableMouseWheel)
+        disableMouseWheelCheck = QtGui.QCheckBox("Disable mouse wheel (VTK)")
+        disableMouseWheelCheck.setToolTip("Disables the mouse wheel in the VTK window. The mouse wheel can be used to zoom in and out. This is most useful with the wireless Apple Magic mouse.")
+        if self.disableMouseWheel:
+            disableMouseWheelCheck.setCheckState(QtCore.Qt.Checked)
+        else:
+            disableMouseWheelCheck.setCheckState(QtCore.Qt.Unchecked)
+        disableMouseWheelCheck.stateChanged.connect(self.disableMouseWheelChanged)
+        
+        rowLayout = self.newRow()
+        rowLayout.addWidget(disableMouseWheelCheck)
+        
         self.init()
+    
+    def disableMouseWheelChanged(self, state):
+        """
+        Disable mouse wheel changed
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.disableMouseWheel = False
+        
+        else:
+            self.disableMouseWheel = True
+        
+        self.settings.setValue("mouse/disableWheel", int(self.disableMouseWheel))
+        
+        # broadcast
+        for rw in self.parent.mainWindow.rendererWindows:
+            rw.vtkRenWinInteract.changeDisableMouseWheel(self.disableMouseWheel)
     
     def ompNumThreadsChanged(self, n):
         """
@@ -906,12 +938,13 @@ class PreferencesDialog(QtGui.QDialog):
     A number of global application settings can be configured on the Preferences dialog.
     
     """
-    def __init__(self, parent=None):
+    def __init__(self, mainWindow, parent=None):
         super(PreferencesDialog, self).__init__(parent)
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.parent = parent
+        self.mainWindow = mainWindow
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Preferences")

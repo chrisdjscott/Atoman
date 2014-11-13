@@ -134,9 +134,11 @@ class RendererWindow(QtGui.QWidget):
         # VTK interactor
         self.vtkRenWinInteract = QVTKRenderWindowInteractor(self, rw=self.vtkRenWin)
         
-        
         # interactor style
         self.vtkRenWinInteract._Iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
+        
+        # disable wheel event?
+        self.vtkRenWinInteract.changeDisableMouseWheel(self.mainWindow.preferences.generalForm.disableMouseWheel)
         
         # add observers
 #         self.vtkRenWinInteract._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)

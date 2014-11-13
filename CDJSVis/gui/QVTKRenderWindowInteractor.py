@@ -213,7 +213,16 @@ class QVTKRenderWindowInteractor(MSWidget):
         self._Iren.AddObserver('DestroyTimerEvent', self.DestroyTimer)
         self._Iren.GetRenderWindow().AddObserver('CursorChangedEvent',
                                                  self.CursorChangedEvent)
-
+        
+        if kw.has_key("disable_mouse_wheel"):
+            self.disableMouseWheel = kw["disable_mouse_wheel"]
+        else:
+            self.disableMouseWheel = False
+    
+    def changeDisableMouseWheel(self, disableMouseWheel):
+        """Enable/disable mouse wheel event"""
+        self.disableMouseWheel = disableMouseWheel
+    
     def __getattr__(self, attr):
         """Makes the object behave like a vtkGenericRenderWindowInteractor"""
         self.logger.log(1, "In QVTKRenderWindowInteractor::__getattr__()")
@@ -413,6 +422,8 @@ class QVTKRenderWindowInteractor(MSWidget):
 
     def wheelEvent(self, ev):
         self.logger.log(1, "In QVTKRenderWindowInteractor::wheelEvent()")
+        if self.disableMouseWheel:
+            return
         if ev.delta() >= 0:
             self._Iren.MouseWheelForwardEvent()
         else:
