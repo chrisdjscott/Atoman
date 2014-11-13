@@ -10,6 +10,7 @@ import sys
 import logging
 import datetime
 import multiprocessing as mp
+import textwrap
 
 from PySide import QtGui, QtCore
 
@@ -877,6 +878,7 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         ompNumThreadsSpin.setMaximum(maxthread)
         ompNumThreadsSpin.setValue(ini)
         ompNumThreadsSpin.valueChanged.connect(self.ompNumThreadsChanged)
+        ompNumThreadsSpin.setToolTip("The number of threads that can be used by OpenMP")
         
         rowLayout = self.newRow()
         rowLayout.addWidget(QtGui.QLabel("OMP_NUM_THREADS: "))
@@ -887,7 +889,11 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         self.disableMouseWheel = bool(disableMouseWheel)
         self.logger.debug("Disable mouse wheel (initial value): %s", self.disableMouseWheel)
         disableMouseWheelCheck = QtGui.QCheckBox("Disable mouse wheel (VTK)")
-        disableMouseWheelCheck.setToolTip("Disables the mouse wheel in the VTK window. The mouse wheel can be used to zoom in and out. This is most useful with the wireless Apple Magic mouse.")
+        disableMouseWheelCheck.setToolTip(textwrap.dedent("""
+                                                          Disables the mouse wheel in the VTK window. The 
+                                                          mouse wheel can be used to zoom in and out. This is 
+                                                          most useful with the wireless Apple Magic mouse.
+                                                          """).strip())
         if self.disableMouseWheel:
             disableMouseWheelCheck.setCheckState(QtCore.Qt.Checked)
         else:
