@@ -2,6 +2,12 @@
 Changelog
 =========
 
+**v141113**
+
+* Histogram min/max are always a multiple of the bin width
+* Do not show progress dialog when running filter lists
+* Add option to disable mouse wheel events in the VTK window (on by default)
+
 **v141031**
 
 * Make paramiko optional
