@@ -690,6 +690,10 @@ class Filterer(object):
         
         if status:
             self.logger.error("    Error in bonds clib (%d)", status)
+            
+            if status == 1:
+                self.mainWindow.displayError("Max bonds per atom exceeded!\n\nThis would suggest you bond range is too big!")
+            
             return 1
         
         # total number of bonds
