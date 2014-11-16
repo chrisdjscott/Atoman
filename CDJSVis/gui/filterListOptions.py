@@ -90,7 +90,6 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         saveToFileCheck.stateChanged.connect(self.saveToFileChanged)
         saveToFileCheck.setToolTip("Save Voronoi volumes/number of neighbours to file")
         filenameEdit = QtGui.QLineEdit(self.outputFilename)
-        filenameEdit.setFixedWidth(130)
         filenameEdit.textChanged.connect(self.filenameChanged)
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(saveToFileCheck)
