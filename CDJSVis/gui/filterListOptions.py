@@ -66,24 +66,13 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         self.faceAreaThreshold = 0.1
         
         # layout
-        self.contentLayout = QtGui.QVBoxLayout(self)
-#        layout.setSpacing(0)
-#        layout.setContentsMargins(0, 0, 0, 0)
-        self.contentLayout.setAlignment(QtCore.Qt.AlignTop)
-        
-        # display voronoi cells
-        self.displayVoronoiCheck = QtGui.QCheckBox("Display Voronoi cells")
-        self.displayVoronoiCheck.stateChanged.connect(self.displayVoronoiToggled)
-        
-        row = self.newRow()
-        row.addWidget(self.displayVoronoiCheck)
+        dialogLayout = QtGui.QFormLayout(self)
         
         # use radii
-        self.useRadiiCheck = QtGui.QCheckBox("Use radii")
+        self.useRadiiCheck = QtGui.QCheckBox()
         self.useRadiiCheck.stateChanged.connect(self.useRadiiChanged)
-        
-        row = self.newRow()
-        row.addWidget(self.useRadiiCheck)
+        self.useRadiiCheck.setToolTip("Positions are weighted by their radii")
+        dialogLayout.addRow("Use radii", self.useRadiiCheck)
         
         # face area threshold
         faceThreshSpin = QtGui.QDoubleSpinBox()
@@ -93,65 +82,56 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         faceThreshSpin.setDecimals(1)
         faceThreshSpin.setValue(self.faceAreaThreshold)
         faceThreshSpin.valueChanged.connect(self.faceAreaThresholdChanged)
+        faceThreshSpin.setToolTip("When counting the number of neighbouring cells, faces with area lower than this value are ignored")
+        dialogLayout.addRow("Face area threshold", faceThreshSpin)
         
-        row = self.newRow()
-        row.addWidget(QtGui.QLabel("Face area threshold:"))
-        row.addWidget(faceThreshSpin)
+        # save to file
+        saveToFileCheck = QtGui.QCheckBox()
+        saveToFileCheck.stateChanged.connect(self.saveToFileChanged)
+        saveToFileCheck.setToolTip("Save Voronoi volumes/number of neighbours to file")
+        filenameEdit = QtGui.QLineEdit(self.outputFilename)
+        filenameEdit.setFixedWidth(130)
+        filenameEdit.textChanged.connect(self.filenameChanged)
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(saveToFileCheck)
+        vbox.addWidget(filenameEdit)
+        dialogLayout.addRow("Save to file", vbox)
+        
+        # break
+        line = QtGui.QFrame()
+        line.setFrameShape(QtGui.QFrame.HLine)
+        line.setFrameShadow(QtGui.QFrame.Sunken)
+        dialogLayout.addRow(line)
+        
+        # display voronoi cells
+        self.displayVoronoiCheck = QtGui.QCheckBox()
+        self.displayVoronoiCheck.stateChanged.connect(self.displayVoronoiToggled)
+        self.displayVoronoiCheck.setToolTip("Display the Voronoi cells of the visible atoms")
+        dialogLayout.addRow("Display Voronoi cells", self.displayVoronoiCheck)
         
         # opacity
-        label = QtGui.QLabel("Opacity:")
-        
         self.opacitySpin = QtGui.QDoubleSpinBox()
         self.opacitySpin.setMinimum(0.0)
         self.opacitySpin.setMaximum(1.0)
         self.opacitySpin.setSingleStep(0.01)
         self.opacitySpin.setValue(self.opacity)
         self.opacitySpin.valueChanged.connect(self.opacityChanged)
+        self.opacitySpin.setToolTip("Opacity of displayed Voronoi cells")
+        dialogLayout.addRow("Opacity", self.opacitySpin)
         
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.opacitySpin)
+        # button box
+        buttonBox = QtGui.QDialogButtonBox()
+        dialogLayout.addRow(buttonBox)
         
-        # save to file
-        saveToFileGroup = QtGui.QGroupBox("Save to file")
-        saveToFileGroup.setCheckable(True)
-        saveToFileGroup.setChecked(False)
-#         saveToFileGroup.setAlignment(QtCore.Qt.AlignCenter)
-        saveToFileGroup.toggled.connect(self.saveToFileChanged)
-        
-        layout = QtGui.QVBoxLayout(saveToFileGroup)
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
-                
-        row = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row)
-        rowLayout.setSpacing(0)
-        rowLayout.setContentsMargins(0, 0, 0, 0)
-        
-        filenameEdit = QtGui.QLineEdit(self.outputFilename)
-        filenameEdit.setFixedWidth(130)
-        filenameEdit.textChanged.connect(self.filenameChanged)
-        
-        rowLayout.addWidget(filenameEdit)
-        
-        layout.addWidget(row)
-        
-        row = self.newRow()
-        row.addWidget(saveToFileGroup)
-        
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "Show help")
-        helpButton.setToolTip("Show help page")
+        # help button
+        helpButton = buttonBox.addButton(buttonBox.Help)
         helpButton.setAutoDefault(0)
-        helpButton.clicked.connect(self.loadHelpPage)
-        row = self.newRow()
-        row.addWidget(helpButton)
+        buttonBox.helpRequested.connect(self.loadHelpPage)
         self.helpPage = "usage/analysis/filterListOptions.html#voronoi-options"
         
-        label = QtGui.QLabel("""<qt>See <a href="http://math.lbl.gov/voro++/about.html">here</a> for info about Voro++</qt>""")
-        label.setOpenExternalLinks(True)
-        label.setTextInteractionFlags(QtCore.Qt.LinksAccessibleByMouse)
-        row = self.newRow()
-        row.addWidget(label)
+        # close button
+        closeButton = buttonBox.addButton(buttonBox.Close)
+        closeButton.setDefault(1)
     
     def loadHelpPage(self):
         """
@@ -195,12 +175,16 @@ class VoronoiOptionsWindow(QtGui.QDialog):
 #         for state in self.mainWindow.systemsDialog.lattice_list:
 #             state.voronoi = None
     
-    def saveToFileChanged(self, val):
+    def saveToFileChanged(self, state):
         """
         Save to file changed
         
         """
-        self.outputToFile = val
+        if state == QtCore.Qt.Unchecked:
+            self.outputToFile = False
+        
+        else:
+            self.outputToFile = True
         
         self.clearVoronoiResults()
     
