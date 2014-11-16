@@ -329,22 +329,22 @@ class SystemsDialog(QtGui.QDialog):
         self.generate_system_form = GenerateInputForm(self, self.mainWindow, self.mainToolbar)
         self.new_system_stack.addWidget(self.generate_system_form)
         
-        # help icon
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
-        helpButton.setFixedWidth(20)
-        helpButton.setFixedHeight(20)
-        helpButton.setToolTip("Show help page")
-        helpButton.clicked.connect(self.load_help_page)
+        # button box
+        self.buttonBox = QtGui.QDialogButtonBox()
         
-        # hide button
-        hideButton = QtGui.QPushButton("&Hide")
-        hideButton.clicked.connect(self.close)
-        row = QtGui.QHBoxLayout()
-        row.addStretch(1)
-        row.addWidget(hideButton)
-        row.addStretch(1)
-        row.addWidget(helpButton)
-        dialog_layout.addLayout(row)
+        # help button
+        helpButton = self.buttonBox.addButton(self.buttonBox.Help)
+        helpButton.setToolTip("Show help page")
+        helpButton.setAutoDefault(False)
+        self.buttonBox.helpRequested.connect(self.load_help_page)
+        
+        # close button
+        closeButton = self.buttonBox.addButton(self.buttonBox.Close)
+        closeButton.setToolTip("Hide dialog")
+        closeButton.setDefault(True)
+        self.buttonBox.rejected.connect(self.close)
+        
+        dialog_layout.addWidget(self.buttonBox)
     
     def tmpHide(self):
         """

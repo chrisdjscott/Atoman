@@ -3,9 +3,9 @@
 Settings for filters.
 
 Dialogs must be named like: FilterNameSettingsDialog
-    where FilterName is the (capitalised) name of the
-    filter with no spaces. Eg "Point defects" becomes
-    "PointDefectsSettingsDialog".
+where FilterName is the (capitalised) name of the
+filter with no spaces. Eg "Point defects" becomes
+"PointDefectsSettingsDialog".
 
 @author: Chris Scott
 
@@ -13,6 +13,7 @@ Dialogs must be named like: FilterNameSettingsDialog
 import sys
 import logging
 import functools
+import textwrap
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -87,18 +88,15 @@ class GenericSettingsDialog(QtGui.QDialog):
         dialogLayout.addWidget(tabWidget)
         self.setLayout(dialogLayout)
         
-        # buttons
-        closeButton = QtGui.QPushButton("Hide")
-        closeButton.setAutoDefault(1)
-        self.connect(closeButton, QtCore.SIGNAL('clicked()'), self.close)
+        # button box
+        self.buttonBox = QtGui.QDialogButtonBox()
         
-        buttonWidget = QtGui.QWidget()
-        buttonLayout = QtGui.QHBoxLayout(buttonWidget)
-        buttonLayout.setAlignment(QtCore.Qt.AlignCenter)
-#        buttonLayout.addStretch()
-        buttonLayout.addWidget(closeButton)
+        # add close button
+        closeButton = self.buttonBox.addButton(self.buttonBox.Close)
+        closeButton.setDefault(True)
+        self.buttonBox.rejected.connect(self.close)
         
-        dialogLayout.addWidget(buttonWidget)
+        dialogLayout.addWidget(self.buttonBox)
         
         # filtering enabled by default
         self.filteringEnabled = True
@@ -111,12 +109,11 @@ class GenericSettingsDialog(QtGui.QDialog):
         Add button with link to help page
         
         """
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "Show help")
+        helpButton = self.buttonBox.addButton(self.buttonBox.Help)
+        helpButton.setAutoDefault(False)
         helpButton.setToolTip("Show help page")
-        helpButton.setAutoDefault(0)
-        helpButton.clicked.connect(self.loadHelpPage)
-        self.newRow()
-        self.newRow().addWidget(helpButton)
+        self.buttonBox.helpRequested.connect(self.loadHelpPage)
+        
         self.helpPage = page
     
     def loadHelpPage(self):
@@ -124,6 +121,8 @@ class GenericSettingsDialog(QtGui.QDialog):
         Load the help page
         
         """
+        self.logger.debug("Help requested: '%s'", self.helpPage)
+        
         if self.helpPage is None:
             return
         
@@ -701,16 +700,19 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.intTypeCheckBox = QtGui.QCheckBox(" Interstitials")
         self.intTypeCheckBox.setChecked(1)
         self.intTypeCheckBox.stateChanged[int].connect(self.intVisChanged)
+        self.intTypeCheckBox.setToolTip("If unchecked then interstitials are not shown")
         visTypesLayout.addWidget(self.intTypeCheckBox)
         
         self.vacTypeCheckBox = QtGui.QCheckBox(" Vacancies   ")
         self.vacTypeCheckBox.setChecked(1)
         self.vacTypeCheckBox.stateChanged[int].connect(self.vacVisChanged)
+        self.vacTypeCheckBox.setToolTip("If unchecked then vacancies are not shown")
         visTypesLayout.addWidget(self.vacTypeCheckBox)
         
         self.antTypeCheckBox = QtGui.QCheckBox(" Antisites    ")
         self.antTypeCheckBox.setChecked(1)
         self.antTypeCheckBox.stateChanged[int].connect(self.antVisChanged)
+        self.antTypeCheckBox.setToolTip("If unchecked then antisites are not shown")
         visTypesLayout.addWidget(self.antTypeCheckBox)
         
 #         self.newRow()
@@ -719,6 +721,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.identifySplitsCheck = QtGui.QCheckBox(" Identify split interstitials")
         self.identifySplitsCheck.setChecked(1)
         self.identifySplitsCheck.stateChanged.connect(self.identifySplitsChanged)
+        self.identifySplitsCheck.setToolTip("Attempt to identify split interstitials: 2 interstitials and 1 vacancy")
         row = self.newRow()
         row.addWidget(self.identifySplitsCheck)
         
@@ -729,6 +732,10 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.useAcnaGroup = QtGui.QGroupBox("Use ACNA")
         self.useAcnaGroup.setCheckable(True)
         self.useAcnaGroup.setChecked(False)
+        self.useAcnaGroup.setToolTip(textwrap.dedent("""
+                                                     Use Adaptive Common Neighbour Analysis to complement the comparison to a reference system.<br> 
+                                                     Interstitials with the given structure are not classified as defects if they are have a <br>
+                                                     neighbouring vacancy.""".strip()))
 #         self.useAcnaGroup.setAlignment(QtCore.Qt.AlignHCenter)
         self.useAcnaGroup.toggled.connect(self.useAcnaToggled)
         
@@ -2531,7 +2538,7 @@ class AcnaSettingsDialog(GenericSettingsDialog):
         self.maxBondDistanceSpin.setMaximum(9.99)
         self.maxBondDistanceSpin.setValue(self.maxBondDistance)
         self.maxBondDistanceSpin.valueChanged[float].connect(self.setMaxBondDistance)
-        
+        self.maxBondDistanceSpin.setToolTip("This is used for spatially decomposing the system. This should be set large enough that the required neighbours will be included.")
         
         row = self.newRow()
         row.addWidget(label)
