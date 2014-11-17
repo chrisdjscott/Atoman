@@ -54,44 +54,34 @@ class SFTPConnectionDialog(QtGui.QDialog):
         self.hostname = None
         
         # layout
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtGui.QFormLayout(self)
         
         #TODO: access previous hosts in settings and add those as options
         
         # user name
         usernameLineEdit = QtGui.QLineEdit(self.username)
         usernameLineEdit.textEdited.connect(self.usernameEdited)
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("Username"))
-        row.addWidget(usernameLineEdit)
-        layout.addLayout(row)
+        usernameLineEdit.setToolTip("The user to connect as.")
+        layout.addRow("Username", usernameLineEdit)
         
         # host name
         hostnameLineEdit = QtGui.QLineEdit()
         hostnameLineEdit.textEdited.connect(self.hostnameEdited)
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("Hostname"))
-        row.addWidget(hostnameLineEdit)
-        layout.addLayout(row)
+        hostnameLineEdit.setToolTip("The address of the machine to connect to.")
+        layout.addRow("Hostname", hostnameLineEdit)
         
-        # help label
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("Leave password blank if using public key"))
-        layout.addLayout(row)
-        
-        # password (can be blank)
+        # password
         passwordLineEdit = QtGui.QLineEdit()
         passwordLineEdit.textEdited.connect(self.passwordEdited)
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("Password"))
-        row.addWidget(passwordLineEdit)
-        layout.addLayout(row)
+        passwordLineEdit.setEchoMode(QtGui.QLineEdit.Password)
+        passwordLineEdit.setToolTip("Password")
+        layout.addRow("Password", passwordLineEdit)
         
         # buttons
         buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
-        layout.addWidget(buttonBox)
+        layout.addRow(buttonBox)
         
         # set focus on hostname line edit
         hostnameLineEdit.setFocus()
@@ -145,8 +135,6 @@ class SFTPBrowserDialog(QtGui.QDialog):
         
         # layout
         layout = QtGui.QVBoxLayout(self)
-#         layout.setContentsMargins(0,0,0,0)
-#         layout.setSpacing(0)
         
         # add connection
         self.connectionsCombo = QtGui.QComboBox()
@@ -155,15 +143,9 @@ class SFTPBrowserDialog(QtGui.QDialog):
         addConnectionButton.setToolTip("Add new connection")
         addConnectionButton.setFixedWidth(35)
         addConnectionButton.clicked.connect(self.addNewConnection)
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
-        helpButton.setFixedWidth(20)
-        helpButton.setFixedHeight(20)
-        helpButton.setToolTip("Show help page")
-        helpButton.clicked.connect(self.loadHelpPage)
         row = QtGui.QHBoxLayout()
         row.addWidget(self.connectionsCombo)
         row.addWidget(addConnectionButton)
-        row.addWidget(helpButton)
         layout.addLayout(row)
         
         # stacked widget
@@ -174,16 +156,13 @@ class SFTPBrowserDialog(QtGui.QDialog):
         self.connectionsList = []
         
         # buttons
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Open | QtGui.QDialogButtonBox.Cancel)
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Open | QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Help)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
+        buttonBox.helpRequested.connect(self.loadHelpPage)
         self.openButton = buttonBox.button(QtGui.QDialogButtonBox.Open)
         self.openButton.setEnabled(False)
         layout.addWidget(buttonBox)
-        row = QtGui.QHBoxLayout()
-        row.addStretch()
-        row.addWidget(buttonBox)
-        layout.addLayout(row)
     
     def loadHelpPage(self):
         """
@@ -248,7 +227,7 @@ class SFTPBrowserDialog(QtGui.QDialog):
             
             # identifier
             if dlg.username is None:
-                connectionID = dlg.hostname
+                connectionID = "%s@%s" % (getpass.getuser(), dlg.hostname)
             else:
                 connectionID = "%s@%s" % (dlg.username, dlg.hostname)
             
@@ -260,7 +239,11 @@ class SFTPBrowserDialog(QtGui.QDialog):
             try:
                 ssh = paramiko.SSHClient()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                
+                #TODO: add key file list to preferences
+                
                 ssh.connect(dlg.hostname, username=dlg.username, password=dlg.password, look_for_keys=True, timeout=5)
+                
                 self.logger.debug("Test connection ok: '%s'", connectionID)
             
             except:
