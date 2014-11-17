@@ -163,6 +163,8 @@ class PipelineForm(QtGui.QWidget):
         self.filterTabBar = QtGui.QTabWidget(self)
         self.filterTabBar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         self.filterTabBar.currentChanged[int].connect(self.filterTabBarChanged)
+        self.filterTabBar.setTabsClosable(True)
+        self.filterTabBar.tabCloseRequested.connect(self.tabCloseRequested)
         filterTabLayout.addWidget(self.filterTabBar)
         
         # add a filter list
@@ -541,7 +543,14 @@ class PipelineForm(QtGui.QWidget):
         # guess need to handle addition and removal of tabs here
         pass
     
-    def removeFilterList(self):
+    def tabCloseRequested(self, index):
+        """
+        Tab close requested
+        
+        """
+        self.removeFilterList(index=index)
+    
+    def removeFilterList(self, index=None):
         """
         Remove a filter list
         
@@ -549,13 +558,18 @@ class PipelineForm(QtGui.QWidget):
         if self.filterListCount <= 1:
             return
         
-        currentList = self.filterTabBar.currentIndex()
+        if index is not None:
+            currentList = index
+        
+        else:
+            currentList = self.filterTabBar.currentIndex()
         
         self.filterLists[currentList].clearList()
         
         for i in xrange(self.filterListCount):
             if i > currentList:
                 self.filterTabBar.setTabText(i, str(i - 1))
+                self.filterLists[i].tab -= 1
         
         self.filterTabBar.removeTab(currentList)
         
