@@ -130,6 +130,7 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         # close button
         closeButton = buttonBox.addButton(buttonBox.Close)
+        buttonBox.rejected.connect(self.close)
         closeButton.setDefault(1)
     
     def loadHelpPage(self):
