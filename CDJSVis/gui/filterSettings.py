@@ -525,6 +525,7 @@ class CropSphereSettingsDialog(GenericSettingsDialog):
         self.xCentreSpinBox.setMinimum(-9999.0)
         self.xCentreSpinBox.setMaximum( 9999.0)
         self.xCentreSpinBox.setValue(self.xCentre)
+        self.xCentreSpinBox.setToolTip("Centre of crop region (x)")
         self.xCentreSpinBox.valueChanged.connect(self.xCentreChanged)
         
         self.yCentreSpinBox = QtGui.QDoubleSpinBox()
@@ -532,6 +533,7 @@ class CropSphereSettingsDialog(GenericSettingsDialog):
         self.yCentreSpinBox.setMinimum(-9999.0)
         self.yCentreSpinBox.setMaximum( 9999.0)
         self.yCentreSpinBox.setValue(self.yCentre)
+        self.yCentreSpinBox.setToolTip("Centre of crop region (y)")
         self.yCentreSpinBox.valueChanged.connect(self.yCentreChanged)
         
         self.zCentreSpinBox = QtGui.QDoubleSpinBox()
@@ -539,49 +541,36 @@ class CropSphereSettingsDialog(GenericSettingsDialog):
         self.zCentreSpinBox.setMinimum(-9999.0)
         self.zCentreSpinBox.setMaximum( 9999.0)
         self.zCentreSpinBox.setValue(self.zCentre)
+        self.zCentreSpinBox.setToolTip("Centre of crop region (z)")
         self.zCentreSpinBox.valueChanged.connect(self.zCentreChanged)
         
-        label = QtGui.QLabel("Centre: ")
-        comma = QtGui.QLabel(" , ")
-        comma2 = QtGui.QLabel(" , ")
+        self.contentLayout.addRow("Centre (x)", self.xCentreSpinBox)
+        self.contentLayout.addRow("Centre (y)", self.yCentreSpinBox)
+        self.contentLayout.addRow("Centre (z)", self.zCentreSpinBox)
         
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.xCentreSpinBox)
-        row.addWidget(comma)
-        row.addWidget(self.yCentreSpinBox)
-        row.addWidget(comma2)
-        row.addWidget(self.zCentreSpinBox)
+        # radius
+        self.radiusSpinBox = QtGui.QDoubleSpinBox()
+        self.radiusSpinBox.setSingleStep(1)
+        self.radiusSpinBox.setMinimum(0.0)
+        self.radiusSpinBox.setMaximum(9999.0)
+        self.radiusSpinBox.setValue(self.radius)
+        self.radiusSpinBox.setToolTip("Radius of sphere")
+        self.radiusSpinBox.valueChanged.connect(self.radiusChanged)
+        self.contentLayout.addRow("Radius", self.radiusSpinBox)
+        
+        # invert selection
+        self.invertCheckBox = QtGui.QCheckBox()
+        self.invertCheckBox.setChecked(0)
+        self.invertCheckBox.setToolTip("Invert selection")
+        self.invertCheckBox.stateChanged.connect(self.invertChanged)
+        self.contentLayout.addRow("Invert selection", self.invertCheckBox)
         
         # set to centre
         self.setToLatticeButton = QtGui.QPushButton('Set to lattice centre')
         self.setToLatticeButton.setAutoDefault(0)
-        self.setToLatticeButton.setStatusTip('Set to lattice centre')
+        self.setToLatticeButton.setToolTip('Set to lattice centre')
         self.setToLatticeButton.clicked.connect(self.setToLattice)
-        row = self.newRow(align='Center')
-        row.addWidget(self.setToLatticeButton)
-        
-        # radius
-        self.radiusSpinBox = QtGui.QDoubleSpinBox()
-        self.radiusSpinBox.setSingleStep(0.01)
-        self.radiusSpinBox.setMinimum(0.0)
-        self.radiusSpinBox.setMaximum(9999.0)
-        self.radiusSpinBox.setValue(self.radius)
-        self.radiusSpinBox.valueChanged.connect(self.radiusChanged)
-        
-        label = QtGui.QLabel("Radius: ")
-        
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.radiusSpinBox)
-        
-        # invert selection
-        self.invertCheckBox = QtGui.QCheckBox("Invert selection")
-        self.invertCheckBox.setChecked(0)
-        self.invertCheckBox.stateChanged.connect(self.invertChanged)
-        
-        row = self.newRow()
-        row.addWidget(self.invertCheckBox)
+        self.contentLayout.addRow(self.setToLatticeButton)
     
     def invertChanged(self, index):
         """
