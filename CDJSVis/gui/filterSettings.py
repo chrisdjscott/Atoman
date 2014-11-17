@@ -56,33 +56,18 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         dialogLayout = QtGui.QVBoxLayout()
         dialogLayout.setAlignment(QtCore.Qt.AlignTop)
-#        dialogLayout.setContentsMargins(0, 0, 0, 0)
-#        dialogLayout.setSpacing(0)
         
         tabWidget = QtGui.QTabWidget()
         
-        # filter settings
-#         self.contentLayout = QtGui.QVBoxLayout()
-#         self.contentLayout.setAlignment(QtCore.Qt.AlignTop)
-#         self.contentLayout.setContentsMargins(0, 0, 0, 0)
-#         self.contentLayout.setSpacing(0)
-        
+        # layout/widget
         self.contentLayout = QtGui.QFormLayout()
-        
-        
-        contentWidget = QtGui.QWidget() #QtGui.QGroupBox(title)
-#        contentWidget.setAlignment(QtCore.Qt.AlignCenter)
+        contentWidget = QtGui.QWidget()
         contentWidget.setLayout(self.contentLayout)
         
-#        dialogLayout.addWidget(contentWidget)
         tabWidget.addTab(contentWidget, "Calculate")
         
         # display settings
-        self.displaySettingsLayout = QtGui.QVBoxLayout()
-        self.displaySettingsLayout.setAlignment(QtCore.Qt.AlignTop)
-        self.displaySettingsLayout.setContentsMargins(0, 0, 0, 0)
-        self.displaySettingsLayout.setSpacing(0)
-        
+        self.displaySettingsLayout = QtGui.QFormLayout()
         displaySettingsWidget = QtGui.QWidget()
         displaySettingsWidget.setLayout(self.displaySettingsLayout)
         
@@ -106,6 +91,16 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         # help page
         self.helpPage = None
+    
+    def addHorizontalDivider(self):
+        """
+        Add horizontal divider (QFrame)
+        
+        """
+        line = QtGui.QFrame()
+        line.setFrameShape(QtGui.QFrame.HLine)
+        line.setFrameShadow(QtGui.QFrame.Sunken)
+        self.contentLayout.addRow(line)
     
     def addLinkToHelpPage(self, page):
         """
@@ -681,216 +676,168 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.vacSpecularPower = 10
         
         # vacancy radius option
-        label = QtGui.QLabel("Vacancy radius ")
         self.vacRadSpinBox = QtGui.QDoubleSpinBox()
         self.vacRadSpinBox.setSingleStep(0.1)
         self.vacRadSpinBox.setMinimum(0.01)
         self.vacRadSpinBox.setMaximum(10.0)
         self.vacRadSpinBox.setValue(self.vacancyRadius)
+        self.vacRadSpinBox.setToolTip("The vacancy radius is used to determine if an input atom "
+                                      "is associated with a reference site.")
         self.vacRadSpinBox.valueChanged[float].connect(self.vacRadChanged)
+        self.contentLayout.addRow("Vacancy radius", self.vacRadSpinBox)
         
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.vacRadSpinBox)
-        
-#         self.newRow()
+        self.addHorizontalDivider()
         
         # defect type options
-        visTypesGroup = QtGui.QGroupBox("Visible types")
-        visTypesGroup.setAlignment(QtCore.Qt.AlignHCenter)
-        row = self.newRow()
-        row.addWidget(visTypesGroup)
-        
-        visTypesLayout = QtGui.QVBoxLayout(visTypesGroup)
-        visTypesLayout.setAlignment(QtCore.Qt.AlignTop)
-        visTypesLayout.setContentsMargins(0, 0, 0, 0)
-        visTypesLayout.setSpacing(0)
-        
-        self.intTypeCheckBox = QtGui.QCheckBox(" Interstitials")
+        self.intTypeCheckBox = QtGui.QCheckBox("Interstitials")
         self.intTypeCheckBox.setChecked(1)
         self.intTypeCheckBox.stateChanged[int].connect(self.intVisChanged)
-        self.intTypeCheckBox.setToolTip("If unchecked then interstitials are not shown")
-        visTypesLayout.addWidget(self.intTypeCheckBox)
+        self.intTypeCheckBox.setToolTip("Show interstitials")
         
-        self.vacTypeCheckBox = QtGui.QCheckBox(" Vacancies   ")
+        self.vacTypeCheckBox = QtGui.QCheckBox("Vacancies")
         self.vacTypeCheckBox.setChecked(1)
         self.vacTypeCheckBox.stateChanged[int].connect(self.vacVisChanged)
-        self.vacTypeCheckBox.setToolTip("If unchecked then vacancies are not shown")
-        visTypesLayout.addWidget(self.vacTypeCheckBox)
+        self.vacTypeCheckBox.setToolTip("Show vacancies")
         
-        self.antTypeCheckBox = QtGui.QCheckBox(" Antisites    ")
+        self.antTypeCheckBox = QtGui.QCheckBox("Antisites")
         self.antTypeCheckBox.setChecked(1)
         self.antTypeCheckBox.stateChanged[int].connect(self.antVisChanged)
-        self.antTypeCheckBox.setToolTip("If unchecked then antisites are not shown")
-        visTypesLayout.addWidget(self.antTypeCheckBox)
+        self.antTypeCheckBox.setToolTip("Show antisites")
         
-#         self.newRow()
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(self.intTypeCheckBox)
+        vbox.addWidget(self.vacTypeCheckBox)
+        vbox.addWidget(self.antTypeCheckBox)
+        self.contentLayout.addRow("Defect visibility", vbox)
+        
+        self.addHorizontalDivider()
         
         # identify split ints check box
-        self.identifySplitsCheck = QtGui.QCheckBox(" Identify split interstitials")
+        self.identifySplitsCheck = QtGui.QCheckBox()
         self.identifySplitsCheck.setChecked(1)
         self.identifySplitsCheck.stateChanged.connect(self.identifySplitsChanged)
-        self.identifySplitsCheck.setToolTip("Attempt to identify split interstitials: 2 interstitials and 1 vacancy")
-        row = self.newRow()
-        row.addWidget(self.identifySplitsCheck)
+        self.identifySplitsCheck.setToolTip("Attempt to identify split interstitials (2 interstitials and 1 vacancy). "
+                                            "Note: a split interstitial is counted as 1 defect, not 3.")
+        self.contentLayout.addRow("Identify split interstitials", self.identifySplitsCheck)
         
-#         self.newRow()
+        self.addHorizontalDivider()
         
         # use acna options
         self.useAcna = False
-        self.useAcnaGroup = QtGui.QGroupBox("Use ACNA")
-        self.useAcnaGroup.setCheckable(True)
-        self.useAcnaGroup.setChecked(False)
-        self.useAcnaGroup.setToolTip(textwrap.dedent("""
-                                                     Use Adaptive Common Neighbour Analysis to complement the comparison to a reference system.<br> 
-                                                     Interstitials with the given structure are not classified as defects if they are have a <br>
-                                                     neighbouring vacancy.""".strip()))
-#         self.useAcnaGroup.setAlignment(QtCore.Qt.AlignHCenter)
-        self.useAcnaGroup.toggled.connect(self.useAcnaToggled)
+        useAcnaCheck = QtGui.QCheckBox()
+        useAcnaCheck.setChecked(self.useAcna)
+        useAcnaCheck.stateChanged.connect(self.useAcnaToggled)
+        useAcnaCheck.setToolTip("Use Adaptive Common Neighbour Analysis to complement the comparison "
+                                "to a reference system. Interstitials with the selected structure are "
+                                "not classified as defects if they have a neighbouring vacancy.")
+        self.contentLayout.addRow("<b>Use ACNA</b>", useAcnaCheck)
         
-        useAcnaLayout = QtGui.QVBoxLayout(self.useAcnaGroup)
-        useAcnaLayout.setAlignment(QtCore.Qt.AlignTop)
-        useAcnaLayout.setContentsMargins(0, 0, 0, 0)
-        useAcnaLayout.setSpacing(0)
-        
-        row = self.newRow()
-        row.addWidget(self.useAcnaGroup)
-        
+        # acna max bond distance
         self.acnaMaxBondDistance = 5.0
-        label = QtGui.QLabel("Max bond distance: ")
-        maxBondDistanceSpin = QtGui.QDoubleSpinBox()
-        maxBondDistanceSpin.setSingleStep(0.1)
-        maxBondDistanceSpin.setMinimum(2.0)
-        maxBondDistanceSpin.setMaximum(9.99)
-        maxBondDistanceSpin.setValue(self.acnaMaxBondDistance)
-        maxBondDistanceSpin.valueChanged[float].connect(self.setAcnaMaxBondDistance)
+        self.maxBondDistanceSpin = QtGui.QDoubleSpinBox()
+        self.maxBondDistanceSpin.setSingleStep(0.1)
+        self.maxBondDistanceSpin.setMinimum(2.0)
+        self.maxBondDistanceSpin.setMaximum(9.99)
+        self.maxBondDistanceSpin.setValue(self.acnaMaxBondDistance)
+        self.maxBondDistanceSpin.valueChanged[float].connect(self.setAcnaMaxBondDistance)
+        self.maxBondDistanceSpin.setToolTip("This value is used for spatially decomposing the system. It "
+                                       "should be set large enough to include all required atoms. "
+                                       "If unsure just set it to something big, eg. 10.0")
+        self.contentLayout.addRow("Max bond distance", self.maxBondDistanceSpin)
         
-        row = genericForm.FormRow()
-        row.addWidget(label)
-        row.addWidget(maxBondDistanceSpin)
-        useAcnaLayout.addWidget(row)
-        
-        # acna ideal structure ...
+        # acna ideal structure
         self.acnaStructureType = 1
-        label = QtGui.QLabel("Structure: ")
-        structureCombo = QtGui.QComboBox()
+        self.acnaStructureCombo = QtGui.QComboBox()
         filterer = self.parent.filterer
-        structureCombo.addItems(filterer.knownStructures)
-        structureCombo.setCurrentIndex(self.acnaStructureType)
-        structureCombo.currentIndexChanged.connect(self.acnaStructureTypeChanged)
+        self.acnaStructureCombo.addItems(filterer.knownStructures)
+        self.acnaStructureCombo.setCurrentIndex(self.acnaStructureType)
+        self.acnaStructureCombo.currentIndexChanged.connect(self.acnaStructureTypeChanged)
+        self.contentLayout.addRow("Structure", self.acnaStructureCombo)
         
-        row = genericForm.FormRow()
-        row.addWidget(label)
-        row.addWidget(structureCombo)
-        useAcnaLayout.addWidget(row)
+        # make sure set up properly
+        self.useAcnaToggled(QtCore.Qt.Unchecked)
         
-#         self.newRow()
+        self.addHorizontalDivider()
         
-        # find clusters group box
-        self.findClustersGroupBox = QtGui.QGroupBox("Find clusters")
-        self.findClustersGroupBox.setCheckable(True)
-        self.findClustersGroupBox.setChecked(False)
-#         self.findClustersGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
-        self.findClustersGroupBox.toggled.connect(self.findClustersChanged)
-        
-        findClustersLayout = QtGui.QVBoxLayout(self.findClustersGroupBox)
-        findClustersLayout.setAlignment(QtCore.Qt.AlignTop)
-        findClustersLayout.setContentsMargins(0, 0, 0, 0)
-        findClustersLayout.setSpacing(0)
-        
-        row = self.newRow()
-        row.addWidget(self.findClustersGroupBox)
+        # find clusters settings
+        findClustersCheck = QtGui.QCheckBox()
+        findClustersCheck.setToolTip("Identify clusters of defects in the system.")
+        findClustersCheck.stateChanged.connect(self.findClustersChanged)
+        findClustersCheck.setChecked(self.findClusters)
+        self.contentLayout.addRow("<b>Identify clusters</b>", findClustersCheck)
         
         # neighbour rad spin box
-        label = QtGui.QLabel("Neighbour radius ")
         self.nebRadSpinBox = QtGui.QDoubleSpinBox()
-        self.nebRadSpinBox.setSingleStep(0.01)
+        self.nebRadSpinBox.setSingleStep(0.1)
         self.nebRadSpinBox.setMinimum(0.01)
         self.nebRadSpinBox.setMaximum(100.0)
         self.nebRadSpinBox.setValue(self.neighbourRadius)
         self.nebRadSpinBox.valueChanged[float].connect(self.nebRadChanged)
-        
-        row = genericForm.FormRow()
-        row.addWidget(label)
-        row.addWidget(self.nebRadSpinBox)
-        findClustersLayout.addWidget(row)
+        self.nebRadSpinBox.setToolTip("Clusters are constructed using a recursive algorithm where "
+                                      "two atoms are said to be neighbours if their separation "
+                                      "is less than this value.")
+        self.contentLayout.addRow("Neighbour radius", self.nebRadSpinBox)
         
         # minimum size spin box
-        label = QtGui.QLabel("Minimum cluster size ")
         self.minNumSpinBox = QtGui.QSpinBox()
         self.minNumSpinBox.setMinimum(1)
         self.minNumSpinBox.setMaximum(1000)
         self.minNumSpinBox.setValue(self.minClusterSize)
         self.minNumSpinBox.valueChanged[int].connect(self.minNumChanged)
-        
-        row = genericForm.FormRow()
-        row.addWidget(label)
-        row.addWidget(self.minNumSpinBox)
-        findClustersLayout.addWidget(row)
+        self.minNumSpinBox.setToolTip("Only show clusters that contain more than this number of defects.")
+        self.contentLayout.addRow("Minimum cluster size", self.minNumSpinBox)
         
         # maximum size spin box
-        label = QtGui.QLabel("Maximum cluster size ")
         self.maxNumSpinBox = QtGui.QSpinBox()
         self.maxNumSpinBox.setMinimum(-1)
-        self.maxNumSpinBox.setMaximum(999999)
+        self.maxNumSpinBox.setMaximum(9999)
         self.maxNumSpinBox.setValue(self.maxClusterSize)
         self.maxNumSpinBox.valueChanged[int].connect(self.maxNumChanged)
+        self.maxNumSpinBox.setToolTip("Only show clusters that contain less than this number of defects. "
+                                      "Set to '-1' to disable this condition.")
+        self.contentLayout.addRow("Maximum cluster size", self.maxNumSpinBox)
         
-        row = genericForm.FormRow()
-        row.addWidget(label)
-        row.addWidget(self.maxNumSpinBox)
-        findClustersLayout.addWidget(row)
-        
-        # calculate volume group box
-        self.calcVolsGroup = QtGui.QGroupBox("Calculate volumes")
-        self.calcVolsGroup.setCheckable(True)
-        self.calcVolsGroup.setChecked(False)
-#         self.calcVolsGroup.setAlignment(QtCore.Qt.AlignHCenter)
-        self.calcVolsGroup.toggled.connect(self.calcVolsChanged)
-        
-        calcVolsLayout = QtGui.QVBoxLayout(self.calcVolsGroup)
-        calcVolsLayout.setAlignment(QtCore.Qt.AlignTop)
-        calcVolsLayout.setContentsMargins(0, 0, 0, 0)
-        calcVolsLayout.setSpacing(0)
+        # calculate volumes options
+        self.calcVolsCheck = QtGui.QCheckBox()
+        self.calcVolsCheck.setToolTip("Calculate volumes of defect clusters.")
+        self.calcVolsCheck.stateChanged.connect(self.calcVolsChanged)
+        self.calcVolsCheck.setChecked(self.calculateVolumes)
+        self.contentLayout.addRow("<b>Calculate volumes</b>", self.calcVolsCheck)
         
         # radio buttons
-        self.convHullVolRadio = QtGui.QRadioButton("Use volume of convex hull", parent=self.calcVolsGroup)
+        self.convHullVolRadio = QtGui.QRadioButton(parent=self.calcVolsCheck)
         self.convHullVolRadio.toggled.connect(self.calcVolsChanged)
-        self.voroVolRadio = QtGui.QRadioButton("Sum Voronoi volumes", parent=self.calcVolsGroup)
+        self.convHullVolRadio.setToolTip("Volume is determined from the convex hull of the defect positions.")
+        self.voroVolRadio = QtGui.QRadioButton(parent=self.calcVolsCheck)
+        self.voroVolRadio.setToolTip("Volume is determined by summing the Voronoi volumes of the defects in "
+                                     "the cluster. Ghost atoms are added for vacancies when computing the "
+                                     "individual Voronoi volumes.")
         self.voroVolRadio.setChecked(True)
+        self.contentLayout.addRow("Convex hull volumes", self.convHullVolRadio)
+        self.contentLayout.addRow("Sum Voronoi volumes", self.voroVolRadio)
         
-        calcVolsLayout.addWidget(self.convHullVolRadio)
-        calcVolsLayout.addWidget(self.voroVolRadio)
+        # make sure setup properly
+        self.calcVolsChanged(QtCore.Qt.Unchecked)
+        self.findClustersChanged(QtCore.Qt.Unchecked)
         
-        self.newDisplayRow()
-        
-        row = genericForm.FormRow()
-        row.addWidget(self.calcVolsGroup)
-        findClustersLayout.addWidget(self.calcVolsGroup)
-        
-#         self.newRow()
+        self.addHorizontalDivider()
         
         # filter species group
         self.filterSpecies = False
-        self.filterSpeciesGroup = QtGui.QGroupBox("Filter species")
-        self.filterSpeciesGroup.setCheckable(True)
-        self.filterSpeciesGroup.setChecked(self.filterSpecies)
-        self.filterSpeciesGroup.toggled.connect(self.filterSpeciesToggled)
-        row = self.newRow()
-        row.addWidget(self.filterSpeciesGroup)
-        
-        filterSpeciesGroupLayout = QtGui.QVBoxLayout()
-#        filterSpeciesGroupLayout.setSpacing(0)
-#        filterSpeciesGroupLayout.setContentsMargins(0, 0, 0, 0)
-        filterSpeciesGroupLayout.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignHCenter)
-        self.filterSpeciesGroup.setLayout(filterSpeciesGroupLayout)
+        self.filterSpeciesCheck = QtGui.QCheckBox()
+        self.filterSpeciesCheck.setChecked(self.filterSpecies)
+        self.filterSpeciesCheck.setToolTip("Filter visible defects by specie")
+        self.filterSpeciesCheck.stateChanged.connect(self.filterSpeciesToggled)
         
         self.specieList = QtGui.QListWidget(self)
-        self.specieList.setFixedHeight(100)
-        self.specieList.setFixedWidth(120)
-        filterSpeciesGroupLayout.addWidget(self.specieList)
+        self.specieList.setFixedHeight(80)
+        self.specieList.setFixedWidth(100)
+        self.specieList.setEnabled(self.filterSpecies)
         
-        self.filterSpeciesGroup.setLayout(filterSpeciesGroupLayout)
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(self.filterSpeciesCheck)
+        vbox.addWidget(self.specieList)
+        self.contentLayout.addRow("Filter species", vbox)
         
         # draw hulls group box
         self.drawHullsGroupBox = QtGui.QGroupBox(" Draw convex hulls")
@@ -1102,7 +1049,19 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         Use ACNA toggled
         
         """
-        self.useAcna = state
+        if state == QtCore.Qt.Unchecked:
+            self.useAcna = False
+            
+            # disable associated
+            self.maxBondDistanceSpin.setEnabled(False)
+            self.acnaStructureCombo.setEnabled(False)
+        
+        else:
+            self.useAcna = True
+            
+            # disable associated
+            self.maxBondDistanceSpin.setEnabled(True)
+            self.acnaStructureCombo.setEnabled(True)
     
     def numSidesChanged(self, val):
         """
@@ -1204,15 +1163,48 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         """
         self.neighbourRadius = val
     
-    def findClustersChanged(self, findClusters):
+    def disableCalcVolsCheck(self):
+        """
+        Disable calc vols check box
+        
+        """
+        self.calcVolsCheck.setEnabled(False)
+        if self.calculateVolumes:
+            self.convHullVolRadio.setEnabled(False)
+            self.voroVolRadio.setEnabled(False)
+    
+    def enableCalcVolsCheck(self):
+        """
+        Enable calc vols check box
+        
+        """
+        self.calcVolsCheck.setEnabled(True)
+        if self.calculateVolumes:
+            self.convHullVolRadio.setEnabled(True)
+            self.voroVolRadio.setEnabled(True)
+    
+    def findClustersChanged(self, state):
         """
         Change find volumes setting.
         
         """
-        if findClusters:
-            self.findClusters = 1
-        else:
+        if state == QtCore.Qt.Unchecked:
             self.findClusters = 0
+            
+            # disable associated settings
+            self.nebRadSpinBox.setEnabled(False)
+            self.minNumSpinBox.setEnabled(False)
+            self.maxNumSpinBox.setEnabled(False)
+            self.disableCalcVolsCheck()
+        
+        else:
+            self.findClusters = 1
+            
+            # enable associated settings
+            self.nebRadSpinBox.setEnabled(True)
+            self.minNumSpinBox.setEnabled(True)
+            self.maxNumSpinBox.setEnabled(True)
+            self.enableCalcVolsCheck()
     
     def vacRadChanged(self, val):
         """
@@ -1251,12 +1243,18 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         else:
             self.showAntisites = 0
     
-    def filterSpeciesToggled(self, filterSpecies):
+    def filterSpeciesToggled(self, state):
         """
         Filter species toggled
         
         """
-        self.filterSpecies = filterSpecies
+        if state == QtCore.Qt.Unchecked:
+            self.filterSpecies = False
+            self.specieList.setEnabled(False)
+        
+        else:
+            self.filterSpecies = True
+            self.specieList.setEnabled(True)
     
     def getVisibleSpecieList(self):
         """
@@ -1356,15 +1354,24 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
             self.hullCol[1] = float(col.green()) / 255.0
             self.hullCol[2] = float(col.blue()) / 255.0
     
-    def calcVolsChanged(self, val):
+    def calcVolsChanged(self, state):
         """
         Changed calc vols.
         
         """
-        if self.calcVolsGroup.isChecked():
-            self.calculateVolumes = True
-        else:
+        if state == QtCore.Qt.Unchecked:
             self.calculateVolumes = False
+            
+            # disable buttons
+            self.convHullVolRadio.setEnabled(False)
+            self.voroVolRadio.setEnabled(False)
+        
+        else:
+            self.calculateVolumes = True
+            
+            # enable buttons
+            self.convHullVolRadio.setEnabled(True)
+            self.voroVolRadio.setEnabled(True)
         
         if self.convHullVolRadio.isChecked():
             self.calculateVolumesHull = True
