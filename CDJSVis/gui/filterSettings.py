@@ -1765,29 +1765,21 @@ class KineticEnergySettingsDialog(GenericSettingsDialog):
         self.minKE = -1000.0
         self.maxKE = 1000.0
         
-        label = QtGui.QLabel("Min KE ")
         self.minKESpinBox = QtGui.QDoubleSpinBox()
         self.minKESpinBox.setSingleStep(0.1)
         self.minKESpinBox.setMinimum(-9999.0)
         self.minKESpinBox.setMaximum(9999.0)
         self.minKESpinBox.setValue(self.minKE)
         self.minKESpinBox.valueChanged.connect(self.setMinKE)
+        self.contentLayout.addRow("Min KE", self.minKESpinBox)
         
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.minKESpinBox)
-        
-        label = QtGui.QLabel("Max KE ")
         self.maxKESpinBox = QtGui.QDoubleSpinBox()
         self.maxKESpinBox.setSingleStep(0.1)
         self.maxKESpinBox.setMinimum(-9999.0)
         self.maxKESpinBox.setMaximum(9999.0)
         self.maxKESpinBox.setValue(self.maxKE)
         self.maxKESpinBox.valueChanged.connect(self.setMaxKE)
-        
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.maxKESpinBox)
+        self.contentLayout.addRow("Max KE", self.maxKESpinBox)
     
     def setMinKE(self, val):
         """
@@ -1814,29 +1806,21 @@ class PotentialEnergySettingsDialog(GenericSettingsDialog):
         self.minPE = -1000.0
         self.maxPE = 1000.0
         
-        label = QtGui.QLabel("Min PE ")
         self.minPESpinBox = QtGui.QDoubleSpinBox()
         self.minPESpinBox.setSingleStep(0.1)
         self.minPESpinBox.setMinimum(-9999.0)
         self.minPESpinBox.setMaximum(9999.0)
         self.minPESpinBox.setValue(self.minPE)
         self.minPESpinBox.valueChanged.connect(self.setMinPE)
+        self.contentLayout.addRow("Min PE", self.minPESpinBox)
         
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.minPESpinBox)
-        
-        label = QtGui.QLabel("Max PE ")
         self.maxPESpinBox = QtGui.QDoubleSpinBox()
         self.maxPESpinBox.setSingleStep(0.1)
         self.maxPESpinBox.setMinimum(-9999.0)
         self.maxPESpinBox.setMaximum(9999.0)
         self.maxPESpinBox.setValue(self.maxPE)
         self.maxPESpinBox.valueChanged.connect(self.setMaxPE)
-        
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.maxPESpinBox)
+        self.contentLayout.addRow("Max PE", self.maxPESpinBox)
     
     def setMinPE(self, val):
         """
@@ -1863,29 +1847,21 @@ class ChargeSettingsDialog(GenericSettingsDialog):
         self.minCharge = -100.0
         self.maxCharge = 100.0
         
-        label = QtGui.QLabel("Min charge ")
         self.minChargeSpinBox = QtGui.QDoubleSpinBox()
         self.minChargeSpinBox.setSingleStep(0.1)
         self.minChargeSpinBox.setMinimum(-999.0)
         self.minChargeSpinBox.setMaximum(999.0)
         self.minChargeSpinBox.setValue(self.minCharge)
         self.minChargeSpinBox.valueChanged.connect(self.setMinCharge)
+        self.contentLayout.addRow("Min charge", self.minChargeSpinBox)
         
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.minChargeSpinBox)
-        
-        label = QtGui.QLabel("Max charge ")
         self.maxChargeSpinBox = QtGui.QDoubleSpinBox()
         self.maxChargeSpinBox.setSingleStep(0.1)
         self.maxChargeSpinBox.setMinimum(-999.0)
         self.maxChargeSpinBox.setMaximum(999.0)
         self.maxChargeSpinBox.setValue(self.maxCharge)
         self.maxChargeSpinBox.valueChanged.connect(self.setMaxCharge)
-        
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.maxChargeSpinBox)
+        self.contentLayout.addRow("Max charge", self.maxChargeSpinBox)
     
     def setMinCharge(self, val):
         """
