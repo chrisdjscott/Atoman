@@ -92,7 +92,7 @@ class GenericSettingsDialog(QtGui.QDialog):
         # help page
         self.helpPage = None
     
-    def addHorizontalDivider(self):
+    def addHorizontalDivider(self, displaySettings=False):
         """
         Add horizontal divider (QFrame)
         
@@ -100,7 +100,10 @@ class GenericSettingsDialog(QtGui.QDialog):
         line = QtGui.QFrame()
         line.setFrameShape(QtGui.QFrame.HLine)
         line.setFrameShadow(QtGui.QFrame.Sunken)
-        self.contentLayout.addRow(line)
+        if displaySettings:
+            self.displaySettingsLayout.addRow(line)
+        else:
+            self.contentLayout.addRow(line)
     
     def addLinkToHelpPage(self, page):
         """
@@ -818,7 +821,6 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         # make sure setup properly
         self.calcVolsChanged(QtCore.Qt.Unchecked)
-        self.findClustersChanged(QtCore.Qt.Unchecked)
         
         self.addHorizontalDivider()
         
@@ -839,68 +841,44 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         vbox.addWidget(self.specieList)
         self.contentLayout.addRow("Filter species", vbox)
         
-        # draw hulls group box
-        self.drawHullsGroupBox = QtGui.QGroupBox(" Draw convex hulls")
-        self.drawHullsGroupBox.setCheckable(True)
-        self.drawHullsGroupBox.setChecked(False)
-        self.drawHullsGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
-        self.drawHullsGroupBox.toggled.connect(self.drawHullsChanged)
-        
-        drawHullsLayout = QtGui.QVBoxLayout(self.drawHullsGroupBox)
-        drawHullsLayout.setAlignment(QtCore.Qt.AlignTop)
-        drawHullsLayout.setContentsMargins(0, 0, 0, 0)
-        drawHullsLayout.setSpacing(0)
-        
-        row = self.newDisplayRow()
-        row.addWidget(self.drawHullsGroupBox)
+        # draw hulls options
+        self.drawHullsCheck = QtGui.QCheckBox()
+        self.drawHullsCheck.setChecked(False)
+        self.drawHullsCheck.setToolTip("Draw convex hulls of defect clusters")
+        self.drawHullsCheck.stateChanged.connect(self.drawHullsChanged)
+        self.displaySettingsLayout.addRow("<b>Draw convex hulls</b>", self.drawHullsCheck)
         
         # hull colour
-        label = QtGui.QLabel("Hull colour  ")
-        
         col = QtGui.QColor(self.hullCol[0]*255.0, self.hullCol[1]*255.0, self.hullCol[2]*255.0)
         self.hullColourButton = QtGui.QPushButton("")
         self.hullColourButton.setFixedWidth(50)
         self.hullColourButton.setFixedHeight(30)
         self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
         self.hullColourButton.clicked.connect(self.showColourDialog)
-        
-        row = genericForm.FormRow()
-        row.addWidget(label)
-        row.addWidget(self.hullColourButton)
-        drawHullsLayout.addWidget(row)
+        self.hullColourButton.setToolTip("The colour of the hull.")
+        self.displaySettingsLayout.addRow("Hull colour", self.hullColourButton)
         
         # hull opacity
-        label = QtGui.QLabel("Hull opacity ")
-        
         self.hullOpacitySpinBox = QtGui.QDoubleSpinBox()
         self.hullOpacitySpinBox.setSingleStep(0.01)
         self.hullOpacitySpinBox.setMinimum(0.01)
         self.hullOpacitySpinBox.setMaximum(1.0)
         self.hullOpacitySpinBox.setValue(self.hullOpacity)
+        self.hullOpacitySpinBox.setToolTip("The opacity of the convex hulls")
         self.hullOpacitySpinBox.valueChanged[float].connect(self.hullOpacityChanged)
-        
-        row = genericForm.FormRow()
-        row.addWidget(label)
-        row.addWidget(self.hullOpacitySpinBox)
-        drawHullsLayout.addWidget(row)
+        self.displaySettingsLayout.addRow("Hull opacity", self.hullOpacitySpinBox)
         
         # hide atoms
-        self.hideAtomsCheckBox = QtGui.QCheckBox(" Hide defects")
+        self.hideAtomsCheckBox = QtGui.QCheckBox()
         self.hideAtomsCheckBox.stateChanged.connect(self.hideDefectsChanged)
+        self.hideAtomsCheckBox.setToolTip("Don't show the defects when rendering the convex hulls")
+        self.displaySettingsLayout.addRow("Hide defects", self.hideAtomsCheckBox)
         
-        row = genericForm.FormRow()
-        row.addWidget(self.hideAtomsCheckBox)
-        drawHullsLayout.addWidget(row)
+        self.drawHullsChanged(QtCore.Qt.Unchecked)
+        
+        self.addHorizontalDivider(displaySettings=True)
         
         # vac display settings
-        vacForm = genericForm.GenericForm(self, 0, "Vac display settings")
-        vacForm.show()
-        
-#        self.vacScaleSize = 0.75
-#        self.vacOpacity = 0.8
-#        self.vacSpecular = 0.4
-#        self.vacSpecularPower = 10
-        
         # scale size
         vacScaleSizeSpin = QtGui.QDoubleSpinBox()
         vacScaleSizeSpin.setMinimum(0.1)
@@ -908,22 +886,18 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         vacScaleSizeSpin.setSingleStep(0.1)
         vacScaleSizeSpin.setValue(self.vacScaleSize)
         vacScaleSizeSpin.valueChanged.connect(self.vacScaleSizeChanged)
-        
-        row = vacForm.newRow()
-        row.addWidget(QtGui.QLabel("Scale size:"))
-        row.addWidget(vacScaleSizeSpin)
+        vacScaleSizeSpin.setToolTip("When rendering vacancies scale the atomic radius by this amount (usually < 1)")
+        self.displaySettingsLayout.addRow("Vacancy scale size", vacScaleSizeSpin)
         
         # opacity
         vacOpacitySpin = QtGui.QDoubleSpinBox()
         vacOpacitySpin.setMinimum(0.01)
         vacOpacitySpin.setMaximum(1.0)
-        vacOpacitySpin.setSingleStep(0.01)
+        vacOpacitySpin.setSingleStep(0.1)
         vacOpacitySpin.setValue(self.vacOpacity)
+        vacOpacitySpin.setToolTip("The opacity value for vacancies.")
         vacOpacitySpin.valueChanged.connect(self.vacOpacityChanged)
-        
-        row = vacForm.newRow()
-        row.addWidget(QtGui.QLabel("Opacity:"))
-        row.addWidget(vacOpacitySpin)
+        self.displaySettingsLayout.addRow("Vacancy opacity", vacOpacitySpin)
         
         # specular
         vacSpecularSpin = QtGui.QDoubleSpinBox()
@@ -931,11 +905,9 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         vacSpecularSpin.setMaximum(1.0)
         vacSpecularSpin.setSingleStep(0.01)
         vacSpecularSpin.setValue(self.vacSpecular)
+        vacSpecularSpin.setToolTip("Vacancy specular value")
         vacSpecularSpin.valueChanged.connect(self.vacSpecularChanged)
-        
-        row = vacForm.newRow()
-        row.addWidget(QtGui.QLabel("Specular:"))
-        row.addWidget(vacSpecularSpin)
+        self.displaySettingsLayout.addRow("Vacancy specular", vacSpecularSpin)
         
         # specular power
         vacSpecularPowerSpin = QtGui.QDoubleSpinBox()
@@ -943,14 +915,11 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         vacSpecularPowerSpin.setMaximum(100)
         vacSpecularPowerSpin.setSingleStep(0.1)
         vacSpecularPowerSpin.setValue(self.vacSpecularPower)
+        vacSpecularPowerSpin.setToolTip("Vacancy specu;ar power value")
         vacSpecularPowerSpin.valueChanged.connect(self.vacSpecularPowerChanged)
+        self.displaySettingsLayout.addRow("Vacancy specular power", vacSpecularPowerSpin)
         
-        row = vacForm.newRow()
-        row.addWidget(QtGui.QLabel("Specular power:"))
-        row.addWidget(vacSpecularPowerSpin)
-        
-        row = self.newDisplayRow()
-        row.addWidget(vacForm)
+        self.addHorizontalDivider(displaySettings=True)
         
         self.drawDisplacementVectors = False
         self.bondThicknessVTK = 0.4
@@ -958,75 +927,46 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.bondNumSides = 5
         
         # draw displacement vector settings
-        self.drawVectorsGroup = QtGui.QGroupBox("Draw displacement vectors")
-        self.drawVectorsGroup.setCheckable(True)
-        self.drawVectorsGroup.setChecked(False)
-        self.drawVectorsGroup.setEnabled(False)
-        self.drawVectorsGroup.toggled.connect(self.drawVectorsChanged)
+        self.drawVectorsCheck = QtGui.QCheckBox()
+        self.drawVectorsCheck.stateChanged.connect(self.drawVectorsChanged)
+        self.drawVectorsCheck.setCheckState(QtCore.Qt.Unchecked)
+        self.drawVectorsCheck.setToolTip("Draw displacement vectors (movement) of defects")
+        self.disableDrawVectorsCheck()
         
-        grpLayout = QtGui.QVBoxLayout(self.drawVectorsGroup)
-        grpLayout.setAlignment(QtCore.Qt.AlignTop)
-        grpLayout.setContentsMargins(0,0,0,0)
-        grpLayout.setSpacing(0)
+        self.displaySettingsLayout.addRow("<b>Draw displacement vectors</b>", self.drawVectorsCheck)
         
-        # thickness
-        bondThicknessGroup = QtGui.QGroupBox("Bond thickness")
-        bondThicknessGroup.setAlignment(QtCore.Qt.AlignCenter)
-        bondThicknessLayout = QtGui.QVBoxLayout()
-        bondThicknessLayout.setContentsMargins(0,0,0,0)
-        bondThicknessLayout.setSpacing(0)
-        bondThicknessGroup.setLayout(bondThicknessLayout)
-        grpLayout.addWidget(bondThicknessGroup)
+        # vtk thickness
+        self.vtkThickSpin = QtGui.QDoubleSpinBox()
+        self.vtkThickSpin.setMinimum(0.01)
+        self.vtkThickSpin.setMaximum(10)
+        self.vtkThickSpin.setSingleStep(0.1)
+        self.vtkThickSpin.setValue(self.bondThicknessVTK)
+        self.vtkThickSpin.valueChanged.connect(self.vtkThickChanged)
+        self.vtkThickSpin.setToolTip("Thickness of lines showing defect movement (VTK)")
+        self.displaySettingsLayout.addRow("Bond thickness (VTK)", self.vtkThickSpin)
         
-        # vtk
-        vtkThickSpin = QtGui.QDoubleSpinBox()
-        vtkThickSpin.setMinimum(0.01)
-        vtkThickSpin.setMaximum(10)
-        vtkThickSpin.setSingleStep(0.01)
-        vtkThickSpin.setValue(self.bondThicknessVTK)
-        vtkThickSpin.valueChanged.connect(self.vtkThickChanged)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("VTK:"))
-        row.addWidget(vtkThickSpin)
-        bondThicknessLayout.addLayout(row)
-        
-        # pov
-        povThickSpin = QtGui.QDoubleSpinBox()
-        povThickSpin.setMinimum(0.01)
-        povThickSpin.setMaximum(10)
-        povThickSpin.setSingleStep(0.01)
-        povThickSpin.setValue(self.bondThicknessPOV)
-        povThickSpin.valueChanged.connect(self.povThickChanged)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("POV:"))
-        row.addWidget(povThickSpin)
-        bondThicknessLayout.addLayout(row)
-        
-        # num sides group
-        numSidesGroup = QtGui.QGroupBox("Number of sides")
-        numSidesGroup.setAlignment(QtCore.Qt.AlignCenter)
-        numSidesLayout = QtGui.QVBoxLayout()
-        numSidesLayout.setContentsMargins(0,0,0,0)
-        numSidesLayout.setSpacing(0)
-        numSidesGroup.setLayout(numSidesLayout)
-        grpLayout.addWidget(numSidesGroup)
+        # pov thickness
+        self.povThickSpin = QtGui.QDoubleSpinBox()
+        self.povThickSpin.setMinimum(0.01)
+        self.povThickSpin.setMaximum(10)
+        self.povThickSpin.setSingleStep(0.01)
+        self.povThickSpin.setValue(self.bondThicknessPOV)
+        self.povThickSpin.valueChanged.connect(self.povThickChanged)
+        self.povThickSpin.setToolTip("Thickness of lines showing defect movement (POV-Ray)")
+        self.displaySettingsLayout.addRow("Bond thickness (POV)", self.povThickSpin)
         
         # num sides
-        numSidesSpin = QtGui.QSpinBox()
-        numSidesSpin.setMinimum(3)
-        numSidesSpin.setMaximum(999)
-        numSidesSpin.setSingleStep(1)
-        numSidesSpin.setValue(self.bondNumSides)
-        numSidesSpin.valueChanged.connect(self.numSidesChanged)
+        self.numSidesSpin = QtGui.QSpinBox()
+        self.numSidesSpin.setMinimum(3)
+        self.numSidesSpin.setMaximum(999)
+        self.numSidesSpin.setSingleStep(1)
+        self.numSidesSpin.setValue(self.bondNumSides)
+        self.numSidesSpin.valueChanged.connect(self.numSidesChanged)
+        self.numSidesSpin.setToolTip("Number of sides when rendering displacement vectors (more looks better but is slower)")
+        self.displaySettingsLayout.addRow("Bond number of sides", self.numSidesSpin)
         
-        row = QtGui.QHBoxLayout()
-        row.addWidget(numSidesSpin)
-        numSidesLayout.addLayout(row)
-        
-        row = self.newDisplayRow()
-        row.addWidget(self.drawVectorsGroup)
+        self.drawVectorsChanged(QtCore.Qt.Unchecked)
+        self.findClustersChanged(QtCore.Qt.Unchecked)
         
         self.refresh()
     
@@ -1084,12 +1024,46 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         """
         self.bondThicknessPOV = val
     
-    def drawVectorsChanged(self, drawVectors):
+    def enableDrawVectorsCheck(self):
+        """
+        Enable
+        
+        """
+        self.drawVectorsCheck.setEnabled(True)
+        if self.drawDisplacementVectors:
+            self.vtkThickSpin.setEnabled(True)
+            self.povThickSpin.setEnabled(True)
+    
+    def disableDrawVectorsCheck(self):
+        """
+        Disable
+        
+        """
+        self.drawVectorsCheck.setEnabled(False)
+        if self.drawDisplacementVectors:
+            self.vtkThickSpin.setEnabled(False)
+            self.povThickSpin.setEnabled(False)
+        
+    
+    def drawVectorsChanged(self, state):
         """
         Draw displacement vectors toggled
         
         """
-        self.drawDisplacementVectors = drawVectors
+        if state == QtCore.Qt.Unchecked:
+            self.drawDisplacementVectors = False
+            
+            self.vtkThickSpin.setEnabled(False)
+            self.povThickSpin.setEnabled(False)
+            self.numSidesSpin.setEnabled(False)
+        
+        else:
+            self.drawDisplacementVectors = True
+            
+            self.vtkThickSpin.setEnabled(True)
+            self.povThickSpin.setEnabled(True)
+            self.numSidesSpin.setEnabled(True)
+        
         self.logger.debug("Draw defect displacement vectors: %r", self.drawDisplacementVectors)
     
     def vacSpecularPowerChanged(self, val):
@@ -1196,6 +1170,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
             self.minNumSpinBox.setEnabled(False)
             self.maxNumSpinBox.setEnabled(False)
             self.disableCalcVolsCheck()
+            self.disableDrawHullsCheck()
         
         else:
             self.findClusters = 1
@@ -1205,6 +1180,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
             self.minNumSpinBox.setEnabled(True)
             self.maxNumSpinBox.setEnabled(True)
             self.enableCalcVolsCheck()
+            self.enableDrawHullsCheck()
     
     def vacRadChanged(self, val):
         """
@@ -1319,19 +1295,50 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         # enable/disable draw vectors
         if inputState.NAtoms == refState.NAtoms:
-            self.drawVectorsGroup.setEnabled(True)
+            self.enableDrawVectorsCheck()
         else:
-            self.drawVectorsGroup.setEnabled(False)
+            self.disableDrawVectorsCheck()
     
-    def drawHullsChanged(self, drawHulls):
+    def disableDrawHullsCheck(self):
+        """
+        Disable the check box and associated widgets
+        
+        """
+        self.drawHullsCheck.setEnabled(False)
+        if self.drawConvexHulls:
+            self.hullColourButton.setEnabled(False)
+            self.hullOpacitySpinBox.setEnabled(False)
+            self.hideAtomsCheckBox.setEnabled(False)
+    
+    def enableDrawHullsCheck(self):
+        """
+        Enable the check box and associated widgets
+        
+        """
+        self.drawHullsCheck.setEnabled(True)
+        if self.drawConvexHulls:
+            self.hullColourButton.setEnabled(True)
+            self.hullOpacitySpinBox.setEnabled(True)
+            self.hideAtomsCheckBox.setEnabled(True)
+    
+    def drawHullsChanged(self, state):
         """
         Change draw hulls setting.
         
         """
-        if drawHulls:
-            self.drawConvexHulls = 1
-        else:
+        if state == QtCore.Qt.Unchecked:
             self.drawConvexHulls = 0
+            
+            self.hullColourButton.setEnabled(False)
+            self.hullOpacitySpinBox.setEnabled(False)
+            self.hideAtomsCheckBox.setEnabled(False)
+        
+        else:
+            self.drawConvexHulls = 1
+            
+            self.hullColourButton.setEnabled(True)
+            self.hullOpacitySpinBox.setEnabled(True)
+            self.hideAtomsCheckBox.setEnabled(True)
     
     def hullOpacityChanged(self, val):
         """
