@@ -744,8 +744,8 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.maxBondDistanceSpin.setValue(self.acnaMaxBondDistance)
         self.maxBondDistanceSpin.valueChanged[float].connect(self.setAcnaMaxBondDistance)
         self.maxBondDistanceSpin.setToolTip("This value is used for spatially decomposing the system. It "
-                                       "should be set large enough to include all required atoms. "
-                                       "If unsure just set it to something big, eg. 10.0")
+                                            "should be set large enough to include all required atoms. "
+                                            "If unsure just set it to something big, eg. 10.0")
         self.contentLayout.addRow("Max bond distance", self.maxBondDistanceSpin)
         
         # acna ideal structure
@@ -777,7 +777,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.nebRadSpinBox.setValue(self.neighbourRadius)
         self.nebRadSpinBox.valueChanged[float].connect(self.nebRadChanged)
         self.nebRadSpinBox.setToolTip("Clusters are constructed using a recursive algorithm where "
-                                      "two atoms are said to be neighbours if their separation "
+                                      "two defects are said to be neighbours if their separation "
                                       "is less than this value.")
         self.contentLayout.addRow("Neighbour radius", self.nebRadSpinBox)
         
@@ -809,7 +809,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         
         # radio buttons
         self.convHullVolRadio = QtGui.QRadioButton(parent=self.calcVolsCheck)
-        self.convHullVolRadio.toggled.connect(self.calcVolsChanged)
+        self.convHullVolRadio.toggled.connect(self.calcVolsMethodChanged)
         self.convHullVolRadio.setToolTip("Volume is determined from the convex hull of the defect positions.")
         self.voroVolRadio = QtGui.QRadioButton(parent=self.calcVolsCheck)
         self.voroVolRadio.setToolTip("Volume is determined by summing the Voronoi volumes of the defects in "
@@ -1361,6 +1361,21 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
             self.hullCol[1] = float(col.green()) / 255.0
             self.hullCol[2] = float(col.blue()) / 255.0
     
+    def calcVolsMethodChanged(self, val=None):
+        """
+        Calc vols method changed
+        
+        """
+        if self.convHullVolRadio.isChecked():
+            self.calculateVolumesHull = True
+        else:
+            self.calculateVolumesHull = False
+        
+        if self.voroVolRadio.isChecked():
+            self.calculateVolumesVoro = True
+        else:
+            self.calculateVolumesVoro = False
+    
     def calcVolsChanged(self, state):
         """
         Changed calc vols.
@@ -1380,15 +1395,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
             self.convHullVolRadio.setEnabled(True)
             self.voroVolRadio.setEnabled(True)
         
-        if self.convHullVolRadio.isChecked():
-            self.calculateVolumesHull = True
-        else:
-            self.calculateVolumesHull = False
-        
-        if self.voroVolRadio.isChecked():
-            self.calculateVolumesVoro = True
-        else:
-            self.calculateVolumesVoro = False
+        self.calcVolsMethodChanged()
 
 ################################################################################
 class ClusterSettingsDialog(GenericSettingsDialog):
@@ -1410,122 +1417,93 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         self.hideAtoms = 0
         
         # neighbour rad spin box
-        label = QtGui.QLabel("Neighbour radius ")
         self.nebRadSpinBox = QtGui.QDoubleSpinBox()
         self.nebRadSpinBox.setSingleStep(0.01)
         self.nebRadSpinBox.setMinimum(0.01)
         self.nebRadSpinBox.setMaximum(100.0)
         self.nebRadSpinBox.setValue(self.neighbourRadius)
         self.nebRadSpinBox.valueChanged.connect(self.nebRadChanged)
-        
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.nebRadSpinBox)
+        self.nebRadSpinBox.setToolTip("Clusters are constructed using a recursive algorithm where "
+                                      "two atoms are said to be neighbours if their separation "
+                                      "is less than this value.")
+        self.contentLayout.addRow("Neighbour radius", self.nebRadSpinBox)
         
         # minimum size spin box
-        label = QtGui.QLabel("Minimum cluster size ")
         self.minNumSpinBox = QtGui.QSpinBox()
         self.minNumSpinBox.setMinimum(1)
         self.minNumSpinBox.setMaximum(1000)
         self.minNumSpinBox.setValue(self.minClusterSize)
         self.minNumSpinBox.valueChanged.connect(self.minNumChanged)
-        
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.minNumSpinBox)
+        self.minNumSpinBox.setToolTip("Only show clusters that contain more than this number of atoms.")
+        self.contentLayout.addRow("Minimum cluster size", self.minNumSpinBox)
         
         # maximum size spin box
-        label = QtGui.QLabel("Maximum cluster size ")
         self.maxNumSpinBox = QtGui.QSpinBox()
         self.maxNumSpinBox.setMinimum(-1)
         self.maxNumSpinBox.setMaximum(999999)
         self.maxNumSpinBox.setValue(self.maxClusterSize)
         self.maxNumSpinBox.valueChanged.connect(self.maxNumChanged)
+        self.maxNumSpinBox.setToolTip("Only show clusters that contain less than this number of atoms. Set to "
+                                      "'-1' to disable this condition.")
+        self.contentLayout.addRow("Maximum cluster size", self.maxNumSpinBox)
         
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(self.maxNumSpinBox)
-                
-        # draw hulls group box
-        self.drawHullsGroupBox = QtGui.QGroupBox("Draw convex hulls")
-        self.drawHullsGroupBox.setCheckable(True)
-        self.drawHullsGroupBox.setChecked(False)
-#         self.drawHullsGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
-        self.drawHullsGroupBox.toggled.connect(self.drawHullsChanged)
+        self.addHorizontalDivider()
         
-        drawHullsLayout = QtGui.QVBoxLayout(self.drawHullsGroupBox)
-        drawHullsLayout.setAlignment(QtCore.Qt.AlignTop)
-        drawHullsLayout.setContentsMargins(0, 0, 0, 0)
-        drawHullsLayout.setSpacing(0)
+        # calculate volumes options
+        self.calcVolsCheck = QtGui.QCheckBox()
+        self.calcVolsCheck.setToolTip("Calculate volumes of clusters of atoms.")
+        self.calcVolsCheck.stateChanged.connect(self.calcVolsChanged)
+        self.calcVolsCheck.setChecked(self.calculateVolumes)
+        self.contentLayout.addRow("<b>Calculate volumes</b>", self.calcVolsCheck)
         
-        row = self.newDisplayRow()
-        row.addWidget(self.drawHullsGroupBox)
+        # radio buttons
+        self.convHullVolRadio = QtGui.QRadioButton(parent=self.calcVolsCheck)
+        self.convHullVolRadio.toggled.connect(self.calcVolsMethodChanged)
+        self.convHullVolRadio.setToolTip("Volume is determined from the convex hull of the atom positions.")
+        self.voroVolRadio = QtGui.QRadioButton(parent=self.calcVolsCheck)
+        self.voroVolRadio.setToolTip("Volume is determined by summing the Voronoi volumes of the atoms in "
+                                     "the cluster.")
+        self.voroVolRadio.setChecked(True)
+        self.contentLayout.addRow("Convex hull volumes", self.convHullVolRadio)
+        self.contentLayout.addRow("Sum Voronoi volumes", self.voroVolRadio)
+        
+        # make sure setup properly
+        self.calcVolsChanged(QtCore.Qt.Unchecked)
+        
+        # draw hulls options
+        self.drawHullsCheck = QtGui.QCheckBox()
+        self.drawHullsCheck.setChecked(False)
+        self.drawHullsCheck.setToolTip("Draw convex hulls of atom clusters")
+        self.drawHullsCheck.stateChanged.connect(self.drawHullsChanged)
+        self.displaySettingsLayout.addRow("<b>Draw convex hulls</b>", self.drawHullsCheck)
         
         # hull colour
-        label = QtGui.QLabel("Hull colour  ")
-        
         col = QtGui.QColor(self.hullCol[0]*255.0, self.hullCol[1]*255.0, self.hullCol[2]*255.0)
         self.hullColourButton = QtGui.QPushButton("")
         self.hullColourButton.setFixedWidth(50)
         self.hullColourButton.setFixedHeight(30)
         self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
         self.hullColourButton.clicked.connect(self.showColourDialog)
-        
-        row = genericForm.FormRow()
-        row.addWidget(label)
-        row.addWidget(self.hullColourButton)
-        drawHullsLayout.addWidget(row)
+        self.hullColourButton.setToolTip("The colour of the hull.")
+        self.displaySettingsLayout.addRow("Hull colour", self.hullColourButton)
         
         # hull opacity
-        label = QtGui.QLabel("Hull opacity ")
-        
         self.hullOpacitySpinBox = QtGui.QDoubleSpinBox()
         self.hullOpacitySpinBox.setSingleStep(0.01)
         self.hullOpacitySpinBox.setMinimum(0.01)
         self.hullOpacitySpinBox.setMaximum(1.0)
         self.hullOpacitySpinBox.setValue(self.hullOpacity)
-        self.hullOpacitySpinBox.valueChanged.connect(self.hullOpacityChanged)
-        
-        row = genericForm.FormRow()
-        row.addWidget(label)
-        row.addWidget(self.hullOpacitySpinBox)
-        drawHullsLayout.addWidget(row)
+        self.hullOpacitySpinBox.setToolTip("The opacity of the convex hulls")
+        self.hullOpacitySpinBox.valueChanged[float].connect(self.hullOpacityChanged)
+        self.displaySettingsLayout.addRow("Hull opacity", self.hullOpacitySpinBox)
         
         # hide atoms
-        self.hideAtomsCheckBox = QtGui.QCheckBox(" Hide atoms")
+        self.hideAtomsCheckBox = QtGui.QCheckBox()
         self.hideAtomsCheckBox.stateChanged.connect(self.hideAtomsChanged)
+        self.hideAtomsCheckBox.setToolTip("Don't show the atoms when rendering the convex hulls")
+        self.displaySettingsLayout.addRow("Hide atoms", self.hideAtomsCheckBox)
         
-        row = genericForm.FormRow()
-        row.addWidget(self.hideAtomsCheckBox)
-        drawHullsLayout.addWidget(row)
-        
-        # calculate volume group box
-        self.calcVolsGroup = QtGui.QGroupBox("Calculate volumes")
-        self.calcVolsGroup.setCheckable(True)
-        self.calcVolsGroup.setChecked(False)
-#         self.calcVolsGroup.setAlignment(QtCore.Qt.AlignHCenter)
-        self.calcVolsGroup.toggled.connect(self.calcVolsChanged)
-        
-        calcVolsLayout = QtGui.QVBoxLayout(self.calcVolsGroup)
-        calcVolsLayout.setAlignment(QtCore.Qt.AlignTop)
-        calcVolsLayout.setContentsMargins(0, 0, 0, 0)
-        calcVolsLayout.setSpacing(0)
-        
-        self.newRow()
-        row = self.newRow()
-        row.addWidget(self.calcVolsGroup)
-        
-        # radio buttons
-        self.convHullVolRadio = QtGui.QRadioButton("Use volume of convex hull", parent=self.calcVolsGroup)
-        self.convHullVolRadio.toggled.connect(self.calcVolsChanged)
-        
-        self.voroVolRadio = QtGui.QRadioButton("Sum Voronoi volumes", parent=self.calcVolsGroup)
-#         self.voroVolRadio.toggled.connect(self.calcVolsChanged)
-        
-        self.voroVolRadio.setChecked(True)
-        
-        calcVolsLayout.addWidget(self.convHullVolRadio)
-        calcVolsLayout.addWidget(self.voroVolRadio)
+        self.drawHullsChanged(QtCore.Qt.Unchecked)
     
     def hideAtomsChanged(self, val):
         """
@@ -1559,16 +1537,11 @@ class ClusterSettingsDialog(GenericSettingsDialog):
             self.hullCol[1] = float(col.green()) / 255.0
             self.hullCol[2] = float(col.blue()) / 255.0
     
-    def calcVolsChanged(self, val):
+    def calcVolsMethodChanged(self, val=None):
         """
-        Changed calc vols.
+        Calc vols method changed
         
         """
-        if self.calcVolsGroup.isChecked():
-            self.calculateVolumes = True
-        else:
-            self.calculateVolumes = False
-        
         if self.convHullVolRadio.isChecked():
             self.calculateVolumesHull = True
         else:
@@ -1578,6 +1551,27 @@ class ClusterSettingsDialog(GenericSettingsDialog):
             self.calculateVolumesVoro = True
         else:
             self.calculateVolumesVoro = False
+    
+    def calcVolsChanged(self, state):
+        """
+        Changed calc vols.
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.calculateVolumes = False
+            
+            # disable buttons
+            self.convHullVolRadio.setEnabled(False)
+            self.voroVolRadio.setEnabled(False)
+        
+        else:
+            self.calculateVolumes = True
+            
+            # enable buttons
+            self.convHullVolRadio.setEnabled(True)
+            self.voroVolRadio.setEnabled(True)
+        
+        self.calcVolsMethodChanged()
     
     def minNumChanged(self, val):
         """
@@ -1600,15 +1594,24 @@ class ClusterSettingsDialog(GenericSettingsDialog):
         """
         self.neighbourRadius = val
     
-    def drawHullsChanged(self, drawHulls):
+    def drawHullsChanged(self, state):
         """
         Change draw hulls setting.
         
         """
-        if drawHulls:
-            self.drawConvexHulls = 1
-        else:
+        if state == QtCore.Qt.Unchecked:
             self.drawConvexHulls = 0
+            
+            self.hullColourButton.setEnabled(False)
+            self.hullOpacitySpinBox.setEnabled(False)
+            self.hideAtomsCheckBox.setEnabled(False)
+        
+        else:
+            self.drawConvexHulls = 1
+            
+            self.hullColourButton.setEnabled(True)
+            self.hullOpacitySpinBox.setEnabled(True)
+            self.hideAtomsCheckBox.setEnabled(True)
 
 
 ################################################################################
