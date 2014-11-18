@@ -111,9 +111,6 @@ class MainWindow(QtGui.QMainWindow):
         logger = logging.getLogger(__name__)
         logger.debug("Initialising user interface")
         
-        # mac specific
-        self.setUnifiedTitleAndToolBarOnMac(True)
-        
         # defaults
         self.refFile = ""
         self.inputFile = ""
