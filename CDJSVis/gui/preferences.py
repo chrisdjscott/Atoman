@@ -36,8 +36,9 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
         super(GenericPreferencesSettingsForm, self).__init__(parent)
         
         # tab layout
-        self.layout = QtGui.QVBoxLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout = QtGui.QFormLayout()
+#         self.layout = QtGui.QVBoxLayout()
+#         self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
         
         self.parent = parent
@@ -60,7 +61,8 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
         return rowLayout
     
     def init(self):
-        self.layout.addStretch(1)
+#         self.layout.addStretch(1)
+        pass
 
 ################################################################################
 
@@ -97,19 +99,15 @@ class LogFileSettingsForm(GenericPreferencesSettingsForm):
         createCheck = QtGui.QCheckBox("Create log file")
         createCheck.setChecked(self.createLogFile)
         createCheck.stateChanged.connect(self.createToggled)
-        rowLayout = self.newRow()
-        rowLayout.addWidget(createCheck)
+        self.layout.addRow("Create log file", createCheck)
         
-        # directory
-        self.logDirLabel = QtGui.QLabel("Log dir: '%s'" % self.logDirectory)
-        row = self.newRow()
-        row.addWidget(self.logDirLabel)
-        
-        # directory dialog button
-        button = QtGui.QPushButton("Choose directory")
-        button.clicked.connect(self.showLogDirectoryDialog)
-        row = self.newRow()
-        row.addWidget(button)
+        # directory button
+        self.logDirButton = QtGui.QPushButton(self.logDirectory)
+        self.logDirButton.clicked.connect(self.showLogDirectoryDialog)
+        self.logDirButton.setAutoDefault(False)
+        self.logDirButton.setDefault(False)
+        self.logDirButton.setFixedWidth(160)
+        self.layout.addRow("Log directory", self.logDirButton)
         
         # logging levels
         self.loggingLevels = {"CRITICAL": logging.CRITICAL,
@@ -125,15 +123,12 @@ class LogFileSettingsForm(GenericPreferencesSettingsForm):
                                     "DEBUG"]
         
         # log file level
-        label = QtGui.QLabel("Level:")
         levelCombo = QtGui.QComboBox()
         levelCombo.addItems(self.loggingLevelsSorted)
         levelIndex = self.getLevelIndex(self.logLevel)
         levelCombo.setCurrentIndex(levelIndex)
         levelCombo.currentIndexChanged[str].connect(self.logLevelChanged)
-        row = self.newRow()
-        row.addWidget(label)
-        row.addWidget(levelCombo)
+        self.layout.addRow("Level", levelCombo)
         
         # create handler... (should be on main window!)
         if self.createLogFile:
@@ -199,7 +194,7 @@ class LogFileSettingsForm(GenericPreferencesSettingsForm):
         
         if new_dir and os.path.isdir(new_dir):
             self.logDirectory = new_dir
-            self.logDirLabel.setText("Log dir: '%s" % new_dir)
+            self.logDirButton.setText(new_dir)
             
             self.logger.debug("Log file directory changed: '%s'", new_dir)
             
@@ -254,17 +249,12 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
         self.maxAtomsAutoRun = int(settings.value("rendering/maxAtomsAutoRun", 10000))
         
         # max atoms auto run
-        rowLayout = self.newRow()
-        
-        label = QtGui.QLabel("Max atoms auto run:")
-        rowLayout.addWidget(label)
-        
         maxAtomsSpin = QtGui.QSpinBox()
         maxAtomsSpin.setMinimum(1)
         maxAtomsSpin.setMaximum(99999)
         maxAtomsSpin.setValue(self.maxAtomsAutoRun)
         maxAtomsSpin.valueChanged.connect(self.maxAtomsChanged)
-        rowLayout.addWidget(maxAtomsSpin)
+        self.layout.addRow("Max atoms auto run", maxAtomsSpin)
         
         self.init()
     
@@ -313,26 +303,15 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         pathToFFmpegLineEdit = QtGui.QLineEdit(self.pathToFFmpeg)
         pathToFFmpegLineEdit.textChanged.connect(self.pathToFFmpegChanged)
         pathToFFmpegLineEdit.editingFinished.connect(self.pathToFFmpegEdited)
-        
-        rowLayout = self.newRow()
-        rowLayout.addWidget(QtGui.QLabel("Path to FFmpeg:"))
-        rowLayout.addWidget(pathToFFmpegLineEdit)
+        self.layout.addRow("FFmpeg path", pathToFFmpegLineEdit)
         
         # bitrate
-        rowLayout = self.newRow()
-        
-        label = QtGui.QLabel("Bitrate:")
-        rowLayout.addWidget(label)
-        
         bitrateSpin = QtGui.QSpinBox()
         bitrateSpin.setMinimum(1)
         bitrateSpin.setMaximum(1e8)
         bitrateSpin.setValue(self.bitrate)
         bitrateSpin.valueChanged.connect(self.bitrateChanged)
-        rowLayout.addWidget(bitrateSpin)
-        
-        label = QtGui.QLabel("kbits/s")
-        rowLayout.addWidget(label)
+        self.layout.addRow("Bitrate (kbits/s)", bitrateSpin)
         
         self.init()
     
@@ -415,79 +394,55 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         pathToPovrayLineEdit = QtGui.QLineEdit(self.pathToPovray)
         pathToPovrayLineEdit.textChanged.connect(self.pathToPovrayChanged)
         pathToPovrayLineEdit.editingFinished.connect(self.pathToPovrayEdited)
-        
-        rowLayout = self.newRow()
-        rowLayout.addWidget(QtGui.QLabel("Path to POV-Ray:"))
-        rowLayout.addWidget(pathToPovrayLineEdit)
+        self.layout.addRow("POV-Ray path", pathToPovrayLineEdit)
         
         # overlay check box
-        self.overlayImageCheck = QtGui.QCheckBox("Overlay image")
+        self.overlayImageCheck = QtGui.QCheckBox()
         self.overlayImageCheck.setChecked(1)
         self.overlayImageCheck.stateChanged.connect(self.overlayImageChanged)
-        
-        rowLayout = self.newRow()
-        rowLayout.addWidget(self.overlayImageCheck)
+        self.layout.addRow("Overlay image", self.overlayImageCheck)
         
         # shadowless check box
-        self.shadowlessCheck = QtGui.QCheckBox("Shadowless")
+        self.shadowlessCheck = QtGui.QCheckBox()
         self.shadowlessCheck.stateChanged.connect(self.shadowlessChanged)
-        
-        rowLayout = self.newRow()
-        rowLayout.addWidget(self.shadowlessCheck)
+        self.layout.addRow("Shadowless", self.shadowlessCheck)
         
         # dimensions
-        rowLayout = self.newRow()
-        
-        label = QtGui.QLabel("Dimensions: ")
-        rowLayout.addWidget(label)
-        
         HResSpinBox = QtGui.QSpinBox()
         HResSpinBox.setMinimum(1)
         HResSpinBox.setMaximum(10000)
         HResSpinBox.setValue(self.HRes)
         HResSpinBox.valueChanged.connect(self.HResChanged)
-        rowLayout.addWidget(HResSpinBox)
-        
-        label = QtGui.QLabel(" x ")
-        rowLayout.addWidget(label)
         
         VResSpinBox = QtGui.QSpinBox()
         VResSpinBox.setMinimum(1)
         VResSpinBox.setMaximum(10000)
         VResSpinBox.setValue(self.VRes)
         VResSpinBox.valueChanged.connect(self.VResChanged)
-        rowLayout.addWidget(VResSpinBox)
+        
+        hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(HResSpinBox)
+        hbox.addWidget(QtGui.QLabel("x"))
+        hbox.addWidget(VResSpinBox)
+        self.layout.addRow("Dimensions", hbox)
         
         # view angle
-        rowLayout = self.newRow()
-        
-        label = QtGui.QLabel("View angle: ")
-        rowLayout.addWidget(label)
-        
         angleSpinBox = QtGui.QDoubleSpinBox()
         angleSpinBox.setSingleStep(0.1)
         angleSpinBox.setMinimum(0.1)
         angleSpinBox.setMaximum(360.0)
         angleSpinBox.setValue(self.viewAngle)
         angleSpinBox.valueChanged.connect(self.viewAngleChanged)
-        rowLayout.addWidget(angleSpinBox)
-        
-        label = QtGui.QLabel(" degrees")
-        rowLayout.addWidget(label)
+        self.layout.addRow("View angle (degrees)", angleSpinBox)
         
         # cell frame radius
-        rowLayout = self.newRow()
-        
-        label = QtGui.QLabel("Cell frame radius: ")
-        rowLayout.addWidget(label)
-        
         cellFrameSpinBox = QtGui.QDoubleSpinBox()
         cellFrameSpinBox.setSingleStep(0.01)
         cellFrameSpinBox.setMinimum(0.01)
         cellFrameSpinBox.setMaximum(5.0)
         cellFrameSpinBox.setValue(self.cellFrameRadius)
         cellFrameSpinBox.valueChanged.connect(self.cellFrameRadiusChanged)
-        rowLayout.addWidget(cellFrameSpinBox)
+        self.layout.addRow("Cell frame radius", cellFrameSpinBox)
         
         self.init()
     
@@ -592,21 +547,12 @@ class MatplotlibSettingsForm(GenericPreferencesSettingsForm):
         self.legendFontsize = 16
         
         # dimensions
-        rowLayout = self.newRow()
-        
-        label = QtGui.QLabel("Fig size:")
-        rowLayout.addWidget(label)
-        
         widthSpinBox = QtGui.QDoubleSpinBox()
         widthSpinBox.setMinimum(1)
         widthSpinBox.setMaximum(50)
         widthSpinBox.setSingleStep(0.1)
         widthSpinBox.setValue(self.figWidth)
         widthSpinBox.valueChanged.connect(self.widthChanged)
-        rowLayout.addWidget(widthSpinBox)
-        
-        label = QtGui.QLabel("x")
-        rowLayout.addWidget(label)
         
         heightSpinBox = QtGui.QDoubleSpinBox()
         heightSpinBox.setMinimum(1)
@@ -614,74 +560,50 @@ class MatplotlibSettingsForm(GenericPreferencesSettingsForm):
         heightSpinBox.setSingleStep(0.1)
         heightSpinBox.setValue(self.figHeight)
         heightSpinBox.valueChanged.connect(self.heightChanged)
-        rowLayout.addWidget(heightSpinBox)
         
-        label = QtGui.QLabel("inches")
-        rowLayout.addWidget(label)
+        hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(widthSpinBox)
+        hbox.addWidget(QtGui.QLabel("x"))
+        hbox.addWidget(heightSpinBox)
+        self.layout.addRow("Fig size (inches)", hbox)
         
         # dpi
-        rowLayout = self.newRow()
-        
-        label = QtGui.QLabel("Dpi:")
-        rowLayout.addWidget(label)
-        
         dpiSpinBox = QtGui.QSpinBox()
         dpiSpinBox.setMinimum(1)
         dpiSpinBox.setMaximum(1000)
         dpiSpinBox.setValue(self.figDpi)
         dpiSpinBox.valueChanged.connect(self.dpiChanged)
-        rowLayout.addWidget(dpiSpinBox)
+        self.layout.addRow("Dpi", dpiSpinBox)
         
         # show grid
-        self.showGridCheck = QtGui.QCheckBox("Show grid")
+        self.showGridCheck = QtGui.QCheckBox()
         self.showGridCheck.setChecked(self.showGrid)
         self.showGridCheck.stateChanged.connect(self.showGridChanged)
+        self.layout.addRow("Show grid", self.showGridCheck)
         
-        rowLayout = self.newRow()
-        rowLayout.addWidget(self.showGridCheck)
-        
-        # font size group
-        fontSizeGroup = genericForm.GenericForm(self, 0, "Font size")
-        fontSizeGroup.show()
-        
-        rowLayout = self.newRow()
-        rowLayout.addWidget(fontSizeGroup)
-        
-        # general
-        label = QtGui.QLabel("General:")
+        # general font size
         generalFontSizeSpin = QtGui.QSpinBox()
         generalFontSizeSpin.setMinimum(1)
         generalFontSizeSpin.setMaximum(100)
         generalFontSizeSpin.setValue(self.fontsize)
         generalFontSizeSpin.valueChanged.connect(self.generalFontSizeChanged)
-        
-        row = fontSizeGroup.newRow()
-        row.addWidget(label)
-        row.addWidget(generalFontSizeSpin)
+        self.layout.addRow("Font size (general)", generalFontSizeSpin)
         
         # ticks
-        label = QtGui.QLabel("Legend:")
         legendFontSizeSpin = QtGui.QSpinBox()
         legendFontSizeSpin.setMinimum(1)
         legendFontSizeSpin.setMaximum(100)
         legendFontSizeSpin.setValue(self.legendFontsize)
         legendFontSizeSpin.valueChanged.connect(self.legendFontSizeChanged)
-        
-        row = fontSizeGroup.newRow()
-        row.addWidget(label)
-        row.addWidget(legendFontSizeSpin)
+        self.layout.addRow("Font size (legend)", legendFontSizeSpin)
         
         # ticks
-        label = QtGui.QLabel("Ticks:")
         tickFontSizeSpin = QtGui.QSpinBox()
         tickFontSizeSpin.setMinimum(1)
         tickFontSizeSpin.setMaximum(100)
         tickFontSizeSpin.setValue(self.tickFontsize)
         tickFontSizeSpin.valueChanged.connect(self.tickFontSizeChanged)
-        
-        row = fontSizeGroup.newRow()
-        row.addWidget(label)
-        row.addWidget(tickFontSizeSpin)
+        self.layout.addRow("Font size (ticks)", tickFontSizeSpin)
         
         self.init()
     
@@ -879,29 +801,22 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         ompNumThreadsSpin.setValue(ini)
         ompNumThreadsSpin.valueChanged.connect(self.ompNumThreadsChanged)
         ompNumThreadsSpin.setToolTip("The number of threads that can be used by OpenMP")
-        
-        rowLayout = self.newRow()
-        rowLayout.addWidget(QtGui.QLabel("OMP_NUM_THREADS: "))
-        rowLayout.addWidget(ompNumThreadsSpin)
+        self.layout.addRow("OpenMP threads", ompNumThreadsSpin)
         
         # disable mouse wheel
         disableMouseWheel = int(self.settings.value("mouse/disableWheel", 1))
         self.disableMouseWheel = bool(disableMouseWheel)
         self.logger.debug("Disable mouse wheel (initial value): %s", self.disableMouseWheel)
-        disableMouseWheelCheck = QtGui.QCheckBox("Disable mouse wheel (VTK)")
-        disableMouseWheelCheck.setToolTip(textwrap.dedent("""
-                                                          Disables the mouse wheel in the VTK window. The 
-                                                          mouse wheel can be used to zoom in and out. This is 
-                                                          most useful with the wireless Apple Magic mouse.
-                                                          """).strip())
+        disableMouseWheelCheck = QtGui.QCheckBox()
+        disableMouseWheelCheck.setToolTip("Disables the mouse wheel in the VTK window. The "
+                                          "mouse wheel can be used to zoom in and out. This is "
+                                          "most useful with the wireless Apple Magic mouse.")
         if self.disableMouseWheel:
             disableMouseWheelCheck.setCheckState(QtCore.Qt.Checked)
         else:
             disableMouseWheelCheck.setCheckState(QtCore.Qt.Unchecked)
         disableMouseWheelCheck.stateChanged.connect(self.disableMouseWheelChanged)
-        
-        rowLayout = self.newRow()
-        rowLayout.addWidget(disableMouseWheelCheck)
+        self.layout.addRow("Disable mouse wheel (VTK)", disableMouseWheelCheck)
         
         self.init()
     
@@ -955,7 +870,7 @@ class PreferencesDialog(QtGui.QDialog):
         
         self.setWindowTitle("Preferences")
         self.setWindowIcon(QtGui.QIcon(iconPath("applications-system.svg")))
-        self.resize(320, 520)
+        self.resize(360, 540)
         
         self.buttonCount = 0
         
