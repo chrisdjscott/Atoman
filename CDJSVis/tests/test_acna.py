@@ -25,7 +25,7 @@ class TestACNABCC(unittest.TestCase):
         
         """
         # lattice generator args
-        args = lattice_gen_bcc.Args(sym="Fe", NCells=[10,10,10], a0=2.87, pbcx=True, pbcy=True, pbcz=True, quiet=False)
+        args = lattice_gen_bcc.Args(sym="Fe", NCells=[10,10,10], a0=2.87, pbcx=True, pbcy=True, pbcz=True)
         
         # lattice generator
         gen = lattice_gen_bcc.BCCLatticeGenerator()
@@ -109,7 +109,7 @@ class TestACNAFCC(unittest.TestCase):
          
         """
         # lattice generator args
-        args = lattice_gen_fcc.Args(sym="Au", NCells=[8,8,8], a0=4.078, pbcx=True, pbcy=True, pbcz=True, quiet=False)
+        args = lattice_gen_fcc.Args(sym="Au", NCells=[8,8,8], a0=4.078, pbcx=True, pbcy=True, pbcz=True)
          
         # lattice generator
         gen = lattice_gen_fcc.FCCLatticeGenerator()
