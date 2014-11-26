@@ -1,7 +1,7 @@
 
 /*******************************************************************************
  ** Copyright Chris Scott 2014
- ** Generate BCC lattice
+ ** Generate FCC lattice
  *******************************************************************************/
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
@@ -10,14 +10,14 @@
 #include "array_utils.h"
 
 
-static PyObject* generateBCCLattice(PyObject*, PyObject*);
+static PyObject* generateFCCLattice(PyObject*, PyObject*);
 
 
 /*******************************************************************************
  ** List of python methods available in this module
  *******************************************************************************/
 static struct PyMethodDef methods[] = {
-    {"generateBCCLattice", generateBCCLattice, METH_VARARGS, "Generate a BCC lattice"},
+    {"generateFCCLattice", generateFCCLattice, METH_VARARGS, "Generate a FCC lattice"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -25,9 +25,9 @@ static struct PyMethodDef methods[] = {
  ** Module initialisation function
  *******************************************************************************/
 PyMODINIT_FUNC
-init_lattice_gen_bcc(void)
+init_lattice_gen_fcc(void)
 {
-    (void)Py_InitModule("_lattice_gen_bcc", methods);
+    (void)Py_InitModule("_lattice_gen_fcc", methods);
     import_array();
 }
 
@@ -35,14 +35,14 @@ init_lattice_gen_bcc(void)
  ** Generate lattice
  *******************************************************************************/
 static PyObject*
-generateBCCLattice(PyObject *self, PyObject *args)
+generateFCCLattice(PyObject *self, PyObject *args)
 {
     int *numCells, *PBC;
     double latticeConstant;
     PyArrayObject *numCellsIn=NULL;
     PyArrayObject *PBCIn=NULL;
     
-    const int unitCellNAtoms = 2;
+    const int unitCellNAtoms = 4;
     int i, loopStop[3], count, numpyDims[1];
     int unitCellSpecie[unitCellNAtoms];
     double cellDims[3], a1;
@@ -74,11 +74,17 @@ generateBCCLattice(PyObject *self, PyObject *args)
     /* define primitive cell */
     a1 = latticeConstant / 2.0;
     unitCellPos[0] = 0.0; unitCellPos[1] = 0.0; unitCellPos[2] = 0.0;
-    unitCellPos[3] = a1; unitCellPos[4] = a1; unitCellPos[5] = a1;
+    unitCellPos[3] = 0.0; unitCellPos[4] = a1; unitCellPos[5] = a1;
+    unitCellPos[6] = a1; unitCellPos[7] = 0.0; unitCellPos[8] = a1;
+    unitCellPos[9] = a1; unitCellPos[10] = a1; unitCellPos[11] = 0.0;
     unitCellSpecie[0] = 0;
     unitCellSpecie[1] = 0;
+    unitCellSpecie[2] = 0;
+    unitCellSpecie[3] = 0;
     unitCellCharge[0] = 0.0;
     unitCellCharge[1] = 0.0;
+    unitCellCharge[2] = 0.0;
+    unitCellCharge[3] = 0.0;
     
     /* first pass to get number of atoms (not required with PBCs...) */
     count = 0;

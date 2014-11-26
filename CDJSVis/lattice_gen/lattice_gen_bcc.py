@@ -41,15 +41,7 @@ class BCCLatticeGenerator(object):
     
     """
     def __init__(self, log=None):
-        self.logger = log
-    
-    def log(self, message, level=0, indent=0):
-        """
-        Write log message.
-        
-        """
-        if self.logger is not None:
-            self.logger(message, level=level, indent=indent)
+        pass
     
     def generateLattice(self, args):
         """
@@ -92,6 +84,9 @@ class BCCLatticeGenerator(object):
         for i in xrange(3):
             lattice.minPos[i] = np.min(lattice.pos[i::3])
             lattice.maxPos[i] = np.max(lattice.pos[i::3])
+        
+        # atom ID
+        lattice.atomID = np.arange(1, lattice.NAtoms + 1, dtype=np.int32)
         
         logger.info("  Number of atoms: %d", NAtoms)
         logger.info("  Dimensions: %s", str(dims))
