@@ -236,8 +236,6 @@ class GenericLatticeGeneratorForm(GenericForm):
         
         else:
             self.generatorArgs.pbcx = False
-        
-        print "PBCX CHECKED", self.generatorArgs.pbcx
     
     def PBCYChanged(self, checked):
         """
@@ -249,8 +247,6 @@ class GenericLatticeGeneratorForm(GenericForm):
         
         else:
             self.generatorArgs.pbcy = False
-        
-        print "PBCY CHECKED", self.generatorArgs.pbcy
     
     def PBCZChanged(self, checked):
         """
@@ -262,8 +258,6 @@ class GenericLatticeGeneratorForm(GenericForm):
         
         else:
             self.generatorArgs.pbcz = False
-        
-        print "PBCZ CHECKED", self.generatorArgs.pbcz
     
     def add_generate_button(self):
         """
