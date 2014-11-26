@@ -67,11 +67,12 @@ generateBCCLattice(PyObject *self, PyObject *args)
     if (not_intVector(PBCIn)) return NULL;
     PBC = pyvector_to_Cptr_int(PBCIn);
     
-    /* dimensions */
-    for (i = 0; i < 3; i++) cellDims[i] = latticeConstant * numCells[i];
-    
-    /* handle PBCs */
-    for (i = 0; i < 3; i++) loopStop[i] = (PBC[i]) ? numCells[i] : numCells[i] + 1;
+    /* dimensions/handle PBCs */
+    for (i = 0; i < 3; i++)
+    {
+        cellDims[i] = latticeConstant * numCells[i];
+        loopStop[i] = (PBC[i]) ? numCells[i] : numCells[i] + 1;
+    }
     
     /* define unit cell */
     a1 = latticeConstant / 2.0;
@@ -87,10 +88,12 @@ generateBCCLattice(PyObject *self, PyObject *args)
     for (i = 0; i < loopStop[0]; i++)
     {
         int j;
+        double ilatt = i * latticeConstant;
         
         for (j = 0; j < loopStop[1]; j++)
         {
             int k;
+            double jlatt = j * latticeConstant;
             
             for (k = 0; k < loopStop[2]; k++)
             {
@@ -100,8 +103,8 @@ generateBCCLattice(PyObject *self, PyObject *args)
                 {
                     double atomPos[3];
                     
-                    atomPos[0] = unitCellPos[3 * m    ] + i * latticeConstant;
-                    atomPos[1] = unitCellPos[3 * m + 1] + j * latticeConstant;
+                    atomPos[0] = unitCellPos[3 * m    ] + ilatt;
+                    atomPos[1] = unitCellPos[3 * m + 1] + jlatt;
                     atomPos[2] = unitCellPos[3 * m + 2] + k * latticeConstant;
                     
                     if (atomPos[0] > cellDims[0] + epsilon || atomPos[1] > cellDims[1] + epsilon || atomPos[2] > cellDims[2] + epsilon)
@@ -113,8 +116,6 @@ generateBCCLattice(PyObject *self, PyObject *args)
             }
         }
     }
-    
-    printf("NUM ATOMS: %d\n", count);
     
     /* allocate arrays */
     numpyDims[0] = 3 * count;
@@ -131,10 +132,12 @@ generateBCCLattice(PyObject *self, PyObject *args)
     for (i = 0; i < loopStop[0]; i++)
     {
         int j;
+        double ilatt = i * latticeConstant;
         
         for (j = 0; j < loopStop[1]; j++)
         {
             int k;
+            double jlatt = j * latticeConstant;
             
             for (k = 0; k < loopStop[2]; k++)
             {
@@ -145,8 +148,8 @@ generateBCCLattice(PyObject *self, PyObject *args)
                     int c3;
                     double atomPos[3];
                     
-                    atomPos[0] = unitCellPos[3 * m    ] + i * latticeConstant;
-                    atomPos[1] = unitCellPos[3 * m + 1] + j * latticeConstant;
+                    atomPos[0] = unitCellPos[3 * m    ] + ilatt;
+                    atomPos[1] = unitCellPos[3 * m + 1] + jlatt;
                     atomPos[2] = unitCellPos[3 * m + 2] + k * latticeConstant;
                     
                     if (atomPos[0] > cellDims[0] + epsilon || atomPos[1] > cellDims[1] + epsilon || atomPos[2] > cellDims[2] + epsilon)
