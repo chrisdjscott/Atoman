@@ -2,6 +2,13 @@
 Changelog
 =========
 
+**v141127**
+
+* Display error message if max bonds per atom exceeded
+* Use QFormLayout for many forms/dialogs
+* FCC/BCC/Pu-Ga lattice generators written in C to improve performance
+* Fix bug when reading animation reference format file - species could be wrong if the atoms in the file were not ordered by atom ID
+
 **v141113**
 
 * Histogram min/max are always a multiple of the bin width
