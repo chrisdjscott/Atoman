@@ -5,6 +5,7 @@ Generate Ga stabilised delta-Pu lattice using Pu3Ga technique
 @author: Chris Scott
 
 """
+import logging
 import random
 
 from ..state.lattice import Lattice
@@ -19,17 +20,15 @@ class Args(object):
     a0: lattice constant (default=4.64)
     f: output filename
     x,y,z: PBCs in each direction (default=True)
-    quiet: suppress stdout
     
     """
-    def __init__(self, NCells=[10,10,10], percGa=5, a0=4.64, pbcx=True, pbcy=True, pbcz=True, quiet=False):
+    def __init__(self, NCells=[10,10,10], percGa=5, a0=4.64, pbcx=True, pbcy=True, pbcz=True):
         self.NCells = NCells
         self.percGa = percGa
         self.a0 = a0
         self.pbcx = pbcx
         self.pbcy = pbcy
         self.pbcz = pbcz
-        self.quiet = quiet
 
 ################################################################################
 
@@ -38,24 +37,15 @@ class Pu3GaLatticeGenerator(object):
     Pu3Ga lattice generator.
     
     """
-    def __init__(self, log=None):
-        self.logger = log
-    
-    def log(self, message, level=0, indent=0):
-        """
-        Write log message.
-        
-        """
-        if self.logger is not None:
-            self.logger(message, level=level, indent=indent)
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
     
     def generateLattice(self, args):
         """
         Generate the lattice.
         
         """
-        if not args.quiet:
-            self.log("Generating Pu-Ga lattice")
+        self.logger.info("Generating Pu-Ga lattice")
         
         # lattice constants
         a0 = args.a0
@@ -123,9 +113,8 @@ class Pu3GaLatticeGenerator(object):
         assert NAtoms == lattice.NAtoms
         assert NGa == lattice.specieCount[lattice.getSpecieIndex("Ga")]
         
-        if not args.quiet:
-            self.log("Number of atoms: %d" % (NAtoms,), indent=1)
-            self.log("Dimensions: %s" % (str(dims),), indent=1)
+        self.logger.info("  Number of atoms: %d", NAtoms)
+        self.logger.info("  Dimensions: %s", str(dims))
         
         # obtain correct percentage of Ga
         self.fixGaPercentage(lattice, GaIndexes, args)
@@ -139,20 +128,17 @@ class Pu3GaLatticeGenerator(object):
         """
         NGa = len(GaIndexes)
         
-        if not args.quiet:
-            self.log("Fixing Ga percentage to %f %%" % (args.percGa,), indent=1)
+        self.logger.debug("  Fixing Ga percentage to %f %%", args.percGa)
             
         currentPercGa = float(NGa) / float(lattice.NAtoms) * 100.0
-        if not args.quiet:
-            self.log("Current Ga percentage: %f %%" % (currentPercGa,), indent=2)
+        self.logger.debug("    Current Ga percentage: %f %%", currentPercGa)
         
         newNGa = int(args.percGa * 0.01 * float(lattice.NAtoms))
         
         diff = NGa - newNGa
         if diff > 0:
             # remove Ga until right number
-            if not args.quiet:
-                self.log("Removing %d Ga atoms" % (diff,), indent=2)
+            self.logger.debug("    Removing %d Ga atoms", diff)
             
             count = 0
             while count < diff:

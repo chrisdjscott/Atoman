@@ -42,13 +42,6 @@ class GenericLatticeGeneratorForm(GenericForm):
         
         self.show()
     
-    def log(self, message, indent=0):
-        """
-        Log message.
-        
-        """
-        self.mainWindow.console.write(str(message), indent=0)
-    
     def generateLattice(self):
         """
         Generate the lattice
@@ -318,7 +311,7 @@ class Pu3GaLatticeGeneratorForm(GenericLatticeGeneratorForm):
         Generate lattice
         
         """
-        generator = lattice_gen_pu3ga.Pu3GaLatticeGenerator(log=self.mainWindow.console.write)
+        generator = lattice_gen_pu3ga.Pu3GaLatticeGenerator()
         
         status, lattice = generator.generateLattice(self.generatorArgs)
         
@@ -371,7 +364,7 @@ class FCCLatticeGeneratorForm(GenericLatticeGeneratorForm):
         Generate lattice
         
         """
-        generator = lattice_gen_fcc.FCCLatticeGenerator(log=self.mainWindow.console.write)
+        generator = lattice_gen_fcc.FCCLatticeGenerator()
         
         status, lattice = generator.generateLattice(self.generatorArgs)
         
@@ -424,7 +417,7 @@ class BCCLatticeGeneratorForm(GenericLatticeGeneratorForm):
         Generate lattice
         
         """
-        generator = lattice_gen_bcc.BCCLatticeGenerator(log=self.mainWindow.console.write)
+        generator = lattice_gen_bcc.BCCLatticeGenerator()
         
         status, lattice = generator.generateLattice(self.generatorArgs)
         
@@ -530,7 +523,7 @@ class FluoriteLatticeGeneratorForm(GenericLatticeGeneratorForm):
         Generate lattice
         
         """
-        generator = lattice_gen_fluorite.FluoriteLatticeGenerator(log=self.mainWindow.console.write)
+        generator = lattice_gen_fluorite.FluoriteLatticeGenerator()
         
         status, lattice = generator.generateLattice(self.generatorArgs)
         
@@ -636,7 +629,7 @@ class RockSaltLatticeGeneratorForm(GenericLatticeGeneratorForm):
         Generate lattice
         
         """
-        generator = lattice_gen_rockSalt.RockSaltLatticeGenerator(log=self.mainWindow.console.write)
+        generator = lattice_gen_rockSalt.RockSaltLatticeGenerator()
         
         status, lattice = generator.generateLattice(self.generatorArgs)
         
