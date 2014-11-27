@@ -181,7 +181,7 @@ readRef(PyObject *self, PyObject *args)
         /* find specie index */
         specInd = specieIndex(symtemp, NSpecies, specieList);
         
-        specie[i] = specInd;
+        specie[index] = specInd;
         
         if (specInd == NSpecies)
         {
