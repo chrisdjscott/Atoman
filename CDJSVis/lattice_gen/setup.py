@@ -19,6 +19,10 @@ def configuration(parent_package='', top_path=None):
                          ["_lattice_gen_fcc.c", "../visclibs/array_utils.c"],
                          include_dirs=[incdir])
     
+    config.add_extension("_lattice_gen_pu3ga", 
+                         ["_lattice_gen_pu3ga.c", "../visclibs/array_utils.c"],
+                         include_dirs=[incdir])
+    
     return config
 
 if __name__ == "__main__":
