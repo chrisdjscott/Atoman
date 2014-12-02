@@ -59,14 +59,7 @@ pickObject(PyObject *self, PyObject *args)
     PyArrayObject *refSpecieCovRadIn=NULL;
     PyArrayObject *resultIn=NULL;
     
-    int i, k, index, boxIndex;
-    int boxNebList[27], realIndex;
-    int minSepIndex, NVis, count;
-    int minSepType;
-    double approxBoxWidth, *visPos;
-    double sep2, minSep, rad, sep;
-    double *visCovRad;
-    struct Boxes *boxes;
+    double approxBoxWidth;
     
     
     /* parse and check arguments from Python */
@@ -140,20 +133,29 @@ pickObject(PyObject *self, PyObject *args)
     
     if (visibleAtomsDim > 0)
     {
+        int i, boxIndex, boxNebList[27];
+        int minSepIndex;
+        double minSep, minSep2, minSepRad;
+        double *visPos;
+        struct Boxes *boxes;
+        
         /* vis atoms pos */
         visPos = malloc(3 * visibleAtomsDim * sizeof(double));
         if (visPos == NULL)
         {
-            printf("ERROR: could not allocate visPos\n");
-            exit(1);
+            PyErr_SetString(PyExc_RuntimeError, "Could not allocate visPos");
+            return NULL;
         }
         
-        for (i=0; i<visibleAtomsDim; i++)
+        for (i = 0; i < visibleAtomsDim; i++)
         {
-            index = visibleAtoms[i];
-            visPos[3*i] = pos[3*index];
-            visPos[3*i+1] = pos[3*index+1];
-            visPos[3*i+2] = pos[3*index+2];
+            int i3 = 3 * i;
+            int index = visibleAtoms[i];
+            int index3 = 3 * index;
+            
+            visPos[i3    ] = pos[index3    ];
+            visPos[i3 + 1] = pos[index3 + 1];
+            visPos[i3 + 2] = pos[index3 + 2];
         }
         
         /* box vis atoms */
@@ -167,14 +169,20 @@ pickObject(PyObject *self, PyObject *args)
         getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over neighbouring boxes, looking for nearest atom */
-        minSep = 9999999.0;
+        minSep2 = 9999999.0;
         minSepIndex = -1;
-        for (i=0; i<27; i++)
+        minSepRad = 0.0;
+        for (i = 0; i < 27; i++)
         {
+            int k;
+            
             boxIndex = boxNebList[i];
             
-            for (k=0; k<boxes->boxNAtoms[boxIndex]; k++)
+            for (k = 0; k < boxes->boxNAtoms[boxIndex]; k++)
             {
+                int index, realIndex;
+                double sep2, rad;
+                
                 index = boxes->boxAtoms[boxIndex][k];
                 
                 /* atomic separation */
@@ -185,23 +193,23 @@ pickObject(PyObject *self, PyObject *args)
                 
                 /* need radius too */
                 realIndex = visibleAtoms[index];
-                
                 rad = specieCovRad[specie[realIndex]];
                 
-                sep = sqrt(sep2);
-                
-                /* if separation is greater than radius, subtract radius, 
-                 * otherwise set to zero (within radius is good enough for me)
-                 */
-                sep = (sep > rad) ? sep - rad : 0.0;
-                
-                if (sep < minSep)
+                if (sep2 < minSep2)
                 {
-                    minSep = sep;
+                    minSep2 = sep2;
                     minSepIndex = index;
+                    minSepRad = rad;
                 }
             }
         }
+        
+        /* min separation */
+        minSep = sqrt(minSep2);
+        /* if separation is greater than radius, subtract radius, 
+         * otherwise set to zero (within radius is good enough for me)
+         */
+        minSep = (minSep > minSepRad) ? minSep - minSepRad : 0.0;
         
         /* store result */
         result[0] = 0;
@@ -214,85 +222,98 @@ pickObject(PyObject *self, PyObject *args)
     }
     else
     {
+        int i, NVis, count, minSepIndex;
+        int boxIndex, boxNebList[27];
+        int minSepType;
+        double *visPos, *visCovRad, minSep, minSep2;
+        double minSepRad;
+        struct Boxes *boxes;
+        
         /* build positions array of all defects */
         NVis = vacsDim + intsDim + onAntsDim + splitsDim;
         visPos = malloc(3 * NVis * sizeof(double));
         if (visPos == NULL)
         {
-            printf("ERROR: could not allocate visPos\n");
-            exit(50);
+            PyErr_SetString(PyExc_RuntimeError, "Could not allocate visPos");
+            return NULL;
         }
         
         visCovRad = malloc(NVis * sizeof(double));
         if (visCovRad == NULL)
         {
-            printf("ERROR: could not allocate visCovRad\n");
-            exit(50);
+            PyErr_SetString(PyExc_RuntimeError, "Could not allocate visCovRad");
+            return NULL;
         }
         
         /* add defects positions: vac then int then ant */
         count = 0;
-        for (i=0; i<vacsDim; i++)
+        for (i = 0; i < vacsDim; i++)
         {
-            index = vacs[i];
+            int c3 = 3 * count;
+            int index = vacs[i];
+            int index3 = 3 * index;
             
-            visPos[3*count] = refPos[3*index];
-            visPos[3*count+1] = refPos[3*index+1];
-            visPos[3*count+2] = refPos[3*index+2];
+            visPos[c3    ] = refPos[index3    ];
+            visPos[c3 + 1] = refPos[index3 + 1];
+            visPos[c3 + 2] = refPos[index3 + 2];
             
-            visCovRad[count] = refSpecieCovRad[refSpecie[index]] * 1.2;// * 0.75; // multiply by 0.75 because vacs aren't full size (rendering.py)
-            
-            count++;
+            visCovRad[count++] = refSpecieCovRad[refSpecie[index]] * 1.2; // * 0.75; // multiply by 0.75 because vacs aren't full size (rendering.py)
         }
         
-        for (i=0; i<intsDim; i++)
+        for (i = 0; i < intsDim; i++)
         {
-            index = ints[i];
+            int c3 = 3 * count;
+            int index = ints[i];
+            int index3 = 3 * index;
             
-            visPos[3*count] = pos[3*index];
-            visPos[3*count+1] = pos[3*index+1];
-            visPos[3*count+2] = pos[3*index+2];
+            visPos[c3    ] = pos[index3    ];
+            visPos[c3 + 1] = pos[index3 + 1];
+            visPos[c3 + 2] = pos[index3 + 2];
             
-            visCovRad[count] = specieCovRad[specie[index]];
-            
-            count++;
+            visCovRad[count++] = specieCovRad[specie[index]];
         }
         
-        for (i=0; i<onAntsDim; i++)
+        for (i = 0; i < onAntsDim; i++)
         {
-            index = onAnts[i];
+            int c3 = 3 * count;
+            int index = onAnts[i];
+            int index3 = 3 * index;
             
-            visPos[3*count] = pos[3*index];
-            visPos[3*count+1] = pos[3*index+1];
-            visPos[3*count+2] = pos[3*index+2];
+            visPos[c3    ] = pos[index3    ];
+            visPos[c3 + 1] = pos[index3 + 1];
+            visPos[c3 + 2] = pos[index3 + 2];
             
-            visCovRad[count] = specieCovRad[specie[index]];
-            
-            count++;
+            visCovRad[count++] = specieCovRad[specie[index]];
         }
         
-        for (i=0; i<splitsDim/3; i++)
+        for (i = 0; i < splitsDim / 3; i++)
         {
-            index = splits[3*i];
-            visPos[3*count] = refPos[3*index];
-            visPos[3*count+1] = refPos[3*index+1];
-            visPos[3*count+2] = refPos[3*index+2];
-            visCovRad[count] = refSpecieCovRad[refSpecie[index]];
-            count++;
+            int i3 = 3 * i;
+            int index, c3, index3;
             
-            index = splits[3*i+1];
-            visPos[3*count] = pos[3*index];
-            visPos[3*count+1] = pos[3*index+1];
-            visPos[3*count+2] = pos[3*index+2];
-            visCovRad[count] = specieCovRad[specie[index]];
-            count++;
+            index = splits[i3];
+            index3 = index * 3;
+            c3 = count * 3;
+            visPos[c3    ] = refPos[index3    ];
+            visPos[c3 + 1] = refPos[index3 + 1];
+            visPos[c3 + 2] = refPos[index3 + 2];
+            visCovRad[count++] = refSpecieCovRad[refSpecie[index]];
             
-            index = splits[3*i+2];
-            visPos[3*count] = pos[3*index];
-            visPos[3*count+1] = pos[3*index+1];
-            visPos[3*count+2] = pos[3*index+2];
-            visCovRad[count] = specieCovRad[specie[index]];
-            count++;
+            index = splits[i3];
+            index3 = index * 3;
+            c3 = count * 3;
+            visPos[c3    ] = pos[index3    ];
+            visPos[c3 + 1] = pos[index3 + 1];
+            visPos[c3 + 2] = pos[index3 + 2];
+            visCovRad[count++] = specieCovRad[specie[index]];
+            
+            index = splits[i3];
+            index3 = index * 3;
+            c3 = count * 3;
+            visPos[c3    ] = pos[index3    ];
+            visPos[c3 + 1] = pos[index3 + 1];
+            visPos[c3 + 2] = pos[index3 + 2];
+            visCovRad[count++] = specieCovRad[specie[index]];
         }
         
         /* box vis atoms */
@@ -306,14 +327,20 @@ pickObject(PyObject *self, PyObject *args)
         getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over neighbouring boxes, looking for nearest atom */
-        minSep = 9999999.0;
+        minSep2 = 9999999.0;
         minSepIndex = -1;
-        for (i=0; i<27; i++)
+        minSepRad = 0.0;
+        for (i = 0; i < 27; i++)
         {
+            int k;
+            
             boxIndex = boxNebList[i];
             
-            for (k=0; k<boxes->boxNAtoms[boxIndex]; k++)
+            for (k = 0; k < boxes->boxNAtoms[boxIndex]; k++)
             {
+                int index;
+                double sep2, rad;
+                
                 index = boxes->boxAtoms[boxIndex][k];
                 
                 /* atomic separation */
@@ -324,23 +351,24 @@ pickObject(PyObject *self, PyObject *args)
                 
                 /* need radius too */
                 rad = visCovRad[index];
-                                
-                sep = sqrt(sep2);
                 
-                /* if separation is greater than radius, subtract radius, 
-                 * otherwise set to zero (within radius is good enough for me)
-                 */
-                sep = (sep > rad) ? sep - rad : 0.0;
-                
-                if (sep < minSep)
+                if (sep2 < minSep2)
                 {
-                    minSep = sep;
+                    minSep2 = sep2;
                     minSepIndex = index;
+                    minSepRad = rad;
                 }
-                
             }
         }
         
+        /* min separation */
+        minSep = sqrt(minSep2);
+        /* if separation is greater than radius, subtract radius, 
+         * otherwise set to zero (within radius is good enough for me)
+         */
+        minSep = (minSep > minSepRad) ? minSep - minSepRad : 0.0;
+        
+        /* picked type */
         if (minSepIndex < vacsDim)
         {
             minSepType = 1;
@@ -375,7 +403,3 @@ pickObject(PyObject *self, PyObject *args)
     
     return Py_BuildValue("i", 0);
 }
-
-
-
-
