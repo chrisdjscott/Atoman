@@ -495,6 +495,9 @@ class FilterList(QtGui.QWidget):
         """
         self.filterer.removeActors()
         
+        # close info windows
+        self.removeInfoWindows()
+        
         # close settings dialogs
         settingsDialogs = self.getCurrentFilterSettings()
         while len(settingsDialogs):
