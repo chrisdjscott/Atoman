@@ -1629,97 +1629,70 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         self.drawDisplacementVectors = False
         
         # draw displacement vector settings
-        self.drawVectorsGroup = QtGui.QGroupBox("Draw displacement vectors")
-        self.drawVectorsGroup.setCheckable(True)
-        self.drawVectorsGroup.setChecked(False)
-        self.drawVectorsGroup.toggled.connect(self.drawVectorsChanged)
+        self.drawVectorsCheck = QtGui.QCheckBox()
+        self.drawVectorsCheck.stateChanged.connect(self.drawVectorsChanged)
+        self.drawVectorsCheck.setCheckState(QtCore.Qt.Unchecked)
+        self.drawVectorsCheck.setToolTip("Draw displacement vectors (movement) of defects")
         
-        grpLayout = QtGui.QVBoxLayout(self.drawVectorsGroup)
-        grpLayout.setAlignment(QtCore.Qt.AlignTop)
+        self.displaySettingsLayout.addRow("<b>Draw displacement vectors</b>", self.drawVectorsCheck)
         
-        # thickness
-        bondThicknessGroup = QtGui.QGroupBox("Bond thickness")
-        bondThicknessGroup.setAlignment(QtCore.Qt.AlignCenter)
-        bondThicknessLayout = QtGui.QVBoxLayout()
-        bondThicknessGroup.setLayout(bondThicknessLayout)
-        grpLayout.addWidget(bondThicknessGroup)
+        # vtk thickness
+        self.vtkThickSpin = QtGui.QDoubleSpinBox()
+        self.vtkThickSpin.setMinimum(0.01)
+        self.vtkThickSpin.setMaximum(10)
+        self.vtkThickSpin.setSingleStep(0.1)
+        self.vtkThickSpin.setValue(self.bondThicknessVTK)
+        self.vtkThickSpin.valueChanged.connect(self.vtkThickChanged)
+        self.vtkThickSpin.setToolTip("Thickness of lines showing defect movement (VTK)")
+        self.displaySettingsLayout.addRow("Bond thickness (VTK)", self.vtkThickSpin)
         
-        # vtk
-        vtkThickSpin = QtGui.QDoubleSpinBox()
-        vtkThickSpin.setMinimum(0.01)
-        vtkThickSpin.setMaximum(10)
-        vtkThickSpin.setSingleStep(0.01)
-        vtkThickSpin.setValue(self.bondThicknessVTK)
-        vtkThickSpin.valueChanged.connect(self.vtkThickChanged)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("VTK:"))
-        row.addWidget(vtkThickSpin)
-        bondThicknessLayout.addLayout(row)
-        
-        # pov
-        povThickSpin = QtGui.QDoubleSpinBox()
-        povThickSpin.setMinimum(0.01)
-        povThickSpin.setMaximum(10)
-        povThickSpin.setSingleStep(0.01)
-        povThickSpin.setValue(self.bondThicknessPOV)
-        povThickSpin.valueChanged.connect(self.povThickChanged)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("POV:"))
-        row.addWidget(povThickSpin)
-        bondThicknessLayout.addLayout(row)
-        
-        # num sides group
-        numSidesGroup = QtGui.QGroupBox("Number of sides")
-        numSidesGroup.setAlignment(QtCore.Qt.AlignCenter)
-        numSidesLayout = QtGui.QVBoxLayout()
-        numSidesGroup.setLayout(numSidesLayout)
-        grpLayout.addWidget(numSidesGroup)
+        # pov thickness
+        self.povThickSpin = QtGui.QDoubleSpinBox()
+        self.povThickSpin.setMinimum(0.01)
+        self.povThickSpin.setMaximum(10)
+        self.povThickSpin.setSingleStep(0.01)
+        self.povThickSpin.setValue(self.bondThicknessPOV)
+        self.povThickSpin.valueChanged.connect(self.povThickChanged)
+        self.povThickSpin.setToolTip("Thickness of lines showing defect movement (POV-Ray)")
+        self.displaySettingsLayout.addRow("Bond thickness (POV)", self.povThickSpin)
         
         # num sides
-        numSidesSpin = QtGui.QSpinBox()
-        numSidesSpin.setMinimum(3)
-        numSidesSpin.setMaximum(999)
-        numSidesSpin.setSingleStep(1)
-        numSidesSpin.setValue(self.bondNumSides)
-        numSidesSpin.valueChanged.connect(self.numSidesChanged)
+        self.numSidesSpin = QtGui.QSpinBox()
+        self.numSidesSpin.setMinimum(3)
+        self.numSidesSpin.setMaximum(999)
+        self.numSidesSpin.setSingleStep(1)
+        self.numSidesSpin.setValue(self.bondNumSides)
+        self.numSidesSpin.valueChanged.connect(self.numSidesChanged)
+        self.numSidesSpin.setToolTip("Number of sides when rendering displacement vectors (more looks better but is slower)")
+        self.displaySettingsLayout.addRow("Bond number of sides", self.numSidesSpin)
         
-        row = QtGui.QHBoxLayout()
-        row.addWidget(numSidesSpin)
-        numSidesLayout.addLayout(row)
+        self.drawVectorsChanged(QtCore.Qt.Unchecked)
         
-        row = self.newDisplayRow()
-        row.addWidget(self.drawVectorsGroup)
+        # filtering options
+        self.filteringEnabled = False
+        filterCheck = QtGui.QCheckBox()
+        filterCheck.setChecked(self.filteringEnabled)
+        filterCheck.setToolTip("Filter atoms by displacement")
+        filterCheck.stateChanged.connect(self.filteringToggled)
+        self.contentLayout.addRow("<b>Enable filtering</b>", filterCheck)
         
-        # filtering group
-        groupLayout = self.addFilteringGroupBox(slot=self.filteringToggled, checked=False)
-        
-        label = QtGui.QLabel("Min:")
         self.minDisplacementSpinBox = QtGui.QDoubleSpinBox()
         self.minDisplacementSpinBox.setSingleStep(0.1)
         self.minDisplacementSpinBox.setMinimum(0.0)
         self.minDisplacementSpinBox.setMaximum(9999.0)
         self.minDisplacementSpinBox.setValue(self.minDisplacement)
         self.minDisplacementSpinBox.valueChanged.connect(self.setMinDisplacement)
+        self.minDisplacementSpinBox.setEnabled(False)
+        self.contentLayout.addRow("Min", self.minDisplacementSpinBox)
         
-        row = QtGui.QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.minDisplacementSpinBox)
-        groupLayout.addLayout(row)
-        
-        label = QtGui.QLabel("Max:")
         self.maxDisplacementSpinBox = QtGui.QDoubleSpinBox()
         self.maxDisplacementSpinBox.setSingleStep(0.1)
         self.maxDisplacementSpinBox.setMinimum(0.0)
         self.maxDisplacementSpinBox.setMaximum(9999.0)
         self.maxDisplacementSpinBox.setValue(self.maxDisplacement)
         self.maxDisplacementSpinBox.valueChanged.connect(self.setMaxDisplacement)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.maxDisplacementSpinBox)
-        groupLayout.addLayout(row)
+        self.maxDisplacementSpinBox.setEnabled(False)
+        self.contentLayout.addRow("Max", self.maxDisplacementSpinBox)
     
     def numSidesChanged(self, val):
         """
@@ -1742,20 +1715,43 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         """
         self.bondThicknessPOV = val
     
-    def drawVectorsChanged(self, drawVectors):
+    def drawVectorsChanged(self, state):
         """
         Draw displacement vectors toggled
         
         """
-        self.drawDisplacementVectors = drawVectors
+        if state == QtCore.Qt.Unchecked:
+            self.drawDisplacementVectors = False
+            
+            self.vtkThickSpin.setEnabled(False)
+            self.povThickSpin.setEnabled(False)
+            self.numSidesSpin.setEnabled(False)
+        
+        else:
+            self.drawDisplacementVectors = True
+            
+            self.vtkThickSpin.setEnabled(True)
+            self.povThickSpin.setEnabled(True)
+            self.numSidesSpin.setEnabled(True)
+        
         self.logger.debug("Draw displacement vectors: %r", self.drawDisplacementVectors)
     
-    def filteringToggled(self, arg):
+    def filteringToggled(self, state):
         """
         Filtering toggled
         
         """
-        self.filteringEnabled = arg
+        if state == QtCore.Qt.Unchecked:
+            self.filteringEnabled = False
+            
+            self.minDisplacementSpinBox.setEnabled(False)
+            self.maxDisplacementSpinBox.setEnabled(False)
+        
+        else:
+            self.filteringEnabled = True
+            
+            self.minDisplacementSpinBox.setEnabled(True)
+            self.maxDisplacementSpinBox.setEnabled(True)
     
     def setMinDisplacement(self, val):
         """
