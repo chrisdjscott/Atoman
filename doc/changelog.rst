@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**v141202**
+
+* Fix bug preventing rendering defects
+
 **v141127**
 
 * Display error message if max bonds per atom exceeded

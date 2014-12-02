@@ -1325,7 +1325,7 @@ class Filterer(object):
                 clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
         
         # draw displacement vectors
-        if settings.drawVectorsGroup.isEnabled() and settings.drawDisplacementVectors:
+        if settings.drawVectorsCheck.isEnabled() and settings.drawDisplacementVectors:
             self.logger.debug("Drawing displacement vectors for interstitials (%d)", NInt)
             
             # need to make a unique list for interstitials and split intersitials and antisites
