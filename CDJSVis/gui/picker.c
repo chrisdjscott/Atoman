@@ -242,6 +242,7 @@ pickObject(PyObject *self, PyObject *args)
         if (visCovRad == NULL)
         {
             PyErr_SetString(PyExc_RuntimeError, "Could not allocate visCovRad");
+            free(visPos);
             return NULL;
         }
         
