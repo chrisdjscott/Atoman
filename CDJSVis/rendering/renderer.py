@@ -1088,7 +1088,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         atomsGlyph.SetInputData(atomsPolyData)
         atomsGlyph.SetScaleFactor(1.0)
         atomsGlyph.SetScaleModeToDataScalingOff()
-        
+ 
         atomsMapper = vtk.vtkPolyDataMapper()
         atomsMapper.SetInputConnection(atomsGlyph.GetOutputPort())
         atomsMapper.SetLookupTable(lut)
@@ -1102,7 +1102,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         
         t1s.append(time.time() - t1)
         
-        if True:
+        if False:
             logger.debug("Adding arrows for vectors: 'Testing'")
             logger.debug("Size of vectors = %d", lattice.specieCount[i])
             
@@ -1120,17 +1120,19 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
             
             # arrow source
             arrowSource = vtk.vtkArrowSource()
+            arrowSource.Update()
             
             # glyph
             arrowGlyph = vtk.vtkGlyph3D()
-            arrowGlyph.SetSource(arrowSource.GetOutput())
+            arrowGlyph.SetSourceConnection(arrowSource.GetOutputPort())
             arrowGlyph.OrientOn()
             arrowGlyph.SetVectorModeToUseVector()
-            arrowGlyph.SetInput(arrowPolyData)
+            arrowGlyph.SetInputData(arrowPolyData)
+            arrowGlyph.Update()
             
             # mapper
             arrowMapper = vtk.vtkPolyDataMapper()
-            arrowMapper.SetInput(arrowGlyph.GetOutput())
+            arrowMapper.SetInputConnection(arrowGlyph.GetOutputPort())
             arrowMapper.SetLookupTable(lut)
             setMapperScalarRange(arrowMapper, colouringOptions, NSpecies)
             
