@@ -1101,6 +1101,43 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         actorsCollection.AddItem(atomsActor)
         
         t1s.append(time.time() - t1)
+        
+        if True:
+            logger.debug("Adding arrows for vectors: 'Testing'")
+            logger.debug("Size of vectors = %d", lattice.specieCount[i])
+            
+            # TEST ADDING VECTORS
+            # create vectors
+            vects = np.random.rand(lattice.specieCount[i], 3)
+            vects *= 4.0
+            vects -= 2.0
+            
+            # polydata
+            arrowPolyData = vtk.vtkPolyData()
+            arrowPolyData.SetPoints(atomPointsList[i])
+            arrowPolyData.GetPointData().SetScalars(atomScalarsList[i])
+            arrowPolyData.GetPointData().SetVectors(numpy_support.numpy_to_vtk(vects, deep=1))
+            
+            # arrow source
+            arrowSource = vtk.vtkArrowSource()
+            
+            # glyph
+            arrowGlyph = vtk.vtkGlyph3D()
+            arrowGlyph.SetSource(arrowSource.GetOutput())
+            arrowGlyph.OrientOn()
+            arrowGlyph.SetVectorModeToUseVector()
+            arrowGlyph.SetInput(arrowPolyData)
+            
+            # mapper
+            arrowMapper = vtk.vtkPolyDataMapper()
+            arrowMapper.SetInput(arrowGlyph.GetOutput())
+            arrowMapper.SetLookupTable(lut)
+            setMapperScalarRange(arrowMapper, colouringOptions, NSpecies)
+            
+            # actor
+            arrowActor = vtk.vtkActor()
+            arrowActor.SetMapper(arrowMapper)
+            actorsCollection.AddItem(arrowActor)
     
     # scalar bar
     scalarBar_white = None
