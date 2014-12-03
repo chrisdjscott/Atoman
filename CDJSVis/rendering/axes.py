@@ -157,7 +157,7 @@ class AxesBasic(vtk.vtkActorCollection):
     
     
         conexMapper = vtk.vtkPolyDataMapper()
-        conexMapper.SetInput(conex.GetOutput())
+        conexMapper.SetInputConnection(conex.GetOutputPort())
         
         self.conexActor.SetMapper(conexMapper)
         self.conexActor.GetProperty().SetDiffuseColor(1,0,0)
@@ -171,7 +171,7 @@ class AxesBasic(vtk.vtkActorCollection):
     
         
         coneyMapper = vtk.vtkPolyDataMapper()
-        coneyMapper.SetInput(coney.GetOutput())
+        coneyMapper.SetInputConnection(coney.GetOutputPort())
         self.coneyActor.SetMapper(coneyMapper)
         self.coneyActor.GetProperty().SetDiffuseColor(0,1,0)
         self.coneyActor.SetOrigin(x0,y0+yl+1.0,z0)
@@ -184,7 +184,7 @@ class AxesBasic(vtk.vtkActorCollection):
         conez.SetResolution(50)
         conez.SetCenter(x0,y0,z0+zl+1.0)
         conezMapper = vtk.vtkPolyDataMapper()
-        conezMapper.SetInput(conez.GetOutput())
+        conezMapper.SetInputConnection(conez.GetOutputPort())
         self.conezActor.SetMapper(conezMapper)
         self.conezActor.GetProperty().SetDiffuseColor(0,0,1)
         self.conezActor.SetOrigin(x0,y0,z0+zl+1.0)

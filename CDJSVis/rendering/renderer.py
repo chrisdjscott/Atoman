@@ -1084,13 +1084,13 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         atomsGlyphSource.SetThetaResolution(res)
         
         atomsGlyph = vtk.vtkGlyph3D()
-        atomsGlyph.SetSource(atomsGlyphSource.GetOutput())
-        atomsGlyph.SetInput(atomsPolyData)
+        atomsGlyph.SetSourceConnection(atomsGlyphSource.GetOutputPort())
+        atomsGlyph.SetInputData(atomsPolyData)
         atomsGlyph.SetScaleFactor(1.0)
         atomsGlyph.SetScaleModeToDataScalingOff()
         
         atomsMapper = vtk.vtkPolyDataMapper()
-        atomsMapper.SetInput(atomsGlyph.GetOutput())
+        atomsMapper.SetInputConnection(atomsGlyph.GetOutputPort())
         atomsMapper.SetLookupTable(lut)
         setMapperScalarRange(atomsMapper, colouringOptions, NSpecies)
         
@@ -1274,13 +1274,13 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsGlyphSource.SetThetaResolution(res)
         
         intsGlyph = vtk.vtkGlyph3D()
-        intsGlyph.SetSource(intsGlyphSource.GetOutput())
-        intsGlyph.SetInput(intsPolyData)
+        intsGlyph.SetSourceConnection(intsGlyphSource.GetOutputPort())
+        intsGlyph.SetInputData(intsPolyData)
         intsGlyph.SetScaleFactor(1.0)
         intsGlyph.SetScaleModeToDataScalingOff()
         
         intsMapper = vtk.vtkPolyDataMapper()
-        intsMapper.SetInput(intsGlyph.GetOutput())
+        intsMapper.SetInputConnection(intsGlyph.GetOutputPort())
         intsMapper.SetLookupTable(lut)
         setMapperScalarRange(intsMapper, colouringOptions, NSpecies)
         
@@ -1340,13 +1340,13 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsGlyphSource.SetThetaResolution(res)
         
         intsGlyph = vtk.vtkGlyph3D()
-        intsGlyph.SetSource(intsGlyphSource.GetOutput())
-        intsGlyph.SetInput(intsPolyData)
+        intsGlyph.SetSourceConnection(intsGlyphSource.GetOutputPort())
+        intsGlyph.SetInputData(intsPolyData)
         intsGlyph.SetScaleFactor(1.0)
         intsGlyph.SetScaleModeToDataScalingOff()
         
         intsMapper = vtk.vtkPolyDataMapper()
-        intsMapper.SetInput(intsGlyph.GetOutput())
+        intsMapper.SetInputConnection(intsGlyph.GetOutputPort())
         intsMapper.SetLookupTable(lut)
         setMapperScalarRange(intsMapper, colouringOptions, NSpecies)
         
@@ -1394,13 +1394,13 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         
         vacsGlyph = vtk.vtkGlyph3D()
-        vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
-        vacsGlyph.SetInput(vacsPolyData)
+        vacsGlyph.SetSourceConnection(vacsGlyphSource.GetOutputPort())
+        vacsGlyph.SetInputData(vacsPolyData)
         vacsGlyph.SetScaleFactor(1.0)
         vacsGlyph.SetScaleModeToDataScalingOff()
         
         vacsMapper = vtk.vtkPolyDataMapper()
-        vacsMapper.SetInput(vacsGlyph.GetOutput())
+        vacsMapper.SetInputConnection(vacsGlyph.GetOutputPort())
         vacsMapper.SetLookupTable(lut)
         setMapperScalarRange(vacsMapper, colouringOptions, NSpecies)
         
@@ -1452,13 +1452,13 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsGlyphSource.SetThetaResolution(res)
         
         intsGlyph = vtk.vtkGlyph3D()
-        intsGlyph.SetSource(intsGlyphSource.GetOutput())
-        intsGlyph.SetInput(intsPolyData)
+        intsGlyph.SetSourceConnection(intsGlyphSource.GetOutputPort())
+        intsGlyph.SetInputData(intsPolyData)
         intsGlyph.SetScaleFactor(1.0)
         intsGlyph.SetScaleModeToDataScalingOff()
         
         intsMapper = vtk.vtkPolyDataMapper()
-        intsMapper.SetInput(intsGlyph.GetOutput())
+        intsMapper.SetInputConnection(intsGlyph.GetOutputPort())
         intsMapper.SetLookupTable(lut)
         setMapperScalarRange(intsMapper, colouringOptions, NSpecies)
         
@@ -1508,13 +1508,13 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         
         vacsGlyph = vtk.vtkGlyph3D()
-        vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
-        vacsGlyph.SetInput(vacsPolyData)
+        vacsGlyph.SetSourceConnection(vacsGlyphSource.GetOutputPort())
+        vacsGlyph.SetInputData(vacsPolyData)
         vacsGlyph.SetScaleFactor(1.0)
         vacsGlyph.SetScaleModeToDataScalingOff()
         
         vacsMapper = vtk.vtkPolyDataMapper()
-        vacsMapper.SetInput(vacsGlyph.GetOutput())
+        vacsMapper.SetInputConnection(vacsGlyph.GetOutputPort())
         vacsMapper.SetLookupTable(lut)
         setMapperScalarRange(vacsMapper, colouringOptions, NSpecies)
         
@@ -1574,13 +1574,13 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsGlyphSource.SetDefaultNormal(.577, .577, .577)
         
         vacsGlyph = vtk.vtkGlyph3D()
-        vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
-        vacsGlyph.SetInput(vacsPolyData)
+        vacsGlyph.SetSourceConnection(vacsGlyphSource.GetOutputPort())
+        vacsGlyph.SetInputData(vacsPolyData)
         vacsGlyph.SetScaleFactor(1.0)
         vacsGlyph.SetScaleModeToDataScalingOff()
         
         vacsMapper = vtk.vtkPolyDataMapper()
-        vacsMapper.SetInput(vacsGlyph.GetOutput())
+        vacsMapper.SetInputConnection(vacsGlyph.GetOutputPort())
         vacsMapper.SetLookupTable(lut)
         setMapperScalarRange(vacsMapper, colouringOptions, NSpecies)
         
@@ -1643,7 +1643,7 @@ def getActorsForHullFacets(facets, pos, mainWindow, actorsCollection, settings):
     
     # mapper
     mapper = vtk.vtkPolyDataMapper()
-    mapper.SetInput(trianglePolyData)
+    mapper.SetInputData(trianglePolyData)
     
     # actor
     actor = vtk.vtkActor()

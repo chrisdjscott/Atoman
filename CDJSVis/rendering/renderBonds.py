@@ -196,8 +196,8 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colour
     # glyph filter
     bondGlyphFilter = vtk.vtkProgrammableGlyphFilter()
     bondGlyphFilter.SetGlyphMethod(functools.partial(bondGlyphMethod, bondGlyphFilter, lineSource))
-    bondGlyphFilter.SetSource(tubes.GetOutput())
-    bondGlyphFilter.SetInput(bondPolyData)
+    bondGlyphFilter.SetSourceConnection(tubes.GetOutputPort())
+    bondGlyphFilter.SetInputData(bondPolyData)
     
     # mapper
     mapper = vtk.vtkPolyDataMapper()
@@ -334,8 +334,8 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsColl
     # glyph filter
     bondGlyphFilter = vtk.vtkProgrammableGlyphFilter()
     bondGlyphFilter.SetGlyphMethod(functools.partial(bondGlyphMethod, bondGlyphFilter, lineSource))
-    bondGlyphFilter.SetSource(tubes.GetOutput())
-    bondGlyphFilter.SetInput(bondPolyData)
+    bondGlyphFilter.SetSourceConnection(tubes.GetOutputPort())
+    bondGlyphFilter.SetInputData(bondPolyData)
     
     # mapper
     mapper = vtk.vtkPolyDataMapper()
@@ -465,7 +465,7 @@ def renderTraceVectors2(visibleAtoms, mainWindow, pipelinePage, actorsCollection
     
     # tubes
     tubes = vtk.vtkTubeFilter()
-    tubes.SetInput(polydata)
+    tubes.SetInputData(polydata)
     tubes.SetRadius(bondThicknessVTK)
     tubes.SetNumberOfSides(bondNumSides)
     tubes.SetCapping(1)
@@ -614,8 +614,8 @@ def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsCollection,
     # glyph filter
     glyphFilter = vtk.vtkProgrammableGlyphFilter()
     glyphFilter.SetGlyphMethod(functools.partial(bondGlyphMethod, glyphFilter, lineSource))
-    glyphFilter.SetSource(tubes.GetOutput())
-    glyphFilter.SetInput(polyData)
+    glyphFilter.SetSourceConnection(tubes.GetOutputPort())
+    glyphFilter.SetInputData(polyData)
     
     # mapper
     mapper = vtk.vtkPolyDataMapper()
