@@ -32,7 +32,7 @@ class CellOutline(object):
         # now add it
         self.source.SetBounds(a[0], b[0], a[1], b[1], a[2], b[2])
         
-        self.mapper.SetInput(self.source.GetOutput())
+        self.mapper.SetInputConnection(self.source.GetOutputPort())
         
         self.actor.SetMapper(self.mapper)
         self.setColour(self.currentColour)

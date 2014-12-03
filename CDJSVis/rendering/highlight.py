@@ -24,7 +24,7 @@ class AtomHighlighter(vtk.vtkActor):
         self.source.SetRadius(radius)
         
         # mapper
-        self.mapper.SetInput(self.source.GetOutput())
+        self.mapper.SetInputConnection(self.source.GetOutputPort())
         
         # actor
         self.SetMapper(self.mapper)
@@ -50,7 +50,7 @@ class VacancyHighlighter(vtk.vtkActor):
         self.source.SetCenter(pos)
         
         # mapper
-        self.mapper.SetInput(self.source.GetOutput())
+        self.mapper.SetInputConnection(self.source.GetOutputPort())
         
         # actor
         self.SetMapper(self.mapper)
@@ -88,7 +88,7 @@ class AntisiteHighlighter(vtk.vtkActor):
         tubes.SetDefaultNormal(.577, .577, .577)
         
         # mapper
-        self.mapper.SetInput(tubes.GetOutput())
+        self.mapper.SetInputConnection(tubes.GetOutputPort())
         
         # actor
         self.SetMapper(self.mapper)

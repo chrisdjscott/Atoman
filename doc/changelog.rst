@@ -2,6 +2,11 @@
 Changelog
 =========
 
+**dev**
+
+* Close info windows when clearing a filter list
+* Compatible with VTK 6
+
 **v141202**
 
 * Fix bug preventing rendering defects
