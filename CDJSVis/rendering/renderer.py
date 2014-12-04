@@ -1077,38 +1077,37 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         atomsPolyData = vtk.vtkPolyData()
         atomsPolyData.SetPoints(atomPointsList[i])
         atomsPolyData.GetPointData().SetScalars(atomScalarsList[i])
-        
+
         atomsGlyphSource = vtk.vtkSphereSource()
         atomsGlyphSource.SetRadius(lattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         atomsGlyphSource.SetPhiResolution(res)
         atomsGlyphSource.SetThetaResolution(res)
-        
+
         atomsGlyph = vtk.vtkGlyph3D()
         atomsGlyph.SetSource(atomsGlyphSource.GetOutput())
         atomsGlyph.SetInput(atomsPolyData)
         atomsGlyph.SetScaleFactor(1.0)
         atomsGlyph.SetScaleModeToDataScalingOff()
-        
+
         atomsMapper = vtk.vtkPolyDataMapper()
         atomsMapper.SetInput(atomsGlyph.GetOutput())
         atomsMapper.SetLookupTable(lut)
         setMapperScalarRange(atomsMapper, colouringOptions, NSpecies)
-        
+
         atomsActor = vtk.vtkActor()
         atomsActor.SetMapper(atomsMapper)
 #         atomsActor.GetProperty().BackfaceCullingOn()
-        
+
         actorsCollection.AddItem(atomsActor)
         
         t1s.append(time.time() - t1)
         
         if True:
-            logger.debug("Adding arrows for vectors: 'Testing'")
-            logger.debug("Size of vectors = %d", lattice.specieCount[i])
+            logger.debug("Adding arrows for vector data: 'Testing'")
             
             # TEST ADDING VECTORS
             # create vectors
-            vects = np.random.rand(lattice.specieCount[i], 3)
+            vects = np.random.rand(specieCount[i], 3)
             vects *= 4.0
             vects -= 2.0
             
@@ -1117,23 +1116,25 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
             arrowPolyData.SetPoints(atomPointsList[i])
             arrowPolyData.GetPointData().SetScalars(atomScalarsList[i])
             arrowPolyData.GetPointData().SetVectors(numpy_support.numpy_to_vtk(vects, deep=1))
-            
+
             # arrow source
             arrowSource = vtk.vtkArrowSource()
-            
+
             # glyph
             arrowGlyph = vtk.vtkGlyph3D()
             arrowGlyph.SetSource(arrowSource.GetOutput())
             arrowGlyph.OrientOn()
             arrowGlyph.SetVectorModeToUseVector()
             arrowGlyph.SetInput(arrowPolyData)
-            
+            arrowGlyph.SetScaleFactor(1.0)
+            arrowGlyph.SetScaleModeToDataScalingOff()
+
             # mapper
             arrowMapper = vtk.vtkPolyDataMapper()
             arrowMapper.SetInput(arrowGlyph.GetOutput())
             arrowMapper.SetLookupTable(lut)
             setMapperScalarRange(arrowMapper, colouringOptions, NSpecies)
-            
+
             # actor
             arrowActor = vtk.vtkActor()
             arrowActor.SetMapper(arrowMapper)
