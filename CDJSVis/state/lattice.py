@@ -6,6 +6,7 @@ Lattice module, with Lattice object and utilities
 
 """
 import logging
+import copy
 
 import numpy as np
 
@@ -48,6 +49,9 @@ class Lattice(object):
         self.KE = np.empty(0, np.float64)
         self.PE = np.empty(0, np.float64)
         self.charge = np.empty(0, np.float64)
+        
+        self.scalarsDict = {}
+        self.vectorsDict = {}
     
     def atomSeparation(self, index1, index2, pbc):
         """
@@ -111,6 +115,9 @@ class Lattice(object):
         self.barrier = None
         self.kmcStep = None
         self.temperature = None
+        
+        self.scalarsDict = {}
+        self.vectorsDict = {}
     
     def calcTemperature(self, NMoving=None):
         """
@@ -220,6 +227,11 @@ class Lattice(object):
             self.maxPos[2] = pos[2]
         
         self.NAtoms += 1
+        
+        logger = logging.getLogger(__name__)
+        logger.warning("Clearing scalars/vectors due to adding atom")
+        self.scalarsDict = {}
+        self.vectorsDict = {}
     
     def removeAtom(self, index):
         """
@@ -241,6 +253,11 @@ class Lattice(object):
         
         self.KE = np.delete(self.KE, index)
         self.PE = np.delete(self.PE, index)
+        
+        logger = logging.getLogger(__name__)
+        logger.warning("Clearing scalars/vectors due to adding atom")
+        self.scalarsDict = {}
+        self.vectorsDict = {}
     
     def removeSpecie(self, index):
         """
@@ -386,3 +403,6 @@ class Lattice(object):
         self.maxPos[0] = lattice.maxPos[0]
         self.maxPos[1] = lattice.maxPos[1]
         self.maxPos[2] = lattice.maxPos[2]
+        
+        self.scalarsDict = copy.deepcopy(lattice.scalarsDict)
+        self.vectorsDict = copy.deepcopy(lattice.vectorsDict)

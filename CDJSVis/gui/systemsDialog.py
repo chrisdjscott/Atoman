@@ -14,12 +14,14 @@ import functools
 import copy
 
 from PySide import QtGui, QtCore
+import numpy as np
 
 from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
 from . import latticeReaderForms
 from . import latticeGeneratorForms
 from . import sftpDialog
+from .filterList import FilterList
 
 try:
     from .. import resources
@@ -238,6 +240,12 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
         
         self.setText("%s (%d atoms)" % (displayName, lattice.NAtoms))
         self.setToolTip(abspath)
+        
+        # files holding data for this lattice
+        # key is the name to go in the scalars/vectors dict,
+        # value is the filename
+        self.vectorDataFiles = {}
+        self.scalarDataFiles = {}
     
     def changeDisplayName(self, displayName):
         """
@@ -410,14 +418,124 @@ class SystemsDialog(QtGui.QDialog):
             reloadAction.setStatusTip("Reload selected system(s)")
             reloadAction.triggered.connect(self.reload_system)
             
+            # load scalar data action
+            loadScalarAction = QtGui.QAction("Load scalar data", self)
+            loadScalarAction.setToolTip("Load scalar data from a file")
+            loadScalarAction.triggered.connect(functools.partial(self.loadScalarData, index))
+            
+            # load vector data action
+            loadVectorAction = QtGui.QAction("Load vector data", self)
+            loadVectorAction.setToolTip("Load vector data from a file")
+            loadVectorAction.triggered.connect(functools.partial(self.loadVectorData, index))
+            
             # add action
             menu.addAction(dnAction)
+            
+            menu.addAction(loadScalarAction)
+            menu.addAction(loadVectorAction)
+            
             menu.addAction(duplicateAction)
             menu.addAction(reloadAction)
             menu.addAction(removeAction)
             
             # show menu
             menu.exec_(globalPos)
+    
+    def loadScalarData(self, index):
+        """
+        Load scalar data for associated Lattice
+        
+        """
+        self.logger.debug("Loading scalar data from file")
+        
+        # item
+        item = self.systems_list_widget.item(index)
+        
+        # lattice
+        lattice = item.lattice
+        
+        # open a dialog to get the name of scalar data and the filename
+        inputdiag = QtGui.QInputDialog(self)
+        inputdiag.setOkButtonText("Select file")
+        inputdiag.setLabelText("Name:")
+        inputdiag.setWindowTitle("Load scalar data")
+        inputdiag.setInputMode(QtGui.QInputDialog.TextInput)
+        
+        scalarName = None
+        while scalarName is None:
+            # open dialog
+            retcode = inputdiag.exec_()
+            
+            if retcode == QtGui.QDialog.Rejected:
+                break
+            
+            # get text
+            text = inputdiag.textValue()
+            text = text.strip()
+            
+            if not len(text):
+                break
+            
+            # check name is not the same as a filter list item
+            if text in FilterList.allFilters:
+                # show warning
+                self.mainWindow.displayWarning("The chosen name is reserved ({0})".format(text))
+            
+            # check the name is not already used
+            elif text in lattice.scalarsDict:
+                # show warning
+                self.mainWindow.displayWarning("The chosen name already exists ({0})".format(text))
+            
+            else:
+                scalarName = text
+            
+        if scalarName is not None:
+            self.logger.debug("Got name for scalar data: '%s'", scalarName)
+            
+            # get filename
+            self.tmpHide()
+            filename = QtGui.QFileDialog.getOpenFileName(self, "Select file containing scalar data: '{0}'".format(scalarName), os.getcwd())[0]
+            filename = str(filename)
+            self.showAgain()
+            
+            if len(filename):
+                # read file
+                self.logger.debug("Got file name containing scalar data: '%s'", filename)
+                
+                # load file...
+                with open(filename) as f:
+                    scalars = []
+                    try:
+                        for line in f:
+                            scalars.append(float(line))
+                    
+                    except:
+                        self.logger.error("Error reading scalar file")
+                        self.mainWindow.displayError("Could not read scalar file.")
+                        return
+                
+                if len(scalars) != lattice.NAtoms:
+                    self.logger.error("The scalar data is the wrong length")
+                    self.mainWindow.displayError("The scalar data is the wrong length")
+                    return
+                
+                # convert to numpy array
+                scalars = np.asarray(scalars, dtype=np.float64)
+                
+                # store on lattice
+                lattice.scalarsDict[scalarName] = scalars
+                
+                self.logger.info("Added '%s' scalars to '%s'", scalarName, item.displayName)
+    
+    def loadVectorData(self, index):
+        """
+        Load vector data for associated Lattice
+        
+        """
+        self.logger.debug("Loading vector data from file")
+        
+        # open a dialog to get the name of vector data and the filename
+        
     
     def duplicate_system(self, index):
         """
