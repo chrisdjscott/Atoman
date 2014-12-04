@@ -91,6 +91,7 @@ class Filterer(object):
         self.traceOptions = self.parent.traceOptions
         self.scalarBarAdded = False
         self.scalarsDict = {}
+        self.vectorsDict = {}
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
         self.povrayAtomsWritten = False
@@ -112,6 +113,7 @@ class Filterer(object):
             self.previousPosForTrace = None
         
         self.scalarsDict = {}
+        self.vectorsDict = {}
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
         
@@ -147,10 +149,7 @@ class Filterer(object):
         while actor is not None:
             for rw in self.rendererWindows:
                 if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                    try:
-                        rw.vtkRen.RemoveActor(actor)
-                    except:
-                        pass
+                    rw.vtkRen.RemoveActor(actor)
             
             actor = self.actorsCollection.GetNextItem()
         
@@ -170,10 +169,7 @@ class Filterer(object):
         while actor is not None:
             for rw in self.rendererWindows:
                 if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                    try:
-                        rw.vtkRen.AddActor(actor)
-                    except:
-                        pass
+                    rw.vtkRen.AddActor(actor)
             
             actor = self.actorsCollection.GetNextItem()
         
@@ -196,12 +192,19 @@ class Filterer(object):
             self.removeActors(sequencer=sequencer)
         
         # first set up visible atoms arrays
-        NAtoms = self.pipelinePage.inputState.NAtoms
+        inputState = self.pipelinePage.inputState
+        NAtoms = inputState.NAtoms
         
         if not self.parent.defectFilterSelected:
             self.visibleAtoms = np.arange(NAtoms, dtype=np.int32)
             self.NVis = NAtoms
             self.logger.info("%d visible atoms", len(self.visibleAtoms))
+            
+            # set initial scalars
+            self.logger.debug("Adding initial scalars from inputState")
+            for scalarsName, scalars in inputState.scalarsDict.iteritems():
+                self.logger.debug("  Adding '%s' scalars", scalarsName)
+                self.scalarsDict[scalarsName] = scalars
         
         # pov-ray hull file
         hullFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_hulls%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID)))

@@ -10,6 +10,7 @@ Changelog
 **v141202**
 
 * Fix bug preventing rendering defects
+* Add ability to load custom scalar values from a file for a Lattice
 
 **v141127**
 

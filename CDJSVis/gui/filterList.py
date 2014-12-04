@@ -41,6 +41,31 @@ class FilterListWidgetItem(QtGui.QListWidgetItem):
 ################################################################################
 
 class FilterList(QtGui.QWidget):
+    """
+    Filter list widget
+    
+    """
+    # all available filters
+    allFilters = [
+        "Specie", 
+        "Point defects", 
+        "Crop box", 
+        "Cluster", 
+        "Displacement",
+        "Kinetic energy",
+        "Potential energy",
+        "Charge",
+        "Crop sphere",
+        "Slice",
+        "Coordination number",
+        "Voronoi neighbours",
+        "Voronoi volume",
+        "Bond order",
+        "Atom index",
+        "ACNA",
+    ]
+    allFilters.sort()
+    
     def __init__(self, parent, mainToolbar, mainWindow, tab, width, height=150):
         super(FilterList, self).__init__(parent)
         
@@ -61,27 +86,6 @@ class FilterList(QtGui.QWidget):
         # info windows stored here
         self.infoWindows = {}
         self.clusterInfoWindows = {}
-        
-        # all available filters
-        self.allFilters = [
-            "Specie", 
-            "Point defects", 
-            "Crop box", 
-            "Cluster", 
-            "Displacement",
-            "Kinetic energy",
-            "Potential energy",
-            "Charge",
-            "Crop sphere",
-            "Slice",
-            "Coordination number",
-            "Voronoi neighbours",
-            "Voronoi volume",
-            "Bond order",
-            "Atom index",
-            "ACNA",
-        ]
-        self.allFilters.sort()
         
         self.visible = True
         
