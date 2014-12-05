@@ -1336,15 +1336,20 @@ class Filterer(object):
             
             # calculate vectors
             bondVectorArray = np.empty(3 * NInt, np.float64)
-            status = bonds_c.calculateDisplacementVectors(interstitials, inputLattice.pos, refLattice.pos, 
-                                                          refLattice.cellDims, self.pipelinePage.PBC, bondVectorArray)
+            drawTrace = np.empty(NInt, np.int32)
+            numBonds = bonds_c.calculateDisplacementVectors(interstitials, inputLattice.pos, refLattice.pos, 
+                                                          refLattice.cellDims, self.pipelinePage.PBC, bondVectorArray,
+                                                          drawTrace)
+            
+            self.logger.debug("  Number of interstitial displacement vectors to draw = %d (/ %d)", numBonds, NInt)
             
             # pov file for bonds
             povfile = "pipeline%d_intdispvects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
             
             # draw displacement vectors as bonds
             renderBonds.renderDisplacementVectors(interstitials, self.mainWindow, self.pipelinePage, self.actorsCollection, 
-                                                  self.colouringOptions, povfile, self.scalarsDict, bondVectorArray, settings)
+                                                  self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
+                                                  drawTrace, settings)
         
         return interstitials, vacancies, antisites, onAntisites, splitInterstitials
     
