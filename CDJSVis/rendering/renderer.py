@@ -1084,8 +1084,12 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         atomsGlyphSource.SetThetaResolution(res)
 
         atomsGlyph = vtk.vtkGlyph3D()
-        atomsGlyph.SetSourceConnection(atomsGlyphSource.GetOutputPort())
-        atomsGlyph.SetInputData(atomsPolyData)
+        if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+            atomsGlyph.SetSource(atomsGlyphSource.GetOutput())
+            atomsGlyph.SetInput(atomsPolyData)
+        else:
+            atomsGlyph.SetSourceConnection(atomsGlyphSource.GetOutputPort())
+            atomsGlyph.SetInputData(atomsPolyData)
         atomsGlyph.SetScaleFactor(1.0)
         atomsGlyph.SetScaleModeToDataScalingOff()
 
@@ -1122,10 +1126,14 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
 
             # glyph
             arrowGlyph = vtk.vtkGlyph3D()
-            arrowGlyph.SetSourceConnection(arrowSource.GetOutputPort())
             arrowGlyph.OrientOn()
             arrowGlyph.SetVectorModeToUseVector()
-            arrowGlyph.SetInputData(arrowPolyData)
+            if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+                arrowGlyph.SetSource(arrowSource.GetOutput())
+                arrowGlyph.SetInput(arrowPolyData)
+            else:
+                arrowGlyph.SetSourceConnection(arrowSource.GetOutputPort())
+                arrowGlyph.SetInputData(arrowPolyData)
             arrowGlyph.SetScaleFactor(1.0)
             arrowGlyph.SetScaleModeToDataScalingOff()
 
@@ -1312,8 +1320,12 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsGlyphSource.SetThetaResolution(res)
         
         intsGlyph = vtk.vtkGlyph3D()
-        intsGlyph.SetSourceConnection(intsGlyphSource.GetOutputPort())
-        intsGlyph.SetInputData(intsPolyData)
+        if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+            intsGlyph.SetSource(intsGlyphSource.GetOutput())
+            intsGlyph.SetInput(intsPolyData)
+        else:
+            intsGlyph.SetSourceConnection(intsGlyphSource.GetOutputPort())
+            intsGlyph.SetInputData(intsPolyData)
         intsGlyph.SetScaleFactor(1.0)
         intsGlyph.SetScaleModeToDataScalingOff()
         
@@ -1378,8 +1390,12 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsGlyphSource.SetThetaResolution(res)
         
         intsGlyph = vtk.vtkGlyph3D()
-        intsGlyph.SetSourceConnection(intsGlyphSource.GetOutputPort())
-        intsGlyph.SetInputData(intsPolyData)
+        if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+            intsGlyph.SetSource(intsGlyphSource.GetOutput())
+            intsGlyph.SetInput(intsPolyData)
+        else:
+            intsGlyph.SetSourceConnection(intsGlyphSource.GetOutputPort())
+            intsGlyph.SetInputData(intsPolyData)
         intsGlyph.SetScaleFactor(1.0)
         intsGlyph.SetScaleModeToDataScalingOff()
         
@@ -1432,8 +1448,12 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         
         vacsGlyph = vtk.vtkGlyph3D()
-        vacsGlyph.SetSourceConnection(vacsGlyphSource.GetOutputPort())
-        vacsGlyph.SetInputData(vacsPolyData)
+        if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+            vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
+            vacsGlyph.SetInput(vacsPolyData)
+        else:
+            vacsGlyph.SetSourceConnection(vacsGlyphSource.GetOutputPort())
+            vacsGlyph.SetInputData(vacsPolyData)
         vacsGlyph.SetScaleFactor(1.0)
         vacsGlyph.SetScaleModeToDataScalingOff()
         
@@ -1490,8 +1510,12 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsGlyphSource.SetThetaResolution(res)
         
         intsGlyph = vtk.vtkGlyph3D()
-        intsGlyph.SetSourceConnection(intsGlyphSource.GetOutputPort())
-        intsGlyph.SetInputData(intsPolyData)
+        if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+            intsGlyph.SetSource(intsGlyphSource.GetOutput())
+            intsGlyph.SetInput(intsPolyData)
+        else:
+            intsGlyph.SetSourceConnection(intsGlyphSource.GetOutputPort())
+            intsGlyph.SetInputData(intsPolyData)
         intsGlyph.SetScaleFactor(1.0)
         intsGlyph.SetScaleModeToDataScalingOff()
         
@@ -1546,8 +1570,12 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
         
         vacsGlyph = vtk.vtkGlyph3D()
-        vacsGlyph.SetSourceConnection(vacsGlyphSource.GetOutputPort())
-        vacsGlyph.SetInputData(vacsPolyData)
+        if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+            vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
+            vacsGlyph.SetInput(vacsPolyData)
+        else:
+            vacsGlyph.SetSourceConnection(vacsGlyphSource.GetOutputPort())
+            vacsGlyph.SetInputData(vacsPolyData)
         vacsGlyph.SetScaleFactor(1.0)
         vacsGlyph.SetScaleModeToDataScalingOff()
         
@@ -1612,8 +1640,12 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsGlyphSource.SetDefaultNormal(.577, .577, .577)
         
         vacsGlyph = vtk.vtkGlyph3D()
-        vacsGlyph.SetSourceConnection(vacsGlyphSource.GetOutputPort())
-        vacsGlyph.SetInputData(vacsPolyData)
+        if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+            vacsGlyph.SetSource(vacsGlyphSource.GetOutput())
+            vacsGlyph.SetInput(vacsPolyData)
+        else:
+            vacsGlyph.SetSourceConnection(vacsGlyphSource.GetOutputPort())
+            vacsGlyph.SetInputData(vacsPolyData)
         vacsGlyph.SetScaleFactor(1.0)
         vacsGlyph.SetScaleModeToDataScalingOff()
         
@@ -1681,7 +1713,10 @@ def getActorsForHullFacets(facets, pos, mainWindow, actorsCollection, settings):
     
     # mapper
     mapper = vtk.vtkPolyDataMapper()
-    mapper.SetInputData(trianglePolyData)
+    if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+        mapper.SetInput(trianglePolyData)
+    else:
+        mapper.SetInputData(trianglePolyData)
     
     # actor
     actor = vtk.vtkActor()

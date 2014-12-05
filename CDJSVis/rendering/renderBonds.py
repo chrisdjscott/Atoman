@@ -196,8 +196,12 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colour
     # glyph filter
     bondGlyphFilter = vtk.vtkProgrammableGlyphFilter()
     bondGlyphFilter.SetGlyphMethod(functools.partial(bondGlyphMethod, bondGlyphFilter, lineSource))
-    bondGlyphFilter.SetSourceConnection(tubes.GetOutputPort())
-    bondGlyphFilter.SetInputData(bondPolyData)
+    if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+        bondGlyphFilter.SetSource(tubes.GetOutput())
+        bondGlyphFilter.SetInput(bondPolyData)
+    else:
+        bondGlyphFilter.SetSourceConnection(tubes.GetOutputPort())
+        bondGlyphFilter.SetInputData(bondPolyData)
     
     # mapper
     mapper = vtk.vtkPolyDataMapper()
@@ -334,8 +338,12 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsColl
     # glyph filter
     bondGlyphFilter = vtk.vtkProgrammableGlyphFilter()
     bondGlyphFilter.SetGlyphMethod(functools.partial(bondGlyphMethod, bondGlyphFilter, lineSource))
-    bondGlyphFilter.SetSourceConnection(tubes.GetOutputPort())
-    bondGlyphFilter.SetInputData(bondPolyData)
+    if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+        bondGlyphFilter.SetSource(tubes.GetOutput())
+        bondGlyphFilter.SetInput(bondPolyData)
+    else:
+        bondGlyphFilter.SetSourceConnection(tubes.GetOutputPort())
+        bondGlyphFilter.SetInputData(bondPolyData)
     
     # mapper
     mapper = vtk.vtkPolyDataMapper()
@@ -465,7 +473,10 @@ def renderTraceVectors2(visibleAtoms, mainWindow, pipelinePage, actorsCollection
     
     # tubes
     tubes = vtk.vtkTubeFilter()
-    tubes.SetInputData(polydata)
+    if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+        tubes.SetInput(polydata)
+    else:
+        tubes.SetInputData(polydata)
     tubes.SetRadius(bondThicknessVTK)
     tubes.SetNumberOfSides(bondNumSides)
     tubes.SetCapping(1)
@@ -614,8 +625,12 @@ def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsCollection,
     # glyph filter
     glyphFilter = vtk.vtkProgrammableGlyphFilter()
     glyphFilter.SetGlyphMethod(functools.partial(bondGlyphMethod, glyphFilter, lineSource))
-    glyphFilter.SetSourceConnection(tubes.GetOutputPort())
-    glyphFilter.SetInputData(polyData)
+    if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+        glyphFilter.SetSource(tubes.GetOutput())
+        glyphFilter.SetInput(polyData)
+    else:
+        glyphFilter.SetSourceConnection(tubes.GetOutputPort())
+        glyphFilter.SetInputData(polyData)
     
     # mapper
     mapper = vtk.vtkPolyDataMapper()

@@ -108,7 +108,10 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         
         # mapper
         mapper = vtk.vtkPolyDataMapper()
-        mapper.SetInputData(regionPolyData)
+        if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+            mapper.SetInput(regionPolyData)
+        else:
+            mapper.SetInputData(regionPolyData)
         mapper.SetLookupTable(lut)
         setMapperScalarRange(mapper, colouringOptions, len(inputState.specieList))
         
