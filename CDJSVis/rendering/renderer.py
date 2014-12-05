@@ -1106,7 +1106,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         
         t1s.append(time.time() - t1)
         
-        if True:
+        if False:
             logger.debug("Adding arrows for vector data: 'Testing'")
             
             # TEST ADDING VECTORS
