@@ -89,6 +89,7 @@ class Filterer(object):
         self.displayOptions = self.parent.displayOptions
         self.voronoiOptions = self.parent.voronoiOptions
         self.traceOptions = self.parent.traceOptions
+        self.vectorsOptions = self.parent.vectorsOptions
         self.scalarBarAdded = False
         self.scalarsDict = {}
         self.vectorsDict = {}
@@ -208,7 +209,7 @@ class Filterer(object):
             
             # set initial vectors
             self.logger.debug("Adding initial vectors from inputState")
-            for vectorsName, vectors in inputState.scalarsDict.iteritems():
+            for vectorsName, vectors in inputState.vectorsDict.iteritems():
                 self.logger.debug("  Adding '%s' vectors", vectorsName)
                 self.vectorsDict[vectorsName] = vectors
         
@@ -372,7 +373,7 @@ class Filterer(object):
                                                                                                                      self.actorsCollection, self.colouringOptions, 
                                                                                                                      povfile, self.scalarsDict, self.displayOptions, 
                                                                                                                      self.pipelinePage, self.povrayAtomsWrittenSlot,
-                                                                                                                     self.vectorsDict,
+                                                                                                                     self.vectorsDict, self.vectorsOptions,
                                                                                                                      NVisibleForRes=NVisibleForRes,
                                                                                                                      sequencer=sequencer)
                 

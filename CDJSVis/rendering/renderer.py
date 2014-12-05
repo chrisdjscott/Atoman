@@ -993,7 +993,7 @@ def getSpeciePosScalarVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOpt
 
 ################################################################################
 def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsDict, displayOptions, 
-                               pipelinePage, povFinishedSlot, vectorsDict, NVisibleForRes=None, sequencer=False):
+                               pipelinePage, povFinishedSlot, vectorsDict, vectorsOptions, NVisibleForRes=None, sequencer=False):
     """
     Make the actors for the filtered system
     
@@ -1106,20 +1106,24 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         
         t1s.append(time.time() - t1)
         
-        if True:
-            logger.debug("Adding arrows for vector data: 'Testing'")
+        if vectorsOptions.selectedVectorsName is not None:
+            vectorsName = vectorsOptions.selectedVectorsName
+            logger.debug("Adding arrows for vector data: '%s'", vectorsName)
+            
+            # vectors array
+            vects = vectorsDict[vectorsName]
             
             # TEST ADDING VECTORS
             # create vectors
-            vects = np.random.rand(specieCount[i], 3)
-            vects *= 4.0
-            vects -= 2.0
+#             vects = np.random.rand(specieCount[i], 3)
+#             vects *= 4.0
+#             vects -= 2.0
             
             # polydata
             arrowPolyData = vtk.vtkPolyData()
             arrowPolyData.SetPoints(atomPointsList[i])
             arrowPolyData.GetPointData().SetScalars(atomScalarsList[i])
-            arrowPolyData.GetPointData().SetVectors(numpy_support.numpy_to_vtk(vects, deep=1))
+            arrowPolyData.GetPointData().SetVectors(numpy_support.numpy_to_vtk(vects * vectorsOptions.vectorScaleFactor, deep=1))
 
             # arrow source
             arrowSource = vtk.vtkArrowSource()
@@ -1134,8 +1138,9 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
             else:
                 arrowGlyph.SetSourceConnection(arrowSource.GetOutputPort())
                 arrowGlyph.SetInputData(arrowPolyData)
-            arrowGlyph.SetScaleFactor(1.0)
-            arrowGlyph.SetScaleModeToDataScalingOff()
+            arrowGlyph.SetScaleModeToScaleByVector()
+            arrowGlyph.SetVectorModeToUseVector()
+            arrowGlyph.SetColorModeToColorByScalar()
 
             # mapper
             arrowMapper = vtk.vtkPolyDataMapper()

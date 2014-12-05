@@ -573,7 +573,7 @@ class SystemsDialog(QtGui.QDialog):
                 self.mainWindow.displayWarning("The chosen name already exists ({0})".format(text))
             
             else:
-                vectorName = text
+                vectorName = str(text)
             
         if vectorName is not None:
             self.logger.debug("Got name for vector data: '%s'", vectorName)
@@ -618,6 +618,11 @@ class SystemsDialog(QtGui.QDialog):
                 lattice.vectorsDict[vectorName] = vectors
                 
                 self.logger.info("Added '%s' vectors to '%s'", vectorName, item.displayName)
+        
+        # refresh vectors settings (should just do it on pipelines that have this system as the input state)
+        for pp in self.mainWindow.mainToolbar.pipelineList:
+            for filterList in pp.filterLists:
+                filterList.vectorsOptions.refresh()
     
     def duplicate_system(self, index):
         """

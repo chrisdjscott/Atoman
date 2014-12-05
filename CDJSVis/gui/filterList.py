@@ -247,15 +247,19 @@ class FilterList(QtGui.QWidget):
         self.voronoiOptions = filterListOptions.VoronoiOptionsWindow(self.mainWindow, parent=self)
         self.voronoiOptionsButton = QtGui.QPushButton("Voronoi options")
         self.voronoiOptionsButton.clicked.connect(self.showVoronoiOptions)
-        
         groupLayout.addWidget(self.voronoiOptionsButton)
         
-        # Voronoi options
+        # trace options
         self.traceOptions = filterListOptions.TraceOptionsWindow(self.mainWindow, parent=self)
         self.traceOptionsButton = QtGui.QPushButton("Trace options")
         self.traceOptionsButton.clicked.connect(self.showTraceOptions)
-        
         groupLayout.addWidget(self.traceOptionsButton)
+        
+        # vectors options
+        self.vectorsOptions = filterListOptions.VectorsOptionsWindow(self.mainWindow, parent=self)
+        self.vectorsOptionsButton = QtGui.QPushButton("Vectors options")
+        self.vectorsOptionsButton.clicked.connect(self.showVectorsOptions)
+        groupLayout.addWidget(self.vectorsOptionsButton)
         
         self.filterListLayout.addWidget(extraOptionsGroupBox)
         
@@ -394,6 +398,14 @@ class FilterList(QtGui.QWidget):
         
         else:
             self.filterer.hideScalarBar()
+    
+    def showVectorsOptions(self):
+        """
+        Show the Vectors options window.
+        
+        """
+        self.vectorsOptions.hide()
+        self.vectorsOptions.show()
     
     def showVoronoiOptions(self):
         """

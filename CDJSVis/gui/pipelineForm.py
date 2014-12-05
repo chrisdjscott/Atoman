@@ -591,6 +591,7 @@ class PipelineForm(QtGui.QWidget):
                 filterSettings.refresh()
             
             filterList.bondsOptions.refresh()
+            filterList.vectorsOptions.refresh()
     
     def gatherVisibleAtoms(self):
         """
