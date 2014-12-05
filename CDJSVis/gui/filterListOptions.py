@@ -448,7 +448,7 @@ class BondsOptionsWindow(QtGui.QDialog):
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
-        self.setWindowTitle("Filter list colouring options")
+        self.setWindowTitle("Bonds options")
         self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
         
         self.mainWindow = mainWindow
@@ -1233,3 +1233,210 @@ class TraceOptionsWindow(QtGui.QDialog):
         
         """
         self.drawTraceVectors = drawVectors
+
+################################################################################
+
+class VectorsOptionsWindow(QtGui.QDialog):
+    """
+    Vectors options
+    
+    """
+    def __init__(self, mainWindow, parent=None):
+        super(VectorsOptionsWindow, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
+        self.parent = parent
+        
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.setWindowTitle("Display vectors options")
+#         self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        
+        self.mainWindow = mainWindow
+        
+        # logger
+        self.logger = logging.getLogger(__name__+".VectorsOptionsWindow")
+        
+        # options
+        self.selectedVectorsName = None
+        self.vectorRadiusPOV = 0.03
+        self.vectorRadiusVTK = 0.03
+        self.vectorResolution = 6
+        self.vectorScaleFactor = 1.0
+        
+        # layout
+        layout = QtGui.QFormLayout(self)
+        self.setLayout(layout)
+        
+        # draw vectors list widget
+        self.vectorsList = QtGui.QListWidget(self)
+        self.vectorsList.setFixedHeight(100)
+        self.vectorsList.setFixedWidth(180)
+        self.vectorsList.itemChanged.connect(self.listItemChanged)
+        layout.addRow(self.vectorsList)
+        
+        # scale vectors
+        scaleVectorsCheck = QtGui.QDoubleSpinBox()
+        scaleVectorsCheck.setMinimum(0.1)
+        scaleVectorsCheck.setMaximum(100)
+        scaleVectorsCheck.setSingleStep(0.1)
+        scaleVectorsCheck.setValue(self.vectorScaleFactor)
+        scaleVectorsCheck.valueChanged.connect(self.vectorScaleFactorChanged)
+        scaleVectorsCheck.setToolTip("Scale the vectors by this amount")
+        layout.addRow("Scale vectors", scaleVectorsCheck)
+        
+        # vtk radius
+        vtkRadiusSpin = QtGui.QDoubleSpinBox()
+        vtkRadiusSpin.setMinimum(0.01)
+        vtkRadiusSpin.setMaximum(2)
+        vtkRadiusSpin.setSingleStep(0.1)
+        vtkRadiusSpin.setValue(self.vectorRadiusVTK)
+        vtkRadiusSpin.valueChanged.connect(self.vtkRadiusChanged)
+        vtkRadiusSpin.setToolTip("Set the radius of the vectors (in the VTK window)")
+        layout.addRow("Vector radius (VTK)", vtkRadiusSpin)
+        
+        # pov
+        povRadiusSpin = QtGui.QDoubleSpinBox()
+        povRadiusSpin.setMinimum(0.01)
+        povRadiusSpin.setMaximum(2)
+        povRadiusSpin.setSingleStep(0.1)
+        povRadiusSpin.setValue(self.vectorRadiusPOV)
+        povRadiusSpin.valueChanged.connect(self.povRadiusChanged)
+        povRadiusSpin.setToolTip("Set the radius of the vectors (when using POV-Ray)")
+        layout.addRow("Vector radius (POV)", povRadiusSpin)
+        
+        # resolution
+        resSpin = QtGui.QSpinBox()
+        resSpin.setMinimum(3)
+        resSpin.setMaximum(100)
+        resSpin.setSingleStep(1)
+        resSpin.setValue(self.vectorResolution)
+        resSpin.valueChanged.connect(self.vectorResolutionChanged)
+        resSpin.setToolTip("Set the resolution of the vectors")
+        layout.addRow("Vector resolution", resSpin)
+        
+        # always refresh
+        self.refresh()
+    
+    def vectorScaleFactorChanged(self, val):
+        """
+        Vector scale factor has changed
+        
+        """
+        self.vectorScaleFactor = val
+    
+    def vectorResolutionChanged(self, val):
+        """
+        Vector resolution changed
+        
+        """
+        self.vectorResolution = val
+    
+    def vtkRadiusChanged(self, val):
+        """
+        VTK radius changed.
+        
+        """
+        self.vectorRadiusVTK = val
+    
+    def povRadiusChanged(self, val):
+        """
+        POV radius changed.
+        
+        """
+        self.vectorRadiusPOV = val
+    
+    def listItemChanged(self, changedItem):
+        """
+        Item has changed.
+        
+        """
+        index = self.vectorsList.indexFromItem(changedItem).row()
+
+        if changedItem.checkState() == QtCore.Qt.Unchecked:
+            if changedItem.vectorsName == self.selectedVectorsName:
+                self.logger.debug("Deselecting vectors: '%s'", self.selectedVectorsName)
+                self.selectedVectorsName = None
+        
+        else:
+            self.selectedVectorsName = changedItem.vectorsName
+            
+            # deselect others
+            for i in xrange(self.vectorsList.count()):
+                item = self.vectorsList.item(i)
+                
+                if i == index:
+                    continue
+                
+                if item.checkState() == QtCore.Qt.Checked:
+                    item.setCheckState(QtCore.Qt.Unchecked)
+            
+            self.logger.debug("Selected vectors: '%s'", self.selectedVectorsName)
+    
+    def refresh(self):
+        """
+        Refresh available vectors.
+        
+        Should be called whenever a new input or vector data is loaded.
+        
+        """
+        inputState = self.parent.filterTab.inputState
+        if inputState is None:
+            return
+        
+        self.logger.debug("Refreshing vectors options (%d - %d)", self.parent.pipelinePage.pipelineIndex, self.parent.tab)
+        
+        # set of added pairs
+        currentVectors = set()
+        
+        # remove vectors that no longer exist
+        num = self.vectorsList.count()
+        for i in xrange(num - 1, -1, -1):
+            item = self.vectorsList.item(i)
+            
+            # make this 'and' so that if a lattice is missing one specie we still
+            # keep the pair in case it comes back later... 
+            if item.vectorsName not in inputState.vectorsDict:
+                self.logger.debug("  Removing vectors option: '%s'", item.name)
+                item = self.vectorsList.takeItem(i)
+                if self.selectedVectorsName == item.vectorsName:
+                    self.selectedVectorsName = None
+             
+            else:
+                currentVectors.add(item.vectorsName)
+         
+        # add vectors that aren't already added
+        for vectorsName in inputState.vectorsDict:
+            if vectorsName in currentVectors:
+                self.logger.debug("  Keeping vectors option: '%s'", vectorsName)
+             
+            else:
+                self.logger.debug("  Adding vectors option: '%s'", vectorsName)
+                item = VectorsListItem(vectorsName)
+                self.vectorsList.addItem(item)
+
+################################################################################
+
+class VectorsListItem(QtGui.QListWidgetItem):
+    """
+    Item in the vectors list widget.
+    
+    """
+    def __init__(self, name):
+        super(VectorsListItem, self).__init__()
+        
+        # add check box
+        self.setFlags(self.flags() | QtCore.Qt.ItemIsUserCheckable)
+        
+        # don't allow it to be selected
+        self.setFlags(self.flags() & ~QtCore.Qt.ItemIsSelectable)
+        
+        # set unchecked initially
+        self.setCheckState(QtCore.Qt.Unchecked)
+        
+        # store vectors name
+        self.vectorsName = name
+        
+        # set text
+        self.setText(self.vectorsName)

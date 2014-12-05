@@ -36,7 +36,7 @@ init_rendering(void)
 static PyObject*
 splitVisAtomsBySpecie(PyObject *self, PyObject *args)
 {
-    int NVisible, *visibleAtoms, NSpecies, *specieArray, *specieCount, scalarType, heightAxis;
+    int NVisible, *visibleAtoms, NSpecies, *specieArray, *specieCount, scalarType, heightAxis, vectorsLen;
     double *pos, *PE, *KE, *charge, *scalars;  
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *specieArrayIn=NULL;
@@ -46,6 +46,7 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
     PyArrayObject *KEIn=NULL;
     PyArrayObject *chargeIn=NULL;
     PyArrayObject *scalarsIn=NULL;
+    PyArrayObject *vectors=NULL;
     
     int i, j, index, specie, count;
     int numpyDims[1], numpyDims2[2];
@@ -54,9 +55,9 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
     
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!iO!O!O!O!O!O!O!ii", &PyArray_Type, &visibleAtomsIn, &NSpecies, &PyArray_Type, &specieArrayIn, 
+    if (!PyArg_ParseTuple(args, "O!iO!O!O!O!O!O!O!iiO!", &PyArray_Type, &visibleAtomsIn, &NSpecies, &PyArray_Type, &specieArrayIn, 
             &PyArray_Type, &specieCountIn, &PyArray_Type, &posIn, &PyArray_Type, &PEIn, &PyArray_Type, &KEIn, &PyArray_Type, 
-            &chargeIn, &PyArray_Type, &scalarsIn, &scalarType, &heightAxis))
+            &chargeIn, &PyArray_Type, &scalarsIn, &scalarType, &heightAxis, &PyArray_Type, &vectors))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -84,6 +85,9 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
     if (not_doubleVector(scalarsIn)) return NULL;
     scalars = pyvector_to_Cptr_double(scalarsIn);
     
+    if (not_doubleVector(vectors)) return NULL;
+    vectorsLen = (int) vectors->dimensions[0];
+    
     /* first pass to get counters, assume counter zeroed before */
     for (i = 0; i < NVisible; i++)
     {
@@ -100,6 +104,7 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
     {
         PyArrayObject *speciePos = NULL;
         PyArrayObject *specieScalars = NULL;
+        PyArrayObject *specieVectors = NULL;
         PyObject *tuple = NULL;
         
         /* allocate position array */
@@ -110,6 +115,19 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
         /* allocate position array */
         numpyDims[0] = specieCount[i];
         specieScalars = (PyArrayObject *) PyArray_FromDims(1, numpyDims, NPY_FLOAT64);
+        
+        if (vectorsLen > 0)
+        {
+            /* allocate vectors array */
+            numpyDims2[0] = specieCount[i];
+            numpyDims2[1] = 3;
+            specieVectors = (PyArrayObject *) PyArray_FromDims(2, numpyDims2, NPY_FLOAT64);
+        }
+        else
+        {
+            numpyDims[0] = 0;
+            specieVectors = (PyArrayObject *) PyArray_FromDims(1, numpyDims, NPY_FLOAT64);
+        }
         
         /* loop over atoms */
         count = 0;
@@ -135,14 +153,23 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
                 
                 DIND1(specieScalars, count) = scalar;
                 
+                if (vectorsLen > 0)
+                {
+                    /* vector */
+                    DIND2(specieVectors, count, 0) = DIND2(vectors, index, 0);
+                    DIND2(specieVectors, count, 1) = DIND2(vectors, index, 1);
+                    DIND2(specieVectors, count, 2) = DIND2(vectors, index, 2);
+                }
+                
                 count++;
             }
         }
         
         /* create tuple (setItem steals ownership of array objects!!??) */
-        tuple = PyTuple_New(2);
+        tuple = PyTuple_New(3);
         PyTuple_SetItem(tuple, 0, PyArray_Return(speciePos));
         PyTuple_SetItem(tuple, 1, PyArray_Return(specieScalars));
+        PyTuple_SetItem(tuple, 2, PyArray_Return(specieVectors));
         
         /* store in list (setItem steals ownership of tuple!?) */
         PyList_SetItem(list, i, tuple);

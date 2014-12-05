@@ -943,7 +943,7 @@ def writePovrayAtoms(filename, visibleAtoms, lattice, scalarsDict, colouringOpti
 
 ################################################################################
 
-def getSpeciePosScalarVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOptions):
+def getSpecieVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOptions, vectorsDict, vectorsOptions):
     """
     Split visible atoms pos/scalar arrays by specie
     
@@ -964,22 +964,32 @@ def getSpeciePosScalarVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOpt
     else:
         scalarsArray = np.array([], dtype=np.float64)
     
+    if vectorsOptions.selectedVectorsName is not None:
+        vectorsArray = vectorsDict[vectorsOptions.selectedVectorsName] * vectorsOptions.vectorScaleFactor
+    else:
+        vectorsArray = np.array([], dtype=np.float64)
+    
     # call C lib
     resultList = _rendering.splitVisAtomsBySpecie(visibleAtoms, NSpecies, lattice.specie, specieCount, lattice.pos, lattice.PE, lattice.KE, 
-                                                  lattice.charge, scalarsArray, scalarType, colouringOptions.heightAxis)
+                                                  lattice.charge, scalarsArray, scalarType, colouringOptions.heightAxis, 
+                                                  vectorsArray)
     
     # check result
     speciePosArrays = []
     specieScalarArrays = []
-    for sposarr, sscalarr in resultList:
+    specieVectorArrays = []
+    for sposarr, sscalarr, svectarr in resultList:
         speciePosArrays.append(sposarr)
         specieScalarArrays.append(sscalarr)
+        if vectorsOptions.selectedVectorsName is not None:
+            specieVectorArrays.append(svectarr)
     assert len(speciePosArrays) == NSpecies
     assert len(specieScalarArrays) == NSpecies
     
     # make points from numpy array
     atomPointsList = []
     atomScalarsList = []
+    atomVectorsList = []
     for specInd in xrange(NSpecies):
         specPos = speciePosArrays[specInd]
         specScalar = specieScalarArrays[specInd]
@@ -988,12 +998,15 @@ def getSpeciePosScalarVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOpt
         points.SetData(numpy_support.numpy_to_vtk(specPos, deep=1))
         atomPointsList.append(points)
         atomScalarsList.append(numpy_support.numpy_to_vtk(specScalar, deep=1))
+        if vectorsOptions.selectedVectorsName is not None:
+            specVector = specieVectorArrays[specInd]
+            atomVectorsList.append(numpy_support.numpy_to_vtk(specVector, deep=1))
     
-    return atomPointsList, atomScalarsList, specieCount
+    return atomPointsList, atomScalarsList, atomVectorsList, specieCount
 
 ################################################################################
 def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsDict, displayOptions, 
-                               pipelinePage, povFinishedSlot, NVisibleForRes=None, sequencer=False):
+                               pipelinePage, povFinishedSlot, vectorsDict, vectorsOptions, NVisibleForRes=None, sequencer=False):
     """
     Make the actors for the filtered system
     
@@ -1030,7 +1043,8 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
     # loop over atoms, setting points and scalars
     setPointsTime2 = time.time()
     
-    atomPointsList, atomScalarsList, specieCount = getSpeciePosScalarVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOptions)
+    atomPointsList, atomScalarsList, atomVectorsList, specieCount = getSpecieVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOptions, 
+                                                                                       vectorsDict, vectorsOptions)
     
     setPointsTime2 = time.time() - setPointsTime2
     
@@ -1106,20 +1120,23 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         
         t1s.append(time.time() - t1)
         
-        if False:
-            logger.debug("Adding arrows for vector data: 'Testing'")
+        if vectorsOptions.selectedVectorsName is not None:
+            vectorsName = vectorsOptions.selectedVectorsName
+            logger.debug("Adding arrows for vector data: '%s'", vectorsName)
+            
+            # vectors array
+            vects = vectorsDict[vectorsName]
             
             # TEST ADDING VECTORS
-            # create vectors
-            vects = np.random.rand(specieCount[i], 3)
-            vects *= 4.0
-            vects -= 2.0
+#             vects = np.random.rand(specieCount[i], 3)
+#             vects *= 4.0
+#             vects -= 2.0
             
             # polydata
             arrowPolyData = vtk.vtkPolyData()
             arrowPolyData.SetPoints(atomPointsList[i])
             arrowPolyData.GetPointData().SetScalars(atomScalarsList[i])
-            arrowPolyData.GetPointData().SetVectors(numpy_support.numpy_to_vtk(vects, deep=1))
+            arrowPolyData.GetPointData().SetVectors(atomVectorsList[i])
 
             # arrow source
             arrowSource = vtk.vtkArrowSource()
@@ -1134,8 +1151,9 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
             else:
                 arrowGlyph.SetSourceConnection(arrowSource.GetOutputPort())
                 arrowGlyph.SetInputData(arrowPolyData)
-            arrowGlyph.SetScaleFactor(1.0)
-            arrowGlyph.SetScaleModeToDataScalingOff()
+            arrowGlyph.SetScaleModeToScaleByVector()
+            arrowGlyph.SetVectorModeToUseVector()
+            arrowGlyph.SetColorModeToColorByScalar()
 
             # mapper
             arrowMapper = vtk.vtkPolyDataMapper()

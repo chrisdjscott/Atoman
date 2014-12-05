@@ -534,8 +534,95 @@ class SystemsDialog(QtGui.QDialog):
         """
         self.logger.debug("Loading vector data from file")
         
-        # open a dialog to get the name of vector data and the filename
+        # item
+        item = self.systems_list_widget.item(index)
         
+        # lattice
+        lattice = item.lattice
+        
+        # open a dialog to get the name of scalar data and the filename
+        inputdiag = QtGui.QInputDialog(self)
+        inputdiag.setOkButtonText("Select file")
+        inputdiag.setLabelText("Name:")
+        inputdiag.setWindowTitle("Load vector data")
+        inputdiag.setInputMode(QtGui.QInputDialog.TextInput)
+        
+        vectorName = None
+        while vectorName is None:
+            # open dialog
+            retcode = inputdiag.exec_()
+            
+            if retcode == QtGui.QDialog.Rejected:
+                break
+            
+            # get text
+            text = inputdiag.textValue()
+            text = text.strip()
+            
+            if not len(text):
+                break
+            
+            # check name is not the same as a filter list item
+            if text in FilterList.allFilters:
+                # show warning
+                self.mainWindow.displayWarning("The chosen name is reserved ({0})".format(text))
+            
+            # check the name is not already used
+            elif text in lattice.vectorsDict:
+                # show warning
+                self.mainWindow.displayWarning("The chosen name already exists ({0})".format(text))
+            
+            else:
+                vectorName = str(text)
+            
+        if vectorName is not None:
+            self.logger.debug("Got name for vector data: '%s'", vectorName)
+            
+            # get filename
+            self.tmpHide()
+            filename = QtGui.QFileDialog.getOpenFileName(self, "Select file containing vector data: '{0}'".format(vectorName), os.getcwd())[0]
+            filename = str(filename)
+            self.showAgain()
+            
+            if len(filename):
+                # read file
+                self.logger.debug("Got file name containing vector data: '%s'", filename)
+                
+                # load file...
+                with open(filename) as f:
+                    vectors = []
+                    try:
+                        for line in f:
+                            array = line.split()
+                            array[0] = float(array[0])
+                            array[1] = float(array[1])
+                            array[2] = float(array[2])
+                            
+                            vectors.append(array)
+                    
+                    except:
+                        self.logger.error("Error reading vector file")
+                        self.mainWindow.displayError("Could not read vector file.")
+                        return
+                
+                if len(vectors) != lattice.NAtoms:
+                    self.logger.error("The vector data is the wrong length")
+                    self.mainWindow.displayError("The vector data is the wrong length")
+                    return
+                
+                # convert to numpy array
+                vectors = np.asarray(vectors, dtype=np.float64)
+                assert vectors.shape[0] == lattice.NAtoms and vectors.shape[1] == 3
+                
+                # store on lattice
+                lattice.vectorsDict[vectorName] = vectors
+                
+                self.logger.info("Added '%s' vectors to '%s'", vectorName, item.displayName)
+        
+        # refresh vectors settings (should just do it on pipelines that have this system as the input state)
+        for pp in self.mainWindow.mainToolbar.pipelineList:
+            for filterList in pp.filterLists:
+                filterList.vectorsOptions.refresh()
     
     def duplicate_system(self, index):
         """
