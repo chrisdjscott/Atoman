@@ -62,7 +62,7 @@ def bondGlyphMethod(bondGlyph, bondGlyphSource, *args, **kwargs):
 
 ################################################################################
 
-def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colouringOptions, povfile, 
+def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsDict, colouringOptions, povfile, 
                 scalarsDict, bondArray, NBondsArray, bondVectorArray, bondsOptions):
     """
     Render bonds.
@@ -216,7 +216,7 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colour
     actor.GetProperty().SetLineWidth(bondThicknessVTK)
     
     # add to actors collection
-    actorsCollection.AddItem(actor)
+    actorsDict["Bonds"] = actor
     
     # close pov file
     fpov.close()
@@ -227,7 +227,7 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colour
 
 ################################################################################
 
-def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colouringOptions, povfile, 
+def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict, colouringOptions, povfile, 
                               scalarsDict, numBonds, bondVectorArray, drawBondVector, bondsOptions):
     """
     Render displacement vectors
@@ -358,7 +358,7 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsColl
     actor.GetProperty().SetLineWidth(bondThicknessVTK)
     
     # add to actors collection
-    actorsCollection.AddItem(actor)
+    actorsDict["Displacement vectors"] = actor
     
     # close pov file
     fpov.close()
@@ -369,7 +369,7 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsColl
 
 ################################################################################
 
-def renderTraceVectors2(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colouringOptions, povfile, 
+def renderTraceVectors2(visibleAtoms, mainWindow, pipelinePage, actorsDict, colouringOptions, povfile, 
                         scalarsDict, numBonds, previousPos, drawTrace, bondsOptions, traceDict):
     """
     Render trace vectors
@@ -500,7 +500,7 @@ def renderTraceVectors2(visibleAtoms, mainWindow, pipelinePage, actorsCollection
     actor.GetProperty().SetLineWidth(bondThicknessVTK)
     
     # add to actors collection
-    actorsCollection.AddItem(actor)
+    actorsDict["Trace vectors 2"] = actor
     
     # time taken
     renderBondsTime = time.time() - renderBondsTime
@@ -510,7 +510,7 @@ def renderTraceVectors2(visibleAtoms, mainWindow, pipelinePage, actorsCollection
 
 ################################################################################
 
-def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsCollection, colouringOptions, povfile, 
+def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict, colouringOptions, povfile, 
                        scalarsDict, numBonds, bondVectorArray, drawBondVector, bondsOptions, traceDict):
     """
     Render trace vectors
@@ -645,7 +645,7 @@ def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsCollection,
     actor.GetProperty().SetLineWidth(bondThicknessVTK)
     
     # add to actors collection
-    actorsCollection.AddItem(actor)
+    actorsDict["Trace vectors"] = actor
     
     # close pov file
     fpov.close()

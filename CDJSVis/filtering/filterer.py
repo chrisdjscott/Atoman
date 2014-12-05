@@ -79,7 +79,7 @@ class Filterer(object):
         
         self.driftVector = np.zeros(3, np.float64)
         
-        self.actorsCollection = vtk.vtkActorCollection()
+        self.actorsDict = {}
         
         self.traceDict = {}
         self.previousPosForTrace = None
@@ -108,7 +108,7 @@ class Filterer(object):
         """
         self.hideActors()
         
-        self.actorsCollection = vtk.vtkActorCollection()
+        self.actorsDict = {}
         if not sequencer:
             self.traceDict = {}
             self.previousPosForTrace = None
@@ -145,14 +145,11 @@ class Filterer(object):
         Hide all actors
         
         """
-        self.actorsCollection.InitTraversal()
-        actor = self.actorsCollection.GetNextItem()
-        while actor is not None:
+        for actorName, actor in self.actorsDict.iteritems():
+            self.logger.debug("Removing actor: '%s'", actorName)
             for rw in self.rendererWindows:
                 if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
                     rw.vtkRen.RemoveActor(actor)
-            
-            actor = self.actorsCollection.GetNextItem()
         
         for rw in self.rendererWindows:
             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
@@ -165,14 +162,11 @@ class Filterer(object):
         Add all actors
         
         """
-        self.actorsCollection.InitTraversal()
-        actor = self.actorsCollection.GetNextItem()
-        while actor is not None:
+        for actorName, actor in self.actorsDict.iteritems():
+            self.logger.debug("Adding actor: '%s'", actorName)
             for rw in self.rendererWindows:
                 if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
                     rw.vtkRen.AddActor(actor)
-            
-            actor = self.actorsCollection.GetNextItem()
         
         for rw in self.rendererWindows:
             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
@@ -342,7 +336,7 @@ class Filterer(object):
                 pass
             
             else:
-                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.actorsCollection, 
+                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.actorsDict, 
                                                                 self.colouringOptions, filterSettings, self.displayOptions, self.pipelinePage)
                 
                 self.vacancySpecieCount = counters[0]
@@ -370,7 +364,7 @@ class Filterer(object):
                     NVisibleForRes = None
                 
                 self.scalarBar_white_bg, self.scalarBar_black_bg, visSpecCount = renderer.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, 
-                                                                                                                     self.actorsCollection, self.colouringOptions, 
+                                                                                                                     self.actorsDict, self.colouringOptions, 
                                                                                                                      povfile, self.scalarsDict, self.displayOptions, 
                                                                                                                      self.pipelinePage, self.povrayAtomsWrittenSlot,
                                                                                                                      self.vectorsDict, self.vectorsOptions,
@@ -635,7 +629,7 @@ class Filterer(object):
         
         # get actors for vis atoms only!
         renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.voronoi, 
-                                               self.colouringOptions, self.voronoiOptions, self.actorsCollection, 
+                                               self.colouringOptions, self.voronoiOptions, self.actorsDict, 
                                                voroFile, self.scalarsDict, log=self.log)
     
     def calculateBonds(self):
@@ -756,7 +750,7 @@ class Filterer(object):
             # pov file for bonds
             povfile = "pipeline%d_bonds%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
             
-            renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsCollection, self.colouringOptions, 
+            renderBonds.renderBonds(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsDict, self.colouringOptions, 
                                     povfile, self.scalarsDict, bondArray, NBondsArray, bondVectorArray, self.bondsOptions)
         
         return 0
@@ -955,7 +949,7 @@ class Filterer(object):
         povfile = "pipeline%d_dispvects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
         
         # draw displacement vectors as bonds
-        renderBonds.renderDisplacementVectors(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsCollection, 
+        renderBonds.renderDisplacementVectors(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsDict, 
                                               self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
                                               drawBondVector, settings)
     
@@ -1030,7 +1024,7 @@ class Filterer(object):
             
             # render trace vectors
             self.traceDict = renderBonds.renderTraceVectors(self.visibleAtoms, self.mainWindow, self.pipelinePage, 
-                                                            self.actorsCollection, self.colouringOptions, povfile, 
+                                                            self.actorsDict, self.colouringOptions, povfile, 
                                                             self.scalarsDict, numBonds, bondVectorArray, drawTrace, 
                                                             settings, self.traceDict)
             
@@ -1461,7 +1455,7 @@ class Filterer(object):
             povfile = "pipeline%d_intdispvects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
             
             # draw displacement vectors as bonds
-            renderBonds.renderDisplacementVectors(interstitials, self.mainWindow, self.pipelinePage, self.actorsCollection, 
+            renderBonds.renderDisplacementVectors(interstitials, self.mainWindow, self.pipelinePage, self.actorsDict, 
                                                   self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
                                                   drawTrace, settings)
         
@@ -1585,13 +1579,14 @@ class Filterer(object):
                 facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, 
                                                   inputLattice.cellDims)
                 
-                renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
+                renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsDict, settings, "Defects")
                 
                 # write povray file too
                 renderer.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
             
             # handle PBCs
             if NDefects > 1 and PBCFlag:
+                count = 0
                 while max(appliedPBCs) > 0:
                     tmpClusterPos = copy.deepcopy(clusterPos)
                     clusters.applyPBCsToCluster(tmpClusterPos, inputLattice.cellDims, appliedPBCs)
@@ -1611,10 +1606,13 @@ class Filterer(object):
                         facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, 
                                                           self.pipelinePage.PBC, inputLattice.cellDims)
                         
-                        renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
+                        renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsDict, settings)
                         
                         # write povray file too
-                        renderer.writePovrayHull(facets, tmpClusterPos, self.mainWindow, hullPovFile, settings)
+                        renderer.writePovrayHull(facets, tmpClusterPos, self.mainWindow, hullPovFile, settings, 
+                                                 "Defects (PBC {0})".format(count))
+                        
+                        count += 1
         
     def clusterFilter(self, settings, PBC=None, minSize=None, maxSize=None, nebRad=None):
         """
@@ -1737,7 +1735,7 @@ class Filterer(object):
             
             # now render
             if facets is not None:
-                renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
+                renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsDict, settings, "Clusters")
                 
                 # write povray file too
                 renderer.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
@@ -1776,13 +1774,14 @@ class Filterer(object):
                 #TODO: make sure not facets more than neighbour rad from cell
                 facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
                 
-                renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsCollection, settings)
+                renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, self.actorsDict, settings, "Cluster")
                 
                 # write povray file too
                 renderer.writePovrayHull(facets, clusterPos, self.mainWindow, hullPovFile, settings)
             
             # handle PBCs
             if len(cluster) > 1:
+                count = 0
                 while max(appliedPBCs) > 0:
                     tmpClusterPos = copy.deepcopy(clusterPos)
                     clusters.applyPBCsToCluster(tmpClusterPos, lattice.cellDims, appliedPBCs)
@@ -1801,7 +1800,10 @@ class Filterer(object):
                         #TODO: make sure not facets more than neighbour rad from cell
                         facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
                         
-                        renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsCollection, settings)
+                        renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, self.actorsDict, settings,
+                                                        "Cluster (PBC {0})".format(count))
+                         
+                        count += 1
                         
                         # write povray file too
                         renderer.writePovrayHull(facets, tmpClusterPos, self.mainWindow, hullPovFile, settings)
@@ -1870,7 +1872,7 @@ class Filterer(object):
                 count += 1
         
         else:
-            self.log("ERROR: method to calculate cluster volumes not specified")
+            self.logger.error("Method to calculate cluster volumes not specified")
     
     def coordinationNumberFilter(self, filterSettings):
         """

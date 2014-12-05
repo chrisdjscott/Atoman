@@ -1005,7 +1005,7 @@ def getSpecieVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOptions, vec
     return atomPointsList, atomScalarsList, atomVectorsList, specieCount
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsDict, displayOptions, 
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOptions, povFileName, scalarsDict, displayOptions, 
                                pipelinePage, povFinishedSlot, vectorsDict, vectorsOptions, NVisibleForRes=None, sequencer=False):
     """
     Make the actors for the filtered system
@@ -1115,8 +1115,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
         atomsActor = vtk.vtkActor()
         atomsActor.SetMapper(atomsMapper)
 #         atomsActor.GetProperty().BackfaceCullingOn()
-
-        actorsCollection.AddItem(atomsActor)
+        actorsDict["Atoms ({0})".format(lattice.specieList[i])] = atomsActor
         
         t1s.append(time.time() - t1)
         
@@ -1164,7 +1163,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colou
             # actor
             arrowActor = vtk.vtkActor()
             arrowActor.SetMapper(arrowMapper)
-            actorsCollection.AddItem(arrowActor)
+            actorsDict["Vectors ({0})".format(lattice.specieList[i])] = arrowActor
     
     # scalar bar
     scalarBar_white = None
@@ -1274,7 +1273,7 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
 
     
 ################################################################################
-def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, actorsCollection, 
+def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, actorsDict, 
                                 colouringOptions, filterSettings, displayOptions, pipelinePage):
     
     NInt = len(interstitials)
@@ -1355,7 +1354,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsActor = vtk.vtkActor()
         intsActor.SetMapper(intsMapper)
         
-        actorsCollection.AddItem(intsActor)
+        actorsDict["Interstitials ({0})".format(inputLattice.specieList[i])] = intsActor
     
     #----------------------------------------#
     # split interstitial atoms next
@@ -1425,7 +1424,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsActor = vtk.vtkActor()
         intsActor.SetMapper(intsMapper)
         
-        actorsCollection.AddItem(intsActor)
+        actorsDict["Split ints ({0})".format(inputLattice.specieList[i])] = intsActor
     
     #----------------------------------------#
     # split interstitial vacs next
@@ -1486,9 +1485,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsActor.GetProperty().SetSpecularPower(filterSettings.vacSpecularPower)
         vacsActor.GetProperty().SetOpacity(filterSettings.vacOpacity)
         
-        actorsCollection.AddItem(vacsActor)
-    
-    
+        actorsDict["Split vacs ({0})".format(refLattice.specieList[i])] = vacsActor
     
     #----------------------------------------#
     # antisites occupying atom
@@ -1545,7 +1542,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         intsActor = vtk.vtkActor()
         intsActor.SetMapper(intsMapper)
         
-        actorsCollection.AddItem(intsActor)
+        actorsDict["Antisites occupying ({0})".format(inputLattice.specieList[i])] = intsActor
     
     #----------------------------------------#
     # vacancies
@@ -1608,7 +1605,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsActor.GetProperty().SetSpecularPower(filterSettings.vacSpecularPower)
         vacsActor.GetProperty().SetOpacity(filterSettings.vacOpacity)
         
-        actorsCollection.AddItem(vacsActor)
+        actorsDict["Vacancies ({0})".format(refLattice.specieList[i])] = vacsActor
     
     #----------------------------------------#
     # antisites
@@ -1675,7 +1672,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         vacsActor = vtk.vtkActor()
         vacsActor.SetMapper(vacsMapper)
         
-        actorsCollection.AddItem(vacsActor)
+        actorsDict["Antisites frames ({0})".format(refLattice.specieList[i])] = vacsActor
         
     # scalar bar
     scalarBar_white = None
@@ -1706,7 +1703,7 @@ def makeTriangle(indexes):
 
 
 ################################################################################
-def getActorsForHullFacets(facets, pos, mainWindow, actorsCollection, settings):
+def getActorsForHullFacets(facets, pos, mainWindow, actorsDict, settings, caller):
     """
     Render convex hull facets
     
@@ -1742,6 +1739,4 @@ def getActorsForHullFacets(facets, pos, mainWindow, actorsCollection, settings):
     actor.GetProperty().SetOpacity(settings.hullOpacity)
     actor.GetProperty().SetColor(settings.hullCol[0], settings.hullCol[1], settings.hullCol[2])
     
-    actorsCollection.AddItem(actor)
-
-
+    actorsDict["Hulls - ({0})".format(caller)] = intsActor
