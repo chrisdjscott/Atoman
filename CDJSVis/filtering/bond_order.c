@@ -237,7 +237,7 @@ static PyObject*
 bondOrderFilter(PyObject *self, PyObject *args)
 {
     int NVisibleIn, *visibleAtoms, *PBC, NScalars, filterQ4Enabled, filterQ6Enabled;
-    int OMP_NUM_THREADS;
+    int OMP_NUM_THREADS, NVectors;
     double maxBondDistance, *scalarsQ4, *scalarsQ6, *minPos, *maxPos, *cellDims;
     double *pos, *fullScalars, minQ4, maxQ4, minQ6, maxQ6;
     PyArrayObject *posIn=NULL;
@@ -249,6 +249,7 @@ bondOrderFilter(PyObject *self, PyObject *args)
     PyArrayObject *maxPosIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
     
     int i, j, index, NVisible;
     int maxSep2;
@@ -259,10 +260,10 @@ bondOrderFilter(PyObject *self, PyObject *args)
     struct AtomStructureResults *results;
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!dO!O!O!O!O!O!iO!iddiddi", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &maxBondDistance, 
+    if (!PyArg_ParseTuple(args, "O!O!dO!O!O!O!O!O!iO!iddiddiiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &maxBondDistance, 
             &PyArray_Type, &scalarsQ4In, &PyArray_Type, &scalarsQ6In, &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, 
             &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, &PyArray_Type, &fullScalarsIn, &filterQ4Enabled, &minQ4, 
-            &maxQ4, &filterQ6Enabled, &minQ6, &maxQ6, &OMP_NUM_THREADS))
+            &maxQ4, &filterQ6Enabled, &minQ6, &maxQ6, &OMP_NUM_THREADS, &NVectors, &PyArray_Type, &fullVectors))
             return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -292,6 +293,8 @@ bondOrderFilter(PyObject *self, PyObject *args)
     
     if (not_doubleVector(fullScalarsIn)) return NULL;
     fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
     
     /* set number of openmp threads to use */
     omp_set_num_threads(OMP_NUM_THREADS);
@@ -364,6 +367,13 @@ bondOrderFilter(PyObject *self, PyObject *args)
         for (j = 0; j < NScalars; j++)
         {
             fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+        }
+        
+        for (j = 0; j < NVectors; j++)
+        {
+            DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
+            DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
+            DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
         }
         
         NVisible++;

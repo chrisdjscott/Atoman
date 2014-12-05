@@ -993,7 +993,7 @@ def getSpeciePosScalarVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOpt
 
 ################################################################################
 def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsCollection, colouringOptions, povFileName, scalarsDict, displayOptions, 
-                               pipelinePage, povFinishedSlot, NVisibleForRes=None, sequencer=False):
+                               pipelinePage, povFinishedSlot, vectorsDict, NVisibleForRes=None, sequencer=False):
     """
     Make the actors for the filtered system
     

@@ -64,7 +64,7 @@ class TestBondOrderBCC(unittest.TestCase):
         nthreads = 1
         NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
                                           self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
-                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads, 0, np.empty(0, np.float64))
         
         # make sure num visible is same
         self.assertEqual(NVis, self.lattice.NAtoms)
@@ -94,7 +94,7 @@ class TestBondOrderBCC(unittest.TestCase):
         nthreads = 1
         NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
                                           self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
-                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads, 0, np.empty(0, np.float64))
         
         # make sure num visible is same
         self.assertEqual(NVis, self.lattice.NAtoms)
@@ -124,7 +124,7 @@ class TestBondOrderBCC(unittest.TestCase):
         nthreads = 4
         NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
                                           self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
-                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads, 0, np.empty(0, np.float64))
         
         # make sure num visible is same
         self.assertEqual(NVis, self.lattice.NAtoms)
@@ -154,7 +154,7 @@ class TestBondOrderBCC(unittest.TestCase):
         nthreads = 4
         NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
                                           self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
-                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads, 0, np.empty(0, np.float64))
         
         # make sure num visible is same
         self.assertEqual(NVis, self.lattice.NAtoms)
@@ -216,7 +216,7 @@ class TestBondOrderFCC(unittest.TestCase):
         nthreads = 1
         NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
                                           self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
-                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads, 0, np.empty(0, np.float64))
         
         # make sure num visible is same
         self.assertEqual(NVis, self.lattice.NAtoms)
@@ -246,7 +246,7 @@ class TestBondOrderFCC(unittest.TestCase):
         nthreads = 1
         NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
                                           self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
-                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads, 0, np.empty(0, np.float64))
         
         # make sure num visible is same
         self.assertEqual(NVis, self.lattice.NAtoms)
@@ -276,7 +276,7 @@ class TestBondOrderFCC(unittest.TestCase):
         nthreads = 4
         NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
                                           self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
-                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads, 0, np.empty(0, np.float64))
         
         # make sure num visible is same
         self.assertEqual(NVis, self.lattice.NAtoms)
@@ -306,7 +306,7 @@ class TestBondOrderFCC(unittest.TestCase):
         nthreads = 4
         NVis = bond_order.bondOrderFilter(visibleAtoms, self.lattice.pos, maxBondDistance, scalarsQ4, scalarsQ6, self.lattice.minPos, 
                                           self.lattice.maxPos, self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
-                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads)
+                                          filterQ4Enabled, minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, nthreads, 0, np.empty(0, np.float64))
         
         # make sure num visible is same
         self.assertEqual(NVis, self.lattice.NAtoms)

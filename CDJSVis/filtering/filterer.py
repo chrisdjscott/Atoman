@@ -205,6 +205,12 @@ class Filterer(object):
             for scalarsName, scalars in inputState.scalarsDict.iteritems():
                 self.logger.debug("  Adding '%s' scalars", scalarsName)
                 self.scalarsDict[scalarsName] = scalars
+            
+            # set initial vectors
+            self.logger.debug("Adding initial vectors from inputState")
+            for vectorsName, vectors in inputState.scalarsDict.iteritems():
+                self.logger.debug("  Adding '%s' vectors", vectorsName)
+                self.vectorsDict[vectorsName] = vectors
         
         # pov-ray hull file
         hullFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_hulls%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID)))
@@ -366,6 +372,7 @@ class Filterer(object):
                                                                                                                      self.actorsCollection, self.colouringOptions, 
                                                                                                                      povfile, self.scalarsDict, self.displayOptions, 
                                                                                                                      self.pipelinePage, self.povrayAtomsWrittenSlot,
+                                                                                                                     self.vectorsDict,
                                                                                                                      NVisibleForRes=NVisibleForRes,
                                                                                                                      sequencer=sequencer)
                 
@@ -438,17 +445,21 @@ class Filterer(object):
         # new scalars array
         scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
         
-        # old scalars arrays (resize as appropriate)
+        # full scalars array
         NScalars, fullScalars = self.makeFullScalarsArray()
+        
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
         
         # make array of neighbours
         num_nebs_array = vor.atomNumNebsArray()
         
         NVisible = filtering_c.voronoiNeighboursFilter(self.visibleAtoms, num_nebs_array, settings.minVoroNebs, settings.maxVoroNebs, 
-                                                       scalars, NScalars, fullScalars, settings.filteringEnabled)
+                                                       scalars, NScalars, fullScalars, settings.filteringEnabled, NVectors, fullVectors)
         
-        # update scalars dict
+        # update scalars/vectors dicts
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
 
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -478,14 +489,18 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
         # make array of volumes
         atom_volumes = vor.atomVolumesArray()
         
         NVisible = filtering_c.voronoiVolumeFilter(self.visibleAtoms, atom_volumes, settings.minVoroVol, settings.maxVoroVol, 
-                                                   scalars, NScalars, fullScalars, settings.filteringEnabled)
+                                                   scalars, NScalars, fullScalars, settings.filteringEnabled, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
         
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -508,15 +523,20 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
         # num threads
         ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
         
         NVisible = bond_order.bondOrderFilter(self.visibleAtoms, inputState.pos, settings.maxBondDistance, scalarsQ4, scalarsQ6, inputState.minPos, 
                                                 inputState.maxPos, inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.filterQ4Enabled, 
-                                                settings.minQ4, settings.maxQ4, settings.filterQ6Enabled, settings.minQ6, settings.maxQ6, ompNumThreads)
+                                                settings.minQ4, settings.maxQ4, settings.filterQ6Enabled, settings.minQ6, settings.maxQ6, ompNumThreads, 
+                                                NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
         
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -540,6 +560,9 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
         # number of openmp threads
         ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
         
@@ -548,10 +571,12 @@ class Filterer(object):
         
         NVisible = acna.adaptiveCommonNeighbourAnalysis(self.visibleAtoms, inputState.pos, scalars, inputState.minPos, inputState.maxPos, 
                                                         inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.maxBondDistance,
-                                                        counters, settings.filteringEnabled, settings.structureVisibility, ompNumThreads)
+                                                        counters, settings.filteringEnabled, settings.structureVisibility, ompNumThreads, NVectors, 
+                                                        fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
         
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -802,6 +827,31 @@ class Filterer(object):
         
         return len(scalarsList), scalarsFull
     
+    def makeFullVectorsArray(self):
+        """
+        Combine vectors array into one big array for passing to C
+        
+        """
+        self.logger.debug("Making full vectors array (N=%d)", len(self.vectorsDict))
+        
+        vectorsList = []
+        for name, vectors in self.vectorsDict.iteritems():
+            self.logger.debug("  Adding '%s' vectors", name)
+            vectorsList.append(vectors)
+            
+#             assert len(scalars) == len(self.visibleAtoms)
+#             f = open("%s_before.dat" % name.replace(" ", "_"), "w")
+#             for tup in itertools.izip(self.visibleAtoms, scalars):
+#                 f.write("%d %f\n" % tup)
+#             f.close()
+        
+        if len(vectorsList):
+            vectorsFull = np.concatenate(vectorsList)
+        else:
+            vectorsFull = np.array([], dtype=np.float64)
+        
+        return len(vectorsList), vectorsFull
+    
     def storeFullScalarsArray(self, NVisible, NScalars, scalarsFull):
         """
         Split and resize full scalars array; store in dict
@@ -822,6 +872,26 @@ class Filterer(object):
                 scalars_cp.resize(NVisible, refcheck=False)
                 self.scalarsDict[key] = scalars_cp
     
+    def storeFullVectorsArray(self, NVisible, NVectors, vectorsFull):
+        """
+        Split and resize full vectors array; store in dict
+        
+        Assumes vectorsDict was not modified since we called
+        makeFullVectorsArray.
+        
+        """
+        if NVectors > 0:
+            self.logger.debug("Storing full vectors array in dict")
+            vectorsList = np.split(vectorsFull, NVectors)
+            keys = self.scalarsDict.keys()
+            
+            for key, vectors in itertools.izip(keys, vectorsList):
+                self.logger.debug("  Storing '%s' vectors", key)
+                assert len(vectors) >= NVisible, "ERROR: vectors (%s) smaller than expected (%d < %d)" % (key, len(vectors), NVisible)
+                vectors_cp = copy.copy(vectors)
+                vectors_cp.resize((NVisible, 3), refcheck=False)
+                self.vectorsDict[key] = vectors_cp
+    
     def filterSpecie(self, settings):
         """
         Filter by specie
@@ -840,10 +910,15 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
-        NVisible = filtering_c.specieFilter(self.visibleAtoms, visSpecArray, self.pipelinePage.inputState.specie, NScalars, fullScalars)
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
+        NVisible = filtering_c.specieFilter(self.visibleAtoms, visSpecArray, self.pipelinePage.inputState.specie, NScalars, fullScalars, 
+                                            NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
 
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -904,14 +979,18 @@ class Filterer(object):
             # old scalars arrays (resize as appropriate)
             NScalars, fullScalars = self.makeFullScalarsArray()
             
+            # full vectors array
+            NVectors, fullVectors = self.makeFullVectorsArray()
+            
             # run displacement filter
             NVisible = filtering_c.displacementFilter(self.visibleAtoms, scalars, inputState.pos, refState.pos, refState.cellDims, 
                                                       self.pipelinePage.PBC, settings.minDisplacement, settings.maxDisplacement, 
                                                       NScalars, fullScalars, settings.filteringEnabled, self.parent.driftCompensation, 
-                                                      self.driftVector)
+                                                      self.driftVector, NVectors, fullVectors)
             
             # update scalars dict
             self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+            self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
             
             # resize visible atoms
             self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -974,12 +1053,16 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
         # run displacement filter
         NVisible = filtering_c.atomIndexFilter(self.visibleAtoms, lattice.atomID, settings.filteringEnabled, settings.minVal, settings.maxVal, 
-                                               NScalars, fullScalars)
+                                               NScalars, fullScalars, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
         
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -994,12 +1077,17 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
         NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
                                           settings.ymax, settings.zmin, settings.zmax, settings.xEnabled, 
-                                          settings.yEnabled, settings.zEnabled, settings.invertSelection, NScalars, fullScalars)
+                                          settings.yEnabled, settings.zEnabled, settings.invertSelection, NScalars, 
+                                          fullScalars, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
 
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -1014,12 +1102,16 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
         NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, settings.xCentre, settings.yCentre, settings.zCentre, 
                                                 settings.radius, lattice.cellDims, self.pipelinePage.PBC, settings.invertSelection, 
-                                                NScalars, fullScalars)
+                                                NScalars, fullScalars, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
 
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -1034,11 +1126,16 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
         NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, settings.x0, settings.y0, settings.z0, 
-                                           settings.xn, settings.yn, settings.zn, settings.invert, NScalars, fullScalars)
+                                           settings.xn, settings.yn, settings.zn, settings.invert, NScalars, fullScalars, 
+                                           NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
 
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -1053,10 +1150,15 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
-        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge, NScalars, fullScalars)
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
+        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge, 
+                                            NScalars, fullScalars, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
 
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -1071,10 +1173,15 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
-        NVisible = filtering_c.KEFilter(self.visibleAtoms, lattice.KE, settings.minKE, settings.maxKE, NScalars, fullScalars)
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
+        NVisible = filtering_c.KEFilter(self.visibleAtoms, lattice.KE, settings.minKE, settings.maxKE, 
+                                        NScalars, fullScalars, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
 
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -1089,10 +1196,15 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
-        NVisible = filtering_c.PEFilter(self.visibleAtoms, lattice.PE, settings.minPE, settings.maxPE, NScalars, fullScalars)
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
+        NVisible = filtering_c.PEFilter(self.visibleAtoms, lattice.PE, settings.minPE, settings.maxPE, 
+                                        NScalars, fullScalars, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
 
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
@@ -1123,7 +1235,8 @@ class Filterer(object):
             
             acna.adaptiveCommonNeighbourAnalysis(visAtoms, inputLattice.pos, acnaArray, inputLattice.minPos, inputLattice.maxPos, 
                                                  inputLattice.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, 
-                                                 settings.acnaMaxBondDistance, counters, 0, structVis, ompNumThreads) 
+                                                 settings.acnaMaxBondDistance, counters, 0, structVis, ompNumThreads, 
+                                                 NVectors, fullVectors) 
             
             # store counters
             d = {}
@@ -1533,14 +1646,18 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
         clusters_c.findClusters(self.visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
-                                minPos, maxPos, minSize, maxSize, result, NScalars, fullScalars)
+                                minPos, maxPos, minSize, maxSize, result, NScalars, fullScalars, NVectors, fullVectors)
         
         NVisible = result[0]
         NClusters = result[1]
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
         
         self.visibleAtoms.resize(NVisible, refcheck=False)
         atomCluster.resize(NVisible, refcheck=False)
@@ -1807,14 +1924,18 @@ class Filterer(object):
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
         
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
         # run displacement filter
         NVisible = filtering_c.coordNumFilter(self.visibleAtoms, inputState.pos, inputState.specie, NSpecies, bondMinArray, bondMaxArray, 
                                               maxBond, inputState.cellDims, self.pipelinePage.PBC, inputState.minPos, inputState.maxPos, 
                                               scalars, filterSettings.minCoordNum, filterSettings.maxCoordNum, NScalars, fullScalars, 
-                                              filterSettings.filteringEnabled)
+                                              filterSettings.filteringEnabled, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
         
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)

@@ -74,7 +74,7 @@ static int compare_two_nebs(const void * a, const void * b)
 static PyObject*
 adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
 {
-    int NVisibleIn, *visibleAtoms, *PBC, NScalars, *counters, filteringEnabled, *structureVisibility;
+    int NVisibleIn, *visibleAtoms, *PBC, NScalars, *counters, filteringEnabled, *structureVisibility, NVectors;
     int OMP_NUM_THREADS;
     double *pos, *scalars, *minPos, *maxPos, *cellDims, *fullScalars, maxBondDistance;
     PyArrayObject *posIn=NULL;
@@ -87,6 +87,7 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     PyArrayObject *maxPosIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
     
     int i, NVisible;
     double *visiblePos, approxBoxWidth, maxSep2;
@@ -95,10 +96,10 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
 /* parse and check arguments from Python */
     
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!iO!dO!iO!i", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!iO!dO!iO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn, 
             &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, 
             &PyArray_Type, &fullScalarsIn, &maxBondDistance, &PyArray_Type, &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn,
-            &OMP_NUM_THREADS))
+            &OMP_NUM_THREADS, &NVectors, &PyArray_Type, &fullVectors))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -131,6 +132,8 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
     if (not_intVector(structureVisibilityIn)) return NULL;
     structureVisibility = pyvector_to_Cptr_int(structureVisibilityIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
     
     /* set number of openmp threads to use */
     omp_set_num_threads(OMP_NUM_THREADS);
@@ -213,6 +216,13 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
                 for (j = 0; j < NScalars; j++)
                 {
                     fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+                }
+                
+                for (j = 0; j < NVectors; j++)
+                {
+                    DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
+                    DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
+                    DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
                 }
             }
         }
