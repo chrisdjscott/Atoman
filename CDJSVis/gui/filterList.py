@@ -257,7 +257,7 @@ class FilterList(QtGui.QWidget):
         
         # vectors options
         self.vectorsOptions = filterListOptions.VectorsOptionsWindow(self.mainWindow, parent=self)
-        self.vectorsOptionsButton = QtGui.QPushButton("Vectors options")
+        self.vectorsOptionsButton = QtGui.QPushButton("Vectors options: None")
         self.vectorsOptionsButton.clicked.connect(self.showVectorsOptions)
         groupLayout.addWidget(self.vectorsOptionsButton)
         

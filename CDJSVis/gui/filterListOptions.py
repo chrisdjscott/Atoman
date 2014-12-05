@@ -1358,9 +1358,11 @@ class VectorsOptionsWindow(QtGui.QDialog):
             if changedItem.vectorsName == self.selectedVectorsName:
                 self.logger.debug("Deselecting vectors: '%s'", self.selectedVectorsName)
                 self.selectedVectorsName = None
+                self.parent.vectorsOptionsButton.setText("Vectors options: None")
         
         else:
             self.selectedVectorsName = changedItem.vectorsName
+            self.parent.vectorsOptionsButton.setText("Vectors options: '{0}'".format(self.selectedVectorsName))
             
             # deselect others
             for i in xrange(self.vectorsList.count()):
