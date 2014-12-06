@@ -64,6 +64,7 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
     
     # looks like we will have to make an actor for each atom
     # NOT IDEAL!
+    actorsDictLocal = {}
     for visIndex, index in enumerate(visibleAtoms):
         # check we are working with the same atom!
         inp_pos = inputState.atomPos(index)
@@ -120,7 +121,7 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         actor.SetMapper(mapper)
         actor.GetProperty().SetOpacity(voronoiOptions.opacity)
         
-        actorsCollection.AddItem(actor)
+        actorsDictLocal["Voronoi cell {0}".format(visIndex)]
         
         # colour for povray file
         rgb = np.empty(3, np.float64)
@@ -136,6 +137,8 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         pos = pos.flatten()
         facets = clusters.findConvexHullFacets(len(pos) / 3, pos)
         writePOVRayVoroVolumeTriangles(facets, pos, povfile, voronoiOptions, rgb)
+    
+    actorsDict["Voronoi cells"] = actorsDictLocal
     
     renderVoroTime = time.time() - renderVoroTime
     

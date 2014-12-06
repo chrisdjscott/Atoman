@@ -1442,3 +1442,92 @@ class VectorsListItem(QtGui.QListWidgetItem):
         
         # set text
         self.setText(self.vectorsName)
+
+################################################################################
+
+class ActorsVisibilityWindow(QtGui.QDialog):
+    """
+    Actors visibility options
+    
+    """
+    def __init__(self, mainWindow, parent=None):
+        super(ActorsVisibilityWindow, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
+        self.parent = parent
+        
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.setWindowTitle("Actors visibility")
+#         self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        
+        self.mainWindow = mainWindow
+        
+        # logger
+        self.logger = logging.getLogger(__name__+".ActorsVisibilityWindow")
+        
+        # options
+        
+        
+        # layout
+        layout = QtGui.QFormLayout(self)
+        self.setLayout(layout)
+        
+        # draw vectors list widget
+        self.tree = QtGui.QTreeWidget()
+        self.tree.setColumnCount(1)
+        self.tree.itemChanged.connect(self.itemChanged)
+        self.tree.setHeaderLabel("Actors")
+        layout.addRow(self.tree)
+            
+    def itemChanged(self, item, column):
+        """
+        Item has changed.
+        
+        """
+        print "List item changed...", item, column
+    
+    def refresh(self, actorsDict):
+        """
+        Refresh actor visibility options
+        
+        Should be called whenever the filters are run
+        
+        """
+        inputState = self.parent.filterTab.inputState
+        if inputState is None:
+            return
+        
+        self.logger.debug("Refreshing actor visibility options")
+        
+        # clear the tree
+        self.tree.clear()
+        
+        # populate
+        for key, val in actorsDict.iteritems():
+            if isinstance(val, dict):
+                parent = QtGui.QTreeWidgetItem(self.tree)
+                parent.setText(0, key)
+                parent.setFlags(parent.flags() | QtCore.Qt.ItemIsUserCheckable)
+                parent.setFlags(parent.flags() & ~QtCore.Qt.ItemIsSelectable)
+                parent.setCheckState(0, QtCore.Qt.Checked)
+                
+                for actorName, actor in val.iteritems():
+                    item = QtGui.QTreeWidgetItem(parent)
+                    item.setText(0, actorName)
+                    item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
+                    item.setCheckState(0, QtCore.Qt.Checked)
+            
+            else:
+                actorName = key
+                actor = val
+                
+                item = QtGui.QTreeWidgetItem(self.tree)
+                item.setText(0, actorName)
+                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
+                item.setCheckState(0, QtCore.Qt.Checked)
+        
+        

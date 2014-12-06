@@ -261,6 +261,12 @@ class FilterList(QtGui.QWidget):
         self.vectorsOptionsButton.clicked.connect(self.showVectorsOptions)
         groupLayout.addWidget(self.vectorsOptionsButton)
         
+        # actor visibility
+        self.actorsOptions = filterListOptions.ActorsVisibilityWindow(self.mainWindow, parent=self)
+        self.actorsOptionsButton = QtGui.QPushButton("Actors options")
+        self.actorsOptionsButton.clicked.connect(self.showActorsOptions)
+        groupLayout.addWidget(self.actorsOptionsButton)
+        
         self.filterListLayout.addWidget(extraOptionsGroupBox)
         
         # the filterer (does the filtering)
@@ -406,6 +412,14 @@ class FilterList(QtGui.QWidget):
         """
         self.vectorsOptions.hide()
         self.vectorsOptions.show()
+    
+    def showActorsOptions(self):
+        """
+        Show the actors options window.
+        
+        """
+        self.actorsOptions.hide()
+        self.actorsOptions.show()
     
     def showVoronoiOptions(self):
         """
