@@ -1119,24 +1119,41 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     atomsGlyphSource.SetRadius(1.0)
     
     # glyph
-    atomsGlyph = vtk.vtkGlyph3D()
-    if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
-        atomsGlyph.SetSource(atomsGlyphSource.GetOutput())
-        atomsGlyph.SetInput(atomsPolyData)
-    else:
-        atomsGlyph.SetSourceConnection(atomsGlyphSource.GetOutputPort())
-        atomsGlyph.SetInputData(atomsPolyData)
-    atomsGlyph.SetScaleFactor(displayOptions.atomScaleFactor)
-    atomsGlyph.SetScaleModeToScaleByScalar()
-    atomsGlyph.ClampingOff()
+#     atomsGlyph = vtk.vtkGlyph3D()
+#     if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+#         atomsGlyph.SetSource(atomsGlyphSource.GetOutput())
+#         atomsGlyph.SetInput(atomsPolyData)
+#     else:
+#         atomsGlyph.SetSourceConnection(atomsGlyphSource.GetOutputPort())
+#         atomsGlyph.SetInputData(atomsPolyData)
+#     atomsGlyph.SetScaleFactor(displayOptions.atomScaleFactor)
+#     atomsGlyph.SetScaleModeToScaleByScalar()
+#     atomsGlyph.ClampingOff()
+#      
+#     # mapper
+#     atomsMapper = vtk.vtkPolyDataMapper()
+#     atomsMapper.SetInputConnection(atomsGlyph.GetOutputPort())
+#     atomsMapper.SetLookupTable(lut)
+#     atomsMapper.SetScalarModeToUsePointFieldData()
+#     atomsMapper.SelectColorArray("colours")
+#     setMapperScalarRange(atomsMapper, colouringOptions, NSpecies)
     
-    # mapper
-    atomsMapper = vtk.vtkPolyDataMapper()
-    atomsMapper.SetInputConnection(atomsGlyph.GetOutputPort())
-    atomsMapper.SetLookupTable(lut)
-    atomsMapper.SetScalarModeToUsePointFieldData()
-    atomsMapper.SelectColorArray("colours")
-    setMapperScalarRange(atomsMapper, colouringOptions, NSpecies)
+    # glyph mapper
+    glyphMapper = vtk.vtkGlyph3DMapper()
+    if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+        glyphMapper.SetSource(atomsGlyphSource.GetOutput())
+        glyphMapper.SetInput(atomsPolyData)
+    else:
+        glyphMapper.SetSourceConnection(atomsGlyphSource.GetOutputPort())
+        glyphMapper.SetInputData(atomsPolyData)
+    glyphMapper.SetScaleFactor(displayOptions.atomScaleFactor)
+    glyphMapper.SetScaleModeToScaleByMagnitude()
+    glyphMapper.ClampingOff()
+    glyphMapper.SetLookupTable(lut)
+    glyphMapper.SetScalarModeToUsePointFieldData()
+    glyphMapper.SelectColorArray("colours")
+    setMapperScalarRange(glyphMapper, colouringOptions, NSpecies)
+    atomsMapper = glyphMapper
     
     # actor
     atomsActor = vtk.vtkActor()
@@ -1149,6 +1166,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
         
         # vectors
         vects = numpy_support.numpy_to_vtk(vectorsDict[vectorsName], deep=1)
+        vects.SetName("vectors")
         
         # polydata
         arrowPolyData = vtk.vtkPolyData()
@@ -1160,22 +1178,38 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
         arrowSource = vtk.vtkArrowSource()
     
         # glyph
-        arrowGlyph = vtk.vtkGlyph3D()
+#         arrowGlyph = vtk.vtkGlyph3D()
+#         arrowGlyph.OrientOn()
+#         if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+#             arrowGlyph.SetSource(arrowSource.GetOutput())
+#             arrowGlyph.SetInput(arrowPolyData)
+#         else:
+#             arrowGlyph.SetSourceConnection(arrowSource.GetOutputPort())
+#             arrowGlyph.SetInputData(arrowPolyData)
+#         arrowGlyph.SetScaleModeToScaleByVector()
+#         arrowGlyph.SetVectorModeToUseVector()
+#         arrowGlyph.SetColorModeToColorByScalar()
+#          
+#         # mapper
+#         arrowMapper = vtk.vtkPolyDataMapper()
+#         arrowMapper.SetInputConnection(arrowGlyph.GetOutputPort())
+#         arrowMapper.SetLookupTable(lut)
+#         setMapperScalarRange(arrowMapper, colouringOptions, NSpecies)
+        
+        # glyph mapper
+        arrowGlyph = vtk.vtkGlyph3DMapper()
         arrowGlyph.OrientOn()
-        arrowGlyph.SetVectorModeToUseVector()
         if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
             arrowGlyph.SetSource(arrowSource.GetOutput())
             arrowGlyph.SetInput(arrowPolyData)
         else:
             arrowGlyph.SetSourceConnection(arrowSource.GetOutputPort())
             arrowGlyph.SetInputData(arrowPolyData)
-        arrowGlyph.SetScaleModeToScaleByVector()
-        arrowGlyph.SetVectorModeToUseVector()
-        arrowGlyph.SetColorModeToColorByScalar()
-    
-        # mapper
-        arrowMapper = vtk.vtkPolyDataMapper()
-        arrowMapper.SetInputConnection(arrowGlyph.GetOutputPort())
+        arrowGlyph.SetScaleModeToScaleByMagnitude()
+        arrowGlyph.SetScaleArray("vectors")
+        arrowGlyph.SetScalarModeToUsePointFieldData()
+        arrowGlyph.SelectColorArray("colours")
+        arrowMapper = arrowGlyph
         arrowMapper.SetLookupTable(lut)
         setMapperScalarRange(arrowMapper, colouringOptions, NSpecies)
     
