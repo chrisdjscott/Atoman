@@ -1459,13 +1459,13 @@ class ActorsVisibilityWindow(QtGui.QDialog):
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
-        self.setWindowTitle("Actors visibility")
+        self.setWindowTitle("Actors options")
 #         self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
         
         self.mainWindow = mainWindow
         
         # logger
-        self.logger = logging.getLogger(__name__+".ActorsVisibilityWindow")
+        self.logger = logging.getLogger(__name__+".ActorsOptionsWindow")
         
         # defaults
         self.refreshing = False
@@ -1478,7 +1478,7 @@ class ActorsVisibilityWindow(QtGui.QDialog):
         self.tree = QtGui.QTreeWidget()
         self.tree.setColumnCount(1)
         self.tree.itemChanged.connect(self.itemChanged)
-        self.tree.setHeaderLabel("Actors")
+        self.tree.setHeaderLabel("Visibility")
         layout.addRow(self.tree)
     
     def itemChanged(self, item, column):
@@ -1523,6 +1523,35 @@ class ActorsVisibilityWindow(QtGui.QDialog):
                 if parent is not None:
                     parentName = parent.text(0)
                 self.parent.filterer.addActor(item.text(0), parentName=parentName)
+    
+    def addCheckedActors(self):
+        """
+        Add all actors that are checked (but not already added)
+        
+        """
+        it = QtGui.QTreeWidgetItemIterator(self.tree)
+        
+        globalChanges = False
+        while it.value():
+            item = it.value()
+            
+            if item.childCount() == 0:
+                if item.checkState(0) == QtCore.Qt.Checked:
+                    
+                    parent = item.parent()
+                    parentName = None
+                    if parent is not None:
+                        parentName = parent.text(0)
+                    
+                    changes = self.parent.filterer.addActor(item.text(0), parentName=parentName, reinit=False)
+                    
+                    if changes:
+                        globalChanges = True
+            
+            it += 1
+        
+        if globalChanges:
+            self.parent.filterer.reinitialiseRendererWindows()
     
     def refresh(self, actorsDict):
         """

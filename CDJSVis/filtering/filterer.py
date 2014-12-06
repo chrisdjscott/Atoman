@@ -174,7 +174,7 @@ class Filterer(object):
         
         self.hideScalarBar()
     
-    def addActor(self, actorName, parentName=None):
+    def addActor(self, actorName, parentName=None, reinit=True):
         """
         Add individual actor
         
@@ -185,19 +185,22 @@ class Filterer(object):
             d = self.actorsDict
         
         actorObj = d[actorName]
+        changes = False
         if not actorObj.visible:
             self.logger.debug("Adding actor: '%s'", actorName)
             for rw in self.rendererWindows:
                 if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
                     rw.vtkRen.AddActor(actorObj.actor)
+                    changes = True
             
             actorObj.visible = True
-            
-            for rw in self.rendererWindows:
-                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                    rw.vtkRenWinInteract.ReInitialize()
+        
+        if changes and reinit:
+            self.reinitialiseRendererWindows()
+        
+        return changes
     
-    def hideActor(self, actorName, parentName=None):
+    def hideActor(self, actorName, parentName=None, reinit=True):
         """
         Remove individual actor
         
@@ -208,17 +211,29 @@ class Filterer(object):
             d = self.actorsDict
         
         actorObj = d[actorName]
+        changes = False
         if actorObj.visible:
             self.logger.debug("Removing actor: '%s'", actorName)
             for rw in self.rendererWindows:
                 if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
                     rw.vtkRen.RemoveActor(actorObj.actor)
+                    changes = True
             
             actorObj.visible = False
-            
-            for rw in self.rendererWindows:
-                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                    rw.vtkRenWinInteract.ReInitialize()
+        
+        if changes and reinit:
+            self.reinitialiseRendererWindows()
+        
+        return changes
+    
+    def reinitialiseRendererWindows(self):
+        """
+        Reinit renderer windows
+        
+        """
+        for rw in self.rendererWindows:
+            if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                rw.vtkRenWinInteract.ReInitialize()
     
     def addActors(self):
         """

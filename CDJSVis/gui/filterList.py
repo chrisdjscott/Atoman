@@ -750,6 +750,6 @@ class FilterList(QtGui.QWidget):
         else:
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))
             self.visible = True
-            self.filterer.addActors()
+            self.actorsOptions.addCheckedActors()
         
         self.filterTab.refreshOnScreenInfo()
