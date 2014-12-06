@@ -1101,8 +1101,8 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     scalarsArrayVTK = numpy_support.numpy_to_vtk(scalarsArray, deep=1)
     scalarsArrayVTK.SetName("colours")
     
-    # make points array (reshape should not allocate more memory)
-    atomPoints = np.reshape(lattice.pos, (-1, 3))
+    # make points array
+    atomPoints = _rendering.makeVisiblePointsArray(visibleAtoms, lattice.pos)
     atomPointsVTK = vtk.vtkPoints()
     atomPointsVTK.SetData(numpy_support.numpy_to_vtk(atomPoints, deep=1))
     
@@ -1792,4 +1792,6 @@ def getActorsForHullFacets(facets, pos, mainWindow, actorsDict, settings, caller
     actor.GetProperty().SetOpacity(settings.hullOpacity)
     actor.GetProperty().SetColor(settings.hullCol[0], settings.hullCol[1], settings.hullCol[2])
     
-    actorsDict["Hulls - ({0})".format(caller)] = intsActor
+    d = {}
+    
+    actorsDict["Hulls - ({0})".format(caller)] = actor
