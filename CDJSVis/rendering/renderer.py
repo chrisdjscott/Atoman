@@ -1025,12 +1025,6 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     # resolution
     res = setRes(NVisibleForRes, displayOptions)
     
-    # choose correct scalars array
-#     if len(scalarsDict) and False:
-#         scalarsArray = scalarsDict[colouringOptions.currentScalarsKey]
-#     else:
-#         scalarsArray = np.array([], dtype=np.float64)
-    
     # lattice
     lattice = pipelinePage.inputState
     
@@ -1039,14 +1033,6 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     
     # number of species
     NSpecies = len(lattice.specieList)
-    
-    # loop over atoms, setting points and scalars
-    setPointsTime2 = time.time()
-    
-    atomPointsList, atomScalarsList, atomVectorsList, specieCount = getSpecieVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOptions, 
-                                                                                       vectorsDict, vectorsOptions)
-    
-    setPointsTime2 = time.time() - setPointsTime2
     
     # call method to make POV-Ray file (with callback to get rgb?)
     # use class similar to Allocator...
@@ -1083,87 +1069,120 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     if sequencer:
         povFinishedSlot(0, povtime, uniqueId)
     
-    # now loop over species, making actors
-    t1s = []
-    for i in xrange(NSpecies):
-        t1 = time.time()
-        
-        atomsPolyData = vtk.vtkPolyData()
-        atomsPolyData.SetPoints(atomPointsList[i])
-        atomsPolyData.GetPointData().SetScalars(atomScalarsList[i])
-
-        atomsGlyphSource = vtk.vtkSphereSource()
-        atomsGlyphSource.SetRadius(lattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
-        atomsGlyphSource.SetPhiResolution(res)
-        atomsGlyphSource.SetThetaResolution(res)
-
-        atomsGlyph = vtk.vtkGlyph3D()
-        if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
-            atomsGlyph.SetSource(atomsGlyphSource.GetOutput())
-            atomsGlyph.SetInput(atomsPolyData)
+    # make radius array
+    radiusArray = _rendering.makeVisibleRadiusArray(visibleAtoms, lattice.specie, lattice.specieCovalentRadius)
+    radiusArrayVTK = numpy_support.numpy_to_vtk(radiusArray, deep=1)
+    radiusArrayVTK.SetName("radius")
+    
+    # scalar type
+    scalarType = getScalarsType(colouringOptions)
+    
+    # scalars array
+    if scalarType == 5:
+        scalarsArray = scalarsDict[colouringOptions.colourBy]
+    
+    else:
+        if scalarType == 0:
+            scalarsFull = np.asarray(lattice.specie, dtype=np.float64)
+        elif scalarType == 1:
+            scalarsFull = lattice.pos[colouringOptions.heightAxis::3]
+        elif scalarType == 2:
+            scalarsFull = lattice.KE
+        elif scalarType == 3:
+            scalarsFull = lattice.PE
+        elif scalarType == 4:
+            scalarsFull = lattice.charge
         else:
-            atomsGlyph.SetSourceConnection(atomsGlyphSource.GetOutputPort())
-            atomsGlyph.SetInputData(atomsPolyData)
-        atomsGlyph.SetScaleFactor(1.0)
-        atomsGlyph.SetScaleModeToDataScalingOff()
-
-        atomsMapper = vtk.vtkPolyDataMapper()
-        atomsMapper.SetInputConnection(atomsGlyph.GetOutputPort())
-        atomsMapper.SetLookupTable(lut)
-        setMapperScalarRange(atomsMapper, colouringOptions, NSpecies)
-
-        atomsActor = vtk.vtkActor()
-        atomsActor.SetMapper(atomsMapper)
-#         atomsActor.GetProperty().BackfaceCullingOn()
-        actorsDict["Atoms ({0})".format(lattice.specieList[i])] = atomsActor
+            logger.error("Unrecognised scalar type (%d): defaulting to specie", scalarType)
+            scalarsFull = lattice.specie
         
-        t1s.append(time.time() - t1)
+        scalarsArray = _rendering.makeVisibleScalarArray(visibleAtoms, scalarsFull)
+    
+    scalarsArrayVTK = numpy_support.numpy_to_vtk(scalarsArray, deep=1)
+    scalarsArrayVTK.SetName("colours")
+    
+    # make points array (reshape should not allocate more memory)
+    atomPoints = np.reshape(lattice.pos, (-1, 3))
+    atomPointsVTK = vtk.vtkPoints()
+    atomPointsVTK.SetData(numpy_support.numpy_to_vtk(atomPoints, deep=1))
+    
+    # poly data
+    atomsPolyData = vtk.vtkPolyData()
+    atomsPolyData.SetPoints(atomPointsVTK)
+    atomsPolyData.GetPointData().AddArray(scalarsArrayVTK)
+    atomsPolyData.GetPointData().SetScalars(radiusArrayVTK)
+    
+    # glyph source
+    atomsGlyphSource = vtk.vtkSphereSource()
+    atomsGlyphSource.SetPhiResolution(res)
+    atomsGlyphSource.SetThetaResolution(res)
+    atomsGlyphSource.SetRadius(1.0)
+    
+    # glyph
+    atomsGlyph = vtk.vtkGlyph3D()
+    if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+        atomsGlyph.SetSource(atomsGlyphSource.GetOutput())
+        atomsGlyph.SetInput(atomsPolyData)
+    else:
+        atomsGlyph.SetSourceConnection(atomsGlyphSource.GetOutputPort())
+        atomsGlyph.SetInputData(atomsPolyData)
+    atomsGlyph.SetScaleFactor(displayOptions.atomScaleFactor)
+    atomsGlyph.SetScaleModeToScaleByScalar()
+    atomsGlyph.ClampingOff()
+    
+    # mapper
+    atomsMapper = vtk.vtkPolyDataMapper()
+    atomsMapper.SetInputConnection(atomsGlyph.GetOutputPort())
+    atomsMapper.SetLookupTable(lut)
+    atomsMapper.SetScalarModeToUsePointFieldData()
+    atomsMapper.SelectColorArray("colours")
+    setMapperScalarRange(atomsMapper, colouringOptions, NSpecies)
+    
+    # actor
+    atomsActor = vtk.vtkActor()
+    atomsActor.SetMapper(atomsMapper)
+    actorsDict["Atoms"] = atomsActor
+    
+    if vectorsOptions.selectedVectorsName is not None:
+        vectorsName = vectorsOptions.selectedVectorsName
+        logger.debug("Adding arrows for vector data: '%s'", vectorsName)
         
-        if vectorsOptions.selectedVectorsName is not None:
-            vectorsName = vectorsOptions.selectedVectorsName
-            logger.debug("Adding arrows for vector data: '%s'", vectorsName)
-            
-            # vectors array
-            vects = vectorsDict[vectorsName]
-            
-            # TEST ADDING VECTORS
-#             vects = np.random.rand(specieCount[i], 3)
-#             vects *= 4.0
-#             vects -= 2.0
-            
-            # polydata
-            arrowPolyData = vtk.vtkPolyData()
-            arrowPolyData.SetPoints(atomPointsList[i])
-            arrowPolyData.GetPointData().SetScalars(atomScalarsList[i])
-            arrowPolyData.GetPointData().SetVectors(atomVectorsList[i])
-
-            # arrow source
-            arrowSource = vtk.vtkArrowSource()
-
-            # glyph
-            arrowGlyph = vtk.vtkGlyph3D()
-            arrowGlyph.OrientOn()
-            arrowGlyph.SetVectorModeToUseVector()
-            if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
-                arrowGlyph.SetSource(arrowSource.GetOutput())
-                arrowGlyph.SetInput(arrowPolyData)
-            else:
-                arrowGlyph.SetSourceConnection(arrowSource.GetOutputPort())
-                arrowGlyph.SetInputData(arrowPolyData)
-            arrowGlyph.SetScaleModeToScaleByVector()
-            arrowGlyph.SetVectorModeToUseVector()
-            arrowGlyph.SetColorModeToColorByScalar()
-
-            # mapper
-            arrowMapper = vtk.vtkPolyDataMapper()
-            arrowMapper.SetInputConnection(arrowGlyph.GetOutputPort())
-            arrowMapper.SetLookupTable(lut)
-            setMapperScalarRange(arrowMapper, colouringOptions, NSpecies)
-
-            # actor
-            arrowActor = vtk.vtkActor()
-            arrowActor.SetMapper(arrowMapper)
-            actorsDict["Vectors ({0})".format(lattice.specieList[i])] = arrowActor
+        # vectors
+        vects = numpy_support.numpy_to_vtk(vectorsDict[vectorsName], deep=1)
+        
+        # polydata
+        arrowPolyData = vtk.vtkPolyData()
+        arrowPolyData.SetPoints(atomPointsVTK)
+        arrowPolyData.GetPointData().SetScalars(scalarsArrayVTK)
+        arrowPolyData.GetPointData().SetVectors(vects)
+    
+        # arrow source
+        arrowSource = vtk.vtkArrowSource()
+    
+        # glyph
+        arrowGlyph = vtk.vtkGlyph3D()
+        arrowGlyph.OrientOn()
+        arrowGlyph.SetVectorModeToUseVector()
+        if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+            arrowGlyph.SetSource(arrowSource.GetOutput())
+            arrowGlyph.SetInput(arrowPolyData)
+        else:
+            arrowGlyph.SetSourceConnection(arrowSource.GetOutputPort())
+            arrowGlyph.SetInputData(arrowPolyData)
+        arrowGlyph.SetScaleModeToScaleByVector()
+        arrowGlyph.SetVectorModeToUseVector()
+        arrowGlyph.SetColorModeToColorByScalar()
+    
+        # mapper
+        arrowMapper = vtk.vtkPolyDataMapper()
+        arrowMapper.SetInputConnection(arrowGlyph.GetOutputPort())
+        arrowMapper.SetLookupTable(lut)
+        setMapperScalarRange(arrowMapper, colouringOptions, NSpecies)
+    
+        # actor
+        arrowActor = vtk.vtkActor()
+        arrowActor.SetMapper(arrowMapper)
+        actorsDict["Vectors"] = arrowActor
     
     # scalar bar
     scalarBar_white = None
@@ -1174,13 +1193,13 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     
     getActorsTime = time.time() - getActorsTime
     logger.debug("Get actors time: %f s", getActorsTime)
-    logger.debug("  Set points time (new): %f s", povtime + setPointsTime2)
-    logger.debug("    Build spec arrays time: %f s", setPointsTime2)
-    logger.debug("    Write pov atoms time: %f s", povtime)
-    for i, t1 in enumerate(t1s):
-        logger.debug("  Make actors time (%d): %f s", i, t1)
+#     logger.debug("  Set points time (new): %f s", povtime + setPointsTime2)
+#     logger.debug("    Build spec arrays time: %f s", setPointsTime2)
+#     logger.debug("    Write pov atoms time: %f s", povtime)
+#     for i, t1 in enumerate(t1s):
+#         logger.debug("  Make actors time (%d): %f s", i, t1)
     
-    return scalarBar_white, scalarBar_black, specieCount
+    return scalarBar_white, scalarBar_black, lattice.specieCount
 
 ################################################################################
 def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 

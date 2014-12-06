@@ -10,6 +10,8 @@
 
 
 static PyObject* splitVisAtomsBySpecie(PyObject*, PyObject*);
+static PyObject* makeVisibleRadiusArray(PyObject*, PyObject*);
+static PyObject* makeVisibleScalarArray(PyObject*, PyObject*);
 
 
 /*******************************************************************************
@@ -17,6 +19,8 @@ static PyObject* splitVisAtomsBySpecie(PyObject*, PyObject*);
  *******************************************************************************/
 static struct PyMethodDef methods[] = {
     {"splitVisAtomsBySpecie", splitVisAtomsBySpecie, METH_VARARGS, "Create specie pos and scalar arrays"},
+    {"makeVisibleRadiusArray", makeVisibleRadiusArray, METH_VARARGS, "Create radius array for visible atoms"},
+    {"makeVisibleScalarArray", makeVisibleScalarArray, METH_VARARGS, "Create scalars array for visible atoms"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -176,4 +180,86 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
     }
     
     return list;
+}
+
+/*******************************************************************************
+ ** Make radius array for visible atoms
+ *******************************************************************************/
+static PyObject*
+makeVisibleRadiusArray(PyObject *self, PyObject *args)
+{
+    int NVisible;
+    PyArrayObject *visibleAtoms=NULL;
+    PyArrayObject *specie=NULL;
+    PyArrayObject *specieCovalentRadius=NULL;
+
+    int i, numpydims[1];
+    PyArrayObject *radius=NULL;
+
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "O!O!O!", &PyArray_Type, &visibleAtoms, &PyArray_Type, &specie,
+            &PyArray_Type, &specieCovalentRadius))
+        return NULL;
+
+    if (not_intVector(visibleAtoms)) return NULL;
+    NVisible = (int) visibleAtoms->dimensions[0];
+
+    if (not_intVector(specie)) return NULL;
+
+    if (not_doubleVector(specieCovalentRadius)) return NULL;
+
+    /* create radius array */
+    numpydims[0] = NVisible;
+    radius = (PyArrayObject *) PyArray_FromDims(1, numpydims, NPY_FLOAT64);
+
+    /* populate array */
+    for (i = 0; i < NVisible; i++)
+    {
+        int index, specieIndex;
+
+        index = IIND1(visibleAtoms, i);
+        specieIndex = IIND1(specie, index);
+
+        DIND1(radius, i) = DIND1(specieCovalentRadius, specieIndex);
+    }
+
+    PyArray_Return(radius);
+}
+
+/*******************************************************************************
+ ** Make radius array for visible atoms
+ *******************************************************************************/
+static PyObject*
+makeVisibleScalarArray(PyObject *self, PyObject *args)
+{
+    int NVisible;
+    PyArrayObject *visibleAtoms=NULL;
+    PyArrayObject *scalarsFull=NULL;
+
+    int i, numpydims[1];
+    PyArrayObject *scalars=NULL;
+
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "O!O!", &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalarsFull))
+        return NULL;
+
+    if (not_intVector(visibleAtoms)) return NULL;
+    NVisible = (int) visibleAtoms->dimensions[0];
+
+    if (not_doubleVector(scalarsFull)) return NULL;
+
+    /* create radius array */
+    numpydims[0] = NVisible;
+    scalars = (PyArrayObject *) PyArray_FromDims(1, numpydims, NPY_FLOAT64);
+
+    /* populate array */
+    for (i = 0; i < NVisible; i++)
+    {
+        int index;
+
+        index = IIND1(visibleAtoms, i);
+        DIND1(scalars, i) = DIND1(scalarsFull, index);
+    }
+
+    PyArray_Return(scalars);
 }
