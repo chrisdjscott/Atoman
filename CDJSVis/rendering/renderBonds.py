@@ -15,6 +15,7 @@ import numpy as np
 import vtk
 from vtk.util import numpy_support
 
+from . import utils
 from .utils import setupLUT, getScalarsType, setMapperScalarRange
 from .povutils import povrayBond
 
@@ -216,7 +217,7 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsDict, colouringOpt
     actor.GetProperty().SetLineWidth(bondThicknessVTK)
     
     # add to actors collection
-    actorsDict["Bonds"] = actor
+    actorsDict["Bonds"] = utils.ActorObject(actor)
     
     # close pov file
     fpov.close()
@@ -358,7 +359,7 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict
     actor.GetProperty().SetLineWidth(bondThicknessVTK)
     
     # add to actors collection
-    actorsDict["Displacement vectors"] = actor
+    actorsDict["Displacement vectors"] = utils.ActorObject(actor)
     
     # close pov file
     fpov.close()
@@ -500,7 +501,7 @@ def renderTraceVectors2(visibleAtoms, mainWindow, pipelinePage, actorsDict, colo
     actor.GetProperty().SetLineWidth(bondThicknessVTK)
     
     # add to actors collection
-    actorsDict["Trace vectors 2"] = actor
+    actorsDict["Trace vectors 2"] = utils.ActorObject(actor)
     
     # time taken
     renderBondsTime = time.time() - renderBondsTime
@@ -645,7 +646,7 @@ def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict, colou
     actor.GetProperty().SetLineWidth(bondThicknessVTK)
     
     # add to actors collection
-    actorsDict["Trace vectors"] = actor
+    actorsDict["Trace vectors"] = utils.ActorObject(actor)
     
     # close pov file
     fpov.close()

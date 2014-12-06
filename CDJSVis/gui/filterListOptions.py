@@ -1467,8 +1467,8 @@ class ActorsVisibilityWindow(QtGui.QDialog):
         # logger
         self.logger = logging.getLogger(__name__+".ActorsVisibilityWindow")
         
-        # options
-        
+        # defaults
+        self.refreshing = False
         
         # layout
         layout = QtGui.QFormLayout(self)
@@ -1480,13 +1480,49 @@ class ActorsVisibilityWindow(QtGui.QDialog):
         self.tree.itemChanged.connect(self.itemChanged)
         self.tree.setHeaderLabel("Actors")
         layout.addRow(self.tree)
-            
+    
     def itemChanged(self, item, column):
         """
         Item has changed.
         
         """
-        print "List item changed...", item, column
+        if self.refreshing:
+            return
+        
+        #TODO: if child is unchecked, parent should be too
+        #TODO: when all children are checked, parent should be checked too
+        
+        if item.checkState(0) == QtCore.Qt.Unchecked:
+            if item.childCount():
+                # uncheck all children that are checked
+                for i in xrange(item.childCount()):
+                    child = item.child(i)
+                    if child.checkState(0) == QtCore.Qt.Checked:
+                        child.setCheckState(0, QtCore.Qt.Unchecked)
+            
+            else:
+                # hide actor
+                parentName = None
+                parent = item.parent()
+                if parent is not None:
+                    parentName = parent.text(0)
+                self.parent.filterer.hideActor(item.text(0), parentName=parentName)
+        
+        else:
+            if item.childCount():
+                # check all children that aren't checked
+                for i in xrange(item.childCount()):
+                    child = item.child(i)
+                    if child.checkState(0) == QtCore.Qt.Unchecked:
+                        child.setCheckState(0, QtCore.Qt.Checked)
+            
+            else:
+                # show actor
+                parentName = None
+                parent = item.parent()
+                if parent is not None:
+                    parentName = parent.text(0)
+                self.parent.filterer.addActor(item.text(0), parentName=parentName)
     
     def refresh(self, actorsDict):
         """
@@ -1495,43 +1531,44 @@ class ActorsVisibilityWindow(QtGui.QDialog):
         Should be called whenever the filters are run
         
         """
-        inputState = self.parent.filterTab.inputState
-        if inputState is None:
-            return
+        self.refreshing = True
         
-        self.logger.debug("Refreshing actor visibility options")
-        
-        # clear the tree
-        self.tree.clear()
-        
-        # populate
-        for key in sorted(actorsDict.keys()):
-            val = actorsDict[key]
+        try:
+            inputState = self.parent.filterTab.inputState
+            if inputState is None:
+                return
             
-            if isinstance(val, dict):
-                parent = QtGui.QTreeWidgetItem(self.tree)
-                parent.setText(0, key)
-                parent.setFlags(parent.flags() | QtCore.Qt.ItemIsUserCheckable)
-                parent.setFlags(parent.flags() & ~QtCore.Qt.ItemIsSelectable)
-                parent.setCheckState(0, QtCore.Qt.Checked)
+            self.logger.debug("Refreshing actor visibility options")
+            
+            # clear the tree
+            self.tree.clear()
+            
+            # populate
+            for key in sorted(actorsDict.keys()):
+                val = actorsDict[key]
                 
-                for actorName in sorted(val.keys()):
-                    actor = val[actorName]
+                if isinstance(val, dict):
+                    parent = QtGui.QTreeWidgetItem(self.tree)
+                    parent.setText(0, key)
+                    parent.setFlags(parent.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    parent.setFlags(parent.flags() & ~QtCore.Qt.ItemIsSelectable)
+                    parent.setCheckState(0, QtCore.Qt.Checked)
                     
-                    item = QtGui.QTreeWidgetItem(parent)
+                    for actorName in sorted(val.keys()):
+                        item = QtGui.QTreeWidgetItem(parent)
+                        item.setText(0, actorName)
+                        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                        item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
+                        item.setCheckState(0, QtCore.Qt.Checked)
+                
+                else:
+                    actorName = key
+                    
+                    item = QtGui.QTreeWidgetItem(self.tree)
                     item.setText(0, actorName)
                     item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
                     item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
                     item.setCheckState(0, QtCore.Qt.Checked)
-            
-            else:
-                actorName = key
-                actor = val
-                
-                item = QtGui.QTreeWidgetItem(self.tree)
-                item.setText(0, actorName)
-                item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
-                item.setCheckState(0, QtCore.Qt.Checked)
         
-        
+        finally:
+            self.refreshing = False

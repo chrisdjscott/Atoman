@@ -13,6 +13,7 @@ import numpy as np
 import vtk
 
 from ..algebra import vectors
+from . import utils
 from .utils import setupLUT, getScalar, setMapperScalarRange, getScalarsType
 from ..filtering import clusters
 
@@ -121,7 +122,7 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         actor.SetMapper(mapper)
         actor.GetProperty().SetOpacity(voronoiOptions.opacity)
         
-        actorsDictLocal["Voronoi cell {0}".format(visIndex)] = actor
+        actorsDictLocal["Voronoi cell {0}".format(visIndex)] = utils.ActorObject(actor)
         
         # colour for povray file
         rgb = np.empty(3, np.float64)

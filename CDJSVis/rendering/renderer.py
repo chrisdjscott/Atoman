@@ -1158,7 +1158,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     # actor
     atomsActor = vtk.vtkActor()
     atomsActor.SetMapper(atomsMapper)
-    actorsDict["Atoms"] = atomsActor
+    actorsDict["Atoms"] = utils.ActorObject(atomsActor)
     
     if vectorsOptions.selectedVectorsName is not None:
         vectorsName = vectorsOptions.selectedVectorsName
@@ -1216,7 +1216,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
         # actor
         arrowActor = vtk.vtkActor()
         arrowActor.SetMapper(arrowMapper)
-        actorsDict["Vectors"] = arrowActor
+        actorsDict["Vectors"] = utils.ActorObject(arrowMapper)
     
     # scalar bar
     scalarBar_white = None
@@ -1410,7 +1410,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
             
-            actorsDictLocal["Interstitials ({0})".format(inputLattice.specieList[i])] = intsActor
+            actorsDictLocal["Interstitials ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
     
     #----------------------------------------#
     # split interstitial atoms next
@@ -1481,7 +1481,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
             
-            actorsDictLocal["Split ints ({0})".format(inputLattice.specieList[i])] = intsActor
+            actorsDictLocal["Split ints ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
         
         #----------------------------------------#
         # split interstitial vacs next
@@ -1542,7 +1542,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             vacsActor.GetProperty().SetSpecularPower(filterSettings.vacSpecularPower)
             vacsActor.GetProperty().SetOpacity(filterSettings.vacOpacity)
             
-            actorsDictLocal["Split vacs ({0})".format(refLattice.specieList[i])] = vacsActor
+            actorsDictLocal["Split vacs ({0})".format(refLattice.specieList[i])] = utils.ActorObject(vacsActor)
     
     #----------------------------------------#
     # antisites occupying atom
@@ -1600,7 +1600,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
             
-            actorsDictLocal["Antisites occupying ({0})".format(inputLattice.specieList[i])] = intsActor
+            actorsDictLocal["Antisites occupying ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
     
     #----------------------------------------#
     # vacancies
@@ -1664,7 +1664,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             vacsActor.GetProperty().SetSpecularPower(filterSettings.vacSpecularPower)
             vacsActor.GetProperty().SetOpacity(filterSettings.vacOpacity)
             
-            actorsDictLocal["Vacancies ({0})".format(refLattice.specieList[i])] = vacsActor
+            actorsDictLocal["Vacancies ({0})".format(refLattice.specieList[i])] = utils.ActorObject(vacsActor)
     
     #----------------------------------------#
     # antisites
@@ -1732,7 +1732,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             vacsActor = vtk.vtkActor()
             vacsActor.SetMapper(vacsMapper)
             
-            actorsDictLocal["Antisites frames ({0})".format(refLattice.specieList[i])] = vacsActor
+            actorsDictLocal["Antisites frames ({0})".format(refLattice.specieList[i])] = utils.ActorObject(vacsActor)
     
     actorsDict["Defects"] = actorsDictLocal
     
@@ -1803,4 +1803,4 @@ def getActorsForHullFacets(facets, pos, mainWindow, actorsDict, settings, caller
     
     d = {}
     
-    actorsDict["Hulls - ({0})".format(caller)] = actor
+    actorsDict["Hulls - ({0})".format(caller)] = utils.ActorObject(actor)

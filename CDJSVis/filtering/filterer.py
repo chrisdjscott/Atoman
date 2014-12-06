@@ -149,24 +149,76 @@ class Filterer(object):
         for actorName, val in self.actorsDict.iteritems():
             if isinstance(val, dict):
                 self.logger.debug("Removing actors for: '%s'", actorName)
-                for actorName2, actor in val.iteritems():
-                    self.logger.debug("  Removing actor: '%s'", actorName2)
-                    for rw in self.rendererWindows:
-                        if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                            rw.vtkRen.RemoveActor(actor)
+                for actorName2, actorObj in val.iteritems():
+                    if actorObj.visible:
+                        self.logger.debug("  Removing actor: '%s'", actorName2)
+                        for rw in self.rendererWindows:
+                            if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                                rw.vtkRen.RemoveActor(actorObj.actor)
+                        
+                        actorObj.visible = False
             
             else:
-                actor = val
-                self.logger.debug("Removing actor: '%s'", actorName)
-                for rw in self.rendererWindows:
-                    if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                        rw.vtkRen.RemoveActor(actor)
+                actorObj = val
+                if actorObj.visible:
+                    self.logger.debug("Removing actor: '%s'", actorName)
+                    for rw in self.rendererWindows:
+                        if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                            rw.vtkRen.RemoveActor(actorObj.actor)
+                    
+                    actorObj.visible = False
         
         for rw in self.rendererWindows:
             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
                 rw.vtkRenWinInteract.ReInitialize()
         
         self.hideScalarBar()
+    
+    def addActor(self, actorName, parentName=None):
+        """
+        Add individual actor
+        
+        """
+        if parentName is not None:
+            d = self.actorsDict[parentName]
+        else:
+            d = self.actorsDict
+        
+        actorObj = d[actorName]
+        if not actorObj.visible:
+            self.logger.debug("Adding actor: '%s'", actorName)
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                    rw.vtkRen.AddActor(actorObj.actor)
+            
+            actorObj.visible = True
+            
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                    rw.vtkRenWinInteract.ReInitialize()
+    
+    def hideActor(self, actorName, parentName=None):
+        """
+        Remove individual actor
+        
+        """
+        if parentName is not None:
+            d = self.actorsDict[parentName]
+        else:
+            d = self.actorsDict
+        
+        actorObj = d[actorName]
+        if actorObj.visible:
+            self.logger.debug("Removing actor: '%s'", actorName)
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                    rw.vtkRen.RemoveActor(actorObj.actor)
+            
+            actorObj.visible = False
+            
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                    rw.vtkRenWinInteract.ReInitialize()
     
     def addActors(self):
         """
@@ -176,18 +228,24 @@ class Filterer(object):
         for actorName, val in self.actorsDict.iteritems():
             if isinstance(val, dict):
                 self.logger.debug("Adding actors for: '%s'", actorName)
-                for actorName2, actor in val.iteritems():
-                    self.logger.debug("  Adding actor: '%s'", actorName2)
-                    for rw in self.rendererWindows:
-                        if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                            rw.vtkRen.AddActor(actor)
+                for actorName2, actorObj in val.iteritems():
+                    if not actorObj.visible:
+                        self.logger.debug("  Adding actor: '%s'", actorName2)
+                        for rw in self.rendererWindows:
+                            if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                                rw.vtkRen.AddActor(actorObj.actor)
+                        
+                        actorObj.visible = True
             
             else:
-                actor = val
-                self.logger.debug("Adding actor: '%s'", actorName)
-                for rw in self.rendererWindows:
-                    if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                        rw.vtkRen.AddActor(actor)
+                actorObj = val
+                if not actorObj.visible:
+                    self.logger.debug("Adding actor: '%s'", actorName)
+                    for rw in self.rendererWindows:
+                        if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                            rw.vtkRen.AddActor(actorObj.actor)
+                    
+                    actorObj.visible = True
         
         for rw in self.rendererWindows:
             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
