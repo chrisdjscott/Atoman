@@ -1505,7 +1505,9 @@ class ActorsVisibilityWindow(QtGui.QDialog):
         self.tree.clear()
         
         # populate
-        for key, val in actorsDict.iteritems():
+        for key in sorted(actorsDict.keys()):
+            val = actorsDict[key]
+            
             if isinstance(val, dict):
                 parent = QtGui.QTreeWidgetItem(self.tree)
                 parent.setText(0, key)
@@ -1513,7 +1515,9 @@ class ActorsVisibilityWindow(QtGui.QDialog):
                 parent.setFlags(parent.flags() & ~QtCore.Qt.ItemIsSelectable)
                 parent.setCheckState(0, QtCore.Qt.Checked)
                 
-                for actorName, actor in val.iteritems():
+                for actorName in sorted(val.keys()):
+                    actor = val[actorName]
+                    
                     item = QtGui.QTreeWidgetItem(parent)
                     item.setText(0, actorName)
                     item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)

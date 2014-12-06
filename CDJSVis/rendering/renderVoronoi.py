@@ -121,7 +121,7 @@ def getActorsForVoronoiCells(visibleAtoms, inputState, voronoi, colouringOptions
         actor.SetMapper(mapper)
         actor.GetProperty().SetOpacity(voronoiOptions.opacity)
         
-        actorsDictLocal["Voronoi cell {0}".format(visIndex)]
+        actorsDictLocal["Voronoi cell {0}".format(visIndex)] = actor
         
         # colour for povray file
         rgb = np.empty(3, np.float64)
