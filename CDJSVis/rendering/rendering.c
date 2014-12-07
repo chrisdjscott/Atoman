@@ -225,7 +225,7 @@ makeVisibleRadiusArray(PyObject *self, PyObject *args)
         DIND1(radius, i) = DIND1(specieCovalentRadius, specieIndex);
     }
 
-    PyArray_Return(radius);
+    return PyArray_Return(radius);
 }
 
 /*******************************************************************************
@@ -263,7 +263,7 @@ makeVisibleScalarArray(PyObject *self, PyObject *args)
         DIND1(scalars, i) = DIND1(scalarsFull, index);
     }
 
-    PyArray_Return(scalars);
+    return PyArray_Return(scalars);
 }
 
 /*******************************************************************************
@@ -305,5 +305,5 @@ makeVisiblePointsArray(PyObject *self, PyObject *args)
             DIND2(visiblePos, i, j) = DIND1(pos, index3 + j);
     }
 
-    PyArray_Return(visiblePos);
+    return PyArray_Return(visiblePos);
 }
