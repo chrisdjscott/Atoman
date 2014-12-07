@@ -1445,13 +1445,13 @@ class VectorsListItem(QtGui.QListWidgetItem):
 
 ################################################################################
 
-class ActorsVisibilityWindow(QtGui.QDialog):
+class ActorsOptionsWindow(QtGui.QDialog):
     """
-    Actors visibility options
+    Actors options options
     
     """
     def __init__(self, mainWindow, parent=None):
-        super(ActorsVisibilityWindow, self).__init__(parent)
+        super(ActorsOptionsWindow, self).__init__(parent)
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
@@ -1507,6 +1507,12 @@ class ActorsVisibilityWindow(QtGui.QDialog):
                 if parent is not None:
                     parentName = parent.text(0)
                 self.parent.filterer.hideActor(item.text(0), parentName=parentName)
+                
+                # also uncheck parent
+                if parent is not None and parent.checkState(0) == QtCore.Qt.Checked:
+                    self.refreshing = True
+                    parent.setCheckState(0, QtCore.Qt.Unchecked)
+                    self.refreshing = False
         
         else:
             if item.childCount():
@@ -1523,6 +1529,21 @@ class ActorsVisibilityWindow(QtGui.QDialog):
                 if parent is not None:
                     parentName = parent.text(0)
                 self.parent.filterer.addActor(item.text(0), parentName=parentName)
+                
+                # if all parents children are checked, make sure parent is too
+                if parent is not None and parent.checkState(0) == QtCore.Qt.Unchecked:
+                    # count children
+                    allChecked = True
+                    for i in xrange(parent.childCount()):
+                        child = parent.child(i)
+                        if child.checkState(0) == QtCore.Qt.Unchecked:
+                            allChecked = False
+                            break
+                    
+                    if allChecked:
+                        self.refreshing = True
+                        parent.setCheckState(0, QtCore.Qt.Checked)
+                        self.refreshing = False
     
     def addCheckedActors(self):
         """

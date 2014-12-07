@@ -262,7 +262,7 @@ class FilterList(QtGui.QWidget):
         groupLayout.addWidget(self.vectorsOptionsButton)
         
         # actor visibility
-        self.actorsOptions = filterListOptions.ActorsVisibilityWindow(self.mainWindow, parent=self)
+        self.actorsOptions = filterListOptions.ActorsOptionsWindow(self.mainWindow, parent=self)
         self.actorsOptionsButton = QtGui.QPushButton("Actors options")
         self.actorsOptionsButton.clicked.connect(self.showActorsOptions)
         groupLayout.addWidget(self.actorsOptionsButton)
