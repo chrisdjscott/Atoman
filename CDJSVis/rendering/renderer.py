@@ -1160,6 +1160,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     atomsActor.SetMapper(atomsMapper)
     actorsDict["Atoms"] = utils.ActorObject(atomsActor)
     
+    # check for vectors
     vectorsName = vectorsOptions.selectedVectorsName
     if vectorsName is not None and vectorsName not in vectorsDict:
         logger.warning("Skipping adding vectors because could not find array: '%s'", vectorsName)

@@ -363,6 +363,10 @@ class DisplayOptionsWindow(QtGui.QDialog):
         row.addWidget(storeDefaultButton)
         
         layout.addWidget(resGroupBox)
+        
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        layout.addWidget(buttonBox)
     
     def storeResSettings(self):
         """
@@ -539,6 +543,11 @@ class BondsOptionsWindow(QtGui.QDialog):
         row = QtGui.QHBoxLayout()
         row.addWidget(numSidesSpin)
         numSidesLayout.addLayout(row)
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        layout.addWidget(buttonBox)
         
         # always refresh
         self.refresh()
@@ -857,6 +866,10 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.scalarBarTexts = {}
         
         windowLayout.addWidget(self.stackedWidget)
+        
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        windowLayout.addWidget(buttonBox)
     
     def propertyTypeChanged(self, val):
         """
@@ -1205,6 +1218,10 @@ class TraceOptionsWindow(QtGui.QDialog):
         numSidesLayout.addLayout(row)
         
         windowLayout.addWidget(self.drawVectorsGroup)
+        
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        windowLayout.addWidget(buttonBox)
     
     def numSidesChanged(self, val):
         """
@@ -1315,6 +1332,10 @@ class VectorsOptionsWindow(QtGui.QDialog):
         resSpin.valueChanged.connect(self.vectorResolutionChanged)
         resSpin.setToolTip("Set the resolution of the vectors")
         layout.addRow("Vector resolution", resSpin)
+        
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        layout.addRow(buttonBox)
         
         # always refresh
         self.refresh()
@@ -1480,6 +1501,11 @@ class ActorsOptionsWindow(QtGui.QDialog):
         self.tree.itemChanged.connect(self.itemChanged)
         self.tree.setHeaderLabel("Visibility")
         layout.addRow(self.tree)
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        layout.addRow(buttonBox)
     
     def itemChanged(self, item, column):
         """
