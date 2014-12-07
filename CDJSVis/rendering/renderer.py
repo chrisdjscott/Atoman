@@ -377,7 +377,7 @@ class Renderer(object):
             elif imageFormat == "tif":
                 writer = vtk.vtkTIFFWriter()
             
-            writer.SetInput(w2if.GetOutput())
+            writer.SetInputConnection(w2if.GetOutputPort())
             
             if not overwrite:
                 count = 0
@@ -1160,8 +1160,11 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     atomsActor.SetMapper(atomsMapper)
     actorsDict["Atoms"] = utils.ActorObject(atomsActor)
     
-    if vectorsOptions.selectedVectorsName is not None:
-        vectorsName = vectorsOptions.selectedVectorsName
+    vectorsName = vectorsOptions.selectedVectorsName
+    if vectorsName is not None and vectorsName not in vectorsDict:
+        logger.warning("Skipping adding vectors because could not find array: '%s'", vectorsName)
+    
+    elif vectorsName is not None:
         logger.debug("Adding arrows for vector data: '%s'", vectorsName)
         
         # vectors
@@ -1209,6 +1212,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
         arrowGlyph.SetScaleArray("vectors")
         arrowGlyph.SetScalarModeToUsePointFieldData()
         arrowGlyph.SelectColorArray("colours")
+        arrowGlyph.SetScaleFactor(vectorsOptions.vectorScaleFactor)
         arrowMapper = arrowGlyph
         arrowMapper.SetLookupTable(lut)
         setMapperScalarRange(arrowMapper, colouringOptions, NSpecies)
@@ -1216,7 +1220,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
         # actor
         arrowActor = vtk.vtkActor()
         arrowActor.SetMapper(arrowMapper)
-        actorsDict["Vectors"] = utils.ActorObject(arrowMapper)
+        actorsDict["Vectors"] = utils.ActorObject(arrowActor)
     
     # scalar bar
     scalarBar_white = None

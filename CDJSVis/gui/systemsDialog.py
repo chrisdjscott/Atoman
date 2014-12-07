@@ -524,6 +524,7 @@ class SystemsDialog(QtGui.QDialog):
                 
                 # store on lattice
                 lattice.scalarsDict[scalarName] = scalars
+                lattice.scalarsFiles[scalarName] = filename
                 
                 self.logger.info("Added '%s' scalars to '%s'", scalarName, item.displayName)
     
@@ -616,6 +617,7 @@ class SystemsDialog(QtGui.QDialog):
                 
                 # store on lattice
                 lattice.vectorsDict[vectorName] = vectors
+                lattice.vectorsFiles[vectorName] = filename
                 
                 self.logger.info("Added '%s' vectors to '%s'", vectorName, item.displayName)
         
