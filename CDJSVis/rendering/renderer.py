@@ -1141,11 +1141,10 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     # glyph mapper
     glyphMapper = vtk.vtkGlyph3DMapper()
     if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
-        glyphMapper.SetSource(atomsGlyphSource.GetOutput())
-        glyphMapper.SetInput(atomsPolyData)
+        glyphMapper.SetInputConnection(atomsPolyData.GetProducerPort())
     else:
-        glyphMapper.SetSourceConnection(atomsGlyphSource.GetOutputPort())
         glyphMapper.SetInputData(atomsPolyData)
+    glyphMapper.SetSourceConnection(atomsGlyphSource.GetOutputPort())
     glyphMapper.SetScaleFactor(displayOptions.atomScaleFactor)
     glyphMapper.SetScaleModeToScaleByMagnitude()
     glyphMapper.ClampingOff()
@@ -1204,11 +1203,10 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
         arrowGlyph = vtk.vtkGlyph3DMapper()
         arrowGlyph.OrientOn()
         if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
-            arrowGlyph.SetSource(arrowSource.GetOutput())
-            arrowGlyph.SetInput(arrowPolyData)
+            arrowGlyph.SetInputConnection(arrowPolyData.GetProducerPort())
         else:
-            arrowGlyph.SetSourceConnection(arrowSource.GetOutputPort())
             arrowGlyph.SetInputData(arrowPolyData)
+        arrowGlyph.SetSourceConnection(arrowSource.GetOutputPort())
         arrowGlyph.SetScaleModeToScaleByMagnitude()
         arrowGlyph.SetScaleArray("vectors")
         arrowGlyph.SetScalarModeToUsePointFieldData()
