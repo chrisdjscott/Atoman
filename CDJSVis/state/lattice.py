@@ -183,7 +183,7 @@ class Lattice(object):
         rgbnew[0][2] = rgbtemp[2]            
         self.specieRGB = np.append(self.specieRGB, rgbnew, axis=0)
     
-    def addAtom(self, sym, pos, charge, atomID=None):
+    def addAtom(self, sym, pos, charge, atomID=None, KE=0.0, PE=0.0):
         """
         Add an atom to the lattice
         
@@ -206,8 +206,8 @@ class Lattice(object):
         self.pos = np.append(self.pos, pos)
         self.charge = np.append(self.charge, charge)
 #         self.force = np.append(self.force, np.zeros(3, np.float64))
-        self.KE = np.append(self.KE, 0.0)
-        self.PE = np.append(self.PE, 0.0)
+        self.KE = np.append(self.KE, KE)
+        self.PE = np.append(self.PE, PE)
         
         # wrap positions
         
@@ -228,8 +228,8 @@ class Lattice(object):
         
         self.NAtoms += 1
         
-        logger = logging.getLogger(__name__)
-        logger.warning("Clearing scalars/vectors due to adding atom")
+#         logger = logging.getLogger(__name__)
+#         logger.warning("Clearing scalars/vectors due to adding atom")
         self.scalarsDict = {}
         self.vectorsDict = {}
     
@@ -254,8 +254,8 @@ class Lattice(object):
         self.KE = np.delete(self.KE, index)
         self.PE = np.delete(self.PE, index)
         
-        logger = logging.getLogger(__name__)
-        logger.warning("Clearing scalars/vectors due to adding atom")
+#         logger = logging.getLogger(__name__)
+#         logger.warning("Clearing scalars/vectors due to removing atom")
         self.scalarsDict = {}
         self.vectorsDict = {}
     

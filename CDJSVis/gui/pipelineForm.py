@@ -29,6 +29,7 @@ from . import picker as picker_c
 from . import infoDialogs
 from . import utils
 from ..rendering import highlight
+from . import dialogs
 
 try:
     from .. import resources
@@ -176,6 +177,11 @@ class PipelineForm(QtGui.QWidget):
         
         groupLayout = QtGui.QVBoxLayout(group)
         
+        self.replicateCellButton = QtGui.QPushButton("Replicate cell")
+        self.replicateCellButton.clicked.connect(self.replicateCell)
+        self.replicateCellButton.setToolTip("Replicate in periodic directions")
+        groupLayout.addWidget(self.replicateCellButton)
+        
         self.PBCXCheckBox = QtGui.QCheckBox("x")
         self.PBCXCheckBox.setChecked(1)
         self.PBCYCheckBox = QtGui.QCheckBox("y")
@@ -201,6 +207,68 @@ class PipelineForm(QtGui.QWidget):
         # refresh if ref already loaded
         if self.mainWindow.refLoaded:
             self.refreshAllFilters()
+    
+    def replicateCell(self):
+        """
+        Replicate cell?
+        
+        """
+        self.logger.warning("'Replicate cell' is an experimental feature!")
+        
+        dlg = dialogs.ReplicateCellDialog(self.PBC, parent=self)
+        status = dlg.exec_()
+        
+        if status == QtGui.QDialog.Accepted:
+            print "Replicating cell"
+            
+            repDirs = np.zeros(3, np.int32)
+            replicate = False
+            
+            if dlg.replicateInXCheck.isChecked():
+                repDirs[0] = 1
+                replicate = True
+                self.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
+            
+            if dlg.replicateInYCheck.isChecked():
+                repDirs[1] = 1
+                replicate = True
+                self.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
+            
+            if dlg.replicateInZCheck.isChecked():
+                repDirs[2] = 1
+                replicate = True
+                self.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
+            
+            if replicate:
+                self.logger.warning("Replicating cell: this will modify the current input state everywhere")
+                self.logger.debug("Replicating cell: %r", repDirs)
+                
+                #TODO: write in C
+                lattice = self.inputState
+                numatoms = lattice.NAtoms
+                halfCell = lattice.cellDims / 2.0
+                newpos = np.empty(3, np.float64)
+                cellDims = lattice.cellDims
+                for i in xrange(numatoms):
+                    sym = lattice.atomSym(i)
+                    pos = lattice.atomPos(i)
+                    q = lattice.charge[i]
+                    ke = lattice.KE[i]
+                    pe = lattice.PE[i]
+                    for j in xrange(3):
+                        if repDirs[j]:
+                            if pos[j] < halfCell[j]:
+                                newpos[:] = pos[:]
+                                newpos[j] += cellDims[j]
+                                lattice.addAtom(sym, newpos, q, KE=ke, PE=pe)
+                            
+                            else:
+                                newpos[:] = pos[:]
+                                newpos[j] -= cellDims[j]
+                                lattice.addAtom(sym, newpos, q, KE=ke, PE=pe)
+                
+                # run all filter lists
+                self.runAllFilterLists()
     
     def PBCXChanged(self, val):
         """

@@ -1413,3 +1413,49 @@ class RotateViewPointDialog(QtGui.QDialog):
             renderer.camera.Elevation(angle)
         
         renderer.reinit()
+
+################################################################################
+
+class ReplicateCellDialog(QtGui.QDialog):
+    """
+    Ask user which directions they want to replicate the cell in
+    
+    """
+    def __init__(self, pbc, parent=None):
+        super(ReplicateCellDialog, self).__init__(parent)
+        
+        self.setWindowTitle("Replicate cell options")
+        
+        # layout
+        layout = QtGui.QFormLayout()
+        self.setLayout(layout)
+        
+        # x
+        self.replicateInXCheck = QtGui.QCheckBox()
+        self.replicateInXCheck.setCheckState(QtCore.Qt.Unchecked)
+        self.replicateInXCheck.setToolTip("Replicate the cell in the x direction")
+        if not pbc[0]:
+            self.replicateInXCheck.setEnabled(False)
+        layout.addRow("Replicate in x", self.replicateInXCheck)
+        
+        # y
+        self.replicateInYCheck = QtGui.QCheckBox()
+        self.replicateInYCheck.setCheckState(QtCore.Qt.Unchecked)
+        self.replicateInYCheck.setToolTip("Replicate the cell in the y direction")
+        if not pbc[1]:
+            self.replicateInYCheck.setEnabled(False)
+        layout.addRow("Replicate in y", self.replicateInYCheck)
+        
+        # z
+        self.replicateInZCheck = QtGui.QCheckBox()
+        self.replicateInZCheck.setCheckState(QtCore.Qt.Unchecked)
+        self.replicateInZCheck.setToolTip("Replicate the cell in the z direction")
+        if not pbc[2]:
+            self.replicateInZCheck.setEnabled(False)
+        layout.addRow("Replicate in z", self.replicateInZCheck)
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        layout.addRow(buttonBox)
