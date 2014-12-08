@@ -1179,7 +1179,10 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     
         # arrow source
         arrowSource = vtk.vtkArrowSource()
-    
+        arrowSource.SetShaftResolution(vectorsOptions.vectorResolution)
+        arrowSource.SetTipResolution(vectorsOptions.vectorResolution)
+        arrowSource.Update()
+        
         # glyph
 #         arrowGlyph = vtk.vtkGlyph3D()
 #         arrowGlyph.OrientOn()

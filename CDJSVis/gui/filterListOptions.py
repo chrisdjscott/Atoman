@@ -1255,7 +1255,14 @@ class TraceOptionsWindow(QtGui.QDialog):
 
 class VectorsOptionsWindow(QtGui.QDialog):
     """
-    Vectors options
+    Vectors display options for a filter list.
+    
+    * Vectors that have been loaded onto the current input state are shown in
+      the list. If one of the options is checked the vectors will be displayed
+      by drawing arrows for each of the visible atoms. The size of the arrows
+      is calculated from the magnitude of that atoms component.
+    * Vectors will be scaled by "Scale vector" before being rendered.
+    * "Vector resolution" sets the resolution of the arrows cone and shaft.
     
     """
     def __init__(self, mainWindow, parent=None):
@@ -1304,24 +1311,24 @@ class VectorsOptionsWindow(QtGui.QDialog):
         layout.addRow("Scale vectors", scaleVectorsCheck)
         
         # vtk radius
-        vtkRadiusSpin = QtGui.QDoubleSpinBox()
-        vtkRadiusSpin.setMinimum(0.01)
-        vtkRadiusSpin.setMaximum(2)
-        vtkRadiusSpin.setSingleStep(0.1)
-        vtkRadiusSpin.setValue(self.vectorRadiusVTK)
-        vtkRadiusSpin.valueChanged.connect(self.vtkRadiusChanged)
-        vtkRadiusSpin.setToolTip("Set the radius of the vectors (in the VTK window)")
-        layout.addRow("Vector radius (VTK)", vtkRadiusSpin)
-        
-        # pov
-        povRadiusSpin = QtGui.QDoubleSpinBox()
-        povRadiusSpin.setMinimum(0.01)
-        povRadiusSpin.setMaximum(2)
-        povRadiusSpin.setSingleStep(0.1)
-        povRadiusSpin.setValue(self.vectorRadiusPOV)
-        povRadiusSpin.valueChanged.connect(self.povRadiusChanged)
-        povRadiusSpin.setToolTip("Set the radius of the vectors (when using POV-Ray)")
-        layout.addRow("Vector radius (POV)", povRadiusSpin)
+#         vtkRadiusSpin = QtGui.QDoubleSpinBox()
+#         vtkRadiusSpin.setMinimum(0.01)
+#         vtkRadiusSpin.setMaximum(2)
+#         vtkRadiusSpin.setSingleStep(0.1)
+#         vtkRadiusSpin.setValue(self.vectorRadiusVTK)
+#         vtkRadiusSpin.valueChanged.connect(self.vtkRadiusChanged)
+#         vtkRadiusSpin.setToolTip("Set the radius of the vectors (in the VTK window)")
+#         layout.addRow("Vector radius (VTK)", vtkRadiusSpin)
+#         
+#         # pov
+#         povRadiusSpin = QtGui.QDoubleSpinBox()
+#         povRadiusSpin.setMinimum(0.01)
+#         povRadiusSpin.setMaximum(2)
+#         povRadiusSpin.setSingleStep(0.1)
+#         povRadiusSpin.setValue(self.vectorRadiusPOV)
+#         povRadiusSpin.valueChanged.connect(self.povRadiusChanged)
+#         povRadiusSpin.setToolTip("Set the radius of the vectors (when using POV-Ray)")
+#         layout.addRow("Vector radius (POV)", povRadiusSpin)
         
         # resolution
         resSpin = QtGui.QSpinBox()
@@ -1354,19 +1361,19 @@ class VectorsOptionsWindow(QtGui.QDialog):
         """
         self.vectorResolution = val
     
-    def vtkRadiusChanged(self, val):
-        """
-        VTK radius changed.
-        
-        """
-        self.vectorRadiusVTK = val
-    
-    def povRadiusChanged(self, val):
-        """
-        POV radius changed.
-        
-        """
-        self.vectorRadiusPOV = val
+#     def vtkRadiusChanged(self, val):
+#         """
+#         VTK radius changed.
+#         
+#         """
+#         self.vectorRadiusVTK = val
+#     
+#     def povRadiusChanged(self, val):
+#         """
+#         POV radius changed.
+#         
+#         """
+#         self.vectorRadiusPOV = val
     
     def listItemChanged(self, changedItem):
         """

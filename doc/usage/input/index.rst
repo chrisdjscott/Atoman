@@ -10,3 +10,4 @@ Input
     file_input
     sftp_browser
     lattice_generation
+    vector_scalar_data

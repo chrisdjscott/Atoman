@@ -30,3 +30,8 @@ Trace options
 -------------
 
 .. autoclass:: CDJSVis.gui.filterListOptions.TraceOptionsWindow
+
+Vectors options
+---------------
+
+.. autoclass:: CDJSVis.gui.filterListOptions.VectorsOptionsWindow
