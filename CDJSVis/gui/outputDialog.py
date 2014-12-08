@@ -1705,6 +1705,15 @@ class ImageSequenceTab(QtGui.QWidget):
         else:
             filename = pp.filename
         
+        guess = self.guessFilePrefix(filename)
+        
+        self.fileprefix.setText(guess)
+    
+    def guessFilePrefix(self, filename):
+        """
+        Guess the file prefix
+        
+        """
         count = 0
         lim = None
         for i in xrange(len(filename)):
@@ -1722,7 +1731,7 @@ class ImageSequenceTab(QtGui.QWidget):
             
             count += 1
         
-        self.fileprefix.setText(filename[:lim])
+        return filename[:lim]
     
     def startSequencer(self):
         """
@@ -1930,6 +1939,59 @@ class ImageSequenceTab(QtGui.QWidget):
                 if self.flickerFlag:
                     self.eliminateFlicker(state, previousPos, pipelinePage)
                     previousPos = copy.deepcopy(state.pos)
+                
+                # attempt to read any scalars/vectors files
+                for vectorsName, vectorsFile in origInput.vectorsFiles.iteritems():
+                    self.logger.debug("Sequencer checking vectors file: '%s'", vectorsFile)
+                    
+                    vdn, vbn = os.path.split(vectorsFile)
+                    
+                    # guess prefix
+                    guessvfn = self.guessFilePrefix(vbn)
+                    
+                    if guessvfn != vbn:
+                        ext = "." + vbn.split(".")[-1]
+                        if ext == vbn:
+                            ext = ""
+                        
+                        vfn = "%s%s%s" % (guessvfn, self.numberFormat, ext)
+                        if len(vdn):
+                            vfn = os.path.join(vdn, vfn)
+                        
+                        vfn = vfn % i
+                        
+                        self.logger.debug("Looking for vectors file: '%s' (%s)", vfn, os.path.exists(vfn))
+                        if os.path.exists(vfn):
+                            # read vectors file
+                            ok = True
+                            with open(vfn) as f:
+                                vectors = []
+                                try:
+                                    for line in f:
+                                        array = line.split()
+                                        array[0] = float(array[0])
+                                        array[1] = float(array[1])
+                                        array[2] = float(array[2])
+                                        
+                                        vectors.append(array)
+                                
+                                except:
+                                    self.logger.error("Error reading vector file")
+                                    ok = False
+                            
+                            if ok and len(vectors) != state.NAtoms:
+                                self.logger.error("The vector data is the wrong length")
+                                ok = False
+                            
+                            if ok:
+                                # convert to numpy array
+                                vectors = np.asarray(vectors, dtype=np.float64)
+                                assert vectors.shape[0] == state.NAtoms and vectors.shape[1] == 3
+                                
+                                state.vectorsDict[vectorsName] = vectors
+                                state.vectorsFiles[vectorsName] = vfn
+                                
+                                self.logger.debug("Added vectors data (%s) to sequencer lattice", vectorsName)
                 
                 # set input state on current pipeline
                 pipelinePage.inputState = state

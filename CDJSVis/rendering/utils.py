@@ -11,6 +11,16 @@ import logging
 import numpy as np
 import vtk
 
+################################################################################
+
+class ActorObject(object):
+    """
+    Holds a VTK actor and a boolean to say whether it is loaded
+    
+    """
+    def __init__(self, actor):
+        self.actor = actor
+        self.visible = False
 
 ################################################################################
 

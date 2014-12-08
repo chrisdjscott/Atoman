@@ -363,6 +363,10 @@ class DisplayOptionsWindow(QtGui.QDialog):
         row.addWidget(storeDefaultButton)
         
         layout.addWidget(resGroupBox)
+        
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        layout.addWidget(buttonBox)
     
     def storeResSettings(self):
         """
@@ -539,6 +543,11 @@ class BondsOptionsWindow(QtGui.QDialog):
         row = QtGui.QHBoxLayout()
         row.addWidget(numSidesSpin)
         numSidesLayout.addLayout(row)
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        layout.addWidget(buttonBox)
         
         # always refresh
         self.refresh()
@@ -857,6 +866,10 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.scalarBarTexts = {}
         
         windowLayout.addWidget(self.stackedWidget)
+        
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        windowLayout.addWidget(buttonBox)
     
     def propertyTypeChanged(self, val):
         """
@@ -1205,6 +1218,10 @@ class TraceOptionsWindow(QtGui.QDialog):
         numSidesLayout.addLayout(row)
         
         windowLayout.addWidget(self.drawVectorsGroup)
+        
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        windowLayout.addWidget(buttonBox)
     
     def numSidesChanged(self, val):
         """
@@ -1316,6 +1333,10 @@ class VectorsOptionsWindow(QtGui.QDialog):
         resSpin.setToolTip("Set the resolution of the vectors")
         layout.addRow("Vector resolution", resSpin)
         
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        layout.addRow(buttonBox)
+        
         # always refresh
         self.refresh()
     
@@ -1358,9 +1379,11 @@ class VectorsOptionsWindow(QtGui.QDialog):
             if changedItem.vectorsName == self.selectedVectorsName:
                 self.logger.debug("Deselecting vectors: '%s'", self.selectedVectorsName)
                 self.selectedVectorsName = None
+                self.parent.vectorsOptionsButton.setText("Vectors options: None")
         
         else:
             self.selectedVectorsName = changedItem.vectorsName
+            self.parent.vectorsOptionsButton.setText("Vectors options: '{0}'".format(self.selectedVectorsName))
             
             # deselect others
             for i in xrange(self.vectorsList.count()):
@@ -1440,3 +1463,188 @@ class VectorsListItem(QtGui.QListWidgetItem):
         
         # set text
         self.setText(self.vectorsName)
+
+################################################################################
+
+class ActorsOptionsWindow(QtGui.QDialog):
+    """
+    Actors options options
+    
+    """
+    def __init__(self, mainWindow, parent=None):
+        super(ActorsOptionsWindow, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        
+        self.parent = parent
+        
+        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        
+        self.setWindowTitle("Actors options")
+#         self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        
+        self.mainWindow = mainWindow
+        
+        # logger
+        self.logger = logging.getLogger(__name__+".ActorsOptionsWindow")
+        
+        # defaults
+        self.refreshing = False
+        
+        # layout
+        layout = QtGui.QFormLayout(self)
+        self.setLayout(layout)
+        
+        # draw vectors list widget
+        self.tree = QtGui.QTreeWidget()
+        self.tree.setColumnCount(1)
+        self.tree.itemChanged.connect(self.itemChanged)
+        self.tree.setHeaderLabel("Visibility")
+        layout.addRow(self.tree)
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.rejected.connect(self.reject)
+        layout.addRow(buttonBox)
+    
+    def itemChanged(self, item, column):
+        """
+        Item has changed.
+        
+        """
+        if self.refreshing:
+            return
+        
+        #TODO: if child is unchecked, parent should be too
+        #TODO: when all children are checked, parent should be checked too
+        
+        if item.checkState(0) == QtCore.Qt.Unchecked:
+            if item.childCount():
+                # uncheck all children that are checked
+                for i in xrange(item.childCount()):
+                    child = item.child(i)
+                    if child.checkState(0) == QtCore.Qt.Checked:
+                        child.setCheckState(0, QtCore.Qt.Unchecked)
+            
+            else:
+                # hide actor
+                parentName = None
+                parent = item.parent()
+                if parent is not None:
+                    parentName = parent.text(0)
+                self.parent.filterer.hideActor(item.text(0), parentName=parentName)
+                
+                # also uncheck parent
+                if parent is not None and parent.checkState(0) == QtCore.Qt.Checked:
+                    self.refreshing = True
+                    parent.setCheckState(0, QtCore.Qt.Unchecked)
+                    self.refreshing = False
+        
+        else:
+            if item.childCount():
+                # check all children that aren't checked
+                for i in xrange(item.childCount()):
+                    child = item.child(i)
+                    if child.checkState(0) == QtCore.Qt.Unchecked:
+                        child.setCheckState(0, QtCore.Qt.Checked)
+            
+            else:
+                # show actor
+                parentName = None
+                parent = item.parent()
+                if parent is not None:
+                    parentName = parent.text(0)
+                self.parent.filterer.addActor(item.text(0), parentName=parentName)
+                
+                # if all parents children are checked, make sure parent is too
+                if parent is not None and parent.checkState(0) == QtCore.Qt.Unchecked:
+                    # count children
+                    allChecked = True
+                    for i in xrange(parent.childCount()):
+                        child = parent.child(i)
+                        if child.checkState(0) == QtCore.Qt.Unchecked:
+                            allChecked = False
+                            break
+                    
+                    if allChecked:
+                        self.refreshing = True
+                        parent.setCheckState(0, QtCore.Qt.Checked)
+                        self.refreshing = False
+    
+    def addCheckedActors(self):
+        """
+        Add all actors that are checked (but not already added)
+        
+        """
+        it = QtGui.QTreeWidgetItemIterator(self.tree)
+        
+        globalChanges = False
+        while it.value():
+            item = it.value()
+            
+            if item.childCount() == 0:
+                if item.checkState(0) == QtCore.Qt.Checked:
+                    
+                    parent = item.parent()
+                    parentName = None
+                    if parent is not None:
+                        parentName = parent.text(0)
+                    
+                    changes = self.parent.filterer.addActor(item.text(0), parentName=parentName, reinit=False)
+                    
+                    if changes:
+                        globalChanges = True
+            
+            it += 1
+        
+        if globalChanges:
+            self.parent.filterer.reinitialiseRendererWindows()
+    
+    def refresh(self, actorsDict):
+        """
+        Refresh actor visibility options
+        
+        Should be called whenever the filters are run
+        
+        """
+        self.refreshing = True
+        
+        try:
+            inputState = self.parent.filterTab.inputState
+            if inputState is None:
+                return
+            
+            self.logger.debug("Refreshing actor visibility options")
+            
+            # clear the tree
+            self.tree.clear()
+            
+            # populate
+            for key in sorted(actorsDict.keys()):
+                val = actorsDict[key]
+                
+                if isinstance(val, dict):
+                    parent = QtGui.QTreeWidgetItem(self.tree)
+                    parent.setText(0, key)
+                    parent.setFlags(parent.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    parent.setFlags(parent.flags() & ~QtCore.Qt.ItemIsSelectable)
+                    parent.setCheckState(0, QtCore.Qt.Checked)
+                    
+                    for actorName in sorted(val.keys()):
+                        item = QtGui.QTreeWidgetItem(parent)
+                        item.setText(0, actorName)
+                        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                        item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
+                        item.setCheckState(0, QtCore.Qt.Checked)
+                
+                else:
+                    actorName = key
+                    
+                    item = QtGui.QTreeWidgetItem(self.tree)
+                    item.setText(0, actorName)
+                    item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+                    item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
+                    item.setCheckState(0, QtCore.Qt.Checked)
+        
+        finally:
+            self.refreshing = False

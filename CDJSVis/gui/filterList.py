@@ -257,9 +257,15 @@ class FilterList(QtGui.QWidget):
         
         # vectors options
         self.vectorsOptions = filterListOptions.VectorsOptionsWindow(self.mainWindow, parent=self)
-        self.vectorsOptionsButton = QtGui.QPushButton("Vectors options")
+        self.vectorsOptionsButton = QtGui.QPushButton("Vectors options: None")
         self.vectorsOptionsButton.clicked.connect(self.showVectorsOptions)
         groupLayout.addWidget(self.vectorsOptionsButton)
+        
+        # actor visibility
+        self.actorsOptions = filterListOptions.ActorsOptionsWindow(self.mainWindow, parent=self)
+        self.actorsOptionsButton = QtGui.QPushButton("Actors options")
+        self.actorsOptionsButton.clicked.connect(self.showActorsOptions)
+        groupLayout.addWidget(self.actorsOptionsButton)
         
         self.filterListLayout.addWidget(extraOptionsGroupBox)
         
@@ -406,6 +412,14 @@ class FilterList(QtGui.QWidget):
         """
         self.vectorsOptions.hide()
         self.vectorsOptions.show()
+    
+    def showActorsOptions(self):
+        """
+        Show the actors options window.
+        
+        """
+        self.actorsOptions.hide()
+        self.actorsOptions.show()
     
     def showVoronoiOptions(self):
         """
@@ -736,6 +750,6 @@ class FilterList(QtGui.QWidget):
         else:
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))
             self.visible = True
-            self.filterer.addActors()
+            self.actorsOptions.addCheckedActors()
         
         self.filterTab.refreshOnScreenInfo()

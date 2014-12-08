@@ -117,7 +117,9 @@ class Lattice(object):
         self.temperature = None
         
         self.scalarsDict = {}
+        self.scalarsFiles = {}
         self.vectorsDict = {}
+        self.vectorsFiles = {}
     
     def calcTemperature(self, NMoving=None):
         """
