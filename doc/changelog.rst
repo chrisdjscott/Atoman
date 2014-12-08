@@ -5,7 +5,13 @@ Changelog
 **dev**
 
 * Close info windows when clearing a filter list
-* Compatible with VTK 6
+* Compatible with VTK 5 and 6
+* Add ability to load scalar/vector data from a file to a lattice object
+* Loading vector data works with the sequencer if the files are named properly
+* Add option to render vector data (filter list options)
+* Add fine grained actor visibility options to filer lists
+* One actor created for all atoms, not per specie (faster when there are multiple species)
+* Add option to replicate the cell in periodic directions
 
 **v141202**
 
