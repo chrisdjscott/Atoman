@@ -1119,40 +1119,40 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     atomsGlyphSource.SetRadius(1.0)
     
     # glyph
-#     atomsGlyph = vtk.vtkGlyph3D()
-#     if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
-#         atomsGlyph.SetSource(atomsGlyphSource.GetOutput())
-#         atomsGlyph.SetInput(atomsPolyData)
-#     else:
-#         atomsGlyph.SetSourceConnection(atomsGlyphSource.GetOutputPort())
-#         atomsGlyph.SetInputData(atomsPolyData)
-#     atomsGlyph.SetScaleFactor(displayOptions.atomScaleFactor)
-#     atomsGlyph.SetScaleModeToScaleByScalar()
-#     atomsGlyph.ClampingOff()
-#      
-#     # mapper
-#     atomsMapper = vtk.vtkPolyDataMapper()
-#     atomsMapper.SetInputConnection(atomsGlyph.GetOutputPort())
-#     atomsMapper.SetLookupTable(lut)
-#     atomsMapper.SetScalarModeToUsePointFieldData()
-#     atomsMapper.SelectColorArray("colours")
-#     setMapperScalarRange(atomsMapper, colouringOptions, NSpecies)
+    atomsGlyph = vtk.vtkGlyph3D()
+    if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+        atomsGlyph.SetSource(atomsGlyphSource.GetOutput())
+        atomsGlyph.SetInput(atomsPolyData)
+    else:
+        atomsGlyph.SetSourceConnection(atomsGlyphSource.GetOutputPort())
+        atomsGlyph.SetInputData(atomsPolyData)
+    atomsGlyph.SetScaleFactor(displayOptions.atomScaleFactor)
+    atomsGlyph.SetScaleModeToScaleByScalar()
+    atomsGlyph.ClampingOff()
+      
+    # mapper
+    atomsMapper = vtk.vtkPolyDataMapper()
+    atomsMapper.SetInputConnection(atomsGlyph.GetOutputPort())
+    atomsMapper.SetLookupTable(lut)
+    atomsMapper.SetScalarModeToUsePointFieldData()
+    atomsMapper.SelectColorArray("colours")
+    setMapperScalarRange(atomsMapper, colouringOptions, NSpecies)
     
     # glyph mapper
-    glyphMapper = vtk.vtkGlyph3DMapper()
-    if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
-        glyphMapper.SetInputConnection(atomsPolyData.GetProducerPort())
-    else:
-        glyphMapper.SetInputData(atomsPolyData)
-    glyphMapper.SetSourceConnection(atomsGlyphSource.GetOutputPort())
-    glyphMapper.SetScaleFactor(displayOptions.atomScaleFactor)
-    glyphMapper.SetScaleModeToScaleByMagnitude()
-    glyphMapper.ClampingOff()
-    glyphMapper.SetLookupTable(lut)
-    glyphMapper.SetScalarModeToUsePointFieldData()
-    glyphMapper.SelectColorArray("colours")
-    setMapperScalarRange(glyphMapper, colouringOptions, NSpecies)
-    atomsMapper = glyphMapper
+#     glyphMapper = vtk.vtkGlyph3DMapper()
+#     if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+#         glyphMapper.SetInputConnection(atomsPolyData.GetProducerPort())
+#     else:
+#         glyphMapper.SetInputData(atomsPolyData)
+#     glyphMapper.SetSourceConnection(atomsGlyphSource.GetOutputPort())
+#     glyphMapper.SetScaleFactor(displayOptions.atomScaleFactor)
+#     glyphMapper.SetScaleModeToScaleByMagnitude()
+#     glyphMapper.ClampingOff()
+#     glyphMapper.SetLookupTable(lut)
+#     glyphMapper.SetScalarModeToUsePointFieldData()
+#     glyphMapper.SelectColorArray("colours")
+#     setMapperScalarRange(glyphMapper, colouringOptions, NSpecies)
+#     atomsMapper = glyphMapper
     
     # actor
     atomsActor = vtk.vtkActor()
