@@ -72,7 +72,7 @@ class PipelineForm(QtGui.QWidget):
         self.filename = None
         self.currentRunID = None
         self.abspath = None
-        self.PBC = np.ones(3, np.int32)
+        self.PBC = None
         
         self.analysisPipelineFormHidden = True
         
@@ -464,6 +464,8 @@ class PipelineForm(QtGui.QWidget):
         self.filename = item.displayName
         self.extension = item.extension
         self.abspath = item.abspath
+        self.PBC = state.PBC
+        self.setPBCChecks()
         
         # check ok
         status = self.checkStateChangeOk()
@@ -475,6 +477,15 @@ class PipelineForm(QtGui.QWidget):
         
         # post input loaded
         self.postInputLoaded()
+    
+    def setPBCChecks(self):
+        """
+        Set the PBC checks
+        
+        """
+        self.PBCXCheckBox.setChecked(self.PBC[0])
+        self.PBCYCheckBox.setChecked(self.PBC[1])
+        self.PBCZCheckBox.setChecked(self.PBC[2])
     
     def removeInfoWindows(self):
         """

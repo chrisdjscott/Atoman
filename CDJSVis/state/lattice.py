@@ -52,6 +52,8 @@ class Lattice(object):
         
         self.scalarsDict = {}
         self.vectorsDict = {}
+        
+        self.PBC = np.ones(3, np.int32)
     
     def atomSeparation(self, index1, index2, pbc):
         """
@@ -120,6 +122,8 @@ class Lattice(object):
         self.scalarsFiles = {}
         self.vectorsDict = {}
         self.vectorsFiles = {}
+        
+        self.PBC = np.ones(3, np.int32)
     
     def calcTemperature(self, NMoving=None):
         """
@@ -408,3 +412,5 @@ class Lattice(object):
         
         self.scalarsDict = copy.deepcopy(lattice.scalarsDict)
         self.vectorsDict = copy.deepcopy(lattice.vectorsDict)
+        
+        self.PBC = copy.deepcopy(lattice.PBC)
