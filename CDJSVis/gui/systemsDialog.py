@@ -51,6 +51,7 @@ class GenerateInputForm(GenericForm):
         self.inputTypeCombo.addItem("BCC")
         self.inputTypeCombo.addItem("Fluorite (CaF2)")
         self.inputTypeCombo.addItem("Rock salt (NaCl)")
+        self.inputTypeCombo.addItem("SiC 4H (diamond)")
 #         self.inputTypeCombo.addItem("Pyrochlore")
 #         self.inputTypeCombo.addItem("6H")
         self.inputTypeCombo.currentIndexChanged.connect(self.setWidgetStack)
@@ -85,6 +86,10 @@ class GenerateInputForm(GenericForm):
         # Rock Salt generator
         self.rockSalt_generator = latticeGeneratorForms.RockSaltLatticeGeneratorForm(self, self.mainWindow)
         self.stackedWidget.addWidget(self.rockSalt_generator)
+        
+        # SiC 4H generator
+        self.sic4h_generator = latticeGeneratorForms.SiC4HLatticeGeneratorForm(self, self.mainWindow)
+        self.stackedWidget.addWidget(self.sic4h_generator)
         
         # help icon
         row = self.newRow()

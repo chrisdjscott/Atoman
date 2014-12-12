@@ -17,6 +17,7 @@ from ..lattice_gen import lattice_gen_fcc
 from ..lattice_gen import lattice_gen_bcc
 from ..lattice_gen import lattice_gen_fluorite
 from ..lattice_gen import lattice_gen_rockSalt
+from ..lattice_gen import lattice_gen_sic
 
 try:
     from .. import resources
@@ -630,6 +631,112 @@ class RockSaltLatticeGeneratorForm(GenericLatticeGeneratorForm):
         
         """
         generator = lattice_gen_rockSalt.RockSaltLatticeGenerator()
+        
+        status, lattice = generator.generateLattice(self.generatorArgs)
+        
+        return status, lattice
+
+################################################################################
+
+class SiC4HLatticeGeneratorForm(GenericLatticeGeneratorForm):
+    """
+    SiC 4H lattice generator
+    
+    """
+    def __init__(self, parent, mainWindow):
+        super(SiC4HLatticeGeneratorForm, self).__init__(parent, mainWindow, "CSi 4H lattice generator")
+        
+        self.generatorArgs = lattice_gen_sic.Args()
+        
+        self.add_filename_option()
+        
+        # specie 1
+        row = self.newRow()
+        
+        label = QtGui.QLabel("Specie 1:")
+        row.addWidget(label)
+        
+        self.specie1_text = QtGui.QLineEdit(self.generatorArgs.sym1)
+        self.specie1_text.setFixedWidth(30)
+        self.specie1_text.setMaxLength(2)
+        self.specie1_text.textEdited.connect(self.specie1_text_edited)
+        row.addWidget(self.specie1_text)
+        
+        # charge 1
+        label = QtGui.QLabel("Charge 1:")
+        row.addWidget(label)
+        
+        charge1Spin = QtGui.QDoubleSpinBox()
+        charge1Spin.setMinimum(-99.99)
+        charge1Spin.setValue(self.generatorArgs.charge1)
+        charge1Spin.valueChanged.connect(self.charge1_changed)
+        row.addWidget(charge1Spin)
+        
+        # specie 2
+        row = self.newRow()
+        
+        label = QtGui.QLabel("Specie 2:")
+        row.addWidget(label)
+        
+        self.specie2_text = QtGui.QLineEdit(self.generatorArgs.sym2)
+        self.specie2_text.setFixedWidth(30)
+        self.specie2_text.setMaxLength(2)
+        self.specie2_text.textEdited.connect(self.specie2_text_edited)
+        row.addWidget(self.specie2_text)
+        
+        # charge 1
+        label = QtGui.QLabel("Charge 2:")
+        row.addWidget(label)
+        
+        charge2Spin = QtGui.QDoubleSpinBox()
+        charge2Spin.setMinimum(-99.99)
+        charge2Spin.setValue(self.generatorArgs.charge2)
+        charge2Spin.valueChanged.connect(self.charge2_changed)
+        row.addWidget(charge2Spin)
+        
+        self.add_unit_cell_options()
+        
+        self.add_a0_option()
+        
+        self.add_pbc_options()
+                
+        # generate button
+        self.add_generate_button()
+    
+    def charge1_changed(self, val):
+        """
+        Charge 1 changed
+        
+        """
+        self.generatorArgs.charge1 = val
+    
+    def charge2_changed(self, val):
+        """
+        Charge 2 changed
+        
+        """
+        self.generatorArgs.charge2 = val
+    
+    def specie1_text_edited(self, text):
+        """
+        Specie 1 text edited
+        
+        """
+        self.generatorArgs.sym1 = str(text)
+    
+    def specie2_text_edited(self, text):
+        """
+        Specie 2 text edited
+        
+        """
+        self.generatorArgs.sym2 = str(text)
+    
+    def generateLatticeMain(self):
+        """
+        Generate lattice
+        
+        """
+        generator = lattice_gen_sic.SiC4HLatticeGenerator()
         
         status, lattice = generator.generateLattice(self.generatorArgs)
         
