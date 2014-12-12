@@ -12,6 +12,7 @@ Changelog
 * Add fine grained actor visibility options to filer lists
 * One actor created for all atoms, not per specie (faster when there are multiple species)
 * Add option to replicate the cell in periodic directions
+* Add SiC 4H (diamond) lattice generator
 
 **v141202**
 

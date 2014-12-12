@@ -242,9 +242,10 @@ class Renderer(object):
         Add the axis label
         
         """
-        if self.useNewAxes and not self.axesEnabled:
-            self.axesMarker.SetEnabled(1)
-            self.axesEnabled = True
+        if self.useNewAxes:
+            if not self.axesEnabled:
+                self.axesMarker.SetEnabled(1)
+                self.axesEnabled = True
         
         else:
             ref = self.getRefState()
@@ -257,9 +258,10 @@ class Renderer(object):
         Remove the axis label
         
         """
-        if self.useNewAxes and self.axesEnabled:
-            self.axesMarker.SetEnabled(0)
-            self.axesEnabled = False
+        if self.useNewAxes:
+            if self.axesEnabled:
+                self.axesMarker.SetEnabled(0)
+                self.axesEnabled = False
         
         else:
             self.axes.remove()
