@@ -2,7 +2,7 @@
 Changelog
 =========
 
-**dev**
+**v141212**
 
 * Close info windows when clearing a filter list
 * Compatible with VTK 5 and 6
@@ -13,6 +13,7 @@ Changelog
 * One actor created for all atoms, not per specie (faster when there are multiple species)
 * Add option to replicate the cell in periodic directions
 * Add SiC 4H (diamond) lattice generator
+* Add axes that are always displayed and can be moved around the screen
 
 **v141202**
 
