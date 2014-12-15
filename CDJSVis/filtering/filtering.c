@@ -1180,10 +1180,11 @@ slipFilter(PyObject *self, PyObject *args)
     struct Boxes *boxes;
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!ddiO!iiO!iO!", &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalars, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!ddiO!iiO!iO!O!O!", &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalars, 
             &PyArray_Type, &pos, &PyArray_Type, &refPosOrig, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, 
             &minSlip, &maxSlip, &NScalars, &PyArray_Type, &fullScalars, &filteringEnabled, &driftCompensation, 
-            &PyArray_Type, &driftVector, &NVectors, &PyArray_Type, &fullVectors))
+            &PyArray_Type, &driftVector, &NVectors, &PyArray_Type, &fullVectors, &PyArray_Type, &minPosIn, 
+            &PyArray_Type, &maxPosIn))
         return NULL;
     
     if (not_intVector(visibleAtoms)) return NULL;
