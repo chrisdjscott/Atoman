@@ -25,6 +25,7 @@ static PyObject* voronoiVolumeFilter(PyObject*, PyObject*);
 static PyObject* voronoiNeighboursFilter(PyObject*, PyObject*);
 static PyObject* coordNumFilter(PyObject*, PyObject*);
 static PyObject* displacementFilter(PyObject*, PyObject*);
+static PyObject* slipFilter(PyObject*, PyObject*);
 
 
 /*******************************************************************************
@@ -44,6 +45,7 @@ static struct PyMethodDef methods[] = {
     {"voronoiNeighboursFilter", voronoiNeighboursFilter, METH_VARARGS, "Voronoi neighbours filter"},
     {"coordNumFilter", coordNumFilter, METH_VARARGS, "Coordination number filter"},
     {"displacementFilter", displacementFilter, METH_VARARGS, "Displacement filter"},
+    {"slipFilter", slipFilter, METH_VARARGS, "Slip filter"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -1146,6 +1148,297 @@ atomIndexFilter(PyObject *self, PyObject *args)
         
         visibleAtoms[NVisible++] = index;
     }
+    
+    return Py_BuildValue("i", NVisible);
+}
+
+/*******************************************************************************
+ ** Slip filter
+ *******************************************************************************/
+static PyObject *
+slipFilter(PyObject *self, PyObject *args)
+{
+    // we need: refPos, pos, minPos, maxPos, cellDims, PBC, visibleAtoms
+    int NVisibleIn, *PBC, NScalars, filteringEnabled, driftCompensation, refPosDim, NVectors;
+    double minSlip, maxSlip, *cellDims, *minPos, *maxPos;
+    PyArrayObject *visibleAtoms=NULL;
+    PyArrayObject *refPosOrig=NULL;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *pos=NULL;
+    PyArrayObject *scalars=NULL;
+    PyArrayObject *driftVector=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *fullScalars=NULL;
+    PyArrayObject *fullVectors=NULL;
+    PyArrayObject *minPosIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    
+    int i, NVisible;
+    int *slippedAtoms;
+    double *refPos, *visiblePos, *slipx, *slipy, *slipz;
+    double approxBoxWidth;
+    struct Boxes *boxes;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!ddiO!iiO!iO!", &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalars, 
+            &PyArray_Type, &pos, &PyArray_Type, &refPosOrig, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, 
+            &minSlip, &maxSlip, &NScalars, &PyArray_Type, &fullScalars, &filteringEnabled, &driftCompensation, 
+            &PyArray_Type, &driftVector, &NVectors, &PyArray_Type, &fullVectors))
+        return NULL;
+    
+    if (not_intVector(visibleAtoms)) return NULL;
+    NVisibleIn = (int) visibleAtoms->dimensions[0];
+    
+    if (not_doubleVector(pos)) return NULL;
+    
+    if (not_doubleVector(refPosOrig)) return NULL;
+    refPosDim = (int) refPosOrig->dimensions[0];
+    
+    if (not_doubleVector(scalars)) return NULL;
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_doubleVector(maxPosIn)) return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_doubleVector(minPosIn)) return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
+    
+    if (not_doubleVector(fullScalars)) return NULL;
+    
+    if (not_doubleVector(driftVector)) return NULL;
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
+    /* drift compensation */
+    if (driftCompensation)
+    {
+        refPos = malloc(refPosDim * sizeof(double));
+        if (refPos == NULL)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Could not allocate refPos in slipFilter");
+            return NULL;
+        }
+        
+        for (i = 0; i < refPosDim / 3; i++)
+        {
+            int j, i3;
+            
+            i3 = 3 * i;
+            for (j = 0; j < 3; j++) refPos[i3 + j] = DIND1(refPosOrig, i3 + j) + DIND1(driftVector, j);
+        }
+    }
+    else
+    {
+        refPos = pyvector_to_Cptr_double(refPosOrig);
+    }
+    
+    /* visible pos */
+    visiblePos = malloc(NVisibleIn * sizeof(double));
+    if (visiblePos == NULL)
+    {
+        if (driftCompensation) free(refPos);
+        PyErr_SetString(PyExc_RuntimeError, "Could not allocate visiblePos in slipFilter");
+        return NULL;
+    }
+    for (i = 0; i < NVisibleIn; i++)
+    {
+        int index3, i3;
+        
+        i3 = 3 * i;
+        index3 = IIND1(visibleAtoms, i) * 3;
+        visiblePos[i3    ] = DIND1(pos, index3    );
+        visiblePos[i3 + 1] = DIND1(pos, index3 + 1);
+        visiblePos[i3 + 2] = DIND1(pos, index3 + 2);
+    }
+    
+    /* boxAtoms */
+    approxBoxWidth = 5.0; // detect automatically!!
+    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
+    putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
+    
+    /* free visiblePos (only required for boxing) */
+    free(visiblePos);
+    
+    /* allocate slip arrays */
+    slipx = calloc(NVisibleIn, sizeof(double));
+    if (slipx == NULL);
+    {
+        if (driftCompensation) free(refPos);
+        PyErr_SetString(PyExc_RuntimeError, "Could not allocate slipx in slipFilter");
+        return NULL;
+    }
+    
+    slipy = calloc(NVisibleIn, sizeof(double));
+    if (slipy == NULL);
+    {
+        if (driftCompensation) free(refPos);
+        free(slipx);
+        PyErr_SetString(PyExc_RuntimeError, "Could not allocate slipy in slipFilter");
+        return NULL;
+    }
+    
+    slipz = calloc(NVisibleIn, sizeof(double));
+    if (slipz == NULL);
+    {
+        if (driftCompensation) free(refPos);
+        free(slipx);
+        free(slipy);
+        PyErr_SetString(PyExc_RuntimeError, "Could not allocate slipz in slipFilter");
+        return NULL;
+    }
+    
+    slippedAtoms = calloc(NVisibleIn, sizeof(int));
+    if (slippedAtoms == NULL);
+    {
+        if (driftCompensation) free(refPos);
+        free(slipx);
+        free(slipy);
+        free(slipz);
+        PyErr_SetString(PyExc_RuntimeError, "Could not allocate slippedAtoms in slipFilter");
+        return NULL;
+    }
+    
+    /* loop over visible atoms */
+    for (i = 0; i < NVisibleIn; i++)
+    {
+        int j, index, index3, boxIndex, boxNebList[27];
+        double refxposi, refyposi, refzposi;
+        
+        index = IIND1(visibleAtoms, i);
+        index3 = index * 3;
+        refxposi = DIND1(refPos, index3    );
+        refyposi = DIND1(refPos, index3 + 1);
+        refzposi = DIND1(refPos, index3 + 2);
+        
+        /* find box for ref pos of this visible atom */
+        boxIndex = boxIndexOfAtom(refxposi, refyposi, refzposi, boxes);
+        
+        /* box neighbourhood */
+        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        
+        /* loop over boxes */
+        for (j = 0; j < 27; j++)
+        {
+            int k;
+            
+            boxIndex = boxNebList[j];
+            
+            /* loop over atoms in box */
+            for (k = 0; k < boxes->boxNAtoms[boxIndex]; k++)
+            {
+                int visIndex, index2;
+                
+                visIndex = boxes->boxAtoms[boxIndex][k];
+                index2 = IIND1(visibleAtoms, visIndex);
+                
+                if (index < index2)
+                {
+                    int index23;
+                    double refxposj, refyposj, refzposj, sep2;
+                    
+                    index23 = index2 * 3;
+                    refxposj = refPos[index23    ];
+                    refyposj = refPos[index23 + 1];
+                    refzposj = refPos[index23 + 2];
+                    
+                    /* separation between reference positions */
+                    sep2 = atomicSeparation2(refxposi, refyposi, refzposi, refxposj, refyposj, refzposj,
+                            cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
+                    
+                    /* why 9, should this be an input and/or linked to approxBoxWidth!!?? */
+                    /* we only compare to atoms that were local in the reference */
+                    if (sep2 < 9.0)
+                    {
+                        double sepVeci[3], sepVecj[3];
+                        double dslipx, dslipy, dslipz, slipMag;
+                        
+                        /* separation vectors (input - ref) */
+                        atomSeparationVector(sepVeci, refPos[index3], refPos[index3 + 1], refPos[index3 + 2],
+                                DIND1(pos, index3), DIND1(pos, index3 + 1), DIND1(pos, index3 + 2),
+                                cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
+                        
+                        atomSeparationVector(sepVecj, DIND1(pos, index23), DIND1(pos, index23 + 1), DIND1(pos, index23 + 2),
+                                refPos[index23], refPos[index23 + 1], refPos[index23 + 2], cellDims[0], cellDims[1], cellDims[2], 
+                                PBC[0], PBC[1], PBC[2]);
+                        
+                        /* slip */
+                        dslipx = sepVeci[0] - sepVecj[0];
+                        dslipy = sepVeci[1] - sepVecj[1];
+                        dslipz = sepVeci[2] - sepVecj[2];
+                        
+                        slipMag = dslipx * dslipx + dslipy * dslipy + dslipz * dslipz;
+                        if (slipMag > 0.09) // why 0.09!!??
+                        {
+                            slipx[i] += dslipx;
+                            slipy[i] += dslipy;
+                            slipz[i] += dslipz;
+                            slippedAtoms[i]++;
+                            
+                            slipx[visIndex] += dslipx;
+                            slipy[visIndex] += dslipy;
+                            slipz[visIndex] += dslipz;
+                            slippedAtoms[visIndex]++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /* store slip value */
+    for (i = 0; i < NVisibleIn; i++)
+    {
+        if (slippedAtoms[i])
+        {
+            DIND1(scalars, i) = sqrt(slipx[i] * slipx[i] + slipy[i] * slipy[i] + slipz[i] * slipz[i]) / ((double) slippedAtoms[i]);
+        }
+        else
+        {
+            DIND1(scalars, i) = 0.0;
+        }
+    }
+    
+    /* filtering */
+    if (filteringEnabled)
+    {
+        NVisible = 0;
+        for (i = 0; i < NVisibleIn; i++)
+        {
+            if (DIND1(scalars, i) >= minSlip && DIND1(scalars, i) < maxSlip)
+            {
+                int j;
+                
+                /* handle full scalars array */
+                for (j = 0; j < NScalars; j++)
+                {
+                    DIND1(fullScalars, NVisibleIn * j + NVisible) = DIND1(fullScalars, NVisibleIn * j + i);
+                }
+                
+                /* handle full vectors array */
+                for (j = 0; j < NVectors; j++)
+                {
+                    DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
+                    DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
+                    DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
+                }
+                
+                IIND1(visibleAtoms, NVisible++) = IIND1(visibleAtoms, i);
+            }
+        }
+    }
+    
+    /* free */
+    free(slipx);
+    free(slipy);
+    free(slipz);
+    free(slippedAtoms);
+    if (driftCompensation) free(refPos);
+    else refPos = NULL;
     
     return Py_BuildValue("i", NVisible);
 }
