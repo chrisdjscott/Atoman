@@ -51,16 +51,30 @@ class GenericLatticeReader(object):
         Check if file exists (unzip if required)
         
         """
-        if os.path.exists(filename):
+        if os.path.exists(filename) and (filename.endswith(".gz") or filename.endswith(".bz2")):
+            if filename.endswith(".gz"):
+                filename = filename[:-3]
+                command = 'gzip -dc "%s.gz" > ' % filename
+            
+            elif filename.endswith(".bz2"):
+                filename = filename[:-4]
+                command = 'bzcat -k "%s.bz2" > ' % filename
+            
+            fileLocation = self.tmpLocation
+            command = command + os.path.join(fileLocation, filename)
+            os.system(command)
+            zipFlag = 1
+        
+        elif os.path.exists(filename):
             fileLocation = '.'
             zipFlag = 0
         
         else:
             if os.path.exists(filename + '.bz2'):
-                command = 'bzcat -k "%s.bz2" > ' % (filename)
+                command = 'bzcat -k "%s.bz2" > ' % filename
             
             elif os.path.exists(filename + '.gz'):
-                command = 'gzip -dc "%s.gz" > ' % (filename)
+                command = 'gzip -dc "%s.gz" > ' % filename
                 
             else:
                 return (None, -1)
