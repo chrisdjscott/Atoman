@@ -2,9 +2,10 @@
 Changelog
 =========
 
-**dev**
+**v150105**
 
 * If max index on sequencer is less than min index we auto detect the max
+* SFTP browser and sequencer work with zipped files
 
 **v141212**
 
