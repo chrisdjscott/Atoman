@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* If max index on sequencer is less than min index we auto detect the max
+
 **v141212**
 
 * Close info windows when clearing a filter list

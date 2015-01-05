@@ -1421,7 +1421,7 @@ class ImageSequenceTab(QtGui.QWidget):
         # initial values
         self.numberFormat = "%04d"
         self.minIndex = 0
-        self.maxIndex = 10
+        self.maxIndex = -1
         self.interval = 1
         self.fileprefixText = "guess"
         self.overwrite = False
@@ -1515,10 +1515,11 @@ class ImageSequenceTab(QtGui.QWidget):
         label = QtGui.QLabel("to")
         
         self.maxIndexSpinBox = QtGui.QSpinBox()
-        self.maxIndexSpinBox.setMinimum(1)
+        self.maxIndexSpinBox.setMinimum(-1)
         self.maxIndexSpinBox.setMaximum(99999)
         self.maxIndexSpinBox.setValue(self.maxIndex)
         self.maxIndexSpinBox.valueChanged[int].connect(self.maxIndexChanged)
+        self.maxIndexSpinBox.setToolTip("The max index (inclusive; if less than min index do all we can find)")
         
         label2 = QtGui.QLabel("by")
         
@@ -1745,6 +1746,8 @@ class ImageSequenceTab(QtGui.QWidget):
         Run the sequencer
         
         """
+        self.logger.info("Running sequencer")
+        
         if self.parent.renderType == "POV":
             settings = self.mainWindow.preferences.povrayForm
             povray = utilities.checkForExe(settings.pathToPovray)
@@ -1800,19 +1803,46 @@ class ImageSequenceTab(QtGui.QWidget):
             return
         
         # check last file exists
-        lastFile = fileText % self.maxIndex
-        if sftpBrowser is None:
-            lastFileExists = utilities.checkForFile(lastFile)
+        if self.maxIndex > self.minIndex:
+            lastFile = fileText % self.maxIndex
+            if sftpBrowser is None:
+                lastFileExists = utilities.checkForFile(lastFile)
+            else:
+                rp = os.path.join(os.path.dirname(sftpFile), lastFile)
+                self.logger.debug("Checking last file exists (SFTP): '%s'", rp)
+                lastFileExists = bool(sftpBrowser.checkPathExists(rp)) or bool(sftpBrowser.checkPathExists(rp+".gz")) or bool(sftpBrowser.checkPathExists(rp+".bz2"))
+            
+            if not lastFileExists:
+                self.warnFileNotPresent(lastFile, tag="last")
+                return
+            
+            maxIndex = self.maxIndex
+        
         else:
-            rp = os.path.join(os.path.dirname(sftpFile), lastFile)
-            self.logger.debug("Checking last file exists (SFTP): '%s'", rp)
-            lastFileExists = bool(sftpBrowser.checkPathExists(rp)) or bool(sftpBrowser.checkPathExists(rp+".gz")) or bool(sftpBrowser.checkPathExists(rp+".bz2"))
-        
-        if not lastFileExists:
-            self.warnFileNotPresent(lastFile, tag="last")
-            return
-        
-        self.logger.info("Running sequencer")
+            # find greatest file
+            self.logger.info("Auto-detecting last sequencer file")
+            
+            lastIndex = self.minIndex
+            lastFile = fileText % lastIndex
+            
+            if sftpBrowser is None:
+                def _checkForLastFile(fn):
+                    return utilities.checkForFile(fn)
+            
+            else:
+                def _checkForLastFile(fn):
+                    rp = os.path.join(os.path.dirname(sftpFile), lastFile)
+                    return bool(sftpBrowser.checkPathExists(rp)) or bool(sftpBrowser.checkPathExists(rp+".gz")) or bool(sftpBrowser.checkPathExists(rp+".bz2"))
+            
+            while _checkForLastFile(lastFile):
+                lastIndex += 1
+                lastFile = fileText % lastIndex
+            
+            lastIndex -= 1
+            lastFile = fileText % lastIndex
+            maxIndex = lastIndex
+            
+            self.logger.info("Last file detected as: '%s'", lastFile)
         
         # store current input state
         origInput = copy.deepcopy(self.rendererWindow.getCurrentInputState())
@@ -1873,7 +1903,7 @@ class ImageSequenceTab(QtGui.QWidget):
             saveText2 = saveText + "_2"
         
         # progress dialog
-        NSteps = int((self.maxIndex - self.minIndex) / self.interval) + 1
+        NSteps = int((maxIndex - self.minIndex) / self.interval) + 1
         progDialog = QtGui.QProgressDialog("Running sequencer...", "Cancel", self.minIndex, NSteps)
         progDialog.setWindowModality(QtCore.Qt.WindowModal)
         progDialog.setWindowTitle("Progress")
@@ -1887,7 +1917,7 @@ class ImageSequenceTab(QtGui.QWidget):
         previousPos = None
         try:
             count = 0
-            for i in xrange(self.minIndex, self.maxIndex + self.interval, self.interval):
+            for i in xrange(self.minIndex, maxIndex + self.interval, self.interval):
                 if sftpBrowser is None:
                     currentFile = fileText % i
                     self.logger.info("Current file: '%s'", currentFile)
