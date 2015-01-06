@@ -175,6 +175,7 @@ class LbomdXYZReader(GenericLatticeReader):
         
         self.formatIdentifiers.append([1, 1, 6])
         self.formatIdentifiers.append([1, 1, 7])
+        self.formatIdentifiers.append([1, 1, 9])
         
         self.requiresRef = True
     
@@ -247,6 +248,9 @@ class LbomdXYZReader(GenericLatticeReader):
             
         elif len(array) == 7:
             xyzformat = 1
+        
+        elif len(array) == 9:
+            xyzformat = 2
         
         else:
             return -3, None

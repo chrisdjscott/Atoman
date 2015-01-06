@@ -244,7 +244,6 @@ readLBOMDXYZ(PyObject *self, PyObject *args)
     int i, index, id, NAtoms, stat;
     double simTime, xpos, ypos, zpos;
     double chargetmp, KEtmp, PEtmp;
-//    double xfor, yfor, zfor;
     
     /* parse and check arguments from Python */
 	if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!i", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &posIn, 
@@ -311,6 +310,13 @@ readLBOMDXYZ(PyObject *self, PyObject *args)
             stat = fscanf(INFILE, "%d%lf%lf%lf%lf%lf%lf", &id, &xpos, &ypos, &zpos, &KEtmp, &PEtmp, &chargetmp);
             if (stat != 7) return Py_BuildValue("i", -3);
         }
+        else if (xyzformat == 2)
+        {
+            double xfor, yfor, zfor;
+            
+            stat = fscanf(INFILE, "%d %lf %lf %lf %lf %lf %lf %lf %lf", &id, &xpos, &ypos, &zpos, &KEtmp, &PEtmp, &xfor, &yfor, &zfor);
+            if (stat != 9) return Py_BuildValue("i", -3);
+        }
         
         index = id - 1;
         
@@ -327,12 +333,12 @@ readLBOMDXYZ(PyObject *self, PyObject *args)
         if (xyzformat == 1) charge[index] = chargetmp;
         
         /* max and min positions */
-        if ( xpos > maxPos[0] ) maxPos[0] = xpos;
-        if ( ypos > maxPos[1] ) maxPos[1] = ypos;
-        if ( zpos > maxPos[2] ) maxPos[2] = zpos;
-        if ( xpos < minPos[0] ) minPos[0] = xpos;
-        if ( ypos < minPos[1] ) minPos[1] = ypos;
-        if ( zpos < minPos[2] ) minPos[2] = zpos;
+        if (xpos > maxPos[0]) maxPos[0] = xpos;
+        if (ypos > maxPos[1]) maxPos[1] = ypos;
+        if (zpos > maxPos[2]) maxPos[2] = zpos;
+        if (xpos < minPos[0]) minPos[0] = xpos;
+        if (ypos < minPos[1]) minPos[1] = ypos;
+        if (zpos < minPos[2]) minPos[2] = zpos;
     }
     
     fclose(INFILE);
