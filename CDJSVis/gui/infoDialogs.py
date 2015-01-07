@@ -602,7 +602,7 @@ class AtomInfoWindow(QtGui.QDialog):
     Atom info window.
     
     """
-    def __init__(self, pipelinePage, atomIndex, scalarsDict, filterList, parent=None):
+    def __init__(self, pipelinePage, atomIndex, scalarsDict, vectorsDict, filterList, parent=None):
         super(AtomInfoWindow, self).__init__(parent)
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
@@ -631,27 +631,23 @@ class AtomInfoWindow(QtGui.QDialog):
         
         layout = QtGui.QVBoxLayout()
         
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("Atom: %d" % lattice.atomID[atomIndex]))
-        layout.addLayout(row)
+        listWidget = QtGui.QListWidget(self)
+        listWidget.setMinimumWidth(300)
+        listWidget.setMinimumHeight(175)
+        layout.addWidget(listWidget)
         
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("Specie: %s" % lattice.specieList[lattice.specie[atomIndex]]))
-        layout.addLayout(row)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (lattice.pos[3*atomIndex], lattice.pos[3*atomIndex+1], lattice.pos[3*atomIndex+2])))
-        layout.addLayout(row)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("Charge: %f" % (lattice.charge[atomIndex],)))
-        layout.addLayout(row)
+        listWidget.addItem("Atom: %d" % lattice.atomID[atomIndex])
+        listWidget.addItem("Specie: %s" % lattice.specieList[lattice.specie[atomIndex]])
+        listWidget.addItem("Position: (%f, %f, %f)" % (lattice.pos[3*atomIndex], lattice.pos[3*atomIndex+1], lattice.pos[3*atomIndex+2]))
+        listWidget.addItem("Charge: %f" % lattice.charge[atomIndex])
         
         # add scalars
         for scalarType, scalar in scalarsDict.iteritems():
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("%s: %f" % (scalarType, scalar)))
-            layout.addLayout(row)
+            listWidget.addItem("%s: %f" % (scalarType, scalar))
+        
+        # add vectors
+        for vectorType, vector in vectorsDict.iteritems():
+            listWidget.addItem("%s: (%f, %f, %f)" % (vectorType, vector[0], vector[1], vector[2]))
         
         # add Voronoi neighbour info (if available)
         voro = filterList.filterer.voronoi

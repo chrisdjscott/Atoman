@@ -279,7 +279,7 @@ class LbomdXYZReader(GenericLatticeReader):
         state.scalarsDict["Kinetic energy"] = ke
         state.scalarsDict["Potential energy"] = pe
         if len(velocityArray) == 3 * NAtoms:
-            state.vectorsDict["velocity"] = velocityArray
+            state.vectorsDict["Velocity"] = velocityArray
         
         # set cell dimensions
         state.setDims(refLattice.cellDims)
@@ -362,7 +362,7 @@ class LbomdRefReader(GenericLatticeReader):
         # add KE, PE and force
         state.scalarsDict["Kinetic energy"] = ke
         state.scalarsDict["Potential energy"] = pe
-        state.vectorsDict["force"] = forceArray
+        state.vectorsDict["Force"] = forceArray
         
         # build specie list and counter in lattice object
         NSpecies = 0
