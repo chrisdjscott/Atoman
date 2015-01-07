@@ -276,8 +276,8 @@ class LbomdXYZReader(GenericLatticeReader):
             return status, None
         
         # add KE, PE and velocity (if included)
-        state.scalarsDict["KE"] = ke
-        state.scalarsDict["PE"] = pe
+        state.scalarsDict["Kinetic energy"] = ke
+        state.scalarsDict["Potential energy"] = pe
         if len(velocityArray) == 3 * NAtoms:
             state.vectorsDict["velocity"] = velocityArray
         
@@ -360,8 +360,8 @@ class LbomdRefReader(GenericLatticeReader):
             return status, None
         
         # add KE, PE and force
-        state.scalarsDict["KE"] = ke
-        state.scalarsDict["PE"] = pe
+        state.scalarsDict["Kinetic energy"] = ke
+        state.scalarsDict["Potential energy"] = pe
         state.vectorsDict["force"] = forceArray
         
         # build specie list and counter in lattice object

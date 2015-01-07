@@ -126,13 +126,18 @@ class Lattice(object):
         Calculate temperature in K
         
         """
-        if "KE" not in self.scalarsDict:
+        if "Kinetic energy" in self.scalarsDict:
+            ke = self.scalarsDict["Kinetic energy"]
+        
+        elif "KE" in self.scalarsDict:
+            ke = self.scalarsDict["KE"]
+        
+        else:
             return None
         
         if NMoving is None:
             NMoving = self.NAtoms
         
-        ke = self.scalarsDict["KE"]
         keSum = np.sum(ke)
         
         if keSum == 0:
