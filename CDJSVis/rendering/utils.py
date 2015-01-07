@@ -36,13 +36,8 @@ def getScalarsType(colouringOptions):
     elif colouringOptions.colourBy == "Height":
         scalarType = 1
     
-    elif colouringOptions.colourBy == "Atom property":
-        if colouringOptions.atomPropertyType == "Kinetic energy":
-            scalarType = 2
-        elif colouringOptions.atomPropertyType == "Potential energy":
-            scalarType = 3
-        else:
-            scalarType = 4
+    elif colouringOptions.colourBy == "Charge":
+        scalarType = 4
     
     else:
         scalarType = 5
@@ -91,7 +86,7 @@ def makeScalarBar(lut, colouringOptions, text_colour):
     
     if colouringOptions.colourBy == "Height":
         title = colouringOptions.scalarBarText
-    elif colouringOptions.colourBy == "Atom property":
+    elif colouringOptions.colourBy == "Charge":
         title = str(colouringOptions.scalarBarTextEdit3.text())
     else:
         title = str(colouringOptions.scalarBarTexts[colouringOptions.colourBy].text())
@@ -132,8 +127,8 @@ def setMapperScalarRange(mapper, colouringOptions, NSpecies):
     elif colouringOptions.colourBy == "Height":
         mapper.SetScalarRange(colouringOptions.minVal, colouringOptions.maxVal)
     
-    elif colouringOptions.colourBy == "Atom property":
-        mapper.SetScalarRange(colouringOptions.propertyMinSpin.value(), colouringOptions.propertyMaxSpin.value())
+    elif colouringOptions.colourBy == "Charge":
+        mapper.SetScalarRange(colouringOptions.chargeMinSpin.value(), colouringOptions.chargeMaxSpin.value())
     
     else:
         mapper.SetScalarRange(colouringOptions.scalarMinSpins[colouringOptions.colourBy].value(), 
@@ -152,13 +147,8 @@ def getScalar(colouringOptions, lattice, atomIndex, scalarVal=None):
     elif colouringOptions.colourBy == "Height":
         scalar = lattice.pos[3*atomIndex+colouringOptions.heightAxis]
     
-    elif colouringOptions.colourBy == "Atom property":
-        if colouringOptions.atomPropertyType == "Kinetic energy":
-            scalar = lattice.KE[atomIndex]
-        elif colouringOptions.atomPropertyType == "Potential energy":
-            scalar = lattice.PE[atomIndex]
-        else:
-            scalar = lattice.charge[atomIndex]
+    elif colouringOptions.colourBy == "Charge":
+        scalar = lattice.charge[atomIndex]
     
     elif scalarVal is not None:
         scalar = scalarVal
@@ -202,10 +192,10 @@ def setupLUT(specieList, specieRGB, colouringOptions):
         lut.SetRampToLinear()
         lut.Build()
     
-    elif colouringOptions.colourBy == "Atom property":
+    elif colouringOptions.colourBy == "Charge":
         lut.SetNumberOfColors(1024)
         lut.SetHueRange(0.667,0.0)
-        lut.SetRange(colouringOptions.propertyMinSpin.value(), colouringOptions.propertyMaxSpin.value())    
+        lut.SetRange(colouringOptions.chargeMinSpin.value(), colouringOptions.chargeMaxSpin.value())    
         lut.SetRampToLinear()
         lut.Build()
     

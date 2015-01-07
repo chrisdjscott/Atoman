@@ -914,8 +914,6 @@ class PovRayAtomsWriter(QtCore.QObject):
         specie = lattice.specie
         pos = lattice.pos
         charge = lattice.charge
-        KE = lattice.KE
-        PE = lattice.PE
         
         # scalars type
         scalarsType = getScalarsType(colouringOptions)
@@ -933,10 +931,6 @@ class PovRayAtomsWriter(QtCore.QObject):
                 scalar = specInd
             elif scalarsType == 1:
                 scalar = pos[3*index+colouringOptions.heightAxis]
-            elif scalarsType == 2:
-                scalar = KE[index]
-            elif scalarsType == 3:
-                scalar = PE[index]
             elif scalarsType == 4:
                 scalar = charge[index]
             else:
@@ -984,71 +978,7 @@ def writePovrayAtoms(filename, visibleAtoms, lattice, scalarsDict, colouringOpti
     
     # call C routine to write atoms to file
     output_c.writePOVRAYAtoms(filename, visibleAtoms, lattice.specie, lattice.pos, lattice.specieCovalentRadius, 
-                              lattice.PE, lattice.KE, lattice.charge, scalarsArray, scalarsType, 
-                              colouringOptions.heightAxis, rgbcalc.cfunc)
-
-################################################################################
-
-def getSpecieVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOptions, vectorsDict, vectorsOptions):
-    """
-    Split visible atoms pos/scalar arrays by specie
-    
-    """
-    logger = logging.getLogger(__name__)
-    logger.debug("Creating VTK specie arrays")
-    
-    # specie counter
-    NSpecies = len(lattice.specieList)
-    specieCount = np.zeros(NSpecies, np.int32)
-    
-    # scalar type
-    scalarType = getScalarsType(colouringOptions)
-    
-    # scalars array
-    if scalarType == 5:
-        scalarsArray = scalarsDict[colouringOptions.colourBy]
-    else:
-        scalarsArray = np.array([], dtype=np.float64)
-    
-    if vectorsOptions.selectedVectorsName is not None:
-        vectorsArray = vectorsDict[vectorsOptions.selectedVectorsName] * vectorsOptions.vectorScaleFactor
-    else:
-        vectorsArray = np.array([], dtype=np.float64)
-    
-    # call C lib
-    resultList = _rendering.splitVisAtomsBySpecie(visibleAtoms, NSpecies, lattice.specie, specieCount, lattice.pos, lattice.PE, lattice.KE, 
-                                                  lattice.charge, scalarsArray, scalarType, colouringOptions.heightAxis, 
-                                                  vectorsArray)
-    
-    # check result
-    speciePosArrays = []
-    specieScalarArrays = []
-    specieVectorArrays = []
-    for sposarr, sscalarr, svectarr in resultList:
-        speciePosArrays.append(sposarr)
-        specieScalarArrays.append(sscalarr)
-        if vectorsOptions.selectedVectorsName is not None:
-            specieVectorArrays.append(svectarr)
-    assert len(speciePosArrays) == NSpecies
-    assert len(specieScalarArrays) == NSpecies
-    
-    # make points from numpy array
-    atomPointsList = []
-    atomScalarsList = []
-    atomVectorsList = []
-    for specInd in xrange(NSpecies):
-        specPos = speciePosArrays[specInd]
-        specScalar = specieScalarArrays[specInd]
-        
-        points = vtk.vtkPoints()
-        points.SetData(numpy_support.numpy_to_vtk(specPos, deep=1))
-        atomPointsList.append(points)
-        atomScalarsList.append(numpy_support.numpy_to_vtk(specScalar, deep=1))
-        if vectorsOptions.selectedVectorsName is not None:
-            specVector = specieVectorArrays[specInd]
-            atomVectorsList.append(numpy_support.numpy_to_vtk(specVector, deep=1))
-    
-    return atomPointsList, atomScalarsList, atomVectorsList, specieCount
+                              lattice.charge, scalarsArray, scalarsType, colouringOptions.heightAxis, rgbcalc.cfunc)
 
 ################################################################################
 def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOptions, povFileName, scalarsDict, displayOptions, 
@@ -1132,10 +1062,6 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
             scalarsFull = np.asarray(lattice.specie, dtype=np.float64)
         elif scalarType == 1:
             scalarsFull = lattice.pos[colouringOptions.heightAxis::3]
-        elif scalarType == 2:
-            scalarsFull = lattice.KE
-        elif scalarType == 3:
-            scalarsFull = lattice.PE
         elif scalarType == 4:
             scalarsFull = lattice.charge
         else:

@@ -644,14 +644,6 @@ class AtomInfoWindow(QtGui.QDialog):
         layout.addLayout(row)
         
         row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("PE: %f eV" % (lattice.PE[atomIndex],)))
-        layout.addLayout(row)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("KE: %f eV" % (lattice.KE[atomIndex],)))
-        layout.addLayout(row)
-        
-        row = QtGui.QHBoxLayout()
         row.addWidget(QtGui.QLabel("Charge: %f" % (lattice.charge[atomIndex],)))
         layout.addLayout(row)
         
@@ -908,14 +900,6 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("PE: %f eV" % (inputState.PE[index],)))
-            layout.addLayout(row)
-            
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("KE: %f eV" % (inputState.KE[index],)))
-            layout.addLayout(row)
-            
-            row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("Charge: %f" % (inputState.charge[index],)))
             layout.addLayout(row)
             
@@ -960,14 +944,6 @@ class DefectInfoWindow(QtGui.QDialog):
             
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("    Specie: %s" % inputState.specieList[inputState.specie[index2]]))
-            layout.addLayout(row)
-            
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    PE: %f eV" % (inputState.PE[index2],)))
-            layout.addLayout(row)
-            
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    KE: %f eV" % (inputState.KE[index2],)))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
@@ -1018,14 +994,6 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    PE: %f eV" % (inputState.PE[int1Index],)))
-            layout.addLayout(row)
-            
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    KE: %f eV" % (inputState.KE[int1Index],)))
-            layout.addLayout(row)
-            
-            row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("    Charge: %f" % (inputState.charge[int1Index],)))
             layout.addLayout(row)
             
@@ -1046,14 +1014,6 @@ class DefectInfoWindow(QtGui.QDialog):
             
             row = QtGui.QHBoxLayout()
             row.addWidget(QtGui.QLabel("    Specie: %s" % inputState.specieList[inputState.specie[int2Index]]))
-            layout.addLayout(row)
-            
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    PE: %f eV" % (inputState.PE[int2Index],)))
-            layout.addLayout(row)
-            
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    KE: %f eV" % (inputState.KE[int2Index],)))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()

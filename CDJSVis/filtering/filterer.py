@@ -348,12 +348,6 @@ class Filterer(object):
                 self.onAntisites = onAntisites
                 self.splitInterstitials = splitInterstitials
             
-            elif filterName == "Kinetic energy":
-                self.KEFilter(filterSettings)
-            
-            elif filterName == "Potential energy":
-                self.PEFilter(filterSettings)
-            
             elif filterName == "Charge":
                 self.chargeFilter(filterSettings)
             
@@ -1254,52 +1248,6 @@ class Filterer(object):
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
     
-    def KEFilter(self, settings):
-        """
-        Filter kinetic energy.
-        
-        """
-        lattice = self.pipelinePage.inputState
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        NVisible = filtering_c.KEFilter(self.visibleAtoms, lattice.KE, settings.minKE, settings.maxKE, 
-                                        NScalars, fullScalars, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-    
-    def PEFilter(self, settings):
-        """
-        Filter potential energy.
-        
-        """
-        lattice = self.pipelinePage.inputState
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        NVisible = filtering_c.PEFilter(self.visibleAtoms, lattice.PE, settings.minPE, settings.maxPE, 
-                                        NScalars, fullScalars, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-    
     def pointDefectFilter(self, settings, acnaArray=None):
         """
         Point defects filter
@@ -1316,6 +1264,8 @@ class Filterer(object):
             acnaArray = np.empty(inputLattice.NAtoms, np.float64)
             NScalars = 0
             fullScalars = np.empty(NScalars, np.float64)
+            NVectors = 0
+            fullVectors = np.empty(NVectors, np.float64)
             structVis = np.ones(len(self.knownStructures), np.int32)
             
             # number of threads

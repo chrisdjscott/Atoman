@@ -52,8 +52,6 @@ class FilterList(QtGui.QWidget):
         "Crop box", 
         "Cluster", 
         "Displacement",
-        "Kinetic energy",
-        "Potential energy",
         "Charge",
         "Crop sphere",
         "Slice",

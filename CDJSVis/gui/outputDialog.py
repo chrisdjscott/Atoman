@@ -156,26 +156,6 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
         ppindex = pp.pipelineIndex
         lattice = pp.inputState
         
-        # add PE plot option
-        scalarsArray = lattice.PE
-        if np.min(scalarsArray) == 0 == np.max(scalarsArray):
-            self.logger.debug(" Skipping PE: all zero")
-        else:
-            self.logger.debug(" Adding PE plot")
-            scalarsName = "Potential energy"
-            scalarsID = "%s (%d)" % (scalarsName, ppindex)
-            self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
-        
-        # add KE plot option
-        scalarsArray = lattice.KE
-        if np.min(scalarsArray) == 0 == np.max(scalarsArray):
-            self.logger.debug(" Skipping KE: all zero")
-        else:
-            self.logger.debug(" Adding KE plot")
-            scalarsName = "Kinetic energy"
-            scalarsID = "%s (%d)" % (scalarsName, ppindex)
-            self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
-        
         # add charge plot option
         scalarsArray = lattice.charge
         if np.min(scalarsArray) == 0 == np.max(scalarsArray):
