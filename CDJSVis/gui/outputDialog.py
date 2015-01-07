@@ -238,6 +238,24 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
                 # add
                 self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
             
+            # loop over scalars in latticeScalarsDict on filterer
+            latticeScalarKeys = filterList.pipelinePage.inputState.scalarsDict.keys()
+            for key in latticeScalarKeys:
+                if key in filterList.filterer.latticeScalarsDict:
+                    scalarsArray = filterList.filterer.latticeScalarsDict[key]
+                    self.logger.debug("Using Filterer scalars for '%s'", key)
+                
+                else:
+                    scalarsArray = filterList.pipelinePage.inputState.scalarsDict[key]
+                    self.logger.debug("Using Lattice scalars for '%s'", key)
+            
+                # make unique id
+                scalarsName = key
+                scalarsID = "%s (%s)" % (scalarsName, filterListID)
+                
+                # add
+                self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
+            
             # add cluster size/volume distributions too
             if len(filterList.filterer.clusterList):
                 clusterSizes = []
