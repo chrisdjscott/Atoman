@@ -479,7 +479,7 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
             binWidth = self.binWidth
             
             # min
-            tmp = int(minVal / binWidth)
+            tmp = math.floor(minVal / binWidth)
             assert tmp * binWidth <= minVal and (tmp + 1) * binWidth > minVal
             minVal = tmp * binWidth
             
