@@ -1404,7 +1404,7 @@ class VectorsOptionsWindow(QtGui.QDialog):
             # make this 'and' so that if a lattice is missing one specie we still
             # keep the pair in case it comes back later... 
             if item.vectorsName not in inputState.vectorsDict:
-                self.logger.debug("  Removing vectors option: '%s'", item.name)
+                self.logger.debug("  Removing vectors option: '%s'", item.vectorsName)
                 item = self.vectorsList.takeItem(i)
                 if self.selectedVectorsName == item.vectorsName:
                     self.selectedVectorsName = None
