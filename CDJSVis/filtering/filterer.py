@@ -66,11 +66,11 @@ class Filterer(object):
         self.NInt = 0
         self.NAnt = 0
         self.visibleAtoms = np.empty(0, np.int32)
-        self.visibleSpecieCount = []
-        self.vacancySpecieCount = []
-        self.interstitialSpecieCount = []
-        self.antisiteSpecieCount = []
-        self.splitIntSpecieCount = []
+        self.visibleSpecieCount = np.asarray([], dtype=np.int32)
+        self.vacancySpecieCount = np.asarray([], dtype=np.int32)
+        self.interstitialSpecieCount = np.asarray([], dtype=np.int32)
+        self.antisiteSpecieCount = np.asarray([], dtype=np.int32)
+        self.splitIntSpecieCount = np.asarray([], dtype=np.int32)
         self.vacancies = np.empty(0, np.int32)
         self.interstitials = np.empty(0, np.int32)
         self.antisites = np.empty(0, np.int32)
@@ -93,6 +93,7 @@ class Filterer(object):
         self.actorsOptions = self.parent.actorsOptions
         self.scalarBarAdded = False
         self.scalarsDict = {}
+        self.latticeScalarsDict = {}
         self.vectorsDict = {}
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
@@ -115,6 +116,7 @@ class Filterer(object):
             self.previousPosForTrace = None
         
         self.scalarsDict = {}
+        self.latticeScalarsDict = {}
         self.vectorsDict = {}
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
@@ -289,13 +291,11 @@ class Filterer(object):
             self.NVis = NAtoms
             self.logger.info("%d visible atoms", len(self.visibleAtoms))
             
-            # set initial scalars
-#             self.logger.debug("Adding initial scalars from inputState")
-#             for scalarsName, scalars in inputState.scalarsDict.iteritems():
-#                 self.logger.debug("  Adding '%s' scalars", scalarsName)
-#                 self.scalarsDict[scalarsName] = scalars
-            
-            latticeScalarsOrig = copy.deepcopy(inputState.scalarsDict)
+            # set Lattice scalars
+            self.logger.debug("Adding initial scalars from inputState")
+            for scalarsName, scalars in inputState.scalarsDict.iteritems():
+                self.logger.debug("  Adding '%s' scalars", scalarsName)
+                self.latticeScalarsDict[scalarsName] = copy.deepcopy(scalars)
             
             # set initial vectors
             self.logger.debug("Adding initial vectors from inputState")
@@ -505,9 +505,6 @@ class Filterer(object):
 #             f.close()
         
         self.actorsOptions.refresh(self.actorsDict)
-        
-        if not self.parent.defectFilterSelected:
-            inputState.scalarsDict = latticeScalarsOrig
         
         # time
         runFiltersTime = time.time() - runFiltersTime
@@ -903,9 +900,7 @@ class Filterer(object):
         Combine scalars array into one big array for passing to C
         
         """
-        inputState = self.pipelinePage.inputState
-        
-        self.logger.debug("Making full scalars array (N=%d)", len(self.scalarsDict) + len(inputState.scalarsDict))
+        self.logger.debug("Making full scalars array (N=%d)", len(self.scalarsDict) + len(self.latticeScalarsDict))
         
         scalarsList = []
         for name, scalars in self.scalarsDict.iteritems():
@@ -918,7 +913,7 @@ class Filterer(object):
 #                 f.write("%d %f\n" % tup)
 #             f.close()
         
-        for name, scalars in inputState.scalarsDict.iteritems():
+        for name, scalars in self.latticeScalarsDict.iteritems():
             self.logger.debug("  Adding '%s' scalars (Lattice)", name)
             scalarsList.append(scalars)
             assert len(scalars) == len(self.visibleAtoms), "Wrong length for scalars: '%s' (Lattice)" % name
@@ -974,8 +969,7 @@ class Filterer(object):
             
             # Lattice.scalarsDict
             offset = len(keys)
-            inputState = self.pipelinePage.inputState
-            keys = inputState.scalarsDict.keys()
+            keys = self.latticeScalarsDict.keys()
             for j, key in enumerate(keys):
                 self.logger.debug("  Storing '%s' scalars (Lattice)", key)
                 i = j + offset
@@ -983,7 +977,7 @@ class Filterer(object):
                 assert len(scalars) >= NVisible, "ERROR: scalars (%s) smaller than expected (%d < %d)" % (key, len(scalars), NVisible)
                 scalars_cp = copy.copy(scalars)
                 scalars_cp.resize(NVisible, refcheck=False)
-                inputState.scalarsDict[key] = scalars_cp
+                self.latticeScalarsDict[key] = scalars_cp
     
     def storeFullVectorsArray(self, NVisible, NVectors, vectorsFull):
         """
@@ -2047,9 +2041,9 @@ class Filterer(object):
         NScalars, fullScalars = self.makeFullScalarsArray()
         NVectors, fullVectors = self.makeFullVectorsArray()
         
-        # scalars array (do we need to copy this?)
+        # scalars array (the full, unmodified one stored on the Lattice)
         scalarsName = filterName[8:]
-        scalarsArray = copy.deepcopy(self.pipelinePage.inputState.scalarsDict[scalarsName]) # does this need to be copy
+        scalarsArray = self.pipelinePage.inputState.scalarsDict[scalarsName]
         
         # run filter
         NVisible = filtering_c.genericScalarFilter(self.visibleAtoms, scalarsArray, filterSettings.minVal, filterSettings.maxVal,

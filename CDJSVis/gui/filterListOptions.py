@@ -888,7 +888,10 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         if scalarType.startswith("Lattice: "):
             key = scalarType[9:]
-            scalarsDict = self.parent.pipelinePage.inputState.scalarsDict
+            if key in self.parent.filterer.latticeScalarsDict:
+                scalarsDict = self.parent.filterer.latticeScalarsDict
+            else:
+                scalarsDict = self.parent.pipelinePage.inputState.scalarsDict
             scalars = scalarsDict[key]
             
         else:
@@ -1102,7 +1105,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         else:
             cbtext = self.colourBy
         
-        self.parent.colouringOptionsButton.setText("Colouring options: %s" % cbtext)
+        self.parent.colouringOptionsButton.setText("Colouring: %s" % cbtext)
         
         self.stackedWidget.setCurrentIndex(index)
     

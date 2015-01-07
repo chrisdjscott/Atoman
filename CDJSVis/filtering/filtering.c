@@ -1154,7 +1154,7 @@ atomIndexFilter(PyObject *self, PyObject *args)
 
 /*******************************************************************************
  ** Generic scalar filter
- ** The scalars array should be linked to visibleAtoms: same size/order
+ ** The scalars array should be NAtoms in size, not NVisibleIn
  *******************************************************************************/
 static PyObject* 
 genericScalarFilter(PyObject *self, PyObject *args)
@@ -1179,12 +1179,15 @@ genericScalarFilter(PyObject *self, PyObject *args)
     if (not_doubleVector(fullScalars)) return NULL;
     if (not_doubleVector(fullVectors)) return NULL;
     
+    /* loop over visible atoms */
     NVisible = 0;
     for (i = 0; i < NVisibleIn; i++)
     {
+        int index;
         double scalarVal;
         
-        scalarVal = DIND1(scalars, i);
+        index = IIND1(visibleAtoms, i);
+        scalarVal = DIND1(scalars, index);
         
         if (!(scalarVal < minVal || scalarVal > maxVal))
         {
