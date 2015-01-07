@@ -482,7 +482,7 @@ class SystemsDialog(QtGui.QDialog):
                 break
             
             # check name is not the same as a filter list item
-            if text in FilterList.allFilters:
+            if text in FilterList.defaultFilters:
                 # show warning
                 self.mainWindow.displayWarning("The chosen name is reserved ({0})".format(text))
             
@@ -532,6 +532,11 @@ class SystemsDialog(QtGui.QDialog):
                 lattice.scalarsFiles[scalarName] = filename
                 
                 self.logger.info("Added '%s' scalars to '%s'", scalarName, item.displayName)
+                
+                # refresh vectors settings (should just do it on pipelines that have this system as the input state)
+                for pp in self.mainWindow.mainToolbar.pipelineList:
+                    for filterList in pp.filterLists:
+                        filterList.refreshAvailableFilters()
     
     def loadVectorData(self, index):
         """
@@ -569,7 +574,7 @@ class SystemsDialog(QtGui.QDialog):
                 break
             
             # check name is not the same as a filter list item
-            if text in FilterList.allFilters:
+            if text in FilterList.defaultFilters:
                 # show warning
                 self.mainWindow.displayWarning("The chosen name is reserved ({0})".format(text))
             
@@ -626,10 +631,10 @@ class SystemsDialog(QtGui.QDialog):
                 
                 self.logger.info("Added '%s' vectors to '%s'", vectorName, item.displayName)
         
-        # refresh vectors settings (should just do it on pipelines that have this system as the input state)
-        for pp in self.mainWindow.mainToolbar.pipelineList:
-            for filterList in pp.filterLists:
-                filterList.vectorsOptions.refresh()
+                # refresh vectors settings (should just do it on pipelines that have this system as the input state)
+                for pp in self.mainWindow.mainToolbar.pipelineList:
+                    for filterList in pp.filterLists:
+                        filterList.vectorsOptions.refresh()
     
     def duplicate_system(self, index):
         """

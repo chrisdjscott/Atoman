@@ -707,7 +707,6 @@ class ColouringOptionsWindow(QtGui.QDialog):
                                float(self.solidColour.green()) / 255.0,
                                float(self.solidColour.blue()) / 255.0)
         self.scalarBarText = "Height in Y (A)"
-        self.atomPropertyType = "Kinetic energy"
         
         # layout
         windowLayout = QtGui.QVBoxLayout(self)
@@ -863,16 +862,6 @@ class ColouringOptionsWindow(QtGui.QDialog):
         buttonBox.rejected.connect(self.reject)
         windowLayout.addWidget(buttonBox)
     
-#     def propertyTypeChanged(self, val):
-#         """
-#         Property type changed.
-#         
-#         """
-#         self.atomPropertyType = str(self.propertyTypeCombo.currentText())
-#         
-#         self.parent.colouringOptionsButton.setText("Colouring options: %s" % self.atomPropertyType)
-#         self.scalarBarTextEdit3.setText(self.atomPropertyType)
-    
     def setToChargeRange(self):
         """
         Set min/max to scalar range.
@@ -897,10 +886,17 @@ class ColouringOptionsWindow(QtGui.QDialog):
         logger = logging.getLogger(__name__)
         logger.debug("Setting to scalar range (%s)", scalarType)
         
-        scalarsDict = self.parent.filterer.scalarsDict
+        if scalarType.startswith("Lattice: "):
+            key = scalarType[9:]
+            scalarsDict = self.parent.pipelinePage.inputState.scalarsDict
+            scalars = scalarsDict[key]
+            
+        else:
+            scalarsDict = self.parent.filterer.scalarsDict
+            scalars = scalarsDict[scalarType]
         
-        minVal = min(scalarsDict[scalarType])
-        maxVal = max(scalarsDict[scalarType])
+        minVal = min(scalars)
+        maxVal = max(scalars)
         if math.fabs(minVal - maxVal) < 0.01:
             maxVal += 1
         
@@ -958,7 +954,12 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(setToScalarRangeButton)
          
         # scalar bar text
-        scalarBarTextEdit = QtGui.QLineEdit("%s" % name)
+        if name.startswith("Lattice: "):
+            scalarBarName = name[9:]
+        else:
+            scalarBarName = name
+        
+        scalarBarTextEdit = QtGui.QLineEdit("%s" % scalarBarName)
         self.scalarBarTexts[name] = scalarBarTextEdit
          
         label = QtGui.QLabel("Scalar bar title:")
@@ -985,17 +986,23 @@ class ColouringOptionsWindow(QtGui.QDialog):
         # ref to scalarsDict
         scalarsDict = self.parent.filterer.scalarsDict
         
+        # lattice scalars dict
+        inputState = self.parent.pipelinePage.inputState
+        latticeScalarsDict = inputState.scalarsDict
+        latticeScalarsNames = ["Lattice: {0}".format(key) for key in latticeScalarsDict.keys()]
+        
         # list of previous scalar types
         previousScalarTypes = []
         for i in xrange(4, self.colouringCombo.count()):
             previousScalarTypes.append(str(self.colouringCombo.itemText(i)))
         
         logger.debug("New scalars: %r", scalarsDict.keys())
+        logger.debug("New scalars (L): %r", latticeScalarsNames)
         logger.debug("Old scalars: %r", previousScalarTypes)
         
         # check if need to remove any scalar types
         for i, name in enumerate(previousScalarTypes):
-            if name not in scalarsDict:
+            if name not in scalarsDict and name not in latticeScalarsNames:
                 logger.debug("Removing '%s'", name)
                 
                 # if selected set zero
@@ -1013,6 +1020,17 @@ class ColouringOptionsWindow(QtGui.QDialog):
             # already in?
             if scalarType in previousScalarTypes:
                 logger.debug("Skipping '%s'; already exists", scalarType)
+            
+            else:
+                logger.debug("Adding: '%s'", scalarType)
+                self.colouringCombo.addItem(scalarType)
+                self.addScalarWidget(scalarType)
+        
+        for scalarType in latticeScalarsNames:
+            # already in?
+            if scalarType in previousScalarTypes:
+                logger.debug("Skipping '%s'; already exists", scalarType)
+            
             else:
                 logger.debug("Adding: '%s'", scalarType)
                 self.colouringCombo.addItem(scalarType)
@@ -1078,7 +1096,13 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         """
         self.colourBy = str(self.colouringCombo.currentText())
-        self.parent.colouringOptionsButton.setText("Colouring options: %s" % self.colourBy)
+        
+        if self.colourBy.startswith("Lattice: "):
+            cbtext = self.colourBy[9:] + "(L)"
+        else:
+            cbtext = self.colourBy
+        
+        self.parent.colouringOptionsButton.setText("Colouring options: %s" % cbtext)
         
         self.stackedWidget.setCurrentIndex(index)
     

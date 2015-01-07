@@ -13,6 +13,7 @@ static PyObject* splitVisAtomsBySpecie(PyObject*, PyObject*);
 static PyObject* makeVisibleRadiusArray(PyObject*, PyObject*);
 static PyObject* makeVisibleScalarArray(PyObject*, PyObject*);
 static PyObject* makeVisiblePointsArray(PyObject*, PyObject*);
+static PyObject* countVisibleBySpecie(PyObject *, PyObject *);
 
 
 /*******************************************************************************
@@ -23,6 +24,7 @@ static struct PyMethodDef methods[] = {
     {"makeVisibleRadiusArray", makeVisibleRadiusArray, METH_VARARGS, "Create radius array for visible atoms"},
     {"makeVisibleScalarArray", makeVisibleScalarArray, METH_VARARGS, "Create scalars array for visible atoms"},
     {"makeVisiblePointsArray", makeVisiblePointsArray, METH_VARARGS, "Create points array for visible atoms"},
+    {"countVisibleBySpecie", countVisibleBySpecie, METH_VARARGS, "Count the number of visible atoms of each specie"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -34,6 +36,44 @@ init_rendering(void)
 {
     (void)Py_InitModule("_rendering", methods);
     import_array();
+}
+
+/*******************************************************************************
+ ** Split visible atoms by specie (position and scalar)
+ *******************************************************************************/
+static PyObject*
+countVisibleBySpecie(PyObject *self, PyObject *args)
+{
+    int i, dims[1];
+    int NSpecies, NVisible;
+    PyArrayObject *visibleAtoms=NULL;
+    PyArrayObject *specieArray=NULL;
+    PyArrayObject *specieCount=NULL;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "O!iO!", &PyArray_Type, &visibleAtoms, &NSpecies, &PyArray_Type, &specieArray))
+        return NULL;
+    
+    if (not_intVector(visibleAtoms)) return NULL;
+    NVisible = (int) visibleAtoms->dimensions[0];
+    if (not_intVector(specieArray)) return NULL;
+    
+    /* specie counter array */
+    dims[0] = NSpecies;
+    specieCount = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_INT32);
+    for (i = 0; i < NSpecies; i++) IIND1(specieCount, i) = 0;
+    
+    /* loop over visible atoms, incrementing specie counter */
+    for (i = 0; i < NVisible; i++)
+    {
+        int index, specieIndex;
+        
+        index = IIND1(visibleAtoms, i);
+        specieIndex = IIND1(specieArray, index);
+        IIND1(specieCount, specieIndex) = IIND1(specieCount, specieIndex) + 1;
+    }
+    
+    return PyArray_Return(specieCount);
 }
 
 /*******************************************************************************

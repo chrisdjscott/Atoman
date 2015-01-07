@@ -25,6 +25,7 @@ static PyObject* voronoiVolumeFilter(PyObject*, PyObject*);
 static PyObject* voronoiNeighboursFilter(PyObject*, PyObject*);
 static PyObject* coordNumFilter(PyObject*, PyObject*);
 static PyObject* displacementFilter(PyObject*, PyObject*);
+static PyObject* genericScalarFilter(PyObject *, PyObject *);
 
 
 /*******************************************************************************
@@ -44,6 +45,7 @@ static struct PyMethodDef methods[] = {
     {"voronoiNeighboursFilter", voronoiNeighboursFilter, METH_VARARGS, "Voronoi neighbours filter"},
     {"coordNumFilter", coordNumFilter, METH_VARARGS, "Coordination number filter"},
     {"displacementFilter", displacementFilter, METH_VARARGS, "Displacement filter"},
+    {"genericScalarFilter", genericScalarFilter, METH_VARARGS, "Generic scalar filter"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -1145,6 +1147,72 @@ atomIndexFilter(PyObject *self, PyObject *args)
         }
         
         visibleAtoms[NVisible++] = index;
+    }
+    
+    return Py_BuildValue("i", NVisible);
+}
+
+/*******************************************************************************
+ ** Generic scalar filter
+ ** The scalars array should be linked to visibleAtoms: same size/order
+ *******************************************************************************/
+static PyObject* 
+genericScalarFilter(PyObject *self, PyObject *args)
+{
+    int NVisibleIn, NScalars, NVectors;
+    double minVal, maxVal;
+    PyArrayObject *visibleAtoms=NULL;
+    PyArrayObject *scalars=NULL;
+    PyArrayObject *fullScalars=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
+    int i, NVisible;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "O!O!ddiO!iO!", &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalars, &minVal, 
+            &maxVal, &NScalars, &PyArray_Type, &fullScalars, &NVectors, &PyArray_Type, &fullVectors))
+        return NULL;
+    
+    if (not_intVector(visibleAtoms)) return NULL;
+    NVisibleIn = (int) visibleAtoms->dimensions[0];
+    if (not_doubleVector(scalars)) return NULL;
+    if (not_doubleVector(fullScalars)) return NULL;
+    if (not_doubleVector(fullVectors)) return NULL;
+    
+    NVisible = 0;
+    for (i = 0; i < NVisibleIn; i++)
+    {
+        double scalarVal;
+        
+        scalarVal = DIND1(scalars, i);
+        
+        if (!(scalarVal < minVal || scalarVal > maxVal))
+        {
+            int j;
+            
+            /* handle full scalars array */
+            for (j = 0; j < NScalars; j++)
+            {
+                int nj = NVisibleIn * j;
+                
+                DIND1(fullScalars, nj + NVisible) = DIND1(fullScalars, nj + i);
+            }
+            
+            for (j = 0; j < NVectors; j++)
+            {
+                int nj, njn, nji;
+                
+                nj = NVisibleIn * j;
+                njn = nj + NVisible;
+                nji = nj + i;
+                
+                DIND2(fullVectors, njn, 0) = DIND2(fullVectors, nji, 0);
+                DIND2(fullVectors, njn, 1) = DIND2(fullVectors, nji, 1);
+                DIND2(fullVectors, njn, 2) = DIND2(fullVectors, nji, 2);
+            }
+            
+            IIND1(visibleAtoms, NVisible++) = IIND1(visibleAtoms, i);
+        }
     }
     
     return Py_BuildValue("i", NVisible);

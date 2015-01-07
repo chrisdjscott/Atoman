@@ -862,7 +862,6 @@ class PovrayColouringOptions(object):
     """
     def __init__(self, colouringOptions):
         self.colourBy = colouringOptions.colourBy
-        self.atomPropertyType = colouringOptions.atomPropertyType
         self.heightAxis = colouringOptions.heightAxis
 
 ################################################################################
@@ -934,7 +933,10 @@ class PovRayAtomsWriter(QtCore.QObject):
             elif scalarsType == 4:
                 scalar = charge[index]
             else:
-                scalar = scalarsDict[colouringOptions.colourBy][i]
+                if colouringOptions.colourBy.startswith("Lattice: "):
+                    scalar = lattice.scalarsDict[colouringOptions.colourBy[9:]][i]
+                else:
+                    scalar = scalarsDict[colouringOptions.colourBy][i]
             
             # colour for povray file
             rgb = np.empty(3, np.float64)
@@ -969,7 +971,11 @@ def writePovrayAtoms(filename, visibleAtoms, lattice, scalarsDict, colouringOpti
     # scalars type
     scalarsType = getScalarsType(colouringOptions)
     if scalarsType == 5:
-        scalarsArray = scalarsDict[colouringOptions.colourBy]
+        if colouringOptions.colourBy.startswith("Lattice: "):
+            scalarsArray = lattice.scalarsDict[colouringOptions.colourBy[9:]]
+        else:
+            scalarsArray = scalarsDict[colouringOptions.colourBy]
+    
     else:
         scalarsArray = np.array([], dtype=np.float64)
     
@@ -1055,7 +1061,10 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     
     # scalars array
     if scalarType == 5:
-        scalarsArray = scalarsDict[colouringOptions.colourBy]
+        if colouringOptions.colourBy.startswith("Lattice: "):
+            scalarsArray = lattice.scalarsDict[colouringOptions.colourBy[9:]]
+        else:
+            scalarsArray = scalarsDict[colouringOptions.colourBy]
     
     else:
         if scalarType == 0:
@@ -1203,6 +1212,9 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
         scalarBar_white = makeScalarBar(lut, colouringOptions, (0, 0, 0))
         scalarBar_black = makeScalarBar(lut, colouringOptions, (1, 1, 1))
     
+    # visible specie count
+    visSpecCount = _rendering.countVisibleBySpecie(visibleAtoms, NSpecies, lattice.specie)
+    
     getActorsTime = time.time() - getActorsTime
     logger.debug("Get actors time: %f s", getActorsTime)
 #     logger.debug("  Set points time (new): %f s", povtime + setPointsTime2)
@@ -1211,7 +1223,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
 #     for i, t1 in enumerate(t1s):
 #         logger.debug("  Make actors time (%d): %f s", i, t1)
     
-    return scalarBar_white, scalarBar_black, lattice.specieCount
+    return scalarBar_white, scalarBar_black, visSpecCount
 
 ################################################################################
 def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 

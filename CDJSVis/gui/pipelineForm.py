@@ -671,6 +671,8 @@ class PipelineForm(QtGui.QWidget):
             
             filterList.bondsOptions.refresh()
             filterList.vectorsOptions.refresh()
+            filterList.colouringOptions.refreshScalarColourOption()
+            filterList.refreshAvailableFilters()
     
     def gatherVisibleAtoms(self):
         """
