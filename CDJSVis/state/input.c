@@ -68,7 +68,7 @@ readRef(PyObject *self, PyObject *args)
 {
 	char *file, *specieList_c;
 	int *atomID, *specie, *specieCount_c;
-	double *pos, *charge, *maxPos, *minPos, *KE, *PE, *force;
+	double *pos, *charge, *maxPos, *minPos, *KE, *PE;
 	PyArrayObject *atomIDIn=NULL;
 	PyArrayObject *specieIn=NULL;
 	PyArrayObject *posIn=NULL;
@@ -79,7 +79,7 @@ readRef(PyObject *self, PyObject *args)
 	PyArrayObject *minPosIn=NULL;
 	PyArrayObject *KEIn=NULL;
 	PyArrayObject *PEIn=NULL;
-	PyArrayObject *forceIn=NULL;
+	PyArrayObject *force=NULL;
 	
     int i, NAtoms, specInd, stat;
     FILE *INFILE;
@@ -94,7 +94,7 @@ readRef(PyObject *self, PyObject *args)
     /* parse and check arguments from Python */
 	if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!O!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &specieIn, 
 			&PyArray_Type, &posIn, &PyArray_Type, &chargeIn, &PyArray_Type, &KEIn, &PyArray_Type, &PEIn, 
-			&PyArray_Type, &forceIn, &PyArray_Type, &specieList_cIn, &PyArray_Type, 
+			&PyArray_Type, &force, &PyArray_Type, &specieList_cIn, &PyArray_Type, 
 			&specieCount_cIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &minPosIn))
 		return NULL;
 	
@@ -113,8 +113,7 @@ readRef(PyObject *self, PyObject *args)
 	if (not_doubleVector(PEIn)) return NULL;
 	PE = pyvector_to_Cptr_double(PEIn);
 	
-	if (not_doubleVector(forceIn)) return NULL;
-	force = pyvector_to_Cptr_double(forceIn);
+	if (not_doubleVector(force)) return NULL;
 	
 	if (not_doubleVector(minPosIn)) return NULL;
 	minPos = pyvector_to_Cptr_double(minPosIn);
@@ -188,9 +187,9 @@ readRef(PyObject *self, PyObject *args)
         KE[index] = ketemp;
         PE[index] = petemp;
         
-        force[ind3    ] = xforce;
-        force[ind3 + 1] = yforce;
-        force[ind3 + 2] = zforce;
+        DIND2(force, index, 0) = xforce;
+        DIND2(force, index, 1) = yforce;
+        DIND2(force, index, 2) = zforce;
         
         charge[index] = chargetemp;
         
@@ -431,9 +430,9 @@ readLBOMDXYZ(PyObject *self, PyObject *args)
             
             charge[index] = DIND1(refCharge, index);
             
-            DIND1(velocity, ind3    ) = xvel;
-            DIND1(velocity, ind3 + 1) = yvel;
-            DIND1(velocity, ind3 + 2) = zvel;
+            DIND2(velocity, index, 0) = xvel;
+            DIND2(velocity, index, 1) = yvel;
+            DIND2(velocity, index, 2) = zvel;
             
             /* max and min positions */
             if (xpos > maxPos[0]) maxPos[0] = xpos;

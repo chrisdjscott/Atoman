@@ -253,7 +253,7 @@ class LbomdXYZReader(GenericLatticeReader):
         
         elif len(array) == 9:
             xyzformat = 2
-            velocityArray = np.empty(3 * NAtoms, np.float64)
+            velocityArray = np.empty((NAtoms, 3), np.float64)
         
         else:
             return -3, None
@@ -348,7 +348,7 @@ class LbomdRefReader(GenericLatticeReader):
         specieListTemp = np.empty(maxNumSpecies+1, dt) 
         specieCountTemp = np.zeros(maxNumSpecies+1, np.int32)
         
-        forceArray = np.empty(3 * NAtoms, np.float64)
+        forceArray = np.empty((NAtoms, 3), np.float64)
         ke = np.empty(NAtoms, np.float64)
         pe = np.empty(NAtoms, np.float64)
         
