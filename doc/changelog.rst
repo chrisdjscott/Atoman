@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* Try and autodetect the number format for the sequencer
+
 **v150105**
 
 * If max index on sequencer is less than min index we auto detect the max

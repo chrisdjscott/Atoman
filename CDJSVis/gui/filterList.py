@@ -8,6 +8,7 @@ The filter tab for the main toolbar
 import sys
 import logging
 import functools
+import copy
 
 from PySide import QtGui, QtCore
 
@@ -46,14 +47,12 @@ class FilterList(QtGui.QWidget):
     
     """
     # all available filters
-    allFilters = [
+    defaultFilters = [
         "Specie", 
         "Point defects", 
         "Crop box", 
         "Cluster", 
         "Displacement",
-        "Kinetic energy",
-        "Potential energy",
         "Charge",
         "Crop sphere",
         "Slice",
@@ -64,7 +63,7 @@ class FilterList(QtGui.QWidget):
         "Atom index",
         "ACNA",
     ]
-    allFilters.sort()
+    defaultFilters.sort()
     
     def __init__(self, parent, mainToolbar, mainWindow, tab, width, height=150):
         super(FilterList, self).__init__(parent)
@@ -187,7 +186,8 @@ class FilterList(QtGui.QWidget):
         # quick add combo
         self.quickAddCombo = QtGui.QComboBox()
         self.quickAddCombo.addItem("Add property/filter ...")
-        self.quickAddCombo.addItems(self.allFilters)
+        self.quickAddCombo.addItems(self.defaultFilters)
+        self.allFilters = copy.deepcopy(self.defaultFilters)
         self.quickAddCombo.currentIndexChanged[str].connect(self.quickAddComboAction)
         
         # clear list button
@@ -220,7 +220,7 @@ class FilterList(QtGui.QWidget):
         groupLayout.setSpacing(0)
         
         # colouring options
-        self.colouringOptionsButton = QtGui.QPushButton("Colouring options: Specie")
+        self.colouringOptionsButton = QtGui.QPushButton("Colouring: Specie")
         self.colouringOptionsButton.clicked.connect(self.showColouringOptions)
         
         self.colouringOptions = filterListOptions.ColouringOptionsWindow(parent=self)
@@ -634,6 +634,60 @@ class FilterList(QtGui.QWidget):
         msgBox.setIcon(QtGui.QMessageBox.Warning)
         msgBox.exec_()
     
+    def refreshAvailableFilters(self):
+        """
+        Refresh available filters
+        
+        """
+        self.logger.debug("Refreshing available filters")
+        
+        inp = self.pipelinePage.inputState
+        scalarsDict = inp.scalarsDict
+        
+        numDefault = len(self.defaultFilters)
+        scalarNames = scalarsDict.keys()
+        additionalFilters = ["Scalar: {0}".format(s) for s in scalarNames]
+        previousAdditionalFilters = self.allFilters[numDefault:]
+        currentLen = len(self.allFilters)
+        assert currentLen + 1 == self.quickAddCombo.count()
+        
+        self.logger.debug("Old additional filters: %r", previousAdditionalFilters)
+        self.logger.debug("New additional filters: %r", additionalFilters)
+        
+        # remove filters that are no longer available
+        for key in previousAdditionalFilters:
+            if key not in additionalFilters:
+                self.logger.debug("Removing filter: '%s'", key)
+                
+                for i in xrange(numDefault + 1, self.quickAddCombo.count()):
+                    if str(self.quickAddCombo.itemText(i)) == key:
+                        self.quickAddCombo.removeItem(i)
+                        self.allFilters.pop(i - 1)
+                        
+                        # also delete settings and remove from list widget...
+                        delinds = []
+                        for j in xrange(self.listItems.count() - 1, -1, -1):
+                            item = self.listItems.item(j)
+                            if item.filterName.startswith(key):
+                                delinds.append(j)
+                        
+                        for index in delinds:
+                            item = self.listItems.takeItem(index)
+                            dlg = item.filterSettings
+                            dlg.close()
+                            dlg.accept()
+                            del item
+        
+        # add new filters
+        for key in additionalFilters:
+            if key in previousAdditionalFilters:
+                self.logger.debug("Keeping filter: '%s'", key)
+            
+            else:
+                self.logger.debug("Adding filter: '%s'", key)
+                self.quickAddCombo.addItem(key)
+                self.allFilters.append(key)
+    
     def addFilter(self, filterName=None):
         """
         Add new filter
@@ -645,18 +699,6 @@ class FilterList(QtGui.QWidget):
         
         # first determine what filter is to be added
         if filterName is not None and filterName in self.allFilters:
-            ok = True
-        else:
-#             dlg = QtGui.QInputDialog(self)
-#             dlg.setInputMode(QtGui.QInputDialog.TextInput)
-#             dlg.setComboBoxItems(self.allFilters)
-#             dlg.setLabelText("Select filter:")
-#             utils.positionWindow(dlg, dlg.sizeHint(), self.mainWindow.desktop, self)
-#             ok = dlg.exec_()
-#             filterName = dlg.textValue()
-            filterName, ok = QtGui.QInputDialog.getItem(self, "Add filter", "Select filter:", self.allFilters, editable=False)
-        
-        if ok:
             if self.defectFilterSelected:
                 self.warnDefectFilter()
             
@@ -724,16 +766,24 @@ class FilterList(QtGui.QWidget):
         """
         form = None
         
-        words = str(filterName).title().split()
-        
-        dialogName = "%sSettingsDialog" % "".join(words)
-        self.logger.debug("Creating settings dialog: '%s'", dialogName)
-        
-        formObject = getattr(filterSettings, dialogName, None)
-        if formObject is not None:
+        if filterName.startswith("Scalar: "):
+            self.logger.debug("Creating settings dialog for: '%s'", filterName)
+            
             title = "%s settings (List %d - %d)" % (filterName, self.tab, self.filterCounter)
-            form = formObject(self.mainWindow, title, parent=self)
+            form = filterSettings.GenericScalarFilterSettingsDialog(self.mainWindow, filterName, title, parent=self)
             self.filterCounter += 1
+        
+        else:
+            words = str(filterName).title().split()
+            
+            dialogName = "%sSettingsDialog" % "".join(words)
+            self.logger.debug("Creating settings dialog: '%s'", dialogName)
+            
+            formObject = getattr(filterSettings, dialogName, None)
+            if formObject is not None:
+                title = "%s settings (List %d - %d)" % (filterName, self.tab, self.filterCounter)
+                form = formObject(self.mainWindow, title, parent=self)
+                self.filterCounter += 1
         
         return form
     

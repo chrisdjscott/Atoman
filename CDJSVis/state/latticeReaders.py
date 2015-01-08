@@ -245,12 +245,15 @@ class LbomdXYZReader(GenericLatticeReader):
         array = line.split()
         if len(array) == 6:
             xyzformat = 0
+            velocityArray = np.empty(0, np.float64)
             
         elif len(array) == 7:
             xyzformat = 1
+            velocityArray = np.empty(0, np.float64)
         
         elif len(array) == 9:
             xyzformat = 2
+            velocityArray = np.empty((NAtoms, 3), np.float64)
         
         else:
             return -3, None
@@ -262,22 +265,23 @@ class LbomdXYZReader(GenericLatticeReader):
         
         self.logger.info("  %d atoms", NAtoms)
         
-        tmpForceArray = np.empty(3, np.float64)
+        ke = np.empty(NAtoms, np.float64)
+        pe = np.empty(NAtoms, np.float64)
         
         # call clib
-        status = input_c.readLBOMDXYZ(filename, state.atomID, state.pos, state.charge, state.KE, state.PE, tmpForceArray, 
-                                      state.maxPos, state.minPos, xyzformat)
+        status = input_c.readLBOMDXYZ(filename, state.atomID, state.pos, state.charge, ke, pe, velocityArray, 
+                                      state.maxPos, state.minPos, xyzformat, state.specie, refLattice.specie, refLattice.charge)
         
         if status:
             return status, None
         
-        # copy charge if not included in xyz
-        for i in xrange(refLattice.NAtoms):
-            if xyzformat == 0:
-                state.charge[i] = refLattice.charge[i]
-            
-            state.specie[i] = refLattice.specie[i]
+        # add KE, PE and velocity (if included)
+        state.scalarsDict["Kinetic energy"] = ke
+        state.scalarsDict["Potential energy"] = pe
+        if len(velocityArray) == 3 * NAtoms:
+            state.vectorsDict["Velocity"] = velocityArray
         
+        # set cell dimensions
         state.setDims(refLattice.cellDims)
         
         # copy specie arrays from refLattice
@@ -341,17 +345,24 @@ class LbomdRefReader(GenericLatticeReader):
         # temporary specie list and counter arrays
         maxNumSpecies = 20 ## if there are more than 20 species these must be changed
         dt = np.dtype((str, 2))
-        specieListTemp = np.empty( maxNumSpecies+1, dt ) 
-        specieCountTemp = np.zeros( maxNumSpecies+1, np.int32 )
+        specieListTemp = np.empty(maxNumSpecies+1, dt) 
+        specieCountTemp = np.zeros(maxNumSpecies+1, np.int32)
         
-        tmpForceArray = np.empty(3, np.float64)
+        forceArray = np.empty((NAtoms, 3), np.float64)
+        ke = np.empty(NAtoms, np.float64)
+        pe = np.empty(NAtoms, np.float64)
         
         # call c lib
-        status = input_c.readRef(filename, state.atomID, state.specie, state.pos, state.charge, state.KE, state.PE, tmpForceArray, 
+        status = input_c.readRef(filename, state.atomID, state.specie, state.pos, state.charge, ke, pe, forceArray, 
                                  specieListTemp, specieCountTemp, state.maxPos, state.minPos)
         
         if status:
-            return -3, None
+            return status, None
+        
+        # add KE, PE and force
+        state.scalarsDict["Kinetic energy"] = ke
+        state.scalarsDict["Potential energy"] = pe
+        state.vectorsDict["Force"] = forceArray
         
         # build specie list and counter in lattice object
         NSpecies = 0

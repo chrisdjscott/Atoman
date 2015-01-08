@@ -46,8 +46,6 @@ class Lattice(object):
         self.atomID = np.empty(0, np.int32)
         self.specie = np.empty(0, np.int32)
         self.pos = np.empty(0, np.float64)
-        self.KE = np.empty(0, np.float64)
-        self.PE = np.empty(0, np.float64)
         self.charge = np.empty(0, np.float64)
         
         self.scalarsDict = {}
@@ -96,8 +94,6 @@ class Lattice(object):
         self.atomID = np.empty(NAtoms, np.int32)
         self.specie = np.empty(NAtoms, np.int32)
         self.pos = np.empty(3 * NAtoms, np.float64)
-        self.KE = np.zeros(NAtoms, np.float64)
-        self.PE = np.zeros(NAtoms, np.float64)
         self.charge = np.zeros(NAtoms, np.float64)
         
         dt = np.dtype((str, 2))
@@ -130,13 +126,22 @@ class Lattice(object):
         Calculate temperature in K
         
         """
+        if "Kinetic energy" in self.scalarsDict:
+            ke = self.scalarsDict["Kinetic energy"]
+        
+        elif "KE" in self.scalarsDict:
+            ke = self.scalarsDict["KE"]
+        
+        else:
+            return None
+        
         if NMoving is None:
             NMoving = self.NAtoms
         
-        keSum = np.sum(self.KE)
+        keSum = np.sum(ke)
         
         if keSum == 0:
-            temperature = None
+            temperature = 0.0
         
         else:
             boltzmann = 8.6173324e-5
@@ -189,7 +194,7 @@ class Lattice(object):
         rgbnew[0][2] = rgbtemp[2]            
         self.specieRGB = np.append(self.specieRGB, rgbnew, axis=0)
     
-    def addAtom(self, sym, pos, charge, atomID=None, KE=0.0, PE=0.0):
+    def addAtom(self, sym, pos, charge, atomID=None, scalarVals={}, vectorVals={}):
         """
         Add an atom to the lattice
         
@@ -211,9 +216,6 @@ class Lattice(object):
         self.specie = np.append(self.specie, np.int32(specInd))
         self.pos = np.append(self.pos, pos)
         self.charge = np.append(self.charge, charge)
-#         self.force = np.append(self.force, np.zeros(3, np.float64))
-        self.KE = np.append(self.KE, KE)
-        self.PE = np.append(self.PE, PE)
         
         # wrap positions
         
@@ -234,10 +236,29 @@ class Lattice(object):
         
         self.NAtoms += 1
         
-#         logger = logging.getLogger(__name__)
-#         logger.warning("Clearing scalars/vectors due to adding atom")
-        self.scalarsDict = {}
-        self.vectorsDict = {}
+        logger = logging.getLogger(__name__)
+        logger.debug("Modifying Lattice scalars/vectors after addAtom")
+        
+        for scalarName in self.scalarsDict.keys():
+            if scalarName in scalarVals:
+                newval = scalarVals[scalarName]
+                self.scalarsDict[scalarName] = np.append(self.scalarsDict[scalarName], np.float64(newval))
+            
+            else:
+                self.scalarsDict.pop(scalarName)
+                logger.warning("Removing '%s' scalars from Lattice (addAtom)", scalarName)
+        
+        for vectorName in self.vectorsDict.keys():
+            newval = []
+            if vectorName in vectorVals:
+                newval = vectorVals[vectorName]
+            
+            if len(newval) == 3:
+                self.vectorsDict[vectorName] = np.append(self.vectorsDict[vectorName], np.asarray(newval, dtype=np.float64))
+            
+            else:
+                self.vectorsDict.pop(vectorName)
+                logger.warning("Removing '%s' vectors from Lattice (addAtom)", vectorName)
     
     def removeAtom(self, index):
         """
@@ -257,13 +278,11 @@ class Lattice(object):
         if self.specieCount[specInd] == 0:
             self.removeSpecie(specInd)
         
-        self.KE = np.delete(self.KE, index)
-        self.PE = np.delete(self.PE, index)
+        for scalarName in self.scalarsDict.keys():
+            self.scalarsDict[scalarName] = np.delete(self.scalarsDict[scalarName], index)
         
-#         logger = logging.getLogger(__name__)
-#         logger.warning("Clearing scalars/vectors due to removing atom")
-        self.scalarsDict = {}
-        self.vectorsDict = {}
+        for vectorName in self.vectorsDict.keys():
+            self.vectorsDict[vectorName] = np.delete(self.vectorsDict[vectorName], [3*index,3*index+1,3*index+2])
     
     def removeSpecie(self, index):
         """
@@ -391,14 +410,10 @@ class Lattice(object):
         self.atomID = np.empty(NAtoms, np.int32)
         self.specie = np.empty(NAtoms, np.int32)
         self.pos = np.empty(3 * NAtoms, np.float64)
-        self.KE = np.empty(NAtoms, np.float64)
-        self.PE = np.empty(NAtoms, np.float64)
         self.charge = np.empty(NAtoms, np.float64)
         for i in xrange(NAtoms):
             self.atomID[i] = lattice.atomID[i]
             self.specie[i] = lattice.specie[i]
-            self.KE[i] = lattice.KE[i]
-            self.PE[i] = lattice.PE[i]
             self.charge[i] = lattice.charge[i]
             for j in xrange(3):
                 self.pos[3*i+j] = lattice.pos[3*i+j]

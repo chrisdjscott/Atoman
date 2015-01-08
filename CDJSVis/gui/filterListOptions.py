@@ -708,7 +708,6 @@ class ColouringOptionsWindow(QtGui.QDialog):
                                float(self.solidColour.green()) / 255.0,
                                float(self.solidColour.blue()) / 255.0)
         self.scalarBarText = "Height in Y (A)"
-        self.atomPropertyType = "Kinetic energy"
         
         # layout
         windowLayout = QtGui.QVBoxLayout(self)
@@ -718,8 +717,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.colouringCombo.addItem("Specie")
         self.colouringCombo.addItem("Height")
         self.colouringCombo.addItem("Solid colour")
-        self.colouringCombo.addItem("Atom property")
-#        self.colouringCombo.addItem("Scalar")
+        self.colouringCombo.addItem("Charge")
         self.colouringCombo.currentIndexChanged.connect(self.colourByChanged)
         
         windowLayout.addWidget(self.colouringCombo)
@@ -808,57 +806,50 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.stackedWidget.addWidget(solidColourOptions)
         
         # atom property widget
-        atomPropertyOptions = genericForm.GenericForm(self, 0, "Atom property options")
-        
-        # type
-        self.propertyTypeCombo = QtGui.QComboBox()
-        self.propertyTypeCombo.addItems(("Kinetic energy", "Potential energy", "Charge"))
-        self.propertyTypeCombo.currentIndexChanged.connect(self.propertyTypeChanged)
-        row = atomPropertyOptions.newRow()
-        row.addWidget(self.propertyTypeCombo)
+        chargeOptions = genericForm.GenericForm(self, 0, "Charge colouring options")
         
         # min/max
-        self.propertyMinSpin = QtGui.QDoubleSpinBox()
-        self.propertyMinSpin.setSingleStep(0.1)
-        self.propertyMinSpin.setMinimum(-9999.0)
-        self.propertyMinSpin.setMaximum(9999.0)
-        self.propertyMinSpin.setValue(0)
+        self.chargeMinSpin = QtGui.QDoubleSpinBox()
+        self.chargeMinSpin.setSingleStep(0.1)
+        self.chargeMinSpin.setMinimum(-9999.0)
+        self.chargeMinSpin.setMaximum(9999.0)
+        self.chargeMinSpin.setValue(0)
         
-        self.propertyMaxSpin = QtGui.QDoubleSpinBox()
-        self.propertyMaxSpin.setSingleStep(0.1)
-        self.propertyMaxSpin.setMinimum(-9999.0)
-        self.propertyMaxSpin.setMaximum(9999.0)
-        self.propertyMaxSpin.setValue(1)
+        self.chargeMaxSpin = QtGui.QDoubleSpinBox()
+        self.chargeMaxSpin.setSingleStep(0.1)
+        self.chargeMaxSpin.setMinimum(-9999.0)
+        self.chargeMaxSpin.setMaximum(9999.0)
+        self.chargeMaxSpin.setValue(1)
         
         label = QtGui.QLabel( " Min " )
         label2 = QtGui.QLabel( " Max " )
         
-        row = atomPropertyOptions.newRow()
+        row = chargeOptions.newRow()
         row.addWidget(label)
-        row.addWidget(self.propertyMinSpin)
+        row.addWidget(self.chargeMinSpin)
         
-        row = atomPropertyOptions.newRow()
+        row = chargeOptions.newRow()
         row.addWidget(label2)
-        row.addWidget(self.propertyMaxSpin)
+        row.addWidget(self.chargeMaxSpin)
         
         # set to scalar range
-        setToPropertyRangeButton = QtGui.QPushButton("Set to scalar range")
-        setToPropertyRangeButton.setAutoDefault(0)
-        setToPropertyRangeButton.clicked.connect(self.setToPropertyRange)
+        setToChargeRangeButton = QtGui.QPushButton("Set to charge range")
+        setToChargeRangeButton.setAutoDefault(0)
+        setToChargeRangeButton.clicked.connect(self.setToChargeRange)
         
-        row = atomPropertyOptions.newRow()
-        row.addWidget(setToPropertyRangeButton)
+        row = chargeOptions.newRow()
+        row.addWidget(setToChargeRangeButton)
         
         # scalar bar text
-        self.scalarBarTextEdit3 = QtGui.QLineEdit("<insert title>")
+        self.scalarBarTextEdit3 = QtGui.QLineEdit("Charge")
         
         label = QtGui.QLabel("Scalar bar title:")
-        row = atomPropertyOptions.newRow()
+        row = chargeOptions.newRow()
         row.addWidget(label)
-        row = atomPropertyOptions.newRow()
+        row = chargeOptions.newRow()
         row.addWidget(self.scalarBarTextEdit3)
         
-        self.stackedWidget.addWidget(atomPropertyOptions)
+        self.stackedWidget.addWidget(chargeOptions)
         
         # scalar widgets
         self.scalarWidgets = {}
@@ -872,40 +863,21 @@ class ColouringOptionsWindow(QtGui.QDialog):
         buttonBox.rejected.connect(self.reject)
         windowLayout.addWidget(buttonBox)
     
-    def propertyTypeChanged(self, val):
-        """
-        Property type changed.
-        
-        """
-        self.atomPropertyType = str(self.propertyTypeCombo.currentText())
-        
-        self.parent.colouringOptionsButton.setText("Colouring options: %s" % self.atomPropertyType)
-        self.scalarBarTextEdit3.setText(self.atomPropertyType)
-    
-    def setToPropertyRange(self):
+    def setToChargeRange(self):
         """
         Set min/max to scalar range.
         
         """
         lattice = self.parent.filterTab.inputState
         
-        if self.atomPropertyType == "Kinetic energy":
-            minVal = min(lattice.KE)
-            maxVal = max(lattice.KE)
-        
-        elif self.atomPropertyType == "Potential energy":
-            minVal = min(lattice.PE)
-            maxVal = max(lattice.PE)
-        
-        else:
-            minVal = min(lattice.charge)
-            maxVal = max(lattice.charge)
+        minVal = min(lattice.charge)
+        maxVal = max(lattice.charge)
         
         if minVal == maxVal:
             maxVal += 1
         
-        self.propertyMinSpin.setValue(minVal)
-        self.propertyMaxSpin.setValue(maxVal)
+        self.chargeMinSpin.setValue(minVal)
+        self.chargeMaxSpin.setValue(maxVal)
     
     def setToScalarRange(self, scalarType):
         """
@@ -915,10 +887,20 @@ class ColouringOptionsWindow(QtGui.QDialog):
         logger = logging.getLogger(__name__)
         logger.debug("Setting to scalar range (%s)", scalarType)
         
-        scalarsDict = self.parent.filterer.scalarsDict
+        if scalarType.startswith("Lattice: "):
+            key = scalarType[9:]
+            if key in self.parent.filterer.latticeScalarsDict:
+                scalarsDict = self.parent.filterer.latticeScalarsDict
+            else:
+                scalarsDict = self.parent.pipelinePage.inputState.scalarsDict
+            scalars = scalarsDict[key]
+            
+        else:
+            scalarsDict = self.parent.filterer.scalarsDict
+            scalars = scalarsDict[scalarType]
         
-        minVal = min(scalarsDict[scalarType])
-        maxVal = max(scalarsDict[scalarType])
+        minVal = min(scalars)
+        maxVal = max(scalars)
         if math.fabs(minVal - maxVal) < 0.01:
             maxVal += 1
         
@@ -976,7 +958,12 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(setToScalarRangeButton)
          
         # scalar bar text
-        scalarBarTextEdit = QtGui.QLineEdit("%s" % name)
+        if name.startswith("Lattice: "):
+            scalarBarName = name[9:]
+        else:
+            scalarBarName = name
+        
+        scalarBarTextEdit = QtGui.QLineEdit("%s" % scalarBarName)
         self.scalarBarTexts[name] = scalarBarTextEdit
          
         label = QtGui.QLabel("Scalar bar title:")
@@ -1003,17 +990,23 @@ class ColouringOptionsWindow(QtGui.QDialog):
         # ref to scalarsDict
         scalarsDict = self.parent.filterer.scalarsDict
         
+        # lattice scalars dict
+        inputState = self.parent.pipelinePage.inputState
+        latticeScalarsDict = inputState.scalarsDict
+        latticeScalarsNames = ["Lattice: {0}".format(key) for key in latticeScalarsDict.keys()]
+        
         # list of previous scalar types
         previousScalarTypes = []
         for i in xrange(4, self.colouringCombo.count()):
             previousScalarTypes.append(str(self.colouringCombo.itemText(i)))
         
         logger.debug("New scalars: %r", scalarsDict.keys())
+        logger.debug("New scalars (L): %r", latticeScalarsNames)
         logger.debug("Old scalars: %r", previousScalarTypes)
         
         # check if need to remove any scalar types
         for i, name in enumerate(previousScalarTypes):
-            if name not in scalarsDict:
+            if name not in scalarsDict and name not in latticeScalarsNames:
                 logger.debug("Removing '%s'", name)
                 
                 # if selected set zero
@@ -1031,6 +1024,17 @@ class ColouringOptionsWindow(QtGui.QDialog):
             # already in?
             if scalarType in previousScalarTypes:
                 logger.debug("Skipping '%s'; already exists", scalarType)
+            
+            else:
+                logger.debug("Adding: '%s'", scalarType)
+                self.colouringCombo.addItem(scalarType)
+                self.addScalarWidget(scalarType)
+        
+        for scalarType in latticeScalarsNames:
+            # already in?
+            if scalarType in previousScalarTypes:
+                logger.debug("Skipping '%s'; already exists", scalarType)
+            
             else:
                 logger.debug("Adding: '%s'", scalarType)
                 self.colouringCombo.addItem(scalarType)
@@ -1097,13 +1101,12 @@ class ColouringOptionsWindow(QtGui.QDialog):
         """
         self.colourBy = str(self.colouringCombo.currentText())
         
-        if self.colourBy == "Atom property":
-            colourByText = str(self.propertyTypeCombo.currentText())
-            self.scalarBarTextEdit3.setText(self.atomPropertyType)
+        if self.colourBy.startswith("Lattice: "):
+            cbtext = self.colourBy[9:] + "(L)"
         else:
-            colourByText = self.colourBy
+            cbtext = self.colourBy
         
-        self.parent.colouringOptionsButton.setText("Colouring options: %s" % colourByText)
+        self.parent.colouringOptionsButton.setText("Colouring: %s" % cbtext)
         
         self.stackedWidget.setCurrentIndex(index)
     
@@ -1448,7 +1451,7 @@ class VectorsOptionsWindow(QtGui.QDialog):
             # make this 'and' so that if a lattice is missing one specie we still
             # keep the pair in case it comes back later... 
             if item.vectorsName not in inputState.vectorsDict:
-                self.logger.debug("  Removing vectors option: '%s'", item.name)
+                self.logger.debug("  Removing vectors option: '%s'", item.vectorsName)
                 item = self.vectorsList.takeItem(i)
                 if self.selectedVectorsName == item.vectorsName:
                     self.selectedVectorsName = None

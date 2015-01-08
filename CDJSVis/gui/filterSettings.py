@@ -1769,88 +1769,6 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
 
 
 ################################################################################
-class KineticEnergySettingsDialog(GenericSettingsDialog):
-    def __init__(self, mainWindow, title, parent=None):
-        super(KineticEnergySettingsDialog, self).__init__(title, parent)
-        
-        self.filterType = "Kinetic energy"
-        
-        self.minKE = -1000.0
-        self.maxKE = 1000.0
-        
-        self.minKESpinBox = QtGui.QDoubleSpinBox()
-        self.minKESpinBox.setSingleStep(0.1)
-        self.minKESpinBox.setMinimum(-9999.0)
-        self.minKESpinBox.setMaximum(9999.0)
-        self.minKESpinBox.setValue(self.minKE)
-        self.minKESpinBox.valueChanged.connect(self.setMinKE)
-        self.contentLayout.addRow("Min KE", self.minKESpinBox)
-        
-        self.maxKESpinBox = QtGui.QDoubleSpinBox()
-        self.maxKESpinBox.setSingleStep(0.1)
-        self.maxKESpinBox.setMinimum(-9999.0)
-        self.maxKESpinBox.setMaximum(9999.0)
-        self.maxKESpinBox.setValue(self.maxKE)
-        self.maxKESpinBox.valueChanged.connect(self.setMaxKE)
-        self.contentLayout.addRow("Max KE", self.maxKESpinBox)
-    
-    def setMinKE(self, val):
-        """
-        Set the minimum KE.
-        
-        """
-        self.minKE = val
-
-    def setMaxKE(self, val):
-        """
-        Set the maximum KE.
-        
-        """
-        self.maxKE = val
-
-
-################################################################################
-class PotentialEnergySettingsDialog(GenericSettingsDialog):
-    def __init__(self, mainWindow, title, parent=None):
-        super(PotentialEnergySettingsDialog, self).__init__(title, parent)
-        
-        self.filterType = "Potential energy"
-        
-        self.minPE = -1000.0
-        self.maxPE = 1000.0
-        
-        self.minPESpinBox = QtGui.QDoubleSpinBox()
-        self.minPESpinBox.setSingleStep(0.1)
-        self.minPESpinBox.setMinimum(-9999.0)
-        self.minPESpinBox.setMaximum(9999.0)
-        self.minPESpinBox.setValue(self.minPE)
-        self.minPESpinBox.valueChanged.connect(self.setMinPE)
-        self.contentLayout.addRow("Min PE", self.minPESpinBox)
-        
-        self.maxPESpinBox = QtGui.QDoubleSpinBox()
-        self.maxPESpinBox.setSingleStep(0.1)
-        self.maxPESpinBox.setMinimum(-9999.0)
-        self.maxPESpinBox.setMaximum(9999.0)
-        self.maxPESpinBox.setValue(self.maxPE)
-        self.maxPESpinBox.valueChanged.connect(self.setMaxPE)
-        self.contentLayout.addRow("Max PE", self.maxPESpinBox)
-    
-    def setMinPE(self, val):
-        """
-        Set the minimum PE.
-        
-        """
-        self.minPE = val
-
-    def setMaxPE(self, val):
-        """
-        Set the maximum PE.
-        
-        """
-        self.maxPE = val
-
-
-################################################################################
 class ChargeSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
         super(ChargeSettingsDialog, self).__init__(title, parent)
@@ -2604,3 +2522,48 @@ class AcnaSettingsDialog(GenericSettingsDialog):
         
         """
         self.maxBondDistance = val
+
+################################################################################
+
+class GenericScalarFilterSettingsDialog(GenericSettingsDialog):
+    """
+    Settings for generic scalar value filterer
+    
+    """
+    def __init__(self, mainWindow, filterType, title, parent=None):
+        super(GenericScalarFilterSettingsDialog, self).__init__(title, parent)
+        
+        self.filterType = filterType
+        
+        self.minVal = -10000.0
+        self.maxVal = 10000.0
+        
+        self.minValSpinBox = QtGui.QDoubleSpinBox()
+        self.minValSpinBox.setSingleStep(0.1)
+        self.minValSpinBox.setMinimum(-99999.0)
+        self.minValSpinBox.setMaximum(99999.0)
+        self.minValSpinBox.setValue(self.minVal)
+        self.minValSpinBox.valueChanged.connect(self.setMinVal)
+        self.contentLayout.addRow("Minimum", self.minValSpinBox)
+        
+        self.maxValSpinBox = QtGui.QDoubleSpinBox()
+        self.maxValSpinBox.setSingleStep(0.1)
+        self.maxValSpinBox.setMinimum(-99999.0)
+        self.maxValSpinBox.setMaximum(99999.0)
+        self.maxValSpinBox.setValue(self.maxVal)
+        self.maxValSpinBox.valueChanged.connect(self.setMaxVal)
+        self.contentLayout.addRow("Maximum", self.maxValSpinBox)
+    
+    def setMinVal(self, val):
+        """
+        Set the minimum value.
+        
+        """
+        self.minVal = val
+
+    def setMaxVal(self, val):
+        """
+        Set the maximum value.
+        
+        """
+        self.maxVal = val
