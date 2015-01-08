@@ -624,6 +624,7 @@ readLatticeLBOMD(PyObject *self, PyObject *args)
 static PyObject*
 readGenericLatticeFile(PyObject *self, PyObject *args)
 {
+    
     char *filename, *delimiter;
     FILE *INFILE=NULL;
     PyObject *headerList=NULL;
@@ -635,6 +636,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         return NULL;
     
     printf("GENREADER: reading file: '%s'\n", filename);
+    printf("Delimiter is '%s'\n", delimiter);
     
     INFILE = fopen(filename, "r");
     if (INFILE == NULL)
@@ -658,52 +660,104 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             return NULL;
         }
         
+        /* allocate atom scalar/vector arrays and add them to the dict */
+        
+        
         /* number of header lines */
         headerNumLines = PyList_Size(headerList);
         printf("HEADER NUM LINES: %ld\n", headerNumLines);
         
+        /* read header */
         for (i = 0; i < headerNumLines; i++)
         {
-            char line[512];
-            long j, lineLength;
+            char line[512], *pch;
+            long lineLength, count;
             PyObject *headerLine=NULL;
             
             headerLine = PyList_GetItem(headerList, i);
-            printf("Parsing header line %ld\n", i);
-//             lineLength = PyList_Size(headerLine);
+//             printf("Parsing header line %ld\n", i);
+            lineLength = PyList_Size(headerLine);
 //             printf("Header line %ld; length = %ld\n", i, lineLength);
             
             if (fgets(line, sizeof(line), INFILE) == NULL)
             {
-                PyErr_SetString(PyExc_RuntimeError, "End of file reached while reading header");
+                PyErr_SetString(PyExc_IOError, "End of file reached while reading header");
                 Py_DECREF(resultDict);
                 fclose(INFILE);
                 return NULL;
             }
             
-            /* make sure enough values in the line! */
-            /* should probably loop over strtok and make sure it gives the value we're expecting, extracting as we go... */
+            /* parse the line */
+            pch = strtok(line, delimiter);
+            count = 0;
+            while (pch != NULL && count < lineLength)
+            {
+                char *key, *type;
+                int stat, dim;
+                PyObject *itemTuple=NULL;
+                PyObject *value=NULL;
+                
+//                 printf("  Line value %ld: %s\n", count, pch);
+                
+                /* each item is a tuple: (key, type, dim) */
+                itemTuple = PyList_GetItem(headerLine, count);
+                if (!PyArg_ParseTuple(itemTuple, "ssi", &key, &type, &dim)) 
+                {
+                    // need to free arrays too...
+                    fclose(INFILE);
+                    Py_DECREF(resultDict);
+                    return NULL;
+                }
+                
+                /* parse */
+//                 printf("    Key: '%s'; Type: '%s'; Dim: %d\n", keytmp, typetmp, dimtmp);
+                
+                if (!strcmp("i", type))
+                    value = Py_BuildValue(type, atol(pch));
+                else if (!strcmp("d", type))
+                    value = Py_BuildValue(type, atof(pch));
+                else if (!strcmp("s", type))
+                    value = Py_BuildValue(type, pch);
+                else
+                {
+                    char errstring[128];
+                    
+                    sprintf("Unrecognised type string: '%s'", type);
+                    PyErr_SetString(PyExc_RuntimeError, errstring);
+                    // need to free arrays too...
+                    fclose(INFILE);
+                    Py_DECREF(resultDict);
+                    return NULL;
+                }
+                
+                stat = PyDict_SetItem(resultDict, Py_BuildValue("s", key), value);
+                if (stat)
+                {
+                    char errstring[128];
+                    
+                    sprintf("Could not set item in dictionary: '%s'", key);
+                    PyErr_SetString(PyExc_RuntimeError, errstring);
+                    // need to free arrays too...
+                    fclose(INFILE);
+                    Py_DECREF(resultDict);
+                    return NULL;
+                }
+                
+                pch = strtok(NULL, delimiter);
+                count++;
+            }
             
-            
-//             for (j = 0; j < lineLength; j++)
-//             {
-//                 char *keytmp, *typetmp;
-//                 long dimtmp;
-//                 PyObject *itemTuple=NULL;
-//                 
-//                 /* each item is a tuple: (key, type, dim) */
-//                 itemTuple = PyList_GetItem(headerLine, j);
-//                 
-//                 if (!PyArg_ParseTuple(itemTuple, "ssi", &keytmp, &typetmp, &dimtmp)) return NULL;
-//                 
-//                 printf("  Key: '%s'; Type: '%s'; Dim: %ld\n", keytmp, typetmp, dimtmp);
-//                 
-//                 
-//                 
-//             }
-            
-            
-            
+            if (count != lineLength)
+            {
+                char errstring[128];
+                
+                sprintf(errstring, "Wrong length for header line %ld: %ld != %ld", i, count, lineLength);
+                PyErr_SetString(PyExc_IOError, errstring);
+                Py_DECREF(resultDict);
+                // may have to free stuff in resultDict!
+                fclose(INFILE);
+                return NULL;
+            }
         }
         
         
