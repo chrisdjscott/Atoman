@@ -13,6 +13,8 @@
 static PyObject* readLatticeLBOMD(PyObject*, PyObject*);
 static PyObject* readRef(PyObject*, PyObject*);
 static PyObject* readLBOMDXYZ(PyObject*, PyObject*);
+static PyObject* readGenericLatticeFile(PyObject*, PyObject*);
+
 static int specieIndex(char*, int, char*);
 
 
@@ -23,6 +25,7 @@ static struct PyMethodDef methods[] = {
     {"readLatticeLBOMD", readLatticeLBOMD, METH_VARARGS, "Read LBOMD lattice format file"},
     {"readRef", readRef, METH_VARARGS, "Read LBOMD animation reference format file"},
     {"readLBOMDXYZ", readLBOMDXYZ, METH_VARARGS, "Read LBOMD XYZ format file"},
+    {"readGenericLatticeFile", readGenericLatticeFile, METH_VARARGS, "Read generic Lattice file"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -614,3 +617,67 @@ readLatticeLBOMD(PyObject *self, PyObject *args)
     return Py_BuildValue("i", 0);
 }
 
+/*******************************************************************************
+ * Read generic lattice file
+ *******************************************************************************/
+static PyObject*
+readGenericLatticeFile(PyObject *self, PyObject *args)
+{
+    char *filename, *delimiter;
+    FILE *INFILE=NULL;
+    PyObject *headerList=NULL;
+    PyObject *bodyList=NULL;
+    PyObject *resultDict=NULL;
+    
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "sO!O!s", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter))
+        return NULL;
+    
+    printf("GENREADER: reading file: '%s'\n", filename);
+    
+    INFILE = fopen(filename, "r");
+    if (INFILE == NULL)
+    {
+        char errstring[128];
+        
+        sprintf(errstring, "%s: '%s'", strerror(errno), filename);
+        PyErr_SetString(PyExc_IOError, errstring);
+        return NULL;
+    }
+    else
+    {
+        long i, headerNumLines;
+        
+        /* allocate result dict */
+        resultDict = PyDict_New();
+        if (resultDict == NULL)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Could not allocate resultDict");
+            fclose(INFILE);
+            return NULL;
+        }
+        
+        /* number of header lines */
+        headerNumLines = PyList_Size(headerList);
+        printf("HEADER NUM LINES: %ld\n", headerNumLines);
+        
+        for (i = 0; i < headerNumLines; i++)
+        {
+            PyObject *headerLine=NULL;
+            
+            headerLine = PyList_GetItem(headerList, i);
+            
+            
+            
+            
+        }
+        
+        
+        
+        
+    }
+    
+    fclose(INFILE);
+    
+    return resultDict;
+}
