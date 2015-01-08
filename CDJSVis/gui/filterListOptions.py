@@ -12,6 +12,7 @@ from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
 from . import genericForm
+from __builtin__ import False
 
 try:
     from .. import resources
@@ -1288,6 +1289,7 @@ class VectorsOptionsWindow(QtGui.QDialog):
         self.vectorRadiusVTK = 0.03
         self.vectorResolution = 6
         self.vectorScaleFactor = 1.0
+        self.vectorNormalise = False
         
         # layout
         layout = QtGui.QFormLayout(self)
@@ -1300,6 +1302,13 @@ class VectorsOptionsWindow(QtGui.QDialog):
         self.vectorsList.itemChanged.connect(self.listItemChanged)
         layout.addRow(self.vectorsList)
         
+        # normalise vectors
+        normaliseVectorsCheck = QtGui.QCheckBox()
+        normaliseVectorsCheck.setChecked(self.vectorNormalise)
+        normaliseVectorsCheck.setToolTip("Normalise the vector before applying the scaling")
+        normaliseVectorsCheck.stateChanged.connect(self.normaliseChanged)
+        layout.addRow("Normalise vector", normaliseVectorsCheck)
+        
         # scale vectors
         scaleVectorsCheck = QtGui.QDoubleSpinBox()
         scaleVectorsCheck.setMinimum(0.1)
@@ -1307,8 +1316,8 @@ class VectorsOptionsWindow(QtGui.QDialog):
         scaleVectorsCheck.setSingleStep(0.1)
         scaleVectorsCheck.setValue(self.vectorScaleFactor)
         scaleVectorsCheck.valueChanged.connect(self.vectorScaleFactorChanged)
-        scaleVectorsCheck.setToolTip("Scale the vectors by this amount")
-        layout.addRow("Scale vectors", scaleVectorsCheck)
+        scaleVectorsCheck.setToolTip("Scale the vector by this amount")
+        layout.addRow("Scale vector", scaleVectorsCheck)
         
         # vtk radius
 #         vtkRadiusSpin = QtGui.QDoubleSpinBox()
@@ -1346,6 +1355,17 @@ class VectorsOptionsWindow(QtGui.QDialog):
         
         # always refresh
         self.refresh()
+    
+    def normaliseChanged(self, state):
+        """
+        Normalise check changed
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.vectorNormalise = False
+        
+        else:
+            self.vectorNormalise = True
     
     def vectorScaleFactorChanged(self, val):
         """

@@ -29,6 +29,7 @@ from .utils import setRes, setupLUT, getScalar, setMapperScalarRange, makeScalar
 from . import utils
 from . import _rendering
 from ..visutils.threading_vis import GenericRunnable
+from ..algebra import vectors as vectorslib
 
 
 ################################################################################
@@ -1214,7 +1215,10 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
         logger.debug("Adding arrows for vector data: '%s'", vectorsName)
         
         # vectors
-        vects = numpy_support.numpy_to_vtk(vectorsDict[vectorsName], deep=1)
+        npvects = vectorsDict[vectorsName]
+        if vectorsOptions.vectorNormalise:
+            npvects = vectorslib.normalise(npvects)
+        vects = numpy_support.numpy_to_vtk(npvects, deep=1)
         vects.SetName("vectors")
         
         # polydata
