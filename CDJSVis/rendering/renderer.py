@@ -1139,6 +1139,8 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     # actor
     atomsActor = vtk.vtkActor()
     atomsActor.SetMapper(atomsMapper)
+#     atomsActor.GetProperty().SetSpecular(0.4)
+#     atomsActor.GetProperty().SetSpecularPower(50)
     actorsDict["Atoms"] = utils.ActorObject(atomsActor)
     
     # check for vectors

@@ -48,7 +48,7 @@ class MainWindow(QtGui.QMainWindow):
     The main window.
     
     """
-    
+    configDir = os.path.join(os.environ["HOME"], ".cdjsvis")
     Instances = set()
     
     def __init__(self, desktop, parent=None):
