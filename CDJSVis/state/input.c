@@ -16,6 +16,7 @@ static PyObject* readLBOMDXYZ(PyObject*, PyObject*);
 static PyObject* readGenericLatticeFile(PyObject*, PyObject*);
 
 static int specieIndex(char*, int, char*);
+static void parseGenericLine(PyObject*, PyObject*, char*, int);
 
 
 /*******************************************************************************
@@ -663,10 +664,43 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         
         for (i = 0; i < headerNumLines; i++)
         {
+            char line[512];
+            long j, lineLength;
             PyObject *headerLine=NULL;
             
             headerLine = PyList_GetItem(headerList, i);
+            printf("Parsing header line %ld\n", i);
+//             lineLength = PyList_Size(headerLine);
+//             printf("Header line %ld; length = %ld\n", i, lineLength);
             
+            if (fgets(line, sizeof(line), INFILE) == NULL)
+            {
+                PyErr_SetString(PyExc_RuntimeError, "End of file reached while reading header");
+                Py_DECREF(resultDict);
+                fclose(INFILE);
+                return NULL;
+            }
+            
+            /* make sure enough values in the line! */
+            /* should probably loop over strtok and make sure it gives the value we're expecting, extracting as we go... */
+            
+            
+//             for (j = 0; j < lineLength; j++)
+//             {
+//                 char *keytmp, *typetmp;
+//                 long dimtmp;
+//                 PyObject *itemTuple=NULL;
+//                 
+//                 /* each item is a tuple: (key, type, dim) */
+//                 itemTuple = PyList_GetItem(headerLine, j);
+//                 
+//                 if (!PyArg_ParseTuple(itemTuple, "ssi", &keytmp, &typetmp, &dimtmp)) return NULL;
+//                 
+//                 printf("  Key: '%s'; Type: '%s'; Dim: %ld\n", keytmp, typetmp, dimtmp);
+//                 
+//                 
+//                 
+//             }
             
             
             
@@ -680,4 +714,11 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     fclose(INFILE);
     
     return resultDict;
+}
+
+static void parseGenericLine(PyObject *resultDict, PyObject *lineList, char *line, int index)
+{
+    
+    
+    
 }
