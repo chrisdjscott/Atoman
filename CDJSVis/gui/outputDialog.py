@@ -1417,7 +1417,8 @@ class ImageSequenceTab(QtGui.QWidget):
         self.logger = logging.getLogger(__name__+".ImageSequenceTab")
         
         # initial values
-        self.numberFormat = "%04d"
+        self.numberFormats = ["%04d", "%d"]
+        self.numberFormat = self.numberFormats[0]
         self.minIndex = 0
         self.maxIndex = -1
         self.interval = 1
@@ -1489,8 +1490,7 @@ class ImageSequenceTab(QtGui.QWidget):
         
 #        label = QtGui.QLabel("Number format")
         self.numberFormatCombo = QtGui.QComboBox()
-        self.numberFormatCombo.addItem("%04d")
-        self.numberFormatCombo.addItem("%d")
+        self.numberFormatCombo.addItems(self.numberFormats)
         self.numberFormatCombo.currentIndexChanged[str].connect(self.numberFormatChanged)
         
 #        rowLayout.addWidget(label)
@@ -1730,7 +1730,18 @@ class ImageSequenceTab(QtGui.QWidget):
             
             count += 1
         
-        return filename[:lim]
+        if lim is None:
+            array = os.path.splitext(filename)
+            
+            if array[1] == '.gz' or array[1] == '.bz2':
+                array = os.path.splitext(array[0])
+            
+            filename = array[0]
+        
+        else:
+            filename = filename[:lim]
+        
+        return filename
     
     def startSequencer(self):
         """
@@ -2208,7 +2219,27 @@ class ImageSequenceTab(QtGui.QWidget):
             ext = pp.extension
         
         text = "%s%s.%s" % (self.fileprefix.text(), self.numberFormat, ext)
-        self.firstFileLabel.setText(text % (self.minIndex,))
+        
+        foundFormat = False
+        testfn = text % self.minIndex
+        if not (os.path.isfile(testfn) or os.path.isfile(testfn+'.gz') or os.path.isfile(testfn+'.bz2')):
+            self.logger.debug("First file does not exist; checking other number formats")
+            for i, nfmt in enumerate(self.numberFormats):
+                if nfmt == self.numberFormat:
+                    continue
+                
+                testText = "%s%s.%s" % (self.fileprefix.text(), nfmt, ext)
+                testfn = testText % self.minIndex
+                if os.path.isfile(testfn) or os.path.isfile(testfn+'.gz') or os.path.isfile(testfn+'.bz2'):
+                    foundFormat = True
+                    break
+            
+            if foundFormat:
+                self.logger.debug("Found suitable number format: '%s'", nfmt)
+                self.numberFormatCombo.setCurrentIndex(i)
+        
+        if not foundFormat:
+            self.firstFileLabel.setText(text % (self.minIndex,))
     
     def minIndexChanged(self, val):
         """
