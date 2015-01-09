@@ -622,7 +622,7 @@ readLatticeLBOMD(PyObject *self, PyObject *args)
 static PyObject*
 readGenericLatticeFile(PyObject *self, PyObject *args)
 {
-    
+    int atomIndexOffset;
     char *filename, *delimiter;
     FILE *INFILE=NULL;
     PyObject *headerList=NULL;
@@ -630,7 +630,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     PyObject *resultDict=NULL;
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "sO!O!s", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter))
+    if (!PyArg_ParseTuple(args, "sO!O!si", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter, &atomIndexOffset))
         return NULL;
     
     printf("GENREADER: reading file: '%s'\n", filename);
@@ -718,48 +718,51 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 /* parse */
 //                 printf("    Key: '%s'; Type: '%s'; Dim: %d\n", keytmp, typetmp, dimtmp);
                 
-                if (!strcmp("xdim", key) || !strcmp("ydim", key) || !strcmp("zdim", key))
-                    cellDimsFlag++;
-                
-                if (!strcmp("i", type))
+                if (strcmp("SKIP", key))
                 {
-                    long tmpval;
-                    
-                    tmpval = atol(pch);
-                    if (!strcmp("NAtoms", key)) NAtoms = tmpval;
-                    value = Py_BuildValue(type, tmpval);
-                }
-                else if (!strcmp("d", type))
-                    value = Py_BuildValue(type, atof(pch));
-                else if (!strcmp("s", type))
-                    value = Py_BuildValue(type, pch);
-                else
-                {
-                    char errstring[128];
-                    
-                    sprintf("Unrecognised type string: '%s'", type);
-                    PyErr_SetString(PyExc_RuntimeError, errstring);
-                    // need to free arrays too...
-                    fclose(INFILE);
-                    Py_DECREF(resultDict);
-                    return NULL;
-                }
+                    if (!strcmp("xdim", key) || !strcmp("ydim", key) || !strcmp("zdim", key))
+                        cellDimsFlag++;
                 
-                stat = PyDict_SetItemString(resultDict, key, value);
-                
-                /* DO I NEED TO DECREF VALUE TOO? */
-                Py_DECREF(value);
-                
-                if (stat)
-                {
-                    char errstring[128];
+                    if (!strcmp("i", type))
+                    {
+                        long tmpval;
                     
-                    sprintf("Could not set item in dictionary: '%s'", key);
-                    PyErr_SetString(PyExc_RuntimeError, errstring);
-                    // need to free arrays too...
-                    fclose(INFILE);
-                    Py_DECREF(resultDict);
-                    return NULL;
+                        tmpval = atol(pch);
+                        if (!strcmp("NAtoms", key)) NAtoms = tmpval;
+                        value = Py_BuildValue(type, tmpval);
+                    }
+                    else if (!strcmp("d", type))
+                        value = Py_BuildValue(type, atof(pch));
+                    else if (!strcmp("s", type))
+                        value = Py_BuildValue(type, pch);
+                    else
+                    {
+                        char errstring[128];
+                    
+                        sprintf("Unrecognised type string: '%s'", type);
+                        PyErr_SetString(PyExc_RuntimeError, errstring);
+                        // need to free arrays too...
+                        fclose(INFILE);
+                        Py_DECREF(resultDict);
+                        return NULL;
+                    }
+                
+                    stat = PyDict_SetItemString(resultDict, key, value);
+                
+                    /* DO I NEED TO DECREF VALUE TOO? */
+                    Py_DECREF(value);
+                
+                    if (stat)
+                    {
+                        char errstring[128];
+                    
+                        sprintf("Could not set item in dictionary: '%s'", key);
+                        PyErr_SetString(PyExc_RuntimeError, errstring);
+                        // need to free arrays too...
+                        fclose(INFILE);
+                        Py_DECREF(resultDict);
+                        return NULL;
+                    }
                 }
                 
                 /* read next token */
@@ -832,60 +835,63 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     return NULL;
                 }
                 
-                if (!atomIDFlag && !strcmp("atomID", key)) atomIDFlag = 1;
-//                 if (!haveSpecieOrSymbol && (!strcmp("Symbol", key) || !strcmp("Specie", key)))
-                if (!haveSpecieOrSymbol && !strcmp("Symbol", key))
-                    haveSpecieOrSymbol = 1;
-                
-                if (!strcmp("i", type))
-                    typenum = NPY_INT32;
-                else if (!strcmp("d", type))
-                    typenum = NPY_FLOAT64;
-                else
+                if (strcmp("SKIP", key))
                 {
-                    char errstring[128];
+                    if (!atomIDFlag && !strcmp("atomID", key)) atomIDFlag = 1;
+    //                 if (!haveSpecieOrSymbol && (!strcmp("Symbol", key) || !strcmp("Specie", key)))
+                    if (!haveSpecieOrSymbol && !strcmp("Symbol", key))
+                        haveSpecieOrSymbol = 1;
+                
+                    if (!strcmp("i", type))
+                        typenum = NPY_INT32;
+                    else if (!strcmp("d", type))
+                        typenum = NPY_FLOAT64;
+                    else
+                    {
+                        char errstring[128];
                     
-                    sprintf("Unrecognised type string (body prep): '%s'", type);
-                    PyErr_SetString(PyExc_RuntimeError, errstring);
-                    // need to free arrays too...
-                    fclose(INFILE);
-                    Py_DECREF(resultDict);
-                    return NULL;
-                }
+                        sprintf("Unrecognised type string (body prep): '%s'", type);
+                        PyErr_SetString(PyExc_RuntimeError, errstring);
+                        // need to free arrays too...
+                        fclose(INFILE);
+                        Py_DECREF(resultDict);
+                        return NULL;
+                    }
                 
-                shape_dim = dim == 1 ? 1 : 2;
-                data = (PyArrayObject *) PyArray_SimpleNew(shape_dim, np_dims, typenum);
-                if (data == NULL)
-                {
-                    char errstring[128];
+                    shape_dim = dim == 1 ? 1 : 2;
+                    data = (PyArrayObject *) PyArray_SimpleNew(shape_dim, np_dims, typenum);
+                    if (data == NULL)
+                    {
+                        char errstring[128];
                     
-                    sprintf(errstring, "Could not allocate ndarray: '%s'", key);
-                    PyErr_SetString(PyExc_MemoryError, errstring);
-                    fclose(INFILE);
-                    Py_DECREF(resultDict);
-                    return NULL;
-                }
+                        sprintf(errstring, "Could not allocate ndarray: '%s'", key);
+                        PyErr_SetString(PyExc_MemoryError, errstring);
+                        fclose(INFILE);
+                        Py_DECREF(resultDict);
+                        return NULL;
+                    }
                 
-                /* store in dict */
-                stat = PyDict_SetItemString(resultDict, key, PyArray_Return(data));
+                    /* store in dict */
+                    stat = PyDict_SetItemString(resultDict, key, PyArray_Return(data));
                 
-                /* decrease ref count on data */
-                /* the documentation does not say PyDict_SetItem steals the reference
-                ** (like PyList_SetItem) so I assume it increases the ref count and that
-                ** I need to decrease it
-                */
-                Py_DECREF(data);
+                    /* decrease ref count on data */
+                    /* the documentation does not say PyDict_SetItem steals the reference
+                    ** (like PyList_SetItem) so I assume it increases the ref count and that
+                    ** I need to decrease it
+                    */
+                    Py_DECREF(data);
                 
-                if (stat)
-                {
-                    char errstring[128];
+                    if (stat)
+                    {
+                        char errstring[128];
                     
-                    sprintf("Could not set item in dictionary (body prep): '%s'", key);
-                    PyErr_SetString(PyExc_RuntimeError, errstring);
-                    // need to free arrays too...
-                    fclose(INFILE);
-                    Py_DECREF(resultDict);
-                    return NULL;
+                        sprintf("Could not set item in dictionary (body prep): '%s'", key);
+                        PyErr_SetString(PyExc_RuntimeError, errstring);
+                        // need to free arrays too...
+                        fclose(INFILE);
+                        Py_DECREF(resultDict);
+                        return NULL;
+                    }
                 }
             }
         }
@@ -899,7 +905,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             int stat;
             PyObject *atomID=NULL;
             
-            atomID = PyArray_Arange(0, NAtoms, 1, NPY_INT32);
+            atomID = PyArray_Arange(1, NAtoms + 1, 1, NPY_INT32);
             if (atomID == NULL)
             {
                 PyErr_SetString(PyExc_MemoryError, "Could not allocate atomID array");
@@ -924,10 +930,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             }
         }
         
-        /* we need to make specie list/count too */
-        // if symbol exists make it from that
-        // if specie exists guess a specie list
-        // if neither exist give all the same
+        /* specie list/count */
         specieList = PyList_New(0);
         if (specieList == NULL)
         {
@@ -952,13 +955,128 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         
         for (i = 0; i < NAtoms; i++)
         {
-            long j;
+            long j, atomIndex = -1;
+            char *atomLines[numLines];
+            const int MAX_LINE_LENGTH = 512;
             
 //             printf("Reading atom: %ld\n", i);
             
+            /* read all of this atom's lines first... */
             for (j = 0; j < numLines; j++)
             {
-                char line[512], *pch;
+                atomLines[j] = malloc(MAX_LINE_LENGTH * sizeof(char));
+                if (atomLines[j] == NULL)
+                {
+                    long k;
+                    
+                    PyErr_SetString(PyExc_MemoryError, "Could not allocate atom line");
+                    Py_DECREF(resultDict);
+                    Py_DECREF(specieList);
+                    Py_DECREF(specieCount);
+                    fclose(INFILE);
+                    for (k = 0; k < j; k++) free(atomLines[k]);
+                    return NULL;
+                }
+                
+                if (fgets(atomLines[j], MAX_LINE_LENGTH, INFILE) == NULL)
+                {
+                    long k;
+                    char errstring[128];
+                    
+                    sprintf(errstring, "End of file reached while reading body (atom %ld)", i);
+                    PyErr_SetString(PyExc_IOError, errstring);
+                    Py_DECREF(resultDict);
+                    Py_DECREF(specieList);
+                    Py_DECREF(specieCount);
+                    fclose(INFILE);
+                    for (k = 0; k < j; k++) free(atomLines[k]);
+                    return NULL;
+                }
+            }
+            
+            /* if atomID is in file, we should parse the line once and get the atom ID */
+            /* Check that the atomID is <= NAtoms (depending if starts from one)
+             * Make an input flag/option that says if atom ID starts from 1 or 0...
+             */
+            if (atomIDFlag)
+            {
+                int foundAtomID = 0;
+                
+                for (j = 0; j < numLines; j++)
+                {
+                    char *pch;
+                    char line[MAX_LINE_LENGTH];
+                    long lineLength, count;
+                    PyObject *lineList=NULL;
+                    
+                    /* steals reference, no need to DECREF */
+                    lineList = PyList_GetItem(bodyList, j);
+                    lineLength = PyList_Size(lineList);
+                    
+                    /* parse for atomID */
+                    /* make a copy of line as strtok modifies the original? */
+                    strcpy(line, atomLines[j]);
+                    pch = strtok(line, delimiter);
+                    count = 0;
+                    while (!foundAtomID && pch != NULL && count < lineLength)
+                    {
+                        char *key, *type;
+                        int dim, dimcount;
+                        PyObject *itemTuple;
+                    
+                        itemTuple = PyList_GetItem(lineList, count);
+                        if (!PyArg_ParseTuple(itemTuple, "ssi", &key, &type, &dim)) 
+                        {
+                            long k;
+                            
+                            for (k = 0; k < numLines; k++) free(atomLines[k]);
+                            fclose(INFILE);
+                            Py_DECREF(resultDict);
+                            Py_DECREF(specieList);
+                            Py_DECREF(specieCount);
+                            return NULL;
+                        }
+                    
+                        dimcount = 0;
+                        while (!foundAtomID && pch != NULL && dimcount < dim)
+                        {
+                            if (!strcmp("atomID", key))
+                            {
+                                atomIndex = (long) atoi(pch);
+                                foundAtomID = 1;
+                            }
+                        
+                            pch = strtok(NULL, delimiter);
+                            dimcount++;
+                        }
+                    }
+                    // TODO: should have err checking here on count/dimcount?
+                    
+                    /* check atomIndex in range */
+                    if (foundAtomID)
+                        atomIndex -= (long) atomIndexOffset;
+                    
+                    if (!foundAtomID || (atomIndex < 0 || atomIndex > NAtoms))
+                    {
+                        char errstring[128];
+                        long k;
+                        
+                        if (foundAtomID) sprintf(errstring, "Atom index error: %ld out of range (atom %ld)", atomIndex, i);
+                        else sprintf(errstring, "Atom index not in line (atom %ld)", i);
+                        PyErr_SetString(PyExc_RuntimeError, errstring);
+                        for (k = 0; k < numLines; k++) free(atomLines[k]);
+                        fclose(INFILE);
+                        Py_DECREF(resultDict);
+                        Py_DECREF(specieList);
+                        Py_DECREF(specieCount);
+                    }
+                }
+            }
+            else atomIndex = i;
+            
+            for (j = 0; j < numLines; j++)
+            {
+                char line[MAX_LINE_LENGTH], *pch;
                 long lineLength, count;
                 PyObject *lineList=NULL;
         
@@ -968,19 +1086,8 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
 //                 printf("Body line %ld; num items = %ld\n", j, lineLength);
                 
                 /* read line */
-                if (fgets(line, sizeof(line), INFILE) == NULL)
-                {
-                    char errstring[128];
-                    
-                    sprintf(errstring, "End of file reached while reading body (atom %ld)", i);
-                    PyErr_SetString(PyExc_IOError, errstring);
-                    Py_DECREF(resultDict);
-                    Py_DECREF(specieList);
-                    Py_DECREF(specieCount);
-                    fclose(INFILE);
-                    return NULL;
-                }
-            
+                strcpy(line, atomLines[j]);
+
                 /* parse the line */
                 pch = strtok(line, delimiter);
                 count = 0;
@@ -997,10 +1104,13 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     itemTuple = PyList_GetItem(lineList, count);
                     if (!PyArg_ParseTuple(itemTuple, "ssi", &key, &type, &dim)) 
                     {
+                        long k;
+                        
                         fclose(INFILE);
                         Py_DECREF(resultDict);
                         Py_DECREF(specieList);
                         Py_DECREF(specieCount);
+                        for (k = 0; k < numLines; k++) free(atomLines[k]);
                         return NULL;
                     }
                     
@@ -1011,79 +1121,34 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     dimcount = 0;
                     while (pch != NULL && dimcount < dim)
                     {
-                        /* symbol is special... */
-                        if (!strcmp("Symbol", key))
+                        if (strcmp("SKIP", key))
                         {
-                            int check, stat;
-                            long value;
-                            Py_ssize_t symlen, index;
-                            PyObject *symin=NULL;
-                            PyObject *valueObj=NULL;
-                            
-                            /* get the symbol */
-                            symin = Py_BuildValue("s", pch);
-                            symlen = PyString_Size(symin);
-                            if (symlen == 1)
+                            /* symbol is special... */
+                            if (!strcmp("Symbol", key))
                             {
-                                Py_XDECREF(symin);
-                                symin = NULL;
-                                symin = PyString_FromFormat("%s_", pch);
-                            }
-                            else if (symlen != 2)
-                            {
-                                char errstring[128];
-                                
-                                sprintf(errstring, "Cannot handle symbol of length %d", (int) symlen);
-                                PyErr_SetString(PyExc_RuntimeError, errstring);
-                                fclose(INFILE);
-                                Py_DECREF(resultDict);
-                                Py_DECREF(specieList);
-                                Py_DECREF(specieCount);
-                                Py_XDECREF(symin);
-                                return NULL;
-                            }
+                                int check, stat;
+                                long value;
+                                Py_ssize_t symlen, index;
+                                PyObject *symin=NULL;
+                                PyObject *valueObj=NULL;
                             
-//                            printf("Symbol: '%s'\n", PyString_AsString(symin));
-                            
-                            /* check if it already exists in the list */
-                            check = PySequence_Contains(specieList, symin);
-                            
-                            /* error */
-                            if (check == -1)
-                            {
-                                PyErr_SetString(PyExc_RuntimeError, "Checking if symbol in specie list failed");
-                                fclose(INFILE);
-                                Py_DECREF(resultDict);
-                                Py_DECREF(specieList);
-                                Py_DECREF(specieCount);
-                                Py_XDECREF(symin);
-                                return NULL;
-                            }
-                            /* symbol not in specie list */
-                            else if (check == 0)
-                            {
-                                PyObject *init=NULL;
-                                
-                                printf("Add new specie\n");
-                                
-                                /* add to list */
-                                stat = PyList_Append(specieList, symin);
-                                if (stat == -1)
+                                /* get the symbol */
+                                symin = Py_BuildValue("s", pch);
+                                symlen = PyString_Size(symin);
+                                if (symlen == 1)
                                 {
-                                    fclose(INFILE);
-                                    Py_DECREF(resultDict);
-                                    Py_DECREF(specieList);
-                                    Py_DECREF(specieCount);
                                     Py_XDECREF(symin);
-                                    return NULL;
-
+                                    symin = NULL;
+                                    symin = PyString_FromFormat("%s_", pch);
                                 }
-                                
-                                init = PyInt_FromLong(0);
-                                stat = PyList_Append(specieCount, init);
-                                Py_XDECREF(init);
-                                if (stat == -1)
+                                else if (symlen != 2)
                                 {
+                                    char errstring[128];
+                                    long k;
+                                
+                                    sprintf(errstring, "Cannot handle symbol of length %d", (int) symlen);
+                                    PyErr_SetString(PyExc_RuntimeError, errstring);
+                                    for (k = 0; k < numLines; k++) free(atomLines[k]);
                                     fclose(INFILE);
                                     Py_DECREF(resultDict);
                                     Py_DECREF(specieList);
@@ -1091,84 +1156,152 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     Py_XDECREF(symin);
                                     return NULL;
                                 }
-                            }
                             
-                            /* increment specie counter */
-                            index = PySequence_Index(specieList, symin);
-                            if (index == -1)
-                            {
-                                PyErr_SetString(PyExc_RuntimeError, "Could not find symbol index in specieList");
-                                fclose(INFILE);
-                                Py_DECREF(resultDict);
-                                Py_DECREF(specieList);
-                                Py_DECREF(specieCount);
-                                Py_XDECREF(symin);
-                                return NULL;
-                            }
+    //                            printf("Symbol: '%s'\n", PyString_AsString(symin));
                             
-                            valueObj = PyList_GetItem(specieCount, index);
-                            if (valueObj == NULL)
-                            {
-                                fclose(INFILE);
-                                Py_DECREF(resultDict);
-                                Py_DECREF(specieList);
-                                Py_DECREF(specieCount);
-                                Py_XDECREF(symin);
-                                return NULL;
-                            }
+                                /* check if it already exists in the list */
+                                check = PySequence_Contains(specieList, symin);
                             
-                            value = PyInt_AsLong(valueObj);
-                            value++;
-                            
-                            stat = PyList_SetItem(specieCount, index, PyInt_FromLong(value));
-                            if (stat == -1)
-                            {
-                                PyErr_SetString(PyExc_RuntimeError, "Could not set incremented specie count on list");
-                                fclose(INFILE);
-                                Py_DECREF(resultDict);
-                                Py_DECREF(specieList);
-                                Py_DECREF(specieCount);
-                                Py_XDECREF(symin);
-                                return NULL;
-                            }
-                            
-                            Py_XDECREF(symin);
-                            
-                            /* set specie value */
-                            IIND1(array, i) = (int) index;
-                        }
-                        else
-                        {
-                            if (!strcmp("i", type))
-                            {
-                                int value;
-                            
-                                value = atoi(pch);
-                                if (dim == 1) IIND1(array, i) = value;
-                                else IIND2(array, i, dimcount) = value;
-                            }
-                            else if (!strcmp("d", type))
-                            {
-                                double value;
+                                /* error */
+                                if (check == -1)
+                                {
+                                    long k;
+                                    
+                                    for (k = 0; k < numLines; k++) free(atomLines[k]);
+                                    PyErr_SetString(PyExc_RuntimeError, "Checking if symbol in specie list failed");
+                                    fclose(INFILE);
+                                    Py_DECREF(resultDict);
+                                    Py_DECREF(specieList);
+                                    Py_DECREF(specieCount);
+                                    Py_XDECREF(symin);
+                                    return NULL;
+                                }
+                                /* symbol not in specie list */
+                                else if (check == 0)
+                                {
+                                    PyObject *init=NULL;
                                 
-                                value = atof(pch);
-                                if (dim == 1) DIND1(array, i) = value;
-                                else DIND2(array, i, dimcount) = value;
+                                    printf("Add new specie\n");
+                                
+                                    /* add to list */
+                                    stat = PyList_Append(specieList, symin);
+                                    if (stat == -1)
+                                    {
+                                        long k;
+                                        
+                                        for (k = 0; k < numLines; k++) free(atomLines[k]);
+                                        fclose(INFILE);
+                                        Py_DECREF(resultDict);
+                                        Py_DECREF(specieList);
+                                        Py_DECREF(specieCount);
+                                        Py_XDECREF(symin);
+                                        return NULL;
+                                    }
+                                
+                                    init = PyInt_FromLong(0);
+                                    stat = PyList_Append(specieCount, init);
+                                    Py_XDECREF(init);
+                                    if (stat == -1)
+                                    {
+                                        long k;
+                                        
+                                        for (k = 0; k < numLines; k++) free(atomLines[k]);
+                                        fclose(INFILE);
+                                        Py_DECREF(resultDict);
+                                        Py_DECREF(specieList);
+                                        Py_DECREF(specieCount);
+                                        Py_XDECREF(symin);
+                                        return NULL;
+                                    }
+                                }
+                            
+                                /* increment specie counter */
+                                index = PySequence_Index(specieList, symin);
+                                if (index == -1)
+                                {
+                                    long k;
+                                    
+                                    for (k = 0; k < numLines; k++) free(atomLines[k]);
+                                    PyErr_SetString(PyExc_RuntimeError, "Could not find symbol index in specieList");
+                                    fclose(INFILE);
+                                    Py_DECREF(resultDict);
+                                    Py_DECREF(specieList);
+                                    Py_DECREF(specieCount);
+                                    Py_XDECREF(symin);
+                                    return NULL;
+                                }
+                            
+                                valueObj = PyList_GetItem(specieCount, index);
+                                if (valueObj == NULL)
+                                {
+                                    long k;
+                                    
+                                    for (k = 0; k < numLines; k++) free(atomLines[k]);
+                                    fclose(INFILE);
+                                    Py_DECREF(resultDict);
+                                    Py_DECREF(specieList);
+                                    Py_DECREF(specieCount);
+                                    Py_XDECREF(symin);
+                                    return NULL;
+                                }
+                            
+                                value = PyInt_AsLong(valueObj);
+                                value++;
+                            
+                                stat = PyList_SetItem(specieCount, index, PyInt_FromLong(value));
+                                if (stat == -1)
+                                {
+                                    long k;
+                                    
+                                    for (k = 0; k < numLines; k++) free(atomLines[k]);
+                                    PyErr_SetString(PyExc_RuntimeError, "Could not set incremented specie count on list");
+                                    fclose(INFILE);
+                                    Py_DECREF(resultDict);
+                                    Py_DECREF(specieList);
+                                    Py_DECREF(specieCount);
+                                    Py_XDECREF(symin);
+                                    return NULL;
+                                }
+                            
+                                Py_XDECREF(symin);
+                            
+                                /* set specie value */
+                                IIND1(array, atomIndex) = (int) index;
                             }
                             else
                             {
-                                char errstring[128];
-                    
-                                sprintf("Unrecognised type string (body): '%s'", type);
-                                PyErr_SetString(PyExc_RuntimeError, errstring);
-                                fclose(INFILE);
-                                Py_DECREF(resultDict);
-                                Py_DECREF(specieList);
-                                Py_DECREF(specieCount);
-                                return NULL;
+                                if (!strcmp("i", type))
+                                {
+                                    int value;
+                            
+                                    value = atoi(pch);
+                                    if (dim == 1) IIND1(array, atomIndex) = value;
+                                    else IIND2(array, atomIndex, dimcount) = value;
+                                }
+                                else if (!strcmp("d", type))
+                                {
+                                    double value;
+                                
+                                    value = atof(pch);
+                                    if (dim == 1) DIND1(array, atomIndex) = value;
+                                    else DIND2(array, atomIndex, dimcount) = value;
+                                }
+                                else
+                                {
+                                    char errstring[128];
+                                    long k;
+                                    
+                                    for (k = 0; k < numLines; k++) free(atomLines[k]);
+                                    sprintf("Unrecognised type string (body): '%s'", type);
+                                    PyErr_SetString(PyExc_RuntimeError, errstring);
+                                    fclose(INFILE);
+                                    Py_DECREF(resultDict);
+                                    Py_DECREF(specieList);
+                                    Py_DECREF(specieCount);
+                                    return NULL;
+                                }
                             }
                         }
-                    
                     
                         /* read next token */
                         pch = strtok(NULL, delimiter);
@@ -1178,7 +1311,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     if (dimcount != dim)
                     {
                         char errstring[128];
-                
+                        long k;
+                        
+                        for (k = 0; k < numLines; k++) free(atomLines[k]);
                         sprintf(errstring, "Error during body line read (%ld:%ld): dim %d != %d", i, j, dimcount, dim);
                         PyErr_SetString(PyExc_IOError, errstring);
                         Py_DECREF(resultDict);
@@ -1194,7 +1329,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 if (count != lineLength)
                 {
                     char errstring[128];
-                
+                    long k;
+                    
+                    for (k = 0; k < numLines; k++) free(atomLines[k]);
                     sprintf(errstring, "Error during body line read (%ld:%ld): %ld != %ld", i, j, count, lineLength);
                     PyErr_SetString(PyExc_IOError, errstring);
                     Py_DECREF(resultDict);
@@ -1204,20 +1341,18 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     return NULL;
                 }
             }
+            
+            for (j = 0; j < numLines; j++) free(atomLines[j]);
         }
         
         /* store specieList/Count */
         PyDict_SetItemString(resultDict, "specieList", specieList);
-        PyDict_SetItemString(resultDict, "specieCount", specieCount);
         Py_DECREF(specieList);
+        PyDict_SetItemString(resultDict, "specieCount", specieCount);
         Py_DECREF(specieCount);
     }
     
     fclose(INFILE);
-    
-    /* correct ordering (make a flag that checks if we need to do this) ie atomID should be sorted*/
-    /* need to make an 'atomIDStartsFromOneFlag' or 'atomIDMinVal' then offset so we index arrays from zero */
-    // also check atomIDs are continuous from min val...
     
     printf("GENREADER: finished\n");
     
