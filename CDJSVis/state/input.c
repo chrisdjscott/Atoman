@@ -16,7 +16,6 @@ static PyObject* readLBOMDXYZ(PyObject*, PyObject*);
 static PyObject* readGenericLatticeFile(PyObject*, PyObject*);
 
 static int specieIndex(char*, int, char*);
-static void parseGenericLine(PyObject*, PyObject*, char*, int);
 
 
 /*******************************************************************************
@@ -649,7 +648,10 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     }
     else
     {
-        long i, headerNumLines;
+        int atomIDFlag = 0;
+        int haveSpecieOrSymbol = 0;
+        long i, numLines;
+        long NAtoms = -1;
         
         /* allocate result dict */
         resultDict = PyDict_New();
@@ -664,21 +666,23 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         
         
         /* number of header lines */
-        headerNumLines = PyList_Size(headerList);
-        printf("HEADER NUM LINES: %ld\n", headerNumLines);
+        numLines = PyList_Size(headerList);
+        printf("HEADER NUM LINES: %ld\n", numLines);
         
         /* read header */
-        for (i = 0; i < headerNumLines; i++)
+        for (i = 0; i < numLines; i++)
         {
             char line[512], *pch;
             long lineLength, count;
             PyObject *headerLine=NULL;
             
+            /* this is a borrowed ref so no need to DECREF */
             headerLine = PyList_GetItem(headerList, i);
 //             printf("Parsing header line %ld\n", i);
             lineLength = PyList_Size(headerLine);
 //             printf("Header line %ld; length = %ld\n", i, lineLength);
             
+            /* read line */
             if (fgets(line, sizeof(line), INFILE) == NULL)
             {
                 PyErr_SetString(PyExc_IOError, "End of file reached while reading header");
@@ -713,7 +717,13 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
 //                 printf("    Key: '%s'; Type: '%s'; Dim: %d\n", keytmp, typetmp, dimtmp);
                 
                 if (!strcmp("i", type))
-                    value = Py_BuildValue(type, atol(pch));
+                {
+                    long tmpval;
+                    
+                    tmpval = atol(pch);
+                    if (!strcmp("NAtoms", key)) NAtoms = tmpval;
+                    value = Py_BuildValue(type, tmpval);
+                }
                 else if (!strcmp("d", type))
                     value = Py_BuildValue(type, atof(pch));
                 else if (!strcmp("s", type))
@@ -730,7 +740,11 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     return NULL;
                 }
                 
-                stat = PyDict_SetItem(resultDict, Py_BuildValue("s", key), value);
+                stat = PyDict_SetItemString(resultDict, key, value);
+                
+                /* DO I NEED TO DECREF VALUE TOO? */
+                Py_DECREF(value);
+                
                 if (stat)
                 {
                     char errstring[128];
@@ -743,6 +757,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     return NULL;
                 }
                 
+                /* read next token */
                 pch = strtok(NULL, delimiter);
                 count++;
             }
@@ -760,19 +775,291 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             }
         }
         
+        /* we check that NAtoms was read during the header... */
+        if (NAtoms == -1)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Cannot autodetect NAtoms at the moment...");
+            Py_DECREF(resultDict);
+            // may have to free stuff in resultDict!
+            fclose(INFILE);
+            return NULL;
+        }
+        
+        printf("Preparing to read body; NAtoms = %ld\n", NAtoms);
+        
+        /* number of body lines per atom */
+        numLines = PyList_Size(bodyList);
+        printf("BODY NUM LINES PER ATOM: %ld\n", numLines);
+        
+        /* allocate the arrays for scalar/vector data */
+        for (i = 0; i < numLines; i++)
+        {
+            long lineLength, j;
+            PyObject *lineList=NULL;
+            
+            lineList = PyList_GetItem(bodyList, i);
+            lineLength = PyList_Size(lineList);
+            
+            printf("Body line %ld; num items = %ld\n", i, lineLength);
+            
+            for (j = 0; j < lineLength; j++)
+            {
+                char *key, *type;
+                int dim, stat, typenum;
+                long shape_dim;
+                npy_intp np_dims[2] = {NAtoms, 3};
+                PyObject *itemTuple=NULL;
+                PyArrayObject *data=NULL;
+                
+                itemTuple = PyList_GetItem(lineList, j);
+                if (!PyArg_ParseTuple(itemTuple, "ssi", &key, &type, &dim)) 
+                {
+                    // need to free arrays too... PyDict_Clear???? will it free all items in the dict
+                    fclose(INFILE);
+                    Py_DECREF(resultDict);
+                    return NULL;
+                }
+                
+                if (!atomIDFlag && !strcmp("atomID", key)) atomIDFlag = 1;
+                if (!haveSpecieOrSymbol && (!strcmp("Symbol", key) || !strcmp("Specie", key)))
+                    haveSpecieOrSymbol = 1;
+                
+                if (!strcmp("i", type))
+                    typenum = NPY_INT32;
+                else if (!strcmp("d", type))
+                    typenum = NPY_FLOAT64;
+                else
+                {
+                    char errstring[128];
+                    
+                    sprintf("Unrecognised type string (body prep): '%s'", type);
+                    PyErr_SetString(PyExc_RuntimeError, errstring);
+                    // need to free arrays too...
+                    fclose(INFILE);
+                    Py_DECREF(resultDict);
+                    return NULL;
+                }
+                
+                shape_dim = dim == 1 ? 1 : 2;
+                data = (PyArrayObject *) PyArray_SimpleNew(shape_dim, np_dims, typenum);
+                if (data == NULL)
+                {
+                    char errstring[128];
+                    
+                    sprintf(errstring, "Could not allocate ndarray: '%s'", key);
+                    PyErr_SetString(PyExc_MemoryError, errstring);
+                    fclose(INFILE);
+                    Py_DECREF(resultDict);
+                    return NULL;
+                }
+                
+                /* store in dict */
+                stat = PyDict_SetItemString(resultDict, key, PyArray_Return(data));
+                
+                /* decrease ref count on data */
+                /* the documentation does not say PyDict_SetItem steals the reference
+                ** (like PyList_SetItem) so I assume it increases the ref count and that
+                ** I need to decrease it
+                */
+                Py_DECREF(data);
+                
+                if (stat)
+                {
+                    char errstring[128];
+                    
+                    sprintf("Could not set item in dictionary (body prep): '%s'", key);
+                    PyErr_SetString(PyExc_RuntimeError, errstring);
+                    // need to free arrays too...
+                    fclose(INFILE);
+                    Py_DECREF(resultDict);
+                    return NULL;
+                }
+            }
+        }
+        
+        printf("Atom ID flag: %d\n", atomIDFlag);
+        printf("Have specie or symbol: %d\n", haveSpecieOrSymbol);
+        
+        /* if no atomID array was specified we create one ourselves... */
+        if (!atomIDFlag)
+        {
+            int stat;
+            PyObject *atomID=NULL;
+            
+            atomID = PyArray_Arange(0, NAtoms, 1, NPY_INT32);
+            if (atomID == NULL)
+            {
+                PyErr_SetString(PyExc_MemoryError, "Could not allocate atomID array");
+                fclose(INFILE);
+                Py_DECREF(resultDict);
+                return NULL;
+            }
+            
+            /* store in dict */
+            stat = PyDict_SetItemString(resultDict, "atomID", atomID);
+            
+            /* give up our reference to array */
+            Py_DECREF(atomID);
+            
+            if (stat)
+            {
+                PyErr_SetString(PyExc_RuntimeError, "Could not set atomID in dictionary");
+                // need to free arrays too...
+                fclose(INFILE);
+                Py_DECREF(resultDict);
+                return NULL;
+            }
+        }
+        
+        /* we need to make specie list/count too */
+        // if symbol exists make it from that
+        // if specie exists guess a specie list
+        // if neither exist give all the same
         
         
         
+        /* read the body */
+        printf("Reading body...\n");
+        
+        for (i = 0; i < NAtoms; i++)
+        {
+            long j;
+            
+//             printf("Reading atom: %ld\n", i);
+            
+            for (j = 0; j < numLines; j++)
+            {
+                char line[512], *pch;
+                long lineLength, count;
+                PyObject *lineList=NULL;
+        
+                lineList = PyList_GetItem(bodyList, j);
+                lineLength = PyList_Size(lineList);
+        
+//                 printf("Body line %ld; num items = %ld\n", j, lineLength);
+                
+                /* read line */
+                if (fgets(line, sizeof(line), INFILE) == NULL)
+                {
+                    char errstring[128];
+                    
+                    sprintf(errstring, "End of file reached while reading body (atom %ld)", i);
+                    PyErr_SetString(PyExc_IOError, errstring);
+                    Py_DECREF(resultDict);
+                    fclose(INFILE);
+                    return NULL;
+                }
+            
+                /* parse the line */
+                pch = strtok(line, delimiter);
+                count = 0;
+                while (pch != NULL && count < lineLength)
+                {
+                    char *key, *type;
+                    int dim, dimcount;
+                    PyObject *itemTuple=NULL;
+                    PyArrayObject *array=NULL;
+                
+    //                 printf("  Line value %ld: %s\n", count, pch);
+                
+                    /* each item is a tuple: (key, type, dim) */
+                    itemTuple = PyList_GetItem(lineList, count);
+                    if (!PyArg_ParseTuple(itemTuple, "ssi", &key, &type, &dim)) 
+                    {
+                        // need to free arrays too...
+                        fclose(INFILE);
+                        Py_DECREF(resultDict);
+                        return NULL;
+                    }
+                    
+                    /* get the array from the dictionary */
+                    array = (PyArrayObject *) PyDict_GetItemString(resultDict, key);
+                    
+                    /* read one or three values */
+                    dimcount = 0;
+                    while (pch != NULL && dimcount < dim)
+                    {
+                        if (!strcmp("Symbol", key))
+                        {
+                            /* symbol is special... */
+                            
+                            
+                            
+                        }
+                        else
+                        {
+                            if (!strcmp("i", type))
+                            {
+                                int value;
+                            
+                                value = atoi(pch);
+                                if (dim == 1) IIND1(array, i) = value;
+                                else IIND2(array, i, dimcount) = value;
+                            }
+                            else if (!strcmp("d", type))
+                            {
+                                double value;
+                                
+                                value = atof(pch);
+                                if (dim == 1) DIND1(array, i) = value;
+                                else DIND2(array, i, dimcount) = value;
+                            }
+                            else
+                            {
+                                char errstring[128];
+                    
+                                sprintf("Unrecognised type string (body): '%s'", type);
+                                PyErr_SetString(PyExc_RuntimeError, errstring);
+                                // need to free arrays too...
+                                fclose(INFILE);
+                                Py_DECREF(resultDict);
+                                return NULL;
+                            }
+                        }
+                    
+                    
+                        /* read next token */
+                        pch = strtok(NULL, delimiter);
+                        dimcount++;
+                    }
+                    
+                    if (dimcount != dim)
+                    {
+                        char errstring[128];
+                
+                        sprintf(errstring, "Error during body line read (%ld:%ld): dim %d != %d", i, j, dimcount, dim);
+                        PyErr_SetString(PyExc_IOError, errstring);
+                        Py_DECREF(resultDict);
+                        // may have to free stuff in resultDict!
+                        fclose(INFILE);
+                        return NULL;
+                    }
+                    
+                    count++;
+                }
+                
+                if (count != lineLength)
+                {
+                    char errstring[128];
+                
+                    sprintf(errstring, "Error during body line read (%ld:%ld): %ld != %ld", i, j, count, lineLength);
+                    PyErr_SetString(PyExc_IOError, errstring);
+                    Py_DECREF(resultDict);
+                    // may have to free stuff in resultDict!
+                    fclose(INFILE);
+                    return NULL;
+                }
+            }
+        }
     }
     
     fclose(INFILE);
     
+    /* correct ordering (make a flag that checks if we need to do this) ie atomID should be sorted*/
+    /* need to make an 'atomIDStartsFromOneFlag' or 'atomIDMinVal' then offset so we index arrays from zero */
+    // also check atomIDs are continuous from min val...
+    
+    printf("GENREADER: finished\n");
+    
     return resultDict;
-}
-
-static void parseGenericLine(PyObject *resultDict, PyObject *lineList, char *line, int index)
-{
-    
-    
-    
 }
