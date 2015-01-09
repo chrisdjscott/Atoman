@@ -9,7 +9,6 @@
 #include <math.h>
 #include "array_utils.h"
 
-
 static PyObject* readLatticeLBOMD(PyObject*, PyObject*);
 static PyObject* readRef(PyObject*, PyObject*);
 static PyObject* readLBOMDXYZ(PyObject*, PyObject*);
@@ -650,8 +649,11 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     {
         int atomIDFlag = 0;
         int haveSpecieOrSymbol = 0;
+        int cellDimsFlag = 0;
         long i, numLines;
         long NAtoms = -1;
+        PyObject *specieList=NULL;
+        PyObject *specieCount=NULL;
         
         /* allocate result dict */
         resultDict = PyDict_New();
@@ -715,6 +717,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 
                 /* parse */
 //                 printf("    Key: '%s'; Type: '%s'; Dim: %d\n", keytmp, typetmp, dimtmp);
+                
+                if (!strcmp("xdim", key) || !strcmp("ydim", key) || !strcmp("zdim", key))
+                    cellDimsFlag++;
                 
                 if (!strcmp("i", type))
                 {
@@ -785,6 +790,13 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             return NULL;
         }
         
+        /* cell dims */
+        printf("Cell dims flag: %d\n", cellDimsFlag);
+        
+        
+        
+        
+        
         printf("Preparing to read body; NAtoms = %ld\n", NAtoms);
         
         /* number of body lines per atom */
@@ -821,7 +833,8 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 }
                 
                 if (!atomIDFlag && !strcmp("atomID", key)) atomIDFlag = 1;
-                if (!haveSpecieOrSymbol && (!strcmp("Symbol", key) || !strcmp("Specie", key)))
+//                 if (!haveSpecieOrSymbol && (!strcmp("Symbol", key) || !strcmp("Specie", key)))
+                if (!haveSpecieOrSymbol && !strcmp("Symbol", key))
                     haveSpecieOrSymbol = 1;
                 
                 if (!strcmp("i", type))
@@ -915,8 +928,24 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         // if symbol exists make it from that
         // if specie exists guess a specie list
         // if neither exist give all the same
+        specieList = PyList_New(0);
+        if (specieList == NULL)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Could not create specieList\n");
+            fclose(INFILE);
+            Py_DECREF(resultDict);
+            return NULL;
+        }
         
-        
+        specieCount = PyList_New(0);
+        if (specieCount == NULL)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Could not create specieCount\n");
+            fclose(INFILE);
+            Py_DECREF(resultDict);
+            Py_DECREF(specieList);
+            return NULL;
+        }
         
         /* read the body */
         printf("Reading body...\n");
@@ -946,6 +975,8 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     sprintf(errstring, "End of file reached while reading body (atom %ld)", i);
                     PyErr_SetString(PyExc_IOError, errstring);
                     Py_DECREF(resultDict);
+                    Py_DECREF(specieList);
+                    Py_DECREF(specieCount);
                     fclose(INFILE);
                     return NULL;
                 }
@@ -966,9 +997,10 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     itemTuple = PyList_GetItem(lineList, count);
                     if (!PyArg_ParseTuple(itemTuple, "ssi", &key, &type, &dim)) 
                     {
-                        // need to free arrays too...
                         fclose(INFILE);
                         Py_DECREF(resultDict);
+                        Py_DECREF(specieList);
+                        Py_DECREF(specieCount);
                         return NULL;
                     }
                     
@@ -981,10 +1013,45 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     {
                         if (!strcmp("Symbol", key))
                         {
+                            
+                            Py_ssize_t symlen;
+                            PyObject *symin=NULL;
+                            
                             /* symbol is special... */
+                            /* construct specieList as a Python list... */
+                            
+                            /* get the symbol */
+                            symin = Py_BuildValue("s", pch);
+                            symlen = PyString_Size(symin);
+                            if (symlen == 1)
+                            {
+                                Py_XDECREF(symin);
+                                symin = NULL;
+                                symin = PyString_FromFormat("%s_", pch);
+                            }
+                            else if (symlen != 2)
+                            {
+                                char errstring[128];
+                                
+                                sprintf(errstring, "Cannot handle symbol of length %d", (int) symlen);
+                                PyErr_SetString(PyExc_RuntimeError, errstring);
+                                fclose(INFILE);
+                                Py_DECREF(resultDict);
+                                Py_DECREF(specieList);
+                                Py_DECREF(specieCount);
+                                Py_XDECREF(symin);
+                                return NULL;
+                            }
+                            
+                            printf("Symbol: '%s'\n", PyString_AsString(symin));
+                            
+                            /* check if it already exists in the list */
                             
                             
                             
+                            
+                            
+                            Py_XDECREF(symin);
                         }
                         else
                         {
@@ -1010,9 +1077,10 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     
                                 sprintf("Unrecognised type string (body): '%s'", type);
                                 PyErr_SetString(PyExc_RuntimeError, errstring);
-                                // need to free arrays too...
                                 fclose(INFILE);
                                 Py_DECREF(resultDict);
+                                Py_DECREF(specieList);
+                                Py_DECREF(specieCount);
                                 return NULL;
                             }
                         }
@@ -1030,8 +1098,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                         sprintf(errstring, "Error during body line read (%ld:%ld): dim %d != %d", i, j, dimcount, dim);
                         PyErr_SetString(PyExc_IOError, errstring);
                         Py_DECREF(resultDict);
-                        // may have to free stuff in resultDict!
                         fclose(INFILE);
+                        Py_DECREF(specieList);
+                        Py_DECREF(specieCount);
                         return NULL;
                     }
                     
@@ -1045,8 +1114,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     sprintf(errstring, "Error during body line read (%ld:%ld): %ld != %ld", i, j, count, lineLength);
                     PyErr_SetString(PyExc_IOError, errstring);
                     Py_DECREF(resultDict);
-                    // may have to free stuff in resultDict!
                     fclose(INFILE);
+                    Py_DECREF(specieList);
+                    Py_DECREF(specieCount);
                     return NULL;
                 }
             }
