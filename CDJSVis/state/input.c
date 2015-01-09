@@ -1011,14 +1011,14 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     dimcount = 0;
                     while (pch != NULL && dimcount < dim)
                     {
+                        /* symbol is special... */
                         if (!strcmp("Symbol", key))
                         {
-                            
-                            Py_ssize_t symlen;
+                            int check, stat;
+                            long value;
+                            Py_ssize_t symlen, index;
                             PyObject *symin=NULL;
-                            
-                            /* symbol is special... */
-                            /* construct specieList as a Python list... */
+                            PyObject *valueObj=NULL;
                             
                             /* get the symbol */
                             symin = Py_BuildValue("s", pch);
@@ -1043,15 +1043,99 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                 return NULL;
                             }
                             
-                            printf("Symbol: '%s'\n", PyString_AsString(symin));
+//                            printf("Symbol: '%s'\n", PyString_AsString(symin));
                             
                             /* check if it already exists in the list */
+                            check = PySequence_Contains(specieList, symin);
                             
+                            /* error */
+                            if (check == -1)
+                            {
+                                PyErr_SetString(PyExc_RuntimeError, "Checking if symbol in specie list failed");
+                                fclose(INFILE);
+                                Py_DECREF(resultDict);
+                                Py_DECREF(specieList);
+                                Py_DECREF(specieCount);
+                                Py_XDECREF(symin);
+                                return NULL;
+                            }
+                            /* symbol not in specie list */
+                            else if (check == 0)
+                            {
+                                PyObject *init=NULL;
+                                
+                                printf("Add new specie\n");
+                                
+                                /* add to list */
+                                stat = PyList_Append(specieList, symin);
+                                if (stat == -1)
+                                {
+                                    fclose(INFILE);
+                                    Py_DECREF(resultDict);
+                                    Py_DECREF(specieList);
+                                    Py_DECREF(specieCount);
+                                    Py_XDECREF(symin);
+                                    return NULL;
+
+                                }
+                                
+                                init = PyInt_FromLong(0);
+                                stat = PyList_Append(specieCount, init);
+                                Py_XDECREF(init);
+                                if (stat == -1)
+                                {
+                                    fclose(INFILE);
+                                    Py_DECREF(resultDict);
+                                    Py_DECREF(specieList);
+                                    Py_DECREF(specieCount);
+                                    Py_XDECREF(symin);
+                                    return NULL;
+                                }
+                            }
                             
+                            /* increment specie counter */
+                            index = PySequence_Index(specieList, symin);
+                            if (index == -1)
+                            {
+                                PyErr_SetString(PyExc_RuntimeError, "Could not find symbol index in specieList");
+                                fclose(INFILE);
+                                Py_DECREF(resultDict);
+                                Py_DECREF(specieList);
+                                Py_DECREF(specieCount);
+                                Py_XDECREF(symin);
+                                return NULL;
+                            }
                             
+                            valueObj = PyList_GetItem(specieCount, index);
+                            if (valueObj == NULL)
+                            {
+                                fclose(INFILE);
+                                Py_DECREF(resultDict);
+                                Py_DECREF(specieList);
+                                Py_DECREF(specieCount);
+                                Py_XDECREF(symin);
+                                return NULL;
+                            }
                             
+                            value = PyInt_AsLong(valueObj);
+                            value++;
+                            
+                            stat = PyList_SetItem(specieCount, index, PyInt_FromLong(value));
+                            if (stat == -1)
+                            {
+                                PyErr_SetString(PyExc_RuntimeError, "Could not set incremented specie count on list");
+                                fclose(INFILE);
+                                Py_DECREF(resultDict);
+                                Py_DECREF(specieList);
+                                Py_DECREF(specieCount);
+                                Py_XDECREF(symin);
+                                return NULL;
+                            }
                             
                             Py_XDECREF(symin);
+                            
+                            /* set specie value */
+                            IIND1(array, i) = (int) index;
                         }
                         else
                         {
@@ -1121,6 +1205,12 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 }
             }
         }
+        
+        /* store specieList/Count */
+        PyDict_SetItemString(resultDict, "specieList", specieList);
+        PyDict_SetItemString(resultDict, "specieCount", specieCount);
+        Py_DECREF(specieList);
+        Py_DECREF(specieCount);
     }
     
     fclose(INFILE);
