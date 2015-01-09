@@ -123,13 +123,14 @@ Voronoi_atomVolume(Voronoi *self, PyObject *args)
 static PyObject*
 Voronoi_atomVolumesArray(Voronoi *self)
 {
-    int i, size, dims[1];
+    int i, size;
+    npy_intp dims[1];
     PyArrayObject *volumes=NULL;
     
     /* allocate volumes array */
     size = self->voroResultSize;
-    dims[0] = size;
-    volumes = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_FLOAT64);
+    dims[0] = (npy_intp) size;
+    volumes = (PyArrayObject *) PyArray_SimpleNew(1, dims, NPY_FLOAT64);
     if (volumes == NULL) return NULL;
     
     /* populate with volumes */
@@ -183,13 +184,14 @@ Voronoi_atomNumNebs(Voronoi *self, PyObject *args)
 static PyObject*
 Voronoi_atomNumNebsArray(Voronoi *self)
 {
-    int i, size, dims[1];
+    int i, size;
+    npy_intp dims[1];
     PyArrayObject *nebsArray=NULL;
     
     /* allocate numpy array */
     size = self->voroResultSize;
-    dims[0] = size;
-    nebsArray = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_INT32);
+    dims[0] = (npy_intp) size;
+    nebsArray = (PyArrayObject *) PyArray_SimpleNew(1, dims, NPY_INT32);
     if (nebsArray == NULL) return NULL;
     
     /* loop over atoms */
@@ -223,7 +225,8 @@ Voronoi_atomNumNebsArray(Voronoi *self)
 static PyObject*
 Voronoi_atomNebList(Voronoi *self, PyObject *args)
 {
-    int i, atomIndex, numNebs, dims[1];
+    int i, atomIndex, numNebs;
+    npy_intp dims[1];
     PyArrayObject *atomNebs=NULL;
     
     /* parse and check arguments from Python */
@@ -242,8 +245,8 @@ Voronoi_atomNebList(Voronoi *self, PyObject *args)
     
     /* allocate numpy array */
     numNebs = self->voroResult[atomIndex].numNeighbours;
-    dims[0] = numNebs;
-    atomNebs = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_INT32);
+    dims[0] = (npy_intp) numNebs;
+    atomNebs = (PyArrayObject *) PyArray_SimpleNew(1, dims, NPY_INT32);
     if (atomNebs == NULL) return NULL;
     
     /* populate array */
@@ -272,7 +275,8 @@ Voronoi_atomNebList(Voronoi *self, PyObject *args)
 static PyObject*
 Voronoi_getInputAtomPos(Voronoi *self, PyObject *args)
 {
-    int atomIndex, dims[1];
+    int atomIndex;
+    npy_intp dims[1];
     PyArrayObject *pos=NULL;
     
     /* parse and check arguments from Python */
@@ -291,7 +295,7 @@ Voronoi_getInputAtomPos(Voronoi *self, PyObject *args)
     
     /* allocate numpy array */
     dims[0] = 3;
-    pos = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_FLOAT64);
+    pos = (PyArrayObject *) PyArray_SimpleNew(1, dims, NPY_FLOAT64);
     if (pos == NULL) return NULL;
     
     /* populate array */
@@ -308,7 +312,8 @@ Voronoi_getInputAtomPos(Voronoi *self, PyObject *args)
 static PyObject*
 Voronoi_atomVertices(Voronoi *self, PyObject *args)
 {
-    int i, nverts, atomIndex, dims[2];
+    int i, nverts, atomIndex;
+    npy_intp dims[2];
     PyArrayObject *vertices=NULL;
     
     /* parse and check arguments from Python */
@@ -327,9 +332,9 @@ Voronoi_atomVertices(Voronoi *self, PyObject *args)
     
     /* allocate numpy array */
     nverts = self->voroResult[atomIndex].numVertices;
-    dims[0] = nverts;
+    dims[0] = (npy_intp) nverts;
     dims[1] = 3;
-    vertices = (PyArrayObject *) PyArray_FromDims(2, dims, NPY_FLOAT64);
+    vertices = (PyArrayObject *) PyArray_SimpleNew(2, dims, NPY_FLOAT64);
     if (vertices == NULL) return NULL;
     
     /* populate array */
@@ -382,15 +387,16 @@ Voronoi_atomFaces(Voronoi *self, PyObject *args)
     faceList = PyList_New(nfaces);
     for (i = 0; i < nfaces; i++)
     {
-        int j, nverts, dims[1];
+        int j, nverts;
+        npy_intp dims[1];
         PyArrayObject *vertArray=NULL;
         
         /* number of vertices making up this face */
         nverts = self->voroResult[atomIndex].numFaceVertices[i];
         
         /* allocate numpy array for storing vertices */
-        dims[0] = nverts;
-        vertArray = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_INT32);
+        dims[0] = (npy_intp) nverts;
+        vertArray = (PyArrayObject *) PyArray_SimpleNew(1, dims, NPY_INT32);
         
         /* add vertices to array */
         for (j = 0; j < nverts; j++)
@@ -643,7 +649,8 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
     
     if (PBC[0] || PBC[1] || PBC[2])
     {
-        int i, addCount, dims[2], count;
+        int i, addCount, count;
+        npy_intp dims[2];
         double halfDims[3];
         PyArrayObject *pts = NULL;
         
@@ -688,9 +695,9 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
         printf("Adding %d ghost atoms (skin = %lf)\n", addCount, skin);
         
         /* second pass to make the pts array */
-        dims[0] = NAtoms + addCount;
+        dims[0] = (npy_intp) (NAtoms + addCount);
         dims[1] = 3;
-        pts = (PyArrayObject *) PyArray_FromDims(2, dims, NPY_FLOAT64);
+        pts = (PyArrayObject *) PyArray_SimpleNew(2, dims, NPY_FLOAT64);
         
         /* first add real atoms */
         for (i = 0; i < NAtoms; i++)
@@ -810,13 +817,14 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
     }
     else
     {
-        int i, dims[2];
+        int i;
+        npy_intp dims[2];
         PyArrayObject *pts = NULL;
         
         /* second pass to make the pts array */
-        dims[0] = NAtoms;
+        dims[0] = (npy_intp) NAtoms;
         dims[1] = 3;
-        pts = (PyArrayObject *) PyArray_FromDims(2, dims, NPY_FLOAT64);
+        pts = (PyArrayObject *) PyArray_SimpleNew(2, dims, NPY_FLOAT64);
         
         /* just add real atoms */
         for (i = 0; i < NAtoms; i++)

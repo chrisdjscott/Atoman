@@ -44,7 +44,8 @@ init_rendering(void)
 static PyObject*
 countVisibleBySpecie(PyObject *self, PyObject *args)
 {
-    int i, dims[1];
+    int i;
+    npy_intp dims[1];
     int NSpecies, NVisible;
     PyArrayObject *visibleAtoms=NULL;
     PyArrayObject *specieArray=NULL;
@@ -59,8 +60,8 @@ countVisibleBySpecie(PyObject *self, PyObject *args)
     if (not_intVector(specieArray)) return NULL;
     
     /* specie counter array */
-    dims[0] = NSpecies;
-    specieCount = (PyArrayObject *) PyArray_FromDims(1, dims, NPY_INT32);
+    dims[0] = (npy_intp) NSpecies;
+    specieCount = (PyArrayObject *) PyArray_SimpleNew(1, dims, NPY_INT32);
     for (i = 0; i < NSpecies; i++) IIND1(specieCount, i) = 0;
     
     /* loop over visible atoms, incrementing specie counter */
@@ -95,7 +96,7 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
     PyArrayObject *vectors=NULL;
     
     int i, j, index, specie, count;
-    int numpyDims[1], numpyDims2[2];
+    npy_intp numpyDims[2];
     double scalar;
     PyObject *list=NULL;
     
@@ -154,25 +155,25 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
         PyObject *tuple = NULL;
         
         /* allocate position array */
-        numpyDims2[0] = specieCount[i];
-        numpyDims2[1] = 3;
-        speciePos = (PyArrayObject *) PyArray_FromDims(2, numpyDims2, NPY_FLOAT64);
+        numpyDims[0] = (npy_intp) specieCount[i];
+        numpyDims[1] = 3;
+        speciePos = (PyArrayObject *) PyArray_SimpleNew(2, numpyDims, NPY_FLOAT64);
         
         /* allocate position array */
-        numpyDims[0] = specieCount[i];
-        specieScalars = (PyArrayObject *) PyArray_FromDims(1, numpyDims, NPY_FLOAT64);
+        numpyDims[0] = (npy_intp) specieCount[i];
+        specieScalars = (PyArrayObject *) PyArray_SimpleNew(1, numpyDims, NPY_FLOAT64);
         
         if (vectorsLen > 0)
         {
             /* allocate vectors array */
-            numpyDims2[0] = specieCount[i];
-            numpyDims2[1] = 3;
-            specieVectors = (PyArrayObject *) PyArray_FromDims(2, numpyDims2, NPY_FLOAT64);
+            numpyDims[0] = (npy_intp) specieCount[i];
+            numpyDims[1] = 3;
+            specieVectors = (PyArrayObject *) PyArray_SimpleNew(2, numpyDims, NPY_FLOAT64);
         }
         else
         {
             numpyDims[0] = 0;
-            specieVectors = (PyArrayObject *) PyArray_FromDims(1, numpyDims, NPY_FLOAT64);
+            specieVectors = (PyArrayObject *) PyArray_SimpleNew(1, numpyDims, NPY_FLOAT64);
         }
         
         /* loop over atoms */
@@ -235,7 +236,8 @@ makeVisibleRadiusArray(PyObject *self, PyObject *args)
     PyArrayObject *specie=NULL;
     PyArrayObject *specieCovalentRadius=NULL;
 
-    int i, numpydims[1];
+    int i;
+    npy_intp numpydims[1];
     PyArrayObject *radius=NULL;
 
     /* parse and check arguments from Python */
@@ -251,8 +253,8 @@ makeVisibleRadiusArray(PyObject *self, PyObject *args)
     if (not_doubleVector(specieCovalentRadius)) return NULL;
 
     /* create radius array */
-    numpydims[0] = NVisible;
-    radius = (PyArrayObject *) PyArray_FromDims(1, numpydims, NPY_FLOAT64);
+    numpydims[0] = (npy_intp) NVisible;
+    radius = (PyArrayObject *) PyArray_SimpleNew(1, numpydims, NPY_FLOAT64);
 
     /* populate array */
     for (i = 0; i < NVisible; i++)
@@ -278,7 +280,8 @@ makeVisibleScalarArray(PyObject *self, PyObject *args)
     PyArrayObject *visibleAtoms=NULL;
     PyArrayObject *scalarsFull=NULL;
 
-    int i, numpydims[1];
+    int i;
+    npy_intp numpydims[1];
     PyArrayObject *scalars=NULL;
 
     /* parse and check arguments from Python */
@@ -291,8 +294,8 @@ makeVisibleScalarArray(PyObject *self, PyObject *args)
     if (not_doubleVector(scalarsFull)) return NULL;
 
     /* create radius array */
-    numpydims[0] = NVisible;
-    scalars = (PyArrayObject *) PyArray_FromDims(1, numpydims, NPY_FLOAT64);
+    numpydims[0] = (npy_intp) NVisible;
+    scalars = (PyArrayObject *) PyArray_SimpleNew(1, numpydims, NPY_FLOAT64);
 
     /* populate array */
     for (i = 0; i < NVisible; i++)
@@ -316,7 +319,8 @@ makeVisiblePointsArray(PyObject *self, PyObject *args)
     PyArrayObject *visibleAtoms=NULL;
     PyArrayObject *pos=NULL;
 
-    int i, numpydims[2];
+    int i;
+    npy_intp numpydims[2];
     PyArrayObject *visiblePos=NULL;
 
     /* parse and check arguments from Python */
@@ -329,9 +333,9 @@ makeVisiblePointsArray(PyObject *self, PyObject *args)
     if (not_doubleVector(pos)) return NULL;
 
     /* create radius array */
-    numpydims[0] = NVisible;
+    numpydims[0] = (npy_intp) NVisible;
     numpydims[1] = 3;
-    visiblePos = (PyArrayObject *) PyArray_FromDims(2, numpydims, NPY_FLOAT64);
+    visiblePos = (PyArrayObject *) PyArray_SimpleNew(2, numpydims, NPY_FLOAT64);
 
     /* populate array */
     for (i = 0; i < NVisible; i++)
