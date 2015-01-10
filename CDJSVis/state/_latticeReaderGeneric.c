@@ -9,7 +9,29 @@
 #include <math.h>
 #include "array_utils.h"
 
+#define MAX_LINE_LENGTH 512
+
+struct BodyLineItem
+{
+    char *key;
+    char *type;
+    int dim;
+};
+
+struct BodyLine
+{
+    Py_ssize_t numItems;
+    struct BodyLineItem *items;
+};
+
+struct Body
+{
+    Py_ssize_t numLines;
+    struct BodyLine *lines;
+};
+
 static PyObject* readGenericLatticeFile(PyObject*, PyObject*);
+static void freeBody(struct Body);
 
 
 /*******************************************************************************
@@ -28,6 +50,20 @@ init_latticeReaderGeneric(void)
 {
     (void)Py_InitModule("_latticeReaderGeneric", methods);
     import_array();
+}
+
+/*******************************************************************************
+ * Free body struct
+ *******************************************************************************/
+static void
+freeBody(struct Body body)
+{
+    Py_ssize_t i;
+
+    for (i = 0; i < body.numLines; i++)
+        free(body.lines[i].items);
+
+    free(body.lines);
 }
 
 /*******************************************************************************
@@ -50,7 +86,10 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     printf("GENREADER: reading file: '%s'\n", filename);
     printf("Delimiter is '%s'\n", delimiter);
 
+    /* open the file for reading */
     INFILE = fopen(filename, "r");
+
+    /* handle error */
     if (INFILE == NULL)
     {
         char errstring[128];
@@ -59,6 +98,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         PyErr_SetString(PyExc_IOError, errstring);
         return NULL;
     }
+    /* continue to read */
     else
     {
         int atomIDFlag = 0;
@@ -68,6 +108,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         long NAtoms = -1;
         PyObject *specieList=NULL;
         PyObject *specieCount=NULL;
+        struct Body bodyFormat;
 
         /* allocate result dict */
         resultDict = PyDict_New();
@@ -78,9 +119,6 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             return NULL;
         }
 
-        /* allocate atom scalar/vector arrays and add them to the dict */
-
-
         /* number of header lines */
         numLines = PyList_Size(headerList);
         printf("HEADER NUM LINES: %ld\n", numLines);
@@ -88,18 +126,16 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         /* read header */
         for (i = 0; i < numLines; i++)
         {
-            char line[512], *pch;
+            char line[MAX_LINE_LENGTH], *pch;
             long lineLength, count;
             PyObject *headerLine=NULL;
 
             /* this is a borrowed ref so no need to DECREF */
             headerLine = PyList_GetItem(headerList, i);
-//             printf("Parsing header line %ld\n", i);
             lineLength = PyList_Size(headerLine);
-//             printf("Header line %ld; length = %ld\n", i, lineLength);
 
             /* read line */
-            if (fgets(line, sizeof(line), INFILE) == NULL)
+            if (fgets(line, MAX_LINE_LENGTH, INFILE) == NULL)
             {
                 PyErr_SetString(PyExc_IOError, "End of file reached while reading header");
                 Py_DECREF(resultDict);
@@ -117,26 +153,23 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 PyObject *itemTuple=NULL;
                 PyObject *value=NULL;
 
-//                 printf("  Line value %ld: %s\n", count, pch);
-
                 /* each item is a tuple: (key, type, dim) */
-                itemTuple = PyList_GetItem(headerLine, count);
+                itemTuple = PyList_GetItem(headerLine, count); // borrowed ref, no need to DECREF
                 if (!PyArg_ParseTuple(itemTuple, "ssi", &key, &type, &dim))
                 {
-                    // need to free arrays too...
                     fclose(INFILE);
                     Py_DECREF(resultDict);
                     return NULL;
                 }
 
-                /* parse */
-//                 printf("    Key: '%s'; Type: '%s'; Dim: %d\n", keytmp, typetmp, dimtmp);
-
+                /* check if supposed to skip this item */
                 if (strcmp("SKIP", key))
                 {
+                    /* are cell dimensions present */
                     if (!strcmp("xdim", key) || !strcmp("ydim", key) || !strcmp("zdim", key))
                         cellDimsFlag++;
 
+                    /* build integer value */
                     if (!strcmp("i", type))
                     {
                         long tmpval;
@@ -145,34 +178,37 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                         if (!strcmp("NAtoms", key)) NAtoms = tmpval;
                         value = Py_BuildValue(type, tmpval);
                     }
+                    /* build float value */
                     else if (!strcmp("d", type))
                         value = Py_BuildValue(type, atof(pch));
+                    /* build string value */
                     else if (!strcmp("s", type))
                         value = Py_BuildValue(type, pch);
+                    /* unrecognised type */
                     else
                     {
                         char errstring[128];
 
                         sprintf("Unrecognised type string: '%s'", type);
                         PyErr_SetString(PyExc_RuntimeError, errstring);
-                        // need to free arrays too...
                         fclose(INFILE);
                         Py_DECREF(resultDict);
                         return NULL;
                     }
 
+                    /* add the value to the dictionary */
                     stat = PyDict_SetItemString(resultDict, key, value);
 
-                    /* DO I NEED TO DECREF VALUE TOO? */
+                    /* Release our reference to value (the dict has a reference now too) */
                     Py_DECREF(value);
 
+                    /* adding to dict failed? */
                     if (stat)
                     {
                         char errstring[128];
 
                         sprintf("Could not set item in dictionary: '%s'", key);
                         PyErr_SetString(PyExc_RuntimeError, errstring);
-                        // need to free arrays too...
                         fclose(INFILE);
                         Py_DECREF(resultDict);
                         return NULL;
@@ -184,6 +220,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 count++;
             }
 
+            /* check we read the correct number of items from this line */
             if (count != lineLength)
             {
                 char errstring[128];
@@ -191,7 +228,6 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 sprintf(errstring, "Wrong length for header line %ld: %ld != %ld", i, count, lineLength);
                 PyErr_SetString(PyExc_IOError, errstring);
                 Py_DECREF(resultDict);
-                // may have to free stuff in resultDict!
                 fclose(INFILE);
                 return NULL;
             }
@@ -202,10 +238,11 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         {
             PyErr_SetString(PyExc_RuntimeError, "Cannot autodetect NAtoms at the moment...");
             Py_DECREF(resultDict);
-            // may have to free stuff in resultDict!
             fclose(INFILE);
             return NULL;
         }
+        // we could do a pass through whole file to get NAtoms, then seek back to where we were...
+
 
         /* cell dims */
         printf("Cell dims flag: %d\n", cellDimsFlag);
@@ -216,22 +253,45 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
 
         printf("Preparing to read body; NAtoms = %ld\n", NAtoms);
 
+        /* body format (should be faster than parsing list/tuples) */
         /* number of body lines per atom */
-        numLines = PyList_Size(bodyList);
-        printf("BODY NUM LINES PER ATOM: %ld\n", numLines);
+        bodyFormat.numLines = PyList_Size(bodyList);
+        printf("Number of body lines per atom: %ld\n", numLines);
+
+        /* allocate memory for body lines */
+        bodyFormat.lines = malloc(bodyFormat.numLines * sizeof(struct BodyLine));
+        if (bodyFormat.lines == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Cannot allocate bodyFormat.lines");
+            Py_DECREF(resultDict);
+            fclose(INFILE);
+            return NULL;
+        }
 
         /* allocate the arrays for scalar/vector data */
-        for (i = 0; i < numLines; i++)
+        for (i = 0; i < bodyFormat.numLines; i++)
         {
-            long lineLength, j;
+            long j;
             PyObject *lineList=NULL;
 
-            lineList = PyList_GetItem(bodyList, i);
-            lineLength = PyList_Size(lineList);
+            /* list of items in this line */
+            lineList = PyList_GetItem(bodyList, i); // steals ref, no need to DECREF
+            bodyFormat.lines[i].numItems = PyList_Size(lineList);
 
-            printf("Body line %ld; num items = %ld\n", i, lineLength);
+            /* allocate memory for this line */
+            bodyFormat.lines[i].items = malloc(bodyFormat.lines[i].numItems * sizeof(struct BodyLineItem));
+            if (bodyFormat.lines[i].items == NULL)
+            {
+                PyErr_SetString(PyExc_MemoryError, "Cannot allocate bodyFormat.lines[].items");
+                Py_DECREF(resultDict);
+                fclose(INFILE);
+                freeBody(bodyFormat);
+                return NULL;
+            }
 
-            for (j = 0; j < lineLength; j++)
+            printf("Body line %ld; num items = %ld\n", i, bodyFormat.lines[i].numItems);
+
+            for (j = 0; j < bodyFormat.lines[i].numItems; j++)
             {
                 char *key, *type;
                 int dim, stat, typenum;
@@ -240,15 +300,22 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 PyObject *itemTuple=NULL;
                 PyArrayObject *data=NULL;
 
+                /* get and parse the tuple containing the item */
                 itemTuple = PyList_GetItem(lineList, j);
                 if (!PyArg_ParseTuple(itemTuple, "ssi", &key, &type, &dim))
                 {
-                    // need to free arrays too... PyDict_Clear???? will it free all items in the dict
                     fclose(INFILE);
                     Py_DECREF(resultDict);
+                    freeBody(bodyFormat);
                     return NULL;
                 }
 
+                /* store item in bodyFormat struct */
+                bodyFormat.lines[i].items[j].key = key;
+                bodyFormat.lines[i].items[j].type = type;
+                bodyFormat.lines[i].items[j].dim = dim;
+
+                /* check if we're supposed to ignore this value... */
                 if (strcmp("SKIP", key))
                 {
                     if (!atomIDFlag && !strcmp("atomID", key)) atomIDFlag = 1;
@@ -266,9 +333,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
 
                         sprintf("Unrecognised type string (body prep): '%s'", type);
                         PyErr_SetString(PyExc_RuntimeError, errstring);
-                        // need to free arrays too...
                         fclose(INFILE);
                         Py_DECREF(resultDict);
+                        freeBody(bodyFormat);
                         return NULL;
                     }
 
@@ -282,6 +349,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                         PyErr_SetString(PyExc_MemoryError, errstring);
                         fclose(INFILE);
                         Py_DECREF(resultDict);
+                        freeBody(bodyFormat);
                         return NULL;
                     }
 
@@ -304,6 +372,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                         // need to free arrays too...
                         fclose(INFILE);
                         Py_DECREF(resultDict);
+                        freeBody(bodyFormat);
                         return NULL;
                     }
                 }
@@ -325,6 +394,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 PyErr_SetString(PyExc_MemoryError, "Could not allocate atomID array");
                 fclose(INFILE);
                 Py_DECREF(resultDict);
+                freeBody(bodyFormat);
                 return NULL;
             }
 
@@ -340,6 +410,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 // need to free arrays too...
                 fclose(INFILE);
                 Py_DECREF(resultDict);
+                freeBody(bodyFormat);
                 return NULL;
             }
         }
@@ -351,6 +422,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             PyErr_SetString(PyExc_RuntimeError, "Could not create specieList\n");
             fclose(INFILE);
             Py_DECREF(resultDict);
+            freeBody(bodyFormat);
             return NULL;
         }
 
@@ -361,19 +433,20 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             fclose(INFILE);
             Py_DECREF(resultDict);
             Py_DECREF(specieList);
+            freeBody(bodyFormat);
             return NULL;
         }
 
         /* read the body */
         printf("Reading body...\n");
 
+        /* loop over all atoms */
+        numLines = bodyFormat.numLines;
         for (i = 0; i < NAtoms; i++)
         {
-            long j, atomIndex = -1;
+            long atomIndex = -1;
+            Py_ssize_t j;
             char *atomLines[numLines];
-            const int MAX_LINE_LENGTH = 512;
-
-//             printf("Reading atom: %ld\n", i);
 
             /* read all of this atom's lines first... */
             for (j = 0; j < numLines; j++)
@@ -389,6 +462,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     Py_DECREF(specieCount);
                     fclose(INFILE);
                     for (k = 0; k < j; k++) free(atomLines[k]);
+                    freeBody(bodyFormat);
                     return NULL;
                 }
 
@@ -404,6 +478,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     Py_DECREF(specieCount);
                     fclose(INFILE);
                     for (k = 0; k < j; k++) free(atomLines[k]);
+                    freeBody(bodyFormat);
                     return NULL;
                 }
             }
@@ -420,36 +495,25 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 {
                     char *pch;
                     char line[MAX_LINE_LENGTH];
-                    long lineLength, count;
-                    PyObject *lineList=NULL;
+                    Py_ssize_t numItems, count;
 
-                    /* steals reference, no need to DECREF */
-                    lineList = PyList_GetItem(bodyList, j);
-                    lineLength = PyList_Size(lineList);
+                    /* number of items in the line */
+                    numItems = bodyFormat.lines[j].numItems;
 
                     /* parse for atomID */
-                    /* make a copy of line as strtok modifies the original? */
+                    /* make a copy of line as strtok might(?) modify the original */
                     strcpy(line, atomLines[j]);
                     pch = strtok(line, delimiter);
                     count = 0;
-                    while (!foundAtomID && pch != NULL && count < lineLength)
+                    while (!foundAtomID && pch != NULL && count < numItems)
                     {
-                        char *key, *type;
+                        char *key;
                         int dim, dimcount;
                         PyObject *itemTuple;
 
-                        itemTuple = PyList_GetItem(lineList, count);
-                        if (!PyArg_ParseTuple(itemTuple, "ssi", &key, &type, &dim))
-                        {
-                            long k;
-
-                            for (k = 0; k < numLines; k++) free(atomLines[k]);
-                            fclose(INFILE);
-                            Py_DECREF(resultDict);
-                            Py_DECREF(specieList);
-                            Py_DECREF(specieCount);
-                            return NULL;
-                        }
+                        /* unpack item */
+                        key = bodyFormat.lines[j].items[count].key;
+                        dim = bodyFormat.lines[j].items[count].dim;
 
                         dimcount = 0;
                         while (!foundAtomID && pch != NULL && dimcount < dim)
@@ -463,8 +527,41 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                             pch = strtok(NULL, delimiter);
                             dimcount++;
                         }
+
+                        if (!foundAtomID && dimcount != dim)
+                        {
+                            char errstring[128];
+                            long k;
+
+                            for (k = 0; k < numLines; k++) free(atomLines[k]);
+                            sprintf(errstring, "Error during body line read for atomID (%ld:%ld): dim %d != %d", i, j, dimcount, dim);
+                            PyErr_SetString(PyExc_IOError, errstring);
+                            Py_DECREF(resultDict);
+                            fclose(INFILE);
+                            Py_DECREF(specieList);
+                            Py_DECREF(specieCount);
+                            freeBody(bodyFormat);
+                            return NULL;
+                        }
+
+                        count++;
                     }
-                    // TODO: should have err checking here on count/dimcount?
+
+                    if (!foundAtomID && count != numItems)
+                    {
+                        char errstring[128];
+                        long k;
+
+                        for (k = 0; k < numLines; k++) free(atomLines[k]);
+                        sprintf(errstring, "Error during body line read for atomID (%ld:%ld): %ld != %ld", i, j, count, numItems);
+                        PyErr_SetString(PyExc_IOError, errstring);
+                        Py_DECREF(resultDict);
+                        fclose(INFILE);
+                        Py_DECREF(specieList);
+                        Py_DECREF(specieCount);
+                        freeBody(bodyFormat);
+                        return NULL;
+                    }
 
                     /* check atomIndex in range */
                     if (foundAtomID)
@@ -483,50 +580,38 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                         Py_DECREF(resultDict);
                         Py_DECREF(specieList);
                         Py_DECREF(specieCount);
+                        freeBody(bodyFormat);
+                        return NULL;
                     }
                 }
             }
             else atomIndex = i;
 
+            /* now read the data for real */
             for (j = 0; j < numLines; j++)
             {
-                char line[MAX_LINE_LENGTH], *pch;
-                long lineLength, count;
-                PyObject *lineList=NULL;
+                char *line, *pch;
+                Py_ssize_t numItems, count;
 
-                lineList = PyList_GetItem(bodyList, j);
-                lineLength = PyList_Size(lineList);
-
-//                 printf("Body line %ld; num items = %ld\n", j, lineLength);
+                /* number of items in the line */
+                numItems = bodyFormat.lines[j].numItems;
 
                 /* read line */
-                strcpy(line, atomLines[j]);
+                line = atomLines[j];
 
                 /* parse the line */
                 pch = strtok(line, delimiter);
                 count = 0;
-                while (pch != NULL && count < lineLength)
+                while (pch != NULL && count < numItems)
                 {
                     char *key, *type;
                     int dim, dimcount;
-                    PyObject *itemTuple=NULL;
                     PyArrayObject *array=NULL;
 
-    //                 printf("  Line value %ld: %s\n", count, pch);
-
-                    /* each item is a tuple: (key, type, dim) */
-                    itemTuple = PyList_GetItem(lineList, count);
-                    if (!PyArg_ParseTuple(itemTuple, "ssi", &key, &type, &dim))
-                    {
-                        long k;
-
-                        fclose(INFILE);
-                        Py_DECREF(resultDict);
-                        Py_DECREF(specieList);
-                        Py_DECREF(specieCount);
-                        for (k = 0; k < numLines; k++) free(atomLines[k]);
-                        return NULL;
-                    }
+                    /* unpack item */
+                    key = bodyFormat.lines[j].items[count].key;
+                    type = bodyFormat.lines[j].items[count].type;
+                    dim = bodyFormat.lines[j].items[count].dim;
 
                     /* get the array from the dictionary */
                     array = (PyArrayObject *) PyDict_GetItemString(resultDict, key);
@@ -568,6 +653,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     Py_DECREF(specieList);
                                     Py_DECREF(specieCount);
                                     Py_XDECREF(symin);
+                                    freeBody(bodyFormat);
                                     return NULL;
                                 }
 
@@ -588,6 +674,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     Py_DECREF(specieList);
                                     Py_DECREF(specieCount);
                                     Py_XDECREF(symin);
+                                    freeBody(bodyFormat);
                                     return NULL;
                                 }
                                 /* symbol not in specie list */
@@ -609,6 +696,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                         Py_DECREF(specieList);
                                         Py_DECREF(specieCount);
                                         Py_XDECREF(symin);
+                                        freeBody(bodyFormat);
                                         return NULL;
                                     }
 
@@ -625,6 +713,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                         Py_DECREF(specieList);
                                         Py_DECREF(specieCount);
                                         Py_XDECREF(symin);
+                                        freeBody(bodyFormat);
                                         return NULL;
                                     }
                                 }
@@ -642,6 +731,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     Py_DECREF(specieList);
                                     Py_DECREF(specieCount);
                                     Py_XDECREF(symin);
+                                    freeBody(bodyFormat);
                                     return NULL;
                                 }
 
@@ -656,6 +746,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     Py_DECREF(specieList);
                                     Py_DECREF(specieCount);
                                     Py_XDECREF(symin);
+                                    freeBody(bodyFormat);
                                     return NULL;
                                 }
 
@@ -674,6 +765,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     Py_DECREF(specieList);
                                     Py_DECREF(specieCount);
                                     Py_XDECREF(symin);
+                                    freeBody(bodyFormat);
                                     return NULL;
                                 }
 
@@ -712,6 +804,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     Py_DECREF(resultDict);
                                     Py_DECREF(specieList);
                                     Py_DECREF(specieCount);
+                                    freeBody(bodyFormat);
                                     return NULL;
                                 }
                             }
@@ -734,24 +827,26 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                         fclose(INFILE);
                         Py_DECREF(specieList);
                         Py_DECREF(specieCount);
+                        freeBody(bodyFormat);
                         return NULL;
                     }
 
                     count++;
                 }
 
-                if (count != lineLength)
+                if (count != numItems)
                 {
                     char errstring[128];
                     long k;
 
                     for (k = 0; k < numLines; k++) free(atomLines[k]);
-                    sprintf(errstring, "Error during body line read (%ld:%ld): %ld != %ld", i, j, count, lineLength);
+                    sprintf(errstring, "Error during body line read (%ld:%ld): %ld != %ld", i, j, count, numItems);
                     PyErr_SetString(PyExc_IOError, errstring);
                     Py_DECREF(resultDict);
                     fclose(INFILE);
                     Py_DECREF(specieList);
                     Py_DECREF(specieCount);
+                    freeBody(bodyFormat);
                     return NULL;
                 }
             }
@@ -764,6 +859,8 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         Py_DECREF(specieList);
         PyDict_SetItemString(resultDict, "specieCount", specieCount);
         Py_DECREF(specieCount);
+
+        freeBody(bodyFormat);
     }
 
     fclose(INFILE);
