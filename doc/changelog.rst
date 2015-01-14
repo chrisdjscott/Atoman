@@ -2,9 +2,14 @@
 Changelog
 =========
 
-**dev**
+**150114**
 
 * Try and autodetect the number format for the sequencer
+* Add option to normalise a vector before rendering/scaling it
+* Fix min value when specifying bin width in plot histogram
+* All scalar/vector data shown on atom info windows
+* Improved scalar data handling on Lattice
+* Ability to read LBOMD xyz files with velocities
 
 **v150105**
 
