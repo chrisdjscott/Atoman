@@ -923,6 +923,11 @@ class MainWindow(QtGui.QMainWindow):
         """
         msgBox = QtGui.QMessageBox(self)
         
+        if __version__.startswith("v"):
+            myVersion = __version__
+        else:
+            myVersion = "v" + __version__
+        
         try:
             import paramiko
             
@@ -932,7 +937,7 @@ class MainWindow(QtGui.QMainWindow):
                               <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
                                  by Marc Robinson.</p>
                               <p>Python %s - Qt %s - PySide %s - VTK %s - NumPy %s - SciPy %s - Matplotlib %s - paramiko %s on %s</p>""" % (
-                              __version__, datetime.date.today().year, platform.python_version(), QtCore.__version__, PySide.__version__,
+                              myVersion, datetime.date.today().year, platform.python_version(), QtCore.__version__, PySide.__version__,
                               vtk.vtkVersion.GetVTKVersion(), np.__version__, scipy.__version__, matplotlib.__version__, paramiko.__version__, 
                               platform.system()))
         
@@ -943,7 +948,7 @@ class MainWindow(QtGui.QMainWindow):
                               <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
                                  by Marc Robinson.</p>
                               <p>Python %s - Qt %s - PySide %s - VTK %s - NumPy %s - SciPy %s - Matplotlib %s on %s</p>""" % (
-                              __version__, datetime.date.today().year, platform.python_version(), QtCore.__version__, PySide.__version__,
+                              myVersion, datetime.date.today().year, platform.python_version(), QtCore.__version__, PySide.__version__,
                               vtk.vtkVersion.GetVTKVersion(), np.__version__, scipy.__version__, matplotlib.__version__, platform.system()))
         
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
