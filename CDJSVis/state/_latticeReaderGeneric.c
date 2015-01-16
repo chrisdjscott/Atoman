@@ -31,6 +31,8 @@ struct Body
 };
 
 static PyObject* readGenericLatticeFile(PyObject*, PyObject*);
+static PyObject* getMinMaxPos(PyObject*, PyObject*);
+static PyObject* getDataFromLinkedLattice(PyObject*, PyObject*);
 static void freeBody(struct Body);
 
 
@@ -39,6 +41,8 @@ static void freeBody(struct Body);
  *******************************************************************************/
 static struct PyMethodDef methods[] = {
     {"readGenericLatticeFile", readGenericLatticeFile, METH_VARARGS, "Read generic Lattice file"},
+    {"getMinMaxPos", getMinMaxPos, METH_VARARGS, "Get the min/max pos"},
+    {"getDataFromLinkedLattice", getDataFromLinkedLattice, METH_VARARGS, "Get required data from the linked Lattice"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -72,7 +76,7 @@ freeBody(struct Body body)
 static PyObject*
 readGenericLatticeFile(PyObject *self, PyObject *args)
 {
-    int atomIndexOffset;
+    int atomIndexOffset, linkedNAtoms;
     char *filename, *delimiter;
     FILE *INFILE=NULL;
     PyObject *headerList=NULL;
@@ -80,7 +84,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     PyObject *resultDict=NULL;
 
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "sO!O!si", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter, &atomIndexOffset))
+    if (!PyArg_ParseTuple(args, "sO!O!sii", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter, &atomIndexOffset, &linkedNAtoms))
         return NULL;
 
     printf("GENREADER: reading file: '%s'\n", filename);
@@ -103,7 +107,6 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     {
         int atomIDFlag = 0;
         int haveSpecieOrSymbol = 0;
-        int cellDimsFlag = 0;
         long i, numLines;
         long NAtoms = -1;
         PyObject *specieList=NULL;
@@ -165,10 +168,6 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 /* check if supposed to skip this item */
                 if (strcmp("SKIP", key))
                 {
-                    /* are cell dimensions present */
-                    if (!strcmp("xdim", key) || !strcmp("ydim", key) || !strcmp("zdim", key))
-                        cellDimsFlag++;
-
                     /* build integer value */
                     if (!strcmp("i", type))
                     {
@@ -243,13 +242,21 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         }
         // we could do a pass through whole file to get NAtoms, then seek back to where we were...
 
-
-        /* cell dims */
-        printf("Cell dims flag: %d\n", cellDimsFlag);
-
-
-
-
+        
+        /* check NAtoms is same as linked */
+        if (linkedNAtoms != -1)
+        {
+            if (NAtoms != linkedNAtoms)
+            {
+                char errstring[128];
+                
+                sprintf(errstring, "Number of atoms does not match linked lattice (%ld != %ld)", NAtoms, linkedNAtoms);
+                Py_DECREF(resultDict);
+                fclose(INFILE);
+                PyErr_SetString(PyExc_ValueError, errstring);
+                return NULL;
+            }
+        }
 
         printf("Preparing to read body; NAtoms = %ld\n", NAtoms);
 
@@ -339,7 +346,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                         return NULL;
                     }
 
-                    shape_dim = dim == 1 ? 1 : 2;
+                    shape_dim = (dim == 1) ? 1 : 2;
                     data = (PyArrayObject *) PyArray_SimpleNew(shape_dim, np_dims, typenum);
                     if (data == NULL)
                     {
@@ -436,7 +443,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             freeBody(bodyFormat);
             return NULL;
         }
-
+        
         /* read the body */
         printf("Reading body...\n");
 
@@ -509,7 +516,6 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     {
                         char *key;
                         int dim, dimcount;
-                        PyObject *itemTuple;
 
                         /* unpack item */
                         key = bodyFormat.lines[j].items[count].key;
@@ -868,4 +874,190 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     printf("GENREADER: finished\n");
 
     return resultDict;
+}
+
+/*******************************************************************************
+ * Get max/min pos
+ *******************************************************************************/
+static PyObject*
+getMinMaxPos(PyObject *self, PyObject *args)
+{
+    Py_ssize_t np_dims[1] = {3};
+    Py_ssize_t i, numAtoms;
+    PyArrayObject *pos=NULL;
+    PyArrayObject *minPos=NULL;
+    PyArrayObject *maxPos=NULL;
+    PyObject *tuple=NULL;
+
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &pos))
+        return NULL;
+    
+    /* number of atoms */
+    numAtoms = pos->dimensions[0] / 3;
+    printf("DBG: NUM ATOMS = %ld\n", numAtoms);
+    
+    /* allocate min/max pos */
+    minPos = (PyArrayObject *) PyArray_SimpleNew(1, np_dims, NPY_FLOAT64);
+    if (minPos == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate minPos");
+        return NULL;
+    }
+    
+    maxPos = (PyArrayObject *) PyArray_SimpleNew(1, np_dims, NPY_FLOAT64);
+    if (maxPos == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate maxPos");
+        Py_DECREF(minPos);
+        return NULL;
+    }
+    
+    /* initialise */
+    for (i = 0; i < 3; i++)
+    {
+        DIND1(minPos, i) = 100000.0;
+        DIND1(maxPos, i) = -100000.0;
+    }
+    
+    /* loop over atoms */
+    for (i = 0; i < numAtoms; i++)
+    {
+        Py_ssize_t j, i3 = 3 * i;
+        
+        for (j = 0; j < 3; j++)
+        {
+            DIND1(minPos, j) = (DIND1(pos, i3 + j) < DIND1(minPos, j)) ? DIND1(pos, i3 + j) : DIND1(minPos, j);
+            DIND1(maxPos, j) = (DIND1(pos, i3 + j) > DIND1(maxPos, j)) ? DIND1(pos, i3 + j) : DIND1(maxPos, j);
+        }
+    }
+    
+    /* tuple for storing result */
+    tuple = PyTuple_New(2);
+    if (tuple == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate tuple");
+        return NULL;
+    }
+    
+    /* add min/max pos to tuple (steals ref) */
+    PyTuple_SetItem(tuple, 0, PyArray_Return(minPos));
+    PyTuple_SetItem(tuple, 1, PyArray_Return(maxPos));
+    
+    return tuple;
+}
+
+/*******************************************************************************
+ * Get specie and charge from linked lattice and compute specie count
+ *******************************************************************************/
+static PyObject*
+getDataFromLinkedLattice(PyObject *self, PyObject *args)
+{
+    int specieFlag, chargeFlag, numSpecies;
+    Py_ssize_t np_dims[1];
+    Py_ssize_t i, numAtoms;
+    PyArrayObject *linkedSpecie=NULL;
+    PyArrayObject *linkedCharge=NULL;
+    PyArrayObject *specie=NULL;
+    PyArrayObject *charge=NULL;
+    PyArrayObject *specieCount=NULL;
+    PyObject *tuple=NULL;
+
+    /* parse and check arguments from Python */
+    if (!PyArg_ParseTuple(args, "iiO!iO!", &specieFlag, &numSpecies, &PyArray_Type, &linkedSpecie, &chargeFlag, &PyArray_Type, &linkedCharge))
+        return NULL;
+    
+    /* number of atoms */
+    numAtoms = linkedSpecie->dimensions[0];
+    printf("DBG: NUM ATOMS = %ld\n", numAtoms);
+    
+    /* allocate arrays */
+    if (specieFlag)
+    {
+        np_dims[0] = numAtoms;
+        specie = (PyArrayObject *) PyArray_SimpleNew(1, np_dims, NPY_INT32);
+        if (specie == NULL);
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate specie");
+            return NULL;
+        }
+        
+        np_dims[0] = (Py_ssize_t) numSpecies;
+        specieCount = (PyArrayObject *) PyArray_SimpleNew(1, np_dims, NPY_INT32);
+        if (specieCount == NULL);
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate specieCount");
+            Py_DECREF(specie);
+            return NULL;
+        }
+        for (i = 0; i < numSpecies; i++) IIND1(specieCount, i) = 0;
+    }
+    
+    if (chargeFlag)
+    {
+        np_dims[0] = numAtoms;
+        charge = (PyArrayObject *) PyArray_SimpleNew(1, np_dims, NPY_FLOAT64);
+        if (charge == NULL);
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate charge");
+            if (specieFlag)
+            {
+                Py_DECREF(specie);
+                Py_DECREF(specieCount);
+            }
+            return NULL;
+        }
+    }
+    
+    /* loop over atoms (indexed by atom id) */
+    for (i = 0; i < numAtoms; i++)
+    {
+        if (specieFlag)
+        {
+            int specieIndex;
+            
+            specieIndex = IIND1(linkedSpecie, i);
+            IIND1(specie, i) = specieIndex;
+            IIND1(specieCount, specieIndex) = IIND1(specieCount, specieIndex) + 1;
+        }
+        
+        if (chargeFlag) DIND1(charge, i) = DIND1(linkedCharge, i);
+    }
+    
+    /* tuple */
+    tuple = PyTuple_New(3);
+    if (tuple == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate tuple");
+        if (specieFlag)
+        {
+            Py_DECREF(specie);
+            Py_DECREF(specieCount);
+        }
+        if (chargeFlag) Py_DECREF(charge);
+        return NULL;
+    }
+    
+    if (specieFlag)
+    {
+        PyTuple_SetItem(tuple, 0, PyArray_Return(specie));
+        PyTuple_SetItem(tuple, 1, PyArray_Return(specieCount));
+    }
+    else
+    {
+        Py_INCREF(Py_None);
+        PyTuple_SetItem(tuple, 0, Py_None);
+        Py_INCREF(Py_None);
+        PyTuple_SetItem(tuple, 1, Py_None);
+    }
+    
+    if (chargeFlag)
+        PyTuple_SetItem(tuple, 2, PyArray_Return(charge));
+    else
+    {
+        Py_INCREF(Py_None);
+        PyTuple_SetItem(tuple, 2, Py_None);
+    }
+    
+    return tuple;
 }
