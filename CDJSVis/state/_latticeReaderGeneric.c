@@ -573,7 +573,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     if (foundAtomID)
                         atomIndex -= (long) atomIndexOffset;
 
-                    if (!foundAtomID || (atomIndex < 0 || atomIndex > NAtoms))
+                    if (!foundAtomID || (atomIndex < 0 || atomIndex >= NAtoms))
                     {
                         char errstring[128];
                         long k;
