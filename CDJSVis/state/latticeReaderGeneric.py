@@ -27,6 +27,8 @@ class FileFormats(object):
     """
     def __init__(self):
         self._fileFormats = {}
+        self._maxIdentifierLength = 0
+        self.logger = logging.getLogger(__name__+".FileFormats")
     
     def getFormat(self, name):
         """
@@ -34,6 +36,13 @@ class FileFormats(object):
         
         """
         return self._fileFormats[name]
+    
+    def getMaxIdentifierLength(self):
+        """
+        Return length of longest identifier
+        
+        """
+        return self._maxIdentifierLength
     
     def addFileFormat(self, fileFormat):
         """
@@ -46,7 +55,16 @@ class FileFormats(object):
         if fileFormat.name in self._fileFormats:
             raise ValueError("File format name is not unique ('%s')" % fileFormat.name)
         
+        self.logger.debug("Adding file format: '%s'", fileFormat.name)
+        
+        # add to dict
         self._fileFormats[fileFormat.name] = fileFormat
+        
+        # max identifier length
+        idlen = len(fileFormat.getIdentifier())
+        if idlen > self._maxIdentifierLength:
+            self._maxIdentifierLength = idlen
+            self.logger.debug("Max identifier length is: %d", idlen)
     
     def read(self, filename="file_formats.IN"):
         """
@@ -63,6 +81,7 @@ class FileFormats(object):
                 
                 print "="*80
                 fmt.print_()
+        print "="*80
         
         self.checkLinkedNames()
     
@@ -84,6 +103,13 @@ class FileFormats(object):
             for key in self._fileFormats:
                 fmt = self._fileFormats[key]
                 fmt.write(f)
+    
+    def __len__(self):
+        return len(self._fileFormats)
+    
+    def __iter__(self):
+        for v in self._fileFormats.values():
+            yield v
 
 ################################################################################
 
@@ -336,16 +362,100 @@ class FileFormat(object):
             for item in line:
                 print "%r%s" % (item, self.delimiter),
             print
+        
+        print "  Identifier: %r" % self.getIdentifier()
+    
+    def getIdentifier(self):
+        """
+        Make identifier for this file
+        
+        """
+        identifier = []
+        for line in self.header:
+            identifier.append(len(line))
+        for _ in xrange(5):
+            for line in self.body:
+                count = 0
+                for value in line:
+                    count += value[2]
+                identifier.append(count)
+        
+        return identifier
     
 ################################################################################
 
-class LatticeReaderGeneric(latticeReaders.GenericLatticeReader):
+class LatticeReaderGeneric(object):
     """
     Generic format Lattice reader
     
     """
     def __init__(self, tmpLocation):
-        super(LatticeReaderGeneric, self).__init__(tmpLocation, None, None, None)
+        self.tmpLocation = tmpLocation
+        self.logger = logging.getLogger(__name__)
+    
+    def unzipFile(self, filename):
+        """
+        Unzip command
+        
+        """
+        bn = os.path.basename(filename)
+        root, ext = os.path.splitext(bn)
+        filepath = os.path.join(self.tmpLocation, root)
+        if ext == ".bz2":
+            command = 'bzcat -k "%s" > "%s"' % (filename, filepath)
+        
+        elif ext == ".gz":
+            command = 'gzip -dc "%s" > "%s"' % (filename, filepath)
+        
+        else:
+            raise RuntimeError("File '%s' is not a zip file", filename)
+        
+        status = os.system(command)
+        if status or not os.path.exists(filepath):
+            raise RuntimeError("Unzip command failed: '%s'" % command)
+        
+        return filepath
+    
+    def checkForZipped(self, filename):
+        """
+        Check if file exists (unzip if required)
+        
+        """
+        zip_exts = ('.bz2', '.gz')
+        ext = os.path.splitext(filename)[1]
+        filepath = None
+        zipFlag = False
+        if os.path.exists(filename) and ext in zip_exts:
+            # unzip
+            zipFlag = True
+            filepath = self.unzipFile(filename)
+        
+        elif os.path.exists(filename):
+            filepath = filename
+        
+        else:
+            if os.path.exists(filename + '.bz2'):
+                filename = filename + '.bz2'
+                zipFlag = True
+                filepath = self.unzipFile(filename)
+            
+            elif os.path.exists(filename + '.gz'):
+                filename = filename + '.gz'
+                zipFlag = True
+                filepath = self.unzipFile(filename)
+        
+        if filepath is None:
+            raise IOError("Could not locate file: '%s'" % filename)
+        
+        return filepath, zipFlag
+    
+    def cleanUnzipped(self, filepath, zipFlag):
+        """
+        Clean up unzipped file.
+        
+        """
+        if zipFlag:
+            os.unlink(filepath)
     
     def readFile(self, filename, fileFormat, rouletteIndex=None, linkedLattice=None):
         """
@@ -354,34 +464,17 @@ class LatticeReaderGeneric(latticeReaders.GenericLatticeReader):
         """
         self.logger.info("Reading file: '%s'", filename)
         
-        # strip gz/bz2 extension
-        if filename.endswith(".bz2"):
-            filename = filename[:-4]
-        elif filename.endswith(".gz"):
-            filename = filename[:-3]
-        
+        # check if zipped
         filepath, zipFlag = self.checkForZipped(filename)
-        if zipFlag == -1:
-            self.displayWarning("Could not find file: "+filename)
-            self.logger.warning("Could not find file: %s", filename)
-            return -1, None
         
         try:
             status, state = self.readFileMain(filepath, fileFormat, rouletteIndex, linkedLattice)
-        
-        except:
-            print sys.exc_info()
-            status = 255
-            state = None
         
         finally:
             self.cleanUnzipped(filepath, zipFlag)
         
         if status:
             self.logger.error("Generic Lattice reader failed with error code: %d", status)
-        
-        elif state is not None:
-            self.currentFile = os.path.abspath(filename)
         
         return status, state
     

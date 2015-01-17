@@ -39,10 +39,14 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         self.systemsDialog = parent
         self.mainToolbar = mainToolbar
         self.mainWindow = mainWindow
+        self.tmpLocation = self.mainWindow.tmpDirectory
         
         self.logger = logging.getLogger(__name__)
         
         vbox = QtGui.QVBoxLayout()
+        
+        # lattice reader
+        self.latticeReader = latticeReaderGeneric.LatticeReaderGeneric(self.tmpLocation)
         
         # open dialog
         self.openLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
@@ -121,29 +125,30 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         Open a file dialog to select a file.
         
         """
-        if self.fileFormatString is None:
-            self.mainWindow.displayError("GenericReaderWidget: fileFormatString not set on:\n%s" % str(self))
-            return None
-        
         # if no file formats, pop up a dialog telling the user to make some/reset to the default formats
-        
+        if not len(self.fileFormats):
+            self.mainWindow.displayError("No file formats have been defined")
+            self.logger.error("No file formats have been defined")
+            return
         
         fdiag = QtGui.QFileDialog()
          
-        # temporarily remove stays on top hint on systems dialog
-        sd = self.parent.parent
-        sd.tmpHide()
+        # temporarily remove stays on top hint on systems dialog (Mac only)
+        if platform.system() == "Darwin":
+            sd = self.parent.parent
+            sd.tmpHide()
         
+        # open the dialog
         filenames = fdiag.getOpenFileNames(self, "Open file", os.getcwd())[0]
         filenames = [str(fn) for fn in filenames]
         
-        sd.showAgain()
+        if platform.system() == "Darwin":
+            sd.showAgain()
         
         if not len(filenames):
             return None
         
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-        
         try:
             for filename in filenames:
                 nwd, filename = os.path.split(filename)        
@@ -153,13 +158,6 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
                     self.mainWindow.console.write("Changing to dir "+nwd)
                     os.chdir(nwd)
                     self.mainWindow.updateCWD()
-                
-                # remove zip extensions
-                if filename[-3:] == ".gz":
-                    filename = filename[:-3]
-                    
-                elif filename[-4:] == ".bz2":
-                    filename = filename[:-4]
                 
                 # open file
                 result = self.openFile(filename)
@@ -177,130 +175,117 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         Open file.
         
         """
-        print "OPEN FILE NOT IMPLEMENTED"
+        self.logger.debug("Open file: '%s'", filename)
+        if rouletteIndex is not None:
+            self.logger.debug("Roulette index is: %d", rouletteIndex)
+        if sftpPath is not None:
+            self.logger.debug("SFTP path is: '%s'", sftpPath)
         
         # first we attempt to detect a format
-        # if there are multiple possibilites we pop up a dialog to ask the user
+        # if there are multiple possibilities we pop up a dialog to ask the user
         # (database of user responses, possibly including extension, to help order the options)
         # if there is a linked lattice type, check one is loaded, if not ask user to load one first,
         #   if 1 is loaded use it, if >1 then pop up a dialog with most recent at the top
         
+        # unzip if required
+        filepath, zipFlag = self.latticeReader.checkForZipped(filename)
         
+        try:
+            # file format
+            fileFormat = self.determineFileFormat(filepath, filename)
+            if fileFormat is None:
+                return 1
+            
+            # linked lattice?
+            
+            
+            # open file
+            status, state = self.latticeReader.readFile(filepath, fileFormat, rouletteIndex=rouletteIndex, linkedLattice=None)
         
+        finally:
+            # delete unzipped file if required
+            self.latticeReader.cleanUnzipped(filepath, zipFlag)
         
+        if not status:
+            self.postOpenFile(state, filename, fileFormat, sftpPath)
     
-    def determineFileFormat(self, filename):
+    def postOpenFile(self, state, filename, fileFormat, sftpPath):
         """
-        Determine file format
+        Should always be called at the end of openFile.
         
-        * loop over formats, matching to each one
-        * if one, use it
-        * if more, show dialog
+        """
+        self.systemsDialog.fileLoaded(state, filename, fileFormat, sftpPath)
+    
+    def determineFileFormat(self, filename, properName):
+        """
+        Attempt to automatically detect the file format.
+        
+        If more that one format open a dialog to ask the user.
         
         """
         self.logger.debug("Attempting to determine file format")
         
+        # max identifier length
+        maxIdLen = self.fileFormats.getMaxIdentifierLength()
+        self.logger.debug("Max identifier length: %d", maxIdLen)
         
+        # read required lines
+        lines = []
+        with open(filename) as f:
+            #TODO: handle case where less than maxIdLen lines...
+            for _ in xrange(maxIdLen):
+                lines.append(f.readline())
         
-        
-        
-        
-        
-        
-        f = open(filename)
-        
-        # if can't determine within limit stop
-        maxLines = 20
-        
-        # stop when this number of lines are repeating (won't work for FAILSAFE!!!)
-        repeatThreshold = 3
-        
-        lineArrayCountList = []
-        
-        success = False
-        repeatCount = 0
-        repeatVal = None
-        repeatFirstIndexLen = None
-        for count, line in enumerate(f):
-            if count == maxLines:
-                self.logger.debug("  Max lines reached; stopping")
-                break
+        # loop over formats
+        matchedFormats = []
+        for fileFormat in self.fileFormats:
+            self.logger.debug("Checking for match with format: '%s'", fileFormat.name)
             
-            line = line.strip()
+            # format identifier
+            identifier = fileFormat.getIdentifier()
             
-            # ignore blank lines
-            if not len(line):
-                continue
+            # delimiter
+            delim = fileFormat.delimiter
+            # handle whitespace properly
+            if delim == " ":
+                delim = None
             
-            # split line
-            array = line.split()
-            num = len(array)
+            # check for match
+            match = True
+            for i in xrange(len(identifier)):
+                lineLenFormat = identifier[i]
+                lineLenInput = len(lines[i].split(delim))
+                self.logger.debug("Line %d: %d <-> %d", i, lineLenInput, lineLenFormat)
+                if lineLenFormat != lineLenInput:
+                    match = False
+                    break
             
-            self.logger.debug("  Line %d; num %d (%s)", count, num, line)
+            if match:
+                self.logger.debug("Found possible file format: '%s'", fileFormat.name)
+                matchedFormats.append(fileFormat)
+        
+        if len(matchedFormats) == 1:
+            fileFormat = matchedFormats[0]
+            self.logger.debug("Found 1 possible file format: '%s'", fileFormat.name)
+        
+        elif len(matchedFormats) > 1:
+            self.logger.debug("Found %d possible file formats", len(matchedFormats))
             
-            # store num items in line
-            lineArrayCountList.append(num)
+            # open dialog
+            items = [fmt.name for fmt in matchedFormats]
+            name, ok = QtGui.QInputDialog.getItem(self, "Select file format", "File '%s'" % properName, items,
+                                                  editable=False)
             
-            if num == repeatVal:
-                repeatCount += 1
+            if ok:
+                self.logger.debug("User selected format '%s'", name)
+                fileFormat = self.fileFormats.getFormat(name)
+            
             else:
-                repeatCount = 0
-                repeatVal = num
-                repeatFirstIndexLen = len(lineArrayCountList)
-            
-            self.logger.debug("  Repeat: cnt %d; val %d; first %d", repeatCount, repeatVal, repeatFirstIndexLen)
-            
-            if repeatCount == repeatThreshold:
-                self.logger.debug("  Repeat threshold reached (%d): exiting detect loop", repeatCount)
-                success = True
-                break
-        
-        if not success:
-            if count < 10:
-                self.logger.warning("Trying to determine format of small file; this might not work")
-            else:    
-                self.logger.debug("Failed to detect file format")
-                return None
-        
-        format_ident = lineArrayCountList[:repeatFirstIndexLen]
-        self.logger.debug("Format identifier: '%s'", str(format_ident))
-        
-        return format_ident
-    
-    def checkForZipped(self, filename):
-        """
-        Check if file exists (unzip if required)
-        
-        """
-        if os.path.exists(filename):
-            fileLocation = '.'
-            zipFlag = 0
+                fileFormat = None
         
         else:
-            if os.path.exists(filename + '.bz2'):
-                command = 'bzcat -k "%s.bz2" > ' % (filename)
-            
-            elif os.path.exists(filename + '.gz'):
-                command = 'gzip -dc "%s.gz" > ' % (filename)
-                
-            else:
-                return None, -1
-                
-            fileLocation = self.tmpLocation
-            command = command + os.path.join(fileLocation, filename)
-            os.system(command)
-            zipFlag = 1
-            
-        filepath = os.path.join(fileLocation, filename)
-        if not os.path.exists(filepath):
-            return None, -1
-            
-        return filepath, zipFlag
-    
-    def cleanUnzipped(self, filepath, zipFlag):
-        """
-        Clean up unzipped file.
+            self.logger.error("Found 0 possible file formats")
+            fileFormat = None
+            self.mainWindow.displayError("Unrecognised file format for: '%s'" % properName)
         
-        """
-        if zipFlag:
-            os.unlink(filepath)
+        return fileFormat

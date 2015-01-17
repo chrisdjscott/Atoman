@@ -187,12 +187,12 @@ class LoadSystemForm(GenericForm):
         """
         self.stackedWidget.setCurrentIndex(index)
     
-    def fileLoaded(self, fileType, state, filename, extension, readerStackIndex, sftpPath):
+    def fileLoaded(self, state, filename, fileFormat, sftpPath):
         """
         Called when a file is loaded
         
         """
-        self.parent.file_loaded(state, filename, extension, readerStackIndex, sftpPath)
+        self.parent.file_loaded(state, filename, fileFormat, sftpPath)
 
 ################################################################################
 
@@ -201,15 +201,20 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
     Item that goes in the systems list
     
     """
-    def __init__(self, lattice, filename, displayName, stackIndex, abspath, extension):
+    def __init__(self, lattice, filename, displayName, abspath, fileFormat):
         super(SystemsListWidgetItem, self).__init__()
         
         self.lattice = lattice
         self.filename = filename
         self.displayName = displayName
-        self.stackIndex = stackIndex
+        self.fileFormat = fileFormat
         self.abspath = abspath
-        self.extension = extension
+        
+        zip_exts = ('.bz2', '.gz')
+        root, ext = os.path.splitext(filename)
+        if ext in zip_exts:
+            ext = os.path.splitext(root)[1]
+        self.extension = ext
         
         self.setText("%s (%d atoms)" % (displayName, lattice.NAtoms))
         self.setToolTip(abspath)
@@ -740,16 +745,16 @@ class SystemsDialog(QtGui.QDialog):
         File generated
         
         """
-        self.add_lattice(lattice, filename, "dat", allowDuplicate=True)
+        self.add_lattice(lattice, filename, allowDuplicate=True)
     
-    def file_loaded(self, lattice, filename, extension, readerStackIndex, sftpPath):
+    def file_loaded(self, lattice, filename, fileFormat, sftpPath):
         """
         Called after a file had been loaded (or generated too?)
         
         """
-        self.add_lattice(lattice, filename, extension, idb=readerStackIndex, ida=0, sftpPath=sftpPath)
+        self.add_lattice(lattice, filename, fileFormat=fileFormat, sftpPath=sftpPath)
     
-    def add_lattice(self, lattice, filename, extension, ida=None, idb=None, displayName=None, allowDuplicate=False, sftpPath=None):
+    def add_lattice(self, lattice, filename, fileFormat=None, displayName=None, allowDuplicate=False, sftpPath=None):
         """
         Add lattice
         
@@ -776,25 +781,18 @@ class SystemsDialog(QtGui.QDialog):
                 
                 return
         
-        # stack index
-        if ida is None:
-            ida = self.new_system_stack.currentIndex()
-            page = self.new_system_stack.currentWidget()
-        
-        if idb is None:
-            idb = page.stackedWidget.currentIndex()
-        
-        stackIndex = (ida, idb)
-        
         if displayName is None:
+            zip_exts = ('.gz', '.bz2')
             displayName = os.path.basename(filename)
+            if os.path.splitext(displayName)[1] in zip_exts:
+                displayName = os.path.splitext(displayName)[0]
         
-        self.logger.debug("Adding new lattice to systemsList (%d): %s; %d,%d", index, filename, ida, idb)
+        self.logger.debug("Adding new lattice to systemsList (%d): %s", index, filename)
         self.logger.debug("Abspath is: '%s'", abspath)
         self.logger.debug("Display name is: '%s'", displayName)
         
         # item for list
-        list_item = SystemsListWidgetItem(lattice, filename, displayName, stackIndex, abspath, extension)
+        list_item = SystemsListWidgetItem(lattice, filename, displayName, abspath, fileFormat)
         
         # add to list
         self.systems_list_widget.addItem(list_item)

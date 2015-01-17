@@ -350,13 +350,12 @@ class PipelineForm(QtGui.QWidget):
         
         diff = False
         for i in xrange(3):
-#             if inp.cellDims[i] != ref.cellDims[i]:
             if math.fabs(inp.cellDims[i] - ref.cellDims[i]) > 1e-4:
                 diff = True
                 break
         
         if diff:
-            self.mainWindow.console.write("WARNING: cell dims differ")
+            self.logger.warning("Cell dims differ")
             
         return diff
     
@@ -443,7 +442,6 @@ class PipelineForm(QtGui.QWidget):
         if status:
             # must change input too
             self.inputCombo.setCurrentIndex(index)
-#             self.inputChanged(index)
     
     def inputChanged(self, index):
         """
@@ -461,10 +459,10 @@ class PipelineForm(QtGui.QWidget):
             return
         
         self.inputState = state
-        self.inputStackIndex = item.stackIndex
         self.filename = item.displayName
         self.extension = item.extension
         self.abspath = item.abspath
+        self.fileFormat = item.fileFormat
         self.PBC = state.PBC
         self.setPBCChecks()
         
@@ -474,7 +472,6 @@ class PipelineForm(QtGui.QWidget):
         if status:
             # must change ref too
             self.refCombo.setCurrentIndex(index)
-#             self.refChanged(index)
         
         # post input loaded
         self.postInputLoaded()
