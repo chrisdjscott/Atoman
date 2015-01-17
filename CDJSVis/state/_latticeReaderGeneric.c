@@ -1052,7 +1052,9 @@ getDataFromLinkedLattice(PyObject *self, PyObject *args)
     }
     
     if (chargeFlag)
+    {
         PyTuple_SetItem(tuple, 2, PyArray_Return(charge));
+    }
     else
     {
         Py_INCREF(Py_None);

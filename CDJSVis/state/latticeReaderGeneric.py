@@ -16,7 +16,6 @@ from . import _latticeReaderGeneric
 from .atoms import elements
 from ..visutils import utilities
 from .lattice import Lattice
-from __builtin__ import True
 
 
 ################################################################################
@@ -82,7 +81,6 @@ class FileFormats(object):
         """
         with open(filename, "w") as f:
             f.write("%d\n" % len(self._fileFormats))
-            
             for key in self._fileFormats:
                 fmt = self._fileFormats[key]
                 fmt.write(f)
@@ -208,7 +206,7 @@ class FileFormat(object):
         if not havePos:
             errors.append("Format body must contain 'Position'")
         
-        if not haveSymbol and self.linkedName is None:
+        if (not haveSymbol) and self.linkedName is None:
             errors.append("Fornat body must contain 'Symbol' or the format must be linked to another format type")
         
         return errors

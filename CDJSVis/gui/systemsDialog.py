@@ -18,7 +18,7 @@ import numpy as np
 
 from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
-from . import latticeReaderForms
+from . import generalReaderForm
 from . import latticeGeneratorForms
 from . import sftpDialog
 from .filterList import FilterList
@@ -146,53 +146,21 @@ class LoadSystemForm(GenericForm):
         else:
             self.sftp_browser = None
         
-        # ordered list of keys
-        self.readerFormsKeys = [
-            "LBOMD DAT",
-            "LBOMD REF",
-            "LBOMD XYZ",
-            "AUTO DETECT"
-        ]
-        
-        # reader forms
-        self.readerForms = {
-            "LBOMD DAT": latticeReaderForms.LbomdDatReaderForm(self, self.mainToolbar, self.mainWindow, "LBOMD DAT"),
-            "LBOMD REF": latticeReaderForms.LbomdRefReaderForm(self, self.mainToolbar, self.mainWindow, "LBOMD REF"),
-            "LBOMD XYZ": latticeReaderForms.LbomdXYZReaderForm(self, self.mainToolbar, self.mainWindow, "LBOMD XYZ"),
-            "AUTO DETECT": latticeReaderForms.AutoDetectReaderForm(self, self.mainToolbar, self.mainWindow, "AUTO DETECT"),
-        }
-        
-        # file type combo
-        self.inputTypeCombo = QtGui.QComboBox()
-        self.inputTypeCombo.addItems(self.readerFormsKeys)
-        self.inputTypeCombo.currentIndexChanged.connect(self.setWidgetStack)
-        
+        # reader form
+        self.readerForm = generalReaderForm.GeneralLatticeReaderForm(self, self.mainToolbar, self.mainWindow)
         row = self.newRow()
-        row.addWidget(self.inputTypeCombo)
-        
-        # stacked widget
-        self.stackedWidget = QtGui.QStackedWidget()
-        
-        # add reader forms
-        for key in self.readerFormsKeys:
-            self.stackedWidget.addWidget(self.readerForms[key])
-        
-        row = self.newRow()
-        row.addWidget(self.stackedWidget)
-        
-        # select auto by default
-        self.inputTypeCombo.setCurrentIndex(self.readerFormsKeys.index("AUTO DETECT"))
+        row.addWidget(self.readerForm)
         
         # help icon
-        row = self.newRow()
-        row.RowLayout.addStretch(1)
-        
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
-        helpButton.setFixedWidth(20)
-        helpButton.setFixedHeight(20)
-        helpButton.setToolTip("Show help page")
-        helpButton.clicked.connect(self.loadHelpPage)
-        row.addWidget(helpButton)
+#         row = self.newRow()
+#         row.RowLayout.addStretch(1)
+#         
+#         helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
+#         helpButton.setFixedWidth(20)
+#         helpButton.setFixedHeight(20)
+#         helpButton.setToolTip("Show help page")
+#         helpButton.clicked.connect(self.loadHelpPage)
+#         row.addWidget(helpButton)
         
         self.show()
     
