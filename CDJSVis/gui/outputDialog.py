@@ -1772,8 +1772,14 @@ class ImageSequenceTab(QtGui.QWidget):
         # get pipeline page
         pipelinePage = self.rendererWindow.getCurrentPipelinePage()
         
+        # check this is not a generated system
+        if pipelinePage.fileFormat is None:
+            self.logger.error("Cannot sequence a generated file")
+            self.mainWindow.displayError("Cannot sequence a generated file")
+            return
+        
         # formatted string
-        fileText = "%s%s.%s" % (str(self.fileprefix.text()), self.numberFormat, pipelinePage.extension)
+        fileText = "%s%s%s" % (str(self.fileprefix.text()), self.numberFormat, pipelinePage.extension)
         
         # check abspath (for sftp)
         abspath = pipelinePage.abspath
@@ -1859,30 +1865,13 @@ class ImageSequenceTab(QtGui.QWidget):
         # pipeline index
         pipelineIndex = self.rendererWindow.currentPipelineIndex
         
-        # stack index from systems dialog
-        ida, idb = pipelinePage.inputStackIndex
-        
-        if ida != 0:
-            self.logger.error("Cannot sequence a generated lattice")
-            return
-        
-        self.logger.debug("  Input stack index: %d, %d", ida, idb)
-        
+        # systems dialog
         systemsDialog = self.mainWindow.systemsDialog
-        iniStackIndexa = systemsDialog.new_system_stack.currentIndex()
+        loadPage = systemsDialog.load_system_form
         
-        systemsDialog.new_system_stack.setCurrentIndex(ida)
-        in_page = systemsDialog.new_system_stack.currentWidget()
-        iniStackIndexb = in_page.stackedWidget.currentIndex()
-        
-        in_page.stackedWidget.setCurrentIndex(idb)
-        readerForm = in_page.stackedWidget.currentWidget()
+        # reader 
+        readerForm = loadPage.readerForm
         reader = readerForm.latticeReader
-        
-        # back to original
-        in_page.stackedWidget.setCurrentIndex(iniStackIndexb)
-        systemsDialog.new_system_stack.setCurrentIndex(iniStackIndexa)
-        
         self.logger.debug("  Reader: %s %s", str(readerForm), str(reader))
         
         # directory
@@ -1964,12 +1953,7 @@ class ImageSequenceTab(QtGui.QWidget):
                     sftpBrowser.copySystem(remoteFile, currentFile)
                 
                 # read in state
-                if reader.requiresRef:
-                    status, state = reader.readFile(currentFile, readerForm.currentRefState, rouletteIndex=i-1)
-                
-                else:
-                    status, state = reader.readFile(currentFile, rouletteIndex=i-1)
-                
+                status, state = reader.readFile(currentFile, pipelinePage.fileFormat, rouletteIndex=i-1, linkedLattice=None)
                 if status:
                     self.logger.error("Sequencer read file failed with status: %d" % status)
                     break
@@ -2218,7 +2202,7 @@ class ImageSequenceTab(QtGui.QWidget):
         else:
             ext = pp.extension
         
-        text = "%s%s.%s" % (self.fileprefix.text(), self.numberFormat, ext)
+        text = "%s%s%s" % (self.fileprefix.text(), self.numberFormat, ext)
         
         foundFormat = False
         testfn = text % self.minIndex
@@ -2228,7 +2212,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 if nfmt == self.numberFormat:
                     continue
                 
-                testText = "%s%s.%s" % (self.fileprefix.text(), nfmt, ext)
+                testText = "%s%s%s" % (self.fileprefix.text(), nfmt, ext)
                 testfn = testText % self.minIndex
                 if os.path.isfile(testfn) or os.path.isfile(testfn+'.gz') or os.path.isfile(testfn+'.bz2'):
                     foundFormat = True

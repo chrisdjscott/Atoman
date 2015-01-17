@@ -49,7 +49,9 @@ class Lattice(object):
         self.charge = np.empty(0, np.float64)
         
         self.scalarsDict = {}
+        self.scalarsFiles = {}
         self.vectorsDict = {}
+        self.vectorsFiles = {}
         
         self.PBC = np.ones(3, np.int32)
     
@@ -427,5 +429,7 @@ class Lattice(object):
         
         self.scalarsDict = copy.deepcopy(lattice.scalarsDict)
         self.vectorsDict = copy.deepcopy(lattice.vectorsDict)
+        self.scalarsFiles = copy.deepcopy(lattice.scalarsFiles)
+        self.vectorsFiles = copy.deepcopy(lattice.vectorsFiles)
         
         self.PBC = copy.deepcopy(lattice.PBC)
