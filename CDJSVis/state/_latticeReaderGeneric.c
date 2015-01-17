@@ -663,7 +663,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     return NULL;
                                 }
 
-    //                            printf("Symbol: '%s'\n", PyString_AsString(symin));
+//                                printf("Symbol: '%s'\n", PyString_AsString(symin));
 
                                 /* check if it already exists in the list */
                                 check = PySequence_Contains(specieList, symin);
