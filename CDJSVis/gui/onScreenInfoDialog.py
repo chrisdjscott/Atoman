@@ -223,6 +223,10 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.textList.addItem(TextListWidgetItem("Energy barrier", "{0} eV", {"{0}": "Energy barrier"}, "Top right", True))
         self.textList.addItem(TextListWidgetItem("Temperature", "{0} K", {"{0}": "Temperature"}, "Top right", True))
         
+        #TODO: automatically add stuff from Lattice.attributes
+        #TODO: automatically add magnitude off Lattice.vectorsData
+        #TODO: automatically add sum of Lattice.scalarData
+        
         # connect
         self.textList.itemDoubleClicked.connect(self.showTextSettingsDialog)
     

@@ -63,3 +63,28 @@ d
 Charge
 d
 1
+LBOMD XYZ
+ 
+1
+LBOMD REF
+2
+1
+NAtoms
+i
+1
+Time
+d
+1
+4
+atomID
+i
+1
+Position
+d
+3
+Kinetic energy
+d
+1
+Potential energy
+d
+1

@@ -736,26 +736,19 @@ class RendererWindow(QtGui.QWidget):
         # atom count
         self.onScreenInfo["Atom count"] = (inputState.NAtoms,)
         
-        # sim time
-        if inputState.simTime is not None:
-            self.onScreenInfo["Simulation time"] = tuple(utilities.simulationTimeLine(inputState.simTime).split())
-        
-        # barrier
-        if inputState.barrier is not None:
-            self.onScreenInfo["Energy barrier"] = (inputState.barrier,)
-        
-        # KMC step
-        if inputState.kmcStep is not None:
-            self.onScreenInfo["KMC step"] = (inputState.kmcStep,)
-        
+        # Lattice attributes
+        for key, value in inputState.attributes.iteritems():
+            if key == "Time":
+                self.onScreenInfo[key] = tuple(utilities.simulationTimeLine(value).split())
+            
+            else:
+                self.onScreenInfo[key] = (value,)        
+
         # lattice temperature
-        if inputState.temperature is None:
+        if not "Temperature" in inputState.attributes:
             temperature = inputState.calcTemperature()
-        else:
-            temperature = inputState.temperature
-        
-        if temperature is not None:
-            self.onScreenInfo["Temperature"] = ("%.3f" % temperature,)
+            if temperature is not None:
+                self.onScreenInfo["Temperature"] = ("%.3f" % temperature,)
         
         # filter lists
         filterLists = self.getFilterLists()

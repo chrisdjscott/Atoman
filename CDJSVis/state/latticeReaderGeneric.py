@@ -126,6 +126,18 @@ class FileFormat(object):
         self.atomIndexOffset = 1
         self.linkedName = None
     
+    def inHeader(self, key):
+        """
+        Test if the key was defined in the header
+        
+        """
+        for line in self.header:
+            for item in line:
+                if item[0] == key:
+                    return True
+        
+        return False
+    
     def setName(self, name):
         """
         Set name
@@ -586,17 +598,29 @@ class LatticeReaderGeneric(object):
             lattice.specieRGB[i][2] = rgbtemp[2]
             self.logger.info("%d %s (%s) atoms", lattice.specieCount[i], lattice.specieList[i], elements.atomName(lattice.specieList[i]))
         
-        # read what's left in resultDict: scalars and vectors
+        # read what's left in resultDict: scalars and vectors and lattice attributes
         for key, data in resultDict.iteritems():
-            if len(data.shape) == 1 and data.shape[0] == lattice.NAtoms:
+            # take lattice attributes (Defined in header) first
+            if fileFormat.inHeader(key):
+                self.logger.debug("Saving '%s' attribute to Lattice (%r)", key, data)
+                lattice.attributes[key] = data
+            
+            # now take scalars
+            elif len(data.shape) == 1 and data.shape[0] == lattice.NAtoms:
                 self.logger.debug("Saving '%s' scalar data to Lattice", key)
                 lattice.scalarsDict[key] = data
             
+            # now take vectors
             elif len(data.shape) == 2 and data.shape[0] == lattice.NAtoms and data.shape[1] == 3:
                 self.logger.debug("Saving '%s' vector data to Lattice", key)
                 lattice.vectorsDict[key] = data
             
             else:
                 raise RuntimeError("Unrecognised shape data extracted from lattice: %s (%r)" % (key, data.shape))
+        
+        #TODO: read Roulette?
+        
+        
+        
         
         return 0, lattice

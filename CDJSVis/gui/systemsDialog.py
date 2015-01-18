@@ -833,6 +833,19 @@ class SystemsDialog(QtGui.QDialog):
         
         return latticeList
     
+    def getLatticesByFormat(self, formatName):
+        """
+        Return a list of loaded systems with the given format
+        
+        """
+        lattices = []
+        for i in xrange(self.systems_list_widget.count()):
+            item = self.systems_list_widget.item(i)
+            if item.fileFormat.name == formatName:
+                lattices.append((item.displayName, item.lattice))
+        
+        return lattices
+    
     def getDisplayNames(self):
         """
         Return ordered list of display names

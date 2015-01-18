@@ -196,11 +196,14 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             if fileFormat is None:
                 return 1
             
-            # linked lattice?
-            
+            # linked lattice
+            if fileFormat.linkedName is not None:
+                linkedLattice = self.getLinkedLattice(fileFormat, filename)
+                if linkedLattice is None:
+                    return 2
             
             # open file
-            status, state = self.latticeReader.readFile(filepath, fileFormat, rouletteIndex=rouletteIndex, linkedLattice=None)
+            status, state = self.latticeReader.readFile(filepath, fileFormat, rouletteIndex=rouletteIndex, linkedLattice=linkedLattice)
         
         finally:
             # delete unzipped file if required
@@ -208,6 +211,60 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         
         if not status:
             self.postOpenFile(state, filename, fileFormat, sftpPath)
+    
+    def getLinkedLattice(self, fileFormat, properName):
+        """
+        Get linked lattice.
+        
+        If one option, select it automatically,
+        otherwise ask user.
+        
+        """
+        linkedType = fileFormat.linkedName
+        self.logger.debug("Getting linked lattice (type: '%s')", linkedType)
+        
+        # list of lattices with required format
+        availableSystems = self.systemsDialog.getLatticesByFormat(linkedType)
+        
+        # nothing available
+        if not len(availableSystems):
+            self.logger.error("No files of linked type")
+            self.mainWindow.displayError("Cannot open '%s'; it depends on a '%s' file being loaded first!" % (properName, linkedType))
+            lattice = None
+        
+        # one available
+        elif len(availableSystems) == 1:
+            latticeDisplayName, lattice = availableSystems[0]
+            self.logger.info("Found 1 possible linked lattice: '%s'", latticeDisplayName)
+        
+        # multiple available
+        else:
+            self.logger.debug("Found %d possible linked lattices", len(availableSystems))
+            
+            # open dialog
+            items = [item[0] for item in availableSystems]
+            name, ok = QtGui.QInputDialog.getItem(self, "Select file format", "File '%s'" % properName, items,
+                                                  editable=False)
+            
+            if ok:
+                self.logger.debug("User selected linked lattice: '%s'", name)
+                match = False
+                for index, latticeDisplayName, lattice in enumerate(availableSystems):
+                    if latticeDisplayName == name:
+                        match = True
+                        break
+            
+                if not match:
+                    self.logger.error("Critical error: could not find selected lattice in available systems")
+                    return None
+                
+                else:
+                    self.logger.debug("User selected linked lattice %d: '%s'", index, latticeDisplayName)
+            
+            else:
+                fileFormat = None
+        
+        return lattice
     
     def postOpenFile(self, state, filename, fileFormat, sftpPath):
         """
