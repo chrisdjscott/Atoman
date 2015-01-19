@@ -41,6 +41,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         self.mainToolbar = mainToolbar
         self.mainWindow = mainWindow
         self.tmpLocation = self.mainWindow.tmpDirectory
+        self.currentFile = None
         
         self.logger = logging.getLogger(__name__)
         
@@ -188,8 +189,10 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         # if there is a linked lattice type, check one is loaded, if not ask user to load one first,
         #   if 1 is loaded use it, if >1 then pop up a dialog with most recent at the top
         
-        # display progress
-        self.mainWindow.updateProgress(0, 0, "Reading '%s'" % filename)
+        # status
+        self.currentFile = os.path.basename(filename)
+#         self.mainWindow.setStatus("Reading '%s'" % self.currentFile)
+        self.mainWindow.updateProgress(0, 0, "Reading '%s'" % self.currentFile)
         
         # unzip if required
         filepath, zipFlag = self.latticeReader.checkForZipped(filename)
@@ -206,17 +209,27 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
                 linkedLattice = self.getLinkedLattice(fileFormat, filename)
                 if linkedLattice is None:
                     return 2
-            
+
             # open file
-            status, state = self.latticeReader.readFile(filepath, fileFormat, rouletteIndex=rouletteIndex, linkedLattice=linkedLattice)
+            status, state = self.latticeReader.readFile(filepath, fileFormat, rouletteIndex=rouletteIndex, linkedLattice=linkedLattice, callback=None)
         
         finally:
             # delete unzipped file if required
             self.latticeReader.cleanUnzipped(filepath, zipFlag)
             self.mainWindow.hideProgressBar()
+            self.currentFile = None
         
         if not status:
             self.postOpenFile(state, filename, fileFormat, sftpPath)
+    
+    def updateProgress(self, n, nmax):
+        """
+        Update progress
+        
+        """
+        print "Hello, world!", n, nmax
+        
+        return 0
     
     def getLinkedLattice(self, fileFormat, properName):
         """

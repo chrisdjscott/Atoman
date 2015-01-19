@@ -9,6 +9,7 @@
 #include <math.h>
 #include "array_utils.h"
 
+#define DEBUG
 #define MAX_LINE_LENGTH 512
 
 struct BodyLineItem
@@ -32,6 +33,8 @@ struct Body
 
 static PyObject* readGenericLatticeFile(PyObject*, PyObject*);
 static PyObject* getMinMaxPos(PyObject*, PyObject*);
+static PyObject* registerCallback(PyObject*, PyObject*);
+static PyObject* updateProgress = NULL;
 static void freeBody(struct Body);
 
 
@@ -41,6 +44,7 @@ static void freeBody(struct Body);
 static struct PyMethodDef methods[] = {
     {"readGenericLatticeFile", readGenericLatticeFile, METH_VARARGS, "Read generic Lattice file"},
     {"getMinMaxPos", getMinMaxPos, METH_VARARGS, "Get the min/max pos"},
+    {"registerCallback", registerCallback, METH_VARARGS, "Register progress callback function"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -69,12 +73,43 @@ freeBody(struct Body body)
 }
 
 /*******************************************************************************
+ * Free body struct
+ *******************************************************************************/
+static PyObject* registerCallback(PyObject *self, PyObject *args)
+{
+    PyObject *temp;
+    PyObject *result = NULL;
+    
+    if (PyArg_ParseTuple(args, "O", &temp))
+    {
+        if (!PyCallable_Check(temp))
+        {
+            PyErr_SetString(PyExc_TypeError, "Progress callback parameter must be callable");
+            return NULL;
+        }
+        
+#ifdef DEBUG
+        printf("Registering progress callback\n");
+#endif
+        
+        Py_XINCREF(temp);
+        Py_XDECREF(updateProgress);
+        updateProgress = temp;
+        
+        Py_INCREF(Py_None);
+        result = Py_None;
+    }
+    
+    return result;
+}
+
+/*******************************************************************************
  * Read generic lattice file
  *******************************************************************************/
 static PyObject*
 readGenericLatticeFile(PyObject *self, PyObject *args)
 {
-    int atomIndexOffset, linkedNAtoms;
+    int atomIndexOffset, linkedNAtoms, callbackFlag;
     char *filename, *delimiter;
     FILE *INFILE=NULL;
     PyObject *headerList=NULL;
@@ -82,12 +117,20 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     PyObject *resultDict=NULL;
 
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "sO!O!sii", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter, &atomIndexOffset, &linkedNAtoms))
+    if (!PyArg_ParseTuple(args, "sO!O!siii", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter, 
+            &atomIndexOffset, &linkedNAtoms, &callbackFlag))
         return NULL;
 
+#ifdef DEBUG
     printf("GENREADER: reading file: '%s'\n", filename);
     printf("Delimiter is '%s'\n", delimiter);
-
+#endif
+    
+    /* check callback is callable */
+#ifdef DEBUG
+    if (callbackFlag) printf("Have progress callback\n");
+#endif
+    
     /* open the file for reading */
     INFILE = fopen(filename, "r");
 
@@ -105,7 +148,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     {
         int atomIDFlag = 0;
         int haveSpecieOrSymbol = 0;
-        long i, numLines;
+        long i, numLines, callbackInterval;
         long NAtoms = -1;
         PyObject *specieList=NULL;
         PyObject *specieCount=NULL;
@@ -122,7 +165,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
 
         /* number of header lines */
         numLines = PyList_Size(headerList);
+#ifdef DEBUG
         printf("HEADER NUM LINES: %ld\n", numLines);
+#endif
 
         /* read header */
         for (i = 0; i < numLines; i++)
@@ -255,13 +300,51 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 return NULL;
             }
         }
-
+        
+#ifdef DEBUG
         printf("Preparing to read body; NAtoms = %ld\n", NAtoms);
+#endif
 
+        /* callback interval */
+        if (callbackFlag)
+        {
+            PyObject *cbres;
+            PyObject *arglist;
+            
+            callbackInterval = (long) (NAtoms / 10);
+#ifdef DEBUG
+            printf("Progress callback every %ld atoms\n", callbackInterval);
+#endif
+            
+            /* create arg list */
+            arglist = Py_BuildValue("(ii)", 0, (int) NAtoms);
+            
+            /* call function */
+            cbres = PyObject_CallObject(updateProgress, arglist);
+            
+            /* decref arglist */
+            Py_DECREF(arglist);
+            
+            /* return if callback raised exception */
+            if (cbres == NULL);
+            {
+                printf("CALLBACK ERROR...\n");
+                PyErr_Print();
+                Py_DECREF(resultDict);
+                fclose(INFILE);
+                return NULL;
+            }
+            
+            /* decref result */
+            Py_DECREF(cbres);
+        }
+        
         /* body format (should be faster than parsing list/tuples) */
         /* number of body lines per atom */
         bodyFormat.numLines = PyList_Size(bodyList);
+#ifdef DEBUG
         printf("Number of body lines per atom: %ld\n", numLines);
+#endif
 
         /* allocate memory for body lines */
         bodyFormat.lines = malloc(bodyFormat.numLines * sizeof(struct BodyLine));
@@ -294,7 +377,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 return NULL;
             }
 
+#ifdef DEBUG
             printf("Body line %ld; num items = %ld\n", i, bodyFormat.lines[i].numItems);
+#endif
 
             for (j = 0; j < bodyFormat.lines[i].numItems; j++)
             {
@@ -384,8 +469,10 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             }
         }
 
+#ifdef DEBUG
         printf("Atom ID flag: %d\n", atomIDFlag);
         printf("Have specie or symbol: %d\n", haveSpecieOrSymbol);
+#endif
 
         /* if no atomID array was specified we create one ourselves... */
         if (!atomIDFlag)
@@ -443,7 +530,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         }
         
         /* read the body */
+#ifdef DEBUG
         printf("Reading body...\n");
+#endif
 
         /* loop over all atoms */
         numLines = bodyFormat.numLines;
@@ -686,7 +775,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                 {
                                     PyObject *init=NULL;
 
+#ifdef DEBUG
                                     printf("Add new specie\n");
+#endif
 
                                     /* add to list */
                                     stat = PyList_Append(specieList, symin);
@@ -854,8 +945,39 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     return NULL;
                 }
             }
-
+            
+            /* free lines */
             for (j = 0; j < numLines; j++) free(atomLines[j]);
+            
+            /* progress callback */
+//            if (tempCb != NULL)
+//            {
+//                PyObject *cbres=NULL;
+//                PyObject *arglist=NULL;
+//                
+//                /* create arg list */
+//                arglist = Py_BuildValue("(ii)", (int) i, (int) NAtoms);
+//                
+//                /* call function */
+//                cbres = PyObject_CallObject(updateProgress, arglist);
+//                
+//                /* decref arglist */
+//                Py_DECREF(arglist);
+//                
+//                /* return if callback raised exception */
+//                if (cbres == NULL);
+//                {
+//                    Py_DECREF(resultDict);
+//                    fclose(INFILE);
+//                    Py_DECREF(specieList);
+//                    Py_DECREF(specieCount);
+//                    freeBody(bodyFormat);
+//                    return NULL;
+//                }
+//                
+//                /* decref result */
+//                Py_DECREF(cbres);
+//            }
         }
 
         /* store specieList/Count */
@@ -869,7 +991,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
 
     fclose(INFILE);
 
+#ifdef DEBUG
     printf("GENREADER: finished\n");
+#endif
 
     return resultDict;
 }

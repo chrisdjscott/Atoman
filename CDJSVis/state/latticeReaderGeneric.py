@@ -393,7 +393,10 @@ class FileFormat(object):
                 identifier.append(count)
         
         return identifier
-    
+
+def callbacktest(a, b):
+    print "CBTEST", a, b
+
 ################################################################################
 
 class LatticeReaderGeneric(object):
@@ -469,7 +472,7 @@ class LatticeReaderGeneric(object):
         if zipFlag:
             os.unlink(filepath)
     
-    def readFile(self, filename, fileFormat, rouletteIndex=None, linkedLattice=None):
+    def readFile(self, filename, fileFormat, rouletteIndex=None, linkedLattice=None, callback=None):
         """
         Read file.
         
@@ -480,7 +483,7 @@ class LatticeReaderGeneric(object):
         filepath, zipFlag = self.checkForZipped(filename)
         
         try:
-            status, state = self.readFileMain(filepath, fileFormat, rouletteIndex, linkedLattice)
+            status, state = self.readFileMain(filepath, fileFormat, rouletteIndex, linkedLattice, callback)
         
         finally:
             self.cleanUnzipped(filepath, zipFlag)
@@ -490,7 +493,7 @@ class LatticeReaderGeneric(object):
         
         return status, state
     
-    def readFileMain(self, filename, fileFormat, rouletteIndex, linkedLattice):
+    def readFileMain(self, filename, fileFormat, rouletteIndex, linkedLattice, callback):
         """
         Main read
         
@@ -500,10 +503,19 @@ class LatticeReaderGeneric(object):
         if linkedLattice is not None:
             linkedNAtoms = linkedLattice.NAtoms
         
+        if callable(callback):
+            cbflag = 1
+            _latticeReaderGeneric.registerCallback(callback)
+            print "Registered callback", callback
+        
+        else:
+            cbflag = 0
+            
+        
         # call C lib
         resultDict = _latticeReaderGeneric.readGenericLatticeFile(filename, fileFormat.header, fileFormat.body,
                                                                   fileFormat.delimiter, fileFormat.atomIndexOffset,
-                                                                  linkedNAtoms)
+                                                                  linkedNAtoms, cbflag)
         
         print "KEYS", resultDict.keys()
         
