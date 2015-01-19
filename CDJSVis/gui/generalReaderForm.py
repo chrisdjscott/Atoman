@@ -188,6 +188,9 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         # if there is a linked lattice type, check one is loaded, if not ask user to load one first,
         #   if 1 is loaded use it, if >1 then pop up a dialog with most recent at the top
         
+        # display progress
+        self.mainWindow.updateProgress(0, 0, "Reading '%s'" % filename)
+        
         # unzip if required
         filepath, zipFlag = self.latticeReader.checkForZipped(filename)
         
@@ -210,6 +213,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         finally:
             # delete unzipped file if required
             self.latticeReader.cleanUnzipped(filepath, zipFlag)
+            self.mainWindow.hideProgressBar()
         
         if not status:
             self.postOpenFile(state, filename, fileFormat, sftpPath)
@@ -243,29 +247,20 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         else:
             self.logger.debug("Found %d possible linked lattices", len(availableSystems))
             
-            # open dialog
+            # items list
             items = [item[0] for item in availableSystems]
-            items.reverse()
-            name, ok = QtGui.QInputDialog.getItem(self, "Select file format", "File '%s'" % properName, items,
-                                                  editable=False)
             
-            if ok:
-                self.logger.debug("User selected linked lattice: '%s'", name)
-                match = False
-                for index, (latticeDisplayName, lattice) in enumerate(availableSystems):
-                    if latticeDisplayName == name:
-                        match = True
-                        break
+            # open dialog
+            dlg = SelectLinkedLatticeDialog(properName, items, parent=self)
+            status = dlg.exec_()
             
-                if not match:
-                    self.logger.error("Critical error: could not find selected lattice in available systems")
-                    return None
-                
-                else:
-                    self.logger.debug("User selected linked lattice %d: '%s'", index, latticeDisplayName)
+            if status == QtGui.QDialog.Accepted:
+                index = dlg.combo.currentIndex()
+                latticeDisplayName, lattice = availableSystems[index]
+                self.logger.debug("User selected linked lattice %d: '%s'", index, latticeDisplayName)
             
             else:
-                fileFormat = None
+                lattice = None
         
         return lattice
     
@@ -349,3 +344,31 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             self.mainWindow.displayError("Unrecognised file format for: '%s'" % properName)
         
         return fileFormat
+
+################################################################################
+
+class SelectLinkedLatticeDialog(QtGui.QDialog):
+    """
+    Select linked lattice from a list
+    
+    """
+    def __init__(self, filename, items, parent=None):
+        super(SelectLinkedLatticeDialog, self).__init__(parent)
+        
+        self.setWindowTitle("Select linked Lattice")
+        
+        # layout
+        layout = QtGui.QFormLayout()
+        self.setLayout(layout)
+        
+        # combo box
+        self.combo = QtGui.QComboBox()
+        self.combo.addItems(items)
+        self.combo.setCurrentIndex(self.combo.count() - 1)
+        layout.addRow("File '{0}'".format(filename), self.combo)
+        
+        # buttons
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        layout.addRow(buttonBox)

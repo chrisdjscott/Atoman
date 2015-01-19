@@ -759,6 +759,7 @@ class MainWindow(QtGui.QMainWindow):
         self.progressBar.setRange(0, nmax)
         self.progressBar.setValue(n)
         self.setStatus(message)
+        QtGui.QApplication.processEvents()
     
     def setStatus(self, message):
         """
