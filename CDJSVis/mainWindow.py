@@ -279,10 +279,14 @@ class MainWindow(QtGui.QMainWindow):
         self.addActions(helpMenu, (aboutAction, helpAction))
         
         # add cwd to status bar
-        self.currentDirectoryLabel = QtGui.QLabel(os.getcwd())
-        self.statusBar = QtGui.QStatusBar()
-        self.statusBar.addPermanentWidget(self.currentDirectoryLabel)
-        self.setStatusBar(self.statusBar)
+        self.currentDirectoryLabel = QtGui.QLabel("")
+        self.updateCWD()
+        sb = QtGui.QStatusBar()
+        self.setStatusBar(sb)
+        self.progressBar = QtGui.QProgressBar(self.statusBar())
+        self.statusBar().addPermanentWidget(self.progressBar)
+        self.statusBar().addPermanentWidget(self.currentDirectoryLabel)
+        self.hideProgressBar()
         
         # dict of currently loaded systems
         self.loaded_systems = {}
@@ -737,12 +741,31 @@ class MainWindow(QtGui.QMainWindow):
 #         self.mainToolbar.currentInputLabel.setText("Input: " + filename)
         self.inputFile = filename
     
-    def setStatus(self, string):
+    def hideProgressBar(self):
+        """
+        Hide the progress bar
+        
+        """
+        self.progressBar.reset()
+        self.progressBar.hide()
+        self.setStatus("Finished")
+    
+    def updateProgress(self, n, nmax, message):
+        """
+        Update progress bar
+        
+        """
+        self.progressBar.show()
+        self.progressBar.setRange(0, nmax)
+        self.progressBar.setValue(n)
+        self.setStatus(message)
+    
+    def setStatus(self, message):
         """
         Set temporary status in status bar
         
         """
-        self.statusBar.showMessage(string)
+        self.statusBar().showMessage(self.tr(message))
     
     def updateCWD(self):
         """
@@ -751,7 +774,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         dirname = os.getcwd()
         
-        self.currentDirectoryLabel.setText(dirname)
+        self.currentDirectoryLabel.setText("CWD: '%s'" % dirname)
         self.imageViewer.changeDir(dirname)
     
     def readLBOMDIN(self):

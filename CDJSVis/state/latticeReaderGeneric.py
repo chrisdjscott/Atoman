@@ -535,27 +535,38 @@ class LatticeReaderGeneric(object):
         self.logger.debug("Max pos: %r", maxPos)
         
         # cell dimensions
+        needCellDims = False
         if "xdim" in resultDict:
             lattice.cellDims[0] = resultDict.pop("xdim")
-        else:
+        elif linkedLattice is None:
             lattice.cellDims[0] = maxPos[0]
+        else:
+            needCellDims = True
+        
         if "ydim" in resultDict:
             lattice.cellDims[1] = resultDict.pop("ydim")
-        else:
+        elif linkedLattice is None:
             lattice.cellDims[1] = maxPos[1]
+        else:
+            needCellDims = True
+        
         if "zdim" in resultDict:
             lattice.cellDims[2] = resultDict.pop("zdim")
-        else:
+        elif linkedLattice is None:
             lattice.cellDims[2] = maxPos[2]
-        self.logger.debug("Cell dimensions: %r", lattice.cellDims)
+        else:
+            needCellDims = True
+        
+        if not needCellDims:
+            self.logger.debug("Cell dimensions: %r", lattice.cellDims)
         
         # specie list
         specieList = resultDict.pop("specieList")
         specieCount = resultDict.pop("specieCount")
         needSpecie = True
         if len(specieList) and "Symbol" in resultDict:
-            lattice.specieList = specieList
-            lattice.specieCount = specieCount
+            lattice.specieList = np.array(specieList)
+            lattice.specieCount = np.array(specieCount, dtype=np.int32)
             lattice.specie = resultDict.pop("Symbol")
             needSpecie = False
         
@@ -563,23 +574,17 @@ class LatticeReaderGeneric(object):
         if linkedLattice is not None:
             if needSpecie:
                 self.logger.debug("Copying specie from linked Lattice")
+                lattice.specie = copy.deepcopy(linkedLattice.specie)
+                lattice.specieCount = copy.deepcopy(linkedLattice.specieCount)
+                lattice.specieList = copy.deepcopy(linkedLattice.specieList)
+            
             if needCharge:
                 self.logger.debug("Copying charge from linked Lattice")
+                lattice.charge = copy.deepcopy(linkedLattice.charge)
             
-            # call C lib
-            numSpecies = len(linkedLattice.specieList)
-            result = _latticeReaderGeneric.getDataFromLinkedLattice(int(needSpecie), numSpecies, linkedLattice.specie, 
-                                                                    int(needCharge), linkedLattice.charge)
-            
-            if needSpecie:
-                lattice.specie = result[0]
-                lattice.specieCount = result[1]
-            
-            if needCharge:
-                lattice.charge = result[2]
-            
-            # copy specie list
-            lattice.specieList = copy.deepcopy(linkedLattice.specieList)
+            if needCellDims:
+                self.logger.debug("Copying cellDims from linked lattice")
+                lattice.cellDims = copy.deepcopy(linkedLattice.cellDims)
         
         # specie mass, etc...
         self.logger.info("Adding species to Lattice")

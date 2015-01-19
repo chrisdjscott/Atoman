@@ -136,7 +136,7 @@ class LoadSystemForm(GenericForm):
     def __init__(self, parent, mainWindow, mainToolbar):
         super(LoadSystemForm, self).__init__(parent, None, "Load new system")
         
-        self.parent = parent
+        self.systemsDialog = parent
         self.mainWindow = mainWindow
         self.mainToolbar = mainToolbar
         
@@ -192,7 +192,7 @@ class LoadSystemForm(GenericForm):
         Called when a file is loaded
         
         """
-        self.parent.file_loaded(state, filename, fileFormat, sftpPath)
+        self.systemsDialog.file_loaded(state, filename, fileFormat, sftpPath)
 
 ################################################################################
 

@@ -36,7 +36,8 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
     def __init__(self, parent, mainToolbar, mainWindow):
         super(GeneralLatticeReaderForm, self).__init__(parent)
         
-        self.systemsDialog = parent
+        self.loadSystemForm = parent
+        self.systemsDialog = parent.systemsDialog
         self.mainToolbar = mainToolbar
         self.mainWindow = mainWindow
         self.tmpLocation = self.mainWindow.tmpDirectory
@@ -59,7 +60,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         vbox.addLayout(hbox)
         
         # sftp browser
-        if hasattr(self.systemsDialog, "sftp_browser"):
+        if hasattr(self.loadSystemForm, "sftp_browser"):
             openSFTPBrowserButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "SFTP browser")
             openSFTPBrowserButton.setToolTip("Open SFTP browser")
             openSFTPBrowserButton.setCheckable(0)
@@ -135,7 +136,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
          
         # temporarily remove stays on top hint on systems dialog (Mac only)
         if platform.system() == "Darwin":
-            sd = self.parent.parent
+            sd = self.systemsDialog
             sd.tmpHide()
         
         # open the dialog
@@ -244,13 +245,14 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             
             # open dialog
             items = [item[0] for item in availableSystems]
+            items.reverse()
             name, ok = QtGui.QInputDialog.getItem(self, "Select file format", "File '%s'" % properName, items,
                                                   editable=False)
             
             if ok:
                 self.logger.debug("User selected linked lattice: '%s'", name)
                 match = False
-                for index, latticeDisplayName, lattice in enumerate(availableSystems):
+                for index, (latticeDisplayName, lattice) in enumerate(availableSystems):
                     if latticeDisplayName == name:
                         match = True
                         break
@@ -272,7 +274,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         Should always be called at the end of openFile.
         
         """
-        self.systemsDialog.fileLoaded(state, filename, fileFormat, sftpPath)
+        self.loadSystemForm.fileLoaded(state, filename, fileFormat, sftpPath)
     
     def determineFileFormat(self, filename, properName):
         """
