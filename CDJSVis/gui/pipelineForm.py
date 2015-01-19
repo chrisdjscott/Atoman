@@ -400,10 +400,7 @@ class PipelineForm(QtGui.QWidget):
         
         for rw in self.rendererWindows:
             if rw.currentPipelineIndex == self.pipelineIndex:
-                rw.textSelector.refresh()
-                rw.outputDialog.plotTab.rdfForm.refresh()
-                rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
-                rw.outputDialog.imageTab.imageSequenceTab.resetPrefix()
+                rw.postInputChanged()
         
         settings = self.mainWindow.preferences.renderingForm
         

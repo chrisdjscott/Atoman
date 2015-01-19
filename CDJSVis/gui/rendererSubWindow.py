@@ -488,6 +488,16 @@ class RendererWindow(QtGui.QWidget):
         
         return inputState
     
+    def postInputChanged(self):
+        """
+        Refresh stuff when the input system has changed
+        
+        """
+        self.textSelector.refresh()
+        self.outputDialog.plotTab.rdfForm.refresh()
+        self.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
+        self.outputDialog.imageTab.imageSequenceTab.resetPrefix()
+    
     def pipelineChanged(self, index):
         """
         Current pipeline changed.
@@ -510,8 +520,9 @@ class RendererWindow(QtGui.QWidget):
         # refresh text
         self.refreshOnScreenInfo()
         
-        # output dialog
-        self.outputDialog.imageTab.imageSequenceTab.resetPrefix()
+        # refresh optiona etc
+        if self.getCurrentInputState() is not None:
+            self.postInputChanged()
     
     def showOutputDialog(self):
         """

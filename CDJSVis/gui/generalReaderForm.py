@@ -197,6 +197,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
                 return 1
             
             # linked lattice
+            linkedLattice = None
             if fileFormat.linkedName is not None:
                 linkedLattice = self.getLinkedLattice(fileFormat, filename)
                 if linkedLattice is None:
