@@ -9,7 +9,7 @@
 #include <math.h>
 #include "array_utils.h"
 
-#define DEBUG
+//#define DEBUG
 #define MAX_LINE_LENGTH 512
 
 struct BodyLineItem
@@ -33,8 +33,6 @@ struct Body
 
 static PyObject* readGenericLatticeFile(PyObject*, PyObject*);
 static PyObject* getMinMaxPos(PyObject*, PyObject*);
-static PyObject* registerCallback(PyObject*, PyObject*);
-static PyObject* updateProgress = NULL;
 static void freeBody(struct Body);
 
 
@@ -44,7 +42,6 @@ static void freeBody(struct Body);
 static struct PyMethodDef methods[] = {
     {"readGenericLatticeFile", readGenericLatticeFile, METH_VARARGS, "Read generic Lattice file"},
     {"getMinMaxPos", getMinMaxPos, METH_VARARGS, "Get the min/max pos"},
-    {"registerCallback", registerCallback, METH_VARARGS, "Register progress callback function"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -72,36 +69,6 @@ freeBody(struct Body body)
     free(body.lines);
 }
 
-/*******************************************************************************
- * Free body struct
- *******************************************************************************/
-static PyObject* registerCallback(PyObject *self, PyObject *args)
-{
-    PyObject *temp;
-    PyObject *result = NULL;
-    
-    if (PyArg_ParseTuple(args, "O", &temp))
-    {
-        if (!PyCallable_Check(temp))
-        {
-            PyErr_SetString(PyExc_TypeError, "Progress callback parameter must be callable");
-            return NULL;
-        }
-        
-#ifdef DEBUG
-        printf("Registering progress callback\n");
-#endif
-        
-        Py_XINCREF(temp);
-        Py_XDECREF(updateProgress);
-        updateProgress = temp;
-        
-        Py_INCREF(Py_None);
-        result = Py_None;
-    }
-    
-    return result;
-}
 
 /*******************************************************************************
  * Read generic lattice file
@@ -109,16 +76,17 @@ static PyObject* registerCallback(PyObject *self, PyObject *args)
 static PyObject*
 readGenericLatticeFile(PyObject *self, PyObject *args)
 {
-    int atomIndexOffset, linkedNAtoms, callbackFlag;
+    int atomIndexOffset, linkedNAtoms;
     char *filename, *delimiter;
     FILE *INFILE=NULL;
     PyObject *headerList=NULL;
     PyObject *bodyList=NULL;
     PyObject *resultDict=NULL;
+    PyObject *updateProgressCallback=NULL;
 
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "sO!O!siii", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter, 
-            &atomIndexOffset, &linkedNAtoms, &callbackFlag))
+    if (!PyArg_ParseTuple(args, "sO!O!sii|O", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter, 
+            &atomIndexOffset, &linkedNAtoms, &updateProgressCallback))
         return NULL;
 
 #ifdef DEBUG
@@ -127,9 +95,17 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
 #endif
     
     /* check callback is callable */
+    if (updateProgressCallback != NULL)
+    {
+        if (!PyCallable_Check(updateProgressCallback))
+        {
+            PyErr_SetString(PyExc_TypeError, "update progress callback must be callable");
+            return NULL;
+        }
 #ifdef DEBUG
-    if (callbackFlag) printf("Have progress callback\n");
+        printf("Have progress callback\n");
 #endif
+    }
     
     /* open the file for reading */
     INFILE = fopen(filename, "r");
@@ -148,7 +124,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     {
         int atomIDFlag = 0;
         int haveSpecieOrSymbol = 0;
-        long i, numLines, callbackInterval;
+        long i, numLines, callbackInterval = 0;
         long NAtoms = -1;
         PyObject *specieList=NULL;
         PyObject *specieCount=NULL;
@@ -306,36 +282,19 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
 #endif
 
         /* callback interval */
-        if (callbackFlag)
+        if (updateProgressCallback != NULL)
         {
-            PyObject *cbres;
             PyObject *arglist;
+            PyObject *cbres;
             
+            /* callback interval */
             callbackInterval = (long) (NAtoms / 10);
-#ifdef DEBUG
-            printf("Progress callback every %ld atoms\n", callbackInterval);
-#endif
             
-            /* create arg list */
+            /* callback */
             arglist = Py_BuildValue("(ii)", 0, (int) NAtoms);
-            
-            /* call function */
-            cbres = PyObject_CallObject(updateProgress, arglist);
-            
-            /* decref arglist */
+            cbres = PyObject_CallObject(updateProgressCallback, arglist);
             Py_DECREF(arglist);
-            
-            /* return if callback raised exception */
-            if (cbres == NULL);
-            {
-                printf("CALLBACK ERROR...\n");
-                PyErr_Print();
-                Py_DECREF(resultDict);
-                fclose(INFILE);
-                return NULL;
-            }
-            
-            /* decref result */
+            if (cbres == NULL) return NULL;
             Py_DECREF(cbres);
         }
         
@@ -950,34 +909,18 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             for (j = 0; j < numLines; j++) free(atomLines[j]);
             
             /* progress callback */
-//            if (tempCb != NULL)
-//            {
-//                PyObject *cbres=NULL;
-//                PyObject *arglist=NULL;
-//                
-//                /* create arg list */
-//                arglist = Py_BuildValue("(ii)", (int) i, (int) NAtoms);
-//                
-//                /* call function */
-//                cbres = PyObject_CallObject(updateProgress, arglist);
-//                
-//                /* decref arglist */
-//                Py_DECREF(arglist);
-//                
-//                /* return if callback raised exception */
-//                if (cbres == NULL);
-//                {
-//                    Py_DECREF(resultDict);
-//                    fclose(INFILE);
-//                    Py_DECREF(specieList);
-//                    Py_DECREF(specieCount);
-//                    freeBody(bodyFormat);
-//                    return NULL;
-//                }
-//                
-//                /* decref result */
-//                Py_DECREF(cbres);
-//            }
+            if (updateProgressCallback != NULL && i % callbackInterval == 0)
+            {
+                PyObject *arglist;
+                PyObject *cbres;
+                
+                /* callback */
+                arglist = Py_BuildValue("(ii)", (int) i, (int) NAtoms);
+                cbres = PyObject_CallObject(updateProgressCallback, arglist);
+                Py_DECREF(arglist);
+                if (cbres == NULL) return NULL;
+                Py_DECREF(cbres);
+            }
         }
 
         /* store specieList/Count */

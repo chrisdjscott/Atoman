@@ -394,9 +394,6 @@ class FileFormat(object):
         
         return identifier
 
-def callbacktest(a, b):
-    print "CBTEST", a, b
-
 ################################################################################
 
 class LatticeReaderGeneric(object):
@@ -503,19 +500,17 @@ class LatticeReaderGeneric(object):
         if linkedLattice is not None:
             linkedNAtoms = linkedLattice.NAtoms
         
-        if callable(callback):
-            cbflag = 1
-            _latticeReaderGeneric.registerCallback(callback)
-            print "Registered callback", callback
+        # call C lib
+        if callback is None:
+            resultDict = _latticeReaderGeneric.readGenericLatticeFile(filename, fileFormat.header, fileFormat.body,
+                                                                      fileFormat.delimiter, fileFormat.atomIndexOffset,
+                                                                      linkedNAtoms)
         
         else:
-            cbflag = 0
-            
-        
-        # call C lib
-        resultDict = _latticeReaderGeneric.readGenericLatticeFile(filename, fileFormat.header, fileFormat.body,
-                                                                  fileFormat.delimiter, fileFormat.atomIndexOffset,
-                                                                  linkedNAtoms, cbflag)
+            print "CALL WITH CALLBACK", callback
+            resultDict = _latticeReaderGeneric.readGenericLatticeFile(filename, fileFormat.header, fileFormat.body,
+                                                                      fileFormat.delimiter, fileFormat.atomIndexOffset,
+                                                                      linkedNAtoms, callback)
         
         print "KEYS", resultDict.keys()
         

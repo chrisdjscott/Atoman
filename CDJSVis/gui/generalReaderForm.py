@@ -191,8 +191,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         
         # status
         self.currentFile = os.path.basename(filename)
-#         self.mainWindow.setStatus("Reading '%s'" % self.currentFile)
-        self.mainWindow.updateProgress(0, 0, "Reading '%s'" % self.currentFile)
+        self.mainWindow.setStatus("Reading '%s'" % self.currentFile)
         
         # unzip if required
         filepath, zipFlag = self.latticeReader.checkForZipped(filename)
@@ -211,7 +210,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
                     return 2
 
             # open file
-            status, state = self.latticeReader.readFile(filepath, fileFormat, rouletteIndex=rouletteIndex, linkedLattice=linkedLattice, callback=None)
+            status, state = self.latticeReader.readFile(filepath, fileFormat, rouletteIndex=rouletteIndex, linkedLattice=linkedLattice, callback=self.updateProgress)
         
         finally:
             # delete unzipped file if required
@@ -227,9 +226,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         Update progress
         
         """
-        print "Hello, world!", n, nmax
-        
-        return 0
+        self.mainWindow.updateProgress(n, nmax, "Reading: '%s'" % self.currentFile)
     
     def getLinkedLattice(self, fileFormat, properName):
         """
