@@ -23,6 +23,7 @@ from CDJSVis.filtering import acna
 from CDJSVis.state import latticeReaders
 from CDJSVis.algebra import vectors
 from CDJSVis.filtering import voronoi
+from CDJSVis.filtering import clusters
 
 
 class Settings(object):
@@ -139,6 +140,8 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None):
         acnaArray = np.empty(inputLattice.NAtoms, np.float64)
         NScalars = 0
         fullScalars = np.empty(NScalars, np.float64)
+        NVectors = 0
+        fullVectors = np.empty(NVectors, np.float64)
         structVis = np.ones(len(filterer.Filterer.knownStructures), np.int32)
         
         # counter array
@@ -149,7 +152,7 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None):
         
         acna.adaptiveCommonNeighbourAnalysis(visAtoms, inputLattice.pos, acnaArray, inputLattice.minPos, inputLattice.maxPos, 
                                              cellDims, pbc	, NScalars, fullScalars, settings.acnaMaxBondDistance, counters, 
-                                             0, structVis, numThreads) 
+                                             0, structVis, numThreads, NVectors, fullVectors) 
         
         # store counters
         d = {}
@@ -376,6 +379,8 @@ def computeACNA(inputState, settings):
     scalars = np.zeros(inputState.NAtoms, dtype=np.float64)
     NScalars = 0
     fullScalars = np.empty(NScalars, np.float64)
+    NVectors = 0
+    fullVectors = np.empty(NVectors, np.float64)
     
     pbc = np.ones(3, np.int32)
     
@@ -384,7 +389,8 @@ def computeACNA(inputState, settings):
     
     NVisible = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.minPos, inputState.maxPos, 
                                                     inputState.cellDims, pbc, NScalars, fullScalars, settings.maxBondDistance,
-                                                    counters, settings.filteringEnabled, settings.structureVisibility)
+                                                    counters, settings.filteringEnabled, settings.structureVisibility, 1,
+                                                    NVectors, fullVectors)
     
     # resize visible atoms
     visibleAtoms.resize(NVisible, refcheck=False)
@@ -424,7 +430,7 @@ def main():
     xyz_reader = latticeReaders.LbomdXYZReader("/tmp", latticeReaders.basic_log, latticeReaders.basic_displayWarning, 
                                                    latticeReaders.basic_displayError)
     
-    work_dir = "/Volumes/Users_HD/Users/macdjs/postdoc/work.new/cascades/1keV_Ga_concentration/0/5percent/output.dir/system3/direction33"
+    work_dir = os.getcwd()
     
     ref_file = os.path.join(work_dir, "ref.dat")
     animref_file = os.path.join(work_dir, "animation-reference.xyz")
