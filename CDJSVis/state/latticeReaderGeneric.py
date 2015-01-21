@@ -676,12 +676,6 @@ class LatticeReaderGeneric(object):
             else:
                 testpath = None
             
-            # step number
-            if stepNumber is None:
-                stepNumber = rouletteIndex + 1
-            lattice.attributes["KMC step"] = stepNumber
-            self.logger.info("Detected KMC step as: %d", stepNumber)
-            
             # read simulation time
             simTime = utilities.getTimeFromRoulette(rouletteIndex, testpath=testpath)
             
@@ -694,6 +688,14 @@ class LatticeReaderGeneric(object):
             if barrier is not None:
                 lattice.attributes["Barrier"] = barrier
                 self.logger.info("Detected barrier as: %f", barrier)
+            
+            # only store step if simTime or barrier were found
+            if simTime is not None or barrier is not None:
+                # step number
+                if stepNumber is None:
+                    stepNumber = rouletteIndex + 1
+                lattice.attributes["KMC step"] = stepNumber
+                self.logger.info("Detected KMC step as: %d", stepNumber)
         
         self.logger.debug("Lattice attribs: %r", lattice.attributes.keys())
         self.logger.debug("Lattice scalars: %r", lattice.scalarsDict.keys())
