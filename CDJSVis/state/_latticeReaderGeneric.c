@@ -284,18 +284,20 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
         /* callback interval */
         if (updateProgressCallback != NULL)
         {
-            PyObject *arglist;
-            PyObject *cbres;
-            
             /* callback interval */
-            callbackInterval = (long) (NAtoms / 10);
-            
-            /* callback */
-            arglist = Py_BuildValue("(ii)", 0, (int) NAtoms);
-            cbres = PyObject_CallObject(updateProgressCallback, arglist);
-            Py_DECREF(arglist);
-            if (cbres == NULL) return NULL;
-            Py_DECREF(cbres);
+            if (NAtoms < 500)
+                callbackInterval = NAtoms;
+            else
+            {
+                callbackInterval = (long) (NAtoms / 10);
+                if (callbackInterval < 500)
+                    callbackInterval = 500;
+                else if (callbackInterval > 20000)
+                    callbackInterval = 20000;
+            }
+#ifdef DEBUG
+            printf("Callback interval = %ld atoms\n", callbackInterval);
+#endif
         }
         
         /* body format (should be faster than parsing list/tuples) */
@@ -915,6 +917,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                 PyObject *cbres;
                 
                 /* callback */
+#ifdef DEBUG
+                printf("Progress callback at: %ld atoms\n", i);
+#endif
                 arglist = Py_BuildValue("(ii)", (int) i, (int) NAtoms);
                 cbres = PyObject_CallObject(updateProgressCallback, arglist);
                 Py_DECREF(arglist);

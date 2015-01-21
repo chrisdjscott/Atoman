@@ -305,9 +305,13 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         # read required lines
         lines = []
         with open(filename) as f:
-            #TODO: handle case where less than maxIdLen lines...
-            for _ in xrange(maxIdLen):
-                lines.append(f.readline())
+            for count, line in enumerate(f):
+                if count == maxIdLen:
+                    break
+                lines.append(line)
+        
+        if len(lines) < maxIdLen:
+            self.logger.debug("Attempting to auto-detect short file; may be less accurate")
         
         # loop over formats
         matchedFormats = []
@@ -324,8 +328,9 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
                 delim = None
             
             # check for match
+            n = min(len(identifier), len(lines))
             match = True
-            for i in xrange(len(identifier)):
+            for i in xrange(n):
                 lineLenFormat = identifier[i]
                 lineLenInput = len(lines[i].split(delim))
                 self.logger.debug("Line %d: %d <-> %d", i, lineLenInput, lineLenFormat)
