@@ -1,4 +1,4 @@
-6
+7
 LBOMD Lattice
  
 0
@@ -164,3 +164,60 @@ d
 SKIP
 i
 1
+FAILSAFE
+ 
+1
+
+5
+1
+Time
+d
+1
+SKIP
+s
+3
+Thermostat
+s
+SKIP
+s
+Target temperature
+d
+1
+NAtoms
+i
+6
+SKIP
+s
+SKIP
+s
+SKIP
+s
+SKIP
+s
+SKIP
+s
+SKIP
+s
+4
+3
+atomID
+i
+1
+Atom type
+i
+1
+Symbol
+i
+1
+1
+Position
+d
+3
+1
+Charge
+d
+1
+1
+Velocity
+d
+3

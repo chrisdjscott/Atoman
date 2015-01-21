@@ -198,14 +198,28 @@ class FileFormat(object):
         
         self.body[-1].append((key, typecode, dim))
     
+    def getDelimiter(self):
+        """
+        Return the delimiter
+        
+        """
+        delim = self.delimiter
+        
+        if " " not in delim:
+            delim += " "
+        if "\n" not in delim:
+            delim += "\n"
+        if "\r" not in delim:
+            delim += "\r"
+        
+        return delim
+    
     def setDelimiter(self, delim):
         """
         Set the delimiter
         
         """
         self.delimiter = delim
-        if " " not in self.delimiter:
-            self.delimiter += " "
     
     def setAtomIndexOffset(self, offset):
         """
@@ -522,16 +536,18 @@ class LatticeReaderGeneric(object):
         if linkedLattice is not None:
             linkedNAtoms = linkedLattice.NAtoms
         
+        # delimiter
+        delim = fileFormat.getDelimiter()
+        
         # call C lib
         if self.updateProgress is None:
             resultDict = _latticeReaderGeneric.readGenericLatticeFile(filename, fileFormat.header, fileFormat.body,
-                                                                      fileFormat.delimiter, fileFormat.atomIndexOffset,
-                                                                      linkedNAtoms)
+                                                                      delim, fileFormat.atomIndexOffset, linkedNAtoms)
         
         else:
             try:
                 resultDict = _latticeReaderGeneric.readGenericLatticeFile(filename, fileFormat.header, fileFormat.body,
-                                                                          fileFormat.delimiter, fileFormat.atomIndexOffset,
+                                                                          delim, fileFormat.atomIndexOffset,
                                                                           linkedNAtoms, self.updateProgress)
             
             finally:

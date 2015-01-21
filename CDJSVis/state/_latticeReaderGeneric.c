@@ -537,7 +537,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     return NULL;
                 }
             }
-
+            
             /* if atomID is in file, we should parse the line once and get the atom ID */
             /* Check that the atomID is <= NAtoms (depending if starts from one)
              * Make an input flag/option that says if atom ID starts from 1 or 0...
@@ -546,7 +546,8 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             {
                 int foundAtomID = 0;
 
-                for (j = 0; j < numLines; j++)
+                j = 0;
+                while(!foundAtomID && j < numLines)
                 {
                     char *pch;
                     char line[MAX_LINE_LENGTH];
@@ -568,7 +569,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                         /* unpack item */
                         key = bodyFormat.lines[j].items[count].key;
                         dim = bodyFormat.lines[j].items[count].dim;
-
+                        
                         dimcount = 0;
                         while (!foundAtomID && pch != NULL && dimcount < dim)
                         {
@@ -616,27 +617,29 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                         freeBody(bodyFormat);
                         return NULL;
                     }
+                    
+                    j++;
+                }
 
-                    /* check atomIndex in range */
-                    if (foundAtomID)
-                        atomIndex -= (long) atomIndexOffset;
+                /* check atomIndex in range */
+                if (foundAtomID)
+                    atomIndex -= (long) atomIndexOffset;
+                
+                if (!foundAtomID || (atomIndex < 0 || atomIndex >= NAtoms))
+                {
+                    char errstring[128];
+                    long k;
 
-                    if (!foundAtomID || (atomIndex < 0 || atomIndex >= NAtoms))
-                    {
-                        char errstring[128];
-                        long k;
-
-                        if (foundAtomID) sprintf(errstring, "Atom index error: %ld out of range (atom %ld)", atomIndex, i);
-                        else sprintf(errstring, "Atom index not in line (atom %ld)", i);
-                        PyErr_SetString(PyExc_RuntimeError, errstring);
-                        for (k = 0; k < numLines; k++) free(atomLines[k]);
-                        fclose(INFILE);
-                        Py_DECREF(resultDict);
-                        Py_DECREF(specieList);
-                        Py_DECREF(specieCount);
-                        freeBody(bodyFormat);
-                        return NULL;
-                    }
+                    if (foundAtomID) sprintf(errstring, "Atom index error: %ld out of range (atom %ld)", atomIndex, i);
+                    else sprintf(errstring, "Atom index not in line (atom %ld)", i);
+                    PyErr_SetString(PyExc_RuntimeError, errstring);
+                    for (k = 0; k < numLines; k++) free(atomLines[k]);
+                    fclose(INFILE);
+                    Py_DECREF(resultDict);
+                    Py_DECREF(specieList);
+                    Py_DECREF(specieCount);
+                    freeBody(bodyFormat);
+                    return NULL;
                 }
             }
             else atomIndex = i;
@@ -699,7 +702,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     char errstring[128];
                                     long k;
 
-                                    sprintf(errstring, "Cannot handle symbol of length %d", (int) symlen);
+                                    sprintf(errstring, "Cannot handle symbol of length %d: '%s'", (int) symlen, PyString_AsString(symin));
                                     PyErr_SetString(PyExc_RuntimeError, errstring);
                                     for (k = 0; k < numLines; k++) free(atomLines[k]);
                                     fclose(INFILE);
