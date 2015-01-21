@@ -1,4 +1,4 @@
-3
+6
 LBOMD Lattice
  
 0
@@ -87,4 +87,80 @@ d
 1
 Potential energy
 d
+1
+LBOMD XYZ (Velocity)
+ 
+1
+LBOMD REF
+2
+1
+NAtoms
+i
+1
+Time
+d
+1
+5
+atomID
+i
+1
+Position
+d
+3
+Kinetic energy
+d
+1
+Potential energy
+d
+1
+Velocity
+d
+3
+LBOMD XYZ (Charge)
+ 
+1
+LBOMD REF
+2
+1
+NAtoms
+i
+1
+Time
+d
+1
+5
+atomID
+i
+1
+Position
+d
+3
+Kinetic energy
+d
+1
+Potential energy
+d
+1
+Charge
+d
+1
+Indenter
+ 
+0
+
+2
+1
+NAtoms
+i
+0
+1
+3
+Symbol
+i
+1
+Position
+d
+3
+SKIP
+i
 1

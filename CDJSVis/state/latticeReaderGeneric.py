@@ -75,6 +75,11 @@ class FileFormats(object):
             for _ in xrange(numFormats):
                 fmt = FileFormat()
                 fmt.read(f)
+                
+                errors = fmt.verify()
+                if errors:
+                    raise RuntimeError("Could not verify FileFormat '%s'!\n%s" % (fmt.name, "\n".join(errors)))
+                
                 self.addFileFormat(fmt)
                 fmt.print_()
         
@@ -224,17 +229,19 @@ class FileFormat(object):
         errors = []
         
         haveNAtoms = False
-        for headerItem in self.header:
-            key, typecode = headerItem
-            
-            # currently NAtoms must be in the header (this will change eventually)
-            if key == "NAtoms":
-                haveNAtoms = True
+        for headerLine in self.header:
+            for headerItem in headerLine:
+                key, typecode, dim = headerItem
+                
+                # currently NAtoms must be in the header (this will change eventually)
+                if key == "NAtoms":
+                    haveNAtoms = True
         
         if not haveNAtoms:
             errors.append("Format header must contain 'NAtoms'")
         
         havePos = False
+        haveAtomId = False
         haveSymbol = False
         for bodyLine in self.body:
             for bodyItem in bodyLine:
@@ -245,11 +252,13 @@ class FileFormat(object):
                     havePos = True
                 elif key == "Symbol":
                     haveSymbol = True
+                elif key == "atomID":
+                    haveAtomId = True
         
         if not havePos:
             errors.append("Format body must contain 'Position'")
         
-        if (not haveSymbol) and self.linkedName is None:
+        if (not haveSymbol) and (self.linkedName is None or not haveAtomId):
             errors.append("Fornat body must contain 'Symbol' or the format must be linked to another format type")
         
         return errors
@@ -362,7 +371,7 @@ class FileFormat(object):
         
         """
         lines = []
-        lines.append("FileFormat:")
+        lines.append("File format:")
         lines.append("  Name: '%s'" % self.name)
         lines.append("  Delimiter: '%s'" % self.delimiter)
         lines.append("  Atom index offset: %d" % self.atomIndexOffset)
