@@ -142,7 +142,7 @@ class LoadSystemForm(GenericForm):
         
         # sftp browser
         if sftpDialog.PARAMIKO_LOADED:
-            self.sftp_browser = sftpDialog.SFTPBrowserDialog(self.mainWindow, parent=self, updateProgress=self.sftpProgress)
+            self.sftp_browser = sftpDialog.SFTPBrowserDialog(self.mainWindow, parent=self)
         else:
             self.sftp_browser = None
         
@@ -163,14 +163,6 @@ class LoadSystemForm(GenericForm):
 #         row.addWidget(helpButton)
         
         self.show()
-    
-    def sftpProgress(self, n, nmax, msg):
-        """
-        Update progress of file transfer
-        
-        """
-        print n, nmax, msg
-        self.mainWindow.updateProgress(n, nmax, msg)
     
     def openSFTPBrowser(self):
         """

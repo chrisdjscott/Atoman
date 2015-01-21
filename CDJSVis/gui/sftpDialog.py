@@ -122,12 +122,11 @@ class SFTPBrowserDialog(QtGui.QDialog):
     SFTP browser dialog
     
     """
-    def __init__(self, mainWindow, parent=None, updateProgress=None):
+    def __init__(self, mainWindow, parent=None):
         super(SFTPBrowserDialog, self).__init__(parent)
         
         self.mainWindow = mainWindow
         self.logger = logging.getLogger(__name__)
-        self.updateProgress = updateProgress
         
         self.setModal(1)
         self.setWindowTitle("SFTP Browser")
@@ -252,7 +251,7 @@ class SFTPBrowserDialog(QtGui.QDialog):
                 return
             
             # add widget
-            w = SFTPBrowser(dlg.hostname, dlg.username, dlg.password, connectionID, parent=self, updateProgress=self.updateProgress)
+            w = SFTPBrowser(self.mainWindow, dlg.hostname, dlg.username, dlg.password, connectionID, parent=self)
             self.stackedWidget.addWidget(w)
             self.connectionsCombo.addItem(connectionID)
             self.connectionsList.append(connectionID)
@@ -286,7 +285,7 @@ class SFTPBrowser(genericForm.GenericForm):
     Basic SFTP file browser
     
     """
-    def __init__(self, hostname, username, password, connectionID, parent=None, updateProgress=None):
+    def __init__(self, mainWindow, hostname, username, password, connectionID, parent=None):
         self.hostname = hostname
         self.connectionID = connectionID
         self.username = username
@@ -295,8 +294,8 @@ class SFTPBrowser(genericForm.GenericForm):
 
         super(SFTPBrowser, self).__init__(parent, None, "%s@%s" % (self.username, self.hostname))
         
-        self.updateProgress = updateProgress
         self.logger = logging.getLogger(__name__)
+        self.mainWindow = mainWindow
         
         # defaults
         self.connected = False
@@ -605,14 +604,16 @@ class SFTPBrowser(genericForm.GenericForm):
         """
         self.logger.debug("Copying file: '%s' to '%s'", remotePath, localPath)
         
-        if self.updateProgress is None:
-            cbfunc = None
-        else:
-            message = "Copying remote file: '%s@%s:%s'" % (self.username, self.hostname, os.path.basename(remotePath))
-            def cbfunc(n, nmax, msg=message):
-                self.updateProgress(n, nmax, msg)
+        # callback
+        message = "Copying remote file: '%s@%s:%s'" % (self.username, self.hostname, os.path.basename(remotePath))
+        def cbfunc(n, nmax):
+            self.mainWindow.updateProgress(n, nmax, message)
         
-        self.sftp.get(remotePath, localPath, callback=cbfunc)
+        try:
+            self.sftp.get(remotePath, localPath, callback=cbfunc)
+        
+        finally:
+            self.mainWindow.hideProgressBar()
         
         fn = os.path.basename(remotePath)
         

@@ -408,10 +408,11 @@ class LatticeReaderGeneric(object):
     Generic format Lattice reader
     
     """
-    def __init__(self, tmpLocation, updateProgress=None):
+    def __init__(self, tmpLocation, updateProgress=None, hideProgress=None):
         self.tmpLocation = tmpLocation
         self.logger = logging.getLogger(__name__+".LatticeReaderGeneric")
         self.updateProgress = updateProgress
+        self.hideProgress = hideProgress
         self.intRegex = re.compile(r'[0-9]+')
     
     def unzipFile(self, filename):
@@ -519,9 +520,13 @@ class LatticeReaderGeneric(object):
                                                                       linkedNAtoms)
         
         else:
-            resultDict = _latticeReaderGeneric.readGenericLatticeFile(filename, fileFormat.header, fileFormat.body,
-                                                                      fileFormat.delimiter, fileFormat.atomIndexOffset,
-                                                                      linkedNAtoms, self.updateProgress)
+            try:
+                resultDict = _latticeReaderGeneric.readGenericLatticeFile(filename, fileFormat.header, fileFormat.body,
+                                                                          fileFormat.delimiter, fileFormat.atomIndexOffset,
+                                                                          linkedNAtoms, self.updateProgress)
+            
+            finally:
+                self.hideProgress()
         
         self.logger.debug("Keys: %r", resultDict.keys())
         

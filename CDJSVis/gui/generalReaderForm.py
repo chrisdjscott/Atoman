@@ -48,7 +48,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         vbox = QtGui.QVBoxLayout()
         
         # lattice reader
-        self.latticeReader = latticeReaderGeneric.LatticeReaderGeneric(self.tmpLocation, updateProgress=self.updateProgress)
+        self.latticeReader = latticeReaderGeneric.LatticeReaderGeneric(self.tmpLocation, updateProgress=self.updateProgress, hideProgress=self.mainWindow.hideProgressBar)
         
         # open dialog
         self.openLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
@@ -219,7 +219,6 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         finally:
             # delete unzipped file if required
             self.latticeReader.cleanUnzipped(filepath, zipFlag)
-            self.mainWindow.hideProgressBar()
             self.currentFile = None
         
         if not status:
