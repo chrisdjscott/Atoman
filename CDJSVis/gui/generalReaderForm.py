@@ -77,14 +77,16 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         self.fileFormats = latticeReaderGeneric.FileFormats()
         
         # check if user dir exists
-        userdir = os.path.join(os.path.expanduser("~"), ".cdjsvis")
-        fn = os.path.join(userdir, "file_formats.IN")
-        if not os.path.isfile(fn):
-            if not os.path.exists(userdir):
-                os.mkdir(userdir)
-            # copy from data dir
-            defaultPath = resourcePath("file_formats.IN")
-            shutil.copy(defaultPath, fn)
+#         userdir = os.path.join(os.path.expanduser("~"), ".cdjsvis")
+#         fn = os.path.join(userdir, "file_formats.IN")
+#         if not os.path.isfile(fn):
+#             if not os.path.exists(userdir):
+#                 os.mkdir(userdir)
+#             # copy from data dir
+#             defaultPath = resourcePath("file_formats.IN")
+#             shutil.copy(defaultPath, fn)
+        
+        fn = resourcePath("file_formats.IN")
         
         # load file formats
         self.fileFormats.read(filename=fn)
