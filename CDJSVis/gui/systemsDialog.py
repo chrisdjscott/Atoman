@@ -209,7 +209,7 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
         self.displayName = displayName
         self.fileFormat = fileFormat
         self.abspath = abspath
-        self.linkedLattice = None
+        self.linkedLattice = linkedLattice
         
         zip_exts = ('.bz2', '.gz')
         root, ext = os.path.splitext(filename)
