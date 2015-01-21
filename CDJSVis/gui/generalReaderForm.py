@@ -94,17 +94,17 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         Open SFTP browser
         
         """
-        if self.parent.sftp_browser is None:
+        if self.loadSystemForm.sftp_browser is None:
             self.mainWindow.displayError("Paramiko must be installed to use the SFTP browser")
             return
         
         self.logger.debug("Opening SFTP browser")
         
-        ok = self.parent.sftp_browser.exec_()
-        if ok and len(self.parent.sftp_browser.filename_remote):
-            remotefns = self.parent.sftp_browser.filename_remote
-            localfns = self.parent.sftp_browser.filename_local
-            sftpPaths = self.parent.sftp_browser.sftpPath
+        ok = self.loadSystemForm.sftp_browser.exec_()
+        if ok and len(self.loadSystemForm.sftp_browser.filename_remote):
+            remotefns = self.loadSystemForm.sftp_browser.filename_remote
+            localfns = self.loadSystemForm.sftp_browser.filename_local
+            sftpPaths = self.loadSystemForm.sftp_browser.sftpPath
             
             for remotefn, localfn, sftpPath in zip(remotefns, localfns, sftpPaths):
                 self.logger.info("Opening remote file (%s) on local machine", remotefn)
@@ -115,7 +115,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
                 status = self.openFile(localfn, sftpPath=sftpPath)
                 
                 # remove local copy
-                self.cleanUnzipped(localfn, True)
+                self.latticeReader.cleanUnzipped(localfn, True)
             
             # remove Roulettes if exists
             rfns = glob.glob(os.path.join(self.mainWindow.tmpDirectory, "Roulette*.OUT"))

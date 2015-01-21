@@ -142,7 +142,7 @@ class LoadSystemForm(GenericForm):
         
         # sftp browser
         if sftpDialog.PARAMIKO_LOADED:
-            self.sftp_browser = sftpDialog.SFTPBrowserDialog(self.mainWindow, parent=self)
+            self.sftp_browser = sftpDialog.SFTPBrowserDialog(self.mainWindow, parent=self, updateProgress=self.sftpProgress)
         else:
             self.sftp_browser = None
         
@@ -163,6 +163,14 @@ class LoadSystemForm(GenericForm):
 #         row.addWidget(helpButton)
         
         self.show()
+    
+    def sftpProgress(self, n, nmax, msg):
+        """
+        Update progress of file transfer
+        
+        """
+        print n, nmax, msg
+        self.mainWindow.updateProgress(n, nmax, msg)
     
     def openSFTPBrowser(self):
         """
@@ -257,12 +265,9 @@ class SystemsDialog(QtGui.QDialog):
         
         self.logger = logging.getLogger(__name__)
         
-        self.resize(80, 120)
-        
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-        
         # dialog layout
-        dialog_layout = QtGui.QVBoxLayout(self)
+        dialog_layout = QtGui.QVBoxLayout()
+        self.setLayout(dialog_layout)
         
         # box for list of loaded systems
         list_holder = GenericForm(self, None, "Loaded systems")
@@ -271,7 +276,8 @@ class SystemsDialog(QtGui.QDialog):
         
         # add list widget
         self.systems_list_widget = QtGui.QListWidget(self)
-#         self.systems_list_widget.setFixedHeight(60)
+        self.systems_list_widget.setMinimumHeight(100)
+        self.systems_list_widget.setMinimumWidth(120)
         self.systems_list_widget.setSelectionMode(self.systems_list_widget.ExtendedSelection)
         self.systems_list_widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.systems_list_widget.customContextMenuRequested.connect(self.showListWidgetContextMenu)
