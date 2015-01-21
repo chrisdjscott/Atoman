@@ -172,7 +172,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         
         return result
     
-    def openFile(self, filename, rouletteIndex=None, sftpPath=None):
+    def openFile(self, filename, rouletteIndex=None, sftpPath=None, linkedLattice=None):
         """
         Open file.
         
@@ -203,14 +203,18 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
                 return 1
             
             # linked lattice
-            linkedLattice = None
-            if fileFormat.linkedName is not None:
+            if fileFormat.linkedName is not None and linkedLattice is None:
                 linkedLattice = self.getLinkedLattice(fileFormat, filename)
                 if linkedLattice is None:
                     return 2
 
             # open file
             status, state = self.latticeReader.readFile(filepath, fileFormat, rouletteIndex=rouletteIndex, linkedLattice=linkedLattice)
+        
+        except:
+            exctype, value = sys.exc_info()[:2]
+            self.logger.error("Lattice reader failed! %s: %s", exctype, value)
+            self.mainWindow.displayError("Lattice reader failed!\n\n%s: %s" % (exctype, value))
         
         finally:
             # delete unzipped file if required
@@ -219,7 +223,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             self.currentFile = None
         
         if not status:
-            self.postOpenFile(state, filename, fileFormat, sftpPath)
+            self.postOpenFile(state, filename, fileFormat, sftpPath, linked=linkedLattice)
     
     def updateProgress(self, n, nmax, action="Reading"):
         """
@@ -278,12 +282,12 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         
         return lattice
     
-    def postOpenFile(self, state, filename, fileFormat, sftpPath):
+    def postOpenFile(self, state, filename, fileFormat, sftpPath, linked=None):
         """
         Should always be called at the end of openFile.
         
         """
-        self.loadSystemForm.fileLoaded(state, filename, fileFormat, sftpPath)
+        self.loadSystemForm.fileLoaded(state, filename, fileFormat, sftpPath, linked)
     
     def determineFileFormat(self, filename, properName):
         """

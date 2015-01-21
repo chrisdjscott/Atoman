@@ -187,12 +187,12 @@ class LoadSystemForm(GenericForm):
         """
         self.stackedWidget.setCurrentIndex(index)
     
-    def fileLoaded(self, state, filename, fileFormat, sftpPath):
+    def fileLoaded(self, state, filename, fileFormat, sftpPath, linked):
         """
         Called when a file is loaded
         
         """
-        self.systemsDialog.file_loaded(state, filename, fileFormat, sftpPath)
+        self.systemsDialog.file_loaded(state, filename, fileFormat, sftpPath, linked)
 
 ################################################################################
 
@@ -201,7 +201,7 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
     Item that goes in the systems list
     
     """
-    def __init__(self, lattice, filename, displayName, abspath, fileFormat):
+    def __init__(self, lattice, filename, displayName, abspath, fileFormat, linkedLattice):
         super(SystemsListWidgetItem, self).__init__()
         
         self.lattice = lattice
@@ -209,6 +209,7 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
         self.displayName = displayName
         self.fileFormat = fileFormat
         self.abspath = abspath
+        self.linkedLattice = None
         
         zip_exts = ('.bz2', '.gz')
         root, ext = os.path.splitext(filename)
@@ -747,14 +748,14 @@ class SystemsDialog(QtGui.QDialog):
         """
         self.add_lattice(lattice, filename, allowDuplicate=True)
     
-    def file_loaded(self, lattice, filename, fileFormat, sftpPath):
+    def file_loaded(self, lattice, filename, fileFormat, sftpPath, linked):
         """
         Called after a file had been loaded (or generated too?)
         
         """
-        self.add_lattice(lattice, filename, fileFormat=fileFormat, sftpPath=sftpPath)
+        self.add_lattice(lattice, filename, fileFormat=fileFormat, sftpPath=sftpPath, linkedLattice=linked)
     
-    def add_lattice(self, lattice, filename, fileFormat=None, displayName=None, allowDuplicate=False, sftpPath=None):
+    def add_lattice(self, lattice, filename, fileFormat=None, displayName=None, allowDuplicate=False, sftpPath=None, linkedLattice=None):
         """
         Add lattice
         
@@ -792,7 +793,7 @@ class SystemsDialog(QtGui.QDialog):
         self.logger.debug("Display name is: '%s'", displayName)
         
         # item for list
-        list_item = SystemsListWidgetItem(lattice, filename, displayName, abspath, fileFormat)
+        list_item = SystemsListWidgetItem(lattice, filename, displayName, abspath, fileFormat, linkedLattice)
         
         # add to list
         self.systems_list_widget.addItem(list_item)

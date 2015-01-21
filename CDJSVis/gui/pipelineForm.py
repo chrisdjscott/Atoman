@@ -73,6 +73,7 @@ class PipelineForm(QtGui.QWidget):
         self.currentRunID = None
         self.abspath = None
         self.PBC = None
+        self.linkedLattice = None
         
         self.analysisPipelineFormHidden = True
         
@@ -460,6 +461,7 @@ class PipelineForm(QtGui.QWidget):
         self.extension = item.extension
         self.abspath = item.abspath
         self.fileFormat = item.fileFormat
+        self.linkedLattice = item.linkedLattice
         self.PBC = state.PBC
         self.setPBCChecks()
         

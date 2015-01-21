@@ -1953,7 +1953,7 @@ class ImageSequenceTab(QtGui.QWidget):
                     sftpBrowser.copySystem(remoteFile, currentFile)
                 
                 # read in state
-                status, state = reader.readFile(currentFile, pipelinePage.fileFormat, rouletteIndex=i-1, linkedLattice=None)
+                status, state = reader.readFile(currentFile, pipelinePage.fileFormat, rouletteIndex=i-1, linkedLattice=pipelinePage.linkedLattice)
                 if status:
                     self.logger.error("Sequencer read file failed with status: %d" % status)
                     break

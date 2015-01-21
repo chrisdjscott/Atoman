@@ -4,14 +4,12 @@ Read user-specified format Lattice FILES_PER_THREAD
 
 """
 import os
-import sys
 import copy
 import re
 import logging
 
 import numpy as np
 
-from . import latticeReaders
 from . import _latticeReaderGeneric
 from .atoms import elements
 from ..visutils import utilities
@@ -414,6 +412,7 @@ class LatticeReaderGeneric(object):
         self.tmpLocation = tmpLocation
         self.logger = logging.getLogger(__name__+".LatticeReaderGeneric")
         self.updateProgress = updateProgress
+        self.intRegex = re.compile(r'[0-9]+')
     
     def unzipFile(self, filename):
         """
@@ -642,9 +641,57 @@ class LatticeReaderGeneric(object):
             else:
                 raise RuntimeError("Unrecognised shape data extracted from lattice: %s (%r)" % (key, data.shape))
         
-        #TODO: read Roulette?
+        # This section is specific to LKMC...
         
+        # guess roulette
+        stepNumber = None
+        if rouletteIndex is None:
+            # file name
+            basename = os.path.basename(filename)
+            
+            # look for integers in the name
+            result = self.intRegex.findall(basename)
+            
+            if len(result):
+                try:
+                    index = int(result[0])
+                except ValueError:
+                    rouletteIndex = None
+                else:
+                    stepNumber = index
+                    if index > 0:
+                        rouletteIndex = index - 1
         
+        # attempt to read roulette file
+        if rouletteIndex is not None:
+            # different path?
+            head = os.path.dirname(filename)
+            if len(head):
+                testpath = head
+            else:
+                testpath = None
+            
+            # step number
+            if stepNumber is None:
+                stepNumber = rouletteIndex + 1
+            lattice.attributes["KMC step"] = stepNumber
+            self.logger.info("Detected KMC step as: %d", stepNumber)
+            
+            # read simulation time
+            simTime = utilities.getTimeFromRoulette(rouletteIndex, testpath=testpath)
+            
+            if simTime is not None:
+                lattice.attributes["Time"] = simTime
+                self.logger.info("Detected simulation time as: %f", simTime)
+            
+            # get barrier
+            barrier = utilities.getBarrierFromRoulette(rouletteIndex, testpath=testpath)
+            if barrier is not None:
+                lattice.attributes["Barrier"] = barrier
+                self.logger.info("Detected barrier as: %f", barrier)
         
+        self.logger.debug("Lattice attribs: %r", lattice.attributes.keys())
+        self.logger.debug("Lattice scalars: %r", lattice.scalarsDict.keys())
+        self.logger.debug("Lattice vectors: %r", lattice.vectorsDict.keys())
         
         return 0, lattice
