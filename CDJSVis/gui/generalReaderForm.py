@@ -48,7 +48,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         vbox = QtGui.QVBoxLayout()
         
         # lattice reader
-        self.latticeReader = latticeReaderGeneric.LatticeReaderGeneric(self.tmpLocation)
+        self.latticeReader = latticeReaderGeneric.LatticeReaderGeneric(self.tmpLocation, updateProgress=self.updateProgress)
         
         # open dialog
         self.openLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
@@ -210,7 +210,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
                     return 2
 
             # open file
-            status, state = self.latticeReader.readFile(filepath, fileFormat, rouletteIndex=rouletteIndex, linkedLattice=linkedLattice, callback=self.updateProgress)
+            status, state = self.latticeReader.readFile(filepath, fileFormat, rouletteIndex=rouletteIndex, linkedLattice=linkedLattice)
         
         finally:
             # delete unzipped file if required
@@ -221,12 +221,12 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         if not status:
             self.postOpenFile(state, filename, fileFormat, sftpPath)
     
-    def updateProgress(self, n, nmax):
+    def updateProgress(self, n, nmax, action="Reading"):
         """
         Update progress
         
         """
-        self.mainWindow.updateProgress(n, nmax, "Reading: '%s'" % self.currentFile)
+        self.mainWindow.updateProgress(n, nmax, "%s: '%s'" % (action, self.currentFile))
     
     def getLinkedLattice(self, fileFormat, properName):
         """
@@ -261,8 +261,12 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             items = [item[0] for item in availableSystems]
             
             # open dialog
+            QtGui.QApplication.restoreOverrideCursor()
+            QtGui.QApplication.processEvents()
             dlg = SelectLinkedLatticeDialog(properName, items, parent=self)
             status = dlg.exec_()
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            QtGui.QApplication.processEvents()
             
             if status == QtGui.QDialog.Accepted:
                 index = dlg.combo.currentIndex()
@@ -337,9 +341,12 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             self.logger.debug("Found %d possible file formats", len(matchedFormats))
             
             # open dialog
+            QtGui.QApplication.restoreOverrideCursor()
+            QtGui.QApplication.processEvents()
             items = [fmt.name for fmt in matchedFormats]
-            name, ok = QtGui.QInputDialog.getItem(self, "Select file format", "File '%s'" % properName, items,
-                                                  editable=False)
+            name, ok = QtGui.QInputDialog.getItem(self, "Select file format", "File '%s'" % properName, items, editable=False)
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            QtGui.QApplication.processEvents()
             
             if ok:
                 self.logger.debug("User selected format '%s'", name)

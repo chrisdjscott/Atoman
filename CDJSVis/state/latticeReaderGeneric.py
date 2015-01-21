@@ -78,10 +78,7 @@ class FileFormats(object):
                 fmt = FileFormat()
                 fmt.read(f)
                 self.addFileFormat(fmt)
-                
-                print "="*80
                 fmt.print_()
-        print "="*80
         
         self.checkLinkedNames()
     
@@ -90,8 +87,16 @@ class FileFormats(object):
         Check that linked names exist
         
         """
-        print "*********Check Linked Names not implemented yet*********"
+        poplist = []
+        names = self._fileFormats.keys()
+        for fmt in self._fileFormats.values():
+            if fmt.linkedName is not None:
+                if fmt.name not in names:
+                    self.logger.error("Linked name '%s' for format type '%s' does not exist! Removing format '%s'", fmt.linkedName, fmt.name, fmt.name)
+                    poplist.append(fmt.name)
         
+        for key in poplist:
+            self._fileFormats.pop(key)
     
     def save(self, filename="file_formats.IN"):
         """
@@ -125,6 +130,8 @@ class FileFormat(object):
         self.delimiter = ' '
         self.atomIndexOffset = 1
         self.linkedName = None
+        
+        self.logger = logging.getLogger(__name__+".FileFormat")
     
     def inHeader(self, key):
         """
@@ -356,26 +363,28 @@ class FileFormat(object):
         Print debug info about the Format
         
         """
-        print "FileFormat: '%s'" % self.name
-        print "  Delimiter: '%s'" % self.delimiter
-        print "  Atom index offset: %d" % self.atomIndexOffset
-        print "  Linked name: %r" % self.linkedName
-        
-        print "  Header (%d lines):" % len(self.header)
+        lines = []
+        lines.append("FileFormat:")
+        lines.append("  Name: '%s'" % self.name)
+        lines.append("  Delimiter: '%s'" % self.delimiter)
+        lines.append("  Atom index offset: %d" % self.atomIndexOffset)
+        lines.append("  Linked name: %r" % self.linkedName)
+        lines.append("  Header (%d lines):" % len(self.header))
         for i, line in enumerate(self.header):
-            print "    %d: " % (i,),
+            nl = "    %d: " % i
             for item in line:
-                print "%r%s" % (item, self.delimiter),
-            print
+                nl += "%r%s" % (item, self.delimiter)
+            lines.append(nl)
         
-        print "  Body (%d lines per atom):" % len(self.body)
+        lines.append("  Body (%d lines per atom):" % len(self.body))
         for i, line in enumerate(self.body):
-            print "    %d: " % (i,),
+            nl = "    %d: " % i
             for item in line:
-                print "%r%s" % (item, self.delimiter),
-            print
+                nl += "%r%s" % (item, self.delimiter)
+            lines.append(nl)
         
-        print "  Identifier: %r" % self.getIdentifier()
+        lines.append("  Identifier: %r" % self.getIdentifier())
+        self.logger.debug("\n".join(lines))
     
     def getIdentifier(self):
         """
@@ -401,9 +410,10 @@ class LatticeReaderGeneric(object):
     Generic format Lattice reader
     
     """
-    def __init__(self, tmpLocation):
+    def __init__(self, tmpLocation, updateProgress=None):
         self.tmpLocation = tmpLocation
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__+".LatticeReaderGeneric")
+        self.updateProgress = updateProgress
     
     def unzipFile(self, filename):
         """
@@ -422,6 +432,9 @@ class LatticeReaderGeneric(object):
         else:
             raise RuntimeError("File '%s' is not a zip file", filename)
         
+        self.logger.debug("Running: '%s'", command)
+        if self.updateProgress is not None:
+            self.updateProgress(0, 0, action="Unzipping")
         status = os.system(command)
         if status or not os.path.exists(filepath):
             raise RuntimeError("Unzip command failed: '%s'" % command)
@@ -469,7 +482,7 @@ class LatticeReaderGeneric(object):
         if zipFlag:
             os.unlink(filepath)
     
-    def readFile(self, filename, fileFormat, rouletteIndex=None, linkedLattice=None, callback=None):
+    def readFile(self, filename, fileFormat, rouletteIndex=None, linkedLattice=None):
         """
         Read file.
         
@@ -480,7 +493,7 @@ class LatticeReaderGeneric(object):
         filepath, zipFlag = self.checkForZipped(filename)
         
         try:
-            status, state = self.readFileMain(filepath, fileFormat, rouletteIndex, linkedLattice, callback)
+            status, state = self.readFileMain(filepath, fileFormat, rouletteIndex, linkedLattice)
         
         finally:
             self.cleanUnzipped(filepath, zipFlag)
@@ -490,7 +503,7 @@ class LatticeReaderGeneric(object):
         
         return status, state
     
-    def readFileMain(self, filename, fileFormat, rouletteIndex, linkedLattice, callback):
+    def readFileMain(self, filename, fileFormat, rouletteIndex, linkedLattice):
         """
         Main read
         
@@ -501,18 +514,17 @@ class LatticeReaderGeneric(object):
             linkedNAtoms = linkedLattice.NAtoms
         
         # call C lib
-        if callback is None:
+        if self.updateProgress is None:
             resultDict = _latticeReaderGeneric.readGenericLatticeFile(filename, fileFormat.header, fileFormat.body,
                                                                       fileFormat.delimiter, fileFormat.atomIndexOffset,
                                                                       linkedNAtoms)
         
         else:
-            print "CALL WITH CALLBACK", callback
             resultDict = _latticeReaderGeneric.readGenericLatticeFile(filename, fileFormat.header, fileFormat.body,
                                                                       fileFormat.delimiter, fileFormat.atomIndexOffset,
-                                                                      linkedNAtoms, callback)
+                                                                      linkedNAtoms, self.updateProgress)
         
-        print "KEYS", resultDict.keys()
+        self.logger.debug("Keys: %r", resultDict.keys())
         
         # create Lattice object
         lattice = Lattice()
