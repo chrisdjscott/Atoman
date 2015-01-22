@@ -332,7 +332,6 @@ class FileFormat(object):
         
         """
         # name
-        #TODO: should check the name is unique!! or do this on the FileFormats object after finished read
         self.name = fh.readline().rstrip("\n")
         
         # delimiter
@@ -458,9 +457,18 @@ class LatticeReaderGeneric(object):
             raise RuntimeError("File '%s' is not a zip file", filename)
         
         self.logger.debug("Running: '%s'", command)
+        
+        # progress bar
         if self.updateProgress is not None:
-            self.updateProgress(0, 0, action="Unzipping")
+            self.updateProgress(0, 0, "Unzipping: '%s'" % bn)
+        
+        # run command
         status = os.system(command)
+        
+        # hide progress bar
+        self.hideProgress()
+        
+        # handle error
         if status or not os.path.exists(filepath):
             raise RuntimeError("Unzip command failed: '%s'" % command)
         
@@ -548,9 +556,10 @@ class LatticeReaderGeneric(object):
         
         else:
             try:
+                bn = os.path.basename(filename)
                 resultDict = _latticeReaderGeneric.readGenericLatticeFile(filename, fileFormat.header, fileFormat.body,
                                                                           delim, fileFormat.atomIndexOffset,
-                                                                          linkedNAtoms, self.updateProgress)
+                                                                          linkedNAtoms, self.updateProgress, bn)
             
             finally:
                 self.hideProgress()

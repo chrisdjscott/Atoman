@@ -41,7 +41,8 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         vbox = QtGui.QVBoxLayout()
         
         # lattice reader
-        self.latticeReader = latticeReaderGeneric.LatticeReaderGeneric(self.tmpLocation, updateProgress=self.updateProgress, hideProgress=self.mainWindow.hideProgressBar)
+        self.latticeReader = latticeReaderGeneric.LatticeReaderGeneric(self.tmpLocation, updateProgress=self.mainWindow.updateProgress, 
+                                                                       hideProgress=self.mainWindow.hideProgressBar)
         
         # open dialog
         self.openLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "File dialog")
@@ -218,13 +219,6 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         
         if not status:
             self.postOpenFile(state, filename, fileFormat, sftpPath, linked=linkedLattice)
-    
-    def updateProgress(self, n, nmax, action="Reading"):
-        """
-        Update progress
-        
-        """
-        self.mainWindow.updateProgress(n, nmax, "%s: '%s'" % (action, self.currentFile))
     
     def getLinkedLattice(self, fileFormat, properName):
         """

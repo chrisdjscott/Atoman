@@ -736,8 +736,8 @@ class MainWindow(QtGui.QMainWindow):
         Hide the progress bar
         
         """
-        self.progressBar.reset()
         self.progressBar.hide()
+        self.progressBar.reset()
         self.setStatus("Finished")
     
     def updateProgress(self, n, nmax, message):

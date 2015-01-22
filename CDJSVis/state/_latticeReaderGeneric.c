@@ -9,7 +9,7 @@
 #include <math.h>
 #include "array_utils.h"
 
-//#define DEBUG
+#define DEBUG
 #define MAX_LINE_LENGTH 512
 
 struct BodyLineItem
@@ -77,7 +77,7 @@ static PyObject*
 readGenericLatticeFile(PyObject *self, PyObject *args)
 {
     int atomIndexOffset, linkedNAtoms;
-    char *filename, *delimiter;
+    char *filename, *delimiter, *basename=NULL;
     FILE *INFILE=NULL;
     PyObject *headerList=NULL;
     PyObject *bodyList=NULL;
@@ -85,8 +85,8 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     PyObject *updateProgressCallback=NULL;
 
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "sO!O!sii|O", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter, 
-            &atomIndexOffset, &linkedNAtoms, &updateProgressCallback))
+    if (!PyArg_ParseTuple(args, "sO!O!sii|Os", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter,
+            &atomIndexOffset, &linkedNAtoms, &updateProgressCallback, &basename))
         return NULL;
 
 #ifdef DEBUG
@@ -914,16 +914,18 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
             for (j = 0; j < numLines; j++) free(atomLines[j]);
             
             /* progress callback */
-            if (updateProgressCallback != NULL && i % callbackInterval == 0)
+            if (updateProgressCallback != NULL && (i % callbackInterval == 0 || i == NAtoms - 1))
             {
+                char message[512];
                 PyObject *arglist;
                 PyObject *cbres;
                 
                 /* callback */
 #ifdef DEBUG
-                printf("Progress callback at: %ld atoms\n", i);
+                printf("Progress callback at: %ld atoms\n", i + 1);
 #endif
-                arglist = Py_BuildValue("(ii)", (int) i, (int) NAtoms);
+                sprintf(message, "Reading: '%s'", basename);
+                arglist = Py_BuildValue("(iis)", (int) i, (int) NAtoms, message);
                 cbres = PyObject_CallObject(updateProgressCallback, arglist);
                 Py_DECREF(arglist);
                 if (cbres == NULL) return NULL;
