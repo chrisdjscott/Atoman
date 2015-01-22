@@ -211,6 +211,8 @@ class FileFormat(object):
             delim += "\n"
         if "\r" not in delim:
             delim += "\r"
+        if "\t" not in delim:
+            delim += "\t"
         
         return delim
     
