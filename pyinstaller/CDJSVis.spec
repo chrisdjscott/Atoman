@@ -13,10 +13,12 @@ a = Analysis(['../cdjsvis.py'],
              hiddenimports=[],
              hookspath=None)
 
+# data files
 a.datas += [('data/atoms.IN', '../CDJSVis/data/atoms.IN', 'DATA'),
-            ('data/bonds.IN', '../CDJSVis/data/bonds.IN', 'DATA')]
+            ('data/bonds.IN', '../CDJSVis/data/bonds.IN', 'DATA'),
+            ('data/file_formats.IN', '../CDJSVis/data/file_formats.IN', 'DATA')]
 
-# icons as data
+# add icons as data
 OWD = os.getcwd()
 os.chdir("../CDJSVis")
 try:
@@ -32,6 +34,7 @@ finally:
     os.chdir(OWD)
 a.datas += extra_datas
 
+# continue with build
 pyz = PYZ(a.pure)
 
 exe = EXE(pyz,
