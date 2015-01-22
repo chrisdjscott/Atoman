@@ -15,7 +15,22 @@ a = Analysis(['../cdjsvis.py'],
 
 a.datas += [('data/atoms.IN', '../CDJSVis/data/atoms.IN', 'DATA'),
             ('data/bonds.IN', '../CDJSVis/data/bonds.IN', 'DATA')]
-#            ('md_input/lbomd.IN', '../CDJSVis/md_input/lbomd.IN', 'DATA')]
+
+# icons as data
+OWD = os.getcwd()
+os.chdir("../CDJSVis")
+try:
+    extra_datas = []
+    for root, dirs, files in os.walk("icons"):
+        for fn in files:
+            if fn.startswith("."):
+                continue
+            data_path = os.path.join(root, fn)
+            rel_path = os.path.join("..", "CDJSVis", data_path)
+            extra_datas.append((data_path, rel_path, "DATA"))
+finally:
+    os.chdir(OWD)
+a.datas += extra_datas
 
 pyz = PYZ(a.pure)
 
@@ -46,7 +61,7 @@ if osname == "Darwin":
     if not os.path.isdir("dist/CDJSVis.app/Contents/Resources/qt_menu.nib"):
         print "qt_menu.nib not found"
         shutil.copytree("/opt/local/Library/Frameworks/QtGui.framework/Versions/Current/Resources/qt_menu.nib", "dist/CDJSVis.app/Contents/Resources/qt_menu.nib")
-        
+
 # copy icns file
 new_icns = os.path.join("dist", "CDJSVis.app", "Contents", "Resources", "CDJSVis.icns")
 cmd = "cp -f CDJSVis.icns %s" % os.path.join("dist", "CDJSVis.app", "Contents", "Resources", "CDJSVis.icns")

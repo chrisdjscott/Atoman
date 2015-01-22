@@ -20,12 +20,6 @@ from matplotlib import rc
 
 from ..visutils.utilities import iconPath
 
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
-
 
 ################################################################################
 
@@ -44,7 +38,7 @@ class PlotDialog(QtGui.QDialog):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Plotter - %s" % dlgTitle)
-        self.setWindowIcon(QtGui.QIcon(iconPath("Plotter.png")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")))
         
         # settings
         settings = self.mainWindow.preferences.matplotlibForm

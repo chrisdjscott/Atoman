@@ -25,19 +25,11 @@ import scipy
 from .visutils.utilities import iconPath, resourcePath
 from .state.atoms import elements
 from .gui import toolbar as toolbarModule
-from .rendering import renderer
 from .gui import helpForm
 from .gui import dialogs
 from .gui import preferences
 from .gui import rendererSubWindow
 from .gui import systemsDialog
-try:
-    from . import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
-
-
 from .visutils import version
 __version__ = version.getVersion()
 
@@ -186,31 +178,29 @@ class MainWindow(QtGui.QMainWindow):
         self.bondsEditor = dialogs.BondEditorDialog(parent=self)
         
         # add file actions
-        exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "system-log-out.svg", 
+        exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "oxygen/application-exit.png", 
                                        "Exit application")
-        newWindowAction = self.createAction("&New app window", self.openNewWindow, "Ctrl-N", 
-                                            "CDJSVis.ico", "Open new application window")
-        newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow,
-                                            icon="window-new.svg", tip="Open new render sub window")
-#         loadInputAction = self.createAction("Load input", slot=self.showLoadInputDialog, icon="document-open.svg",
-#                                             tip="Open load input dialog")
-        systems_action = self.createAction("Systems dialog", slot=self.show_systems_dialog, icon="open-file-icon.png",
+        newWindowAction = self.createAction("&New app window", slot=self.openNewWindow, shortcut="Ctrl-N", 
+                                            icon="CDJSVis.ico", tip="Open new application window")
+        newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow, shortcut="Ctrl-O",
+                                            icon="oxygen/window-new.png", tip="Open new render sub window")
+        systems_action = self.createAction("Systems dialog", slot=self.show_systems_dialog, icon="oxygen/document-open.png",
                                            tip="Show systems dialog")
-        openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="folder.svg", 
+        openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="oxygen/folder-open.png", 
                                           tip="Open current working directory")
         exportElementsAction = self.createAction("Export elements", slot=self.exportElements,
-                                                 icon="file-export-icon.png", tip="Export element properties")
+                                                 icon="oxygen/document-export", tip="Export element properties")
         importElementsAction = self.createAction("Import elements", slot=self.importElements,
-                                                 icon="file-import-icon.png", tip="Import element properties")
+                                                 icon="oxygen/document-import.png", tip="Import element properties")
         exportBondsAction = self.createAction("Export bonds", slot=self.exportBonds,
-                                                 icon="file-export-icon.png", tip="Export bonds file")
+                                                 icon="oxygen/document-export.png", tip="Export bonds file")
         importBondsAction = self.createAction("Import bonds", slot=self.importBonds,
-                                                 icon="file-import-icon.png", tip="Import bonds file")
+                                                 icon="oxygen/document-import.png", tip="Import bonds file")
         showImageViewerAction = self.createAction("Image viewer", slot=self.showImageViewer, 
-                                                  icon="applications-graphics.svg", tip="Show image viewer")
+                                                  icon="oxygen/applications-graphics.png", tip="Show image viewer")
         showPreferencesAction = self.createAction("Preferences", slot=self.showPreferences, 
-                                                  icon="applications-system.svg", tip="Show preferences window")
-        changeCWDAction = self.createAction("Change CWD", slot=self.changeCWD, icon="folder-new.svg", 
+                                                  icon="oxygen/configure.png", tip="Show preferences window")
+        changeCWDAction = self.createAction("Change CWD", slot=self.changeCWD, icon="oxygen/folder-new.png", 
                                             tip="Change current working directory")
         
         # add file menu
@@ -219,18 +209,18 @@ class MainWindow(QtGui.QMainWindow):
                                    exportElementsAction, importBondsAction, exportBondsAction, None, exitAction))
         
         # button to show console window
-        openConsoleAction = self.createAction("Console", self.showConsole, None, "console-icon.png", "Show console window")
+        openConsoleAction = self.createAction("Console", self.showConsole, None, "oxygen/utilities-log-viewer.png", "Show console window")
         
         # element editor action
-        openElementEditorAction = self.createAction("Element editor", slot=self.openElementEditor, icon="periodic-table-icon.png", 
+        openElementEditorAction = self.createAction("Element editor", slot=self.openElementEditor, icon="other/periodic-table-icon.png", 
                                                     tip="Show element editor")
         
         # open bonds editor action
-        openBondsEditorAction = self.createAction("Bonds editor", slot=self.openBondsEditor, icon="bonding.jpg", 
+        openBondsEditorAction = self.createAction("Bonds editor", slot=self.openBondsEditor, icon="other/molecule1.png", 
                                                   tip="Show bonds editor")
         
         # default window size action
-        defaultWindowSizeAction = self.createAction("Default size", slot=self.defaultWindowSize, icon="Window.png", 
+        defaultWindowSizeAction = self.createAction("Default size", slot=self.defaultWindowSize, icon="oxygen/view-restore.png", 
                                                     tip="Resize window to default size")
         
         # add view menu
@@ -265,14 +255,14 @@ class MainWindow(QtGui.QMainWindow):
         
         
         # add about action
-        aboutAction = self.createAction("About CDJSVis", slot=self.aboutMe, icon="Information-icon.png", 
+        aboutAction = self.createAction("About CDJSVis", slot=self.aboutMe, icon="oxygen/help-about.png", 
                                            tip="About CDJSVis")
         
-        helpAction = self.createAction("CDJSVis Help", slot=self.showHelp, icon="Help-icon.png", tip="Show help window")
+        helpAction = self.createAction("CDJSVis Help", slot=self.showHelp, icon="oxygen/system-help.png", tip="Show help window")
         
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
-        helpToolbar.addAction(aboutAction)
+#         helpToolbar.addAction(aboutAction)
         helpToolbar.addAction(helpAction)
         
         helpMenu = self.menuBar().addMenu("&Help")

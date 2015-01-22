@@ -12,18 +12,11 @@ import sys
 import platform
 import logging
 import glob
-import shutil
 
 from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath, resourcePath
 from ..state import latticeReaderGeneric
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -51,7 +44,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         self.latticeReader = latticeReaderGeneric.LatticeReaderGeneric(self.tmpLocation, updateProgress=self.updateProgress, hideProgress=self.mainWindow.hideProgressBar)
         
         # open dialog
-        self.openLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "File dialog")
+        self.openLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "File dialog")
         self.openLatticeButton.setToolTip("Open file dialog")
         self.openLatticeButton.setCheckable(0)
         self.openLatticeButton.clicked.connect(self.openFileDialog)
@@ -62,7 +55,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         
         # sftp browser
         if hasattr(self.loadSystemForm, "sftp_browser"):
-            openSFTPBrowserButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "SFTP browser")
+            openSFTPBrowserButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open-remote.png')), "SFTP browser")
             openSFTPBrowserButton.setToolTip("Open SFTP browser")
             openSFTPBrowserButton.setCheckable(0)
             openSFTPBrowserButton.clicked.connect(self.openSFTPBrowser)

@@ -6,24 +6,15 @@ Preferences dialog.
 
 """
 import os
-import sys
 import logging
 import datetime
 import multiprocessing as mp
-import textwrap
 
 from PySide import QtGui, QtCore
 
-from . import genericForm
 from ..visutils.utilities import iconPath, resourcePath
 from ..visutils import utilities
 # from ..md import forces
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 ################################################################################
 
@@ -869,7 +860,7 @@ class PreferencesDialog(QtGui.QDialog):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Preferences")
-        self.setWindowIcon(QtGui.QIcon(iconPath("applications-system.svg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/configure.png")))
         self.resize(360, 540)
         
         self.buttonCount = 0
@@ -885,34 +876,34 @@ class PreferencesDialog(QtGui.QDialog):
         
         # general settings
         self.generalForm = GeneralSettingsForm(self)
-        self.toolbox.addItem(self.generalForm, QtGui.QIcon(iconPath("applications-system.svg")), "General")
+        self.toolbox.addItem(self.generalForm, QtGui.QIcon(iconPath("oxygen/applications-system.png")), "General")
         
         # log file settings
         self.logFileForm = LogFileSettingsForm(self)
-        self.toolbox.addItem(self.logFileForm, QtGui.QIcon(iconPath("accessories-text-editor.svg")), "Log file")
+        self.toolbox.addItem(self.logFileForm, QtGui.QIcon(iconPath("oxygen/accessories-text-editor.png")), "Log file")
         
         # rendering tab
         self.renderingForm = RenderingSettingsForm(self)
-        self.toolbox.addItem(self.renderingForm, QtGui.QIcon(iconPath("applications-graphics.svg")), "Rendering")
+        self.toolbox.addItem(self.renderingForm, QtGui.QIcon(iconPath("oxygen/applications-graphics.png")), "Rendering")
         
         # povray tab
         self.povrayForm = PovraySettingsForm(self)
-        self.toolbox.addItem(self.povrayForm, QtGui.QIcon(iconPath("pov-icon.svg")), "POV-Ray")
+        self.toolbox.addItem(self.povrayForm, QtGui.QIcon(iconPath("other/pov-icon.svg")), "POV-Ray")
         
         # ffmpeg tab
         self.ffmpegForm = FfmpegSettingsForm(self)
-        self.toolbox.addItem(self.ffmpegForm, QtGui.QIcon(iconPath("ffmpeg.png")), "FFmpeg")
+        self.toolbox.addItem(self.ffmpegForm, QtGui.QIcon(iconPath("other/ffmpeg.png")), "FFmpeg")
         
         # matplotlib tab
         self.matplotlibForm = MatplotlibSettingsForm(self)
-        self.toolbox.addItem(self.matplotlibForm, QtGui.QIcon(iconPath("Plotter.png")), "Matplotlib")
+        self.toolbox.addItem(self.matplotlibForm, QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")), "Matplotlib")
         
         # forces tab
         self.forcesForm = ForcesSettingsForm(self)
         self.toolbox.addItem(self.forcesForm, QtGui.QIcon(iconPath("capital_f.gif")), "Forces")
         
         # help button (links to help page on preferences dialog)
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "Show help")
+        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/system-help.png")), "Show help")
         helpButton.setToolTip("Show help page")
         helpButton.setFixedWidth(150)
         helpButton.setAutoDefault(0)

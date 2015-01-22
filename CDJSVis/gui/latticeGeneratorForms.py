@@ -5,12 +5,8 @@ Lattice generator forms.
 @author: Chris Scott
 
 """
-import os
-import sys
-
 from PySide import QtGui, QtCore
 
-from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
 from ..lattice_gen import lattice_gen_pu3ga
 from ..lattice_gen import lattice_gen_fcc
@@ -19,11 +15,6 @@ from ..lattice_gen import lattice_gen_fluorite
 from ..lattice_gen import lattice_gen_rockSalt
 from ..lattice_gen import lattice_gen_sic
 
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 ################################################################################
 

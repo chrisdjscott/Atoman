@@ -147,7 +147,8 @@ def iconPath(icon):
     Return full path to given icon.
     
     """
-    return os.path.join(":/icons", icon)
+    return resourcePath(icon, dirname="icons")
+#     return os.path.join(":/icons", icon)
 
 
 ################################################################################

@@ -6,7 +6,6 @@ Mdi sub window for displaying VTK render window.
 @author: Chris Scott
 
 """
-import sys
 import logging
 
 from PySide import QtGui, QtCore
@@ -15,7 +14,7 @@ from .QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import numpy as np
 
-from ..visutils.utilities import iconPath, resourcePath
+from ..visutils.utilities import iconPath
 from ..visutils import utilities
 from . import dialogs
 from . import onScreenInfoDialog
@@ -23,11 +22,6 @@ from ..rendering import renderer
 from .outputDialog import OutputDialog
 from ..rendering.text import vtkRenderWindowText
 from ..state.lattice import Lattice
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -83,7 +77,7 @@ class RendererWindow(QtGui.QWidget):
                                            tip="Toggle cell frame visibility")
         
         # button to display axes
-        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon2.svg", 
+        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon.svg", 
                                            tip="Toggle axes visiblity")
         
         # reset camera to cell
@@ -91,33 +85,33 @@ class RendererWindow(QtGui.QWidget):
                                            tip="Reset camera to cell")
         
         # rotate image
-        rotateViewPoint = self.createAction("Rotate view point", slot=self.rotateViewPoint, icon="object-rotate.png",
+        rotateViewPoint = self.createAction("Rotate view point", slot=self.rotateViewPoint, icon="oxygen/transform-rotate.png",
                                             tip="Rotate view point")
         
         # text selector
         openTextSelectorAction = self.createAction("On-screen info", self.showTextSelector, 
-                                                   icon="preferences-desktop-font.svg", 
+                                                   icon="oxygen/preferences-desktop-font.png", 
                                                    tip="Show on-screen text selector")
         
         # output dialog
-        showOutputDialogAction = self.createAction("Output dialog", slot=self.showOutputDialog, icon="loadandsave-icon.svg",
+        showOutputDialogAction = self.createAction("Output dialog", slot=self.showOutputDialog, icon="oxygen/document-save.png",
                                                    tip="Show output dialog")
         
         # background colour
         backgroundColourAction = self.createAction("Toggle background colour", slot=self.toggleBackgroundColour, 
-                                                   icon="preferences-desktop-screensaver.svg",
+                                                   icon="oxygen/preferences-desktop-display-color.png",
                                                    tip="Toggle background colour")
         
         # aa up
-        aaUpAction = self.createAction("Increase anti-aliasing", slot=self.increaseAA, icon="go-up.svg",
+        aaUpAction = self.createAction("Increase anti-aliasing", slot=self.increaseAA, icon="oxygen/go-up.png",
                                        tip="Increase anti-aliasing")
         
         # aa up
-        aaDownAction = self.createAction("Decrease anti-aliasing", slot=self.decreaseAA, icon="go-down.svg",
+        aaDownAction = self.createAction("Decrease anti-aliasing", slot=self.decreaseAA, icon="oxygen/go-down.png",
                                        tip="Decrease anti-aliasing")
         
         # camera settings
-        cameraSettingsAction = self.createAction("Camera settings", slot=self.showCameraSettings, icon="cam.png", tip="Show camera settings")
+        cameraSettingsAction = self.createAction("Camera settings", slot=self.showCameraSettings, icon="oxygen/camera-photo.png", tip="Show camera settings")
         
         # parallel projection action
         projectionAction = self.createAction("Parallel projection", slot=self.toggleProjection, icon="perspective-ava.svg", tip="Parallel projection", checkable=True)

@@ -6,17 +6,10 @@ On screen info dialog
 
 """
 import logging
-import sys
 
 from PySide import QtGui, QtCore
 
-from . import genericForm
-from ..visutils.utilities import resourcePath, iconPath
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
+from ..visutils.utilities import iconPath
 
 
 ################################################################################
@@ -181,7 +174,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.mainWindow = mainWindow
         
         self.setWindowTitle("On screen info - Render window %d" % index)
-        self.setWindowIcon(QtGui.QIcon(iconPath("preferences-desktop-font.svg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/preferences-desktop-font.png")))
         
         dialogLayout = QtGui.QVBoxLayout()
         self.setLayout(dialogLayout)

@@ -13,6 +13,7 @@ def configuration(parent_package='', top_path=None):
     config.add_subpackage("state")
     config.add_subpackage("visutils")
     config.add_data_dir("data")
+    config.add_data_dir("icons")
     
     return config
 

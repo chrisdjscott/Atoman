@@ -6,7 +6,6 @@ The output tab for the main toolbar
 
 """
 import os
-import sys
 import shutil
 import subprocess
 import copy
@@ -29,12 +28,6 @@ from ..plotting import rdf as rdf_c
 from ..algebra import _vectors as vectors_c
 from ..plotting import plotDialog
 from . import utils
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -411,7 +404,7 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         row.addWidget(showAsFractionCheck)
         
         # plot button
-        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Plotter.png")), "Plot")
+        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")), "Plot")
         plotButton.clicked.connect(self.makePlot)
         row = self.newRow()
         row.addWidget(plotButton)
@@ -602,7 +595,7 @@ class RDFForm(genericForm.GenericForm):
         row.addWidget(numBinsSpin)
         
         # plot button
-        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Plotter.png")), "Plot")
+        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")), "Plot")
         plotButton.clicked.connect(self.plotRDF)
         row = self.newRow()
         row.addWidget(plotButton)
@@ -824,7 +817,7 @@ class FileTab(QtGui.QWidget):
         label = QtGui.QLabel("File name: ")
         self.outputFileName = QtGui.QLineEdit("lattice.dat")
         self.outputFileName.setFixedWidth(120)
-        saveFileButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
+        saveFileButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/document-save.png")), "")
         saveFileButton.setToolTip("Save to file")
         saveFileButton.clicked.connect(self.saveToFile)
         
@@ -835,7 +828,7 @@ class FileTab(QtGui.QWidget):
         # dialog
         row = fileNameGroup.newRow()
         
-        saveFileDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Save to file")
+        saveFileDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "Save to file")
         saveFileDialogButton.setToolTip("Save to file")
         saveFileDialogButton.setCheckable(0)
         saveFileDialogButton.setFixedWidth(150)
@@ -939,11 +932,11 @@ class ImageTab(QtGui.QWidget):
         renderTypeButtonGroup.setExclusive(1)
         renderTypeButtonGroup.buttonClicked[int].connect(self.setRenderType)
         
-        self.POVButton = QtGui.QPushButton(QtGui.QIcon(iconPath("pov-icon.svg")), "POV-Ray")
+        self.POVButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/pov-icon.svg")), "POV-Ray")
         self.POVButton.setCheckable(1)
         self.POVButton.setChecked(0)
         
-        self.VTKButton = QtGui.QPushButton(QtGui.QIcon(iconPath("vtk-icon.svg")), "VTK")
+        self.VTKButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/vtk-icon.svg")), "VTK")
         self.VTKButton.setCheckable(1)
         self.VTKButton.setChecked(1)
         
@@ -1175,7 +1168,7 @@ class SingleImageTab(QtGui.QWidget):
         label = QtGui.QLabel("File name")
         self.imageFileName = QtGui.QLineEdit("image")
         self.imageFileName.setFixedWidth(120)
-        saveImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
+        saveImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/document-save.png")), "")
         saveImageButton.setToolTip("Save image")
         saveImageButton.clicked.connect(functools.partial(self.saveSingleImage, True))
         
@@ -1191,7 +1184,7 @@ class SingleImageTab(QtGui.QWidget):
         rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
-        saveImageDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Save image")
+        saveImageDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "Save image")
         saveImageDialogButton.setToolTip("Save image")
         saveImageDialogButton.setCheckable(0)
         saveImageDialogButton.setFixedWidth(150)
@@ -1463,7 +1456,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.fileprefix.setFixedWidth(120)
         self.fileprefix.textChanged[str].connect(self.fileprefixChanged)
         
-        resetPrefixButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-paste.svg")), "")
+        resetPrefixButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-find.png")), "")
         resetPrefixButton.setStatusTip("Set prefix to input file")
         resetPrefixButton.setToolTip("Set prefix to input file")
         resetPrefixButton.clicked.connect(self.resetPrefix)
@@ -1614,7 +1607,7 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        startSequencerButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
+        startSequencerButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/go-last.png")), "START")
         startSequencerButton.setStatusTip("Start sequencer")
         startSequencerButton.setToolTip("Start sequencer")
         startSequencerButton.clicked.connect(self.startSequencer)
@@ -2359,7 +2352,7 @@ class ImageRotateTab(QtGui.QWidget):
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        startRotatorButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
+        startRotatorButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/go-last.png")), "START")
         startRotatorButton.setToolTip("Start sequencer")
         startRotatorButton.clicked.connect(self.startRotator)
         

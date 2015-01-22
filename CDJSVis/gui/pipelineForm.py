@@ -10,7 +10,6 @@ shown below:
 
 """
 import os
-import sys
 import glob
 import math
 import logging
@@ -30,12 +29,6 @@ from . import infoDialogs
 from . import utils
 from ..rendering import highlight
 from . import dialogs
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -142,15 +135,15 @@ class PipelineForm(QtGui.QWidget):
         rowLayout.setSpacing(0)
         
         #----- buttons for new/trash filter list
-        runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('view-refresh-all.svg')),'Apply lists')
+        runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/view-refresh.png')),'Apply lists')
         runAll.setStatusTip("Apply all property/filter lists")
         runAll.setToolTip("Apply all property/filter lists")
         runAll.clicked.connect(self.runAllFilterLists)
-        add = QtGui.QPushButton(QtGui.QIcon(iconPath('tab-new.svg')),'New list')
+        add = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/tab-new-background.png')),'New list')
         add.setToolTip("New property/filter list")
         add.setStatusTip("New property/filter list")
         add.clicked.connect(self.addFilterList)
-        clear = QtGui.QPushButton(QtGui.QIcon(iconPath('edit-delete.svg')),'Clear lists')
+        clear = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/tab-close-other.png')),'Clear lists')
         clear.setStatusTip("Clear all property/filter lists")
         clear.setToolTip("Clear all property/filter lists")
         clear.clicked.connect(self.clearAllFilterLists)

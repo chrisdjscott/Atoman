@@ -5,7 +5,6 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
-import sys
 import logging
 import functools
 import copy
@@ -18,11 +17,6 @@ from . import filterSettings
 from . import filterListOptions
 from . import utils
 from . import infoDialogs
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -104,14 +98,14 @@ class FilterList(QtGui.QWidget):
         self.visibleButton.clicked.connect(self.visibilityChanged)
         
         # trash the list
-        trashButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-delete.svg")), "")
+        trashButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-delete.png")), "")
         trashButton.setStatusTip("Delete property/filter list")
         trashButton.setToolTip("Delete property/filter list")
         trashButton.setFixedWidth(35)
         trashButton.clicked.connect(self.filterTab.removeFilterList)
         
         # drift compenstation
-        self.driftCompButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Drift.jpg")), "")
+        self.driftCompButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/Drift.jpg")), "")
         self.driftCompButton.setStatusTip("Drift compensation")
         self.driftCompButton.setToolTip("Drift compensation")
         self.driftCompButton.setFixedWidth(35)
@@ -121,7 +115,7 @@ class FilterList(QtGui.QWidget):
         self.driftCompensation = False
         
         # persistent list button
-        self.persistButton = QtGui.QPushButton(QtGui.QIcon(iconPath("application-certificate.svg")), "")
+        self.persistButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/applications-education-miscellaneous.png")), "")
         self.persistButton.setFixedWidth(35)
         self.persistButton.setStatusTip("Persistent property/filter list")
         self.persistButton.setToolTip("Persistent property/filter list")
@@ -129,15 +123,16 @@ class FilterList(QtGui.QWidget):
         self.persistButton.setChecked(0)
         
         # static list button
-        self.staticListButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Stop_hand_nuvola_black.svg")), "")
+        self.staticListButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/object-unlocked.png")), "")
         self.staticListButton.setFixedWidth(35)
         self.staticListButton.setStatusTip("Freeze property/filter list")
         self.staticListButton.setToolTip("Freeze property/filter list")
         self.staticListButton.setCheckable(1)
         self.staticListButton.setChecked(0)
+        self.staticListButton.clicked.connect(self.staticListButtonClicked)
         
         # show scalar bar
-        self.scalarBarButton = QtGui.QPushButton(QtGui.QIcon(iconPath("preferences-desktop-locale.svg")), "")
+        self.scalarBarButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/color-spectrum-hi.png")), "")
         self.scalarBarButton.setFixedWidth(35)
         self.scalarBarButton.setStatusTip("Show scalar bar")
         self.scalarBarButton.setToolTip("Show scalar bar")
@@ -191,13 +186,13 @@ class FilterList(QtGui.QWidget):
         self.quickAddCombo.currentIndexChanged[str].connect(self.quickAddComboAction)
         
         # clear list button
-        clearList = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-clear.svg")), "")
+        clearList = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-clear.png")), "")
         clearList.setStatusTip("Clear current property/filter list")
         clearList.setToolTip("Clear current property/filter list")
         clearList.clicked.connect(self.clearList)
         
         # apply list button
-        applyList = QtGui.QPushButton(QtGui.QIcon(iconPath("view-refresh.svg")), "")
+        applyList = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/view-refresh.png")), "")
         applyList.setStatusTip("Apply current property/filter list")
         applyList.setToolTip("Apply current property/filter list")
         applyList.clicked.connect(self.applyList)
@@ -546,6 +541,17 @@ class FilterList(QtGui.QWidget):
             self.scalarBarButton.setChecked(0)
         
         self.filterTab.refreshOnScreenInfo()
+    
+    def staticListButtonClicked(self):
+        """
+        Static list button clicked
+        
+        """
+        if self.staticListButton.isChecked():
+            self.staticListButton.setIcon(QtGui.QIcon(iconPath("oxygen/object-locked.png")))
+        
+        else:
+            self.staticListButton.setIcon(QtGui.QIcon(iconPath("oxygen/object-unlocked.png")))
     
     def isStaticList(self):
         """

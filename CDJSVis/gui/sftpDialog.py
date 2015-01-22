@@ -33,7 +33,6 @@ except ImportError:
     PARAMIKO_LOADED = False
 
 from . import genericForm
-from .. import resources
 from ..visutils.utilities import iconPath
 
 ################################################################################
@@ -139,7 +138,7 @@ class SFTPBrowserDialog(QtGui.QDialog):
         # add connection
         self.connectionsCombo = QtGui.QComboBox()
         self.connectionsCombo.currentIndexChanged[int].connect(self.connectionChanged)
-        addConnectionButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
+        addConnectionButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-add.png")), "")
         addConnectionButton.setToolTip("Add new connection")
         addConnectionButton.setFixedWidth(35)
         addConnectionButton.clicked.connect(self.addNewConnection)
@@ -495,7 +494,7 @@ class SFTPBrowser(genericForm.GenericForm):
             self.listWidget.clear()
             
             # add ".." to top of listing
-            item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("undo_64.png")), "..", True)
+            item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("oxygen/edit-undo.png")), "..", True)
             self.listWidget.addItem(item)
             
             # add files and directories
@@ -509,11 +508,11 @@ class SFTPBrowser(genericForm.GenericForm):
                 statout = self.sftp.stat(name)
                 if stat.S_ISDIR(statout.st_mode):
                     # list widget item
-                    item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("folder.svg")), name, True)
+                    item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("oxygen/folder.png")), name, True)
                 
                 elif stat.S_ISREG(statout.st_mode):
                     # list widget item
-                    item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("x-office-document.svg")), name, False)
+                    item = SFTPBrowserListWidgetItem(QtGui.QIcon(iconPath("oxygen/x-office-document.png")), name, False)
                 
                 else:
                     logging.warning("Item in directory listing is neither file nor directory: '%s (%s)'", name, statout.st_mode)

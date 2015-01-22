@@ -3,7 +3,6 @@
 Additional options for filter lists.
 
 """
-import sys
 import functools
 import logging
 import math
@@ -13,12 +12,6 @@ from PySide import QtGui, QtCore
 from ..visutils.utilities import iconPath
 from . import genericForm
 from __builtin__ import False
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -454,7 +447,7 @@ class BondsOptionsWindow(QtGui.QDialog):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Bonds options")
-        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("other/molecule1.png")))
         
         self.mainWindow = mainWindow
         

@@ -8,7 +8,6 @@ Note that systems that are currently selected on an analysis pipeline, as either
 
 """
 import os
-import sys
 import logging
 import functools
 import copy
@@ -22,12 +21,6 @@ from . import generalReaderForm
 from . import latticeGeneratorForms
 from . import sftpDialog
 from .filterList import FilterList
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -91,26 +84,7 @@ class GenerateInputForm(GenericForm):
         self.sic4h_generator = latticeGeneratorForms.SiC4HLatticeGeneratorForm(self, self.mainWindow)
         self.stackedWidget.addWidget(self.sic4h_generator)
         
-        # help icon
-        row = self.newRow()
-        row.RowLayout.addStretch(1)
-        
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
-        helpButton.setFixedWidth(20)
-        helpButton.setFixedHeight(20)
-        helpButton.setToolTip("Show help page")
-        helpButton.clicked.connect(self.loadHelpPage)
-        row.addWidget(helpButton)
-        
         self.show()
-    
-    def loadHelpPage(self):
-        """
-        Load the help page for this form
-        
-        """
-        self.mainWindow.helpWindow.loadPage("usage/input/lattice_generation.html")
-        self.mainWindow.showHelp()
     
     def file_generated(self, lattice, filename):
         """
@@ -151,34 +125,7 @@ class LoadSystemForm(GenericForm):
         row = self.newRow()
         row.addWidget(self.readerForm)
         
-        # help icon
-#         row = self.newRow()
-#         row.RowLayout.addStretch(1)
-#         
-#         helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
-#         helpButton.setFixedWidth(20)
-#         helpButton.setFixedHeight(20)
-#         helpButton.setToolTip("Show help page")
-#         helpButton.clicked.connect(self.loadHelpPage)
-#         row.addWidget(helpButton)
-        
         self.show()
-    
-    def openSFTPBrowser(self):
-        """
-        Open SFTP browser
-        
-        """
-        
-        
-    
-    def loadHelpPage(self):
-        """
-        Load the help page for this form
-        
-        """
-        self.mainWindow.helpWindow.loadPage("usage/input/file_input.html")
-        self.mainWindow.showHelp()
     
     def setWidgetStack(self, index):
         """
@@ -278,7 +225,7 @@ class SystemsDialog(QtGui.QDialog):
         row.addWidget(self.systems_list_widget)
         
         # remove system button
-        remove_system = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
+        remove_system = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-remove.png")), "")
         remove_system.setAutoDefault(False)
         remove_system.setToolTip("Remove system")
         remove_system.clicked.connect(self.remove_system)

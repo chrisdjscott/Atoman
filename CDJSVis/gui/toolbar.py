@@ -5,19 +5,11 @@ The main toolbar
 @author: Chris Scott
 
 """
-import sys
-
 from PySide import QtGui, QtCore
 
 from .genericForm import GenericForm
 from .pipelineForm import PipelineForm
 from ..visutils.utilities import iconPath
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
-
 
 
 ################################################################################
@@ -59,19 +51,19 @@ class MainToolbar(QtGui.QDockWidget):
         self.pipelineCombo.currentIndexChanged.connect(self.currentPipelineChanged)
         row.addWidget(self.pipelineCombo)
         
-        addPipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
+        addPipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-add.png")), "")
         addPipelineButton.setStatusTip("Add analysis pipeline")
         addPipelineButton.setToolTip("Add analysis pipeline")
         addPipelineButton.clicked.connect(self.addPipeline)
         row.addWidget(addPipelineButton)
         
-        removePipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
+        removePipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-remove.png")), "")
         removePipelineButton.setStatusTip("Remove analysis pipeline")
         removePipelineButton.setToolTip("Remove analysis pipeline")
         removePipelineButton.clicked.connect(self.removePipeline)
         row.addWidget(removePipelineButton)
         
-        applyAllButton = QtGui.QPushButton(QtGui.QIcon(iconPath("view-refresh-all.svg")), "")
+        applyAllButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/view-refresh.png")), "")
         applyAllButton.setStatusTip("Run all pipelines")
         applyAllButton.setToolTip("Run all pipelines")
         applyAllButton.clicked.connect(self.runAllPipelines)
