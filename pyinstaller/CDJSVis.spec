@@ -14,8 +14,8 @@ a = Analysis(['../cdjsvis.py'],
              hookspath=None)
 
 a.datas += [('data/atoms.IN', '../CDJSVis/data/atoms.IN', 'DATA'),
-            ('data/bonds.IN', '../CDJSVis/data/bonds.IN', 'DATA')]
-#            ('md_input/lbomd.IN', '../CDJSVis/md_input/lbomd.IN', 'DATA')]
+            ('data/bonds.IN', '../CDJSVis/data/bonds.IN', 'DATA'),
+            ('data/file_formats.IN', '../CDJSVis/data/file_formats.IN', 'DATA')]
 
 pyz = PYZ(a.pure)
 
