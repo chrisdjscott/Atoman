@@ -1134,6 +1134,8 @@ class TraceOptionsWindow(QtGui.QDialog):
       much slower to render and interact with.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, mainWindow, parent=None):
         super(TraceOptionsWindow, self).__init__(parent)
         
@@ -1252,6 +1254,13 @@ class TraceOptionsWindow(QtGui.QDialog):
         
         """
         self.drawTraceVectors = drawVectors
+        
+        if self.drawTraceVectors:
+            text = "Trace options: On"
+        else:
+            text = "Trace options: Off"
+        
+        self.modified.emit(text)
 
 ################################################################################
 

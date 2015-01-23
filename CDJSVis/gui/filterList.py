@@ -261,7 +261,8 @@ class FilterList(QtGui.QWidget):
         # trace options
         self.traceOptions = filterListOptions.TraceOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.traceOptions)
-        item.setText("Trace options")
+        item.setText("Trace options: Off")
+        self.traceOptions.modified.connect(item.setText)
         self.optionsList.addItem(item)
         
         # vectors options
