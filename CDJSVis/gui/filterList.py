@@ -450,6 +450,11 @@ class FilterList(QtGui.QWidget):
             self.filterer.runFilters()
             
             self.filterTab.refreshOnScreenInfo()
+            
+            # refresh plot options
+            for rw in self.pipelinePage.rendererWindows:
+                if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
+                    rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
         
         finally:
             utils.cancelProgressDialog(progDiag)
