@@ -71,7 +71,7 @@ class FilterList(QtGui.QWidget):
     ]
     defaultFilters.sort()
     
-    def __init__(self, parent, mainToolbar, mainWindow, tab, width, height=150):
+    def __init__(self, parent, mainToolbar, mainWindow, tab, width):
         super(FilterList, self).__init__(parent)
         
         self.filterTab = parent
@@ -79,7 +79,6 @@ class FilterList(QtGui.QWidget):
         self.mainWindow = mainWindow
         self.tab = tab
         self.tabWidth = width
-        self.tabHeight = height
         self.filterCounter = 0
         self.pipelinePage = self.filterTab
         
@@ -182,7 +181,7 @@ class FilterList(QtGui.QWidget):
         
         # Now add the list widget
         self.listItems = QtGui.QListWidget(self)
-        self.listItems.setFixedHeight(self.tabHeight)
+        self.listItems.setFixedHeight(120)
         self.listItems.itemDoubleClicked.connect(self.openFilterSettings)
         self.listItems.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.listItems.customContextMenuRequested.connect(self.showListWidgetContextMenu)
@@ -229,7 +228,7 @@ class FilterList(QtGui.QWidget):
         self.optionsList = QtGui.QListWidget()
         self.optionsList.itemClicked.connect(self.optionsListItemClicked)
         self.optionsList.setSelectionMode(self.optionsList.NoSelection)
-        self.optionsList.setFixedHeight(150)
+        self.optionsList.setFixedHeight(120)
         groupLayout.addWidget(self.optionsList)
         
         # colouring options
