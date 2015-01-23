@@ -34,7 +34,6 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         self.mainToolbar = mainToolbar
         self.mainWindow = mainWindow
         self.tmpLocation = self.mainWindow.tmpDirectory
-        self.currentFile = None
         
         self.logger = logging.getLogger(__name__)
         
@@ -131,7 +130,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             sd.tmpHide()
         
         # open the dialog
-        filenames = fdiag.getOpenFileNames(self, "Open file", os.getcwd())[0]
+        filenames = fdiag.getOpenFileNames(parent=self, caption="Open file", dir=os.getcwd(), options=QtGui.QFileDialog.DontResolveSymlinks)[0]
         filenames = [str(fn) for fn in filenames]
         
         if platform.system() == "Darwin":
@@ -180,8 +179,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         #   if 1 is loaded use it, if >1 then pop up a dialog with most recent at the top
         
         # status
-        self.currentFile = os.path.basename(filename)
-        self.mainWindow.setStatus("Reading '%s'" % self.currentFile)
+        self.mainWindow.setStatus("Opening '%s'" % os.path.basename(filename))
         
         # unzip if required
         filepath, zipFlag = self.latticeReader.checkForZipped(filename)
@@ -210,7 +208,6 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         finally:
             # delete unzipped file if required
             self.latticeReader.cleanUnzipped(filepath, zipFlag)
-            self.currentFile = None
         
         if not status:
             self.postOpenFile(state, filename, fileFormat, sftpPath, linked=linkedLattice)
