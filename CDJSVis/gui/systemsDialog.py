@@ -127,13 +127,6 @@ class LoadSystemForm(GenericForm):
         
         self.show()
     
-    def setWidgetStack(self, index):
-        """
-        Change load ref stack.
-        
-        """
-        self.stackedWidget.setCurrentIndex(index)
-    
     def fileLoaded(self, state, filename, fileFormat, sftpPath, linked):
         """
         Called when a file is loaded
@@ -185,19 +178,13 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
 
 ################################################################################
 
-class SystemsDialog(QtGui.QDialog):
+class SystemsDialog(QtGui.QWidget):
     """
     Systems dialog
     
     """
     def __init__(self, parent, mainWindow):
         super(SystemsDialog, self).__init__(parent)
-        
-        self.setWindowTitle("Systems dialog")
-        self.setModal(False)
-        
-        self.iniWinFlags = self.windowFlags()
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.mainToolbar = mainWindow
         self.mainWindow = mainWindow
@@ -223,9 +210,7 @@ class SystemsDialog(QtGui.QDialog):
         self.systems_list_widget.setSelectionMode(self.systems_list_widget.ExtendedSelection)
         self.systems_list_widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.systems_list_widget.customContextMenuRequested.connect(self.showListWidgetContextMenu)
-#         self.systems_list_widget.resize(QtCore.QSize(254,118))
-#         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
-#         self.systems_list_widget.setSizePolicy(sizePolicy)
+        self.systems_list_widget.setFixedHeight(150)
         vbox.addWidget(self.systems_list_widget)
         
         # remove system button
@@ -240,62 +225,15 @@ class SystemsDialog(QtGui.QDialog):
         hbox.addStretch(1)
         vbox.addLayout(hbox)
         
-        # load or generate combo
-        self.new_type_combo = QtGui.QComboBox()
-        self.new_type_combo.addItem("Load system")
-        self.new_type_combo.addItem("Generate system")
-        self.new_type_combo.currentIndexChanged.connect(self.set_new_system_stack)
-        hbox = QtGui.QHBoxLayout()
-        hbox.addStretch(1)
-        hbox.addWidget(self.new_type_combo)
-        hbox.addStretch(1)
-        dialog_layout.addLayout(hbox)
-        
-        # stacked widget
-        self.new_system_stack = QtGui.QStackedWidget()
-        dialog_layout.addWidget(self.new_system_stack)
-        
         # load input form
         self.load_system_form = LoadSystemForm(self, self.mainWindow, self.mainToolbar)
-        self.new_system_stack.addWidget(self.load_system_form)
+        dialog_layout.addWidget(self.load_system_form)
         
         # generate input form
         self.generate_system_form = GenerateInputForm(self, self.mainWindow, self.mainToolbar)
-        self.new_system_stack.addWidget(self.generate_system_form)
+        dialog_layout.addWidget(self.generate_system_form)
         
-        # button box
-        self.buttonBox = QtGui.QDialogButtonBox()
-        
-        # help button
-        helpButton = self.buttonBox.addButton(self.buttonBox.Help)
-        helpButton.setToolTip("Show help page")
-        helpButton.setAutoDefault(False)
-        self.buttonBox.helpRequested.connect(self.load_help_page)
-        
-        # close button
-        closeButton = self.buttonBox.addButton(self.buttonBox.Close)
-        closeButton.setToolTip("Hide dialog")
-        closeButton.setDefault(True)
-        self.buttonBox.rejected.connect(self.close)
-        
-        dialog_layout.addWidget(self.buttonBox)
-        
-        self.resize(QtCore.QSize(300, 550))
-    
-    def tmpHide(self):
-        """
-        Temporarily remove staysOnTop hint
-        
-        """
-        self.setWindowFlags(self.iniWinFlags)
-    
-    def showAgain(self):
-        """
-        Readd stayOnTop hint and show
-        
-        """
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        self.show()
+        dialog_layout.addStretch(1)
     
     def showListWidgetContextMenu(self, point):
         """

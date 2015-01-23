@@ -184,8 +184,10 @@ class MainWindow(QtGui.QMainWindow):
                                             icon="CDJSVis.ico", tip="Open new application window")
         newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow, shortcut="Ctrl-O",
                                             icon="oxygen/window-new.png", tip="Open new render sub window")
-        systems_action = self.createAction("Systems dialog", slot=self.show_systems_dialog, icon="oxygen/document-open.png",
-                                           tip="Show systems dialog")
+        openFileAction = self.createAction("Open file", slot=self.showOpenFileDialog, icon="oxygen/document-open.png",
+                                           tip="Open file")
+        openRemoteFileAction = self.createAction("Open remote file", slot=self.showOpenRemoteFileDialog, 
+                                                 icon="oxygen/document-open-remote.png", tip="Open remote file")
         openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="oxygen/folder-open.png", 
                                           tip="Open current working directory")
         exportElementsAction = self.createAction("Export elements", slot=self.exportElements,
@@ -205,8 +207,9 @@ class MainWindow(QtGui.QMainWindow):
         
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, systems_action, openCWDAction, changeCWDAction, importElementsAction, 
-                                   exportElementsAction, importBondsAction, exportBondsAction, None, exitAction))
+        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, openFileAction, openRemoteFileAction, openCWDAction, 
+                                   changeCWDAction, importElementsAction, exportElementsAction, importBondsAction, 
+                                   exportBondsAction, None, exitAction))
         
         # button to show console window
         openConsoleAction = self.createAction("Console", self.showConsole, None, "oxygen/utilities-log-viewer.png", "Show console window")
@@ -238,8 +241,8 @@ class MainWindow(QtGui.QMainWindow):
         fileToolbar.addAction(newWindowAction)
         fileToolbar.addAction(newRenWindowAction)
         fileToolbar.addSeparator()
-#         fileToolbar.addAction(loadInputAction)
-        fileToolbar.addAction(systems_action)
+        fileToolbar.addAction(openFileAction)
+        fileToolbar.addAction(openRemoteFileAction)
         fileToolbar.addAction(openCWDAction)
         fileToolbar.addAction(changeCWDAction)
         fileToolbar.addSeparator()
@@ -316,12 +319,20 @@ class MainWindow(QtGui.QMainWindow):
 #         
 #         # give focus
 #         self.raise_()
+    
+    def showOpenRemoteFileDialog(self):
+        """
+        Open remote file
         
-        # show system dialog
-#         self.show_systems_dialog()
+        """
+        self.systemsDialog.load_system_form.readerForm.openSFTPBrowser()
+    
+    def showOpenFileDialog(self):
+        """
+        Open file
         
-        # show input dialog
-#        self.showLoadInputDialog()
+        """
+        self.systemsDialog.load_system_form.readerForm.openFileDialog()
     
     def defaultWindowSize(self):
         """
@@ -329,17 +340,6 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         self.resize(self.defaultWindowWidth, self.defaultWindowHeight)
-    
-    def show(self):
-        """
-        Override show
-        
-        """
-        super(MainWindow, self).show()
-        
-        if self.firstShow:
-            self.show_systems_dialog()
-            self.firstShow = False
     
     def changeCWD(self):
         """
@@ -354,22 +354,6 @@ class MainWindow(QtGui.QMainWindow):
             os.chdir(new_dir)
             self.updateCWD()
     
-    def show_systems_dialog(self):
-        """
-        Show systems dialog.
-        
-        """
-        self.systemsDialog.hide()
-        self.systemsDialog.show()
-    
-#     def showLoadInputDialog(self):
-#         """
-#         Show load input dialog.
-#         
-#         """
-#         self.loadInputDialog.hide()
-#         self.loadInputDialog.show()
-    
     def rendererWindowActivated(self, sw):
         """
         Sub window activated. (TEMPORARY)
@@ -382,12 +366,6 @@ class MainWindow(QtGui.QMainWindow):
         Add renderer window to mdi area.
         
         """
-#         if ask:
-#             dlg = dialogs.NewRendererWindowDialog(parent=self)
-#         
-#         if not ask or dlg.exec_():
-            # if ask, get num from dialog
-            
         rendererWindow = rendererSubWindow.RendererWindow(self, self.subWinCount, parent=self)
         rendererWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         
@@ -539,34 +517,6 @@ class MainWindow(QtGui.QMainWindow):
 #        elif osname == "Windows":
 #            os.startfile(dirname)
     
-    def showFilterSummary(self):
-        """
-        Show the filter window.
-        
-        """
-        self.mainToolbar.filterPage.showFilterSummary()
-    
-    def setCameraToCell(self):
-        """
-        Reset the camera to point at the cell
-        
-        """
-        self.renderer.setCameraToCell()
-    
-    def toggleCellFrame(self):
-        """
-        Toggle lattice frame visibility
-        
-        """
-        self.renderer.toggleLatticeFrame()
-    
-    def toggleAxes(self):
-        """
-        Toggle axes visibility
-        
-        """
-        self.renderer.toggleAxes()
-    
     def openNewWindow(self):
         """
         Open a new instance of the main window
@@ -650,12 +600,8 @@ class MainWindow(QtGui.QMainWindow):
         Catch attempt to close
         
         """
-#        reply = QtGui.QMessageBox.question(self, 'Message', "Are you sure you want to quit", 
-#                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
-        
         close, clearSettings = self.confirmCloseEvent()
         
-#        if reply == QtGui.QMessageBox.Yes:
         if close:
             self.tidyUp()
             
@@ -701,35 +647,6 @@ class MainWindow(QtGui.QMainWindow):
         """
         shutil.rmtree(self.tmpDirectory)
         self.console.accept()
-    
-    def setFileType(self, fileType):
-        """
-        Set the file type.
-        
-        """
-        self.fileType = fileType
-        
-        if fileType == "DAT":
-            self.fileExtension = "dat"
-        
-        elif fileType == "LBOMD":
-            self.fileExtension = "xyz"
-    
-    def setCurrentRefFile(self, filename):
-        """
-        Set the current ref file in the main toolbar
-        
-        """
-#         self.mainToolbar.currentRefLabel.setText("Reference: " + filename)
-        self.refFile = filename
-    
-    def setCurrentInputFile(self, filename):
-        """
-        Set the current input file in the main toolbar
-        
-        """
-#         self.mainToolbar.currentInputLabel.setText("Input: " + filename)
-        self.inputFile = filename
     
     def hideProgressBar(self):
         """
@@ -800,111 +717,6 @@ class MainWindow(QtGui.QMainWindow):
             
             finally:
                 f.close()
-    
-    def postFileLoaded(self, fileType, state, filename, extension):
-        """
-        Called when a new file has been loaded.
-        
-         - fileType should be "ref" or "input"
-         - state is the new Lattice object
-        
-        """
-        if fileType == "ref":
-            # if a ref is already loaded, we need to 
-            
-            
-            self.refState = state
-            
-            self.readLBOMDIN()
-            
-            self.postRefLoaded(filename)
-        
-        else:
-            self.inputState = state
-        
-        self.postInputLoaded(filename)
-        
-        if self.fileExtension is not None:
-            self.fileExtension = extension
-    
-    def postRefLoaded(self, filename):
-        """
-        Do stuff after the ref has been loaded.
-        
-        """
-        if self.refLoaded:
-            for filterPage in self.mainToolbar.pipelineList:
-                filterPage.clearAllActors()
-                filterPage.refreshAllFilters()
-                
-            for rw in self.rendererWindows:
-                rw.textSelector.refresh()
-            
-            for rw in self.rendererWindows:
-                rw.outputDialog.rdfTab.refresh()
-        
-        self.setCurrentRefFile(filename)
-        self.refLoaded = 1
-        
-        for rw in self.rendererWindows:
-            rw.renderer.postRefRender()
-        
-        for rw in self.rendererWindows:
-            rw.textSelector.refresh()
-    
-    def postInputLoaded(self, filename):
-        """
-        Do stuff after the input has been loaded
-        
-        """
-        self.setCurrentInputFile(filename)
-        self.inputLoaded = 1
-        
-        self.mainToolbar.analysisPipelinesForm.show()
-        
-        for filterPage in self.mainToolbar.pipelineList:
-            filterPage.refreshAllFilters()
-        
-        for rw in self.rendererWindows:
-            rw.textSelector.refresh()
-        
-        for rw in self.rendererWindows:
-            rw.outputDialog.rdfTab.refresh()
-    
-    def clearReference(self):
-        """
-        Clear the current reference file
-        
-        """
-        self.refLoaded = 0
-        self.inputLoaded = 0
-        self.setCurrentRefFile("")
-        self.setCurrentInputFile("")
-        
-        # close any open output dialogs!
-        for rw in self.rendererWindows:
-            rw.outputDialog.hide()
-            rw.textSelector.hide()
-        
-        # close all render windows?
-#        for rw in self.rendererWindows:
-#            rw.close()
-#        
-#        # open new renderer window
-#        self.addRendererWindow(ask=False)
-        
-        # should probably hide stuff like elements form too!
-        
-        
-        # clear rdf tab
-        
-        
-        # clear pipelines
-        for pipeline in self.mainToolbar.pipelineList:
-            pipeline.clearAllFilterLists()
-        
-        self.mainToolbar.analysisPipelinesForm.hide()
-        self.mainToolbar.loadInputForm.show()
     
     def displayWarning(self, message):
         """

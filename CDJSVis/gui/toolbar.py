@@ -19,7 +19,7 @@ class MainToolbar(QtGui.QDockWidget):
         
         self.mainWindow = parent
         
-        self.setWindowTitle("Analysis Toolbar")
+        self.setWindowTitle("Toolbar")
         
         self.setFeatures(self.DockWidgetMovable | self.DockWidgetFloatable)
         
@@ -39,11 +39,18 @@ class MainToolbar(QtGui.QDockWidget):
         containerLayout.setContentsMargins(0,0,0,0)
         containerLayout.setAlignment(QtCore.Qt.AlignTop)
         
-        self.currentPipelineString = "Pipeline 0"
-        self.currentPipelineIndex = 0
+        # tab widget
+        self.tabWidget = QtGui.QTabWidget(self)
+        self.tabWidget.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        containerLayout.addWidget(self.tabWidget)
+        
+        # input form
+        self.tabWidget.addTab(self.mainWindow.systemsDialog, "Input")
         
         # analysis pipelines form
-        self.analysisPipelinesForm = GenericForm(self, 0, "Analysis pipelines")
+        self.currentPipelineString = "Pipeline 0"
+        self.currentPipelineIndex = 0
+        self.analysisPipelinesForm = GenericForm(self, 0, "")
         
         row = self.analysisPipelinesForm.newRow()
         
@@ -69,6 +76,13 @@ class MainToolbar(QtGui.QDockWidget):
         applyAllButton.clicked.connect(self.runAllPipelines)
         row.addWidget(applyAllButton)
         
+        # divider
+        line = QtGui.QFrame()
+        line.setFrameShape(QtGui.QFrame.HLine)
+        line.setFrameShadow(QtGui.QFrame.Sunken)
+        row = self.analysisPipelinesForm.newRow()
+        row.addWidget(line)
+        
         # stacked widget (for pipelines)
         self.stackedWidget = QtGui.QStackedWidget()
         row = self.analysisPipelinesForm.newRow()
@@ -81,7 +95,8 @@ class MainToolbar(QtGui.QDockWidget):
         self.addPipeline()
         
         # add to layout
-        containerLayout.addWidget(self.analysisPipelinesForm)
+        self.tabWidget.addTab(self.analysisPipelinesForm, "Analysis pipelines")
+        self.tabWidget.setTabEnabled(1, False)
         
         # set the main widget
         self.setWidget(self.container)

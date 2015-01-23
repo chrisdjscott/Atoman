@@ -142,6 +142,8 @@ class Renderer(object):
         
         """
         ref = self.getRefState()
+        if ref is None:
+            return
         
         dims = ref.cellDims
         

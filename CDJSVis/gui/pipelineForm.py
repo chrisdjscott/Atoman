@@ -43,7 +43,6 @@ class PipelineForm(QtGui.QWidget):
         self.pipelineString = pipelineString
         self.systemsDialog = mainWindow.systemsDialog
         
-        self.log = self.mainWindow.console.write
         self.logger = logging.getLogger(__name__)
         
         self.rendererWindows = self.mainWindow.rendererWindows
@@ -67,8 +66,6 @@ class PipelineForm(QtGui.QWidget):
         self.abspath = None
         self.PBC = None
         self.linkedLattice = None
-        
-        self.analysisPipelineFormHidden = True
         
         # layout
         filterTabLayout = QtGui.QVBoxLayout(self)
@@ -322,6 +319,9 @@ class PipelineForm(QtGui.QWidget):
         """
         self.refCombo.addItem(filename)
         self.inputCombo.addItem(filename)
+        
+        if not self.mainToolbar.tabWidget.isTabEnabled(1):
+            self.mainToolbar.tabWidget.setTabEnabled(1, True)
     
     def removeStateOption(self, index):
         """
@@ -383,14 +383,6 @@ class PipelineForm(QtGui.QWidget):
         self.clearAllActors()
         self.removeInfoWindows()
         self.refreshAllFilters()
-        
-        if self.analysisPipelineFormHidden:
-            self.mainToolbar.analysisPipelinesForm.show()
-            self.analysisPipelineFormHidden = False
-        
-        else:
-            # auto run filters... ?
-            pass
         
         for rw in self.rendererWindows:
             if rw.currentPipelineIndex == self.pipelineIndex:
@@ -487,13 +479,6 @@ class PipelineForm(QtGui.QWidget):
         for filterList in self.filterLists:
             filterList.removeInfoWindows()
     
-    def showFilterSummary(self):
-        """
-        Show filtering summary.
-        
-        """
-        pass
-    
     def removeOnScreenInfo(self):
         """
         Remove on screen info.
@@ -508,7 +493,7 @@ class PipelineForm(QtGui.QWidget):
         Clear all actors.
         
         """
-        self.log("Clearing all actors")
+        self.logger.debug("Clearing all actors")
         
         for filterList in self.filterLists:
             filterList.filterer.removeActors()
@@ -603,7 +588,7 @@ class PipelineForm(QtGui.QWidget):
         Clear all the filter lists
         
         """
-        self.log("Clearing all filter lists")
+        self.logger.debug("Clearing all filter lists")
         for filterList in self.filterLists:
             filterList.clearList()
             self.removeFilterList()
@@ -653,7 +638,7 @@ class PipelineForm(QtGui.QWidget):
         Refresh filter settings
         
         """
-        self.log("Refreshing filters", 3)
+        self.logger.debug("Refreshing filters", 3)
         for filterList in self.filterLists:
             currentSettings = filterList.getCurrentFilterSettings()
             for filterSettings in currentSettings:

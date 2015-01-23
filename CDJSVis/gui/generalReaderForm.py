@@ -51,7 +51,6 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         hbox = QtGui.QHBoxLayout()
         hbox.setAlignment(QtCore.Qt.AlignHCenter)
         hbox.addWidget(self.openLatticeButton)
-        vbox.addLayout(hbox)
         
         # sftp browser
         if hasattr(self.loadSystemForm, "sftp_browser"):
@@ -59,10 +58,9 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             openSFTPBrowserButton.setToolTip("Open SFTP browser")
             openSFTPBrowserButton.setCheckable(0)
             openSFTPBrowserButton.clicked.connect(self.openSFTPBrowser)
-            hbox = QtGui.QHBoxLayout()
-            hbox.setAlignment(QtCore.Qt.AlignHCenter)
             hbox.addWidget(openSFTPBrowserButton)
-            vbox.addLayout(hbox)
+        
+        vbox.addLayout(hbox)
         
         self.setLayout(vbox)
         
@@ -123,18 +121,10 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             return
         
         fdiag = QtGui.QFileDialog()
-         
-        # temporarily remove stays on top hint on systems dialog (Mac only)
-        if platform.system() == "Darwin":
-            sd = self.systemsDialog
-            sd.tmpHide()
         
         # open the dialog
         filenames = fdiag.getOpenFileNames(parent=self, caption="Open file", dir=os.getcwd(), options=QtGui.QFileDialog.DontResolveSymlinks)[0]
         filenames = [str(fn) for fn in filenames]
-        
-        if platform.system() == "Darwin":
-            sd.showAgain()
         
         if not len(filenames):
             return None
