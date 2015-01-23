@@ -70,20 +70,14 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         # file formats
         self.fileFormats = latticeReaderGeneric.FileFormats()
         
-        # check if user dir exists
+        # default file formats
+        self.fileFormats.read(filename=resourcePath("file_formats.IN"))
+        
+        # check if user dir exists, load additional formats if it does
 #         userdir = os.path.join(os.path.expanduser("~"), ".cdjsvis")
 #         fn = os.path.join(userdir, "file_formats.IN")
-#         if not os.path.isfile(fn):
-#             if not os.path.exists(userdir):
-#                 os.mkdir(userdir)
-#             # copy from data dir
-#             defaultPath = resourcePath("file_formats.IN")
-#             shutil.copy(defaultPath, fn)
-        
-        fn = resourcePath("file_formats.IN")
-        
-        # load file formats
-        self.fileFormats.read(filename=fn)
+#         if os.path.isfile(fn):
+#             self.fileFormats.read(filename=fn)
     
     def openSFTPBrowser(self):
         """

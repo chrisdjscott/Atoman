@@ -9,7 +9,7 @@
 #include <math.h>
 #include "array_utils.h"
 
-#define DEBUG
+//#define DEBUG
 #define MAX_LINE_LENGTH 512
 
 struct BodyLineItem
