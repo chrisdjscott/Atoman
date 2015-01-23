@@ -206,52 +206,54 @@ class SystemsDialog(QtGui.QDialog):
         
         # dialog layout
         dialog_layout = QtGui.QVBoxLayout()
+        dialog_layout.setContentsMargins(0,0,0,0)
         self.setLayout(dialog_layout)
         
         # box for list of loaded systems
-        list_holder = GenericForm(self, None, "Loaded systems")
-        list_holder.show()
+        list_holder = QtGui.QGroupBox("Loaded systems")
+        vbox = QtGui.QVBoxLayout()
+        vbox.setAlignment(QtCore.Qt.AlignHCenter)
+        vbox.setSpacing(0)
+        vbox.setContentsMargins(0,0,0,0)
+        list_holder.setLayout(vbox)
         dialog_layout.addWidget(list_holder)
         
         # add list widget
         self.systems_list_widget = QtGui.QListWidget(self)
-        self.systems_list_widget.setMinimumHeight(100)
-        self.systems_list_widget.setMinimumWidth(120)
         self.systems_list_widget.setSelectionMode(self.systems_list_widget.ExtendedSelection)
         self.systems_list_widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.systems_list_widget.customContextMenuRequested.connect(self.showListWidgetContextMenu)
-        
-        row = list_holder.newRow()
-        row.addWidget(self.systems_list_widget)
+#         self.systems_list_widget.resize(QtCore.QSize(254,118))
+#         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Fixed)
+#         self.systems_list_widget.setSizePolicy(sizePolicy)
+        vbox.addWidget(self.systems_list_widget)
         
         # remove system button
-        remove_system = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-remove.png")), "")
-        remove_system.setAutoDefault(False)
-        remove_system.setToolTip("Remove system")
-        remove_system.clicked.connect(self.remove_system)
-        
-        row = list_holder.newRow()
-        row.addWidget(remove_system)
-        
-        # box for new system stuff
-        new_holder = GenericForm(self, None, "New system")
-        new_holder.show()
-        dialog_layout.addWidget(new_holder)
+        removeSystemButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-remove.png")), "")
+        removeSystemButton.setAutoDefault(False)
+        removeSystemButton.setToolTip("Remove system")
+        removeSystemButton.clicked.connect(self.removeSystem)
+        removeSystemButton.setFixedWidth(60)
+        hbox = QtGui.QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(removeSystemButton)
+        hbox.addStretch(1)
+        vbox.addLayout(hbox)
         
         # load or generate combo
         self.new_type_combo = QtGui.QComboBox()
         self.new_type_combo.addItem("Load system")
         self.new_type_combo.addItem("Generate system")
         self.new_type_combo.currentIndexChanged.connect(self.set_new_system_stack)
-        
-        row = new_holder.newRow()
-        row.addWidget(self.new_type_combo)
+        hbox = QtGui.QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(self.new_type_combo)
+        hbox.addStretch(1)
+        dialog_layout.addLayout(hbox)
         
         # stacked widget
         self.new_system_stack = QtGui.QStackedWidget()
-        
-        row = new_holder.newRow()
-        row.addWidget(self.new_system_stack)
+        dialog_layout.addWidget(self.new_system_stack)
         
         # load input form
         self.load_system_form = LoadSystemForm(self, self.mainWindow, self.mainToolbar)
@@ -277,6 +279,8 @@ class SystemsDialog(QtGui.QDialog):
         self.buttonBox.rejected.connect(self.close)
         
         dialog_layout.addWidget(self.buttonBox)
+        
+        self.resize(QtCore.QSize(300, 550))
     
     def tmpHide(self):
         """
@@ -334,7 +338,7 @@ class SystemsDialog(QtGui.QDialog):
             removeAction = QtGui.QAction("Remove system(s)", self)
             removeAction.setToolTip("Remove selected system(s)")
             removeAction.setStatusTip("Remove selected system(s)")
-            removeAction.triggered.connect(self.remove_system)
+            removeAction.triggered.connect(self.removeSystem)
             
             # reload action
             reloadAction = QtGui.QAction("Reload system(s)", self)
@@ -812,7 +816,7 @@ class SystemsDialog(QtGui.QDialog):
         """
         self.new_system_stack.setCurrentIndex(index)
     
-    def remove_system(self):
+    def removeSystem(self):
         """
         Remove system(s) from list
         
