@@ -211,6 +211,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             exctype, value = sys.exc_info()[:2]
             self.logger.error("Lattice reader failed! %s: %s", exctype, value)
             self.mainWindow.displayError("Lattice reader failed!\n\n%s: %s" % (exctype, value))
+            status = 255
         
         finally:
             # delete unzipped file if required

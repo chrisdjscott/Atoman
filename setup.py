@@ -159,11 +159,7 @@ def setup_package():
     try:
         from CDJSVis import resources
     except ImportError:
-        os.chdir("CDJSVis")
-        command = "%s resources.qrc > resources.py" % PYRCC
-        print command
-        os.system(command)
-        os.chdir("..")
+        open(os.path.join("CDJSVis", "resources.py"), "w").close()
     
     # metadata
     metadata = dict(
@@ -172,7 +168,7 @@ def setup_package():
         maintainer_email = "chris@chrisdjscott.co.uk",
         description = "CDJSVis Atomistic Visualisation and Analysis Library",
          long_description = "CDJSVis Atomistic Visualisation and Analysis Library",
-        url = "http://chrisdjscott.com",
+        url = "http://vis.chrisdjscott.com.uk",
         author = "Chris Scott",
         author_email = "chris@chrisdjscott.co.uk",
 #         download_url = "",
