@@ -35,6 +35,18 @@ class FilterListWidgetItem(QtGui.QListWidgetItem):
 
 ################################################################################
 
+class OptionsListItem(QtGui.QListWidgetItem):
+    """
+    Item that goes in the options list
+    
+    """
+    def __init__(self, dialog):
+        super(OptionsListItem, self).__init__()
+        
+        self.dialog = dialog
+
+################################################################################
+
 class FilterList(QtGui.QWidget):
     """
     Filter list widget
@@ -214,58 +226,69 @@ class FilterList(QtGui.QWidget):
         groupLayout.setContentsMargins(0, 0, 0, 0)
         groupLayout.setSpacing(0)
         
+        self.optionsList = QtGui.QListWidget()
+        self.optionsList.itemClicked.connect(self.optionsListItemClicked)
+        self.optionsList.setSelectionMode(self.optionsList.NoSelection)
+        self.optionsList.setFixedHeight(150)
+        groupLayout.addWidget(self.optionsList)
+        
         # colouring options
-        self.colouringOptionsButton = QtGui.QPushButton("Colouring: Specie")
-        self.colouringOptionsButton.clicked.connect(self.showColouringOptions)
-        
         self.colouringOptions = filterListOptions.ColouringOptionsWindow(parent=self)
-        self.colouringOptionsOpen = False
-        
-        groupLayout.addWidget(self.colouringOptionsButton)
+        item = OptionsListItem(self.colouringOptions)
+        item.setText("Colouring: Specie")
+        self.colouringOptions.modified.connect(item.setText)
+        self.optionsList.addItem(item)
         
         # bonding options
-        self.bondsOptionsButton = QtGui.QPushButton("Bonds options: Off")
-        self.bondsOptionsButton.clicked.connect(self.showBondsOptions)
-        
         self.bondsOptions = filterListOptions.BondsOptionsWindow(self.mainWindow, parent=self)
+        item = OptionsListItem(self.bondsOptions)
+        item.setText("Bonds options: Off")
+        self.bondsOptions.modified.connect(item.setText)
+        self.optionsList.addItem(item)
         
         # display options
-        self.displayOptionsButton = QtGui.QPushButton("Display options")
-        self.displayOptionsButton.clicked.connect(self.showDisplayOptions)
-        
         self.displayOptions = filterListOptions.DisplayOptionsWindow(self.mainWindow, parent=self)
-        
-        groupLayout.addWidget(self.bondsOptionsButton)
-        groupLayout.addWidget(self.displayOptionsButton)
+        item = OptionsListItem(self.displayOptions)
+        item.setText("Display options")
+        self.optionsList.addItem(item)
         
         # Voronoi options
         self.voronoiOptions = filterListOptions.VoronoiOptionsWindow(self.mainWindow, parent=self)
-        self.voronoiOptionsButton = QtGui.QPushButton("Voronoi options")
-        self.voronoiOptionsButton.clicked.connect(self.showVoronoiOptions)
-        groupLayout.addWidget(self.voronoiOptionsButton)
+        item = OptionsListItem(self.voronoiOptions)
+        item.setText("Voronoi options")
+        self.optionsList.addItem(item)
         
         # trace options
         self.traceOptions = filterListOptions.TraceOptionsWindow(self.mainWindow, parent=self)
-        self.traceOptionsButton = QtGui.QPushButton("Trace options")
-        self.traceOptionsButton.clicked.connect(self.showTraceOptions)
-        groupLayout.addWidget(self.traceOptionsButton)
+        item = OptionsListItem(self.traceOptions)
+        item.setText("Trace options")
+        self.optionsList.addItem(item)
         
         # vectors options
         self.vectorsOptions = filterListOptions.VectorsOptionsWindow(self.mainWindow, parent=self)
-        self.vectorsOptionsButton = QtGui.QPushButton("Vectors options: None")
-        self.vectorsOptionsButton.clicked.connect(self.showVectorsOptions)
-        groupLayout.addWidget(self.vectorsOptionsButton)
+        item = OptionsListItem(self.vectorsOptions)
+        item.setText("Vectors options: None")
+        self.vectorsOptions.modified.connect(item.setText)
+        self.optionsList.addItem(item)
         
         # actor visibility
         self.actorsOptions = filterListOptions.ActorsOptionsWindow(self.mainWindow, parent=self)
-        self.actorsOptionsButton = QtGui.QPushButton("Actors options")
-        self.actorsOptionsButton.clicked.connect(self.showActorsOptions)
-        groupLayout.addWidget(self.actorsOptionsButton)
+        item = OptionsListItem(self.actorsOptions)
+        item.setText("Actors options")
+        self.optionsList.addItem(item)
         
         self.filterListLayout.addWidget(extraOptionsGroupBox)
         
         # the filterer (does the filtering)
         self.filterer = filterer.Filterer(self)
+    
+    def optionsListItemClicked(self, item):
+        """
+        Item clicked
+        
+        """
+        item.dialog.hide()
+        item.dialog.show()
     
     def driftCompClicked(self):
         """
@@ -399,65 +422,6 @@ class FilterList(QtGui.QWidget):
         
         else:
             self.filterer.hideScalarBar()
-    
-    def showVectorsOptions(self):
-        """
-        Show the Vectors options window.
-        
-        """
-        self.vectorsOptions.hide()
-        self.vectorsOptions.show()
-    
-    def showActorsOptions(self):
-        """
-        Show the actors options window.
-        
-        """
-        self.actorsOptions.hide()
-        self.actorsOptions.show()
-    
-    def showVoronoiOptions(self):
-        """
-        Show the Voronoi options window.
-        
-        """
-        self.voronoiOptions.hide()
-        self.voronoiOptions.show()
-    
-    def showTraceOptions(self):
-        """
-        Show the trace options window.
-        
-        """
-        self.traceOptions.hide()
-        self.traceOptions.show()
-    
-    def showDisplayOptions(self):
-        """
-        Show the display options window.
-        
-        """
-        self.displayOptions.hide()
-        self.displayOptions.show()
-    
-    def showBondsOptions(self):
-        """
-        Show the bonds options window.
-        
-        """
-        self.bondsOptions.hide()
-        self.bondsOptions.show()
-    
-    def showColouringOptions(self):
-        """
-        Show the colouring options window.
-        
-        """
-        if self.colouringOptionsOpen:
-            self.colouringOptions.closeEvent(1)
-        
-        self.colouringOptions.show()
-        self.colouringOptionsOpen = True
     
     def openFilterSettings(self, item=None):
         """

@@ -437,6 +437,8 @@ class BondsOptionsWindow(QtGui.QDialog):
     much slower to render and interact with.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, mainWindow, parent=None):
         super(BondsOptionsWindow, self).__init__(parent)
         
@@ -575,10 +577,11 @@ class BondsOptionsWindow(QtGui.QDialog):
         self.drawBonds = state
         
         if self.drawBonds:
-            self.parent.bondsOptionsButton.setText("Bonds options: On")
-        
+            text = "Bonds options: On"
         else:
-            self.parent.bondsOptionsButton.setText("Bonds options: Off")
+            text = "Bonds options: Off"
+        
+        self.modified.emit(text)
     
     def refresh(self):
         """
@@ -679,6 +682,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
     to set the text that appears on the scalar bar.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, parent=None):
         super(ColouringOptionsWindow, self).__init__(parent)
         
@@ -1099,7 +1104,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         else:
             cbtext = self.colourBy
         
-        self.parent.colouringOptionsButton.setText("Colouring: %s" % cbtext)
+        self.modified.emit("Colouring: %s" % cbtext)
         
         self.stackedWidget.setCurrentIndex(index)
     
@@ -1262,6 +1267,8 @@ class VectorsOptionsWindow(QtGui.QDialog):
     * "Vector resolution" sets the resolution of the arrows cone and shaft.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, mainWindow, parent=None):
         super(VectorsOptionsWindow, self).__init__(parent)
         
@@ -1402,11 +1409,11 @@ class VectorsOptionsWindow(QtGui.QDialog):
             if changedItem.vectorsName == self.selectedVectorsName:
                 self.logger.debug("Deselecting vectors: '%s'", self.selectedVectorsName)
                 self.selectedVectorsName = None
-                self.parent.vectorsOptionsButton.setText("Vectors options: None")
+                self.modified.emit("Vectors options: None")
         
         else:
             self.selectedVectorsName = changedItem.vectorsName
-            self.parent.vectorsOptionsButton.setText("Vectors options: '{0}'".format(self.selectedVectorsName))
+            self.modified.emit("Vectors options: '{0}'".format(self.selectedVectorsName))
             
             # deselect others
             for i in xrange(self.vectorsList.count()):
