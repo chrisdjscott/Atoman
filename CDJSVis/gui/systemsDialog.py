@@ -731,7 +731,7 @@ class SystemsDialog(QtGui.QWidget):
         lattices = []
         for i in xrange(self.systems_list_widget.count()):
             item = self.systems_list_widget.item(i)
-            if item.fileFormat.name == formatName:
+            if item.fileFormat is not None and item.fileFormat.name == formatName:
                 lattices.append((item.displayName, item.lattice))
         
         return lattices
