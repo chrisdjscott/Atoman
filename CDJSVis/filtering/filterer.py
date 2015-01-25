@@ -176,6 +176,99 @@ class Filterer(object):
         
         self.hideScalarBar()
     
+    def setActorAmbient(self, actorName, parentName, ambient, reinit=True):
+    	"""
+    	Set ambient property on actor
+    	
+    	"""
+    	if parentName is not None:
+            d = self.actorsDict[parentName]
+        else:
+            d = self.actorsDict
+        
+        actorObj = d[actorName]
+        actorObj.actor.GetProperty().SetAmbient(ambient)
+        
+        if reinit:
+        	self.reinitialiseRendererWindows()
+    
+    def setActorSpecular(self, actorName, parentName, specular, reinit=True):
+    	"""
+    	Set specular property on actor
+    	
+    	"""
+    	if parentName is not None:
+            d = self.actorsDict[parentName]
+        else:
+            d = self.actorsDict
+        
+        actorObj = d[actorName]
+        actorObj.actor.GetProperty().SetSpecular(specular)
+        
+        if reinit:
+        	self.reinitialiseRendererWindows()
+    
+    def setActorSpecularPower(self, actorName, parentName, specularPower, reinit=True):
+    	"""
+    	Set specular power property on actor
+    	
+    	"""
+    	if parentName is not None:
+            d = self.actorsDict[parentName]
+        else:
+            d = self.actorsDict
+        
+        actorObj = d[actorName]
+        actorObj.actor.GetProperty().SetSpecularPower(specularPower)
+        
+        if reinit:
+        	self.reinitialiseRendererWindows()
+    
+    def getActorAmbient(self, actorName, parentName):
+    	"""
+    	Get ambient property on actor
+    	
+    	"""
+    	if parentName is not None:
+            d = self.actorsDict[parentName]
+        else:
+            d = self.actorsDict
+        
+        actorObj = d[actorName]
+        ambient = actorObj.actor.GetProperty().GetAmbient()
+        
+        return ambient
+    
+    def getActorSpecular(self, actorName, parentName):
+    	"""
+    	Get specular property on actor
+    	
+    	"""
+    	if parentName is not None:
+            d = self.actorsDict[parentName]
+        else:
+            d = self.actorsDict
+        
+        actorObj = d[actorName]
+        specular = actorObj.actor.GetProperty().GetSpecular()
+        
+        return specular
+    
+    def getActorSpecularPower(self, actorName, parentName):
+    	"""
+    	Get specular power property on actor
+    	
+    	"""
+    	if parentName is not None:
+            d = self.actorsDict[parentName]
+        else:
+            d = self.actorsDict
+        
+        actorObj = d[actorName]
+        specularPower = actorObj.actor.GetProperty().GetSpecularPower()
+        
+        return specularPower
+    
     def addActor(self, actorName, parentName=None, reinit=True):
         """
         Add individual actor
