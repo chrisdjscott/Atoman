@@ -1407,6 +1407,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
+            intsActor.GetProperty().SetSpecular(0.4)
+            intsActor.GetProperty().SetSpecularPower(50)
             
             actorsDictLocal["Interstitials ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
     
@@ -1478,6 +1480,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
+            intsActor.GetProperty().SetSpecular(0.4)
+            intsActor.GetProperty().SetSpecularPower(50)
             
             actorsDictLocal["Split ints ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
         
@@ -1597,6 +1601,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
+            intsActor.GetProperty().SetSpecular(0.4)
+            intsActor.GetProperty().SetSpecularPower(50)
             
             actorsDictLocal["Antisites occupying ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
     
