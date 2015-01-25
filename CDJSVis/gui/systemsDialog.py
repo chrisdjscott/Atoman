@@ -48,6 +48,7 @@ class GenerateInputForm(GenericForm):
 #         self.inputTypeCombo.addItem("Pyrochlore")
 #         self.inputTypeCombo.addItem("6H")
         self.inputTypeCombo.currentIndexChanged.connect(self.setWidgetStack)
+        self.inputTypeCombo.setToolTip("Select the type of lattice to generate")
         
         row = self.newRow()
         row.addWidget(self.inputTypeCombo)
@@ -198,6 +199,7 @@ class SystemsDialog(QtGui.QWidget):
         
         # box for list of loaded systems
         list_holder = QtGui.QGroupBox("Loaded systems")
+        list_holder.setAlignment(QtCore.Qt.AlignHCenter)
         vbox = QtGui.QVBoxLayout()
         vbox.setAlignment(QtCore.Qt.AlignHCenter)
         vbox.setSpacing(0)
@@ -210,7 +212,7 @@ class SystemsDialog(QtGui.QWidget):
         self.systems_list_widget.setSelectionMode(self.systems_list_widget.ExtendedSelection)
         self.systems_list_widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.systems_list_widget.customContextMenuRequested.connect(self.showListWidgetContextMenu)
-        self.systems_list_widget.setFixedHeight(150)
+        self.systems_list_widget.setFixedHeight(120)
         vbox.addWidget(self.systems_list_widget)
         
         # remove system button
