@@ -261,11 +261,11 @@ class MainWindow(QtGui.QMainWindow):
         aboutAction = self.createAction("About CDJSVis", slot=self.aboutMe, icon="oxygen/help-about.png", 
                                            tip="About CDJSVis")
         
-        helpAction = self.createAction("CDJSVis Help", slot=self.showHelp, icon="oxygen/system-help.png", tip="Show help window")
+        helpAction = self.createAction("CDJSVis Help", slot=self.showHelp, icon="oxygen/help-browser.png", tip="Show help window")
         
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
-#         helpToolbar.addAction(aboutAction)
+        helpToolbar.addAction(aboutAction)
         helpToolbar.addAction(helpAction)
         
         helpMenu = self.menuBar().addMenu("&Help")

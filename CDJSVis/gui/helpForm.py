@@ -31,7 +31,7 @@ class HelpFormSphinx(QtGui.QDialog):
         self.setModal(0)
         
         self.setWindowTitle("CDJSVis Help")
-        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/system-help.png")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/help-browser.png")))
         
         self.helpFormOpen = False
         
