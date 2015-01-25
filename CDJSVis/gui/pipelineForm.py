@@ -321,7 +321,9 @@ class PipelineForm(QtGui.QWidget):
         self.inputCombo.addItem(filename)
         
         if not self.mainToolbar.tabWidget.isTabEnabled(1):
+            # enable and switch to analysis tab after first file is loaded
             self.mainToolbar.tabWidget.setTabEnabled(1, True)
+            self.mainToolbar.tabWidget.setCurrentIndex(1)
     
     def removeStateOption(self, index):
         """
