@@ -81,8 +81,8 @@ class RendererWindow(QtGui.QWidget):
                                            tip="Toggle axes visiblity")
         
         # reset camera to cell
-        setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="set_cam_cell.svg", 
-                                           tip="Reset camera to cell")
+        setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="oxygen/zoom-fit-best.png", 
+                                               tip="Reset camera to cell")
         
         # rotate image
         rotateViewPoint = self.createAction("Rotate view point", slot=self.rotateViewPoint, icon="oxygen/transform-rotate.png",
