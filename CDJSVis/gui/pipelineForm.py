@@ -92,6 +92,8 @@ class PipelineForm(QtGui.QWidget):
         
         # reference selector
         self.refCombo = QtGui.QComboBox()
+        self.refCombo.setFixedWidth(220)
+        self.refCombo.setToolTip("Select the reference system for this pipeline")
         self.refCombo.currentIndexChanged.connect(self.refChanged)
         for fn in self.systemsDialog.getDisplayNames():
             self.refCombo.addItem(fn)    
@@ -110,6 +112,8 @@ class PipelineForm(QtGui.QWidget):
         
         # reference selector
         self.inputCombo = QtGui.QComboBox()
+        self.inputCombo.setFixedWidth(220)
+        self.inputCombo.setToolTip("Select the input system for this pipeline")
         self.inputCombo.currentIndexChanged.connect(self.inputChanged)
         for fn in self.systemsDialog.getDisplayNames():
             self.inputCombo.addItem(fn)
