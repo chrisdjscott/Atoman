@@ -167,11 +167,18 @@ class PipelineForm(QtGui.QWidget):
         group.setAlignment(QtCore.Qt.AlignHCenter)
         
         groupLayout = QtGui.QVBoxLayout(group)
+        groupLayout.setSpacing(0)
+        groupLayout.setContentsMargins(0,0,0,0)
         
         self.replicateCellButton = QtGui.QPushButton("Replicate cell")
         self.replicateCellButton.clicked.connect(self.replicateCell)
         self.replicateCellButton.setToolTip("Replicate in periodic directions")
-        groupLayout.addWidget(self.replicateCellButton)
+        hbox = QtGui.QHBoxLayout()
+        hbox.setContentsMargins(0,0,0,0)
+        hbox.addStretch(1)
+        hbox.addWidget(self.replicateCellButton)
+        hbox.addStretch(1)
+        groupLayout.addLayout(hbox)
         
         self.PBCXCheckBox = QtGui.QCheckBox("x")
         self.PBCXCheckBox.setChecked(1)
