@@ -24,12 +24,6 @@ class Lattice(object):
     """
     def __init__(self):
         self.NAtoms = 0
-        
-#         self.simTime = None
-#         self.barrier = None
-#         self.kmcStep = None
-#         self.temperature = None
-        
         self.cellDims = np.empty(3, np.float64)
         
         dt = np.dtype((str, 2))
@@ -111,11 +105,6 @@ class Lattice(object):
         self.maxPos = np.zeros(3, np.float64)
          
         self.cellDims = np.zeros(3, np.float64)
-        
-#         self.simTime = None
-#         self.barrier = None
-#         self.kmcStep = None
-#         self.temperature = None
         
         self.scalarsDict = {}
         self.scalarsFiles = {}
@@ -381,11 +370,6 @@ class Lattice(object):
             self.reset(lattice.NAtoms)
         
         NAtoms = lattice.NAtoms
-        
-#         self.simTime = lattice.simTime
-#         self.barrier = lattice.barrier
-#         self.kmcStep = lattice.kmcStep
-#         self.temperature = lattice.temperature
         
         # copy dims
         self.cellDims[0] = lattice.cellDims[0]
