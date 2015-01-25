@@ -24,7 +24,7 @@ class Args(object):
     quiet: suppress stdout
     
     """
-    def __init__(self, sym="Au", NCells=[10,10,10], a0=4.078, pbcx=True, pbcy=True, pbcz=True):
+    def __init__(self, sym="Au", NCells=[8,8,8], a0=4.078, pbcx=True, pbcy=True, pbcz=True):
         self.sym = sym
         self.NCells = NCells
         self.a0 = a0
