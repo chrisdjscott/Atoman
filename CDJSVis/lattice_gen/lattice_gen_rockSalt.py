@@ -146,6 +146,11 @@ class RockSaltLatticeGenerator(object):
         
         assert NAtoms == lattice.NAtoms
         
+        # periodic boundaries
+        lattice.PBC[0] = int(args.pbcx)
+        lattice.PBC[1] = int(args.pbcy)
+        lattice.PBC[2] = int(args.pbcz)
+        
         logger.info("  Number of atoms: %d", NAtoms)
         logger.info("  Dimensions: %s", str(dims))
         logger.info("  Total charge: %f", totalQ)

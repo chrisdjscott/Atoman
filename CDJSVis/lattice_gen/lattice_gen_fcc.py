@@ -87,6 +87,11 @@ class FCCLatticeGenerator(object):
         # atom ID
         lattice.atomID = np.arange(1, lattice.NAtoms + 1, dtype=np.int32)
         
+        # periodic boundaries
+        lattice.PBC[0] = int(args.pbcx)
+        lattice.PBC[1] = int(args.pbcy)
+        lattice.PBC[2] = int(args.pbcz)
+        
         logger.info("  Number of atoms: %d", NAtoms)
         logger.info("  Dimensions: %s", str(dims))
         
