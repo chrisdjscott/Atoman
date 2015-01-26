@@ -651,7 +651,7 @@ class PipelineForm(QtGui.QWidget):
         Refresh filter settings
         
         """
-        self.logger.debug("Refreshing filters", 3)
+        self.logger.debug("Refreshing filters")
         for filterList in self.filterLists:
             currentSettings = filterList.getCurrentFilterSettings()
             for filterSettings in currentSettings:
