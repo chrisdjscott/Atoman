@@ -537,7 +537,7 @@ class RDFForm(genericForm.GenericForm):
         self.spec2 = "ALL"
         self.binMin = 2.0
         self.binMax = 10.0
-        self.NBins = 100
+        self.binWidth = 0.1
         
         # bond type
         label = QtGui.QLabel("Bond type:")
@@ -586,13 +586,13 @@ class RDFForm(genericForm.GenericForm):
         row = self.newRow()
         row.addWidget(label)
         
-        numBinsSpin = QtGui.QSpinBox()
-        numBinsSpin.setMinimum(2)
-        numBinsSpin.setMaximum(100000)
-        numBinsSpin.setSingleStep(1)
-        numBinsSpin.setValue(self.NBins)
-        numBinsSpin.valueChanged.connect(self.numBinsChanged)
-        row.addWidget(numBinsSpin)
+        binWidthSpin = QtGui.QDoubleSpinBox()
+        binWidthSpin.setMinimum(0.01)
+        binWidthSpin.setMaximum(1.00)
+        binWidthSpin.setSingleStep(0.1)
+        binWidthSpin.setValue(self.binWidth)
+        binWidthSpin.valueChanged.connect(self.binWidthChanged)
+        row.addWidget(binWidthSpin)
         
         # plot button
         plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")), "Plot")
@@ -693,7 +693,9 @@ class RDFForm(genericForm.GenericForm):
             spec2Index = int(np.where(specieList == self.spec2)[0][0])
         
         # prelims
-        rdfArray = np.zeros(self.NBins, np.float64)
+        numBins = int((self.binMax - self.binMin) / self.binWidth)
+        rdfArray = np.zeros(numBins, np.float64)
+        self.logger.debug("Bin width is %f; number of bins is %d", self.binWidth, numBins)
         
         # show progress dialog
         progDiag = utils.showProgressDialog("Calculating RDF", "Calculating RDF...", self)
@@ -703,16 +705,15 @@ class RDFForm(genericForm.GenericForm):
         
         try:
             # then calculate
-            rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.minPos,
-                               inputLattice.maxPos, inputLattice.cellDims, pp.PBC, self.binMin, self.binMax, self.NBins,
-                               rdfArray, ompNumThreads)
+            rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.specieCount, inputLattice.pos, spec1Index, spec2Index,
+                               inputLattice.minPos, inputLattice.maxPos, inputLattice.cellDims, pp.PBC, self.binMin, self.binMax,
+                               self.binWidth, numBins, rdfArray, ompNumThreads)
         
         finally:
             utils.cancelProgressDialog(progDiag)
         
         # then plot
-        interval = (self.binMax - self.binMin) / float(self.NBins)
-        xn = np.arange(self.binMin + interval / 2.0, self.binMax, interval, dtype=np.float64)
+        xn = np.arange(self.binMin + self.binWidth / 2.0, self.binMax, self.binWidth, dtype=np.float64)
         
         # prepare to plot
         settingsDict = {}
@@ -726,12 +727,12 @@ class RDFForm(genericForm.GenericForm):
                                        settingsDict=settingsDict)
         dialog.show()
     
-    def numBinsChanged(self, val):
+    def binWidthChanged(self, val):
         """
         Num bins changed.
         
         """
-        self.NBins = val
+        self.binWidth = val
     
     def binMinChanged(self, val):
         """

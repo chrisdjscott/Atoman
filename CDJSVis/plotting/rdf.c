@@ -41,7 +41,7 @@ static PyObject*
 calculateRDF(PyObject *self, PyObject *args)
 {
 	int NVisible, *visibleAtoms, NAtoms, *specie, specieID1, specieID2, *PBC, num;
-	int OMP_NUM_THREADS;
+	int OMP_NUM_THREADS, *specieCount;
 	double *pos, *minPos, *maxPos, *cellDims, start, finish, *rdf;
 	PyArrayObject *visibleAtomsIn=NULL;
 	PyArrayObject *specieIn=NULL;
@@ -51,21 +51,22 @@ calculateRDF(PyObject *self, PyObject *args)
 	PyArrayObject *maxPosIn=NULL;
 	PyArrayObject *cellDimsIn=NULL;
 	PyArrayObject *rdfIn=NULL;
+	PyArrayObject *specieCountIn=NULL;
 	
-    int i;
-    int fullShellCount;
+    int i, norm_n, norm_nref;
+    int spec1cnt, spec2cnt;
     double approxBoxWidth;
-    double avgAtomDensity, shellVolume;
-    double ini, fin, interval;
+    double volume, normFactor;
+    double interval;
     double start2, finish2;
     struct Boxes *boxes;
     
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!O!iiO!O!O!O!ddiO!i", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &specieIn,
-			&PyArray_Type, &posIn, &specieID1, &specieID2, &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, 
-			&PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &start, &finish, &num, &PyArray_Type, &rdfIn, 
-			&OMP_NUM_THREADS))
+	if (!PyArg_ParseTuple(args, "O!O!O!O!iiO!O!O!O!dddiO!i", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &specieIn,
+			&PyArray_Type, &specieCountIn, &PyArray_Type, &posIn, &specieID1, &specieID2, &PyArray_Type, &minPosIn,
+			&PyArray_Type, &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &start, &finish, &interval,
+			&num, &PyArray_Type, &rdfIn, &OMP_NUM_THREADS))
 		return NULL;
 	
 	if (not_intVector(visibleAtomsIn)) return NULL;
@@ -94,6 +95,9 @@ calculateRDF(PyObject *self, PyObject *args)
 	if (not_intVector(PBCIn)) return NULL;
 	PBC = pyvector_to_Cptr_int(PBCIn);
     
+	if (not_intVector(specieCountIn)) return NULL;
+	specieCount = pyvector_to_Cptr_int(specieCountIn);
+
 	/* set number of openmp threads to use */
     omp_set_num_threads(OMP_NUM_THREADS);
 	
@@ -105,14 +109,12 @@ calculateRDF(PyObject *self, PyObject *args)
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
     putAtomsInBoxes(NAtoms, pos, boxes);
     
-    interval = (finish - start) / ((double) num);
-    
     start2 = start * start;
     finish2 = finish * finish;
     
     /* loop over atoms */
     #pragma omp parallel for
-    for (i=0; i<NVisible; i++)
+    for (i = 0; i < NVisible; i++)
     {
         int j, index, boxIndex, boxNebList[27];
         
@@ -128,13 +130,13 @@ calculateRDF(PyObject *self, PyObject *args)
         getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over box neighbourhood */
-        for (j=0; j<27; j++)
+        for (j = 0; j < 27; j++)
         {
             int k;
             
             boxIndex = boxNebList[j];
             
-            for (k=0; k<boxes->boxNAtoms[boxIndex]; k++)
+            for (k = 0; k < boxes->boxNAtoms[boxIndex]; k++)
             {
                 int index2;
                 double sep2;
@@ -167,30 +169,99 @@ calculateRDF(PyObject *self, PyObject *args)
         }
     }
     
-    /* calculate shell volumes and average atom density */
-    avgAtomDensity = 0.0;
-    fullShellCount = 0;
-    for (i=0; i<num; i++)
+    /* normalise rdf */
+
+    /* counters */
+    if (specieID1 < 0 && specieID2 < 0)
     {
-        ini = i * interval + start;
-        fin = (i + 1.0) * interval + start;
-        
-        shellVolume = (4.0 / 3.0) * M_PI * (pow(fin, 3.0) - pow(ini, 3));
-        
-        rdf[i] = rdf[i] / shellVolume;
-        
-        if (rdf[i] > 0)
+        spec1cnt = NVisible;
+        spec2cnt = NVisible;
+    }
+    else if (specieID1 < 0)
+    {
+        spec1cnt = NVisible;
+        spec2cnt = 0;
+        for (i = 0; i < NVisible; i++)
         {
-            avgAtomDensity += rdf[i];
-            fullShellCount++;
+            int index = visibleAtoms[i];
+            if (specie[index] == specieID2) spec2cnt++;
         }
     }
-    
-    avgAtomDensity = avgAtomDensity / fullShellCount;
-    
-    /* divide by average atom density */
-    for (i=0; i<num; i++)
-        rdf[i] = rdf[i] / avgAtomDensity;
+    else if (specieID2 < 0)
+    {
+        spec2cnt = NVisible;
+        spec1cnt = 0;
+        for (i = 0; i < NVisible; i++)
+        {
+            int index = visibleAtoms[i];
+            if (specie[index] == specieID1) spec1cnt++;
+        }
+    }
+    else
+    {
+        spec1cnt = 0;
+        spec2cnt = 0;
+        for (i = 0; i < NVisible; i++)
+        {
+            int index = visibleAtoms[i];
+            if (specie[index] == specieID1) spec1cnt++;
+            if (specie[index] == specieID2) spec2cnt++;
+        }
+    }
+    norm_n = spec2cnt;
+    norm_nref = spec1cnt;
+    volume = cellDims[0] * cellDims[1] * cellDims[2];
+
+    /* divide by volume of the shell and average over reference particles
+     * then normalise by particle density rho = norm_n / volume
+     */
+    normFactor = volume / (4.0 * M_PI * interval * norm_n * norm_nref);
+    printf("NORM: %d %d %lf (%lf)\n", norm_n, norm_nref, volume, normFactor);
+    for (i = 0; i < num; i++)
+    {
+        double fin;
+
+        fin = (i + 1.0) * interval + start;
+        rdf[i] = normFactor / (fin * fin) * rdf[i];
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /* calculate shell volumes and average atom density */
+//    avgAtomDensity = 0.0;
+//    fullShellCount = 0;
+//    for (i=0; i<num; i++)
+//    {
+//        ini = i * interval + start;
+//        fin = (i + 1.0) * interval + start;
+//
+//        shellVolume = (4.0 / 3.0) * M_PI * (pow(fin, 3.0) - pow(ini, 3));
+//
+//        rdf[i] = rdf[i] / shellVolume;
+//
+//        if (rdf[i] > 0)
+//        {
+//            avgAtomDensity += rdf[i];
+//            fullShellCount++;
+//        }
+//    }
+//
+//    avgAtomDensity = avgAtomDensity / fullShellCount;
+//
+//    /* divide by average atom density */
+//    for (i=0; i<num; i++)
+//        rdf[i] = rdf[i] / avgAtomDensity;
     
     /* free */
     freeBoxes(boxes);
