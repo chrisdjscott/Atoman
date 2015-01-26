@@ -10,10 +10,8 @@ filter with no spaces. Eg "Point defects" becomes
 @author: Chris Scott
 
 """
-import sys
 import logging
 import functools
-import textwrap
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -22,11 +20,6 @@ from ..visutils.utilities import iconPath
 from . import genericForm
 from ..rendering import slicePlane
 from ..state.atoms import elements
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -51,7 +44,7 @@ class GenericSettingsDialog(QtGui.QDialog):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle(title)
-        self.setWindowIcon(QtGui.QIcon(iconPath("preferences-system.svg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/configure.png")))
 #        self.resize(500,300)
         
         dialogLayout = QtGui.QVBoxLayout()

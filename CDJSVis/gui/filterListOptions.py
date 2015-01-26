@@ -3,7 +3,6 @@
 Additional options for filter lists.
 
 """
-import sys
 import functools
 import logging
 import math
@@ -13,12 +12,6 @@ from PySide import QtGui, QtCore
 from ..visutils.utilities import iconPath
 from . import genericForm
 from __builtin__ import False
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -444,6 +437,8 @@ class BondsOptionsWindow(QtGui.QDialog):
     much slower to render and interact with.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, mainWindow, parent=None):
         super(BondsOptionsWindow, self).__init__(parent)
         
@@ -454,7 +449,7 @@ class BondsOptionsWindow(QtGui.QDialog):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Bonds options")
-        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("other/molecule1.png")))
         
         self.mainWindow = mainWindow
         
@@ -582,10 +577,11 @@ class BondsOptionsWindow(QtGui.QDialog):
         self.drawBonds = state
         
         if self.drawBonds:
-            self.parent.bondsOptionsButton.setText("Bonds options: On")
-        
+            text = "Bonds options: On"
         else:
-            self.parent.bondsOptionsButton.setText("Bonds options: Off")
+            text = "Bonds options: Off"
+        
+        self.modified.emit(text)
     
     def refresh(self):
         """
@@ -686,6 +682,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
     to set the text that appears on the scalar bar.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, parent=None):
         super(ColouringOptionsWindow, self).__init__(parent)
         
@@ -1106,7 +1104,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         else:
             cbtext = self.colourBy
         
-        self.parent.colouringOptionsButton.setText("Colouring: %s" % cbtext)
+        self.modified.emit("Colouring: %s" % cbtext)
         
         self.stackedWidget.setCurrentIndex(index)
     
@@ -1136,6 +1134,8 @@ class TraceOptionsWindow(QtGui.QDialog):
       much slower to render and interact with.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, mainWindow, parent=None):
         super(TraceOptionsWindow, self).__init__(parent)
         
@@ -1254,6 +1254,13 @@ class TraceOptionsWindow(QtGui.QDialog):
         
         """
         self.drawTraceVectors = drawVectors
+        
+        if self.drawTraceVectors:
+            text = "Trace options: On"
+        else:
+            text = "Trace options: Off"
+        
+        self.modified.emit(text)
 
 ################################################################################
 
@@ -1269,6 +1276,8 @@ class VectorsOptionsWindow(QtGui.QDialog):
     * "Vector resolution" sets the resolution of the arrows cone and shaft.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, mainWindow, parent=None):
         super(VectorsOptionsWindow, self).__init__(parent)
         
@@ -1409,11 +1418,11 @@ class VectorsOptionsWindow(QtGui.QDialog):
             if changedItem.vectorsName == self.selectedVectorsName:
                 self.logger.debug("Deselecting vectors: '%s'", self.selectedVectorsName)
                 self.selectedVectorsName = None
-                self.parent.vectorsOptionsButton.setText("Vectors options: None")
+                self.modified.emit("Vectors options: None")
         
         else:
             self.selectedVectorsName = changedItem.vectorsName
-            self.parent.vectorsOptionsButton.setText("Vectors options: '{0}'".format(self.selectedVectorsName))
+            self.modified.emit("Vectors options: '{0}'".format(self.selectedVectorsName))
             
             # deselect others
             for i in xrange(self.vectorsList.count()):
@@ -1520,6 +1529,9 @@ class ActorsOptionsWindow(QtGui.QDialog):
         
         # defaults
         self.refreshing = False
+        self.ambientSpins = []
+        self.specularSpins = []
+        self.specularPowerSpins = []
         
         # layout
         layout = QtGui.QFormLayout(self)
@@ -1527,9 +1539,9 @@ class ActorsOptionsWindow(QtGui.QDialog):
         
         # draw vectors list widget
         self.tree = QtGui.QTreeWidget()
-        self.tree.setColumnCount(1)
+        self.tree.setColumnCount(4)
         self.tree.itemChanged.connect(self.itemChanged)
-        self.tree.setHeaderLabel("Visibility")
+        self.tree.setHeaderLabels(("Visibility", "Ambient", "Specular", "Specular power"))
         layout.addRow(self.tree)
         
         # button box
@@ -1547,6 +1559,11 @@ class ActorsOptionsWindow(QtGui.QDialog):
         
         #TODO: if child is unchecked, parent should be too
         #TODO: when all children are checked, parent should be checked too
+        
+        print "ITEM CHANGED", item, column
+        if column != 0:
+            print "  IGNORING"
+            return
         
         if item.checkState(0) == QtCore.Qt.Unchecked:
             if item.childCount():
@@ -1648,6 +1665,9 @@ class ActorsOptionsWindow(QtGui.QDialog):
             
             # clear the tree
             self.tree.clear()
+            del self.ambientSpins[:]
+            del self.specularSpins[:]
+            del self.specularPowerSpins[:]
             
             # populate
             for key in sorted(actorsDict.keys()):
@@ -1661,20 +1681,85 @@ class ActorsOptionsWindow(QtGui.QDialog):
                     parent.setCheckState(0, QtCore.Qt.Checked)
                     
                     for actorName in sorted(val.keys()):
-                        item = QtGui.QTreeWidgetItem(parent)
-                        item.setText(0, actorName)
-                        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                        item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
-                        item.setCheckState(0, QtCore.Qt.Checked)
+                        self.addItem(parent, key, actorName)
                 
                 else:
-                    actorName = key
-                    
-                    item = QtGui.QTreeWidgetItem(self.tree)
-                    item.setText(0, actorName)
-                    item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                    item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
-                    item.setCheckState(0, QtCore.Qt.Checked)
+                    self.addItem(self.tree, None, key)
         
         finally:
             self.refreshing = False
+    
+    def addItem(self, parent, parentName, name):
+        """
+        Add item with parent and name
+        
+        """
+        flt = self.parent.filterer
+        
+        item = QtGui.QTreeWidgetItem(parent)
+        item.setText(0, name)
+        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+        item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
+        item.setCheckState(0, QtCore.Qt.Checked)
+        
+        spin = QtGui.QDoubleSpinBox()
+        minval = 0
+        maxval = 1
+        spin.setMinimum(minval)
+        spin.setMaximum(maxval)
+        current = flt.getActorAmbient(name, parentName)
+        assert current <= maxval and current >= minval
+        spin.setValue(current)
+        spin.setSingleStep(0.1)
+        spin.valueChanged.connect(functools.partial(self.ambientSpinChanged, name, parentName))
+        self.ambientSpins.append(spin)
+        self.tree.setItemWidget(item, 1, spin)
+        
+        spin = QtGui.QDoubleSpinBox()
+        minval = 0
+        maxval = 1
+        spin.setMinimum(minval)
+        spin.setMaximum(maxval)
+        current = flt.getActorSpecular(name, parentName)
+        assert current <= maxval and current >= minval
+        spin.setValue(current)
+        spin.setSingleStep(0.1)
+        spin.valueChanged.connect(functools.partial(self.specularSpinChanged, name, parentName))
+        self.specularSpins.append(spin)
+        self.tree.setItemWidget(item, 2, spin)
+        
+        spin = QtGui.QDoubleSpinBox()
+        minval = 0
+        maxval = 1000
+        spin.setMinimum(minval)
+        spin.setMaximum(maxval)
+        current = flt.getActorSpecularPower(name, parentName)
+        assert current <= maxval and current >= minval
+        spin.setValue(current)
+        spin.setSingleStep(1)
+        spin.valueChanged.connect(functools.partial(self.specularPowerSpinChanged, name, parentName))
+        self.specularPowerSpins.append(spin)
+        self.tree.setItemWidget(item, 3, spin)
+        
+    
+    def ambientSpinChanged(self, name, parentName, val):
+        """
+        Ambient spin changed
+        
+        """
+        self.parent.filterer.setActorAmbient(name, parentName, val)
+    
+    def specularSpinChanged(self, name, parentName, val):
+        """
+        Specular spin changed
+        
+        """
+        self.parent.filterer.setActorSpecular(name, parentName, val)
+    
+    def specularPowerSpinChanged(self, name, parentName, val):
+        """
+        Specular power spin changed
+        
+        """
+        self.parent.filterer.setActorSpecularPower(name, parentName, val)
+    

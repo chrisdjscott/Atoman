@@ -8,7 +8,6 @@ Note that systems that are currently selected on an analysis pipeline, as either
 
 """
 import os
-import sys
 import logging
 import functools
 import copy
@@ -18,16 +17,10 @@ import numpy as np
 
 from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
-from . import latticeReaderForms
+from . import generalReaderForm
 from . import latticeGeneratorForms
 from . import sftpDialog
 from .filterList import FilterList
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -55,6 +48,7 @@ class GenerateInputForm(GenericForm):
 #         self.inputTypeCombo.addItem("Pyrochlore")
 #         self.inputTypeCombo.addItem("6H")
         self.inputTypeCombo.currentIndexChanged.connect(self.setWidgetStack)
+        self.inputTypeCombo.setToolTip("Select the type of lattice to generate")
         
         row = self.newRow()
         row.addWidget(self.inputTypeCombo)
@@ -91,26 +85,7 @@ class GenerateInputForm(GenericForm):
         self.sic4h_generator = latticeGeneratorForms.SiC4HLatticeGeneratorForm(self, self.mainWindow)
         self.stackedWidget.addWidget(self.sic4h_generator)
         
-        # help icon
-        row = self.newRow()
-        row.RowLayout.addStretch(1)
-        
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
-        helpButton.setFixedWidth(20)
-        helpButton.setFixedHeight(20)
-        helpButton.setToolTip("Show help page")
-        helpButton.clicked.connect(self.loadHelpPage)
-        row.addWidget(helpButton)
-        
         self.show()
-    
-    def loadHelpPage(self):
-        """
-        Load the help page for this form
-        
-        """
-        self.mainWindow.helpWindow.loadPage("usage/input/lattice_generation.html")
-        self.mainWindow.showHelp()
     
     def file_generated(self, lattice, filename):
         """
@@ -136,7 +111,7 @@ class LoadSystemForm(GenericForm):
     def __init__(self, parent, mainWindow, mainToolbar):
         super(LoadSystemForm, self).__init__(parent, None, "Load new system")
         
-        self.parent = parent
+        self.systemsDialog = parent
         self.mainWindow = mainWindow
         self.mainToolbar = mainToolbar
         
@@ -146,85 +121,19 @@ class LoadSystemForm(GenericForm):
         else:
             self.sftp_browser = None
         
-        # ordered list of keys
-        self.readerFormsKeys = [
-            "LBOMD DAT",
-            "LBOMD REF",
-            "LBOMD XYZ",
-            "AUTO DETECT"
-        ]
-        
-        # reader forms
-        self.readerForms = {
-            "LBOMD DAT": latticeReaderForms.LbomdDatReaderForm(self, self.mainToolbar, self.mainWindow, "LBOMD DAT"),
-            "LBOMD REF": latticeReaderForms.LbomdRefReaderForm(self, self.mainToolbar, self.mainWindow, "LBOMD REF"),
-            "LBOMD XYZ": latticeReaderForms.LbomdXYZReaderForm(self, self.mainToolbar, self.mainWindow, "LBOMD XYZ"),
-            "AUTO DETECT": latticeReaderForms.AutoDetectReaderForm(self, self.mainToolbar, self.mainWindow, "AUTO DETECT"),
-        }
-        
-        # file type combo
-        self.inputTypeCombo = QtGui.QComboBox()
-        self.inputTypeCombo.addItems(self.readerFormsKeys)
-        self.inputTypeCombo.currentIndexChanged.connect(self.setWidgetStack)
-        
+        # reader form
+        self.readerForm = generalReaderForm.GeneralLatticeReaderForm(self, self.mainToolbar, self.mainWindow)
         row = self.newRow()
-        row.addWidget(self.inputTypeCombo)
-        
-        # stacked widget
-        self.stackedWidget = QtGui.QStackedWidget()
-        
-        # add reader forms
-        for key in self.readerFormsKeys:
-            self.stackedWidget.addWidget(self.readerForms[key])
-        
-        row = self.newRow()
-        row.addWidget(self.stackedWidget)
-        
-        # select auto by default
-        self.inputTypeCombo.setCurrentIndex(self.readerFormsKeys.index("AUTO DETECT"))
-        
-        # help icon
-        row = self.newRow()
-        row.RowLayout.addStretch(1)
-        
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "")
-        helpButton.setFixedWidth(20)
-        helpButton.setFixedHeight(20)
-        helpButton.setToolTip("Show help page")
-        helpButton.clicked.connect(self.loadHelpPage)
-        row.addWidget(helpButton)
+        row.addWidget(self.readerForm)
         
         self.show()
     
-    def openSFTPBrowser(self):
-        """
-        Open SFTP browser
-        
-        """
-        
-        
-    
-    def loadHelpPage(self):
-        """
-        Load the help page for this form
-        
-        """
-        self.mainWindow.helpWindow.loadPage("usage/input/file_input.html")
-        self.mainWindow.showHelp()
-    
-    def setWidgetStack(self, index):
-        """
-        Change load ref stack.
-        
-        """
-        self.stackedWidget.setCurrentIndex(index)
-    
-    def fileLoaded(self, fileType, state, filename, extension, readerStackIndex, sftpPath):
+    def fileLoaded(self, state, filename, fileFormat, sftpPath, linked):
         """
         Called when a file is loaded
         
         """
-        self.parent.file_loaded(state, filename, extension, readerStackIndex, sftpPath)
+        self.systemsDialog.file_loaded(state, filename, fileFormat, sftpPath, linked)
 
 ################################################################################
 
@@ -233,15 +142,21 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
     Item that goes in the systems list
     
     """
-    def __init__(self, lattice, filename, displayName, stackIndex, abspath, extension):
+    def __init__(self, lattice, filename, displayName, abspath, fileFormat, linkedLattice):
         super(SystemsListWidgetItem, self).__init__()
         
         self.lattice = lattice
         self.filename = filename
         self.displayName = displayName
-        self.stackIndex = stackIndex
+        self.fileFormat = fileFormat
         self.abspath = abspath
-        self.extension = extension
+        self.linkedLattice = linkedLattice
+        
+        zip_exts = ('.bz2', '.gz')
+        root, ext = os.path.splitext(filename)
+        if ext in zip_exts:
+            ext = os.path.splitext(root)[1]
+        self.extension = ext
         
         self.setText("%s (%d atoms)" % (displayName, lattice.NAtoms))
         self.setToolTip(abspath)
@@ -264,7 +179,7 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
 
 ################################################################################
 
-class SystemsDialog(QtGui.QDialog):
+class SystemsDialog(QtGui.QWidget):
     """
     Systems dialog
     
@@ -272,107 +187,55 @@ class SystemsDialog(QtGui.QDialog):
     def __init__(self, parent, mainWindow):
         super(SystemsDialog, self).__init__(parent)
         
-        self.setWindowTitle("Systems dialog")
-        self.setModal(False)
-        
-        self.iniWinFlags = self.windowFlags()
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        
         self.mainToolbar = mainWindow
         self.mainWindow = mainWindow
         
         self.logger = logging.getLogger(__name__)
         
-        self.resize(80, 120)
-        
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-        
         # dialog layout
-        dialog_layout = QtGui.QVBoxLayout(self)
+        dialog_layout = QtGui.QVBoxLayout()
+        dialog_layout.setContentsMargins(0,0,0,0)
+        self.setLayout(dialog_layout)
         
         # box for list of loaded systems
-        list_holder = GenericForm(self, None, "Loaded systems")
-        list_holder.show()
+        list_holder = QtGui.QGroupBox("Loaded systems")
+        list_holder.setAlignment(QtCore.Qt.AlignHCenter)
+        vbox = QtGui.QVBoxLayout()
+        vbox.setAlignment(QtCore.Qt.AlignHCenter)
+        vbox.setSpacing(0)
+        vbox.setContentsMargins(0,0,0,0)
+        list_holder.setLayout(vbox)
         dialog_layout.addWidget(list_holder)
         
         # add list widget
         self.systems_list_widget = QtGui.QListWidget(self)
-#         self.systems_list_widget.setFixedHeight(60)
         self.systems_list_widget.setSelectionMode(self.systems_list_widget.ExtendedSelection)
         self.systems_list_widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.systems_list_widget.customContextMenuRequested.connect(self.showListWidgetContextMenu)
-        
-        row = list_holder.newRow()
-        row.addWidget(self.systems_list_widget)
+        self.systems_list_widget.setFixedHeight(120)
+        vbox.addWidget(self.systems_list_widget)
         
         # remove system button
-        remove_system = QtGui.QPushButton(QtGui.QIcon(iconPath("list-remove.svg")), "")
-        remove_system.setAutoDefault(False)
-        remove_system.setToolTip("Remove system")
-        remove_system.clicked.connect(self.remove_system)
-        
-        row = list_holder.newRow()
-        row.addWidget(remove_system)
-        
-        # box for new system stuff
-        new_holder = GenericForm(self, None, "New system")
-        new_holder.show()
-        dialog_layout.addWidget(new_holder)
-        
-        # load or generate combo
-        self.new_type_combo = QtGui.QComboBox()
-        self.new_type_combo.addItem("Load system")
-        self.new_type_combo.addItem("Generate system")
-        self.new_type_combo.currentIndexChanged.connect(self.set_new_system_stack)
-        
-        row = new_holder.newRow()
-        row.addWidget(self.new_type_combo)
-        
-        # stacked widget
-        self.new_system_stack = QtGui.QStackedWidget()
-        
-        row = new_holder.newRow()
-        row.addWidget(self.new_system_stack)
+        removeSystemButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-remove.png")), "")
+        removeSystemButton.setAutoDefault(False)
+        removeSystemButton.setToolTip("Remove system")
+        removeSystemButton.clicked.connect(self.removeSystem)
+        removeSystemButton.setFixedWidth(60)
+        hbox = QtGui.QHBoxLayout()
+        hbox.addStretch(1)
+        hbox.addWidget(removeSystemButton)
+        hbox.addStretch(1)
+        vbox.addLayout(hbox)
         
         # load input form
         self.load_system_form = LoadSystemForm(self, self.mainWindow, self.mainToolbar)
-        self.new_system_stack.addWidget(self.load_system_form)
+        dialog_layout.addWidget(self.load_system_form)
         
         # generate input form
         self.generate_system_form = GenerateInputForm(self, self.mainWindow, self.mainToolbar)
-        self.new_system_stack.addWidget(self.generate_system_form)
+        dialog_layout.addWidget(self.generate_system_form)
         
-        # button box
-        self.buttonBox = QtGui.QDialogButtonBox()
-        
-        # help button
-        helpButton = self.buttonBox.addButton(self.buttonBox.Help)
-        helpButton.setToolTip("Show help page")
-        helpButton.setAutoDefault(False)
-        self.buttonBox.helpRequested.connect(self.load_help_page)
-        
-        # close button
-        closeButton = self.buttonBox.addButton(self.buttonBox.Close)
-        closeButton.setToolTip("Hide dialog")
-        closeButton.setDefault(True)
-        self.buttonBox.rejected.connect(self.close)
-        
-        dialog_layout.addWidget(self.buttonBox)
-    
-    def tmpHide(self):
-        """
-        Temporarily remove staysOnTop hint
-        
-        """
-        self.setWindowFlags(self.iniWinFlags)
-    
-    def showAgain(self):
-        """
-        Readd stayOnTop hint and show
-        
-        """
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        self.show()
+        dialog_layout.addStretch(1)
     
     def showListWidgetContextMenu(self, point):
         """
@@ -415,7 +278,7 @@ class SystemsDialog(QtGui.QDialog):
             removeAction = QtGui.QAction("Remove system(s)", self)
             removeAction.setToolTip("Remove selected system(s)")
             removeAction.setStatusTip("Remove selected system(s)")
-            removeAction.triggered.connect(self.remove_system)
+            removeAction.triggered.connect(self.removeSystem)
             
             # reload action
             reloadAction = QtGui.QAction("Reload system(s)", self)
@@ -772,16 +635,16 @@ class SystemsDialog(QtGui.QDialog):
         File generated
         
         """
-        self.add_lattice(lattice, filename, "dat", allowDuplicate=True)
+        self.add_lattice(lattice, filename, allowDuplicate=True)
     
-    def file_loaded(self, lattice, filename, extension, readerStackIndex, sftpPath):
+    def file_loaded(self, lattice, filename, fileFormat, sftpPath, linked):
         """
         Called after a file had been loaded (or generated too?)
         
         """
-        self.add_lattice(lattice, filename, extension, idb=readerStackIndex, ida=0, sftpPath=sftpPath)
+        self.add_lattice(lattice, filename, fileFormat=fileFormat, sftpPath=sftpPath, linkedLattice=linked)
     
-    def add_lattice(self, lattice, filename, extension, ida=None, idb=None, displayName=None, allowDuplicate=False, sftpPath=None):
+    def add_lattice(self, lattice, filename, fileFormat=None, displayName=None, allowDuplicate=False, sftpPath=None, linkedLattice=None):
         """
         Add lattice
         
@@ -808,25 +671,18 @@ class SystemsDialog(QtGui.QDialog):
                 
                 return
         
-        # stack index
-        if ida is None:
-            ida = self.new_system_stack.currentIndex()
-            page = self.new_system_stack.currentWidget()
-        
-        if idb is None:
-            idb = page.stackedWidget.currentIndex()
-        
-        stackIndex = (ida, idb)
-        
         if displayName is None:
+            zip_exts = ('.gz', '.bz2')
             displayName = os.path.basename(filename)
+            if os.path.splitext(displayName)[1] in zip_exts:
+                displayName = os.path.splitext(displayName)[0]
         
-        self.logger.debug("Adding new lattice to systemsList (%d): %s; %d,%d", index, filename, ida, idb)
+        self.logger.debug("Adding new lattice to systemsList (%d): %s", index, filename)
         self.logger.debug("Abspath is: '%s'", abspath)
         self.logger.debug("Display name is: '%s'", displayName)
         
         # item for list
-        list_item = SystemsListWidgetItem(lattice, filename, displayName, stackIndex, abspath, extension)
+        list_item = SystemsListWidgetItem(lattice, filename, displayName, abspath, fileFormat, linkedLattice)
         
         # add to list
         self.systems_list_widget.addItem(list_item)
@@ -867,6 +723,19 @@ class SystemsDialog(QtGui.QDialog):
         
         return latticeList
     
+    def getLatticesByFormat(self, formatName):
+        """
+        Return a list of loaded systems with the given format
+        
+        """
+        lattices = []
+        for i in xrange(self.systems_list_widget.count()):
+            item = self.systems_list_widget.item(i)
+            if item.fileFormat is not None and item.fileFormat.name == formatName:
+                lattices.append((item.displayName, item.lattice))
+        
+        return lattices
+    
     def getDisplayNames(self):
         """
         Return ordered list of display names
@@ -887,7 +756,7 @@ class SystemsDialog(QtGui.QDialog):
         """
         self.new_system_stack.setCurrentIndex(index)
     
-    def remove_system(self):
+    def removeSystem(self):
         """
         Remove system(s) from list
         

@@ -14,3 +14,4 @@ Licenses
    license_pyhull
    license_qhull
    license_voro
+   license_oxygen

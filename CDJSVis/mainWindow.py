@@ -25,19 +25,11 @@ import scipy
 from .visutils.utilities import iconPath, resourcePath
 from .state.atoms import elements
 from .gui import toolbar as toolbarModule
-from .rendering import renderer
 from .gui import helpForm
 from .gui import dialogs
 from .gui import preferences
 from .gui import rendererSubWindow
 from .gui import systemsDialog
-try:
-    from . import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
-
-
 from .visutils import version
 __version__ = version.getVersion()
 
@@ -186,51 +178,52 @@ class MainWindow(QtGui.QMainWindow):
         self.bondsEditor = dialogs.BondEditorDialog(parent=self)
         
         # add file actions
-        exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "system-log-out.svg", 
+        exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "oxygen/application-exit.png", 
                                        "Exit application")
-        newWindowAction = self.createAction("&New app window", self.openNewWindow, "Ctrl-N", 
-                                            "CDJSVis.ico", "Open new application window")
-        newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow,
-                                            icon="window-new.svg", tip="Open new render sub window")
-#         loadInputAction = self.createAction("Load input", slot=self.showLoadInputDialog, icon="document-open.svg",
-#                                             tip="Open load input dialog")
-        systems_action = self.createAction("Systems dialog", slot=self.show_systems_dialog, icon="open-file-icon.png",
-                                           tip="Show systems dialog")
-        openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="folder.svg", 
+        newWindowAction = self.createAction("&New app window", slot=self.openNewWindow, shortcut="Ctrl-N", 
+                                            icon="CDJSVis.ico", tip="Open new application window")
+        newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow, shortcut="Ctrl-O",
+                                            icon="oxygen/window-new.png", tip="Open new render sub window")
+        openFileAction = self.createAction("Open file", slot=self.showOpenFileDialog, icon="oxygen/document-open.png",
+                                           tip="Open file")
+        openRemoteFileAction = self.createAction("Open remote file", slot=self.showOpenRemoteFileDialog, 
+                                                 icon="oxygen/document-open-remote.png", tip="Open remote file")
+        openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="oxygen/folder-open.png", 
                                           tip="Open current working directory")
         exportElementsAction = self.createAction("Export elements", slot=self.exportElements,
-                                                 icon="file-export-icon.png", tip="Export element properties")
+                                                 icon="oxygen/document-export", tip="Export element properties")
         importElementsAction = self.createAction("Import elements", slot=self.importElements,
-                                                 icon="file-import-icon.png", tip="Import element properties")
+                                                 icon="oxygen/document-import.png", tip="Import element properties")
         exportBondsAction = self.createAction("Export bonds", slot=self.exportBonds,
-                                                 icon="file-export-icon.png", tip="Export bonds file")
+                                                 icon="oxygen/document-export.png", tip="Export bonds file")
         importBondsAction = self.createAction("Import bonds", slot=self.importBonds,
-                                                 icon="file-import-icon.png", tip="Import bonds file")
+                                                 icon="oxygen/document-import.png", tip="Import bonds file")
         showImageViewerAction = self.createAction("Image viewer", slot=self.showImageViewer, 
-                                                  icon="applications-graphics.svg", tip="Show image viewer")
+                                                  icon="oxygen/applications-graphics.png", tip="Show image viewer")
         showPreferencesAction = self.createAction("Preferences", slot=self.showPreferences, 
-                                                  icon="applications-system.svg", tip="Show preferences window")
-        changeCWDAction = self.createAction("Change CWD", slot=self.changeCWD, icon="folder-new.svg", 
+                                                  icon="oxygen/configure.png", tip="Show preferences window")
+        changeCWDAction = self.createAction("Change CWD", slot=self.changeCWD, icon="oxygen/folder-new.png", 
                                             tip="Change current working directory")
         
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, systems_action, openCWDAction, changeCWDAction, importElementsAction, 
-                                   exportElementsAction, importBondsAction, exportBondsAction, None, exitAction))
+        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, openFileAction, openRemoteFileAction, openCWDAction, 
+                                   changeCWDAction, importElementsAction, exportElementsAction, importBondsAction, 
+                                   exportBondsAction, None, exitAction))
         
         # button to show console window
-        openConsoleAction = self.createAction("Console", self.showConsole, None, "console-icon.png", "Show console window")
+        openConsoleAction = self.createAction("Console", self.showConsole, None, "oxygen/utilities-log-viewer.png", "Show console window")
         
         # element editor action
-        openElementEditorAction = self.createAction("Element editor", slot=self.openElementEditor, icon="periodic-table-icon.png", 
+        openElementEditorAction = self.createAction("Element editor", slot=self.openElementEditor, icon="other/periodic-table-icon.png", 
                                                     tip="Show element editor")
         
         # open bonds editor action
-        openBondsEditorAction = self.createAction("Bonds editor", slot=self.openBondsEditor, icon="bonding.jpg", 
+        openBondsEditorAction = self.createAction("Bonds editor", slot=self.openBondsEditor, icon="other/molecule1.png", 
                                                   tip="Show bonds editor")
         
         # default window size action
-        defaultWindowSizeAction = self.createAction("Default size", slot=self.defaultWindowSize, icon="Window.png", 
+        defaultWindowSizeAction = self.createAction("Default size", slot=self.defaultWindowSize, icon="oxygen/view-restore.png", 
                                                     tip="Resize window to default size")
         
         # add view menu
@@ -248,8 +241,8 @@ class MainWindow(QtGui.QMainWindow):
         fileToolbar.addAction(newWindowAction)
         fileToolbar.addAction(newRenWindowAction)
         fileToolbar.addSeparator()
-#         fileToolbar.addAction(loadInputAction)
-        fileToolbar.addAction(systems_action)
+        fileToolbar.addAction(openFileAction)
+        fileToolbar.addAction(openRemoteFileAction)
         fileToolbar.addAction(openCWDAction)
         fileToolbar.addAction(changeCWDAction)
         fileToolbar.addSeparator()
@@ -265,10 +258,10 @@ class MainWindow(QtGui.QMainWindow):
         
         
         # add about action
-        aboutAction = self.createAction("About CDJSVis", slot=self.aboutMe, icon="Information-icon.png", 
+        aboutAction = self.createAction("About CDJSVis", slot=self.aboutMe, icon="oxygen/help-about.png", 
                                            tip="About CDJSVis")
         
-        helpAction = self.createAction("CDJSVis Help", slot=self.showHelp, icon="Help-icon.png", tip="Show help window")
+        helpAction = self.createAction("CDJSVis Help", slot=self.showHelp, icon="oxygen/help-browser.png", tip="Show help window")
         
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
@@ -279,10 +272,14 @@ class MainWindow(QtGui.QMainWindow):
         self.addActions(helpMenu, (aboutAction, helpAction))
         
         # add cwd to status bar
-        self.currentDirectoryLabel = QtGui.QLabel(os.getcwd())
-        self.statusBar = QtGui.QStatusBar()
-        self.statusBar.addPermanentWidget(self.currentDirectoryLabel)
-        self.setStatusBar(self.statusBar)
+        self.currentDirectoryLabel = QtGui.QLabel("")
+        self.updateCWD()
+        sb = QtGui.QStatusBar()
+        self.setStatusBar(sb)
+        self.progressBar = QtGui.QProgressBar(self.statusBar())
+        self.statusBar().addPermanentWidget(self.progressBar)
+        self.statusBar().addPermanentWidget(self.currentDirectoryLabel)
+        self.hideProgressBar()
         
         # dict of currently loaded systems
         self.loaded_systems = {}
@@ -322,12 +319,20 @@ class MainWindow(QtGui.QMainWindow):
 #         
 #         # give focus
 #         self.raise_()
+    
+    def showOpenRemoteFileDialog(self):
+        """
+        Open remote file
         
-        # show system dialog
-#         self.show_systems_dialog()
+        """
+        self.systemsDialog.load_system_form.readerForm.openSFTPBrowser()
+    
+    def showOpenFileDialog(self):
+        """
+        Open file
         
-        # show input dialog
-#        self.showLoadInputDialog()
+        """
+        self.systemsDialog.load_system_form.readerForm.openFileDialog()
     
     def defaultWindowSize(self):
         """
@@ -335,17 +340,6 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         self.resize(self.defaultWindowWidth, self.defaultWindowHeight)
-    
-    def show(self):
-        """
-        Override show
-        
-        """
-        super(MainWindow, self).show()
-        
-        if self.firstShow:
-            self.show_systems_dialog()
-            self.firstShow = False
     
     def changeCWD(self):
         """
@@ -360,22 +354,6 @@ class MainWindow(QtGui.QMainWindow):
             os.chdir(new_dir)
             self.updateCWD()
     
-    def show_systems_dialog(self):
-        """
-        Show systems dialog.
-        
-        """
-        self.systemsDialog.hide()
-        self.systemsDialog.show()
-    
-#     def showLoadInputDialog(self):
-#         """
-#         Show load input dialog.
-#         
-#         """
-#         self.loadInputDialog.hide()
-#         self.loadInputDialog.show()
-    
     def rendererWindowActivated(self, sw):
         """
         Sub window activated. (TEMPORARY)
@@ -388,12 +366,6 @@ class MainWindow(QtGui.QMainWindow):
         Add renderer window to mdi area.
         
         """
-#         if ask:
-#             dlg = dialogs.NewRendererWindowDialog(parent=self)
-#         
-#         if not ask or dlg.exec_():
-            # if ask, get num from dialog
-            
         rendererWindow = rendererSubWindow.RendererWindow(self, self.subWinCount, parent=self)
         rendererWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         
@@ -545,34 +517,6 @@ class MainWindow(QtGui.QMainWindow):
 #        elif osname == "Windows":
 #            os.startfile(dirname)
     
-    def showFilterSummary(self):
-        """
-        Show the filter window.
-        
-        """
-        self.mainToolbar.filterPage.showFilterSummary()
-    
-    def setCameraToCell(self):
-        """
-        Reset the camera to point at the cell
-        
-        """
-        self.renderer.setCameraToCell()
-    
-    def toggleCellFrame(self):
-        """
-        Toggle lattice frame visibility
-        
-        """
-        self.renderer.toggleLatticeFrame()
-    
-    def toggleAxes(self):
-        """
-        Toggle axes visibility
-        
-        """
-        self.renderer.toggleAxes()
-    
     def openNewWindow(self):
         """
         Open a new instance of the main window
@@ -656,12 +600,8 @@ class MainWindow(QtGui.QMainWindow):
         Catch attempt to close
         
         """
-#        reply = QtGui.QMessageBox.question(self, 'Message', "Are you sure you want to quit", 
-#                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
-        
         close, clearSettings = self.confirmCloseEvent()
         
-#        if reply == QtGui.QMessageBox.Yes:
         if close:
             self.tidyUp()
             
@@ -708,41 +648,32 @@ class MainWindow(QtGui.QMainWindow):
         shutil.rmtree(self.tmpDirectory)
         self.console.accept()
     
-    def setFileType(self, fileType):
+    def hideProgressBar(self):
         """
-        Set the file type.
+        Hide the progress bar
         
         """
-        self.fileType = fileType
-        
-        if fileType == "DAT":
-            self.fileExtension = "dat"
-        
-        elif fileType == "LBOMD":
-            self.fileExtension = "xyz"
+        self.progressBar.hide()
+        self.progressBar.reset()
+        self.setStatus("Finished")
     
-    def setCurrentRefFile(self, filename):
+    def updateProgress(self, n, nmax, message):
         """
-        Set the current ref file in the main toolbar
+        Update progress bar
         
         """
-#         self.mainToolbar.currentRefLabel.setText("Reference: " + filename)
-        self.refFile = filename
+        self.progressBar.show()
+        self.progressBar.setRange(0, nmax)
+        self.progressBar.setValue(n)
+        self.setStatus(message)
+        QtGui.QApplication.processEvents()
     
-    def setCurrentInputFile(self, filename):
-        """
-        Set the current input file in the main toolbar
-        
-        """
-#         self.mainToolbar.currentInputLabel.setText("Input: " + filename)
-        self.inputFile = filename
-    
-    def setStatus(self, string):
+    def setStatus(self, message):
         """
         Set temporary status in status bar
         
         """
-        self.statusBar.showMessage(string)
+        self.statusBar().showMessage(self.tr(message))
     
     def updateCWD(self):
         """
@@ -751,7 +682,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         dirname = os.getcwd()
         
-        self.currentDirectoryLabel.setText(dirname)
+        self.currentDirectoryLabel.setText("CWD: '%s'" % dirname)
         self.imageViewer.changeDir(dirname)
     
     def readLBOMDIN(self):
@@ -786,111 +717,6 @@ class MainWindow(QtGui.QMainWindow):
             
             finally:
                 f.close()
-    
-    def postFileLoaded(self, fileType, state, filename, extension):
-        """
-        Called when a new file has been loaded.
-        
-         - fileType should be "ref" or "input"
-         - state is the new Lattice object
-        
-        """
-        if fileType == "ref":
-            # if a ref is already loaded, we need to 
-            
-            
-            self.refState = state
-            
-            self.readLBOMDIN()
-            
-            self.postRefLoaded(filename)
-        
-        else:
-            self.inputState = state
-        
-        self.postInputLoaded(filename)
-        
-        if self.fileExtension is not None:
-            self.fileExtension = extension
-    
-    def postRefLoaded(self, filename):
-        """
-        Do stuff after the ref has been loaded.
-        
-        """
-        if self.refLoaded:
-            for filterPage in self.mainToolbar.pipelineList:
-                filterPage.clearAllActors()
-                filterPage.refreshAllFilters()
-                
-            for rw in self.rendererWindows:
-                rw.textSelector.refresh()
-            
-            for rw in self.rendererWindows:
-                rw.outputDialog.rdfTab.refresh()
-        
-        self.setCurrentRefFile(filename)
-        self.refLoaded = 1
-        
-        for rw in self.rendererWindows:
-            rw.renderer.postRefRender()
-        
-        for rw in self.rendererWindows:
-            rw.textSelector.refresh()
-    
-    def postInputLoaded(self, filename):
-        """
-        Do stuff after the input has been loaded
-        
-        """
-        self.setCurrentInputFile(filename)
-        self.inputLoaded = 1
-        
-        self.mainToolbar.analysisPipelinesForm.show()
-        
-        for filterPage in self.mainToolbar.pipelineList:
-            filterPage.refreshAllFilters()
-        
-        for rw in self.rendererWindows:
-            rw.textSelector.refresh()
-        
-        for rw in self.rendererWindows:
-            rw.outputDialog.rdfTab.refresh()
-    
-    def clearReference(self):
-        """
-        Clear the current reference file
-        
-        """
-        self.refLoaded = 0
-        self.inputLoaded = 0
-        self.setCurrentRefFile("")
-        self.setCurrentInputFile("")
-        
-        # close any open output dialogs!
-        for rw in self.rendererWindows:
-            rw.outputDialog.hide()
-            rw.textSelector.hide()
-        
-        # close all render windows?
-#        for rw in self.rendererWindows:
-#            rw.close()
-#        
-#        # open new renderer window
-#        self.addRendererWindow(ask=False)
-        
-        # should probably hide stuff like elements form too!
-        
-        
-        # clear rdf tab
-        
-        
-        # clear pipelines
-        for pipeline in self.mainToolbar.pipelineList:
-            pipeline.clearAllFilterLists()
-        
-        self.mainToolbar.analysisPipelinesForm.hide()
-        self.mainToolbar.loadInputForm.show()
     
     def displayWarning(self, message):
         """

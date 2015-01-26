@@ -7,7 +7,6 @@ Additional dialogs.
 
 """
 import os
-import sys
 import copy
 import logging
 
@@ -18,12 +17,6 @@ from . import genericForm
 from ..state.atoms import elements
 from ..visutils.utilities import resourcePath, iconPath
 from ..visutils import utilities
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -518,7 +511,7 @@ class AddBondDialog(QtGui.QDialog):
         self.setModal(1)
         
         self.setWindowTitle("Add bond")
-        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("other/molecule1.png")))
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
@@ -578,7 +571,7 @@ class BondEditorDialog(QtGui.QDialog):
         self.setModal(0)
         
         self.setWindowTitle("Bonds editor")
-        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("other/molecule1.png")))
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
@@ -596,7 +589,7 @@ class BondEditorDialog(QtGui.QDialog):
         self.bondsCombo.currentIndexChanged.connect(self.setWidgetStack)
         
         # add button
-        addButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
+        addButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-add.png")), "")
         addButton.setFixedWidth(35)
         addButton.setToolTip("Add new bond pair")
         addButton.setStatusTip("Add new bond pair")
@@ -847,7 +840,7 @@ class ElementEditor(QtGui.QDialog):
         self.setModal(0)
         
         self.setWindowTitle("Element editor")
-        self.setWindowIcon(QtGui.QIcon(iconPath("periodic-table-icon.png")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("other/periodic-table-icon.png")))
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
@@ -1062,7 +1055,7 @@ class ImageViewer(QtGui.QDialog):
         self.mainWindow = mainWindow
         
         self.setWindowTitle("Image Viewer:")
-        self.setWindowIcon(QtGui.QIcon(iconPath("applications-graphics.svg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/applications-graphics.png")))
         
         # main layout
         dialogLayout = QtGui.QHBoxLayout()
@@ -1101,7 +1094,7 @@ class ImageViewer(QtGui.QDialog):
         columnLayout.addWidget(self.imageLabel)
         
         # delete button
-        deleteImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-delete.svg")), "Delete image")
+        deleteImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-delete.png")), "Delete image")
         deleteImageButton.clicked.connect(self.deleteImage)
         deleteImageButton.setStatusTip("Delete image")
         deleteImageButton.setAutoDefault(False)
@@ -1195,7 +1188,7 @@ class NotifyFeatureWindow(QtGui.QDialog):
         # image
         pic = QtGui.QLabel()
         pic.resize(200, 200)
-        pic.setPixmap(QtGui.QPixmap(iconPath("preferences-desktop-font.svg")))
+        pic.setPixmap(QtGui.QPixmap(iconPath("oxygen/preferences-desktop-font.png")))
         row = QtGui.QHBoxLayout()
         row.setAlignment(QtCore.Qt.AlignHCenter)
         row.addWidget(pic)
@@ -1337,6 +1330,8 @@ class RotateViewPointDialog(QtGui.QDialog):
         
 #         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
+        self.setWindowTitle("Rotate view point")
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/transform-rotate.png")))
         self.setModal(0)
         
         self.rw = rw

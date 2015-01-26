@@ -9,10 +9,10 @@
 #include <math.h>
 #include "array_utils.h"
 
-
 static PyObject* readLatticeLBOMD(PyObject*, PyObject*);
 static PyObject* readRef(PyObject*, PyObject*);
 static PyObject* readLBOMDXYZ(PyObject*, PyObject*);
+
 static int specieIndex(char*, int, char*);
 
 
@@ -613,4 +613,3 @@ readLatticeLBOMD(PyObject *self, PyObject *args)
     
     return Py_BuildValue("i", 0);
 }
-

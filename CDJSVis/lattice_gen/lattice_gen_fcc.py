@@ -24,7 +24,7 @@ class Args(object):
     quiet: suppress stdout
     
     """
-    def __init__(self, sym="Au", NCells=[10,10,10], a0=4.078, pbcx=True, pbcy=True, pbcz=True):
+    def __init__(self, sym="Au", NCells=[8,8,8], a0=4.078, pbcx=True, pbcy=True, pbcz=True):
         self.sym = sym
         self.NCells = NCells
         self.a0 = a0
@@ -86,6 +86,11 @@ class FCCLatticeGenerator(object):
         
         # atom ID
         lattice.atomID = np.arange(1, lattice.NAtoms + 1, dtype=np.int32)
+        
+        # periodic boundaries
+        lattice.PBC[0] = int(args.pbcx)
+        lattice.PBC[1] = int(args.pbcy)
+        lattice.PBC[2] = int(args.pbcz)
         
         logger.info("  Number of atoms: %d", NAtoms)
         logger.info("  Dimensions: %s", str(dims))

@@ -10,7 +10,6 @@ shown below:
 
 """
 import os
-import sys
 import glob
 import math
 import logging
@@ -31,12 +30,6 @@ from . import utils
 from ..rendering import highlight
 from . import dialogs
 
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
-
 
 ################################################################################
 class PipelineForm(QtGui.QWidget):
@@ -50,7 +43,6 @@ class PipelineForm(QtGui.QWidget):
         self.pipelineString = pipelineString
         self.systemsDialog = mainWindow.systemsDialog
         
-        self.log = self.mainWindow.console.write
         self.logger = logging.getLogger(__name__)
         
         self.rendererWindows = self.mainWindow.rendererWindows
@@ -73,8 +65,7 @@ class PipelineForm(QtGui.QWidget):
         self.currentRunID = None
         self.abspath = None
         self.PBC = None
-        
-        self.analysisPipelineFormHidden = True
+        self.linkedLattice = None
         
         # layout
         filterTabLayout = QtGui.QVBoxLayout(self)
@@ -101,6 +92,8 @@ class PipelineForm(QtGui.QWidget):
         
         # reference selector
         self.refCombo = QtGui.QComboBox()
+        self.refCombo.setFixedWidth(220)
+        self.refCombo.setToolTip("Select the reference system for this pipeline")
         self.refCombo.currentIndexChanged.connect(self.refChanged)
         for fn in self.systemsDialog.getDisplayNames():
             self.refCombo.addItem(fn)    
@@ -119,6 +112,8 @@ class PipelineForm(QtGui.QWidget):
         
         # reference selector
         self.inputCombo = QtGui.QComboBox()
+        self.inputCombo.setFixedWidth(220)
+        self.inputCombo.setToolTip("Select the input system for this pipeline")
         self.inputCombo.currentIndexChanged.connect(self.inputChanged)
         for fn in self.systemsDialog.getDisplayNames():
             self.inputCombo.addItem(fn)
@@ -141,15 +136,15 @@ class PipelineForm(QtGui.QWidget):
         rowLayout.setSpacing(0)
         
         #----- buttons for new/trash filter list
-        runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('view-refresh-all.svg')),'Apply lists')
+        runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/view-refresh.png')),'Apply lists')
         runAll.setStatusTip("Apply all property/filter lists")
         runAll.setToolTip("Apply all property/filter lists")
         runAll.clicked.connect(self.runAllFilterLists)
-        add = QtGui.QPushButton(QtGui.QIcon(iconPath('tab-new.svg')),'New list')
+        add = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/tab-new-background.png')),'New list')
         add.setToolTip("New property/filter list")
         add.setStatusTip("New property/filter list")
         add.clicked.connect(self.addFilterList)
-        clear = QtGui.QPushButton(QtGui.QIcon(iconPath('edit-delete.svg')),'Clear lists')
+        clear = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/tab-close-other.png')),'Clear lists')
         clear.setStatusTip("Clear all property/filter lists")
         clear.setToolTip("Clear all property/filter lists")
         clear.clicked.connect(self.clearAllFilterLists)
@@ -176,11 +171,18 @@ class PipelineForm(QtGui.QWidget):
         group.setAlignment(QtCore.Qt.AlignHCenter)
         
         groupLayout = QtGui.QVBoxLayout(group)
+        groupLayout.setSpacing(0)
+        groupLayout.setContentsMargins(0,0,0,0)
         
         self.replicateCellButton = QtGui.QPushButton("Replicate cell")
         self.replicateCellButton.clicked.connect(self.replicateCell)
         self.replicateCellButton.setToolTip("Replicate in periodic directions")
-        groupLayout.addWidget(self.replicateCellButton)
+        hbox = QtGui.QHBoxLayout()
+        hbox.setContentsMargins(0,0,0,0)
+        hbox.addStretch(1)
+        hbox.addWidget(self.replicateCellButton)
+        hbox.addStretch(1)
+        groupLayout.addLayout(hbox)
         
         self.PBCXCheckBox = QtGui.QCheckBox("x")
         self.PBCXCheckBox.setChecked(1)
@@ -328,6 +330,11 @@ class PipelineForm(QtGui.QWidget):
         """
         self.refCombo.addItem(filename)
         self.inputCombo.addItem(filename)
+        
+        if not self.mainToolbar.tabWidget.isTabEnabled(1):
+            # enable and switch to analysis tab after first file is loaded
+            self.mainToolbar.tabWidget.setTabEnabled(1, True)
+            self.mainToolbar.tabWidget.setCurrentIndex(1)
     
     def removeStateOption(self, index):
         """
@@ -350,13 +357,12 @@ class PipelineForm(QtGui.QWidget):
         
         diff = False
         for i in xrange(3):
-#             if inp.cellDims[i] != ref.cellDims[i]:
             if math.fabs(inp.cellDims[i] - ref.cellDims[i]) > 1e-4:
                 diff = True
                 break
         
         if diff:
-            self.mainWindow.console.write("WARNING: cell dims differ")
+            self.logger.warning("Cell dims differ")
             
         return diff
     
@@ -391,20 +397,9 @@ class PipelineForm(QtGui.QWidget):
         self.removeInfoWindows()
         self.refreshAllFilters()
         
-        if self.analysisPipelineFormHidden:
-            self.mainToolbar.analysisPipelinesForm.show()
-            self.analysisPipelineFormHidden = False
-        
-        else:
-            # auto run filters... ?
-            pass
-        
         for rw in self.rendererWindows:
             if rw.currentPipelineIndex == self.pipelineIndex:
-                rw.textSelector.refresh()
-                rw.outputDialog.plotTab.rdfForm.refresh()
-                rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
-                rw.outputDialog.imageTab.imageSequenceTab.resetPrefix()
+                rw.postInputChanged()
         
         settings = self.mainWindow.preferences.renderingForm
         
@@ -443,7 +438,6 @@ class PipelineForm(QtGui.QWidget):
         if status:
             # must change input too
             self.inputCombo.setCurrentIndex(index)
-#             self.inputChanged(index)
     
     def inputChanged(self, index):
         """
@@ -461,10 +455,11 @@ class PipelineForm(QtGui.QWidget):
             return
         
         self.inputState = state
-        self.inputStackIndex = item.stackIndex
         self.filename = item.displayName
         self.extension = item.extension
         self.abspath = item.abspath
+        self.fileFormat = item.fileFormat
+        self.linkedLattice = item.linkedLattice
         self.PBC = state.PBC
         self.setPBCChecks()
         
@@ -474,7 +469,6 @@ class PipelineForm(QtGui.QWidget):
         if status:
             # must change ref too
             self.refCombo.setCurrentIndex(index)
-#             self.refChanged(index)
         
         # post input loaded
         self.postInputLoaded()
@@ -498,13 +492,6 @@ class PipelineForm(QtGui.QWidget):
         for filterList in self.filterLists:
             filterList.removeInfoWindows()
     
-    def showFilterSummary(self):
-        """
-        Show filtering summary.
-        
-        """
-        pass
-    
     def removeOnScreenInfo(self):
         """
         Remove on screen info.
@@ -519,7 +506,7 @@ class PipelineForm(QtGui.QWidget):
         Clear all actors.
         
         """
-        self.log("Clearing all actors")
+        self.logger.debug("Clearing all actors")
         
         for filterList in self.filterLists:
             filterList.filterer.removeActors()
@@ -614,7 +601,7 @@ class PipelineForm(QtGui.QWidget):
         Clear all the filter lists
         
         """
-        self.log("Clearing all filter lists")
+        self.logger.debug("Clearing all filter lists")
         for filterList in self.filterLists:
             filterList.clearList()
             self.removeFilterList()
@@ -664,7 +651,7 @@ class PipelineForm(QtGui.QWidget):
         Refresh filter settings
         
         """
-        self.log("Refreshing filters", 3)
+        self.logger.debug("Refreshing filters")
         for filterList in self.filterLists:
             currentSettings = filterList.getCurrentFilterSettings()
             for filterSettings in currentSettings:

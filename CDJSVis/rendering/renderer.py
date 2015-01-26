@@ -142,6 +142,8 @@ class Renderer(object):
         
         """
         ref = self.getRefState()
+        if ref is None:
+            return
         
         dims = ref.cellDims
         
@@ -1139,8 +1141,8 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     # actor
     atomsActor = vtk.vtkActor()
     atomsActor.SetMapper(atomsMapper)
-#     atomsActor.GetProperty().SetSpecular(0.4)
-#     atomsActor.GetProperty().SetSpecularPower(50)
+    atomsActor.GetProperty().SetSpecular(0.4)
+    atomsActor.GetProperty().SetSpecularPower(50)
     actorsDict["Atoms"] = utils.ActorObject(atomsActor)
     
     # check for vectors
@@ -1405,6 +1407,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
+            intsActor.GetProperty().SetSpecular(0.4)
+            intsActor.GetProperty().SetSpecularPower(50)
             
             actorsDictLocal["Interstitials ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
     
@@ -1476,6 +1480,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
+            intsActor.GetProperty().SetSpecular(0.4)
+            intsActor.GetProperty().SetSpecularPower(50)
             
             actorsDictLocal["Split ints ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
         
@@ -1595,6 +1601,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
+            intsActor.GetProperty().SetSpecular(0.4)
+            intsActor.GetProperty().SetSpecularPower(50)
             
             actorsDictLocal["Antisites occupying ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
     

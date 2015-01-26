@@ -5,7 +5,6 @@ Info dialogs
 @author: Chris Scott
 
 """
-import sys
 import uuid
 import functools
 import logging
@@ -16,11 +15,6 @@ from ..algebra import vectors
 from ..rendering import highlight
 from . import utils
 
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 ################################################################################
 

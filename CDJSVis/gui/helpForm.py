@@ -31,7 +31,7 @@ class HelpFormSphinx(QtGui.QDialog):
         self.setModal(0)
         
         self.setWindowTitle("CDJSVis Help")
-        self.setWindowIcon(QtGui.QIcon(iconPath("Help-icon.png")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/help-browser.png")))
         
         self.helpFormOpen = False
         
@@ -39,15 +39,16 @@ class HelpFormSphinx(QtGui.QDialog):
         self.webView = QtWebKit.QWebView(self)
         
         # toolbar actions
-        backAction = QtGui.QAction(QtGui.QIcon(iconPath("go-previous.svg")), "&Back", self)
+        backAction = QtGui.QAction(QtGui.QIcon(iconPath("oxygen/go-previous.png")), "&Back", self)
         backAction.triggered.connect(self.webView.back)
-        homeAction = QtGui.QAction(QtGui.QIcon(iconPath("go-home.svg")), "&Home", self)
+        homeAction = QtGui.QAction(QtGui.QIcon(iconPath("oxygen/go-home.png")), "&Home", self)
         homeAction.triggered.connect(functools.partial(self.loadUrl, "qrc:///doc/index.html"))
-        forwardAction = QtGui.QAction(QtGui.QIcon(iconPath("go-next.svg")), "&Foward", self)
+        forwardAction = QtGui.QAction(QtGui.QIcon(iconPath("oxygen/go-next.png")), "&Foward", self)
         forwardAction.triggered.connect(self.webView.forward)
         
         # tool bar
         toolbar = QtGui.QToolBar()
+        toolbar.setFixedHeight(50)
         toolbar.addAction(backAction)
         toolbar.addAction(homeAction)
         toolbar.addAction(forwardAction)

@@ -6,17 +6,10 @@ On screen info dialog
 
 """
 import logging
-import sys
 
 from PySide import QtGui, QtCore
 
-from . import genericForm
-from ..visutils.utilities import resourcePath, iconPath
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
+from ..visutils.utilities import iconPath
 
 
 ################################################################################
@@ -173,6 +166,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         
 #         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
+        self.logger = logging.getLogger(__name__)
         self.resize(340, 380)
         
         self.parent = parent
@@ -180,7 +174,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.mainWindow = mainWindow
         
         self.setWindowTitle("On screen info - Render window %d" % index)
-        self.setWindowIcon(QtGui.QIcon(iconPath("preferences-desktop-font.svg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/preferences-desktop-font.png")))
         
         dialogLayout = QtGui.QVBoxLayout()
         self.setLayout(dialogLayout)
@@ -205,7 +199,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         
         dialogLayout.addWidget(buttonWidget)
         
-        # add text options (read order from settings?)
+        # add default options
         self.textList.addItem(TextListWidgetItem("Atom count", "{0} atoms", {"{0}": "Atom count"}, "Top left", True))
         self.textList.addItem(TextListWidgetItem("Visible count", "{0} visible", {"{0}": "Visible count"}, "Top left", False))
         self.textList.addItem(TextListWidgetItem("Visible specie count", "{0} {1}", {"{0}": "Count", "{1}": "Specie"}, 
@@ -217,11 +211,13 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.textList.addItem(TextListWidgetItem("ACNA structure count", "{0} {1}", {"{0}": "Count", "{1}": "Structure"}, 
                                                  "Top left", True, multiLine=True))
         self.textList.addItem(TextListWidgetItem("Cluster count", "{0} clusters", {"{0}": "Cluster count"}, "Top left", True))
-         
-        self.textList.addItem(TextListWidgetItem("Simulation time", "{0} {1}", {"{0}": "Time", "{1}": "Units"}, "Top right", True))
+        self.textList.addItem(TextListWidgetItem("Time", "{0} {1}", {"{0}": "Time", "{1}": "Units"}, "Top right", True))
         self.textList.addItem(TextListWidgetItem("KMC step", "Step {0}", {"{0}": "Step number"}, "Top right", True))
         self.textList.addItem(TextListWidgetItem("Energy barrier", "{0} eV", {"{0}": "Energy barrier"}, "Top right", True))
         self.textList.addItem(TextListWidgetItem("Temperature", "{0} K", {"{0}": "Temperature"}, "Top right", True))
+        
+        # refresh additional available options
+        self.refreshLists()
         
         # connect
         self.textList.itemDoubleClicked.connect(self.showTextSettingsDialog)
@@ -261,4 +257,8 @@ class OnScreenInfoDialog(QtGui.QDialog):
         Add options that are now available.
         
         """
-        pass
+        self.logger.debug("Refreshing on-screen text options")
+        
+        #TODO: automatically add stuff from Lattice.attributes
+        #TODO: automatically add magnitude off Lattice.vectorsData
+        #TODO: automatically add sum of Lattice.scalarData

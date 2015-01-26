@@ -8,8 +8,6 @@ Basically you should always leave this as 'AUTO DETECT'. The available formats a
 
 """
 import os
-import sys
-import platform
 import logging
 import glob
 
@@ -18,12 +16,6 @@ from PySide import QtGui, QtCore
 from ..visutils.utilities import iconPath
 from .genericForm import GenericForm
 from ..state import latticeReaders
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################

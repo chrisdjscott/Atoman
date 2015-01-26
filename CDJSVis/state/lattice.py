@@ -24,12 +24,6 @@ class Lattice(object):
     """
     def __init__(self):
         self.NAtoms = 0
-        
-        self.simTime = None
-        self.barrier = None
-        self.kmcStep = None
-        self.temperature = None
-        
         self.cellDims = np.empty(3, np.float64)
         
         dt = np.dtype((str, 2))
@@ -49,7 +43,10 @@ class Lattice(object):
         self.charge = np.empty(0, np.float64)
         
         self.scalarsDict = {}
+        self.scalarsFiles = {}
         self.vectorsDict = {}
+        self.vectorsFiles = {}
+        self.attributes = {}
         
         self.PBC = np.ones(3, np.int32)
     
@@ -109,15 +106,11 @@ class Lattice(object):
          
         self.cellDims = np.zeros(3, np.float64)
         
-        self.simTime = None
-        self.barrier = None
-        self.kmcStep = None
-        self.temperature = None
-        
         self.scalarsDict = {}
         self.scalarsFiles = {}
         self.vectorsDict = {}
         self.vectorsFiles = {}
+        self.attributes = {}
         
         self.PBC = np.ones(3, np.int32)
     
@@ -378,11 +371,6 @@ class Lattice(object):
         
         NAtoms = lattice.NAtoms
         
-        self.simTime = lattice.simTime
-        self.barrier = lattice.barrier
-        self.kmcStep = lattice.kmcStep
-        self.temperature = lattice.temperature
-        
         # copy dims
         self.cellDims[0] = lattice.cellDims[0]
         self.cellDims[1] = lattice.cellDims[1]
@@ -427,5 +415,8 @@ class Lattice(object):
         
         self.scalarsDict = copy.deepcopy(lattice.scalarsDict)
         self.vectorsDict = copy.deepcopy(lattice.vectorsDict)
+        self.scalarsFiles = copy.deepcopy(lattice.scalarsFiles)
+        self.vectorsFiles = copy.deepcopy(lattice.vectorsFiles)
+        self.attributes = copy.deepcopy(lattice.attributes)
         
         self.PBC = copy.deepcopy(lattice.PBC)
