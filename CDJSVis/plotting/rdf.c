@@ -54,6 +54,7 @@ calculateRDF(PyObject *self, PyObject *args)
 	
     int i, norm_n, norm_nref;
     int spec1cnt, spec2cnt, fullShellCount;
+    int *sel1, *sel2, sel1cnt, sel2cnt, duplicates;
     double approxBoxWidth, avgAtomDensity;
     double volume, normFactor, rho;
     double interval;
@@ -101,6 +102,49 @@ calculateRDF(PyObject *self, PyObject *args)
     /* approx box width */
 	/* may not be any point boxing... */
     approxBoxWidth = finish;
+    
+    /* handle duplicates */
+    sel1 = malloc(NVisible * sizeof(int));
+    if (sel1 == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate sel1");
+        return NULL;
+    }
+    sel2 = malloc(NVisible * sizeof(int));
+    if (sel2 == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate sel2");
+        return NULL;
+    }
+    sel1cnt = 0;
+    for (i = 0; i < NVisible; i++)
+    {
+        int index = visibleAtoms[i];
+        if (specieID1 >= 0 && specie[index] == specieID1)
+        {
+            sel1[i] = 1;
+            sel1cnt++;
+        }
+        else
+            sel1[i] = 0;
+    }
+    sel2cnt = 0;
+    for (i = 0; i < NVisible; i++)
+    {
+        int index = visibleAtoms[i];
+        if (specieID2 >= 0 && specie[index] == specieID2)
+        {
+            sel2[i] = 1;
+            sel2cnt++;
+        }
+        else
+            sel2[i] = 0;
+    }
+    duplicates = 0;
+    for (i = 0; i < NVisible; i++) if (sel1[i] && sel2[i]) duplicates++;
+    
+    free(sel1);
+    free(sel2);
     
     /* position of visible atoms */
     visiblePos = malloc(3 * NVisible * sizeof(double));
