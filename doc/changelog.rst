@@ -2,6 +2,11 @@
 Changelog
 =========
 
+**dev**
+
+* Better error handling from C code (raise exception instead of exiting)
+* Better normalisation of RDF
+
 **150126**
 
 * Added generic file input module (much easier to add new lattice file formats)
