@@ -12,7 +12,6 @@ import logging
 import itertools
 
 import numpy as np
-import vtk
 from PySide import QtGui, QtCore
 
 from . import _filtering as filtering_c

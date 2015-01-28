@@ -146,11 +146,15 @@ class MainToolbar(QtGui.QDockWidget):
         """
         iniIndex = self.currentPipelineIndex
         
-        for count, p in enumerate(self.pipelineList):
-            self.pipelineCombo.setCurrentIndex(count)
-            p.runAllFilterLists()
+        try:
+            for count, p in enumerate(self.pipelineList):
+                self.pipelineCombo.setCurrentIndex(count)
+                status = p.runAllFilterLists()
+                if status:
+                    break
         
-        self.pipelineCombo.setCurrentIndex(iniIndex)
+        finally:
+            self.pipelineCombo.setCurrentIndex(iniIndex)
     
     def addPipeline(self):
         """

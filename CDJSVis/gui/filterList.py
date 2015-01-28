@@ -5,6 +5,7 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
+import sys
 import logging
 import functools
 import copy
@@ -454,6 +455,11 @@ class FilterList(QtGui.QWidget):
             for rw in self.pipelinePage.rendererWindows:
                 if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                     rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
+        
+        except:
+            exctype, value = sys.exc_info()[:2]
+            self.logger.error("Apply list failed! %s: %s", exctype, value)
+            self.mainWindow.displayError("Apply list failed!\n\n%s: %s" % (exctype, value))
         
         finally:
             utils.cancelProgressDialog(progDiag)

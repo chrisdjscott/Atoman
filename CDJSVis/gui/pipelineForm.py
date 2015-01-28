@@ -10,6 +10,7 @@ shown below:
 
 """
 import os
+import sys
 import glob
 import math
 import logging
@@ -22,8 +23,6 @@ import numpy as np
 
 from ..visutils.utilities import iconPath
 from . import filterList
-from ..rendering.text import vtkRenderWindowText
-from ..visutils import utilities
 from . import picker as picker_c
 from . import infoDialogs
 from . import utils
@@ -538,6 +537,7 @@ class PipelineForm(QtGui.QWidget):
             progDiag = utils.showProgressDialog("Applying lists", "Applying lists...", self)
         
         try:
+            status = 0
             count = 0
             for filterList in self.filterLists:
                 self.logger.info("  Running filter list %d", count)
@@ -557,11 +557,19 @@ class PipelineForm(QtGui.QWidget):
                 if rw.currentPipelineIndex == self.pipelineIndex:
                     rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
         
+        except:
+            exctype, value = sys.exc_info()[:2]
+            self.logger.error("Run all filter lists failed! %s: %s", exctype, value)
+            self.mainWindow.displayError("Run all filter lists failed!\n\n%s: %s" % (exctype, value))
+            status = 1
+        
         finally:
             if not sequencer:
                 utils.cancelProgressDialog(progDiag)
         
         self.mainWindow.setStatus("Ready")
+        
+        return status
     
     def refreshOnScreenInfo(self):
         """
