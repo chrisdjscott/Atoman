@@ -260,7 +260,7 @@ findDefects(PyObject *self, PyObject *args)
     /* loop over reference sites */
     for (i = 0; i < refNAtoms; i++)
     {
-        int boxNebList[27], boxIndex, j;
+        int boxNebList[27], boxIndex, j, boxNebListSize;
         int nearestIndex = -1;
         int occupancyCount = 0;
         int i3 = 3 * i;
@@ -275,12 +275,12 @@ findDefects(PyObject *self, PyObject *args)
         boxIndex = boxIndexOfAtom(refxpos, refypos, refzpos, boxes);
 
         /* find neighbouring boxes */
-        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
 
 //        printf("Checking site %d for occupancy (%lf, %lf, %lf)\n", i, refxpos, refypos, refzpos);
         
         /* loop over neighbouring boxes */
-        for (j = 0; j < 27; j++)
+        for (j = 0; j < boxNebListSize; j++)
         {
             int checkBox, k;
 
@@ -630,7 +630,7 @@ findDefects(PyObject *self, PyObject *args)
         /* loop over vacancies and see if there is a single neighbouring intersitial */
         for (i = 0; i < NVacancies; i++)
         {
-            int vacIndex, j, exitLoop;
+            int vacIndex, j, exitLoop, boxNebListSize;
             int boxNebList[27] , boxIndex;
             int nebIntCount = 0;
             int foundIndex = -1;
@@ -648,11 +648,11 @@ findDefects(PyObject *self, PyObject *args)
             boxIndex = boxIndexOfAtom(refxpos, refypos, refzpos, boxes);
             
             /* find neighbouring boxes */
-            getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+            boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
             
             /* loop over neighbouring boxes */
             exitLoop = 0;
-            for (j = 0; j < 27; j++)
+            for (j = 0; j < boxNebListSize; j++)
             {
                 int k, checkBox;
 
@@ -1198,7 +1198,7 @@ static int findDefectClusters(int NDefects, double *defectPos, int *defectCluste
 static int findDefectNeighbours(int index, int clusterID, int numInCluster, int* atomCluster, double *pos, struct Boxes *boxes, 
                                 double maxSep2, double *cellDims, int *PBC)
 {
-    int i, j, index2;
+    int i, j, index2, boxNebListSize;
     int boxIndex, boxNebList[27];
     double sep2;
     
@@ -1207,10 +1207,10 @@ static int findDefectNeighbours(int index, int clusterID, int numInCluster, int*
     boxIndex = boxIndexOfAtom(pos[3*index], pos[3*index+1], pos[3*index+2], boxes);
         
     /* find neighbouring boxes */
-    getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+    boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
     
     /* loop over neighbouring boxes */
-    for (i=0; i<27; i++)
+    for (i = 0; i < boxNebListSize; i++)
     {
         boxIndex = boxNebList[i];
         

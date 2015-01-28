@@ -37,6 +37,8 @@ struct NeighbourList * constructNeighbourList(int NAtoms, double *pos, struct Bo
     /* loop over atoms */
     for (i = 0; i < NAtoms; i++)
     {
+        int boxNebListSize;
+        
         /* atom position */
         rxa = pos[3*i];
         rya = pos[3*i+1];
@@ -46,10 +48,10 @@ struct NeighbourList * constructNeighbourList(int NAtoms, double *pos, struct Bo
         boxIndex = boxIndexOfAtom(rxa, rya, rza, boxes);
         
         /* find neighbouring boxes */
-        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over box neighbourhood */
-        for (j=0; j<27; j++)
+        for (j = 0; j < boxNebListSize; j++)
         {
             boxIndex = boxNebList[j];
             
@@ -197,6 +199,8 @@ struct NeighbourList2 * constructNeighbourList2(int NAtoms, double *pos, struct 
     /* loop over atoms */
     for (i = 0; i < NAtoms; i++)
     {
+        int boxNebListSize;
+        
         /* atom position */
         rxa = pos[3*i];
         rya = pos[3*i+1];
@@ -206,10 +210,10 @@ struct NeighbourList2 * constructNeighbourList2(int NAtoms, double *pos, struct 
         boxIndex = boxIndexOfAtom(rxa, rya, rza, boxes);
         
         /* find neighbouring boxes */
-        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over box neighbourhood */
-        for (j=0; j<27; j++)
+        for (j = 0; j < boxNebListSize; j++)
         {
             boxIndex = boxNebList[j];
             

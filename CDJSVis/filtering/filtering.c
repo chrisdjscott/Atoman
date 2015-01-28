@@ -874,6 +874,8 @@ coordNumFilter(PyObject *self, PyObject *args)
     count = 0;
     for (i=0; i<NVisible; i++)
     {
+        int boxNebListSize;
+        
         index = visibleAtoms[i];
         
         speca = specie[index];
@@ -882,10 +884,10 @@ coordNumFilter(PyObject *self, PyObject *args)
         boxIndex = boxIndexOfAtom(pos[3*index], pos[3*index+1], pos[3*index+2], boxes);
         
         /* find neighbouring boxes */
-        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over box neighbourhood */
-        for (j=0; j<27; j++)
+        for (j = 0; j < boxNebListSize; j++)
         {
             boxIndex = boxNebList[j];
             

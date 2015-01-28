@@ -134,7 +134,7 @@ pickObject(PyObject *self, PyObject *args)
     if (visibleAtomsDim > 0)
     {
         int i, boxIndex, boxNebList[27];
-        int minSepIndex;
+        int minSepIndex, boxNebListSize;
         double minSep, minSep2, minSepRad;
         double *visPos;
         struct Boxes *boxes;
@@ -166,13 +166,13 @@ pickObject(PyObject *self, PyObject *args)
         boxIndex = boxIndexOfAtom(pickPos[0], pickPos[1], pickPos[2], boxes);
         
         /* neighbouring boxes */
-        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over neighbouring boxes, looking for nearest atom */
         minSep2 = 9999999.0;
         minSepIndex = -1;
         minSepRad = 0.0;
-        for (i = 0; i < 27; i++)
+        for (i = 0; i < boxNebListSize; i++)
         {
             int k;
             
@@ -224,7 +224,7 @@ pickObject(PyObject *self, PyObject *args)
     {
         int i, NVis, count, minSepIndex;
         int boxIndex, boxNebList[27];
-        int minSepType;
+        int minSepType, boxNebListSize;
         double *visPos, *visCovRad, minSep, minSep2;
         double minSepRad;
         struct Boxes *boxes;
@@ -325,13 +325,13 @@ pickObject(PyObject *self, PyObject *args)
         boxIndex = boxIndexOfAtom(pickPos[0], pickPos[1], pickPos[2], boxes);
         
         /* neighbouring boxes */
-        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over neighbouring boxes, looking for nearest atom */
         minSep2 = 9999999.0;
         minSepIndex = -1;
         minSepRad = 0.0;
-        for (i = 0; i < 27; i++)
+        for (i = 0; i < boxNebListSize; i++)
         {
             int k;
             

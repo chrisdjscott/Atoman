@@ -237,7 +237,7 @@ findClusters(PyObject *self, PyObject *args)
 static int findNeighbours(int index, int clusterID, int numInCluster, int* atomCluster, double *pos, double maxSep2, 
                           struct Boxes *boxes, double *cellDims, int *PBC)
 {
-    int i, j, index2;
+    int i, j, index2, boxNebListSize;
     int boxIndex, boxNebList[27];
     double sep2;
     
@@ -246,10 +246,10 @@ static int findNeighbours(int index, int clusterID, int numInCluster, int* atomC
     boxIndex = boxIndexOfAtom(pos[3*index], pos[3*index+1], pos[3*index+2], boxes);
     
     /* find neighbouring boxes */
-    getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+    boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
     
     /* loop over neighbouring boxes */
-    for (i=0; i<27; i++)
+    for (i = 0; i < boxNebListSize; i++)
     {
         boxIndex = boxNebList[i];
         

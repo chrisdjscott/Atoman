@@ -52,11 +52,9 @@ calculateRDF(PyObject *self, PyObject *args)
 	PyArrayObject *cellDimsIn=NULL;
 	PyArrayObject *rdfIn=NULL;
 	
-    int i, norm_n, norm_nref;
-    int spec1cnt, spec2cnt, fullShellCount;
+    int i;
     int *sel1, *sel2, sel1cnt, sel2cnt, duplicates;
-    double approxBoxWidth, avgAtomDensity;
-    double volume, normFactor, rho;
+    double approxBoxWidth;
     double interval;
     double start2, finish2;
     double *visiblePos;
@@ -187,7 +185,7 @@ calculateRDF(PyObject *self, PyObject *args)
         
         index = visibleAtoms[i];
         
-        /* skip if not selected specie */
+        /* skip if not in first selection */
         if (!sel1[i]) continue;
         
         /* get box index of this atom */
@@ -219,7 +217,7 @@ calculateRDF(PyObject *self, PyObject *args)
                 /* skip if same atom */
                 if (index == index2) continue;
                 
-                /* skip if not selected specie */
+                /* skip if not in second selection */
                 if (!sel2[visIndex]) continue;
                 
                 /* atomic separation */
