@@ -103,10 +103,12 @@ calculateRDF(PyObject *self, PyObject *args)
 	/* may not be any point boxing... */
     approxBoxWidth = finish;
     
+#ifdef DEBUG
     printf("DBGRDF: NVis %d; NAtom %d; SPEC1 %d; SPEC2 %d\n", NVisible, NAtoms, specieID1, specieID2);
-    printf("DBGRDF: NUMBOX %d; INTERVAL %lf; START %lf; FINISH %lf\n", num, interval, start, finish);
-
-    /* handle duplicates */
+    printf("DBGRDF: HIST SIZE %d; INTERVAL %lf; START %lf; FINISH %lf\n", num, interval, start, finish);
+#endif
+    
+    /* create the selections of atoms and check for number of duplicates */
     sel1 = malloc(NVisible * sizeof(int));
     if (sel1 == NULL)
     {
@@ -128,8 +130,7 @@ calculateRDF(PyObject *self, PyObject *args)
             sel1[i] = 1;
             sel1cnt++;
         }
-        else
-            sel1[i] = 0;
+        else sel1[i] = 0;
     }
     sel2cnt = 0;
     for (i = 0; i < NVisible; i++)
@@ -140,17 +141,17 @@ calculateRDF(PyObject *self, PyObject *args)
             sel2[i] = 1;
             sel2cnt++;
         }
-        else
-            sel2[i] = 0;
+        else sel2[i] = 0;
     }
     duplicates = 0;
     for (i = 0; i < NVisible; i++) if (sel1[i] && sel2[i]) duplicates++;
     
-    free(sel1);
-    free(sel2);
-    
+#ifdef DEBUG
     printf("DBGRDF: SEL1 %d; SEL2 %d; DUP %d\n", sel1cnt, sel2cnt, duplicates);
-
+#endif
+    
+    //TODO: check length of sel1 and sel2 != 0
+    
     /* position of visible atoms */
     visiblePos = malloc(3 * NVisible * sizeof(double));
     if (visiblePos == NULL)
@@ -181,13 +182,13 @@ calculateRDF(PyObject *self, PyObject *args)
     #pragma omp parallel for
     for (i = 0; i < NVisible; i++)
     {
-        int j, index, ind3, boxIndex, boxNebList[27];
+        int j, index, ind3, boxIndex, boxNebList[27], boxNebListSize;
         double rxa, rya, rza;
         
         index = visibleAtoms[i];
         
         /* skip if not selected specie */
-        if (specieID1 >= 0 && specie[index] != specieID1) continue;
+        if (!sel1[i]) continue;
         
         /* get box index of this atom */
         ind3 = index * 3;
@@ -197,10 +198,10 @@ calculateRDF(PyObject *self, PyObject *args)
         boxIndex = boxIndexOfAtom(rxa, rya, rza, boxes);
         
         /* find neighbouring boxes */
-        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over box neighbourhood */
-        for (j = 0; j < 27; j++)
+        for (j = 0; j < boxNebListSize; j++)
         {
             int k;
             
@@ -215,10 +216,11 @@ calculateRDF(PyObject *self, PyObject *args)
                 index2 = visibleAtoms[visIndex];
                 
 //                if (index2 <= index) continue; // cannot do this because spec1 and spec2 may differ...
+                /* skip if same atom */
                 if (index == index2) continue;
                 
                 /* skip if not selected specie */
-                if (specieID2 >= 0 && specie[index2] != specieID2) continue;
+                if (!sel2[visIndex]) continue;
                 
                 /* atomic separation */
                 ind23 = index2 * 3;
@@ -242,27 +244,37 @@ calculateRDF(PyObject *self, PyObject *args)
         }
     }
     
+    /* free */
+    freeBoxes(boxes);
+    free(sel1);
+    free(sel2);
+    
     /* normalise rdf */
     {
         double pair_dens;
 
         pair_dens = cellDims[0] * cellDims[1] * cellDims[2];
         pair_dens /= ((double)sel1cnt * (double)sel2cnt - (double)duplicates);
-        printf("PAIR DENS %d\n", pair_dens);
-        printf("npair %d\n", sel1cnt * sel2cnt - duplicates);
+#ifdef DEBUG
+        printf("DBGRDF: PAIR DENS %lf\n", pair_dens);
+        printf("DBGRDF: npair %d\n", sel1cnt * sel2cnt - duplicates);
+#endif
 
         for (i = 0; i < num; i++)
         {
             double r_inner, r_outer, norm_f, shellVolume;
-            double histv;
+#ifdef DEBUG
+            double histv = rdf[i];
+#endif
 
-            histv = rdf[i];
             r_inner = interval * i + start;
             r_outer = interval * (i + 1) + start;
             shellVolume = 4.0 / 3.0 * M_PI * (pow(r_outer, 3.0) - pow(r_inner, 3.0));
             norm_f = pair_dens / shellVolume;
             rdf[i] = rdf[i] * norm_f;
+#ifdef DEBUG
             printf("HIST %d (%lf -> %lf): histv %lf; vol %lf; norm_f = %lf; rdf %lf\n", i, r_inner, r_outer, histv, shellVolume, norm_f, rdf[i]);
+#endif
         }
     }
 
@@ -290,9 +302,6 @@ calculateRDF(PyObject *self, PyObject *args)
 //    /* divide by average atom density */
 //    for (i=0; i<num; i++)
 //        rdf[i] = rdf[i] / avgAtomDensity;
-    
-    /* free */
-    freeBoxes(boxes);
     
     return Py_BuildValue("i", 0);
 }
