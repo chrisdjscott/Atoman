@@ -40,7 +40,7 @@ initrdf(void)
 static PyObject*
 calculateRDF(PyObject *self, PyObject *args)
 {
-	int NVisible, *visibleAtoms, NAtoms, *specie, specieID1, specieID2, *PBC, num;
+	int NVisible, *visibleAtoms, *specie, specieID1, specieID2, *PBC, num;
 	int OMP_NUM_THREADS;
 	double *pos, *minPos, *maxPos, *cellDims, start, finish, *rdf;
 	PyArrayObject *visibleAtomsIn=NULL;
@@ -52,7 +52,7 @@ calculateRDF(PyObject *self, PyObject *args)
 	PyArrayObject *cellDimsIn=NULL;
 	PyArrayObject *rdfIn=NULL;
 	
-    int i;
+    int i, boxstat, errcount;
     int *sel1, *sel2, sel1cnt, sel2cnt, duplicates;
     double approxBoxWidth;
     double interval;
@@ -74,7 +74,6 @@ calculateRDF(PyObject *self, PyObject *args)
 	
 	if (not_intVector(specieIn)) return NULL;
 	specie = pyvector_to_Cptr_int(specieIn);
-	NAtoms = (int) specieIn->dimensions[0];
 	
 	if (not_doubleVector(posIn)) return NULL;
 	pos = pyvector_to_Cptr_double(posIn);
@@ -162,7 +161,6 @@ calculateRDF(PyObject *self, PyObject *args)
         int index = visibleAtoms[i];
         int i3 = 3 * i;
         int ind3 = 3 * index;
-        
         visiblePos[i3    ] = pos[ind3    ];
         visiblePos[i3 + 1] = pos[ind3 + 1];
         visiblePos[i3 + 2] = pos[ind3 + 2];
@@ -170,14 +168,28 @@ calculateRDF(PyObject *self, PyObject *args)
     
     /* box atoms */
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-    putAtomsInBoxes(NVisible, visiblePos, boxes);
+    if (boxes == NULL)
+    {
+        free(visiblePos);
+        free(sel1);
+        free(sel2);
+        return NULL;
+    }
+    boxstat = putAtomsInBoxes(NVisible, visiblePos, boxes);
     free(visiblePos);
+    if (boxstat)
+    {
+        free(sel1);
+        free(sel2);
+        return NULL;
+    }
     
     start2 = start * start;
     finish2 = finish * finish;
     
     /* loop over atoms */
-    #pragma omp parallel for
+    errcount = 0;
+    #pragma omp parallel for reduction(+: errcount)
     for (i = 0; i < NVisible; i++)
     {
         int j, index, ind3, boxIndex, boxNebList[27], boxNebListSize;
@@ -194,49 +206,53 @@ calculateRDF(PyObject *self, PyObject *args)
         rya = pos[ind3 + 1];
         rza = pos[ind3 + 2];
         boxIndex = boxIndexOfAtom(rxa, rya, rza, boxes);
+        if (boxIndex < 0) errcount++;
         
-        /* find neighbouring boxes */
-        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
-        
-        /* loop over box neighbourhood */
-        for (j = 0; j < boxNebListSize; j++)
+        if (!errcount)
         {
-            int k;
+            /* find neighbouring boxes */
+            boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
             
-            boxIndex = boxNebList[j];
-            
-            for (k = 0; k < boxes->boxNAtoms[boxIndex]; k++)
+            /* loop over box neighbourhood */
+            for (j = 0; j < boxNebListSize; j++)
             {
-                int visIndex, index2, ind23;
-                double sep2;
+                int k;
                 
-                visIndex = boxes->boxAtoms[boxIndex][k];
-                index2 = visibleAtoms[visIndex];
+                boxIndex = boxNebList[j];
                 
-//                if (index2 <= index) continue; // cannot do this because spec1 and spec2 may differ...
-                /* skip if same atom */
-                if (index == index2) continue;
-                
-                /* skip if not in second selection */
-                if (!sel2[visIndex]) continue;
-                
-                /* atomic separation */
-                ind23 = index2 * 3;
-                sep2 = atomicSeparation2(rxa, rya, rza,
-                                         pos[ind23    ], pos[ind23 + 1], pos[ind23 + 2],
-                                         cellDims[0], cellDims[1], cellDims[2], 
-                                         PBC[0], PBC[1], PBC[2]);
-                
-                /* put in bin */
-                if (sep2 >= start2 && sep2 < finish2)
+                for (k = 0; k < boxes->boxNAtoms[boxIndex]; k++)
                 {
-                    int binIndex;
-                    double sep;
+                    int visIndex, index2, ind23;
+                    double sep2;
                     
-                    sep = sqrt(sep2);
-                    binIndex = (int) ((sep - start) / interval);
-                    #pragma omp atomic
-                    rdf[binIndex]++;
+                    visIndex = boxes->boxAtoms[boxIndex][k];
+                    index2 = visibleAtoms[visIndex];
+                    
+    //                if (index2 <= index) continue; // cannot do this because spec1 and spec2 may differ...
+                    /* skip if same atom */
+                    if (index == index2) continue;
+                    
+                    /* skip if not in second selection */
+                    if (!sel2[visIndex]) continue;
+                    
+                    /* atomic separation */
+                    ind23 = index2 * 3;
+                    sep2 = atomicSeparation2(rxa, rya, rza,
+                                             pos[ind23    ], pos[ind23 + 1], pos[ind23 + 2],
+                                             cellDims[0], cellDims[1], cellDims[2], 
+                                             PBC[0], PBC[1], PBC[2]);
+                    
+                    /* put in bin */
+                    if (sep2 >= start2 && sep2 < finish2)
+                    {
+                        int binIndex;
+                        double sep;
+                        
+                        sep = sqrt(sep2);
+                        binIndex = (int) ((sep - start) / interval);
+                        #pragma omp atomic
+                        rdf[binIndex]++;
+                    }
                 }
             }
         }
@@ -246,6 +262,8 @@ calculateRDF(PyObject *self, PyObject *args)
     freeBoxes(boxes);
     free(sel1);
     free(sel2);
+    
+    if (errcount) return NULL;
     
     /* normalise rdf */
     {

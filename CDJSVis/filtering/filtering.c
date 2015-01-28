@@ -517,8 +517,8 @@ displacementFilter(PyObject *self, PyObject *args)
         refPos = malloc(refPosDim * sizeof(double));
         if (refPos == NULL)
         {
-            printf("ERROR: could not allocate refPos\n");
-            exit(34);
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate refPos");
+            return NULL;
         }
         
         for (i = 0; i < refPosDim / 3; i++)
@@ -781,7 +781,7 @@ coordNumFilter(PyObject *self, PyObject *args)
 	
     int i, j, k, index, index2, visIndex;
     int speca, specb, count, NVisibleNew;
-    int boxIndex, boxNebList[27];
+    int boxIndex, boxNebList[27], boxstat;
     double *visiblePos, sep2, sep;
     struct Boxes *boxes;
     
@@ -829,16 +829,18 @@ coordNumFilter(PyObject *self, PyObject *args)
     
 	if (not_doubleVector(fullVectors)) return NULL;
 	
-//    printf("BONDS CLIB\n");
-//    printf("N VIS: %d\n", NVisible);
-//    
-//    for (i=0; i<NSpecies; i++)
-//    {
-//        for (j=i; j<NSpecies; j++)
-//        {
-//            printf("%d - %d: %lf -> %lf\n", i, j, bondMinArray[i*NSpecies+j], bondMaxArray[i*NSpecies+j]);
-//        }
-//    }
+#ifdef DEBUG
+    printf("COORDNUM CLIB\n");
+    printf("N VIS: %d\n", NVisible);
+    
+    for (i=0; i<NSpecies; i++)
+    {
+        for (j=i; j<NSpecies; j++)
+        {
+            printf("%d - %d: %lf -> %lf\n", i, j, bondMinArray[i*NSpecies+j], bondMaxArray[i*NSpecies+j]);
+        }
+    }
+#endif
     
     /* construct visible pos array */
     visiblePos = malloc(3 * NVisible * sizeof(double));
@@ -851,24 +853,29 @@ coordNumFilter(PyObject *self, PyObject *args)
     for (i=0; i<NVisible; i++)
     {
         index = visibleAtoms[i];
-        
-        visiblePos[3*i] = pos[3*index];
-        visiblePos[3*i+1] = pos[3*index+1];
-        visiblePos[3*i+2] = pos[3*index+2];
+        int i3 = i * 3;
+        int ind3 = index * 3;
+        visiblePos[i3    ] = pos[ind3    ];
+        visiblePos[i3 + 1] = pos[ind3 + 1];
+        visiblePos[i3 + 2] = pos[ind3 + 2];
     }
     
     /* box visible atoms */
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-    putAtomsInBoxes(NVisible, visiblePos, boxes);
+    if (boxes == NULL)
+    {
+        free(visiblePos);
+        return NULL;
+    }
+    boxstat = putAtomsInBoxes(NVisible, visiblePos, boxes);
     
     /* free visible pos */
     free(visiblePos);
     
+    if (boxstat) return NULL;
+    
     /* zero coord array */
-    for (i=0; i<NVisible; i++)
-    {
-        coordArray[i] = 0;
-    }
+    for (i=0; i<NVisible; i++) coordArray[i] = 0;
     
     /* loop over visible atoms */
     count = 0;
@@ -882,6 +889,11 @@ coordNumFilter(PyObject *self, PyObject *args)
         
         /* get box index of this atom */
         boxIndex = boxIndexOfAtom(pos[3*index], pos[3*index+1], pos[3*index+2], boxes);
+        if (boxIndex < 0)
+        {
+            freeBoxes(boxes);
+            return NULL;
+        }
         
         /* find neighbouring boxes */
         boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);

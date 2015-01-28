@@ -30,7 +30,7 @@ struct Boxes * setupBoxes(double, double *, double *, int *, double *);
 
 int boxIndexOfAtom( double, double, double, struct Boxes *);
 
-void putAtomsInBoxes(int, double *, struct Boxes *);
+int putAtomsInBoxes(int, double *, struct Boxes *);
 
 void freeBoxes(struct Boxes *);
 

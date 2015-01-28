@@ -57,7 +57,7 @@ calculateBonds(PyObject *self, PyObject *args)
     PyArrayObject *bondVectorArrayIn=NULL;
     
     int i, j, k, index, index2, visIndex;
-    int speca, specb, count;
+    int speca, specb, count, boxstat;
     int boxIndex, boxNebList[27];
     double *visiblePos, sep2, sep;
     double sepVec[3];
@@ -111,41 +111,51 @@ calculateBonds(PyObject *self, PyObject *args)
     if (not_doubleVector(bondVectorArrayIn)) return NULL;
     bondVectorArray = pyvector_to_Cptr_double(bondVectorArrayIn);
     
-//    printf("BONDS CLIB\n");
-//    printf("N VIS: %d\n", NVisible);
-//    
-//    for (i=0; i<NSpecies; i++)
-//    {
-//        for (j=i; j<NSpecies; j++)
-//        {
-//            printf("%d - %d: %lf -> %lf\n", i, j, bondMinArray[i*NSpecies+j], bondMaxArray[i*NSpecies+j]);
-//        }
-//    }
+#ifdef DEBUG
+    printf("BONDS CLIB\n");
+    printf("N VIS: %d\n", NVisible);
+    
+    for (i = 0; i < NSpecies; i++)
+    {
+        for (j = i; j < NSpecies; j++)
+        {
+            printf("%d - %d: %lf -> %lf\n", i, j, bondMinArray[i*NSpecies+j], bondMaxArray[i*NSpecies+j]);
+        }
+    }
+#endif
     
     /* construct visible pos array */
     visiblePos = malloc(3 * NVisible * sizeof(double));
     if (visiblePos == NULL)
     {
-        printf("ERROR: could not allocate visiblePos\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate visiblePos");
+        return NULL;
     }
     
     for (i=0; i<NVisible; i++)
     {
-        index = visibleAtoms[i];
-        
-        visiblePos[3*i] = pos[3*index];
-        visiblePos[3*i+1] = pos[3*index+1];
-        visiblePos[3*i+2] = pos[3*index+2];
+        int index = visibleAtoms[i];
+        int ind3 = 3 * index;
+        int i3 = 3 * i;
+        visiblePos[i3    ] = pos[ind3    ];
+        visiblePos[i3 + 1] = pos[ind3 + 1];
+        visiblePos[i3 + 2] = pos[ind3 + 2];
     }
     
     /* box visible atoms */
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-    putAtomsInBoxes(NVisible, visiblePos, boxes);
+    if (boxes == NULL)
+    {
+        free(visiblePos);
+        return NULL;
+    }
+    boxstat = putAtomsInBoxes(NVisible, visiblePos, boxes);
+    free(visiblePos);
+    if (boxstat) return NULL;
     
     /* loop over visible atoms */
     count = 0;
-    for (i=0; i<NVisible; i++)
+    for (i = 0; i < NVisible; i++)
     {
         int boxNebListSize;
         
@@ -155,6 +165,11 @@ calculateBonds(PyObject *self, PyObject *args)
         
         /* get box index of this atom */
         boxIndex = boxIndexOfAtom(pos[3*index], pos[3*index+1], pos[3*index+2], boxes);
+        if (boxIndex < 0)
+        {
+            freeBoxes(boxes);
+            return NULL;
+        }
         
         /* find neighbouring boxes */
         boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
@@ -219,10 +234,11 @@ calculateBonds(PyObject *self, PyObject *args)
         }
     }
     
-//    printf("  N BONDS TOT: %d\n", count);
+#ifdef DEBUG
+    printf("  N BONDS TOT: %d\n", count);
+#endif
     
     /* free */
-    free(visiblePos);
     freeBoxes(boxes);
     
     return Py_BuildValue("i", 0);

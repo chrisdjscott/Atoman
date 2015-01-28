@@ -89,7 +89,7 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
     
-    int i, NVisible;
+    int i, NVisible, status;
     double *visiblePos, approxBoxWidth, maxSep2;
     struct Boxes *boxes;
     struct NeighbourList2 *nebList;
@@ -144,26 +144,35 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     visiblePos = malloc(3 * NVisibleIn * sizeof(double));
     if (visiblePos == NULL)
     {
-        printf("ERROR: could not allocate visiblePos\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate visiblePos");
+        return NULL;
     }
     
-    for (i=0; i<NVisibleIn; i++)
+    for (i = 0; i < NVisibleIn; i++)
     {
-        int index;
-        
-        index = visibleAtoms[i];
-        
-        visiblePos[3*i] = pos[3*index];
-        visiblePos[3*i+1] = pos[3*index+1];
-        visiblePos[3*i+2] = pos[3*index+2];
+        int index = visibleAtoms[i];
+        int ind3 = 3 * index;
+        int i3 = 3 * i;
+        visiblePos[i3    ] = pos[ind3    ];
+        visiblePos[i3 + 1] = pos[ind3 + 1];
+        visiblePos[i3 + 2] = pos[ind3 + 2];
     }
     
     /* box visible atoms */
     approxBoxWidth = maxBondDistance;
     maxSep2 = maxBondDistance * maxBondDistance;
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-    putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
+    if (boxes == NULL)
+    {
+        free(visiblePos);
+        return NULL;
+    }
+    status = putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
+    if (status)
+    {
+        free(visiblePos);
+        return NULL;
+    }
     
     /* create neighbour list */
     nebList = constructNeighbourList2(NVisibleIn, visiblePos, boxes, cellDims, PBC, maxSep2);
@@ -171,6 +180,8 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     /* only required for building neb list */
     freeBoxes(boxes);
     free(visiblePos);
+    
+    if (nebList == NULL) return NULL;
     
 /* now we order the neighbour lists by separation */
     

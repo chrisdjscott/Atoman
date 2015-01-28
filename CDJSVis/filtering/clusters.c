@@ -57,7 +57,7 @@ findClusters(PyObject *self, PyObject *args)
     PyArrayObject *fullVectors=NULL;
     
     int i, j, index, NClusters, numInCluster;
-    int maxNumInCluster;
+    int maxNumInCluster, boxstat;
     double nebRad2, approxBoxWidth;
     double *visiblePos;
     struct Boxes *boxes;
@@ -106,37 +106,48 @@ findClusters(PyObject *self, PyObject *args)
     visiblePos = malloc(3 * NVisibleIn * sizeof(double));
     if (visiblePos == NULL)
     {
-        printf("ERROR: could not allocate visiblePos\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate visiblePos");
+        return NULL;
     }
     
-    for (i=0; i<NVisibleIn; i++)
+    for (i = 0; i < NVisibleIn; i++)
     {
-        index = visibleAtoms[i];
-        
-        visiblePos[3*i] = pos[3*index];
-        visiblePos[3*i+1] = pos[3*index+1];
-        visiblePos[3*i+2] = pos[3*index+2];
-    }
-    
-    NAtomsCluster = calloc(NVisibleIn, sizeof(int));
-    if (NAtomsCluster == NULL)
-    {
-        printf("ERROR: could not allocate NAtomsCluster\n");
-        exit(50);
+        int index = visibleAtoms[i];
+        int ind3 = 3 * index;
+        int i3 = 3 * i;
+        visiblePos[i3    ] = pos[ind3    ];
+        visiblePos[i3 + 1] = pos[ind3 + 1];
+        visiblePos[i3 + 2] = pos[ind3 + 2];
     }
     
     /* box visible atoms */
     approxBoxWidth = neighbourRad;
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-    putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
+    if (boxes == NULL)
+    {
+        free(visiblePos);
+        return NULL;
+    }
+    boxstat = putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
+    if (boxstat)
+    {
+        free(visiblePos);
+        return NULL;
+    }
     
     nebRad2 = neighbourRad * neighbourRad;
     
     /* initialise clusters array */
-    for (i=0; i<NVisibleIn; i++)
+    for (i = 0; i < NVisibleIn; i++) clusterArray[i] = -1;
+    
+    /* allocate NAtomsCluster */
+    NAtomsCluster = calloc(NVisibleIn, sizeof(int));
+    if (NAtomsCluster == NULL)
     {
-        clusterArray[i] = -1;
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate NAtomsCluster");
+        freeBoxes(boxes);
+        free(visiblePos);
+        return NULL;
     }
     
     /* loop over atoms */
@@ -148,25 +159,30 @@ findClusters(PyObject *self, PyObject *args)
         if (clusterArray[i] == -1)
         {
             clusterArray[i] = NClusters;
-            
             numInCluster = 1;
             
             /* recursive search for cluster atoms */
             numInCluster = findNeighbours(i, clusterArray[i], numInCluster, clusterArray, visiblePos, nebRad2, boxes, cellDims, PBC);
-            
+            if (numInCluster < 0)
+            {
+                free(NAtomsCluster);
+                freeBoxes(boxes);
+                free(visiblePos);
+            }
             maxNumInCluster = (numInCluster > maxNumInCluster) ? numInCluster : maxNumInCluster;
-            
-            NAtomsCluster[NClusters] = numInCluster;
-            
-            NClusters++;
+            NAtomsCluster[NClusters++] = numInCluster;
         }
     }
+    
+    free(visiblePos);
     
     NAtomsClusterNew = calloc(NClusters, sizeof(int));
     if (NAtomsClusterNew == NULL)
     {
-        printf("ERROR: could not allocate NAtomsClusterNew\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate NAtomsClusterNew");
+        free(NAtomsCluster);
+        freeBoxes(boxes);
+        return NULL;
     }
     
     /* loop over visible atoms to see if their cluster has more than the min number */
@@ -177,16 +193,8 @@ findClusters(PyObject *self, PyObject *args)
         index = visibleAtoms[i];
         
         numInCluster = NAtomsCluster[clusterIndex];
-        
-        if (numInCluster < minClusterSize)
-        {
-            continue;
-        }
-        
-        if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize)
-        {
-            continue;
-        }
+        if (numInCluster < minClusterSize) continue;
+        if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize) continue;
         
         visibleAtoms[NVisible] = index;
         clusterArray[NVisible] = clusterIndex;
@@ -194,15 +202,16 @@ findClusters(PyObject *self, PyObject *args)
         
         /* handle full scalars array */
         for (j = 0; j < NScalars; j++)
-        {
             fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
-        }
         
         for (j = 0; j < NVectors; j++)
         {
-            DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
-            DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
-            DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
+            int addr = NVisibleIn * j;
+            int addr1 = addr + NVisible;
+            int addr2 = addr + i;
+            DIND2(fullVectors, addr1, 0) = DIND2(fullVectors, addr2, 0);
+            DIND2(fullVectors, addr1, 1) = DIND2(fullVectors, addr2, 1);
+            DIND2(fullVectors, addr1, 2) = DIND2(fullVectors, addr2, 2);
         }
         
         NVisible++;
@@ -210,13 +219,7 @@ findClusters(PyObject *self, PyObject *args)
     
     /* how many clusters now */
     count = 0;
-    for (i=0; i<NClusters; i++)
-    {
-        if (NAtomsClusterNew[i] > 0)
-        {
-            count += 1;
-        }
-    }
+    for (i = 0; i < NClusters; i++) if (NAtomsClusterNew[i] > 0) count++;
     
     /* store results */
     results[0] = NVisible;
@@ -225,7 +228,6 @@ findClusters(PyObject *self, PyObject *args)
     free(NAtomsClusterNew);
     free(NAtomsCluster);
     freeBoxes(boxes);
-    free(visiblePos);
     
     return Py_BuildValue("i", 0);
 }
@@ -244,6 +246,7 @@ static int findNeighbours(int index, int clusterID, int numInCluster, int* atomC
     
     /* box of primary atom */
     boxIndex = boxIndexOfAtom(pos[3*index], pos[3*index+1], pos[3*index+2], boxes);
+    if (boxIndex < 0) return -1;
     
     /* find neighbouring boxes */
     boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
@@ -273,6 +276,7 @@ static int findNeighbours(int index, int clusterID, int numInCluster, int* atomC
                 
                 /* search for neighbours to this new cluster atom */
                 numInCluster = findNeighbours(index2, clusterID, numInCluster, atomCluster, pos, maxSep2, boxes, cellDims, PBC);
+                if (numInCluster < 0) return -1;
             }
         }
     }

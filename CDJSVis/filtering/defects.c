@@ -75,7 +75,7 @@ findDefects(PyObject *self, PyObject *args)
     PyArrayObject *driftVectorIn=NULL;
     PyArrayObject *acnaArrayIn=NULL;
     
-    int i;
+    int i, boxstat;
     double vacRad2;
     int NDefects, NAntisites, NInterstitials, NVacancies;
     int *NDefectsCluster, *NDefectsClusterNew;
@@ -187,17 +187,16 @@ findDefects(PyObject *self, PyObject *args)
         refPos = malloc(3 * refNAtoms * sizeof(double));
         if (refPos == NULL)
         {
-            printf("ERROR: could not allocate refPos\n");
-            exit(34);
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate refPos");
+            return NULL;
         }
         
         for (i = 0; i < refNAtoms; i++)
         {
             int i3 = 3 * i;
-
-            refPos[i3] = refPosIn[i3] + driftVector[0];
-            refPos[i3+1] = refPosIn[i3+1] + driftVector[1];
-            refPos[i3+2] = refPosIn[i3+2] + driftVector[2];
+            refPos[i3    ] = refPosIn[i3    ] + driftVector[0];
+            refPos[i3 + 1] = refPosIn[i3 + 1] + driftVector[1];
+            refPos[i3 + 2] = refPosIn[i3 + 2] + driftVector[2];
         }
     }
     else
@@ -213,42 +212,63 @@ findDefects(PyObject *self, PyObject *args)
     
     /* box reference atoms */
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-    putAtomsInBoxes(NAtoms, pos, boxes);
+    if (boxes == NULL)
+    {
+        if (driftCompensation) free(refPos);
+        return NULL;
+    }
+    boxstat = putAtomsInBoxes(NAtoms, pos, boxes);
+    if (boxstat)
+    {
+        if (driftCompensation) free(refPos);
+        return NULL;
+    }
     
     /* allocate local arrays for checking atoms */
     possibleVacancy = malloc(refNAtoms * sizeof(int));
     if (possibleVacancy == NULL)
     {
-        printf("ERROR: Boxes: could not allocate possibleVacancy\n");
-        exit(1);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate possibleVacancy");
+        if (driftCompensation) free(refPos);
+        freeBoxes(boxes);
+        return NULL;
     }
     
     possibleInterstitial = malloc(NAtoms * sizeof(int));
     if (possibleInterstitial == NULL)
     {
-        printf("ERROR: Boxes: could not allocate possibleInterstitial\n");
-        exit(1);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate possibleInterstitial");
+        if (driftCompensation) free(refPos);
+        freeBoxes(boxes);
+        free(possibleVacancy);
+        return NULL;
     }
     
     possibleAntisite = malloc(refNAtoms * sizeof(int));
     if (possibleAntisite == NULL)
     {
-        printf("ERROR: Boxes: could not allocate possibleAntisite\n");
-        exit(1);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate possibleAntisite");
+        if (driftCompensation) free(refPos);
+        freeBoxes(boxes);
+        free(possibleInterstitial);
+        free(possibleVacancy);
+        return NULL;
     }
     
     possibleOnAntisite = malloc(refNAtoms * sizeof(int));
     if (possibleOnAntisite == NULL)
     {
-        printf("ERROR: Boxes: could not allocate possibleOnAntisite\n");
-        exit(1);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate possibleOnAntisite");
+        if (driftCompensation) free(refPos);
+        freeBoxes(boxes);
+        free(possibleAntisite);
+        free(possibleInterstitial);
+        free(possibleVacancy);
+        return NULL;
     }
     
     /* initialise arrays */
-    for (i = 0; i < NAtoms; i++)
-    {
-        possibleInterstitial[i] = 1;
-    }
+    for (i = 0; i < NAtoms; i++) possibleInterstitial[i] = 1;
     for (i = 0; i < refNAtoms; i++)
     {
         possibleVacancy[i] = 1;
@@ -267,12 +287,22 @@ findDefects(PyObject *self, PyObject *args)
         double refxpos, refypos, refzpos;
         double nearestSep2 = 9999.0;
 
-        refxpos = refPos[i3];
-        refypos = refPos[i3+1];
-        refzpos = refPos[i3+2];
+        refxpos = refPos[i3    ];
+        refypos = refPos[i3 + 1];
+        refzpos = refPos[i3 + 2];
 
         /* get box index of this atom */
         boxIndex = boxIndexOfAtom(refxpos, refypos, refzpos, boxes);
+        if (boxIndex < 0)
+        {
+            if (driftCompensation) free(refPos);
+            freeBoxes(boxes);
+            free(possibleAntisite);
+            free(possibleInterstitial);
+            free(possibleVacancy);
+            free(possibleOnAntisite);
+            return NULL;
+        }
 
         /* find neighbouring boxes */
         boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
@@ -377,7 +407,7 @@ findDefects(PyObject *self, PyObject *args)
     NInterstitials = 0;
     NAntisites = 0;
     NSplitInterstitials = 0;
-    for ( i=0; i<refNAtoms; i++ )
+    for (i = 0; i < refNAtoms; i++ )
     {
         /* vacancies */
         if (possibleVacancy[i] == 1)
@@ -393,7 +423,7 @@ findDefects(PyObject *self, PyObject *args)
         }
     }
     
-    for ( i=0; i<NAtoms; i++ )
+    for (i = 0; i < NAtoms; i++ )
     {
         /* interstitials */
         if (possibleInterstitial[i] == 1)
@@ -419,34 +449,33 @@ findDefects(PyObject *self, PyObject *args)
         defectPos = malloc(3 * NDefects * sizeof(double));
         if (defectPos == NULL)
         {
-            printf("ERROR: could not allocate defectPos\n");
-            exit(50);
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate defectPos");
+            if (driftCompensation) free(refPos);
+            return NULL;
         }
         
         /* add defects positions: vac then int then ant */
         count = 0;
         for (i = 0; i < NVacancies; i++)
         {
-            int index;
-
-            index = vacancies[i];
-            
-            defectPos[3*count] = refPos[3*index];
-            defectPos[3*count+1] = refPos[3*index+1];
-            defectPos[3*count+2] = refPos[3*index+2];
+            int index = vacancies[i];
+            int index3 = 3 * index;
+            int c3 = count * 3;
+            defectPos[c3    ] = refPos[index3    ];
+            defectPos[c3 + 1] = refPos[index3 + 1];
+            defectPos[c3 + 2] = refPos[index3 + 2];
             
             count++;
         }
         
         for (i=0; i<NInterstitials; i++)
         {
-            int index;
-
-            index = interstitials[i];
-            
-            defectPos[3*count] = pos[3*index];
-            defectPos[3*count+1] = pos[3*index+1];
-            defectPos[3*count+2] = pos[3*index+2];
+            int index = interstitials[i];
+            int index3 = 3 * index;
+            int c3 = count * 3;
+            defectPos[c3    ] = pos[index3    ];
+            defectPos[c3 + 1] = pos[index3 + 1];
+            defectPos[c3 + 2] = pos[index3 + 2];
             
             count++;
         }
@@ -456,32 +485,65 @@ findDefects(PyObject *self, PyObject *args)
         /* box defects */
         approxBoxWidth = splitIntRad;
         boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-        putAtomsInBoxes(NDefects, defectPos, boxes);
+        if (boxes == NULL)
+        {
+            if (driftCompensation) free(refPos);
+            free(defectPos);
+            return NULL;
+        }
+        boxstat = putAtomsInBoxes(NDefects, defectPos, boxes);
+        if (boxstat)
+        {
+            if (driftCompensation) free(refPos);
+            free(defectPos);
+            return NULL;
+        }
         
         /* number of defects per cluster */
         NDefectsCluster = malloc(NDefects * sizeof(int));
         if (NDefectsCluster == NULL)
         {
-            printf("ERROR: Boxes: could not allocate NDefectsCluster\n");
-            exit(1);
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate NDefectsCluster");
+            if (driftCompensation) free(refPos);
+            free(defectPos);
+            freeBoxes(boxes);
+            return NULL;
         }
         
         /* cluster number */
         defectClusterSplit = malloc(NDefects * sizeof(int));
         if (defectClusterSplit == NULL)
         {
-            printf("ERROR: Boxes: could not allocate defectClusterSplit\n");
-            exit(1);
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate defectClusterSplit");
+            if (driftCompensation) free(refPos);
+            free(defectPos);
+            free(NDefectsCluster);
+            freeBoxes(boxes);
+            return NULL;
         }
         
         /* find clusters */
         NClusters = findDefectClusters(NDefects, defectPos, defectClusterSplit, NDefectsCluster, boxes, splitIntRad, cellDims, PBC);
         
+        freeBoxes(boxes);
+        free(defectPos);
+        
+        if (NClusters < 0)
+        {
+            if (driftCompensation) free(refPos);
+            free(NDefectsCluster);
+            free(defectClusterSplit);
+            return NULL;
+        }
+        
         NDefectsCluster = realloc(NDefectsCluster, NClusters * sizeof(int));
         if (NDefectsCluster == NULL)
         {
-            printf("ERROR: could not reallocate NDefectsCluster\n");
-            exit(51);
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate NDefectsCluster");
+            if (driftCompensation) free(refPos);
+            free(NDefectsCluster);
+            free(defectClusterSplit);
+            return NULL;
         }
         
         NVacNew = NVacancies;
@@ -489,7 +551,7 @@ findDefects(PyObject *self, PyObject *args)
         NSplitInterstitials = 0;
         
         /* find split ints */
-        for (i=0; i<NClusters; i++)
+        for (i = 0; i < NClusters; i++)
         {
             if (NDefectsCluster[i] == 3)
             {
@@ -500,7 +562,7 @@ findDefects(PyObject *self, PyObject *args)
                 
                 count = 0;
                 vacCount = 0;
-                for (j=0; j<NDefects; j++)
+                for (j = 0; j < NDefects; j++)
                 {
                     if (defectClusterSplit[j] == i)
                     {
@@ -520,7 +582,7 @@ findDefects(PyObject *self, PyObject *args)
                     
                     /* indexes */
                     count = 1;
-                    for (j=0; j<3; j++)
+                    for (j = 0; j < 3; j++)
                     {
                         int index;
 
@@ -554,12 +616,10 @@ findDefects(PyObject *self, PyObject *args)
         /* free memory */
         free(defectClusterSplit);
         free(NDefectsCluster);
-        free(defectPos);
-        freeBoxes(boxes);
         
         /* recreate interstitials array */
         count = 0;
-        for (i=0; i<NInterstitials; i++)
+        for (i = 0; i < NInterstitials; i++)
         {
             if (interstitials[i] != -1)
             {
@@ -571,7 +631,7 @@ findDefects(PyObject *self, PyObject *args)
         
         /* recreate vacancies array */
         count = 0;
-        for (i=0; i<NVacancies; i++)
+        for (i = 0; i < NVacancies; i++)
         {
             if (vacancies[i] != -1)
             {
@@ -588,7 +648,6 @@ findDefects(PyObject *self, PyObject *args)
     if (acnaArrayDim)
     {
         int numChanges = 0; // only recreate arrays if changes happened
-        int count;
         double maxSep, maxSep2, *defectPos;
         
         
@@ -599,23 +658,20 @@ findDefects(PyObject *self, PyObject *args)
         defectPos = malloc(3 * NInterstitials * sizeof(double));
         if (defectPos == NULL)
         {
-            printf("ERROR: could not allocate defectPos\n");
-            exit(50);
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate defectPos");
+            if (driftCompensation) free(refPos);
+            return NULL;
         }
         
         /* add defects positions: int then split */
-        count = 0;
-        for (i=0; i<NInterstitials; i++)
+        for (i = 0; i < NInterstitials; i++)
         {
-            int index;
-
-            index = interstitials[i];
-            
-            defectPos[3*count] = pos[3*index];
-            defectPos[3*count+1] = pos[3*index+1];
-            defectPos[3*count+2] = pos[3*index+2];
-            
-            count++;
+            int index  = interstitials[i];
+            int i3 = i * 3;
+            int ind3 = index * 3;
+            defectPos[i3    ] = pos[ind3    ];
+            defectPos[i3 + 1] = pos[ind3 + 1];
+            defectPos[i3 + 2] = pos[ind3 + 2];
         }
         
         /* max separation */
@@ -625,7 +681,19 @@ findDefects(PyObject *self, PyObject *args)
         /* box defects */
         approxBoxWidth = maxSep;
         boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-        putAtomsInBoxes(NInterstitials, defectPos, boxes);
+        if (boxes == NULL)
+        {
+            if (driftCompensation) free(refPos);
+            free(defectPos);
+            return NULL;
+        }
+        boxstat = putAtomsInBoxes(NInterstitials, defectPos, boxes);
+        free(defectPos);
+        if (boxstat)
+        {
+            if (driftCompensation) free(refPos);
+            return NULL;
+        }
         
         /* loop over vacancies and see if there is a single neighbouring intersitial */
         for (i = 0; i < NVacancies; i++)
@@ -646,6 +714,12 @@ findDefects(PyObject *self, PyObject *args)
             
             /* get box index of this atom */
             boxIndex = boxIndexOfAtom(refxpos, refypos, refzpos, boxes);
+            if (boxIndex < 0)
+            {
+                if (driftCompensation) free(refPos);
+                freeBoxes(boxes);
+                return NULL;
+            }
             
             /* find neighbouring boxes */
             boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
@@ -725,7 +799,6 @@ findDefects(PyObject *self, PyObject *args)
         
         /* free */
         freeBoxes(boxes);
-        free(defectPos);
         
         /* recreate vacancies/interstitials arrays */
 //        printf("DEBUG: num changes = %d\n", numChanges);
@@ -756,14 +829,14 @@ findDefects(PyObject *self, PyObject *args)
     else
     {
         NIntNew = 0;
-        for (i=0; i<NInterstitials; i++)
+        for (i = 0; i < NInterstitials; i++)
         {
             int index, j, skip;
 
             index = interstitials[i];
             
             skip = 0;
-            for (j=0; j<exclSpecInputDim; j++)
+            for (j = 0; j < exclSpecInputDim; j++)
             {
                 if (specie[index] == exclSpecInput[j])
                 {
@@ -781,21 +854,18 @@ findDefects(PyObject *self, PyObject *args)
         NInterstitials = NIntNew;
     }
     
-    if (!includeVacs)
-    {
-        NVacancies = 0;
-    }
+    if (!includeVacs) NVacancies = 0;
     else
     {
         NVacNew = 0;
-        for (i=0; i<NVacancies; i++)
+        for (i = 0; i < NVacancies; i++)
         {
             int index, j, skip;
 
             index = vacancies[i];
             
             skip = 0;
-            for (j=0; j<exclSpecRefDim; j++)
+            for (j = 0; j < exclSpecRefDim; j++)
             {
                 if (specie[index] == exclSpecRef[j])
                 {
@@ -813,10 +883,7 @@ findDefects(PyObject *self, PyObject *args)
         NVacancies = NVacNew;
     }
     
-    if (!includeAnts)
-    {
-        NAntisites = 0;
-    }
+    if (!includeAnts) NAntisites = 0;
     
 //    printf("NVACS %d; NINTS %d; NSPLITINTS %d\n", NVacancies, NInterstitials, NSplitInterstitials);
     
@@ -831,105 +898,133 @@ findDefects(PyObject *self, PyObject *args)
         defectPos = malloc(3 * NDefects * sizeof(double));
         if (defectPos == NULL)
         {
-            printf("ERROR: could not allocate defectPos\n");
-            exit(50);
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate defectPos");
+            if (driftCompensation) free(refPos);
+            return NULL;
         }
         
         /* add defects positions: vac then int then ant */
         count = 0;
-        for (i=0; i<NVacancies; i++)
+        for (i = 0; i < NVacancies; i++)
         {
-            int index;
-
-            index = vacancies[i];
-            
-            defectPos[3*count] = refPos[3*index];
-            defectPos[3*count+1] = refPos[3*index+1];
-            defectPos[3*count+2] = refPos[3*index+2];
-            
+            int index  = vacancies[i];
+            int c3 = count * 3;
+            int index3 = index * 3;
+            defectPos[c3    ] = refPos[index3    ];
+            defectPos[c3 + 1] = refPos[index3 + 1];
+            defectPos[c3 + 2] = refPos[index3 + 2];
             count++;
         }
         
-        for (i=0; i<NInterstitials; i++)
+        for (i = 0; i < NInterstitials; i++)
         {
-            int index;
-
-            index = interstitials[i];
-            
-            defectPos[3*count] = pos[3*index];
-            defectPos[3*count+1] = pos[3*index+1];
-            defectPos[3*count+2] = pos[3*index+2];
-            
+            int index = interstitials[i];
+            int c3 = count * 3;
+            int index3 = index * 3;
+            defectPos[c3    ] = pos[index3    ];
+            defectPos[c3 + 1] = pos[index3 + 1];
+            defectPos[c3 + 2] = pos[index3 + 2];
             count++;
         }
         
-        for (i=0; i<NAntisites; i++)
+        for (i = 0; i < NAntisites; i++)
         {
-            int index;
-
-            index = antisites[i];
-            
-            defectPos[3*count] = refPos[3*index];
-            defectPos[3*count+1] = refPos[3*index+1];
-            defectPos[3*count+2] = refPos[3*index+2];
-            
+            int index  = antisites[i];
+            int c3 = count * 3;
+            int index3 = index * 3;
+            defectPos[c3    ] = refPos[index3    ];
+            defectPos[c3 + 1] = refPos[index3 + 1];
+            defectPos[c3 + 2] = refPos[index3 + 2];
             count++;
         }
         
-        for (i=0; i<NSplitInterstitials; i++)
+        for (i = 0; i < NSplitInterstitials; i++)
         {
-            int index;
+            int index, c3, index3;
 
             index = splitInterstitials[3*i];
-            defectPos[3*count] = refPos[3*index];
-            defectPos[3*count+1] = refPos[3*index+1];
-            defectPos[3*count+2] = refPos[3*index+2];
+            c3 = count * 3;
+            index3 = index * 3;
+            defectPos[c3    ] = refPos[index3    ];
+            defectPos[c3 + 1] = refPos[index3 + 1];
+            defectPos[c3 + 2] = refPos[index3 + 2];
             count++;
             
             index = splitInterstitials[3*i+1];
-            defectPos[3*count] = pos[3*index];
-            defectPos[3*count+1] = pos[3*index+1];
-            defectPos[3*count+2] = pos[3*index+2];
+            c3 = count * 3;
+            index3 = index * 3;
+            defectPos[c3    ] = pos[index3    ];
+            defectPos[c3 + 1] = pos[index3 + 1];
+            defectPos[c3 + 2] = pos[index3 + 2];
             count++;
             
             index = splitInterstitials[3*i+2];
-            defectPos[3*count] = pos[3*index];
-            defectPos[3*count+1] = pos[3*index+1];
-            defectPos[3*count+2] = pos[3*index+2];
+            c3 = count * 3;
+            index3 = index * 3;
+            defectPos[c3    ] = pos[index3    ];
+            defectPos[c3 + 1] = pos[index3 + 1];
+            defectPos[c3 + 2] = pos[index3 + 2];
             count++;
         }
         
         /* box defects */
         approxBoxWidth = clusterRadius;
         boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-        putAtomsInBoxes(NDefects, defectPos, boxes);
+        if (boxes == NULL)
+        {
+            if (driftCompensation) free(refPos);
+            free(defectPos);
+            return NULL;
+        }
+        boxstat = putAtomsInBoxes(NDefects, defectPos, boxes);
+        if (boxstat)
+        {
+            if (driftCompensation) free(refPos);
+            free(defectPos);
+            return NULL;
+        }
         
         /* number of defects per cluster */
         NDefectsCluster = malloc(NDefects * sizeof(int));
         if (NDefectsCluster == NULL)
         {
-            printf("ERROR: Boxes: could not allocate NDefectsCluster\n");
-            exit(1);
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate NDefectsCluster");
+            if (driftCompensation) free(refPos);
+            free(defectPos);
+            freeBoxes(boxes);
+            return NULL;
         }
         
         /* find clusters */
         NClusters = findDefectClusters(NDefects, defectPos, defectCluster, NDefectsCluster, boxes, clusterRadius, cellDims, PBC);
         
+        freeBoxes(boxes);
+        free(defectPos);
+        
+        if (NClusters < 0)
+        {
+            if (driftCompensation) free(refPos);
+            free(NDefectsCluster);
+            return NULL;
+        }
+        
         NDefectsCluster = realloc(NDefectsCluster, NClusters * sizeof(int));
         if (NDefectsCluster == NULL)
         {
-            printf("ERROR: could not reallocate NDefectsCluster\n");
-            exit(51);
+            PyErr_SetString(PyExc_MemoryError, "Could not reallocate NDefectsCluster");
+            if (driftCompensation) free(refPos);
+            return NULL;
         }
         
         /* first we have to adjust the number of atoms in clusters containing split interstitials */
-        for (i=0; i<NSplitInterstitials; i++)
+        for (i = 0; i < NSplitInterstitials; i++)
         {
-            int j, index, clusterIndex;
+            int j, index;
+//            int clusterIndex;
 
             /* assume all lone defects forming split interstitial are in same cluster; maybe should check!? */
             j = NVacancies + NInterstitials + NAntisites;
-            clusterIndex = defectCluster[j + 3 * i];
+//            clusterIndex = defectCluster[j + 3 * i];
             
             /* subtract one from other atoms' clusters */
             /* we could also check they are same as main one? */
@@ -943,13 +1038,15 @@ findDefects(PyObject *self, PyObject *args)
         NDefectsClusterNew = calloc(NClusters, sizeof(int));
         if (NDefectsClusterNew == NULL)
         {
-            printf("ERROR: could not allocate NDefectsClusterNew\n");
-            exit(50);
+            PyErr_SetString(PyExc_MemoryError, "Could not reallocate NDefectsClusterNew");
+            if (driftCompensation) free(refPos);
+            free(NDefectsCluster);
+            return NULL;
         }
         
         /* first vacancies */
         NVacNew = 0;
-        for (i=0; i<NVacancies; i++)
+        for (i = 0; i < NVacancies; i++)
         {
             int index, clusterIndex;
 
@@ -957,16 +1054,8 @@ findDefects(PyObject *self, PyObject *args)
             index = vacancies[i];
             
             numInCluster = NDefectsCluster[clusterIndex];
-            
-            if (numInCluster < minClusterSize)
-            {
-                continue;
-            }
-            
-            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize)
-            {
-                continue;
-            }
+            if (numInCluster < minClusterSize) continue;
+            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize) continue;
             
             vacancies[NVacNew] = index;
             defectCluster[NVacNew] = clusterIndex;
@@ -977,7 +1066,7 @@ findDefects(PyObject *self, PyObject *args)
         
         /* now interstitials */
         NIntNew = 0;
-        for (i=0; i<NInterstitials; i++)
+        for (i = 0; i < NInterstitials; i++)
         {
             int index, clusterIndex;
 
@@ -985,16 +1074,8 @@ findDefects(PyObject *self, PyObject *args)
             index = interstitials[i];
             
             numInCluster = NDefectsCluster[clusterIndex];
-            
-            if (numInCluster < minClusterSize)
-            {
-                continue;
-            }
-            
-            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize)
-            {
-                continue;
-            }
+            if (numInCluster < minClusterSize) continue;
+            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize) continue;
             
             interstitials[NIntNew] = index;
             defectCluster[NVacNew+NIntNew] = clusterIndex;
@@ -1005,7 +1086,7 @@ findDefects(PyObject *self, PyObject *args)
         
         /* antisites */
         NAntNew = 0;
-        for (i=0; i<NAntisites; i++)
+        for (i = 0; i < NAntisites; i++)
         {
             int index, index2, clusterIndex;
 
@@ -1014,16 +1095,8 @@ findDefects(PyObject *self, PyObject *args)
             index2 = onAntisites[i];
             
             numInCluster = NDefectsCluster[clusterIndex];
-            
-            if (numInCluster < minClusterSize)
-            {
-                continue;
-            }
-            
-            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize)
-            {
-                continue;
-            }
+            if (numInCluster < minClusterSize) continue;
+            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize) continue;
             
             antisites[NAntNew] = index;
             onAntisites[NAntNew] = index2;
@@ -1035,7 +1108,7 @@ findDefects(PyObject *self, PyObject *args)
         
         /* split interstitials */
         NSplitNew = 0;
-        for (i=0; i<NSplitInterstitials; i++)
+        for (i = 0; i < NSplitInterstitials; i++)
         {
             int j, clusterIndex;
 
@@ -1045,16 +1118,8 @@ findDefects(PyObject *self, PyObject *args)
             
             /* note, this number is wrong because we add 3 per split int, not 1 */
             numInCluster = NDefectsCluster[clusterIndex];
-            
-            if (numInCluster < minClusterSize)
-            {
-                continue;
-            }
-            
-            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize)
-            {
-                continue;
-            }
+            if (numInCluster < minClusterSize) continue;
+            if (maxClusterSize >= minClusterSize && numInCluster > maxClusterSize) continue;
             
             splitInterstitials[3*NSplitNew] = splitInterstitials[3*i];
             splitInterstitials[3*NSplitNew+1] = splitInterstitials[3*i+1];
@@ -1073,18 +1138,13 @@ findDefects(PyObject *self, PyObject *args)
         
         /* recalc number of clusters */
         count = 0;
-        for (i=0; i<NClusters; i++)
-        {
-            if (NDefectsClusterNew[i] > 0) count++;
-        }
+        for (i = 0; i < NClusters; i++) if (NDefectsClusterNew[i] > 0) count++;
         NClusters = count;
         
         /* number of clusters */
         NDefectsType[4] = NClusters;
         
         /* free stuff */
-        freeBoxes(boxes);
-        free(defectPos);
         free(NDefectsCluster);
         free(NDefectsClusterNew);
     }
@@ -1099,23 +1159,19 @@ findDefects(PyObject *self, PyObject *args)
     NDefectsType[5] = NSplitInterstitials;
     
     /* specie counters */
-    for (i=0; i<NVacancies; i++)
+    for (i = 0; i < NVacancies; i++)
     {
-        int index;
-
-        index = vacancies[i];
+        int index = vacancies[i];
         vacSpecCount[specieRef[index]]++;
     }
     
-    for (i=0; i<NInterstitials; i++)
+    for (i = 0; i < NInterstitials; i++)
     {
-        int index;
-
-        index = interstitials[i];
+        int index  = interstitials[i];
         intSpecCount[specie[index]]++;
     }
     
-    for (i=0; i<NAntisites; i++)
+    for (i = 0; i < NAntisites; i++)
     {
         int index, index2;
 
@@ -1126,7 +1182,7 @@ findDefects(PyObject *self, PyObject *args)
         onAntSpecCount[specieRef[index]*NSpecies+specie[index2]]++;
     }
     
-    for (i=0; i<NSplitInterstitials; i++)
+    for (i = 0; i < NSplitInterstitials; i++)
     {
         int index, index2;
 
@@ -1160,15 +1216,12 @@ static int findDefectClusters(int NDefects, double *defectPos, int *defectCluste
      * = -1 : not yet allocated
      * > -1 : cluster ID of defect
      */
-    for (i=0; i<NDefects; i++)
-    {
-        defectCluster[i] = -1;
-    }
+    for (i = 0; i < NDefects; i++) defectCluster[i] = -1;
     
     /* loop over defects */
     NClusters = 0;
     maxNumInCluster = -9999;
-    for (i=0; i<NDefects; i++)
+    for (i = 0; i < NDefects; i++)
     {
         /* skip if atom already allocated */
         if (defectCluster[i] == -1)
@@ -1181,9 +1234,9 @@ static int findDefectClusters(int NDefects, double *defectPos, int *defectCluste
             
             /* recursive search for cluster atoms */
             numInCluster = findDefectNeighbours(i, defectCluster[i], numInCluster, defectCluster, defectPos, boxes, maxSep2, cellDims, PBC);
+            if (numInCluster < 0) return -1;
             
             NDefectsCluster[defectCluster[i]] = numInCluster;
-            
             maxNumInCluster = (numInCluster > maxNumInCluster) ? numInCluster : maxNumInCluster;
         }
     }
@@ -1205,6 +1258,7 @@ static int findDefectNeighbours(int index, int clusterID, int numInCluster, int*
     
     /* box of primary atom */
     boxIndex = boxIndexOfAtom(pos[3*index], pos[3*index+1], pos[3*index+2], boxes);
+    if (boxIndex < 0) return -1;
         
     /* find neighbouring boxes */
     boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
@@ -1219,8 +1273,7 @@ static int findDefectNeighbours(int index, int clusterID, int numInCluster, int*
             index2 = boxes->boxAtoms[boxIndex][j];
             
             /* skip itself or if already searched */
-            if ((index == index2) || (atomCluster[index2] != -1))
-                continue;
+            if ((index == index2) || (atomCluster[index2] != -1)) continue;
             
             /* calculate separation */
             sep2 = atomicSeparation2( pos[3*index], pos[3*index+1], pos[3*index+2], pos[3*index2], pos[3*index2+1], pos[3*index2+2], 
@@ -1234,12 +1287,10 @@ static int findDefectNeighbours(int index, int clusterID, int numInCluster, int*
                 
                 /* search for neighbours to this new cluster atom */
                 numInCluster = findDefectNeighbours(index2, clusterID, numInCluster, atomCluster, pos, boxes, maxSep2, cellDims, PBC);
+                if (numInCluster < 0) return -1;
             }
         }
     }
     
     return numInCluster;
 }
-
-
-

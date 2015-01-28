@@ -15,8 +15,7 @@
  *******************************************************************************/
 
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <math.h>
 #include "boxeslib.h"
 
@@ -38,8 +37,8 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
     boxes = malloc(1 * sizeof(struct Boxes));
     if (boxes == NULL)
     {
-        printf("ERROR: could not allocate boxes\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate boxes");
+        return NULL;
     }
     
     /* setup boxes */
@@ -49,20 +48,10 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
         boxes->PBC[i] = PBC[i];
         boxes->cellDims[i] = cellDims[i];
         
-        /* if PBC box cell, otherwise box min-max pos */
-        /* Changed to always box by cellDims! */
-        if (boxes->PBC[i] == 0)
-        {
-//             boxes->minPos[i] = minPos[i];
-//             boxes->maxPos[i] = maxPos[i];
-            boxes->minPos[i] = 0.0;
-            boxes->maxPos[i] = boxes->cellDims[i];
-        }
-        else
-        {
-            boxes->minPos[i] = 0.0;
-            boxes->maxPos[i] = boxes->cellDims[i];
-        }
+        /* Always box cell only, atoms outside will be either wrapped (PBCs) or
+         * placed in nearest outer box (no PBCs) */
+        boxes->minPos[i] = 0.0;
+        boxes->maxPos[i] = boxes->cellDims[i];
         
         /* size of the region in this direction */
         cellLength = boxes->maxPos[i] - boxes->minPos[i];
@@ -83,17 +72,20 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
     boxes->boxNAtoms = calloc(boxes->totNBoxes, sizeof(int));
     if (boxes->boxNAtoms == NULL)
     {
-        printf("ERROR: could not allocate boxNAtoms\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate boxNAtoms");
+        free(boxes);
+        return NULL;
     }
     
     boxes->boxAtoms = malloc(boxes->totNBoxes * sizeof(int *));
     if (boxes->boxAtoms == NULL)
     {
-        printf("ERROR: could not allocate boxAtoms\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate boxAtoms");
+        free(boxes->boxNAtoms);
+        free(boxes);
+        return NULL;
     }
-        
+    
     return boxes;
 }
 
@@ -101,9 +93,10 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
 /*******************************************************************************
  ** put atoms into boxes
  *******************************************************************************/
-void putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
+int putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
 {
     int i, boxIndex, newsize;
+    int status = 0;
     
     
     for (i=0; i<NAtoms; i++)
@@ -117,8 +110,11 @@ void putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
             boxes->boxAtoms[boxIndex] = malloc(boxes->allocChunk * sizeof(int));
             if (boxes->boxAtoms[boxIndex] == NULL)
             {
-                printf("ERROR: could not allocate boxAtoms[%d]\n", boxIndex);
-                exit(50);
+                char errstring[128];
+                sprintf(errstring, "Could not allocate boxAtoms[%d]", boxIndex);
+                PyErr_SetString(PyExc_MemoryError, errstring);
+                freeBoxes(boxes);
+                return 1;
             }
         }
         
@@ -129,15 +125,19 @@ void putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
             boxes->boxAtoms[boxIndex] = realloc(boxes->boxAtoms[boxIndex], newsize * sizeof(int));
             if (boxes->boxAtoms[boxIndex] == NULL)
             {
-                printf("ERROR: could not reallocate boxAtoms[%d]: %d\n", boxIndex, newsize);
-                exit(50);
+                char errstring[128];
+                sprintf(errstring, "Could not reallocate boxAtoms[%d]: %d", boxIndex, newsize);
+                PyErr_SetString(PyExc_MemoryError, errstring);
+                freeBoxes(boxes);
+                return 1;
             }
         }
         
         /* add atom to box */
-        boxes->boxAtoms[boxIndex][boxes->boxNAtoms[boxIndex]] = i;
-        boxes->boxNAtoms[boxIndex]++;
+        boxes->boxAtoms[boxIndex][boxes->boxNAtoms[boxIndex]++] = i;
     }
+    
+    return status;
 }
 
 
@@ -241,10 +241,14 @@ int boxIndexOfAtom(double xpos, double ypos, double zpos, struct Boxes *boxes)
     
     if (boxIndex < 0)
     {
-        printf("WARNING: boxIndexOfAtom (CLIB): boxIndex < 0: %d, %d %d %d\n", boxIndex, posintx, posinty, posintz);
-        printf("         pos = %f %f %f, box widths = %f %f %f, NBoxes = %d %d %d\n", xpos, ypos, zpos, boxes->boxWidth[0], boxes->boxWidth[1], 
+        fprintf(stderr, "Error: boxIndexOfAtom (CLIB): boxIndex < 0: %d, %d %d %d\n", boxIndex, posintx, posinty, posintz);
+        fprintf(stderr, "       pos = %f %f %f, box widths = %f %f %f, NBoxes = %d %d %d\n", xpos, ypos, zpos, boxes->boxWidth[0], boxes->boxWidth[1], 
                 boxes->boxWidth[2], boxes->NBoxes[0], boxes->NBoxes[1], boxes->NBoxes[2]);
-        printf("         min box pos = %f %f %f\n", boxes->minPos[0], boxes->minPos[1], boxes->minPos[2]);
+        fprintf(stderr, "       min box pos = %f %f %f\n", boxes->minPos[0], boxes->minPos[1], boxes->minPos[2]);
+        
+        PyErr_SetString(PyExc_RuntimeError, "Box index is negative");
+        return -1;
+        
     }
     
     return boxIndex;
@@ -396,14 +400,12 @@ void freeBoxes(struct Boxes *boxes)
     int i;
     
     
-    for (i=0; i<boxes->totNBoxes; i++)
+    for (i = 0; i < boxes->totNBoxes; i++)
     {
-        if (boxes->boxNAtoms[i] > 0)
-        {
-            free(boxes->boxAtoms[i]);
-        }
+        if (boxes->boxNAtoms[i]) free(boxes->boxAtoms[i]);
     }
     free(boxes->boxAtoms);
     free(boxes->boxNAtoms);
     free(boxes);
+    boxes->totNBoxes = 0;
 }

@@ -130,10 +130,9 @@ pickObject(PyObject *self, PyObject *args)
     // this should be detected automatically depending on cell size...
     approxBoxWidth = 4.0;
     
-    
     if (visibleAtomsDim > 0)
     {
-        int i, boxIndex, boxNebList[27];
+        int i, boxIndex, boxNebList[27], boxstat;
         int minSepIndex, boxNebListSize;
         double minSep, minSep2, minSepRad;
         double *visPos;
@@ -152,7 +151,6 @@ pickObject(PyObject *self, PyObject *args)
             int i3 = 3 * i;
             int index = visibleAtoms[i];
             int index3 = 3 * index;
-            
             visPos[i3    ] = pos[index3    ];
             visPos[i3 + 1] = pos[index3 + 1];
             visPos[i3 + 2] = pos[index3 + 2];
@@ -160,10 +158,26 @@ pickObject(PyObject *self, PyObject *args)
         
         /* box vis atoms */
         boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-        putAtomsInBoxes(visibleAtomsDim, visPos, boxes);
+        if (boxes == NULL)
+        {
+            free(visPos);
+            return NULL;
+        }
+        boxstat = putAtomsInBoxes(visibleAtomsDim, visPos, boxes);
+        if (boxstat)
+        {
+            free(visPos);
+            return NULL;
+        }
         
         /* box index of picked pos */
         boxIndex = boxIndexOfAtom(pickPos[0], pickPos[1], pickPos[2], boxes);
+        if (boxIndex < 0)
+        {
+            free(visPos);
+            freeBoxes(boxes);
+            return NULL;
+        }
         
         /* neighbouring boxes */
         boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
@@ -223,7 +237,7 @@ pickObject(PyObject *self, PyObject *args)
     else
     {
         int i, NVis, count, minSepIndex;
-        int boxIndex, boxNebList[27];
+        int boxIndex, boxNebList[27], boxstat;
         int minSepType, boxNebListSize;
         double *visPos, *visCovRad, minSep, minSep2;
         double minSepRad;
@@ -319,10 +333,29 @@ pickObject(PyObject *self, PyObject *args)
         
         /* box vis atoms */
         boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-        putAtomsInBoxes(NVis, visPos, boxes);
+        if (boxes == NULL)
+        {
+            free(visPos);
+            free(visCovRad);
+            return NULL;
+        }
+        boxstat = putAtomsInBoxes(NVis, visPos, boxes);
+        if (boxstat)
+        {
+            free(visPos);
+            free(visCovRad);
+            return NULL;
+        }
         
         /* box index of picked pos */
         boxIndex = boxIndexOfAtom(pickPos[0], pickPos[1], pickPos[2], boxes);
+        if (boxIndex < 0)
+        {
+            free(visPos);
+            free(visCovRad);
+            freeBoxes(boxes);
+            return NULL;
+        }
         
         /* neighbouring boxes */
         boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
