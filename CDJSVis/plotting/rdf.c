@@ -41,7 +41,7 @@ static PyObject*
 calculateRDF(PyObject *self, PyObject *args)
 {
     int NVisible, *visibleAtoms, *specie, specieID1, specieID2, *PBC, num;
-    int OMP_NUM_THREADS;
+    int OMP_NUM_THREADS, NAtoms;
     double *pos, *minPos, *maxPos, *cellDims, start, finish, *rdf;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *specieIn=NULL;
@@ -74,6 +74,7 @@ calculateRDF(PyObject *self, PyObject *args)
     
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
+    NAtoms = (int) specieIn->dimensions[0];
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
@@ -116,6 +117,7 @@ calculateRDF(PyObject *self, PyObject *args)
     if (sel2 == NULL)
     {
         PyErr_SetString(PyExc_MemoryError, "Could not allocate sel2");
+        free(sel1);
         return NULL;
     }
     sel1cnt = 0;
@@ -149,34 +151,41 @@ calculateRDF(PyObject *self, PyObject *args)
     
     //TODO: check length of sel1 and sel2 != 0
     
-    /* position of visible atoms */
-    visiblePos = malloc(3 * NVisible * sizeof(double));
-    if (visiblePos == NULL)
+    /* positions of visible atoms */
+    if (NAtoms == NVisible) visiblePos = pos;
+    else
     {
-        PyErr_SetString(PyExc_MemoryError, "Could not allocate visiblePos");
-        return NULL;
-    }
-    for (i = 0; i < NVisible; i++)
-    {
-        int index = visibleAtoms[i];
-        int i3 = 3 * i;
-        int ind3 = 3 * index;
-        visiblePos[i3    ] = pos[ind3    ];
-        visiblePos[i3 + 1] = pos[ind3 + 1];
-        visiblePos[i3 + 2] = pos[ind3 + 2];
+        visiblePos = malloc(3 * NVisible * sizeof(double));
+        if (visiblePos == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate visiblePos");
+            free(sel1);
+            free(sel2);
+            return NULL;
+        }
+        for (i = 0; i < NVisible; i++)
+        {
+            int index = visibleAtoms[i];
+            int i3 = 3 * i;
+            int ind3 = 3 * index;
+            visiblePos[i3    ] = pos[ind3    ];
+            visiblePos[i3 + 1] = pos[ind3 + 1];
+            visiblePos[i3 + 2] = pos[ind3 + 2];
+        }
     }
     
     /* box atoms */
     boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
     if (boxes == NULL)
     {
-        free(visiblePos);
+        if (NAtoms != NVisible) free(visiblePos);
         free(sel1);
         free(sel2);
         return NULL;
     }
     boxstat = putAtomsInBoxes(NVisible, visiblePos, boxes);
-    free(visiblePos);
+    if (NAtoms != NVisible) free(visiblePos);
+    else visiblePos = NULL;
     if (boxstat)
     {
         free(sel1);
@@ -269,6 +278,7 @@ calculateRDF(PyObject *self, PyObject *args)
     {
         double pair_dens;
 
+        /* compute inverse of pair density */
         pair_dens = cellDims[0] * cellDims[1] * cellDims[2];
         pair_dens /= ((double)sel1cnt * (double)sel2cnt - (double)duplicates);
 #ifdef DEBUG
@@ -276,6 +286,7 @@ calculateRDF(PyObject *self, PyObject *args)
         printf("DBGRDF: npair %d\n", sel1cnt * sel2cnt - duplicates);
 #endif
 
+        /* loop over histogram bins */
         for (i = 0; i < num; i++)
         {
             double r_inner, r_outer, norm_f, shellVolume;
@@ -286,6 +297,7 @@ calculateRDF(PyObject *self, PyObject *args)
             r_inner = interval * i + start;
             r_outer = interval * (i + 1) + start;
             shellVolume = 4.0 / 3.0 * M_PI * (pow(r_outer, 3.0) - pow(r_inner, 3.0));
+            /* normalisation factor is 1 / (pair_density * shellVolume) */
             norm_f = pair_dens / shellVolume;
             rdf[i] = rdf[i] * norm_f;
 #ifdef DEBUG
@@ -293,31 +305,6 @@ calculateRDF(PyObject *self, PyObject *args)
 #endif
         }
     }
-
-    /* calculate shell volumes and average atom density */
-//    avgAtomDensity = 0.0;
-//    fullShellCount = 0;
-//    for (i=0; i<num; i++)
-//    {
-//        double ini, fin, shellVolume;
-//
-//        ini = i * interval + start;
-//        fin = (i + 1.0) * interval + start;
-//
-//        shellVolume = (4.0 / 3.0) * M_PI * (pow(fin, 3.0) - pow(ini, 3));
-//        rdf[i] = rdf[i] / shellVolume;
-//
-//        if (rdf[i] > 0)
-//        {
-//            avgAtomDensity += rdf[i];
-//            fullShellCount++;
-//        }
-//    }
-//    avgAtomDensity = avgAtomDensity / fullShellCount;
-//
-//    /* divide by average atom density */
-//    for (i=0; i<num; i++)
-//        rdf[i] = rdf[i] / avgAtomDensity;
     
     return Py_BuildValue("i", 0);
 }
