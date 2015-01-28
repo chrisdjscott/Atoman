@@ -2,9 +2,25 @@
 Changelog
 =========
 
-**dev**
+**150126**
+
+* Added generic file input module (much easier to add new lattice file formats)
+* Add progress dialog to status bar
+* Show progress when unzipping and reading files
+* Show progress when copying file via SFTP browser
+* Refresh plot options when running a single list
+* Systems dialog moved to tab in toolbar
+* Add option to change ambient, specular, specular power on actors
+* Replace most icons with icons from the Oxygen icon theme
+
+**150114**
 
 * Try and autodetect the number format for the sequencer
+* Add option to normalise a vector before rendering/scaling it
+* Fix min value when specifying bin width in plot histogram
+* All scalar/vector data shown on atom info windows
+* Improved scalar data handling on Lattice
+* Ability to read LBOMD xyz files with velocities
 
 **v150105**
 
