@@ -718,8 +718,8 @@ class RDFForm(genericForm.GenericForm):
         # prepare to plot
         settingsDict = {}
         settingsDict["title"] = "Radial distribution function"
-        settingsDict["xlabel"] = "Bond length (A)"
-        settingsDict["ylabel"] = "%s - %s G(r)" % (self.spec1, self.spec2)
+        settingsDict["xlabel"] = "Bond length (Angstroms)"
+        settingsDict["ylabel"] = "g(r) (%s - %s)" % (self.spec1, self.spec2)
         
         # show plot dialog
         dialog = plotDialog.PlotDialog(self, self.mainWindow, "Radial distribution function ", 
