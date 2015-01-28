@@ -98,7 +98,7 @@ calculateRDF(PyObject *self, PyObject *args)
     omp_set_num_threads(OMP_NUM_THREADS);
     
     /* approx box width */
-    /* may not be any point boxing... */
+    /* may not be any point boxing... (we can't box by less than `finish`) */
     approxBoxWidth = finish;
     
 #ifdef DEBUG
@@ -272,13 +272,17 @@ calculateRDF(PyObject *self, PyObject *args)
     free(sel1);
     free(sel2);
     
-    if (errcount) return NULL;
+    if (errcount)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "RDF loop failed; probably box index error (check stderr)");
+        return NULL;
+    }
     
     /* normalise rdf */
     {
         double pair_dens;
 
-        /* compute inverse of pair density */
+        /* compute inverse of pair density (volume / number of pairs) */
         pair_dens = cellDims[0] * cellDims[1] * cellDims[2];
         pair_dens /= ((double)sel1cnt * (double)sel2cnt - (double)duplicates);
 #ifdef DEBUG
@@ -294,12 +298,15 @@ calculateRDF(PyObject *self, PyObject *args)
             double histv = rdf[i];
 #endif
 
+            /* calculate shell volume */
             r_inner = interval * i + start;
             r_outer = interval * (i + 1) + start;
             shellVolume = 4.0 / 3.0 * M_PI * (pow(r_outer, 3.0) - pow(r_inner, 3.0));
+            
             /* normalisation factor is 1 / (pair_density * shellVolume) */
             norm_f = pair_dens / shellVolume;
             rdf[i] = rdf[i] * norm_f;
+            
 #ifdef DEBUG
             printf("HIST %d (%lf -> %lf): histv %lf; vol %lf; norm_f = %lf; rdf %lf\n", i, r_inner, r_outer, histv, shellVolume, norm_f, rdf[i]);
 #endif
