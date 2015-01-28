@@ -40,18 +40,18 @@ initrdf(void)
 static PyObject*
 calculateRDF(PyObject *self, PyObject *args)
 {
-	int NVisible, *visibleAtoms, *specie, specieID1, specieID2, *PBC, num;
-	int OMP_NUM_THREADS;
-	double *pos, *minPos, *maxPos, *cellDims, start, finish, *rdf;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *specieIn=NULL;
-	PyArrayObject *PBCIn=NULL;
-	PyArrayObject *posIn=NULL;
-	PyArrayObject *minPosIn=NULL;
-	PyArrayObject *maxPosIn=NULL;
-	PyArrayObject *cellDimsIn=NULL;
-	PyArrayObject *rdfIn=NULL;
-	
+    int NVisible, *visibleAtoms, *specie, specieID1, specieID2, *PBC, num;
+    int OMP_NUM_THREADS;
+    double *pos, *minPos, *maxPos, *cellDims, start, finish, *rdf;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *specieIn=NULL;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *minPosIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *rdfIn=NULL;
+    
     int i, boxstat, errcount;
     int *sel1, *sel2, sel1cnt, sel2cnt, duplicates;
     double approxBoxWidth;
@@ -62,42 +62,42 @@ calculateRDF(PyObject *self, PyObject *args)
     
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!O!iiO!O!O!O!dddiO!i", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &specieIn,
-			&PyArray_Type, &posIn, &specieID1, &specieID2, &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn,
-			&PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &start, &finish, &interval, &num, &PyArray_Type,
-			&rdfIn, &OMP_NUM_THREADS))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisible = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_intVector(specieIn)) return NULL;
-	specie = pyvector_to_Cptr_int(specieIn);
-	
-	if (not_doubleVector(posIn)) return NULL;
-	pos = pyvector_to_Cptr_double(posIn);
-	
-	if (not_doubleVector(rdfIn)) return NULL;
-	rdf = pyvector_to_Cptr_double(rdfIn);
-	
-	if (not_doubleVector(minPosIn)) return NULL;
-	minPos = pyvector_to_Cptr_double(minPosIn);
-	
-	if (not_doubleVector(maxPosIn)) return NULL;
-	maxPos = pyvector_to_Cptr_double(maxPosIn);
-	
-	if (not_doubleVector(cellDimsIn)) return NULL;
-	cellDims = pyvector_to_Cptr_double(cellDimsIn);
-	
-	if (not_intVector(PBCIn)) return NULL;
-	PBC = pyvector_to_Cptr_int(PBCIn);
+    if (!PyArg_ParseTuple(args, "O!O!O!iiO!O!O!O!dddiO!i", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &specieIn,
+            &PyArray_Type, &posIn, &specieID1, &specieID2, &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn,
+            &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &start, &finish, &interval, &num, &PyArray_Type,
+            &rdfIn, &OMP_NUM_THREADS))
+        return NULL;
+    
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisible = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_intVector(specieIn)) return NULL;
+    specie = pyvector_to_Cptr_int(specieIn);
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(rdfIn)) return NULL;
+    rdf = pyvector_to_Cptr_double(rdfIn);
+    
+    if (not_doubleVector(minPosIn)) return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_doubleVector(maxPosIn)) return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
 
-	/* set number of openmp threads to use */
+    /* set number of openmp threads to use */
     omp_set_num_threads(OMP_NUM_THREADS);
-	
+    
     /* approx box width */
-	/* may not be any point boxing... */
+    /* may not be any point boxing... */
     approxBoxWidth = finish;
     
 #ifdef DEBUG

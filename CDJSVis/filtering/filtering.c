@@ -65,38 +65,38 @@ init_filtering(void)
 static PyObject* 
 calculate_drift_vector(PyObject *self, PyObject *args)
 {
-	int NAtoms, *PBC;
-	double *pos, *refPos, *cellDims, *driftVector;
-	PyArrayObject *PBCIn=NULL;
-	PyArrayObject *posIn=NULL;
-	PyArrayObject *refPosIn=NULL;
-	PyArrayObject *cellDimsIn=NULL;
-	PyArrayObject *driftVectorIn=NULL;
-	
+    int NAtoms, *PBC;
+    double *pos, *refPos, *cellDims, *driftVector;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *refPosIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *driftVectorIn=NULL;
+    
     int i;
     double sepVec[3];
     
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "iO!O!O!O!O!", &NAtoms, &PyArray_Type, &posIn, &PyArray_Type, &refPosIn, 
-			&PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &driftVectorIn))
-		return NULL;
-	
-	if (not_doubleVector(posIn)) return NULL;
-	pos = pyvector_to_Cptr_double(posIn);
-	
-	if (not_doubleVector(refPosIn)) return NULL;
-	refPos = pyvector_to_Cptr_double(refPosIn);
-	
-	if (not_doubleVector(cellDimsIn)) return NULL;
-	cellDims = pyvector_to_Cptr_double(cellDimsIn);
-	
-	if (not_intVector(PBCIn)) return NULL;
-	PBC = pyvector_to_Cptr_int(PBCIn);
-	
-	if (not_doubleVector(driftVectorIn)) return NULL;
-	driftVector = pyvector_to_Cptr_double(driftVectorIn);
-	
+    if (!PyArg_ParseTuple(args, "iO!O!O!O!O!", &NAtoms, &PyArray_Type, &posIn, &PyArray_Type, &refPosIn, 
+            &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &driftVectorIn))
+        return NULL;
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(refPosIn)) return NULL;
+    refPos = pyvector_to_Cptr_double(refPosIn);
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
+    
+    if (not_doubleVector(driftVectorIn)) return NULL;
+    driftVector = pyvector_to_Cptr_double(driftVectorIn);
+    
     /* compute drift vector */
     driftVector[0] = 0.0;
     driftVector[1] = 0.0;
@@ -124,45 +124,45 @@ calculate_drift_vector(PyObject *self, PyObject *args)
 static PyObject* 
 specieFilter(PyObject *self, PyObject *args)
 {
-	int NVisibleIn, *visibleAtoms, visSpecDim, *visSpec, *specie, NScalars, NVectors;
-	double *fullScalars;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *visSpecIn=NULL;
-	PyArrayObject *specieIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	
+    int NVisibleIn, *visibleAtoms, visSpecDim, *visSpec, *specie, NScalars, NVectors;
+    double *fullScalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *visSpecIn=NULL;
+    PyArrayObject *specieIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
     int i, NVisible;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!O!iO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &visSpecIn, 
-			&PyArray_Type, &specieIn, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, 
-			&fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisibleIn = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_intVector(visSpecIn)) return NULL;
-	visSpec = pyvector_to_Cptr_int(visSpecIn);
-	visSpecDim = (int) visSpecIn->dimensions[0];
-	
-	if (not_intVector(specieIn)) return NULL;
-	specie = pyvector_to_Cptr_int(specieIn);
-	
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
-	
-	if (not_doubleVector(fullVectors)) return NULL;
+    if (!PyArg_ParseTuple(args, "O!O!O!iO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &visSpecIn, 
+            &PyArray_Type, &specieIn, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, 
+            &fullVectors))
+        return NULL;
+    
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_intVector(visSpecIn)) return NULL;
+    visSpec = pyvector_to_Cptr_int(visSpecIn);
+    visSpecDim = (int) visSpecIn->dimensions[0];
+    
+    if (not_intVector(specieIn)) return NULL;
+    specie = pyvector_to_Cptr_int(specieIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
     
     /* run */
     NVisible = 0;
     for (i = 0; i < NVisibleIn; i++)
     {
         int j, index, match;
-    	
-    	index = visibleAtoms[i];
+        
+        index = visibleAtoms[i];
         
         match = 0;
         for (j = 0; j < visSpecDim; j++)
@@ -179,7 +179,7 @@ specieFilter(PyObject *self, PyObject *args)
             int k;
             
             for (k = 0; k < NScalars; k++)
-            	fullScalars[NVisibleIn * k + NVisible] = fullScalars[NVisibleIn * k + i];
+                fullScalars[NVisibleIn * k + NVisible] = fullScalars[NVisibleIn * k + i];
             
             for (k = 0; k < NVectors; k++)
             {
@@ -202,34 +202,34 @@ specieFilter(PyObject *self, PyObject *args)
 static PyObject* 
 sliceFilter(PyObject *self, PyObject *args)
 {
-	int NVisibleIn, *visibleAtoms, invert, NScalars, NVectors;
-	double *pos, x0, y0, z0, xn, yn, zn, *fullScalars;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *posIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	
+    int NVisibleIn, *visibleAtoms, invert, NScalars, NVectors;
+    double *pos, x0, y0, z0, xn, yn, zn, *fullScalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
     int i, j, NVisible, index;
     double mag, xd, yd, zd, dotProd, distanceToPlane;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!ddddddiiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
-			&x0, &y0, &z0, &xn, &yn, &zn, &invert, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, 
-			&PyArray_Type, &fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisibleIn = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_doubleVector(posIn)) return NULL;
-	pos = pyvector_to_Cptr_double(posIn);
-	
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    if (!PyArg_ParseTuple(args, "O!O!ddddddiiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
+            &x0, &y0, &z0, &xn, &yn, &zn, &invert, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, 
+            &PyArray_Type, &fullVectors))
+        return NULL;
     
-	if (not_doubleVector(fullVectors)) return NULL;
-	
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
     /* normalise (xn, yn, zn) */
     mag = sqrt(xn * xn + yn * yn + zn * zn);
     xn = xn / mag;
@@ -251,17 +251,17 @@ sliceFilter(PyObject *self, PyObject *args)
         if ((invert && distanceToPlane > 0) || (!invert && distanceToPlane < 0))
         {
             /* handle full scalars array */
-			for (j = 0; j < NScalars; j++)
-				fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            for (j = 0; j < NScalars; j++)
+                fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
             
-			for (j = 0; j < NVectors; j++)
+            for (j = 0; j < NVectors; j++)
             {
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
             }
-			
-			visibleAtoms[NVisible++] = index;
+            
+            visibleAtoms[NVisible++] = index;
         }
     }
     
@@ -275,41 +275,41 @@ sliceFilter(PyObject *self, PyObject *args)
 static PyObject* 
 cropSphereFilter(PyObject *self, PyObject *args)
 {
-	int NVisibleIn, *visibleAtoms, *PBC, invertSelection, NScalars, NVectors;
-	double *pos, xCentre, yCentre, zCentre, radius, *cellDims, *fullScalars;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *posIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	PyArrayObject *PBCIn=NULL;
-	PyArrayObject *cellDimsIn=NULL;
-	
+    int NVisibleIn, *visibleAtoms, *PBC, invertSelection, NScalars, NVectors;
+    double *pos, xCentre, yCentre, zCentre, radius, *cellDims, *fullScalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    
     int i, j, NVisible, index;
     double radius2, sep2;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!ddddO!O!iiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
-			&xCentre, &yCentre, &zCentre, &radius, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn,
-			&invertSelection, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, &fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisibleIn = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_doubleVector(posIn)) return NULL;
-	pos = pyvector_to_Cptr_double(posIn);
-	
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
-	
-	if (not_doubleVector(fullVectors)) return NULL;
-	
-	if (not_doubleVector(cellDimsIn)) return NULL;
-	cellDims = pyvector_to_Cptr_double(cellDimsIn);
-	
-	if (not_intVector(PBCIn)) return NULL;
-	PBC = pyvector_to_Cptr_int(PBCIn);
+    if (!PyArg_ParseTuple(args, "O!O!ddddO!O!iiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
+            &xCentre, &yCentre, &zCentre, &radius, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn,
+            &invertSelection, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, &fullVectors))
+        return NULL;
+    
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
     
     radius2 = radius * radius;
     
@@ -328,17 +328,17 @@ cropSphereFilter(PyObject *self, PyObject *args)
             if (invertSelection)
             {
                 /* handle full scalars array */
-				for (j = 0; j < NScalars; j++)
-					fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+                for (j = 0; j < NScalars; j++)
+                    fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
                 
-				for (j = 0; j < NVectors; j++)
+                for (j = 0; j < NVectors; j++)
                 {
                     DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
                     DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
                     DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
                 }
-				
-				visibleAtoms[NVisible++] = index;
+                
+                visibleAtoms[NVisible++] = index;
             }
         }
         else
@@ -346,17 +346,17 @@ cropSphereFilter(PyObject *self, PyObject *args)
             if (!invertSelection)
             {
                 /* handle full scalars array */
-				for (j = 0; j < NScalars; j++)
-					fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+                for (j = 0; j < NScalars; j++)
+                    fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
                 
-				for (j = 0; j < NVectors; j++)
+                for (j = 0; j < NVectors; j++)
                 {
                     DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
                     DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
                     DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
                 }
-				
-				visibleAtoms[NVisible++] = index;
+                
+                visibleAtoms[NVisible++] = index;
             }
         }
     }
@@ -371,34 +371,34 @@ cropSphereFilter(PyObject *self, PyObject *args)
 static PyObject* 
 cropFilter(PyObject *self, PyObject *args)
 {
-	int NVisibleIn, *visibleAtoms, xEnabled, yEnabled, zEnabled, invertSelection, NScalars, NVectors;
-	double *pos, xmin, xmax, ymin, ymax, zmin, zmax, *fullScalars;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *posIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	
+    int NVisibleIn, *visibleAtoms, xEnabled, yEnabled, zEnabled, invertSelection, NScalars, NVectors;
+    double *pos, xmin, xmax, ymin, ymax, zmin, zmax, *fullScalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
     int i, j, index, NVisible, add;
     double rx, ry, rz;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!ddddddiiiiiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
-			&xmin, &xmax, &ymin, &ymax, &zmin, &zmax, &xEnabled, &yEnabled, &zEnabled, &invertSelection, 
-			&NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, &fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisibleIn = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_doubleVector(posIn)) return NULL;
-	pos = pyvector_to_Cptr_double(posIn);
-	
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    if (!PyArg_ParseTuple(args, "O!O!ddddddiiiiiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
+            &xmin, &xmax, &ymin, &ymax, &zmin, &zmax, &xEnabled, &yEnabled, &zEnabled, &invertSelection, 
+            &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, &fullVectors))
+        return NULL;
     
-	if (not_doubleVector(fullVectors)) return NULL;
-	
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
     NVisible = 0;
     for (i=0; i<NVisibleIn; i++)
     {
@@ -436,17 +436,17 @@ cropFilter(PyObject *self, PyObject *args)
         if ((add && !invertSelection) || (!add && invertSelection))
         {
             /* handle full scalars array */
-			for (j = 0; j < NScalars; j++)
-				fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            for (j = 0; j < NScalars; j++)
+                fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
             
-			for (j = 0; j < NVectors; j++)
+            for (j = 0; j < NVectors; j++)
             {
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
             }
-			
-			visibleAtoms[NVisible++] = index;
+            
+            visibleAtoms[NVisible++] = index;
         }
     }
     
@@ -460,57 +460,57 @@ cropFilter(PyObject *self, PyObject *args)
 static PyObject* 
 displacementFilter(PyObject *self, PyObject *args)
 {
-	int NVisibleIn, *visibleAtoms, *PBC, NScalars, filteringEnabled, driftCompensation, refPosDim, NVectors;
-	double *scalars, *pos, *refPosIn, *cellDims, minDisp, maxDisp, *fullScalars, *driftVector;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *refPosIn_np=NULL;
-	PyArrayObject *PBCIn=NULL;
-	PyArrayObject *posIn=NULL;
-	PyArrayObject *scalarsIn=NULL;
-	PyArrayObject *driftVectorIn=NULL;
-	PyArrayObject *cellDimsIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	
+    int NVisibleIn, *visibleAtoms, *PBC, NScalars, filteringEnabled, driftCompensation, refPosDim, NVectors;
+    double *scalars, *pos, *refPosIn, *cellDims, minDisp, maxDisp, *fullScalars, *driftVector;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *refPosIn_np=NULL;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *scalarsIn=NULL;
+    PyArrayObject *driftVectorIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
     int i, NVisible, index, j;
     double sep2, maxDisp2, minDisp2;
     double *refPos;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!ddiO!iiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &scalarsIn, 
-			&PyArray_Type, &posIn, &PyArray_Type, &refPosIn_np, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, 
-			&minDisp, &maxDisp, &NScalars, &PyArray_Type, &fullScalarsIn, &filteringEnabled, &driftCompensation, 
-			&PyArray_Type, &driftVectorIn, &NVectors, &PyArray_Type, &fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisibleIn = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_doubleVector(posIn)) return NULL;
-	pos = pyvector_to_Cptr_double(posIn);
-	
-	if (not_doubleVector(refPosIn_np)) return NULL;
-	refPosIn = pyvector_to_Cptr_double(refPosIn_np);
-	refPosDim = (int) refPosIn_np->dimensions[0];
-	
-	if (not_doubleVector(scalarsIn)) return NULL;
-	scalars = pyvector_to_Cptr_double(scalarsIn);
-	
-	if (not_doubleVector(cellDimsIn)) return NULL;
-	cellDims = pyvector_to_Cptr_double(cellDimsIn);
-	
-	if (not_intVector(PBCIn)) return NULL;
-	PBC = pyvector_to_Cptr_int(PBCIn);
-	
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
-	
-	if (not_doubleVector(driftVectorIn)) return NULL;
-	driftVector = pyvector_to_Cptr_double(driftVectorIn);
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!ddiO!iiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &scalarsIn, 
+            &PyArray_Type, &posIn, &PyArray_Type, &refPosIn_np, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, 
+            &minDisp, &maxDisp, &NScalars, &PyArray_Type, &fullScalarsIn, &filteringEnabled, &driftCompensation, 
+            &PyArray_Type, &driftVectorIn, &NVectors, &PyArray_Type, &fullVectors))
+        return NULL;
     
-	if (not_doubleVector(fullVectors)) return NULL;
-	
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(refPosIn_np)) return NULL;
+    refPosIn = pyvector_to_Cptr_double(refPosIn_np);
+    refPosDim = (int) refPosIn_np->dimensions[0];
+    
+    if (not_doubleVector(scalarsIn)) return NULL;
+    scalars = pyvector_to_Cptr_double(scalarsIn);
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(driftVectorIn)) return NULL;
+    driftVector = pyvector_to_Cptr_double(driftVectorIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
     /* drift compensation? */
     if (driftCompensation)
     {
@@ -550,7 +550,7 @@ displacementFilter(PyObject *self, PyObject *args)
         {
             /* handle full scalars array */
             for (j = 0; j < NScalars; j++)
-            	fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+                fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
             
             for (j = 0; j < NVectors; j++)
             {
@@ -560,7 +560,7 @@ displacementFilter(PyObject *self, PyObject *args)
             }
             
             visibleAtoms[NVisible] = index;
-			scalars[NVisible++] = sqrt(sep2);
+            scalars[NVisible++] = sqrt(sep2);
         }
     }
     
@@ -577,32 +577,32 @@ displacementFilter(PyObject *self, PyObject *args)
 static PyObject* 
 KEFilter(PyObject *self, PyObject *args)
 {
-	int NVisibleIn, *visibleAtoms, NScalars, NVectors;
-	double *KE, minKE, maxKE, *fullScalars;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *KEIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	
+    int NVisibleIn, *visibleAtoms, NScalars, NVectors;
+    double *KE, minKE, maxKE, *fullScalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *KEIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
     int i, j, NVisible, index;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!ddiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &KEIn, 
-			&minKE, &maxKE, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, &fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisibleIn = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_doubleVector(KEIn)) return NULL;
-	KE = pyvector_to_Cptr_double(KEIn);
-	
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    if (!PyArg_ParseTuple(args, "O!O!ddiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &KEIn, 
+            &minKE, &maxKE, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, &fullVectors))
+        return NULL;
     
-	if (not_doubleVector(fullVectors)) return NULL;
-	
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_doubleVector(KEIn)) return NULL;
+    KE = pyvector_to_Cptr_double(KEIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
     NVisible = 0;
     for (i=0; i<NVisibleIn; i++)
     {
@@ -615,17 +615,17 @@ KEFilter(PyObject *self, PyObject *args)
         else
         {
             /* handle full scalars array */
-			for (j = 0; j < NScalars; j++)
-				fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            for (j = 0; j < NScalars; j++)
+                fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
             
-			for (j = 0; j < NVectors; j++)
+            for (j = 0; j < NVectors; j++)
             {
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
             }
-			
-			visibleAtoms[NVisible++] = index;
+            
+            visibleAtoms[NVisible++] = index;
         }
     }
     
@@ -639,32 +639,32 @@ KEFilter(PyObject *self, PyObject *args)
 static PyObject* 
 PEFilter(PyObject *self, PyObject *args)
 {
-	int NVisibleIn, *visibleAtoms, NScalars, NVectors;
-	double *PE, minPE, maxPE, *fullScalars;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *PEIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	
+    int NVisibleIn, *visibleAtoms, NScalars, NVectors;
+    double *PE, minPE, maxPE, *fullScalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *PEIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
     int i, j, NVisible, index;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!ddiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &PEIn, 
-			&minPE, &maxPE, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, &fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisibleIn = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_doubleVector(PEIn)) return NULL;
-	PE = pyvector_to_Cptr_double(PEIn);
-	
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    if (!PyArg_ParseTuple(args, "O!O!ddiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &PEIn, 
+            &minPE, &maxPE, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, &fullVectors))
+        return NULL;
     
-	if (not_doubleVector(fullVectors)) return NULL;
-	
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_doubleVector(PEIn)) return NULL;
+    PE = pyvector_to_Cptr_double(PEIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
     NVisible = 0;
     for (i=0; i<NVisibleIn; i++)
     {
@@ -677,17 +677,17 @@ PEFilter(PyObject *self, PyObject *args)
         else
         {
             /* handle full scalars array */
-			for (j = 0; j < NScalars; j++)
-				fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            for (j = 0; j < NScalars; j++)
+                fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
             
-			for (j = 0; j < NVectors; j++)
+            for (j = 0; j < NVectors; j++)
             {
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
             }
-			
-			visibleAtoms[NVisible++] = index;
+            
+            visibleAtoms[NVisible++] = index;
         }
     }
     
@@ -701,33 +701,33 @@ PEFilter(PyObject *self, PyObject *args)
 static PyObject* 
 chargeFilter(PyObject *self, PyObject *args)
 {
-	int NVisibleIn, *visibleAtoms, NScalars, NVectors;
-	double *charge, minCharge, maxCharge, *fullScalars;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *chargeIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	
+    int NVisibleIn, *visibleAtoms, NScalars, NVectors;
+    double *charge, minCharge, maxCharge, *fullScalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *chargeIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
     int i, j, NVisible, index;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!ddiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &chargeIn, 
-			&minCharge, &maxCharge, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, 
-			&fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisibleIn = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_doubleVector(chargeIn)) return NULL;
-	charge = pyvector_to_Cptr_double(chargeIn);
-	
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    if (!PyArg_ParseTuple(args, "O!O!ddiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &chargeIn, 
+            &minCharge, &maxCharge, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, 
+            &fullVectors))
+        return NULL;
     
-	if (not_doubleVector(fullVectors)) return NULL;
-	
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_doubleVector(chargeIn)) return NULL;
+    charge = pyvector_to_Cptr_double(chargeIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
     NVisible = 0;
     for (i=0; i<NVisibleIn; i++)
     {
@@ -740,17 +740,17 @@ chargeFilter(PyObject *self, PyObject *args)
         else
         {
             /* handle full scalars array */
-			for (j = 0; j < NScalars; j++)
-				fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            for (j = 0; j < NScalars; j++)
+                fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
             
-			for (j = 0; j < NVectors; j++)
+            for (j = 0; j < NVectors; j++)
             {
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
             }
-			
-			visibleAtoms[NVisible++] = index;
+            
+            visibleAtoms[NVisible++] = index;
         }
     }
     
@@ -764,21 +764,21 @@ chargeFilter(PyObject *self, PyObject *args)
 static PyObject* 
 coordNumFilter(PyObject *self, PyObject *args)
 {
-	int NVisible, *visibleAtoms, *specie, NSpecies, *PBC, minCoordNum, maxCoordNum, NScalars, filteringEnabled, NVectors;
-	double *pos, *bondMinArray, *bondMaxArray, approxBoxWidth, *cellDims, *minPos, *maxPos, *coordArray, *fullScalars;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *specieIn=NULL;
-	PyArrayObject *PBCIn=NULL;
-	PyArrayObject *coordArrayIn=NULL;
-	PyArrayObject *posIn=NULL;
-	PyArrayObject *bondMinArrayIn=NULL;
-	PyArrayObject *bondMaxArrayIn=NULL;
-	PyArrayObject *cellDimsIn=NULL;
-	PyArrayObject *minPosIn=NULL;
-	PyArrayObject *maxPosIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	
+    int NVisible, *visibleAtoms, *specie, NSpecies, *PBC, minCoordNum, maxCoordNum, NScalars, filteringEnabled, NVectors;
+    double *pos, *bondMinArray, *bondMaxArray, approxBoxWidth, *cellDims, *minPos, *maxPos, *coordArray, *fullScalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *specieIn=NULL;
+    PyArrayObject *PBCIn=NULL;
+    PyArrayObject *coordArrayIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *bondMinArrayIn=NULL;
+    PyArrayObject *bondMaxArrayIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *minPosIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
     int i, j, k, index, index2, visIndex;
     int speca, specb, count, NVisibleNew;
     int boxIndex, boxNebList[27], boxstat;
@@ -786,49 +786,49 @@ coordNumFilter(PyObject *self, PyObject *args)
     struct Boxes *boxes;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!O!iO!O!dO!O!O!O!O!iiiO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
-			&PyArray_Type, &specieIn, &NSpecies, &PyArray_Type, &bondMinArrayIn, &PyArray_Type, &bondMaxArrayIn, 
-			&approxBoxWidth, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &minPosIn, 
-			&PyArray_Type, &maxPosIn, &PyArray_Type, &coordArrayIn, &minCoordNum, &maxCoordNum, &NScalars, 
-			&PyArray_Type, &fullScalarsIn, &filteringEnabled, &NVectors, &PyArray_Type, &fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisible = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_doubleVector(posIn)) return NULL;
-	pos = pyvector_to_Cptr_double(posIn);
-	
-	if (not_intVector(specieIn)) return NULL;
-	specie = pyvector_to_Cptr_int(specieIn);
-	
-	if (not_doubleVector(bondMinArrayIn)) return NULL;
-	bondMinArray = pyvector_to_Cptr_double(bondMinArrayIn);
-	
-	if (not_doubleVector(bondMaxArrayIn)) return NULL;
-	bondMaxArray = pyvector_to_Cptr_double(bondMaxArrayIn);
-	
-	if (not_doubleVector(minPosIn)) return NULL;
-	minPos = pyvector_to_Cptr_double(minPosIn);
-	
-	if (not_doubleVector(maxPosIn)) return NULL;
-	maxPos = pyvector_to_Cptr_double(maxPosIn);
-	
-	if (not_doubleVector(cellDimsIn)) return NULL;
-	cellDims = pyvector_to_Cptr_double(cellDimsIn);
-	
-	if (not_intVector(PBCIn)) return NULL;
-	PBC = pyvector_to_Cptr_int(PBCIn);
-	
-	if (not_doubleVector(coordArrayIn)) return NULL;
-	coordArray = pyvector_to_Cptr_double(coordArrayIn);
+    if (!PyArg_ParseTuple(args, "O!O!O!iO!O!dO!O!O!O!O!iiiO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
+            &PyArray_Type, &specieIn, &NSpecies, &PyArray_Type, &bondMinArrayIn, &PyArray_Type, &bondMaxArrayIn, 
+            &approxBoxWidth, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &minPosIn, 
+            &PyArray_Type, &maxPosIn, &PyArray_Type, &coordArrayIn, &minCoordNum, &maxCoordNum, &NScalars, 
+            &PyArray_Type, &fullScalarsIn, &filteringEnabled, &NVectors, &PyArray_Type, &fullVectors))
+        return NULL;
     
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisible = (int) visibleAtomsIn->dimensions[0];
     
-	if (not_doubleVector(fullVectors)) return NULL;
-	
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_intVector(specieIn)) return NULL;
+    specie = pyvector_to_Cptr_int(specieIn);
+    
+    if (not_doubleVector(bondMinArrayIn)) return NULL;
+    bondMinArray = pyvector_to_Cptr_double(bondMinArrayIn);
+    
+    if (not_doubleVector(bondMaxArrayIn)) return NULL;
+    bondMaxArray = pyvector_to_Cptr_double(bondMaxArrayIn);
+    
+    if (not_doubleVector(minPosIn)) return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_doubleVector(maxPosIn)) return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_doubleVector(cellDimsIn)) return NULL;
+    cellDims = pyvector_to_Cptr_double(cellDimsIn);
+    
+    if (not_intVector(PBCIn)) return NULL;
+    PBC = pyvector_to_Cptr_int(PBCIn);
+    
+    if (not_doubleVector(coordArrayIn)) return NULL;
+    coordArray = pyvector_to_Cptr_double(coordArrayIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
 #ifdef DEBUG
     printf("COORDNUM CLIB\n");
     printf("N VIS: %d\n", NVisible);
@@ -943,34 +943,34 @@ coordNumFilter(PyObject *self, PyObject *args)
     /* filter */
     if (filteringEnabled)
     {
-    	NVisibleNew = 0;
-		for (i=0; i<NVisible; i++)
-		{
-			if (coordArray[i] >= minCoordNum && coordArray[i] <= maxCoordNum)
-			{
-				visibleAtoms[NVisibleNew] = visibleAtoms[i];
-				coordArray[NVisibleNew] = coordArray[i];
-				
-				/* handle full scalars array */
-				for (j = 0; j < NScalars; j++)
-				{
-					fullScalars[NVisible * j + NVisibleNew] = fullScalars[NVisible * j + i];
-				}
-				
-				for (j = 0; j < NVectors; j++)
+        NVisibleNew = 0;
+        for (i=0; i<NVisible; i++)
+        {
+            if (coordArray[i] >= minCoordNum && coordArray[i] <= maxCoordNum)
+            {
+                visibleAtoms[NVisibleNew] = visibleAtoms[i];
+                coordArray[NVisibleNew] = coordArray[i];
+                
+                /* handle full scalars array */
+                for (j = 0; j < NScalars; j++)
+                {
+                    fullScalars[NVisible * j + NVisibleNew] = fullScalars[NVisible * j + i];
+                }
+                
+                for (j = 0; j < NVectors; j++)
                 {
                     DIND2(fullVectors, NVisible * j + NVisibleNew, 0) = DIND2(fullVectors, NVisible * j + i, 0);
                     DIND2(fullVectors, NVisible * j + NVisibleNew, 1) = DIND2(fullVectors, NVisible * j + i, 1);
                     DIND2(fullVectors, NVisible * j + NVisibleNew, 2) = DIND2(fullVectors, NVisible * j + i, 2);
                 }
-				
-				NVisibleNew++;
-			}
-		}
+                
+                NVisibleNew++;
+            }
+        }
     }
     else
     {
-    	NVisibleNew = NVisible;
+        NVisibleNew = NVisible;
     }
     
     /* free */
@@ -985,37 +985,37 @@ coordNumFilter(PyObject *self, PyObject *args)
 static PyObject* 
 voronoiVolumeFilter(PyObject *self, PyObject *args)
 {
-	int NVisibleIn, *visibleAtoms, NScalars, filteringEnabled, NVectors;
-	double *volume, minVolume, maxVolume, *fullScalars, *scalars;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *volumeIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *scalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	
+    int NVisibleIn, *visibleAtoms, NScalars, filteringEnabled, NVectors;
+    double *volume, minVolume, maxVolume, *fullScalars, *scalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *volumeIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *scalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
     int i, j, NVisible, index;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!ddO!iO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &volumeIn, 
-			&minVolume, &maxVolume, &PyArray_Type, &scalarsIn, &NScalars, &PyArray_Type, &fullScalarsIn,
-			&filteringEnabled, &NVectors, &PyArray_Type, &fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisibleIn = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_doubleVector(volumeIn)) return NULL;
-	volume = pyvector_to_Cptr_double(volumeIn);
-	
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
-	
-	if (not_doubleVector(scalarsIn)) return NULL;
-	scalars = pyvector_to_Cptr_double(scalarsIn);
+    if (!PyArg_ParseTuple(args, "O!O!ddO!iO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &volumeIn, 
+            &minVolume, &maxVolume, &PyArray_Type, &scalarsIn, &NScalars, &PyArray_Type, &fullScalarsIn,
+            &filteringEnabled, &NVectors, &PyArray_Type, &fullVectors))
+        return NULL;
     
-	if (not_doubleVector(fullVectors)) return NULL;
-	
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_doubleVector(volumeIn)) return NULL;
+    volume = pyvector_to_Cptr_double(volumeIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(scalarsIn)) return NULL;
+    scalars = pyvector_to_Cptr_double(scalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
     NVisible = 0;
     for (i=0; i<NVisibleIn; i++)
     {
@@ -1024,18 +1024,18 @@ voronoiVolumeFilter(PyObject *self, PyObject *args)
         if (!filteringEnabled || (volume[index] >= minVolume && volume[index] <= maxVolume))
         {
             /* handle full scalars array */
-			for (j = 0; j < NScalars; j++)
-				fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            for (j = 0; j < NScalars; j++)
+                fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
             
-			for (j = 0; j < NVectors; j++)
+            for (j = 0; j < NVectors; j++)
             {
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
             }
-			
-			visibleAtoms[NVisible] = index;
-			scalars[NVisible++] = volume[index];
+            
+            visibleAtoms[NVisible] = index;
+            scalars[NVisible++] = volume[index];
         }
     }
     
@@ -1048,37 +1048,37 @@ voronoiVolumeFilter(PyObject *self, PyObject *args)
 static PyObject* 
 voronoiNeighboursFilter(PyObject *self, PyObject *args)
 {
-	int NVisibleIn, *visibleAtoms, NScalars, filteringEnabled, *num_nebs_array, minNebs, maxNebs, NVectors;
-	double *fullScalars, *scalars;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *num_nebs_arrayIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *scalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	
+    int NVisibleIn, *visibleAtoms, NScalars, filteringEnabled, *num_nebs_array, minNebs, maxNebs, NVectors;
+    double *fullScalars, *scalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *num_nebs_arrayIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *scalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
     int i, j, NVisible, index;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!iiO!iO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &num_nebs_arrayIn, 
-			&minNebs, &maxNebs, &PyArray_Type, &scalarsIn, &NScalars, &PyArray_Type, &fullScalarsIn,
-			&filteringEnabled, &NVectors, &PyArray_Type, &fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisibleIn = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_intVector(num_nebs_arrayIn)) return NULL;
-	num_nebs_array = pyvector_to_Cptr_int(num_nebs_arrayIn);
-	
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
-	
-	if (not_doubleVector(scalarsIn)) return NULL;
-	scalars = pyvector_to_Cptr_double(scalarsIn);
+    if (!PyArg_ParseTuple(args, "O!O!iiO!iO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &num_nebs_arrayIn, 
+            &minNebs, &maxNebs, &PyArray_Type, &scalarsIn, &NScalars, &PyArray_Type, &fullScalarsIn,
+            &filteringEnabled, &NVectors, &PyArray_Type, &fullVectors))
+        return NULL;
     
-	if (not_doubleVector(fullVectors)) return NULL;
-	
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_intVector(num_nebs_arrayIn)) return NULL;
+    num_nebs_array = pyvector_to_Cptr_int(num_nebs_arrayIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(scalarsIn)) return NULL;
+    scalars = pyvector_to_Cptr_double(scalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
     NVisible = 0;
     for (i=0; i<NVisibleIn; i++)
     {
@@ -1087,18 +1087,18 @@ voronoiNeighboursFilter(PyObject *self, PyObject *args)
         if (!filteringEnabled || (num_nebs_array[index] >= minNebs && num_nebs_array[index] <= maxNebs))
         {
             /* handle full scalars array */
-			for (j = 0; j < NScalars; j++)
-				fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            for (j = 0; j < NScalars; j++)
+                fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
             
-			for (j = 0; j < NVectors; j++)
+            for (j = 0; j < NVectors; j++)
             {
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
                 DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
             }
-			
-			visibleAtoms[NVisible] = index;
-			scalars[NVisible++] = num_nebs_array[index];
+            
+            visibleAtoms[NVisible] = index;
+            scalars[NVisible++] = num_nebs_array[index];
         }
     }
     
@@ -1111,33 +1111,33 @@ voronoiNeighboursFilter(PyObject *self, PyObject *args)
 static PyObject* 
 atomIndexFilter(PyObject *self, PyObject *args)
 {
-	int NVisibleIn, *visibleAtoms, NScalars, filteringEnabled, *atomID, minVal, maxVal, NVectors;
-	double *fullScalars;
-	PyArrayObject *visibleAtomsIn=NULL;
-	PyArrayObject *atomIDIn=NULL;
-	PyArrayObject *fullScalarsIn=NULL;
-	PyArrayObject *fullVectors=NULL;
-	
+    int NVisibleIn, *visibleAtoms, NScalars, filteringEnabled, *atomID, minVal, maxVal, NVectors;
+    double *fullScalars;
+    PyArrayObject *visibleAtomsIn=NULL;
+    PyArrayObject *atomIDIn=NULL;
+    PyArrayObject *fullScalarsIn=NULL;
+    PyArrayObject *fullVectors=NULL;
+    
     int i, id, index, NVisible, j;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "O!O!iiiiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &atomIDIn, 
-			&filteringEnabled, &minVal, &maxVal, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, 
-			&PyArray_Type, &fullVectors))
-		return NULL;
-	
-	if (not_intVector(visibleAtomsIn)) return NULL;
-	visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-	NVisibleIn = (int) visibleAtomsIn->dimensions[0];
-	
-	if (not_intVector(atomIDIn)) return NULL;
-	atomID = pyvector_to_Cptr_int(atomIDIn);
-	
-	if (not_doubleVector(fullScalarsIn)) return NULL;
-	fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    if (!PyArg_ParseTuple(args, "O!O!iiiiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &atomIDIn, 
+            &filteringEnabled, &minVal, &maxVal, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, 
+            &PyArray_Type, &fullVectors))
+        return NULL;
     
-	if (not_doubleVector(fullVectors)) return NULL;
-	
+    if (not_intVector(visibleAtomsIn)) return NULL;
+    visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
+    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    
+    if (not_intVector(atomIDIn)) return NULL;
+    atomID = pyvector_to_Cptr_int(atomIDIn);
+    
+    if (not_doubleVector(fullScalarsIn)) return NULL;
+    fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
+    
+    if (not_doubleVector(fullVectors)) return NULL;
+    
     NVisible = 0;
     for (i = 0; i < NVisibleIn; i++)
     {

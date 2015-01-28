@@ -157,40 +157,40 @@ void freeNeighbourList(struct NeighbourList *nebList, int size)
 
 static int addAtomToNebList(int mainIndex, int nebIndex, double sep, struct NeighbourList2 *nebList)
 {
-	int newsize;
-	
-	
-	/* check if need to resize neighbour pointers */
-	if (nebList[mainIndex].neighbourCount == 0)
-	{
-		nebList[mainIndex].neighbour = malloc(nebList[mainIndex].chunk * sizeof(struct Neighbour));
-		if (nebList[mainIndex].neighbour == NULL)
-		{
-			char errstring[128];
+    int newsize;
+    
+    
+    /* check if need to resize neighbour pointers */
+    if (nebList[mainIndex].neighbourCount == 0)
+    {
+        nebList[mainIndex].neighbour = malloc(nebList[mainIndex].chunk * sizeof(struct Neighbour));
+        if (nebList[mainIndex].neighbour == NULL)
+        {
+            char errstring[128];
             sprintf(errstring, "Could not allocate nebList[%d].neighbour\n", mainIndex);
             PyErr_SetString(PyExc_MemoryError, errstring);
             return 1;
-		}
-	}
-	else if (nebList[mainIndex].neighbourCount % nebList[mainIndex].chunk == 0)
-	{
-		newsize = nebList[mainIndex].neighbourCount + nebList[mainIndex].chunk;
-		nebList[mainIndex].neighbour = realloc(nebList[mainIndex].neighbour, newsize * sizeof(struct Neighbour));
-		if (nebList[mainIndex].neighbour == NULL)
-		{
-			char errstring[128];
+        }
+    }
+    else if (nebList[mainIndex].neighbourCount % nebList[mainIndex].chunk == 0)
+    {
+        newsize = nebList[mainIndex].neighbourCount + nebList[mainIndex].chunk;
+        nebList[mainIndex].neighbour = realloc(nebList[mainIndex].neighbour, newsize * sizeof(struct Neighbour));
+        if (nebList[mainIndex].neighbour == NULL)
+        {
+            char errstring[128];
             sprintf(errstring, "Could not reallocate nebList[%d].neighbour\n", mainIndex);
             PyErr_SetString(PyExc_MemoryError, errstring);
             return 2;
-		}
-	}
-	
-	/* add neighbour */
-	nebList[mainIndex].neighbour[nebList[mainIndex].neighbourCount].index = nebIndex;
-	nebList[mainIndex].neighbour[nebList[mainIndex].neighbourCount].separation = sep;
-	nebList[mainIndex].neighbourCount++;
-	
-	return 0;
+        }
+    }
+    
+    /* add neighbour */
+    nebList[mainIndex].neighbour[nebList[mainIndex].neighbourCount].index = nebIndex;
+    nebList[mainIndex].neighbour[nebList[mainIndex].neighbourCount].separation = sep;
+    nebList[mainIndex].neighbourCount++;
+    
+    return 0;
 }
 
 struct NeighbourList2 * constructNeighbourList2(int NAtoms, double *pos, struct Boxes *boxes, double *cellDims, int *PBC, double maxSep2)
@@ -263,14 +263,14 @@ struct NeighbourList2 * constructNeighbourList2(int NAtoms, double *pos, struct 
                     int addstat;
                     double sep = sqrt(sep2);
                     
-                	addstat = addAtomToNebList(i, indexb, sep, nebList);
-                	if (addstat)
-                	{
-                	    freeNeighbourList2(nebList, NAtoms);
-                	    return NULL;
-                	}
-                	addstat = addAtomToNebList(indexb, i, sep, nebList);
-                	if (addstat)
+                    addstat = addAtomToNebList(i, indexb, sep, nebList);
+                    if (addstat)
+                    {
+                        freeNeighbourList2(nebList, NAtoms);
+                        return NULL;
+                    }
+                    addstat = addAtomToNebList(indexb, i, sep, nebList);
+                    if (addstat)
                     {
                         freeNeighbourList2(nebList, NAtoms);
                         return NULL;

@@ -66,21 +66,21 @@ static int specieIndex(char* sym, int NSpecies, char* specieList)
 static PyObject*
 readRef(PyObject *self, PyObject *args)
 {
-	char *file, *specieList_c;
-	int *atomID, *specie, *specieCount_c;
-	double *pos, *charge, *maxPos, *minPos, *KE, *PE;
-	PyArrayObject *atomIDIn=NULL;
-	PyArrayObject *specieIn=NULL;
-	PyArrayObject *posIn=NULL;
-	PyArrayObject *chargeIn=NULL;
-	PyArrayObject *specieList_cIn=NULL;
-	PyArrayObject *specieCount_cIn=NULL;
-	PyArrayObject *maxPosIn=NULL;
-	PyArrayObject *minPosIn=NULL;
-	PyArrayObject *KEIn=NULL;
-	PyArrayObject *PEIn=NULL;
-	PyArrayObject *force=NULL;
-	
+    char *file, *specieList_c;
+    int *atomID, *specie, *specieCount_c;
+    double *pos, *charge, *maxPos, *minPos, *KE, *PE;
+    PyArrayObject *atomIDIn=NULL;
+    PyArrayObject *specieIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *chargeIn=NULL;
+    PyArrayObject *specieList_cIn=NULL;
+    PyArrayObject *specieCount_cIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    PyArrayObject *minPosIn=NULL;
+    PyArrayObject *KEIn=NULL;
+    PyArrayObject *PEIn=NULL;
+    PyArrayObject *force=NULL;
+    
     int i, NAtoms, specInd, stat;
     FILE *INFILE;
     double xdim, ydim, zdim;
@@ -92,45 +92,45 @@ readRef(PyObject *self, PyObject *args)
     double ketemp, petemp, chargetemp;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!O!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &specieIn, 
-			&PyArray_Type, &posIn, &PyArray_Type, &chargeIn, &PyArray_Type, &KEIn, &PyArray_Type, &PEIn, 
-			&PyArray_Type, &force, &PyArray_Type, &specieList_cIn, &PyArray_Type, 
-			&specieCount_cIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &minPosIn))
-		return NULL;
-	
-	if (not_intVector(atomIDIn)) return NULL;
-	atomID = pyvector_to_Cptr_int(atomIDIn);
-	
-	if (not_doubleVector(posIn)) return NULL;
-	pos = pyvector_to_Cptr_double(posIn);
-	
-	if (not_doubleVector(chargeIn)) return NULL;
-	charge = pyvector_to_Cptr_double(chargeIn);
-	
-	if (not_doubleVector(KEIn)) return NULL;
-	KE = pyvector_to_Cptr_double(KEIn);
-	
-	if (not_doubleVector(PEIn)) return NULL;
-	PE = pyvector_to_Cptr_double(PEIn);
-	
-	if (not_doubleVector(force)) return NULL;
-	
-	if (not_doubleVector(minPosIn)) return NULL;
-	minPos = pyvector_to_Cptr_double(minPosIn);
-	
-	if (not_doubleVector(maxPosIn)) return NULL;
-	maxPos = pyvector_to_Cptr_double(maxPosIn);
-	
-	if (not_intVector(specieCount_cIn)) return NULL;
-	specieCount_c = pyvector_to_Cptr_int(specieCount_cIn);
-	
-	if (not_intVector(specieIn)) return NULL;
-	specie = pyvector_to_Cptr_int(specieIn);
-	
-	// no test yet for nx2 char*
-	specieList_c = pyvector_to_Cptr_char(specieList_cIn);
+    if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!O!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &specieIn, 
+            &PyArray_Type, &posIn, &PyArray_Type, &chargeIn, &PyArray_Type, &KEIn, &PyArray_Type, &PEIn, 
+            &PyArray_Type, &force, &PyArray_Type, &specieList_cIn, &PyArray_Type, 
+            &specieCount_cIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &minPosIn))
+        return NULL;
     
-	/* open file */
+    if (not_intVector(atomIDIn)) return NULL;
+    atomID = pyvector_to_Cptr_int(atomIDIn);
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(chargeIn)) return NULL;
+    charge = pyvector_to_Cptr_double(chargeIn);
+    
+    if (not_doubleVector(KEIn)) return NULL;
+    KE = pyvector_to_Cptr_double(KEIn);
+    
+    if (not_doubleVector(PEIn)) return NULL;
+    PE = pyvector_to_Cptr_double(PEIn);
+    
+    if (not_doubleVector(force)) return NULL;
+    
+    if (not_doubleVector(minPosIn)) return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_doubleVector(maxPosIn)) return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_intVector(specieCount_cIn)) return NULL;
+    specieCount_c = pyvector_to_Cptr_int(specieCount_cIn);
+    
+    if (not_intVector(specieIn)) return NULL;
+    specie = pyvector_to_Cptr_int(specieIn);
+    
+    // no test yet for nx2 char*
+    specieList_c = pyvector_to_Cptr_char(specieList_cIn);
+    
+    /* open file */
     INFILE = fopen( file, "r" );
     if (INFILE == NULL)
     {
@@ -242,57 +242,57 @@ readRef(PyObject *self, PyObject *args)
 static PyObject*
 readLBOMDXYZ(PyObject *self, PyObject *args)
 {
-	char *file;
-	int *atomID, xyzformat;
-	double *pos, *charge, *maxPos, *minPos, *KE, *PE;
-	PyArrayObject *atomIDIn=NULL;
-	PyArrayObject *posIn=NULL;
-	PyArrayObject *chargeIn=NULL;
-	PyArrayObject *maxPosIn=NULL;
-	PyArrayObject *minPosIn=NULL;
-	PyArrayObject *KEIn=NULL;
-	PyArrayObject *PEIn=NULL;
-	PyArrayObject *velocity=NULL;
-	PyArrayObject *specie=NULL;
-	PyArrayObject *refSpecie=NULL;
-	PyArrayObject *refCharge=NULL;
-	
+    char *file;
+    int *atomID, xyzformat;
+    double *pos, *charge, *maxPos, *minPos, *KE, *PE;
+    PyArrayObject *atomIDIn=NULL;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *chargeIn=NULL;
+    PyArrayObject *maxPosIn=NULL;
+    PyArrayObject *minPosIn=NULL;
+    PyArrayObject *KEIn=NULL;
+    PyArrayObject *PEIn=NULL;
+    PyArrayObject *velocity=NULL;
+    PyArrayObject *specie=NULL;
+    PyArrayObject *refSpecie=NULL;
+    PyArrayObject *refCharge=NULL;
+    
     FILE *INFILE;
     int i, NAtoms, stat;
     double simTime;
     
     /* parse and check arguments from Python */
-	if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!iO!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &posIn,
-			&PyArray_Type, &chargeIn, &PyArray_Type, &KEIn, &PyArray_Type, &PEIn, &PyArray_Type, &velocity,
-			&PyArray_Type, &maxPosIn, &PyArray_Type, &minPosIn, &xyzformat, &PyArray_Type, &specie, &PyArray_Type,
-			&refSpecie, &PyArray_Type, &refCharge))
-		return NULL;
-	
-	if (not_intVector(atomIDIn)) return NULL;
-	atomID = pyvector_to_Cptr_int(atomIDIn);
-	
-	if (not_doubleVector(posIn)) return NULL;
-	pos = pyvector_to_Cptr_double(posIn);
-	
-	if (not_doubleVector(chargeIn)) return NULL;
-	charge = pyvector_to_Cptr_double(chargeIn);
-	
-	if (not_doubleVector(KEIn)) return NULL;
-	KE = pyvector_to_Cptr_double(KEIn);
-	
-	if (not_doubleVector(PEIn)) return NULL;
-	PE = pyvector_to_Cptr_double(PEIn);
-	
-	if (not_doubleVector(minPosIn)) return NULL;
-	minPos = pyvector_to_Cptr_double(minPosIn);
-	
-	if (not_doubleVector(maxPosIn)) return NULL;
-	maxPos = pyvector_to_Cptr_double(maxPosIn);
-	
-	if (not_intVector(specie)) return NULL;
-	if (not_intVector(refSpecie)) return NULL;
-	if (not_doubleVector(refCharge)) return NULL;
-	if (not_doubleVector(velocity)) return NULL;
+    if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!iO!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &posIn,
+            &PyArray_Type, &chargeIn, &PyArray_Type, &KEIn, &PyArray_Type, &PEIn, &PyArray_Type, &velocity,
+            &PyArray_Type, &maxPosIn, &PyArray_Type, &minPosIn, &xyzformat, &PyArray_Type, &specie, &PyArray_Type,
+            &refSpecie, &PyArray_Type, &refCharge))
+        return NULL;
+    
+    if (not_intVector(atomIDIn)) return NULL;
+    atomID = pyvector_to_Cptr_int(atomIDIn);
+    
+    if (not_doubleVector(posIn)) return NULL;
+    pos = pyvector_to_Cptr_double(posIn);
+    
+    if (not_doubleVector(chargeIn)) return NULL;
+    charge = pyvector_to_Cptr_double(chargeIn);
+    
+    if (not_doubleVector(KEIn)) return NULL;
+    KE = pyvector_to_Cptr_double(KEIn);
+    
+    if (not_doubleVector(PEIn)) return NULL;
+    PE = pyvector_to_Cptr_double(PEIn);
+    
+    if (not_doubleVector(minPosIn)) return NULL;
+    minPos = pyvector_to_Cptr_double(minPosIn);
+    
+    if (not_doubleVector(maxPosIn)) return NULL;
+    maxPos = pyvector_to_Cptr_double(maxPosIn);
+    
+    if (not_intVector(specie)) return NULL;
+    if (not_intVector(refSpecie)) return NULL;
+    if (not_doubleVector(refCharge)) return NULL;
+    if (not_doubleVector(velocity)) return NULL;
     
     /* open file */
     INFILE = fopen(file, "r");
