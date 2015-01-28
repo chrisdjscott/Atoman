@@ -38,6 +38,6 @@ void boxIJKIndices(int, int *, int, struct Boxes *);
 
 int boxIndexFromIJK(int, int, int, struct Boxes *);
 
-void getBoxNeighbourhood(int, int *, struct Boxes *);
+int getBoxNeighbourhood(int, int *, struct Boxes *);
 
 #endif

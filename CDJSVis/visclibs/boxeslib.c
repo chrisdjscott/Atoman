@@ -1,6 +1,6 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2012
+ ** Copyright Chris Scott 2015
  ** Functions associated with spatially decomposing a system of atoms into boxes
  ** 
  ** 
@@ -24,7 +24,6 @@
 
 /*******************************************************************************
  ** create and return pointer to Boxes structure
- ** #TODO: if PBCs are set min/max pos should be equal to cell dims
  *******************************************************************************/
 struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos, int *PBC, double *cellDims)
 {
@@ -32,6 +31,8 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
     double cellLength;
     struct Boxes *boxes;
     
+    
+    //TODO: limit the number of boxes; use long instead?
     
     /* allocate space for boxes struct */
     boxes = malloc(1 * sizeof(struct Boxes));
@@ -42,17 +43,20 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
     }
     
     /* setup boxes */
-    for (i=0; i<3; i++)
+    for (i = 0; i < 3; i++)
     {
         /* store some parameters */
         boxes->PBC[i] = PBC[i];
         boxes->cellDims[i] = cellDims[i];
         
         /* if PBC box cell, otherwise box min-max pos */
+        /* Changed to always box by cellDims! */
         if (boxes->PBC[i] == 0)
         {
-            boxes->minPos[i] = minPos[i];
-            boxes->maxPos[i] = maxPos[i];
+//             boxes->minPos[i] = minPos[i];
+//             boxes->maxPos[i] = maxPos[i];
+            boxes->minPos[i] = 0.0;
+            boxes->maxPos[i] = boxes->cellDims[i];
         }
         else
         {
@@ -290,66 +294,97 @@ int boxIndexFromIJK(int xindex, int yindex, int zindex, struct Boxes *boxes)
 
 /*******************************************************************************
  ** returns neighbourhood of given box
+ ** boxNeighbourList must be of size >= 27
  *******************************************************************************/
-void getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes)
+int getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes)
 {
     int mainBoxIJK[3];
-    int i, j, k;
-    int posintx, posinty, posintz;
-    int index, count;
+    int i, count;
+    int lstart[3], lfinish[3];
     
     
     /* first get i,j,k indices of the main box */
-    boxIJKIndices( 3, mainBoxIJK, mainBox, boxes );
-            
+    boxIJKIndices(3, mainBoxIJK, mainBox, boxes);
+    
+    /* handle cases where we have less than three boxes in a direction */
+    for (i = 0; i < 3; i++)
+    {
+        int num = boxes->NBoxes[i];
+        
+        if (num == 1)
+        {
+            lstart[i] = 0;
+            lfinish[i] = 1;
+        }
+        else if (num == 2)
+        {
+            lstart[i] = 0;
+            lfinish[i] = 2;
+        }
+        else
+        {
+            lstart[i] = -1;
+            lfinish[i] = 2;
+        }
+    }
+    
+    //TODO: only wrap if using PBC, don't bother otherwise!
+    
     /* loop over each direction */
     count = 0;
-    for ( i=0; i<3; i++ )
+    for (i = lstart[0]; i < lfinish[0]; i++)
     {
-        posintx = mainBoxIJK[0] - 1 + i;
+        int j;
+        int posintx = mainBoxIJK[0] + i;
+        
         /* wrap */
-        if ( posintx < 0 )
+        if (posintx < 0)
         {
             posintx += boxes->NBoxes[0];
         }
-        else if ( posintx >= boxes->NBoxes[0] )
+        else if (posintx >= boxes->NBoxes[0])
         {
             posintx -= boxes->NBoxes[0];
         }
         
-        for ( j=0; j<3; j++ )
+        for (j = lstart[1]; j < lfinish[1]; j++)
         {
-            posinty = mainBoxIJK[1] - 1 + j;
+            int k;
+            int posinty = mainBoxIJK[1] + j;
+            
             /* wrap */
             if ( posinty < 0 )
             {
                 posinty += boxes->NBoxes[1];
             }
-            else if ( posinty >= boxes->NBoxes[1] )
+            else if (posinty >= boxes->NBoxes[1])
             {
                 posinty -= boxes->NBoxes[1];
             }
             
-            for ( k=0; k<3; k++ )
+            for (k = lstart[2]; k < lfinish[2]; k++)
             {
-                posintz = mainBoxIJK[2] - 1 + k;
+                int index;
+                int posintz = mainBoxIJK[2] + k;
+                
                 /* wrap */
-                if ( posintz < 0 )
+                if (posintz < 0)
                 {
                     posintz += boxes->NBoxes[2];
                 }
-                else if ( posintz >= boxes->NBoxes[2] )
+                else if (posintz >= boxes->NBoxes[2])
                 {
                     posintz -= boxes->NBoxes[2];
                 }
                 
                 /* get index of box from this i,j,k */
-                index = boxIndexFromIJK( posintx, posinty, posintz, boxes );
-                boxNeighbourList[count] = index;
-                count++;
+                index = boxIndexFromIJK(posintx, posinty, posintz, boxes);
+                boxNeighbourList[count++] = index;
             }
         }
     }
+    
+    return count;
 }
 
 
