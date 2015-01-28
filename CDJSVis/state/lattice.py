@@ -230,7 +230,6 @@ class Lattice(object):
         self.NAtoms += 1
         
         logger = logging.getLogger(__name__)
-        logger.debug("Modifying Lattice scalars/vectors after addAtom")
         
         for scalarName in self.scalarsDict.keys():
             if scalarName in scalarVals:

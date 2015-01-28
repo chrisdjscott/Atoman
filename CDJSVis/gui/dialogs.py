@@ -1426,28 +1426,34 @@ class ReplicateCellDialog(QtGui.QDialog):
         self.setLayout(layout)
         
         # x
-        self.replicateInXCheck = QtGui.QCheckBox()
-        self.replicateInXCheck.setCheckState(QtCore.Qt.Unchecked)
-        self.replicateInXCheck.setToolTip("Replicate the cell in the x direction")
+        self.replicateInXSpin = QtGui.QSpinBox()
+        self.replicateInXSpin.setMinimum(0)
+        self.replicateInXSpin.setMaximum(10)
+        self.replicateInXSpin.setValue(0)
+        self.replicateInXSpin.setToolTip("Number of times to replicate the cell in the x direction")
         if not pbc[0]:
-            self.replicateInXCheck.setEnabled(False)
-        layout.addRow("Replicate in x", self.replicateInXCheck)
+            self.replicateInXSpin.setEnabled(False)
+        layout.addRow("Replicate in x", self.replicateInXSpin)
         
         # y
-        self.replicateInYCheck = QtGui.QCheckBox()
-        self.replicateInYCheck.setCheckState(QtCore.Qt.Unchecked)
-        self.replicateInYCheck.setToolTip("Replicate the cell in the y direction")
+        self.replicateInYSpin = QtGui.QSpinBox()
+        self.replicateInYSpin.setMinimum(0)
+        self.replicateInYSpin.setMaximum(10)
+        self.replicateInYSpin.setValue(0)
+        self.replicateInYSpin.setToolTip("Number of times to replicate the cell in the y direction")
         if not pbc[1]:
-            self.replicateInYCheck.setEnabled(False)
-        layout.addRow("Replicate in y", self.replicateInYCheck)
+            self.replicateInYSpin.setEnabled(False)
+        layout.addRow("Replicate in y", self.replicateInYSpin)
         
         # z
-        self.replicateInZCheck = QtGui.QCheckBox()
-        self.replicateInZCheck.setCheckState(QtCore.Qt.Unchecked)
-        self.replicateInZCheck.setToolTip("Replicate the cell in the z direction")
+        self.replicateInZSpin = QtGui.QSpinBox()
+        self.replicateInZSpin.setMinimum(0)
+        self.replicateInZSpin.setMaximum(10)
+        self.replicateInZSpin.setValue(0)
+        self.replicateInZSpin.setToolTip("Number of times to replicate the cell in the z direction")
         if not pbc[2]:
-            self.replicateInZCheck.setEnabled(False)
-        layout.addRow("Replicate in z", self.replicateInZCheck)
+            self.replicateInYSpin.setEnabled(False)
+        layout.addRow("Replicate in z", self.replicateInZSpin)
         
         # button box
         buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)

@@ -220,25 +220,23 @@ class PipelineForm(QtGui.QWidget):
         status = dlg.exec_()
         
         if status == QtGui.QDialog.Accepted:
-            print "Replicating cell"
-            
             repDirs = np.zeros(3, np.int32)
             replicate = False
             
-            if dlg.replicateInXCheck.isChecked():
-                repDirs[0] = 1
+            numx = dlg.replicateInXSpin.value()
+            if numx:
+                repDirs[0] = numx
                 replicate = True
-                self.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
             
-            if dlg.replicateInYCheck.isChecked():
-                repDirs[1] = 1
+            numy = dlg.replicateInYSpin.value()
+            if numy:
+                repDirs[1] = numy
                 replicate = True
-                self.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
             
-            if dlg.replicateInZCheck.isChecked():
-                repDirs[2] = 1
+            numz = dlg.replicateInZSpin.value()
+            if numz:
+                repDirs[2] = numz
                 replicate = True
-                self.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
             
             if replicate:
                 self.logger.warning("Replicating cell: this will modify the current input state everywhere")
@@ -246,30 +244,80 @@ class PipelineForm(QtGui.QWidget):
                 
                 #TODO: write in C
                 lattice = self.inputState
-                numatoms = lattice.NAtoms
-                halfCell = lattice.cellDims / 2.0
                 newpos = np.empty(3, np.float64)
                 cellDims = lattice.cellDims
-                for i in xrange(numatoms):
-                    sym = lattice.atomSym(i)
-                    pos = lattice.atomPos(i)
-                    q = lattice.charge[i]
-                    ke = lattice.KE[i]
-                    pe = lattice.PE[i]
-                    for j in xrange(3):
-                        if repDirs[j]:
-                            if pos[j] < halfCell[j]:
-                                newpos[:] = pos[:]
-                                newpos[j] += cellDims[j]
-                                lattice.addAtom(sym, newpos, q, KE=ke, PE=pe)
-                            
-                            else:
-                                newpos[:] = pos[:]
-                                newpos[j] -= cellDims[j]
-                                lattice.addAtom(sym, newpos, q, KE=ke, PE=pe)
                 
-                # run all filter lists
-                self.runAllFilterLists()
+                # calculate final number of atoms
+                numfin = lattice.NAtoms
+                for i in xrange(3):
+                    numfin += numfin * repDirs[i]
+                numadd = numfin - lattice.NAtoms
+                self.logger.debug("Replicating cell: adding %d atoms", numadd)
+                
+                # progress update interval
+                progressInterval = int(numadd / 10)
+                if progressInterval < 50:
+                    progressInterval = 50
+                elif progressInterval > 500:
+                    progressInterval = 500
+                
+                # set override cursor
+                QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+                try:
+                    # add progress dialog
+                    self.mainWindow.updateProgress(0, numadd, "Replicating cell")
+                    
+                    # loop over directions
+                    count = 0
+                    for i in xrange(3):
+                        self.logger.debug("Replicating along axis %d: %d times", i, repDirs[i])
+                        
+                        # store num atoms at beginning of this direction
+                        NAtoms = lattice.NAtoms
+                        
+                        # loop over number of replications in this direction
+                        for j in xrange(repDirs[i]):
+                            # loop over atoms
+                            for k in xrange(NAtoms):
+                                # attributes to copy to new atom
+                                sym = lattice.atomSym(k)
+                                q = lattice.charge[k]
+                                scalarVals = {}
+                                for name, scalarsArray in lattice.scalarsDict.iteritems():
+                                    scalarVals[name] = scalarsArray[k]
+                                vectorVals = {}
+                                for name, vectorsArray in lattice.vectorsDict.iteritems():
+                                    vectorVals[name] = vectorsArray[k]
+                                
+                                # new position
+                                pos = lattice.atomPos(k)
+                                newpos[:] = pos[:]
+                                newpos[i] += (j + 1) * cellDims[i]
+                                
+                                # add atom
+                                lattice.addAtom(sym, newpos, q, scalarVals=scalarVals, vectorVals=vectorVals)
+                                
+                                # progress
+                                count += 1
+                                if count % progressInterval == 0:
+                                    self.mainWindow.updateProgress(count, numadd, "Replicating cell")
+                                    
+                        # change cell dimension
+                        lattice.cellDims[i] += cellDims[i] * repDirs[i]
+                        self.logger.debug("New cellDims along axis %d: %f", i, lattice.cellDims[i])
+                
+                finally:
+                    self.mainWindow.hideProgressBar()
+                    QtGui.QApplication.restoreOverrideCursor()
+                
+                # run post ref render of Renderer (redraws cell)
+                for rw in self.rendererWindows:
+                    if rw.currentPipelineIndex == self.pipelineIndex:
+                        rw.renderer.postRefRender()
+                        rw.textSelector.refresh()
+                
+                # run post input loaded method
+                self.postInputLoaded()
     
     def PBCXChanged(self, val):
         """
@@ -401,7 +449,6 @@ class PipelineForm(QtGui.QWidget):
                 rw.postInputChanged()
         
         settings = self.mainWindow.preferences.renderingForm
-        
         if self.inputState.NAtoms <= settings.maxAtomsAutoRun:
             self.runAllFilterLists()
     
