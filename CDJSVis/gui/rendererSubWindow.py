@@ -390,17 +390,19 @@ class RendererWindow(QtGui.QWidget):
         # remove actors from filter lists
         for filterList in filterLists:
             filterer = filterList.filterer
-            actorsCollection = filterer.actorsCollection
+            for actorName, val in filterer.actorsDict.iteritems():
+                if isinstance(val, dict):
+#                     self.logger.debug("Removing actors for: '%s'", actorName)
+                    for actorName2, actorObj in val.iteritems():
+                        if actorObj.visible:
+#                             self.logger.debug("  Removing actor: '%s'", actorName2)
+                            self.vtkRen.RemoveActor(actorObj.actor)
             
-            actorsCollection.InitTraversal()
-            actor = actorsCollection.GetNextItem()
-            while actor is not None:
-                try:
-                    self.vtkRen.RemoveActor(actor)
-                except:
-                    pass
-                
-                actor = actorsCollection.GetNextItem()
+                else:
+                    actorObj = val
+                    if actorObj.visible:
+#                         self.logger.debug("Removing actor: '%s'", actorName)
+                        self.vtkRen.RemoveActor(actorObj.actor)
             
             if filterer.scalarBarAdded:
                 # which scalar bar
@@ -429,17 +431,19 @@ class RendererWindow(QtGui.QWidget):
         
         for filterList in filterLists:
             filterer = filterList.filterer
-            actorsCollection = filterer.actorsCollection
+            for actorName, val in filterer.actorsDict.iteritems():
+                if isinstance(val, dict):
+#                     self.logger.debug("Adding actors for: '%s'", actorName)
+                    for actorName2, actorObj in val.iteritems():
+#                             self.logger.debug("  Adding actor: '%s'", actorName2)
+                        if actorObj.visible:
+                            self.vtkRen.AddActor(actorObj.actor)
             
-            actorsCollection.InitTraversal()
-            actor = actorsCollection.GetNextItem()
-            while actor is not None:
-                try:
-                    self.vtkRen.AddActor(actor)
-                except:
-                    pass
-                
-                actor = actorsCollection.GetNextItem()
+                else:
+                    actorObj = val
+                    if actorObj.visible:
+#                         self.logger.debug("Adding actor: '%s'", actorName)
+                        self.vtkRen.AddActor(actorObj.actor)
             
             if filterer.scalarBarAdded:
                 # which scalar bar
