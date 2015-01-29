@@ -1957,6 +1957,9 @@ class ImageSequenceTab(QtGui.QWidget):
                     self.eliminateFlicker(state, previousPos, pipelinePage)
                     previousPos = copy.deepcopy(state.pos)
                 
+                # set PBCs the same
+                state.PBC[:] = origInput.PBC[:]
+                
                 # attempt to read any scalars/vectors files
                 for vectorsName, vectorsFile in origInput.vectorsFiles.iteritems():
                     self.logger.debug("Sequencer checking vectors file: '%s'", vectorsFile)
