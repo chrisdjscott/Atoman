@@ -53,7 +53,7 @@ class PlotDialog(QtGui.QDialog):
         
         # set dimension of dialog
         self.dlgWidth = figWidth * figDpi + 20
-        self.dlgHeight = figHeight * figDpi + 80
+        self.dlgHeight = figHeight * figDpi + 100
         self.resize(self.dlgWidth, self.dlgHeight)
         
         # make size fixed
@@ -119,18 +119,24 @@ class PlotDialog(QtGui.QDialog):
         # write to file button
         writeDataButton = QtGui.QPushButton("Write csv")
         writeDataButton.setAutoDefault(False)
+        writeDataButton.setDefault(False)
         writeDataButton.clicked.connect(self.writeData)
         writeDataButton.setToolTip("Write csv file containing plot data")
         
-        # row
-        row = QtGui.QHBoxLayout()
-        row.addWidget(self.mplToolbar)
-        row.addWidget(writeDataButton)
+        # close button
+        closeButton = QtGui.QPushButton("Close")
+        closeButton.clicked.connect(self.accept)
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox()
+        buttonBox.addButton(writeDataButton, QtGui.QDialogButtonBox.ActionRole)
+        buttonBox.addButton(closeButton, QtGui.QDialogButtonBox.AcceptRole)
         
         # layout
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.canvas)
-        vbox.addLayout(row)
+        vbox.addWidget(self.mplToolbar)
+        vbox.addWidget(buttonBox)
         
         self.mainWidget.setLayout(vbox)
     
