@@ -10,6 +10,7 @@
 #include "utilities.h"
 #include "array_utils.h"
 
+#define DEBUG
 
 static PyObject* pickObject(PyObject*, PyObject*);
 
@@ -138,6 +139,10 @@ pickObject(PyObject *self, PyObject *args)
         double *visPos;
         struct Boxes *boxes;
         
+#ifdef DEBUG
+        printf("PICKC: Picking atom\n");
+#endif
+        
         /* vis atoms pos */
         visPos = malloc(3 * visibleAtomsDim * sizeof(double));
         if (visPos == NULL)
@@ -242,6 +247,10 @@ pickObject(PyObject *self, PyObject *args)
         double *visPos, *visCovRad, minSep, minSep2;
         double minSepRad;
         struct Boxes *boxes;
+        
+#ifdef DEBUG
+        printf("PICKC: Picking defect\n");
+#endif
         
         /* build positions array of all defects */
         NVis = vacsDim + intsDim + onAntsDim + splitsDim;

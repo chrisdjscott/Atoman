@@ -283,6 +283,115 @@ struct NeighbourList2 * constructNeighbourList2(int NAtoms, double *pos, struct 
     return nebList;
 }
 
+/*******************************************************************************
+ * Construct neighbour lists for "ref" atoms where the neighbour lists contain
+ * "input" atoms only. If separation is very close to 0 we don't add it.
+ *******************************************************************************/
+struct NeighbourList2 * constructNeighbourList2DiffPos(int NAtomsRef, double *refPos, int NAtomsInp, double *inpPos, double *cellDims, int *PBC, double maxSep)
+{
+    int i;
+    int boxstat;
+    double approxBoxWidth;
+    double maxSep2 = maxSep * maxSep;
+    double rxb, ryb, rzb, sep2;
+    struct Boxes *boxes;
+    struct NeighbourList2 *nebList;
+    
+    
+    /* box input atoms */
+    approxBoxWidth = maxSep;
+    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
+    if (boxes == NULL) return NULL;
+    boxstat = putAtomsInBoxes(NAtomsInp, inpPos, boxes);
+    if (boxstat) return NULL;
+    
+    /* allocate neb list */
+    nebList = malloc(NAtomsRef * sizeof(struct NeighbourList2));
+    if (nebList == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate nebList");
+        freeBoxes(boxes);
+        return NULL;
+    }
+    
+    /* initialise */
+    for (i = 0; i < NAtomsRef; i++)
+    {
+        nebList[i].chunk = 16;
+        nebList[i].neighbourCount = 0;
+    }
+    
+    /* loop over ref atoms */
+    for (i = 0; i < NAtomsRef; i++)
+    {
+        int i3 = 3 * i;
+        int j, boxNebListSize, boxIndex, boxNebList[27];
+        double rxa, rya, rza;
+        
+        /* atom position */
+        rxa = refPos[i3    ];
+        rya = refPos[i3 + 1];
+        rza = refPos[i3 + 2];
+        
+        /* get box index of this atom */
+        boxIndex = boxIndexOfAtom(rxa, rya, rza, boxes);
+        if (boxIndex < 0)
+        {
+            freeNeighbourList2(nebList, NAtomsRef);
+            freeBoxes(boxes);
+            return NULL;
+        }
+        
+        /* find neighbouring boxes */
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        
+        /* loop over box neighbourhood */
+        for (j = 0; j < boxNebListSize; j++)
+        {
+            int k;
+            
+            boxIndex = boxNebList[j];
+            
+            /* loop over atoms in box */
+            for (k = 0; k < boxes->boxNAtoms[boxIndex]; k++)
+            {
+                int indexb = boxes->boxAtoms[boxIndex][k];
+                int indb3 = indexb * 3;
+                
+                /* atom position */
+                rxb = inpPos[indb3    ];
+                ryb = inpPos[indb3 + 1];
+                rzb = inpPos[indb3 + 2];
+                
+                /* separation */
+                sep2 = atomicSeparation2(rxa, rya, rza, rxb, ryb, rzb, cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
+                
+                /* check if neighbour */
+                if (sep2 < maxSep2)
+                {
+                    if (fabs(sep2 - 0.0) > 1e-6)
+                    {
+                        int addstat;
+                        double sep = sqrt(sep2);
+                        
+                        addstat = addAtomToNebList(i, indexb, sep, nebList);
+                        if (addstat)
+                        {
+                            freeNeighbourList2(nebList, NAtomsRef);
+                            freeBoxes(boxes);
+                            return NULL;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    freeBoxes(boxes);
+    
+    return nebList;
+}
+
 void freeNeighbourList2(struct NeighbourList2 *nebList, int size)
 {
     int i;
