@@ -113,6 +113,9 @@ class PlotDialog(QtGui.QDialog):
         if "title" in settingsDict:
             self.axes.set_title(settingsDict["title"], fontsize=fontsize)
         
+        # tight layout
+        self.fig.tight_layout()
+        
         # draw canvas
         self.canvas.draw()
         
