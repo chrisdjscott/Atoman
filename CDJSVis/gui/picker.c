@@ -10,8 +10,6 @@
 #include "utilities.h"
 #include "array_utils.h"
 
-#define DEBUG
-
 static PyObject* pickObject(PyObject*, PyObject*);
 
 
@@ -41,7 +39,7 @@ pickObject(PyObject *self, PyObject *args)
 {
     int visibleAtomsDim, *visibleAtoms, vacsDim, *vacs, intsDim, *ints, onAntsDim, *onAnts, splitsDim, *splits;
     int *PBC, *specie, *refSpecie;
-    double *pickPos, *pos, *refPos, *cellDims, *minPos, *maxPos, *specieCovRad, *refSpecieCovRad, *result;  
+    double *pickPos, *pos, *refPos, *cellDims, *specieCovRad, *refSpecieCovRad, *result;  
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *vacsIn=NULL;
     PyArrayObject *intsIn=NULL;
@@ -52,8 +50,6 @@ pickObject(PyObject *self, PyObject *args)
     PyArrayObject *refPosIn=NULL;
     PyArrayObject *PBCIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
-    PyArrayObject *minPosIn=NULL;
-    PyArrayObject *maxPosIn=NULL;
     PyArrayObject *specieIn=NULL;
     PyArrayObject *refSpecieIn=NULL;
     PyArrayObject *specieCovRadIn=NULL;
@@ -64,11 +60,11 @@ pickObject(PyObject *self, PyObject *args)
     
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!O!O!O!O!O!O!O!O!O!O!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &vacsIn, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!O!O!O!O!O!O!O!O!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &vacsIn, 
             &PyArray_Type, &intsIn, &PyArray_Type, &onAntsIn, &PyArray_Type, &splitsIn, &PyArray_Type, &pickPosIn, &PyArray_Type, 
-            &posIn, &PyArray_Type, &refPosIn, &PyArray_Type, &PBCIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &minPosIn, 
-            &PyArray_Type, &maxPosIn, &PyArray_Type, &specieIn, &PyArray_Type, &refSpecieIn, &PyArray_Type, &specieCovRadIn,
-            &PyArray_Type, &refSpecieCovRadIn, &PyArray_Type, &resultIn))
+            &posIn, &PyArray_Type, &refPosIn, &PyArray_Type, &PBCIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &specieIn,
+            &PyArray_Type, &refSpecieIn, &PyArray_Type, &specieCovRadIn, &PyArray_Type, &refSpecieCovRadIn, &PyArray_Type,
+            &resultIn))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -105,12 +101,6 @@ pickObject(PyObject *self, PyObject *args)
     
     if (not_intVector(PBCIn)) return NULL;
     PBC = pyvector_to_Cptr_int(PBCIn);
-    
-    if (not_doubleVector(minPosIn)) return NULL;
-    minPos = pyvector_to_Cptr_double(minPosIn);
-    
-    if (not_doubleVector(maxPosIn)) return NULL;
-    maxPos = pyvector_to_Cptr_double(maxPosIn);
     
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
@@ -315,7 +305,7 @@ pickObject(PyObject *self, PyObject *args)
             int i3 = 3 * i;
             int index, c3, index3;
             
-            index = splits[i3];
+            index = splits[i3    ];
             index3 = index * 3;
             c3 = count * 3;
             visPos[c3    ] = refPos[index3    ];
@@ -323,7 +313,7 @@ pickObject(PyObject *self, PyObject *args)
             visPos[c3 + 2] = refPos[index3 + 2];
             visCovRad[count++] = refSpecieCovRad[refSpecie[index]];
             
-            index = splits[i3];
+            index = splits[i3 + 1];
             index3 = index * 3;
             c3 = count * 3;
             visPos[c3    ] = pos[index3    ];
@@ -331,7 +321,7 @@ pickObject(PyObject *self, PyObject *args)
             visPos[c3 + 2] = pos[index3 + 2];
             visCovRad[count++] = specieCovRad[specie[index]];
             
-            index = splits[i3];
+            index = splits[i3 + 2];
             index3 = index * 3;
             c3 = count * 3;
             visPos[c3    ] = pos[index3    ];
@@ -443,6 +433,10 @@ pickObject(PyObject *self, PyObject *args)
         free(visPos);
         free(visCovRad);
     }
+    
+#ifdef DEBUG
+    printf("PICKC: End\n");
+#endif
     
     return Py_BuildValue("i", 0);
 }

@@ -6,6 +6,7 @@ Changelog
 
 * Better error handling from C code (raise exception instead of exiting)
 * Better normalisation of RDF
+* Fix bug when picking split interstitials
 
 **150126**
 

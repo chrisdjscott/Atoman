@@ -816,8 +816,7 @@ class PipelineForm(QtGui.QWidget):
             
             status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos, 
                                          inputState.pos, refState.pos, pickPBC, inputState.cellDims,
-                                         minPos, maxPos, inputState.specie, 
-                                         refState.specie, inputState.specieCovalentRadius, 
+                                         inputState.specie, refState.specie, inputState.specieCovalentRadius, 
                                          refState.specieCovalentRadius, result)
             
             tmp_type, tmp_index, tmp_sep = result
