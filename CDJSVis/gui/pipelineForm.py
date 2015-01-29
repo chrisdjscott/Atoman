@@ -94,8 +94,6 @@ class PipelineForm(QtGui.QWidget):
         self.refCombo.setFixedWidth(220)
         self.refCombo.setToolTip("Select the reference system for this pipeline")
         self.refCombo.currentIndexChanged.connect(self.refChanged)
-        for fn in self.systemsDialog.getDisplayNames():
-            self.refCombo.addItem(fn)    
         
         # add to row
         rowLayout.addWidget(QtGui.QLabel("Reference:"))
@@ -114,8 +112,6 @@ class PipelineForm(QtGui.QWidget):
         self.inputCombo.setFixedWidth(220)
         self.inputCombo.setToolTip("Select the input system for this pipeline")
         self.inputCombo.currentIndexChanged.connect(self.inputChanged)
-        for fn in self.systemsDialog.getDisplayNames():
-            self.inputCombo.addItem(fn)
         
         # add to row
         rowLayout.addWidget(QtGui.QLabel("Input:"))
@@ -204,6 +200,13 @@ class PipelineForm(QtGui.QWidget):
         groupLayout.addWidget(row)
         
         filterTabLayout.addWidget(group)
+        
+        # add systems to combos
+        for fn in self.systemsDialog.getDisplayNames():
+            self.refCombo.addItem(fn)
+        
+        for fn in self.systemsDialog.getDisplayNames():
+            self.inputCombo.addItem(fn)
         
         # refresh if ref already loaded
         if self.mainWindow.refLoaded:

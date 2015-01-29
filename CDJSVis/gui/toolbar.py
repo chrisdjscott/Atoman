@@ -5,6 +5,8 @@ The main toolbar
 @author: Chris Scott
 
 """
+import logging
+
 from PySide import QtGui, QtCore
 
 from .genericForm import GenericForm
@@ -22,6 +24,7 @@ class MainToolbar(QtGui.QDockWidget):
         self.setWindowTitle("Toolbar")
         
         self.setFeatures(self.DockWidgetMovable | self.DockWidgetFloatable)
+        self.logger = logging.getLogger(__name__)
         
         # set size
         self.toolbarWidth = width
@@ -161,6 +164,8 @@ class MainToolbar(QtGui.QDockWidget):
         Add a new analysis pipeline
         
         """
+        self.logger.debug("Adding new pipeline form: %d", self.NPipelines)
+        
         # add to pipeline combos
         name = "Pipeline %d" % self.NPipelines
         self.pipelineCombo.addItem(name)
