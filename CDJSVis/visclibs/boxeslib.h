@@ -26,7 +26,7 @@ struct Boxes
 };
 
 /* available functions */
-struct Boxes * setupBoxes(double, double *, double *, int *, double *);
+struct Boxes * setupBoxes(double, int *, double *);
 
 int boxIndexOfAtom( double, double, double, struct Boxes *);
 

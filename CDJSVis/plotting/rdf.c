@@ -175,7 +175,7 @@ calculateRDF(PyObject *self, PyObject *args)
     }
     
     /* box atoms */
-    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
+    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
     if (boxes == NULL)
     {
         if (NAtoms != NVisible) free(visiblePos);

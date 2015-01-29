@@ -122,7 +122,7 @@ findClusters(PyObject *self, PyObject *args)
     
     /* box visible atoms */
     approxBoxWidth = neighbourRad;
-    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
+    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
     if (boxes == NULL)
     {
         free(visiblePos);

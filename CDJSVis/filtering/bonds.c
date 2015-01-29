@@ -143,7 +143,7 @@ calculateBonds(PyObject *self, PyObject *args)
     }
     
     /* box visible atoms */
-    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
+    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
     if (boxes == NULL)
     {
         free(visiblePos);

@@ -24,7 +24,7 @@
 /*******************************************************************************
  ** create and return pointer to Boxes structure
  *******************************************************************************/
-struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos, int *PBC, double *cellDims)
+struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
 {
     int i;
     double cellLength;

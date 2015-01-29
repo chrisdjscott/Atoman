@@ -223,10 +223,6 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None):
     
     NDefectsByType = np.zeros(6, np.int32)
     
-    # set min/max pos to lattice (for boxing)
-    minPos = refLattice.minPos
-    maxPos = refLattice.maxPos
-    
     if settings.findClusters:
         defectCluster = np.empty(inputLattice.NAtoms + refLattice.NAtoms, np.int32)
     
@@ -237,7 +233,7 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None):
     status = _defects.findDefects(settings.showVacancies, settings.showInterstitials, settings.showAntisites, NDefectsByType, vacancies, 
                                   interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
                                   inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
-                                  refLattice.pos, cellDims, pbc, settings.vacancyRadius, minPos, maxPos, 
+                                  refLattice.pos, cellDims, pbc, settings.vacancyRadius,
                                   settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
                                   onAntSpecCount, splitIntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials, 
                                   settings.identifySplitInts, settings.driftCompensation, driftVector, acnaArray, settings.acnaStructureType)

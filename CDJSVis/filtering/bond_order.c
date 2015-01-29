@@ -320,7 +320,7 @@ bondOrderFilter(PyObject *self, PyObject *args)
     /* box visible atoms */
     approxBoxWidth = maxBondDistance;
     maxSep2 = maxBondDistance * maxBondDistance;
-    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
+    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
     if (boxes == NULL)
     {
         free(visiblePos);

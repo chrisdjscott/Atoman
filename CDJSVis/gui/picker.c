@@ -157,7 +157,7 @@ pickObject(PyObject *self, PyObject *args)
         }
         
         /* box vis atoms */
-        boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
+        boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
         if (boxes == NULL)
         {
             free(visPos);
@@ -332,7 +332,7 @@ pickObject(PyObject *self, PyObject *args)
         }
         
         /* box vis atoms */
-        boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
+        boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
         if (boxes == NULL)
         {
             free(visPos);

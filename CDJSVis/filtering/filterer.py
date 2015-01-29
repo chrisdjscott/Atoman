@@ -1444,10 +1444,6 @@ class Filterer(object):
         
         NDefectsByType = np.zeros(6, np.int32)
         
-        # set min/max pos to lattice (for boxing)
-        minPos = refLattice.minPos
-        maxPos = refLattice.maxPos
-        
         if settings.findClusters:
             defectCluster = np.empty(inputLattice.NAtoms + refLattice.NAtoms, np.int32)
         
@@ -1458,7 +1454,7 @@ class Filterer(object):
         status = defects_c.findDefects(settings.showVacancies, settings.showInterstitials, settings.showAntisites, NDefectsByType, vacancies, 
                                        interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
                                        inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
-                                       refLattice.pos, refLattice.cellDims, self.pipelinePage.PBC, settings.vacancyRadius, minPos, maxPos, 
+                                       refLattice.pos, refLattice.cellDims, self.pipelinePage.PBC, settings.vacancyRadius,
                                        settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
                                        onAntSpecCount, splitIntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials, 
                                        settings.identifySplitInts, self.parent.driftCompensation, self.driftVector, acnaArray, settings.acnaStructureType)
