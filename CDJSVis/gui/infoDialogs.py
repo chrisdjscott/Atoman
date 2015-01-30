@@ -814,7 +814,7 @@ class DefectInfoWindow(QtGui.QDialog):
     Atom info window.
     
     """
-    def __init__(self, pipelinePage, defectIndex, defectType, defList, filterList, parent=None):
+    def __init__(self, pipelinePage, defectIndex, defectType, defList, scalarsDict, vectorsDict, filterList, parent=None):
         super(DefectInfoWindow, self).__init__(parent)
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
@@ -827,7 +827,8 @@ class DefectInfoWindow(QtGui.QDialog):
         self.defectType = defectType
         self.defList = defList
         self.filterList = filterList
-        voronoiOptions = filterList.voronoiOptions
+        self.scalarsDict = scalarsDict
+        self.vectorsDict = vectorsDict
         
         inputState = self.pipelinePage.inputState
         refState = self.pipelinePage.refState
@@ -877,24 +878,27 @@ class DefectInfoWindow(QtGui.QDialog):
             row.addWidget(QtGui.QLabel("Type: interstitial"))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Atom: %d" % inputState.atomID[index]))
-            layout.addLayout(row)
+            listWidget = QtGui.QListWidget(self)
+            listWidget.setMinimumWidth(300)
+            listWidget.setMinimumHeight(150)
+            layout.addWidget(listWidget)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Specie: %s" % inputState.specieList[inputState.specie[index]]))
-            layout.addLayout(row)
+            listWidget.addItem("Atom: %d" % inputState.atomID[index])
+            listWidget.addItem("Specie: %s" % inputState.specieList[inputState.specie[index]])
+            listWidget.addItem("Position: (%f, %f, %f)" % (inputState.pos[3*index], inputState.pos[3*index+1], inputState.pos[3*index+2]))
+            listWidget.addItem("Charge: %f" % inputState.charge[index])
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (inputState.pos[3*index], inputState.pos[3*index+1], inputState.pos[3*index+2])))
-            layout.addLayout(row)
-            
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Charge: %f" % (inputState.charge[index],)))
-            layout.addLayout(row)
-            
+            # voro vol (why separate?)
             if vor is not None:
-                self.voroVolLine(vor.atomVolume(index))
+                listWidget.addItem("Voronoi volume: %f" % vor.atomVolume(index))
+            
+            # add scalars
+            for scalarType, scalar in scalarsDict.iteritems():
+                listWidget.addItem("%s: %f" % (scalarType, scalar))
+            
+            # add vectors
+            for vectorType, vector in vectorsDict.iteritems():
+                listWidget.addItem("%s: (%f, %f, %f)" % (vectorType, vector[0], vector[1], vector[2]))
         
         elif defectType == 3:
             antisites = defList[0]

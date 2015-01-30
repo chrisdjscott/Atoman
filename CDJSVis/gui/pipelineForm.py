@@ -938,7 +938,7 @@ class PipelineForm(QtGui.QWidget):
             
             else:
                 # defect info window
-                window = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, minSepFilterList, parent=self)
+                window = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, minSepScalars, minSepVectors, minSepFilterList, parent=self)
             
             # store window for reuse
             minSepFilterList.infoWindows[windowKey] = window
