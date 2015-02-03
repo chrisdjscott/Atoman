@@ -281,6 +281,7 @@ calculateRDF(PyObject *self, PyObject *args)
     /* normalise rdf */
     {
         double pair_dens;
+        double fourThirdsPi = 4.0 / 3.0 * M_PI;
 
         /* compute inverse of pair density (volume / number of pairs) */
         pair_dens = cellDims[0] * cellDims[1] * cellDims[2];
@@ -298,18 +299,21 @@ calculateRDF(PyObject *self, PyObject *args)
             double histv = rdf[i];
 #endif
 
-            /* calculate shell volume */
-            r_inner = interval * i + start;
-            r_outer = interval * (i + 1) + start;
-            shellVolume = 4.0 / 3.0 * M_PI * (pow(r_outer, 3.0) - pow(r_inner, 3.0));
-            
-            /* normalisation factor is 1 / (pair_density * shellVolume) */
-            norm_f = pair_dens / shellVolume;
-            rdf[i] = rdf[i] * norm_f;
-            
+            if (rdf[i] != 0.0)
+            {
+                /* calculate shell volume */
+                r_inner = interval * i + start;
+                r_outer = interval * (i + 1) + start;
+                shellVolume = fourThirdsPi * (pow(r_outer, 3.0) - pow(r_inner, 3.0));
+                
+                /* normalisation factor is 1 / (pair_density * shellVolume) */
+                norm_f = pair_dens / shellVolume;
+                rdf[i] = rdf[i] * norm_f;
+                
 #ifdef DEBUG
-            printf("HIST %d (%lf -> %lf): histv %lf; vol %lf; norm_f = %lf; rdf %lf\n", i, r_inner, r_outer, histv, shellVolume, norm_f, rdf[i]);
+                printf("HIST %d (%lf -> %lf): histv %lf; vol %lf; norm_f = %lf; rdf %lf\n", i, r_inner, r_outer, histv, shellVolume, norm_f, rdf[i]);
 #endif
+            }
         }
     }
     
