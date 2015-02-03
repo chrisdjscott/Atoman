@@ -705,9 +705,8 @@ class RDFForm(genericForm.GenericForm):
         
         try:
             # then calculate
-            rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.minPos,
-                               inputLattice.maxPos, inputLattice.cellDims, pp.PBC, self.binMin, self.binMax, self.binWidth,
-                               numBins, rdfArray, ompNumThreads)
+            rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.cellDims,
+                               pp.PBC, self.binMin, self.binMax, self.binWidth, numBins, rdfArray, ompNumThreads)
         
         finally:
             utils.cancelProgressDialog(progDiag)
