@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**150204.1**
+
+* Fix bug when colouring by lattice scalars
+
 **150204**
 
 * Better error handling from C code (raise exception instead of exiting)

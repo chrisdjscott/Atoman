@@ -553,10 +553,10 @@ class Filterer(object):
                 
                 self.scalarBar_white_bg, self.scalarBar_black_bg, visSpecCount = renderer.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, 
                                                                                                                      self.actorsDict, self.colouringOptions, 
-                                                                                                                     povfile, self.scalarsDict, self.displayOptions, 
-                                                                                                                     self.pipelinePage, self.povrayAtomsWrittenSlot,
-                                                                                                                     self.vectorsDict, self.vectorsOptions,
-                                                                                                                     NVisibleForRes=NVisibleForRes,
+                                                                                                                     povfile, self.scalarsDict, self.latticeScalarsDict,
+                                                                                                                     self.displayOptions, self.pipelinePage,
+                                                                                                                     self.povrayAtomsWrittenSlot, self.vectorsDict,
+                                                                                                                     self.vectorsOptions, NVisibleForRes=NVisibleForRes,
                                                                                                                      sequencer=sequencer)
                 
                 self.visibleSpecieCount = visSpecCount
