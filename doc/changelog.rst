@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* Better error handling during type conversion when reading lattice files
+
 **150204.1**
 
 * Fix bug when colouring by lattice scalars
