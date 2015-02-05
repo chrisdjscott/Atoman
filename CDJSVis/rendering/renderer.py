@@ -1001,9 +1001,6 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     logger = logging.getLogger(__name__)
     logger.debug("Getting actors for filtered system")
     logger.debug("  Colour by: '%s'", colouringOptions.colourBy)
-    print "COL BY", colouringOptions.colourBy
-    print scalarsDict.keys()
-    print latticeScalarsDict.keys()
     
     getActorsTime = time.time()
     
