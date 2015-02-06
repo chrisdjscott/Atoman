@@ -20,6 +20,7 @@ from .genericForm import GenericForm
 from . import generalReaderForm
 from . import latticeGeneratorForms
 from . import sftpDialog
+from . import infoDialogs
 from .filterList import FilterList
 
 
@@ -151,6 +152,7 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
         self.fileFormat = fileFormat
         self.abspath = abspath
         self.linkedLattice = linkedLattice
+        self.infoDialog = None
         
         zip_exts = ('.bz2', '.gz')
         root, ext = os.path.splitext(filename)
@@ -262,6 +264,13 @@ class SystemsDialog(QtGui.QWidget):
             menu = QtGui.QMenu(self)
             
             # make actions
+            
+            # show system info
+            showInfoAction = QtGui.QAction("Show information", self)
+            showInfoAction.setToolTip("Show system information")
+            showInfoAction.setStatusTip("Show system information")
+            showInfoAction.triggered.connect(functools.partial(self.showSystemInformation, index))
+            
             # change display name action
             dnAction = QtGui.QAction("Set display name", self)
             dnAction.setToolTip("Change display name")
@@ -297,11 +306,10 @@ class SystemsDialog(QtGui.QWidget):
             loadVectorAction.triggered.connect(functools.partial(self.loadVectorData, index))
             
             # add action
+            menu.addAction(showInfoAction)
             menu.addAction(dnAction)
-            
             menu.addAction(loadScalarAction)
             menu.addAction(loadVectorAction)
-            
             menu.addAction(duplicateAction)
             menu.addAction(reloadAction)
             menu.addAction(removeAction)
@@ -525,6 +533,25 @@ class SystemsDialog(QtGui.QWidget):
             ida, idb = item.stackIndex
             
             self.add_lattice(newState, item.filename, item.extension, ida=ida, idb=idb, displayName=text, allowDuplicate=True)
+    
+    def showSystemInformation(self, index):
+        """
+        Show info window about a system
+        
+        """
+        # item
+        item = self.systems_list_widget.item(index)
+        
+        # create dialog
+        if item.infoDialog is None:
+            dlg = infoDialogs.SystemInfoWindow(item, parent=self)
+            item.infoDialog = dlg
+        else:
+            dlg = item.infoDialog
+        
+        # show
+        dlg.hide()
+        dlg.show()
     
     def changeDisplayName(self, index):
         """
