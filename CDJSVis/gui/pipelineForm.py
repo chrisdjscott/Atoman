@@ -172,9 +172,13 @@ class PipelineForm(QtGui.QWidget):
         self.replicateCellButton = QtGui.QPushButton("Replicate cell")
         self.replicateCellButton.clicked.connect(self.replicateCell)
         self.replicateCellButton.setToolTip("Replicate in periodic directions")
+        self.shiftCellButton = QtGui.QPushButton("Shift cell")
+        self.shiftCellButton.clicked.connect(self.shiftCell)
+        self.shiftCellButton.setToolTip("Shift cell in periodic directions")
         hbox = QtGui.QHBoxLayout()
         hbox.setContentsMargins(0,0,0,0)
         hbox.addStretch(1)
+        hbox.addWidget(self.shiftCellButton)
         hbox.addWidget(self.replicateCellButton)
         hbox.addStretch(1)
         groupLayout.addLayout(hbox)
@@ -212,9 +216,71 @@ class PipelineForm(QtGui.QWidget):
         if self.mainWindow.refLoaded:
             self.refreshAllFilters()
     
+    def shiftCell(self):
+        """
+        Shift cell
+        
+        """
+        # lattice
+        lattice = self.inputState
+        
+        # show dialog
+        dlg = dialogs.ShiftCellDialog(self.PBC, lattice.cellDims, parent=self)
+        status = dlg.exec_()
+        
+        if status == QtGui.QDialog.Accepted:
+            # amount
+            shift = np.empty(3, np.float64)
+            shift[0] = dlg.shiftXSpin.value()
+            shift[1] = dlg.shiftYSpin.value()
+            shift[2] = dlg.shiftZSpin.value()
+            
+            # loop over atoms
+            if shift[0] or shift[1] or shift[2]:
+                self.logger.debug("Shifting cell: x = %f; y = %f; z = %f", shift[0], shift[1], shift[2])
+                
+                # progress update interval
+                progressInterval = int(lattice.NAtoms / 10)
+                if progressInterval < 50:
+                    progressInterval = 50
+                elif progressInterval > 500:
+                    progressInterval = 500
+                
+                # set override cursor
+                QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+                try:
+                    # add progress dialog
+                    self.mainWindow.updateProgress(0, lattice.NAtoms, "Shifting cell")
+                    
+                    # loop over atoms
+                    for i in xrange(lattice.NAtoms):
+                        i3 = 3 * i
+                        for j in xrange(3):
+                            lattice.pos[i3 + j] += shift[j]
+                        
+                        # progress
+                        if i % progressInterval == 0:
+                            self.mainWindow.updateProgress(i, lattice.NAtoms, "Shifting cell")
+                    
+                    # wrap atoms back into periodic cell
+                    lattice.wrapAtoms()
+                
+                finally:
+                    self.mainWindow.hideProgressBar()
+                    QtGui.QApplication.restoreOverrideCursor()
+                
+                # run post ref render of Renderer (redraws cell)
+                for rw in self.rendererWindows:
+                    if rw.currentPipelineIndex == self.pipelineIndex:
+                        rw.renderer.postRefRender()
+                        rw.textSelector.refresh()
+                
+                # run post input loaded method
+                self.postInputLoaded()
+    
     def replicateCell(self):
         """
-        Replicate cell?
+        Replicate cell
         
         """
         self.logger.warning("'Replicate cell' is an experimental feature!")

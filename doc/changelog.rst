@@ -5,6 +5,7 @@ Changelog
 **dev**
 
 * Better error handling during type conversion when reading lattice files
+* Add option to shift the lattice in periodic directions
 
 **150204.1**
 
