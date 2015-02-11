@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**150211**
+
+* Fix bug preventing Lattice being reloaded
+
 **150206**
 
 * Better error handling during type conversion when reading lattice files

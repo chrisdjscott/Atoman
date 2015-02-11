@@ -143,7 +143,7 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
     Item that goes in the systems list
     
     """
-    def __init__(self, lattice, filename, displayName, abspath, fileFormat, linkedLattice):
+    def __init__(self, lattice, filename, displayName, abspath, fileFormat, linkedLattice, generated=False):
         super(SystemsListWidgetItem, self).__init__()
         
         self.lattice = lattice
@@ -153,6 +153,7 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
         self.abspath = abspath
         self.linkedLattice = linkedLattice
         self.infoDialog = None
+        self.generated = generated
         
         zip_exts = ('.bz2', '.gz')
         root, ext = os.path.splitext(filename)
@@ -591,35 +592,22 @@ class SystemsDialog(QtGui.QWidget):
             if item is None:
                 continue
             
-            # stack index
-            ida, idb = item.stackIndex
-            
             # check this is not a generated lattice
-            if ida != 0:
-                self.logger.debug("Cannot reload a generated lattice")
+            if item.generated:
+                self.logger.warning("Cannot reload a generated lattice")
+                self.mainWindow.displayWarning("Cannot reload a generated lattice")
                 return
             
             self.logger.info("  Reloading: '%s' (%s)", item.displayName, item.filename)
-            self.logger.debug("  Input stack index: %d, %d", ida, idb)
-        
+            
+            # reader
             systemsDialog = self.mainWindow.systemsDialog
-            
-            systemsDialog.new_system_stack.setCurrentIndex(ida)
-            in_page = systemsDialog.new_system_stack.currentWidget()
-            
-            in_page.stackedWidget.setCurrentIndex(idb)
-            readerForm = in_page.stackedWidget.currentWidget()
+            loadPage = systemsDialog.load_system_form
+            readerForm = loadPage.readerForm
             reader = readerForm.latticeReader
             
-            self.logger.debug("  Reader: %s %s", str(readerForm), str(reader))
-            
             # read in state
-            if reader.requiresRef:
-                status, state = reader.readFile(item.abspath, readerForm.currentRefState)
-            
-            else:
-                status, state = reader.readFile(item.abspath)
-            
+            status, state = reader.readFile(item.abspath, item.fileFormat, linkedLattice=item.linkedLattice)
             if status:
                 self.logger.error("Reload read file failed with status: %d" % status)
                 continue
@@ -627,6 +615,12 @@ class SystemsDialog(QtGui.QWidget):
             # set on item
             item.lattice = state
             item.changeDisplayName(item.displayName)
+            
+            # remove info window
+            if item.infoDialog is not None:
+                item.infoDialog.accept()
+                item.infoDialog.close()
+                item.infoDialog = None
             
             # need index of this item
             t = self.systems_list_widget.indexFromItem(item)
@@ -647,7 +641,8 @@ class SystemsDialog(QtGui.QWidget):
                     changed = True
                 
                 if changed:
-                    pp.runAllFilterLists()
+#                     pp.runAllFilterLists()
+                    pp.postInputLoaded()
     
     def load_help_page(self):
         """
@@ -662,7 +657,7 @@ class SystemsDialog(QtGui.QWidget):
         File generated
         
         """
-        self.add_lattice(lattice, filename, allowDuplicate=True)
+        self.add_lattice(lattice, filename, allowDuplicate=True, generated=True)
     
     def file_loaded(self, lattice, filename, fileFormat, sftpPath, linked):
         """
@@ -671,7 +666,7 @@ class SystemsDialog(QtGui.QWidget):
         """
         self.add_lattice(lattice, filename, fileFormat=fileFormat, sftpPath=sftpPath, linkedLattice=linked)
     
-    def add_lattice(self, lattice, filename, fileFormat=None, displayName=None, allowDuplicate=False, sftpPath=None, linkedLattice=None):
+    def add_lattice(self, lattice, filename, fileFormat=None, displayName=None, allowDuplicate=False, sftpPath=None, linkedLattice=None, generated=False):
         """
         Add lattice
         
@@ -709,7 +704,7 @@ class SystemsDialog(QtGui.QWidget):
         self.logger.debug("Display name is: '%s'", displayName)
         
         # item for list
-        list_item = SystemsListWidgetItem(lattice, filename, displayName, abspath, fileFormat, linkedLattice)
+        list_item = SystemsListWidgetItem(lattice, filename, displayName, abspath, fileFormat, linkedLattice, generated=generated)
         
         # add to list
         self.systems_list_widget.addItem(list_item)
