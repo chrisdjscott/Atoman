@@ -37,7 +37,7 @@ class TestLoadLattice(base.UsesQApplication):
         self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
         
         # main window
-        self.mw = mainWindow.MainWindow(None)
+        self.mw = mainWindow.MainWindow(None, testing=True)
         self.mw.preferences.renderingForm.maxAtomsAutoRun = 0
         self.mw.show()
     
@@ -49,6 +49,7 @@ class TestLoadLattice(base.UsesQApplication):
         super(TestLoadLattice, self).tearDown()
         
         # remove refs
+        self.mw.close()
         self.mw = None
         
         # remove tmp dir

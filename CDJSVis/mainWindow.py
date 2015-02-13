@@ -43,7 +43,7 @@ class MainWindow(QtGui.QMainWindow):
     configDir = os.path.join(os.environ["HOME"], ".cdjsvis")
     Instances = set()
     
-    def __init__(self, desktop, parent=None):
+    def __init__(self, desktop, parent=None, testing=False):
         super(MainWindow, self).__init__(parent)
         
         # multiple instances
@@ -51,6 +51,7 @@ class MainWindow(QtGui.QMainWindow):
         MainWindow.Instances.add(self)
         
         # first time show called
+        self.testingFlag = testing
         self.firstShow = True
         
         # QDesktopWidget: gives access to screen geometry, which screen we're displayed on, etc...
@@ -600,21 +601,25 @@ class MainWindow(QtGui.QMainWindow):
         Catch attempt to close
         
         """
-        close, clearSettings = self.confirmCloseEvent()
-        
-        if close:
-            self.tidyUp()
-            
-            if clearSettings:
-                self.clearSettings()
-            
-            else:
-                self.saveSettings()
-            
+        if self.testingFlag:
             event.accept()
         
         else:
-            event.ignore()
+            close, clearSettings = self.confirmCloseEvent()
+            
+            if close:
+                self.tidyUp()
+                
+                if clearSettings:
+                    self.clearSettings()
+                
+                else:
+                    self.saveSettings()
+                
+                event.accept()
+            
+            else:
+                event.ignore()
     
     def clearSettings(self):
         """
