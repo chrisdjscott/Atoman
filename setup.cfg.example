@@ -1,6 +1,9 @@
 
 [build_ext]
 inplace = 1
+# on a Mac with MacPorts you might want to uncomment these lines
+#include-dirs = /opt/local/include
+#library-dirs = /opt/local/lib
 
 
 # Nothing should need to be changed below here #
