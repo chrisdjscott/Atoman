@@ -88,6 +88,10 @@ def do_clean():
     if os.path.isdir("doc/_build"):
         print "rm -rf doc/_build"
         shutil.rmtree(os.path.join("doc", "_build"))
+    
+    if os.path.isdir("CDJSVis/doc"):
+        print "rm -rf CDJSVis/doc"
+        shutil.rmtree(os.path.join("CDJSVis", "doc"))
 
 def setup_package():
     # clean?
