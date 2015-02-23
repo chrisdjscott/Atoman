@@ -190,9 +190,7 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsDict, colouringOpt
     tubes.SetInputConnection(lineSource.GetOutputPort())
     tubes.SetRadius(bondThicknessVTK)
     tubes.SetNumberOfSides(bondNumSides)
-    tubes.UseDefaultNormalOn()
     tubes.SetCapping(1)
-    tubes.SetDefaultNormal(0.577, 0.577, 0.577)
     
     # glyph filter
     bondGlyphFilter = vtk.vtkProgrammableGlyphFilter()
@@ -332,9 +330,7 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict
     tubes.SetInputConnection(lineSource.GetOutputPort())
     tubes.SetRadius(bondThicknessVTK)
     tubes.SetNumberOfSides(bondNumSides)
-    tubes.UseDefaultNormalOn()
     tubes.SetCapping(1)
-    tubes.SetDefaultNormal(0.577, 0.577, 0.577)
     
     # glyph filter
     bondGlyphFilter = vtk.vtkProgrammableGlyphFilter()
@@ -619,9 +615,7 @@ def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict, colou
     tubes.SetInputConnection(lineSource.GetOutputPort())
     tubes.SetRadius(bondThicknessVTK)
     tubes.SetNumberOfSides(bondNumSides)
-#     tubes.UseDefaultNormalOn()
     tubes.SetCapping(1)
-#     tubes.SetDefaultNormal(0.577, 0.577, 0.577)
     
     # glyph filter
     glyphFilter = vtk.vtkProgrammableGlyphFilter()

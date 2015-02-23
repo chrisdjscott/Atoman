@@ -1717,8 +1717,6 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             vacsGlyphSource.SetInputConnection(edges.GetOutputPort())
             vacsGlyphSource.SetRadius(0.1)
             vacsGlyphSource.SetNumberOfSides(5)
-            vacsGlyphSource.UseDefaultNormalOn()
-            vacsGlyphSource.SetDefaultNormal(.577, .577, .577)
             
             vacsGlyph = vtk.vtkGlyph3D()
             if vtk.vtkVersion.GetVTKMajorVersion() <= 5:

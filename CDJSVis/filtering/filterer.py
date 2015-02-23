@@ -897,9 +897,9 @@ class Filterer(object):
         NBondsArray = np.zeros(self.NVis, np.int32)
         bondVectorArray = np.empty(3 * size, np.float64)
         
-        status = bonds_c.calculateBonds(self.visibleAtoms, inputState.pos, inputState.specie, len(specieList), bondMinArray, bondMaxArray, 
-                                        maxBond, maxBondsPerAtom, inputState.cellDims, self.pipelinePage.PBC, inputState.minPos, inputState.maxPos, 
-                                        bondArray, NBondsArray, bondVectorArray, bondSpecieCounter)
+        status = bonds_c.calculateBonds(self.visibleAtoms, inputState.pos, inputState.specie, len(specieList), bondMinArray, bondMaxArray,
+                                        maxBond, maxBondsPerAtom, inputState.cellDims, self.pipelinePage.PBC, bondArray, NBondsArray,
+                                        bondVectorArray, bondSpecieCounter)
         
         if status:
             self.logger.error("    Error in bonds clib (%d)", status)

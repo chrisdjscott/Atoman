@@ -89,8 +89,6 @@ class AxesBasic(object):
         Tubesx.SetInputConnection(linex.GetOutputPort())
         Tubesx.SetRadius(0.5)
         Tubesx.SetNumberOfSides(5)
-        Tubesx.UseDefaultNormalOn()
-        Tubesx.SetDefaultNormal(.577, .577, .577)
         TubeMapperx = vtk.vtkPolyDataMapper()
         TubeMapperx.SetInputConnection(Tubesx.GetOutputPort())
         self.Edgesx.SetMapper(TubeMapperx)
@@ -106,8 +104,6 @@ class AxesBasic(object):
         Tubesy.SetInputConnection(liney.GetOutputPort())
         Tubesy.SetRadius(0.5)
         Tubesy.SetNumberOfSides(5)
-        Tubesy.UseDefaultNormalOn()
-        Tubesy.SetDefaultNormal(.577, .577, .577)
         TubeMappery = vtk.vtkPolyDataMapper()
         TubeMappery.SetInputConnection(Tubesy.GetOutputPort())
         
@@ -124,8 +120,6 @@ class AxesBasic(object):
         Tubesz.SetInputConnection(linez.GetOutputPort())
         Tubesz.SetRadius(0.5)
         Tubesz.SetNumberOfSides(5)
-        Tubesz.UseDefaultNormalOn()
-        Tubesz.SetDefaultNormal(.577, .577, .577)
         TubeMapperz = vtk.vtkPolyDataMapper()
         TubeMapperz.SetInputConnection(Tubesz.GetOutputPort())
         
