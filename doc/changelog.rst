@@ -2,6 +2,11 @@
 Changelog
 =========
 
+**150223**
+
+* Fix bug that could have prevented some bonds being displayed
+* No longer require qresources file; doc and icons are added as data instead
+
 **150211**
 
 * Fix bug preventing Lattice being reloaded
