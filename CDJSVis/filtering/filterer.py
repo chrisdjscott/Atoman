@@ -486,10 +486,10 @@ class Filterer(object):
             
             # write to log
             if self.parent.defectFilterSelected:
-                self.NVis = len(interstitials) + len(vacancies) + len(antisites) + len(splitInterstitials)
-                self.NVac = len(vacancies)
-                self.NInt = len(interstitials) + len(splitInterstitials) / 3
-                self.NAnt = len(antisites)
+                self.NVis = len(self.interstitials) + len(self.vacancies) + len(self.antisites) + len(self.splitInterstitials)
+                self.NVac = len(self.vacancies)
+                self.NInt = len(self.interstitials) + len(self.splitInterstitials) / 3
+                self.NAnt = len(self.antisites)
             else:
                 self.NVis = len(self.visibleAtoms)
             
@@ -511,6 +511,9 @@ class Filterer(object):
         renderTime = time.time()
         povfile = "pipeline%d_atoms%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
         if self.parent.defectFilterSelected:
+            # defects filter always first (for now...)
+            filterSettings = currentSettings[0]
+            
             # render convex hulls
             if filterSettings.findClusters and filterSettings.drawConvexHulls:
                 self.pointDefectFilterDrawHulls(filterSettings, hullFile)
@@ -1271,25 +1274,42 @@ class Filterer(object):
         Crop lattice
         
         """
-        lattice = self.pipelinePage.inputState
+        if self.parent.defectFilterSelected:
+            inp = self.pipelinePage.inputState
+            ref = self.pipelinePage.refState
+            
+            result = filtering_c.cropDefectsFilter(self.interstitials, self.vacancies, self.antisites, self.onAntisites, self.splitInterstitials,
+                                                   inp.pos, ref.pos, settings.xmin, settings.xmax, settings.ymin, settings.ymax, settings.zmin,
+                                                   settings.zmax, settings.xEnabled, settings.yEnabled, settings.zEnabled, settings.invertSelection)
+            
+            # unpack
+            NInt, NVac, NAnt, NSplit = result
+            self.vacancies.resize(NVac, refcheck=False)
+            self.interstitials.resize(NInt, refcheck=False)
+            self.antisites.resize(NAnt, refcheck=False)
+            self.onAntisites.resize(NAnt, refcheck=False)
+            self.splitInterstitials.resize(NSplit*3, refcheck=False)
         
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin, 
-                                          settings.ymax, settings.zmin, settings.zmax, settings.xEnabled, 
-                                          settings.yEnabled, settings.zEnabled, settings.invertSelection, NScalars, 
-                                          fullScalars, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
+        else:
+            lattice = self.pipelinePage.inputState
+            
+            # old scalars arrays (resize as appropriate)
+            NScalars, fullScalars = self.makeFullScalarsArray()
+            
+            # full vectors array
+            NVectors, fullVectors = self.makeFullVectorsArray()
+            
+            NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin,
+                                              settings.ymax, settings.zmin, settings.zmax, settings.xEnabled,
+                                              settings.yEnabled, settings.zEnabled, settings.invertSelection, NScalars,
+                                              fullScalars, NVectors, fullVectors)
+            
+            # update scalars dict
+            self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+            self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
+    
+            # resize visible atoms
+            self.visibleAtoms.resize(NVisible, refcheck=False)
     
     def cropSphereFilter(self, settings):
         """

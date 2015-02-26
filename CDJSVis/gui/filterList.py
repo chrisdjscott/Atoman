@@ -72,6 +72,11 @@ class FilterList(QtGui.QWidget):
     ]
     defaultFilters.sort()
     
+    # filters that are compatible with the 'Point defects' filter
+    defectCompatibleFilters = [
+        "Crop box"
+    ]
+    
     def __init__(self, parent, mainToolbar, mainWindow, tab, width):
         super(FilterList, self).__init__(parent)
         
@@ -584,15 +589,16 @@ class FilterList(QtGui.QWidget):
         
         self.listItems.insertItem(newRow, self.listItems.takeItem(row))
     
-    def warnDefectFilter(self):
+    def warnDefectFilter(self, name=None):
         """
         Warn user that defect filter cannot 
         be used with any other filter
         
         """
-#         QtGui.QMessageBox.warning(self, "Warning", "The point defects filter cannot be used in conjunction with any other filter!")
-        
-        message = "The point defects filter cannot be used in conjunction with any other filter!"
+        if name is not None:
+            message = "The '%s' filter cannot be used in conjuction with the 'Point defects' filter" % name
+        else:
+            message = "The 'Point defects' filter must be added to the filter list first"
         
         msgBox = QtGui.QMessageBox(self)
         msgBox.setText(message)
@@ -680,8 +686,8 @@ class FilterList(QtGui.QWidget):
         
         # first determine what filter is to be added
         if filterName is not None and filterName in self.allFilters:
-            if self.defectFilterSelected:
-                self.warnDefectFilter()
+            if self.defectFilterSelected and filterName not in self.defectCompatibleFilters:
+                self.warnDefectFilter(name=filterName)
             
             elif self.listItems.count() > 0 and str(filterName) == "Point defects":
                 self.warnDefectFilter()
