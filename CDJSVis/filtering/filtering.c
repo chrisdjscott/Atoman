@@ -1048,7 +1048,7 @@ static PyObject*
 coordNumFilter(PyObject *self, PyObject *args)
 {
     int NVisible, *visibleAtoms, *specie, NSpecies, *PBC, minCoordNum, maxCoordNum, NScalars, filteringEnabled, NVectors;
-    double *pos, *bondMinArray, *bondMaxArray, approxBoxWidth, *cellDims, *minPos, *maxPos, *coordArray, *fullScalars;
+    double *pos, *bondMinArray, *bondMaxArray, approxBoxWidth, *cellDims, *coordArray, *fullScalars;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *specieIn=NULL;
     PyArrayObject *PBCIn=NULL;
@@ -1057,8 +1057,6 @@ coordNumFilter(PyObject *self, PyObject *args)
     PyArrayObject *bondMinArrayIn=NULL;
     PyArrayObject *bondMaxArrayIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
-    PyArrayObject *minPosIn=NULL;
-    PyArrayObject *maxPosIn=NULL;
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
     
@@ -1069,11 +1067,11 @@ coordNumFilter(PyObject *self, PyObject *args)
     struct Boxes *boxes;
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!iO!O!dO!O!O!O!O!iiiO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
-            &PyArray_Type, &specieIn, &NSpecies, &PyArray_Type, &bondMinArrayIn, &PyArray_Type, &bondMaxArrayIn, 
-            &approxBoxWidth, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &minPosIn, 
-            &PyArray_Type, &maxPosIn, &PyArray_Type, &coordArrayIn, &minCoordNum, &maxCoordNum, &NScalars, 
-            &PyArray_Type, &fullScalarsIn, &filteringEnabled, &NVectors, &PyArray_Type, &fullVectors))
+    if (!PyArg_ParseTuple(args, "O!O!O!iO!O!dO!O!O!iiiO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn,
+            &PyArray_Type, &specieIn, &NSpecies, &PyArray_Type, &bondMinArrayIn, &PyArray_Type, &bondMaxArrayIn,
+            &approxBoxWidth, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &coordArrayIn,
+            &minCoordNum, &maxCoordNum, &NScalars, &PyArray_Type, &fullScalarsIn, &filteringEnabled, &NVectors,
+            &PyArray_Type, &fullVectors))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -1091,12 +1089,6 @@ coordNumFilter(PyObject *self, PyObject *args)
     
     if (not_doubleVector(bondMaxArrayIn)) return NULL;
     bondMaxArray = pyvector_to_Cptr_double(bondMaxArrayIn);
-    
-    if (not_doubleVector(minPosIn)) return NULL;
-    minPos = pyvector_to_Cptr_double(minPosIn);
-    
-    if (not_doubleVector(maxPosIn)) return NULL;
-    maxPos = pyvector_to_Cptr_double(maxPosIn);
     
     if (not_doubleVector(cellDimsIn)) return NULL;
     cellDims = pyvector_to_Cptr_double(cellDimsIn);

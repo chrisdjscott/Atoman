@@ -2140,10 +2140,10 @@ class Filterer(object):
         NVectors, fullVectors = self.makeFullVectorsArray()
         
         # run filter
-        NVisible = filtering_c.coordNumFilter(self.visibleAtoms, inputState.pos, inputState.specie, NSpecies, bondMinArray, bondMaxArray, 
-                                              maxBond, inputState.cellDims, self.pipelinePage.PBC, inputState.minPos, inputState.maxPos, 
-                                              scalars, filterSettings.minCoordNum, filterSettings.maxCoordNum, NScalars, fullScalars, 
-                                              filterSettings.filteringEnabled, NVectors, fullVectors)
+        NVisible = filtering_c.coordNumFilter(self.visibleAtoms, inputState.pos, inputState.specie, NSpecies, bondMinArray, bondMaxArray,
+                                              maxBond, inputState.cellDims, self.pipelinePage.PBC, scalars, filterSettings.minCoordNum,
+                                              filterSettings.maxCoordNum, NScalars, fullScalars, filterSettings.filteringEnabled, NVectors,
+                                              fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
