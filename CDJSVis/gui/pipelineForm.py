@@ -675,7 +675,7 @@ class PipelineForm(QtGui.QWidget):
         
         except:
             exctype, value = sys.exc_info()[:2]
-            self.logger.error("Run all filter lists failed! %s: %s", exctype, value)
+            self.logger.exception("Run all filter lists failed!")
             self.mainWindow.displayError("Run all filter lists failed!\n\n%s: %s" % (exctype, value))
             status = 1
         
