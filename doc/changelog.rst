@@ -2,6 +2,13 @@
 Changelog
 =========
 
+**150226**
+
+* Revert change regarding displaying antisites
+* Fix bug preventing "Solid colour" from working
+* "Crop box" filter works with "Point defects" filter
+* "Slice" filter works with "Point defects" filter
+
 **150223**
 
 * Fix bug that could have prevented some bonds being displayed
