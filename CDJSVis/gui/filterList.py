@@ -74,7 +74,8 @@ class FilterList(QtGui.QWidget):
     
     # filters that are compatible with the 'Point defects' filter
     defectCompatibleFilters = [
-        "Crop box"
+        "Crop box",
+        "Slice",
     ]
     
     def __init__(self, parent, mainToolbar, mainWindow, tab, width):

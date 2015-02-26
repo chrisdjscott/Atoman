@@ -1340,25 +1340,43 @@ class Filterer(object):
         Slice filter.
         
         """
-        lattice = self.pipelinePage.inputState
+        if self.parent.defectFilterSelected:
+            inp = self.pipelinePage.inputState
+            ref = self.pipelinePage.refState
+            
+            self.logger.debug("Calling sliceDefectsFilter C function")
+            result = filtering_c.sliceDefectsFilter(self.interstitials, self.vacancies, self.antisites, self.onAntisites, self.splitInterstitials,
+                                                    inp.pos, ref.pos, settings.x0, settings.y0, settings.z0, settings.xn, settings.yn, settings.zn,
+                                                    settings.invert)
+            
+            # unpack
+            NInt, NVac, NAnt, NSplit = result
+            self.vacancies.resize(NVac, refcheck=False)
+            self.interstitials.resize(NInt, refcheck=False)
+            self.antisites.resize(NAnt, refcheck=False)
+            self.onAntisites.resize(NAnt, refcheck=False)
+            self.splitInterstitials.resize(NSplit*3, refcheck=False)
         
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        self.logger.debug("Calling sliceFilter C function")
-        NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, settings.x0, settings.y0, settings.z0, 
-                                           settings.xn, settings.yn, settings.zn, settings.invert, NScalars, fullScalars, 
-                                           NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
+        else:
+            lattice = self.pipelinePage.inputState
+            
+            # old scalars arrays (resize as appropriate)
+            NScalars, fullScalars = self.makeFullScalarsArray()
+            
+            # full vectors array
+            NVectors, fullVectors = self.makeFullVectorsArray()
+            
+            self.logger.debug("Calling sliceFilter C function")
+            NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, settings.x0, settings.y0, settings.z0, 
+                                               settings.xn, settings.yn, settings.zn, settings.invert, NScalars, fullScalars, 
+                                               NVectors, fullVectors)
+            
+            # update scalars dict
+            self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+            self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
+    
+            # resize visible atoms
+            self.visibleAtoms.resize(NVisible, refcheck=False)
     
     def chargeFilter(self, settings):
         """
