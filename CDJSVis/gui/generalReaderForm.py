@@ -191,7 +191,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         
         except:
             exctype, value = sys.exc_info()[:2]
-            self.logger.error("Lattice reader failed! %s: %s", exctype, value)
+            self.logger.exception("Lattice reader failed!")
             self.mainWindow.displayError("Lattice reader failed!\n\n%s: %s" % (exctype, value))
             status = 255
         
