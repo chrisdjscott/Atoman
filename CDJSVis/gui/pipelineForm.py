@@ -65,6 +65,7 @@ class PipelineForm(QtGui.QWidget):
         self.abspath = None
         self.PBC = None
         self.linkedLattice = None
+        self.fromSFTP = None
         
         # layout
         filterTabLayout = QtGui.QVBoxLayout(self)
@@ -575,6 +576,7 @@ class PipelineForm(QtGui.QWidget):
         self.abspath = item.abspath
         self.fileFormat = item.fileFormat
         self.linkedLattice = item.linkedLattice
+        self.fromSFTP = item.fromSFTP
         self.PBC = state.PBC
         self.setPBCChecks()
         

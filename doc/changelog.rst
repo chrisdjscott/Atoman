@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**150303**
+
+* Handle case where file name contains colons (was wrongly detecting them as SFTP files)
+
 **150226**
 
 * Revert change regarding displaying antisites
