@@ -143,7 +143,7 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
     Item that goes in the systems list
     
     """
-    def __init__(self, lattice, filename, displayName, abspath, fileFormat, linkedLattice, generated=False):
+    def __init__(self, lattice, filename, displayName, abspath, fileFormat, linkedLattice, fromSFTP, generated=False):
         super(SystemsListWidgetItem, self).__init__()
         
         self.lattice = lattice
@@ -154,6 +154,7 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
         self.linkedLattice = linkedLattice
         self.infoDialog = None
         self.generated = generated
+        self.fromSFTP = fromSFTP
         
         zip_exts = ('.bz2', '.gz')
         root, ext = os.path.splitext(filename)
@@ -675,8 +676,10 @@ class SystemsDialog(QtGui.QWidget):
         
         if sftpPath is None:
             abspath = os.path.abspath(filename)
+            fromSFTP = False
         else:
             abspath = sftpPath
+            fromSFTP = True
         
         if not allowDuplicate:
             abspathList = self.getAbspathList()
@@ -704,7 +707,7 @@ class SystemsDialog(QtGui.QWidget):
         self.logger.debug("Display name is: '%s'", displayName)
         
         # item for list
-        list_item = SystemsListWidgetItem(lattice, filename, displayName, abspath, fileFormat, linkedLattice, generated=generated)
+        list_item = SystemsListWidgetItem(lattice, filename, displayName, abspath, fileFormat, linkedLattice, fromSFTP, generated=generated)
         
         # add to list
         self.systems_list_widget.addItem(list_item)
