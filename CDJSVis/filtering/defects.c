@@ -1274,10 +1274,10 @@ findDefects(PyObject *self, PyObject *args)
         splitTime = omp_get_wtime();
 #endif
         
-//        status = identifySplitInterstitialsNew(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
-//                cellDims, defectCounters, vacancyRadius);
-        status = identifySplitInterstitials(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
-                        cellDims, defectCounters, vacancyRadius);
+        status = identifySplitInterstitialsNew(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
+                cellDims, defectCounters, vacancyRadius);
+//        status = identifySplitInterstitials(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
+//                        cellDims, defectCounters, vacancyRadius);
         if (status)
         {
             if (driftCompensation) free(refPos);
