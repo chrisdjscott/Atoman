@@ -148,8 +148,6 @@ def iconPath(icon):
     
     """
     return resourcePath(icon, dirname="icons")
-#     return os.path.join(":/icons", icon)
-
 
 ################################################################################
 def helpPath(page):
@@ -157,8 +155,7 @@ def helpPath(page):
     Return full path to given help page.
     
     """
-    return os.path.join(":/help", page)
-
+    return resourcePath(page, dirname="doc")
 
 ################################################################################
 def idGenerator(size=16, chars=string.digits + string.ascii_letters + string.digits):
@@ -167,7 +164,6 @@ def idGenerator(size=16, chars=string.digits + string.ascii_letters + string.dig
     
     """
     return ''.join(random.choice(chars) for _ in xrange(size))
-
 
 ################################################################################
 def createTmpDirectory():
@@ -184,7 +180,6 @@ def createTmpDirectory():
     tmpDir = tempfile.mkdtemp(prefix="CDJSVis-", dir=dirname)
     
     return tmpDir
-
 
 ################################################################################
 def checkForFile(filename):

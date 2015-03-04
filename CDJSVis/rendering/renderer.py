@@ -887,13 +887,14 @@ class PovRayAtomsWriter(QtCore.QObject):
     finished = QtCore.Signal(int, float, str)
     allDone = QtCore.Signal()
     
-    def __init__(self, filename, visibleAtoms, lattice, scalarsDict, colouringOptions, displayOptions, lut, uniqueId):
+    def __init__(self, filename, visibleAtoms, lattice, scalarsDict, latticeScalarsDict, colouringOptions, displayOptions, lut, uniqueId):
         super(PovRayAtomsWriter, self).__init__()
         
         self.filename = filename
         self.visibleAtoms = visibleAtoms
         self.lattice = lattice
         self.scalarsDict = scalarsDict
+        self.latticeScalarsDict = latticeScalarsDict
         self.colouringOptions = PovrayColouringOptions(colouringOptions)
         self.lut = lut
         self.displayOptions = PovrayDisplayOptions(displayOptions)
@@ -910,6 +911,7 @@ class PovRayAtomsWriter(QtCore.QObject):
         visibleAtoms = self.visibleAtoms
         lattice = self.lattice
         scalarsDict = self.scalarsDict
+        latticeScalarsDict = self.latticeScalarsDict
         colouringOptions = self.colouringOptions
         displayOptions = self.displayOptions
         lut = self.lut
@@ -937,7 +939,7 @@ class PovRayAtomsWriter(QtCore.QObject):
                 scalar = charge[index]
             else:
                 if colouringOptions.colourBy.startswith("Lattice: "):
-                    scalar = lattice.scalarsDict[colouringOptions.colourBy[9:]][i]
+                    scalar = latticeScalarsDict[colouringOptions.colourBy[9:]][i]
                 else:
                     scalar = scalarsDict[colouringOptions.colourBy][i]
             
@@ -990,7 +992,7 @@ def writePovrayAtoms(filename, visibleAtoms, lattice, scalarsDict, colouringOpti
                               lattice.charge, scalarsArray, scalarsType, colouringOptions.heightAxis, rgbcalc.cfunc)
 
 ################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOptions, povFileName, scalarsDict, displayOptions, 
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOptions, povFileName, scalarsDict, latticeScalarsDict, displayOptions, 
                                pipelinePage, povFinishedSlot, vectorsDict, vectorsOptions, NVisibleForRes=None, sequencer=False):
     """
     Make the actors for the filtered system
@@ -1030,7 +1032,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     povtime = time.time()
     povFilePath = os.path.join(mainWindow.tmpDirectory, povFileName)
     uniqueId = uuid.uuid4()
-    povAtomWriter = PovRayAtomsWriter(povFilePath, visibleAtoms, lattice, scalarsDict, colouringOptions, displayOptions, lut, uniqueId)
+    povAtomWriter = PovRayAtomsWriter(povFilePath, visibleAtoms, lattice, scalarsDict, latticeScalarsDict, colouringOptions, displayOptions, lut, uniqueId)
     
     # write pov atoms now if we're running sequencer, otherwise in separate thread
     logger.debug("Preparing to write POV-Ray atoms (sequencer=%s) (%s)", sequencer, uniqueId)
@@ -1065,7 +1067,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     # scalars array
     if scalarType == 5:
         if colouringOptions.colourBy.startswith("Lattice: "):
-            scalarsArray = lattice.scalarsDict[colouringOptions.colourBy[9:]]
+            scalarsArray = latticeScalarsDict[colouringOptions.colourBy[9:]]
         else:
             scalarsArray = scalarsDict[colouringOptions.colourBy]
     

@@ -190,15 +190,44 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     /* build integer value */
                     if (!strcmp("i", type))
                     {
+                        char *endp;
                         long tmpval;
 
-                        tmpval = atol(pch);
+                        tmpval = strtol(pch, &endp, 10);
+                        if (pch == endp || *endp != '\0')
+                        {
+                            char errstring[128];
+
+                            sprintf(errstring, "Could not convert '%s' to integer (header line: %ld; key: '%s')", pch, i, key);
+                            PyErr_SetString(PyExc_TypeError, errstring);
+                            fclose(INFILE);
+                            Py_DECREF(resultDict);
+                            return NULL;
+                        }
+                        
                         if (!strcmp("NAtoms", key)) NAtoms = tmpval;
-                        value = Py_BuildValue(type, tmpval);
+                        value = Py_BuildValue(type, (int)tmpval);
                     }
                     /* build float value */
                     else if (!strcmp("d", type))
-                        value = Py_BuildValue(type, atof(pch));
+                    {
+                        char *endp;
+                        double tmpval;
+                        
+                        tmpval = strtod(pch, &endp);
+                        if (pch == endp || *endp != '\0')
+                        {
+                            char errstring[128];
+
+                            sprintf(errstring, "Could not convert '%s' to double (header line: %ld; key: '%s')", pch, i, key);
+                            PyErr_SetString(PyExc_TypeError, errstring);
+                            fclose(INFILE);
+                            Py_DECREF(resultDict);
+                            return NULL;
+                        }
+                        
+                        value = Py_BuildValue(type, tmpval);
+                    }
                     /* build string value */
                     else if (!strcmp("s", type))
                         value = Py_BuildValue(type, pch);
@@ -207,7 +236,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     {
                         char errstring[128];
 
-                        sprintf("Unrecognised type string: '%s'", type);
+                        sprintf(errstring, "Unrecognised type string: '%s'", type);
                         PyErr_SetString(PyExc_RuntimeError, errstring);
                         fclose(INFILE);
                         Py_DECREF(resultDict);
@@ -225,7 +254,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     {
                         char errstring[128];
 
-                        sprintf("Could not set item in dictionary: '%s'", key);
+                        sprintf(errstring, "Could not set item in dictionary: '%s'", key);
                         PyErr_SetString(PyExc_RuntimeError, errstring);
                         fclose(INFILE);
                         Py_DECREF(resultDict);
@@ -382,7 +411,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     {
                         char errstring[128];
 
-                        sprintf("Unrecognised type string (body prep): '%s'", type);
+                        sprintf(errstring, "Unrecognised type string (body prep): '%s'", type);
                         PyErr_SetString(PyExc_RuntimeError, errstring);
                         fclose(INFILE);
                         Py_DECREF(resultDict);
@@ -418,7 +447,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                     {
                         char errstring[128];
 
-                        sprintf("Could not set item in dictionary (body prep): '%s'", key);
+                        sprintf(errstring, "Could not set item in dictionary (body prep): '%s'", key);
                         PyErr_SetString(PyExc_RuntimeError, errstring);
                         // need to free arrays too...
                         fclose(INFILE);
@@ -575,7 +604,25 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                         {
                             if (!strcmp("atomID", key))
                             {
-                                atomIndex = (long) atoi(pch);
+                                char *endp;
+                                
+                                atomIndex = strtol(pch, &endp, 10);
+                                if (pch == endp || *endp != '\0')
+                                {
+                                    char errstring[128];
+                                    long k;
+
+                                    for (k = 0; k < numLines; k++) free(atomLines[k]);
+                                    sprintf(errstring, "Could not convert atomID '%s' to integer (body line %ld:%ld)", pch, i, j);
+                                    PyErr_SetString(PyExc_TypeError, errstring);
+                                    Py_DECREF(resultDict);
+                                    fclose(INFILE);
+                                    Py_DECREF(specieList);
+                                    Py_DECREF(specieCount);
+                                    freeBody(bodyFormat);
+                                    return NULL;
+                                }
+                                
                                 foundAtomID = 1;
                             }
 
@@ -779,6 +826,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
 
                                 /* increment specie counter */
                                 index = PySequence_Index(specieList, symin);
+                                Py_XDECREF(symin);
                                 if (index == -1)
                                 {
                                     long k;
@@ -789,7 +837,6 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     Py_DECREF(resultDict);
                                     Py_DECREF(specieList);
                                     Py_DECREF(specieCount);
-                                    Py_XDECREF(symin);
                                     freeBody(bodyFormat);
                                     return NULL;
                                 }
@@ -804,7 +851,6 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     Py_DECREF(resultDict);
                                     Py_DECREF(specieList);
                                     Py_DECREF(specieCount);
-                                    Py_XDECREF(symin);
                                     freeBody(bodyFormat);
                                     return NULL;
                                 }
@@ -823,12 +869,9 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     Py_DECREF(resultDict);
                                     Py_DECREF(specieList);
                                     Py_DECREF(specieCount);
-                                    Py_XDECREF(symin);
                                     freeBody(bodyFormat);
                                     return NULL;
                                 }
-
-                                Py_XDECREF(symin);
 
                                 /* set specie value */
                                 IIND1(array, atomIndex) = (int) index;
@@ -837,17 +880,49 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                             {
                                 if (!strcmp("i", type))
                                 {
+                                    char *endp;
                                     int value;
 
-                                    value = atoi(pch);
+                                    /* convert to int */
+                                    value = (int) strtol(pch, &endp, 10);
+                                    if (pch == endp || *endp != '\0')
+                                    {
+                                        char errstring[256];
+                                        
+                                        sprintf(errstring, "Conversion to integer failed for '%s' (body line: %ld:%ld; key: '%s')", pch, i, j, key);
+                                        PyErr_SetString(PyExc_TypeError, errstring);
+                                        fclose(INFILE);
+                                        Py_DECREF(resultDict);
+                                        Py_DECREF(specieList);
+                                        Py_DECREF(specieCount);
+                                        freeBody(bodyFormat);
+                                        return NULL;
+                                    }
+                                    
                                     if (dim == 1) IIND1(array, atomIndex) = value;
                                     else IIND2(array, atomIndex, dimcount) = value;
                                 }
                                 else if (!strcmp("d", type))
                                 {
+                                    char *endp;
                                     double value;
 
-                                    value = atof(pch);
+                                    /* convert to double */
+                                    value = strtod(pch, &endp);
+                                    if (pch == endp || *endp != '\0')
+                                    {
+                                        char errstring[256];
+                                        
+                                        sprintf(errstring, "Conversion to double failed for '%s' (body line: %ld:%ld; key: '%s')", pch, i, j, key);
+                                        PyErr_SetString(PyExc_TypeError, errstring);
+                                        fclose(INFILE);
+                                        Py_DECREF(resultDict);
+                                        Py_DECREF(specieList);
+                                        Py_DECREF(specieCount);
+                                        freeBody(bodyFormat);
+                                        return NULL;
+                                    }
+                                    
                                     if (dim == 1) DIND1(array, atomIndex) = value;
                                     else DIND2(array, atomIndex, dimcount) = value;
                                 }
@@ -857,7 +932,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     long k;
 
                                     for (k = 0; k < numLines; k++) free(atomLines[k]);
-                                    sprintf("Unrecognised type string (body): '%s'", type);
+                                    sprintf(errstring, "Unrecognised type string (body): '%s'", type);
                                     PyErr_SetString(PyExc_RuntimeError, errstring);
                                     fclose(INFILE);
                                     Py_DECREF(resultDict);

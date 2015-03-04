@@ -42,13 +42,11 @@ calculateRDF(PyObject *self, PyObject *args)
 {
     int NVisible, *visibleAtoms, *specie, specieID1, specieID2, *PBC, num;
     int OMP_NUM_THREADS, NAtoms;
-    double *pos, *minPos, *maxPos, *cellDims, start, finish, *rdf;
+    double *pos, *cellDims, start, finish, *rdf;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *specieIn=NULL;
     PyArrayObject *PBCIn=NULL;
     PyArrayObject *posIn=NULL;
-    PyArrayObject *minPosIn=NULL;
-    PyArrayObject *maxPosIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *rdfIn=NULL;
     
@@ -62,10 +60,9 @@ calculateRDF(PyObject *self, PyObject *args)
     
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!iiO!O!O!O!dddiO!i", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &specieIn,
-            &PyArray_Type, &posIn, &specieID1, &specieID2, &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn,
-            &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &start, &finish, &interval, &num, &PyArray_Type,
-            &rdfIn, &OMP_NUM_THREADS))
+    if (!PyArg_ParseTuple(args, "O!O!O!iiO!O!dddiO!i", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &specieIn,
+            &PyArray_Type, &posIn, &specieID1, &specieID2, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &start,
+            &finish, &interval, &num, &PyArray_Type, &rdfIn, &OMP_NUM_THREADS))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -81,12 +78,6 @@ calculateRDF(PyObject *self, PyObject *args)
     
     if (not_doubleVector(rdfIn)) return NULL;
     rdf = pyvector_to_Cptr_double(rdfIn);
-    
-    if (not_doubleVector(minPosIn)) return NULL;
-    minPos = pyvector_to_Cptr_double(minPosIn);
-    
-    if (not_doubleVector(maxPosIn)) return NULL;
-    maxPos = pyvector_to_Cptr_double(maxPosIn);
     
     if (not_doubleVector(cellDimsIn)) return NULL;
     cellDims = pyvector_to_Cptr_double(cellDimsIn);
@@ -204,10 +195,11 @@ calculateRDF(PyObject *self, PyObject *args)
         int j, index, ind3, boxIndex, boxNebList[27], boxNebListSize;
         double rxa, rya, rza;
         
-        index = visibleAtoms[i];
-        
         /* skip if not in first selection */
         if (!sel1[i]) continue;
+        
+        /* atom index */
+        index = visibleAtoms[i];
         
         /* get box index of this atom */
         ind3 = index * 3;
@@ -234,15 +226,18 @@ calculateRDF(PyObject *self, PyObject *args)
                     int visIndex, index2, ind23;
                     double sep2;
                     
+                    /* visible index */
                     visIndex = boxes->boxAtoms[boxIndex][k];
+                    
+                    /* skip if not in second selection */
+                    if (!sel2[visIndex]) continue;
+                    
+                    /* atom index */
                     index2 = visibleAtoms[visIndex];
                     
     //                if (index2 <= index) continue; // cannot do this because spec1 and spec2 may differ...
                     /* skip if same atom */
                     if (index == index2) continue;
-                    
-                    /* skip if not in second selection */
-                    if (!sel2[visIndex]) continue;
                     
                     /* atomic separation */
                     ind23 = index2 * 3;
@@ -281,6 +276,7 @@ calculateRDF(PyObject *self, PyObject *args)
     /* normalise rdf */
     {
         double pair_dens;
+        double fourThirdsPi = 4.0 / 3.0 * M_PI;
 
         /* compute inverse of pair density (volume / number of pairs) */
         pair_dens = cellDims[0] * cellDims[1] * cellDims[2];
@@ -298,18 +294,21 @@ calculateRDF(PyObject *self, PyObject *args)
             double histv = rdf[i];
 #endif
 
-            /* calculate shell volume */
-            r_inner = interval * i + start;
-            r_outer = interval * (i + 1) + start;
-            shellVolume = 4.0 / 3.0 * M_PI * (pow(r_outer, 3.0) - pow(r_inner, 3.0));
-            
-            /* normalisation factor is 1 / (pair_density * shellVolume) */
-            norm_f = pair_dens / shellVolume;
-            rdf[i] = rdf[i] * norm_f;
-            
+            if (rdf[i] != 0.0)
+            {
+                /* calculate shell volume */
+                r_inner = interval * i + start;
+                r_outer = interval * (i + 1) + start;
+                shellVolume = fourThirdsPi * (pow(r_outer, 3.0) - pow(r_inner, 3.0));
+                
+                /* normalisation factor is 1 / (pair_density * shellVolume) */
+                norm_f = pair_dens / shellVolume;
+                rdf[i] = rdf[i] * norm_f;
+                
 #ifdef DEBUG
-            printf("HIST %d (%lf -> %lf): histv %lf; vol %lf; norm_f = %lf; rdf %lf\n", i, r_inner, r_outer, histv, shellVolume, norm_f, rdf[i]);
+                printf("HIST %d (%lf -> %lf): histv %lf; vol %lf; norm_f = %lf; rdf %lf\n", i, r_inner, r_outer, histv, shellVolume, norm_f, rdf[i]);
 #endif
+            }
         }
     }
     

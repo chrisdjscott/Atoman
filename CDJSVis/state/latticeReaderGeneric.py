@@ -118,6 +118,9 @@ class FileFormats(object):
     def __iter__(self):
         for v in self._fileFormats.values():
             yield v
+    
+    def __contains__(self, item):
+        return item in self._fileFormats
 
 ################################################################################
 
@@ -466,7 +469,8 @@ class LatticeReaderGeneric(object):
         status = os.system(command)
         
         # hide progress bar
-        self.hideProgress()
+        if self.hideProgress is not None:
+            self.hideProgress()
         
         # handle error
         if status or not os.path.exists(filepath):

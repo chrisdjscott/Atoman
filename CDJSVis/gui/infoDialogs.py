@@ -591,6 +591,51 @@ class DefectClusterInfoWindow(QtGui.QDialog):
 
 ################################################################################
 
+class SystemInfoWindow(QtGui.QDialog):
+    """
+    System info window.
+    
+    """
+    def __init__(self, item, parent=None):
+        super(SystemInfoWindow, self).__init__(parent)
+        
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        self.setWindowTitle("System info: %s" % item.displayName)
+        
+        # attributes
+        lattice = item.lattice
+        
+        layout = QtGui.QVBoxLayout()
+        
+        listWidget = QtGui.QListWidget(self)
+        listWidget.setMinimumWidth(400)
+        listWidget.setMinimumHeight(200)
+        layout.addWidget(listWidget)
+        
+        listWidget.addItem("Display name: '%s'" % item.displayName)
+        listWidget.addItem("Abspath: '%s'" % item.abspath)
+        listWidget.addItem("Number of atoms: %d" % lattice.NAtoms)
+        listWidget.addItem("Cell dimensions: [%f, %f, %f]" % (lattice.cellDims[0], lattice.cellDims[1], lattice.cellDims[2]))
+        listWidget.addItem("Species list: %r" % list(lattice.specieList))
+        listWidget.addItem("Species count: %r" % list(lattice.specieCount))
+        
+        # add lattice attributes
+        if "Temperature" not in lattice.attributes:
+            temperature = lattice.calcTemperature()
+            if temperature is not None:
+                listWidget.addItem("Temperature: %f" % temperature)
+        
+        for key, value in lattice.attributes.iteritems():
+            listWidget.addItem("%s: %s" % (key, value))
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        layout.addWidget(buttonBox)
+
+################################################################################
+
 class AtomInfoWindow(QtGui.QDialog):
     """
     Atom info window.

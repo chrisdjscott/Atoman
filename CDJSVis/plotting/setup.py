@@ -16,7 +16,7 @@ def configuration(parent_package='', top_path=None):
                           "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
                          libraries=["gsl", "gslcblas", "gomp"],
                          extra_compile_args=["-fopenmp"],
-                         include_dirs=[incdir, "/opt/local/include"])
+                         include_dirs=[incdir])
     
     return config
 

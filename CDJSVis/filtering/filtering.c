@@ -26,6 +26,8 @@ static PyObject* voronoiNeighboursFilter(PyObject*, PyObject*);
 static PyObject* coordNumFilter(PyObject*, PyObject*);
 static PyObject* displacementFilter(PyObject*, PyObject*);
 static PyObject* genericScalarFilter(PyObject *, PyObject *);
+static PyObject* cropDefectsFilter(PyObject *self, PyObject *args);
+static PyObject* sliceDefectsFilter(PyObject *self, PyObject *args);
 
 
 /*******************************************************************************
@@ -46,6 +48,8 @@ static struct PyMethodDef methods[] = {
     {"coordNumFilter", coordNumFilter, METH_VARARGS, "Coordination number filter"},
     {"displacementFilter", displacementFilter, METH_VARARGS, "Displacement filter"},
     {"genericScalarFilter", genericScalarFilter, METH_VARARGS, "Generic scalar filter"},
+    {"cropDefectsFilter", cropDefectsFilter, METH_VARARGS, "Crop defects filter"},
+    {"sliceDefectsFilter", sliceDefectsFilter, METH_VARARGS, "Slice defects filter"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -270,6 +274,138 @@ sliceFilter(PyObject *self, PyObject *args)
 
 
 /*******************************************************************************
+ ** Slice defects filter
+ *******************************************************************************/
+static PyObject*
+sliceDefectsFilter(PyObject *self, PyObject *args)
+{
+    int invert;
+    double x0, y0, z0, xn, yn, zn;
+    PyArrayObject *interstitials=NULL;
+    PyArrayObject *vacancies=NULL;
+    PyArrayObject *antisites=NULL;
+    PyArrayObject *onAntisites=NULL;
+    PyArrayObject *splitInterstitials=NULL;
+    PyArrayObject *pos=NULL;
+    PyArrayObject *refPos=NULL;
+    PyObject *result=NULL;
+    
+    
+    /* parse and check arguments from Python */
+    if (PyArg_ParseTuple(args, "O!O!O!O!O!O!O!ddddddi", &PyArray_Type, &interstitials, &PyArray_Type, &vacancies, &PyArray_Type, &antisites,
+            &PyArray_Type, &onAntisites, &PyArray_Type, &splitInterstitials, &PyArray_Type, &pos, &PyArray_Type, &refPos, &x0, &y0, &z0, &xn,
+            &yn, &zn, &invert))
+    {
+        int i;
+        int NVacsIn, NIntsIn, NAntsIn, NSplitsIn;
+        int NVacs, NInts, NAnts, NSplits;
+        double mag;
+        
+        /* check types */
+        if (not_intVector(interstitials)) return NULL;
+        NIntsIn = (int) interstitials->dimensions[0];
+        if (not_intVector(vacancies)) return NULL;
+        NVacsIn = (int) vacancies->dimensions[0];
+        if (not_intVector(antisites)) return NULL;
+        NAntsIn = (int) antisites->dimensions[0];
+        if (not_intVector(splitInterstitials)) return NULL;
+        NSplitsIn = (int) (splitInterstitials->dimensions[0] / 3);
+        if (not_doubleVector(pos)) return NULL;
+        if (not_doubleVector(refPos)) return NULL;
+        
+        /* normalise (xn, yn, zn) */
+        mag = sqrt(xn*xn + yn*yn + zn*zn);
+        xn = xn / mag;
+        yn = yn / mag;
+        zn = zn / mag;
+        
+        /* vacancies */
+        NVacs = 0;
+        for (i = 0; i < NVacsIn; i++)
+        {
+            int index = IIND1(vacancies, i);
+            int ind3 = index * 3;
+            double xd = DIND1(refPos, ind3    ) - x0;
+            double yd = DIND1(refPos, ind3 + 1) - y0;
+            double zd = DIND1(refPos, ind3 + 2) - z0;
+            double dotProd = xd*xn + yd*yn + zd*zn;
+            double distanceToPlane = dotProd / mag;
+            
+            if ((invert && distanceToPlane > 0) || (!invert && distanceToPlane < 0))
+                IIND1(vacancies, NVacs++) = index;
+        }
+        
+        /* antisites */
+        NAnts = 0;
+        for (i = 0; i < NAntsIn; i++)
+        {
+            int index = IIND1(antisites, i);
+            int ind3 = index * 3;
+            double xd = DIND1(refPos, ind3    ) - x0;
+            double yd = DIND1(refPos, ind3 + 1) - y0;
+            double zd = DIND1(refPos, ind3 + 2) - z0;
+            double dotProd = xd*xn + yd*yn + zd*zn;
+            double distanceToPlane = dotProd / mag;
+            
+            if ((invert && distanceToPlane > 0) || (!invert && distanceToPlane < 0))
+            {
+                IIND1(antisites, NAnts) = index;
+                IIND1(onAntisites, NAnts++) = IIND1(onAntisites, i);
+            }
+        }
+        
+        /* interstitials */
+        NInts = 0;
+        for (i = 0; i < NIntsIn; i++)
+        {
+            int index = IIND1(interstitials, i);
+            int ind3 = index * 3;
+            double xd = DIND1(pos, ind3    ) - x0;
+            double yd = DIND1(pos, ind3 + 1) - y0;
+            double zd = DIND1(pos, ind3 + 2) - z0;
+            double dotProd = xd*xn + yd*yn + zd*zn;
+            double distanceToPlane = dotProd / mag;
+            
+            if ((invert && distanceToPlane > 0) || (!invert && distanceToPlane < 0))
+                IIND1(interstitials, NInts++) = index;
+        }
+        
+        /* split interstitials */
+        NSplits = 0;
+        for (i = 0; i < NSplitsIn; i++)
+        {
+            int i3 = 3 * i;
+            int index = IIND1(splitInterstitials, i3);
+            int ind3 = index * 3;
+            double xd = DIND1(refPos, ind3    ) - x0;
+            double yd = DIND1(refPos, ind3 + 1) - y0;
+            double zd = DIND1(refPos, ind3 + 2) - z0;
+            double dotProd = xd*xn + yd*yn + zd*zn;
+            double distanceToPlane = dotProd / mag;
+            
+            if ((invert && distanceToPlane > 0) || (!invert && distanceToPlane < 0))
+            {
+                int nsplit3 = 3 * NSplits;
+                IIND1(splitInterstitials, nsplit3    ) = index;
+                IIND1(splitInterstitials, nsplit3 + 1) = IIND1(splitInterstitials, i3 + 1);
+                IIND1(splitInterstitials, nsplit3 + 2) = IIND1(splitInterstitials, i3 + 2);
+                NSplits++;
+            }
+        }
+        
+        /* result (setItem steals ownership) */
+        result = PyTuple_New(4);
+        PyTuple_SetItem(result, 0, Py_BuildValue("i", NInts));
+        PyTuple_SetItem(result, 1, Py_BuildValue("i", NVacs));
+        PyTuple_SetItem(result, 2, Py_BuildValue("i", NAnts));
+        PyTuple_SetItem(result, 3, Py_BuildValue("i", NSplits));
+    }
+    
+    return result;
+}
+
+
+/*******************************************************************************
  ** Crop sphere filter
  *******************************************************************************/
 static PyObject* 
@@ -362,6 +498,153 @@ cropSphereFilter(PyObject *self, PyObject *args)
     }
     
     return Py_BuildValue("i", NVisible);
+}
+
+
+/*******************************************************************************
+ ** Crop defects filter
+ *******************************************************************************/
+static PyObject*
+cropDefectsFilter(PyObject *self, PyObject *args)
+{
+    int xEnabled, yEnabled, zEnabled, invertSelection;
+    double xmin, xmax, ymin, ymax, zmin, zmax;
+    PyArrayObject *interstitials=NULL;
+    PyArrayObject *vacancies=NULL;
+    PyArrayObject *antisites=NULL;
+    PyArrayObject *onAntisites=NULL;
+    PyArrayObject *splitInterstitials=NULL;
+    PyArrayObject *pos=NULL;
+    PyArrayObject *refPos=NULL;
+    PyObject *result=NULL;
+    
+    
+    /* parse and check arguments from Python */
+    if (PyArg_ParseTuple(args, "O!O!O!O!O!O!O!ddddddiiii", &PyArray_Type, &interstitials, &PyArray_Type, &vacancies, 
+            &PyArray_Type, &antisites, &PyArray_Type, &onAntisites, &PyArray_Type, &splitInterstitials,
+            &PyArray_Type, &pos, &PyArray_Type, &refPos, &xmin, &xmax, &ymin, &ymax, &zmin, &zmax, &xEnabled,
+            &yEnabled, &zEnabled, &invertSelection))
+    {
+        int i;
+        int NVacsIn, NIntsIn, NAntsIn, NSplitsIn;
+        int NVacs, NInts, NAnts, NSplits;
+        
+        
+        /* check types */
+        if (not_intVector(interstitials)) return NULL;
+        NIntsIn = (int) interstitials->dimensions[0];
+        if (not_intVector(vacancies)) return NULL;
+        NVacsIn = (int) vacancies->dimensions[0];
+        if (not_intVector(antisites)) return NULL;
+        NAntsIn = (int) antisites->dimensions[0];
+        if (not_intVector(splitInterstitials)) return NULL;
+        NSplitsIn = (int) (splitInterstitials->dimensions[0] / 3);
+        if (not_doubleVector(pos)) return NULL;
+        if (not_doubleVector(refPos)) return NULL;
+        
+        /* vacancies */
+        NVacs = 0;
+        for (i = 0; i < NVacsIn; i++)
+        {
+            int index = IIND1(vacancies, i);
+            int ind3 = 3 * index;
+            double rx = DIND1(refPos, ind3    );
+            double ry = DIND1(refPos, ind3 + 1);
+            double rz = DIND1(refPos, ind3 + 2);
+            int add = 1;
+            
+            /* check each direction */
+            if (xEnabled && (rx < xmin || rx > xmax)) add = 0;
+            if (add && yEnabled && (ry < ymin || ry > ymax)) add = 0;
+            if (add && zEnabled && (rz < zmin || rz > zmax)) add = 0;
+            
+            /* is this atom visible? */
+            if ((add && !invertSelection) || (!add && invertSelection))
+                IIND1(vacancies, NVacs++) = index;
+        }
+        
+        /* antisites */
+        NAnts = 0;
+        for (i = 0; i < NAntsIn; i++)
+        {
+            int index = IIND1(antisites, i);
+            int ind3 = 3 * index;
+            double rx = DIND1(refPos, ind3    );
+            double ry = DIND1(refPos, ind3 + 1);
+            double rz = DIND1(refPos, ind3 + 2);
+            int add = 1;
+            
+            /* check each direction */
+            if (xEnabled && (rx < xmin || rx > xmax)) add = 0;
+            if (add && yEnabled && (ry < ymin || ry > ymax)) add = 0;
+            if (add && zEnabled && (rz < zmin || rz > zmax)) add = 0;
+            
+            /* is this atom visible? */
+            if ((add && !invertSelection) || (!add && invertSelection))
+            {
+                IIND1(antisites, NAnts) = index;
+                IIND1(onAntisites, NAnts++) = IIND1(onAntisites, i);
+            }
+        }
+        
+        /* interstitials */
+        NInts = 0;
+        for (i = 0; i < NIntsIn; i++)
+        {
+            int index = IIND1(interstitials, i);
+            int ind3 = 3 * index;
+            double rx = DIND1(pos, ind3    );
+            double ry = DIND1(pos, ind3 + 1);
+            double rz = DIND1(pos, ind3 + 2);
+            int add = 1;
+            
+            /* check each direction */
+            if (xEnabled && (rx < xmin || rx > xmax)) add = 0;
+            if (add && yEnabled && (ry < ymin || ry > ymax)) add = 0;
+            if (add && zEnabled && (rz < zmin || rz > zmax)) add = 0;
+            
+            /* is this atom visible? */
+            if ((add && !invertSelection) || (!add && invertSelection))
+                IIND1(interstitials, NInts++) = index;
+        }
+        
+        /* split interstitials */
+        NSplits = 0;
+        for (i = 0; i < NSplitsIn; i++)
+        {
+            int i3 = 3 * i;
+            int index = IIND1(splitInterstitials, i3);   // we use the position of the vacancy
+            int ind3 = 3 * index;
+            double rx = DIND1(refPos, ind3    );
+            double ry = DIND1(refPos, ind3 + 1);
+            double rz = DIND1(refPos, ind3 + 2);
+            int add = 1;
+            
+            /* check each direction */
+            if (xEnabled && (rx < xmin || rx > xmax)) add = 0;
+            if (add && yEnabled && (ry < ymin || ry > ymax)) add = 0;
+            if (add && zEnabled && (rz < zmin || rz > zmax)) add = 0;
+            
+            /* is this atom visible? */
+            if ((add && !invertSelection) || (!add && invertSelection))
+            {
+                int nsplit3 = 3 * NSplits;
+                IIND1(splitInterstitials, nsplit3    ) = index;
+                IIND1(splitInterstitials, nsplit3 + 1) = IIND1(splitInterstitials, i3 + 1);
+                IIND1(splitInterstitials, nsplit3 + 2) = IIND1(splitInterstitials, i3 + 2);
+                NSplits++;
+            }
+        }
+        
+        /* result (setItem steals ownership) */
+        result = PyTuple_New(4);
+        PyTuple_SetItem(result, 0, Py_BuildValue("i", NInts));
+        PyTuple_SetItem(result, 1, Py_BuildValue("i", NVacs));
+        PyTuple_SetItem(result, 2, Py_BuildValue("i", NAnts));
+        PyTuple_SetItem(result, 3, Py_BuildValue("i", NSplits));
+    }
+    
+    return result;
 }
 
 
@@ -765,7 +1048,7 @@ static PyObject*
 coordNumFilter(PyObject *self, PyObject *args)
 {
     int NVisible, *visibleAtoms, *specie, NSpecies, *PBC, minCoordNum, maxCoordNum, NScalars, filteringEnabled, NVectors;
-    double *pos, *bondMinArray, *bondMaxArray, approxBoxWidth, *cellDims, *minPos, *maxPos, *coordArray, *fullScalars;
+    double *pos, *bondMinArray, *bondMaxArray, approxBoxWidth, *cellDims, *coordArray, *fullScalars;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *specieIn=NULL;
     PyArrayObject *PBCIn=NULL;
@@ -774,8 +1057,6 @@ coordNumFilter(PyObject *self, PyObject *args)
     PyArrayObject *bondMinArrayIn=NULL;
     PyArrayObject *bondMaxArrayIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
-    PyArrayObject *minPosIn=NULL;
-    PyArrayObject *maxPosIn=NULL;
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
     
@@ -786,11 +1067,11 @@ coordNumFilter(PyObject *self, PyObject *args)
     struct Boxes *boxes;
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!iO!O!dO!O!O!O!O!iiiO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
-            &PyArray_Type, &specieIn, &NSpecies, &PyArray_Type, &bondMinArrayIn, &PyArray_Type, &bondMaxArrayIn, 
-            &approxBoxWidth, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &minPosIn, 
-            &PyArray_Type, &maxPosIn, &PyArray_Type, &coordArrayIn, &minCoordNum, &maxCoordNum, &NScalars, 
-            &PyArray_Type, &fullScalarsIn, &filteringEnabled, &NVectors, &PyArray_Type, &fullVectors))
+    if (!PyArg_ParseTuple(args, "O!O!O!iO!O!dO!O!O!iiiO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn,
+            &PyArray_Type, &specieIn, &NSpecies, &PyArray_Type, &bondMinArrayIn, &PyArray_Type, &bondMaxArrayIn,
+            &approxBoxWidth, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &coordArrayIn,
+            &minCoordNum, &maxCoordNum, &NScalars, &PyArray_Type, &fullScalarsIn, &filteringEnabled, &NVectors,
+            &PyArray_Type, &fullVectors))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -808,12 +1089,6 @@ coordNumFilter(PyObject *self, PyObject *args)
     
     if (not_doubleVector(bondMaxArrayIn)) return NULL;
     bondMaxArray = pyvector_to_Cptr_double(bondMaxArrayIn);
-    
-    if (not_doubleVector(minPosIn)) return NULL;
-    minPos = pyvector_to_Cptr_double(minPosIn);
-    
-    if (not_doubleVector(maxPosIn)) return NULL;
-    maxPos = pyvector_to_Cptr_double(maxPosIn);
     
     if (not_doubleVector(cellDimsIn)) return NULL;
     cellDims = pyvector_to_Cptr_double(cellDimsIn);

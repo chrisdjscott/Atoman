@@ -705,9 +705,8 @@ class RDFForm(genericForm.GenericForm):
         
         try:
             # then calculate
-            rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.minPos,
-                               inputLattice.maxPos, inputLattice.cellDims, pp.PBC, self.binMin, self.binMax, self.binWidth,
-                               numBins, rdfArray, ompNumThreads)
+            rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.cellDims,
+                               pp.PBC, self.binMin, self.binMax, self.binWidth, numBins, rdfArray, ompNumThreads)
         
         finally:
             utils.cancelProgressDialog(progDiag)
@@ -1778,9 +1777,12 @@ class ImageSequenceTab(QtGui.QWidget):
         # check abspath (for sftp)
         abspath = pipelinePage.abspath
         sftpBrowser = None
-        if ":" in abspath:
-            self.logger.debug("Sequencing SFTP file")
-            sftpHost, sftpFile = abspath.split(":")
+        if pipelinePage.fromSFTP:
+            self.logger.debug("Sequencing SFTP file: '%s'", abspath)
+            array = abspath.split(":")
+            sftpHost = array[0]
+            # handle case where ":"'s are in the file path
+            sftpFile = ":".join(array[1:])
             self.logger.debug("Host: '%s'; path: '%s'", sftpHost, sftpFile)
             
             sysDiag = self.mainWindow.systemsDialog

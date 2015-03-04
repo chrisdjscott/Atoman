@@ -34,6 +34,22 @@ finally:
     os.chdir(OWD)
 a.datas += extra_datas
 
+# add documentation as data
+OWD = os.getcwd()
+os.chdir("../CDJSVis")
+try:
+    extra_datas = []
+    for root, dirs, files in os.walk("doc"):
+        for fn in files:
+            if fn.startswith("."):
+                continue
+            data_path = os.path.join(root, fn)
+            rel_path = os.path.join("..", "CDJSVis", data_path)
+            extra_datas.append((data_path, rel_path, "DATA"))
+finally:
+    os.chdir(OWD)
+a.datas += extra_datas
+
 # continue with build
 pyz = PYZ(a.pure)
 
@@ -73,12 +89,10 @@ os.system(cmd)
 
 # edit plist
 plist_file = os.path.join("dist", "CDJSVis.app", "Contents", "Info.plist")
-f = open(plist_file)
-lines = f.readlines()
-f.close()
-f = open(plist_file, "w")
-for line in lines:
-    if line.startswith("<string>icon-windowed.icns"):
-        line = "<string>CDJSVis.icns</string>\n"
-    f.write(line)
-f.close()
+with open(plist_file) as f:
+    lines = f.readlines()
+with open(plist_file, "w") as f:
+	for line in lines:
+	    if line.startswith("<string>icon-windowed.icns"):
+	        line = "<string>CDJSVis.icns</string>\n"
+	    f.write(line)

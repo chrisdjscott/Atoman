@@ -694,7 +694,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
 #        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Filter list colouring options")
-        self.setWindowIcon(QtGui.QIcon(iconPath("painticon.png")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/applications-graphics.png")))
         
         # defaults
         self.colourBy = "Specie"

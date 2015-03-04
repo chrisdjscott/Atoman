@@ -2,11 +2,43 @@
 Changelog
 =========
 
-**dev**
+**150303**
+
+* Handle case where file name contains colons (was wrongly detecting them as SFTP files)
+
+**150226**
+
+* Revert change regarding displaying antisites
+* Fix bug preventing "Solid colour" from working
+* "Crop box" filter works with "Point defects" filter
+* "Slice" filter works with "Point defects" filter
+
+**150223**
+
+* Fix bug that could have prevented some bonds being displayed
+* No longer require qresources file; doc and icons are added as data instead
+
+**150211**
+
+* Fix bug preventing Lattice being reloaded
+
+**150206**
+
+* Better error handling during type conversion when reading lattice files
+* Add option to shift the lattice in periodic directions
+* Add dialog to display information about a loaded system
+
+**150204.1**
+
+* Fix bug when colouring by lattice scalars
+
+**150204**
 
 * Better error handling from C code (raise exception instead of exiting)
 * Better normalisation of RDF
 * Fix bug when picking split interstitials
+* Improve "Replicate cell" option
+* Display Exception if running filters fails
 
 **150126**
 

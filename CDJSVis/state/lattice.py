@@ -12,6 +12,7 @@ import numpy as np
 
 from .atoms import elements
 from ..algebra import vectors
+from . import _lattice
 # from ..md import forces
 
 
@@ -24,7 +25,7 @@ class Lattice(object):
     """
     def __init__(self):
         self.NAtoms = 0
-        self.cellDims = np.empty(3, np.float64)
+        self.cellDims = np.array([100, 100, 100], np.float64)
         
         dt = np.dtype((str, 2))
         self.specieList = np.empty(0, dt)
@@ -49,6 +50,13 @@ class Lattice(object):
         self.attributes = {}
         
         self.PBC = np.ones(3, np.int32)
+    
+    def wrapAtoms(self):
+        """
+        Wrap atoms that have left the periodic cell.
+        
+        """
+        return _lattice.wrapAtoms(self.NAtoms, self.pos, self.cellDims, self.PBC)
     
     def atomSeparation(self, index1, index2, pbc):
         """

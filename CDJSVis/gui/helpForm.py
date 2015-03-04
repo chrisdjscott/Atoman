@@ -10,8 +10,7 @@ import functools
 
 from PySide import QtGui, QtCore, QtWebKit
 
-from ..visutils.utilities import iconPath
-from .. import resources
+from ..visutils.utilities import iconPath, helpPath
 
 
 ################################################################################
@@ -57,7 +56,7 @@ class HelpFormSphinx(QtGui.QDialog):
         self.logger = logger
         logger.debug("Setting up help form")
         
-        self.webView.load("qrc:///doc/index.html")
+        self.loadPage("index.html")
         self.webView.show()
         
         layout = QtGui.QVBoxLayout(self)
@@ -81,7 +80,7 @@ class HelpFormSphinx(QtGui.QDialog):
         Load given page
         
         """
-        url = "qrc:///doc/%s" % page
+        url = helpPath(page)
         self.loadUrl(url)
     
     def show(self):

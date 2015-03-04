@@ -121,7 +121,7 @@ def setMapperScalarRange(mapper, colouringOptions, NSpecies):
     Set scalar range on mapper
     
     """
-    if colouringOptions.colourBy == "Specie":
+    if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
         mapper.SetScalarRange(0, NSpecies - 1)
     
     elif colouringOptions.colourBy == "Height":
