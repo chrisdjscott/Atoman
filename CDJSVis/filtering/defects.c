@@ -13,9 +13,6 @@
 #include "array_utils.h"
 #include "atom_structure.h"
 
-#define DEBUG
-#define DEBUGSPLIT
-
 static PyObject* findDefects(PyObject*, PyObject*);
 static int findDefectClusters(int, double *, int *, int *, struct Boxes *, double, double *, int *);
 static int findDefectNeighbours(int, int, int, int *, double *, struct Boxes *, double, double *, int *);
