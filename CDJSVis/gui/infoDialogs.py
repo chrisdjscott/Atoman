@@ -676,7 +676,7 @@ class AtomInfoWindow(QtGui.QDialog):
         layout.addWidget(listWidget)
         
         listWidget.addItem("Atom: %d" % lattice.atomID[atomIndex])
-        listWidget.addItem("Specie: %s" % lattice.specieList[lattice.specie[atomIndex]])
+        listWidget.addItem("Species: %s" % lattice.specieList[lattice.specie[atomIndex]])
         listWidget.addItem("Position: (%f, %f, %f)" % (lattice.pos[3*atomIndex], lattice.pos[3*atomIndex+1], lattice.pos[3*atomIndex+2]))
         listWidget.addItem("Charge: %f" % lattice.charge[atomIndex])
         
@@ -906,7 +906,7 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Specie: %s" % refState.specieList[refState.specie[index]]))
+            row.addWidget(QtGui.QLabel("Species: %s" % refState.specieList[refState.specie[index]]))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
@@ -929,7 +929,7 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addWidget(listWidget)
             
             listWidget.addItem("Atom: %d" % inputState.atomID[index])
-            listWidget.addItem("Specie: %s" % inputState.specieList[inputState.specie[index]])
+            listWidget.addItem("Species: %s" % inputState.specieList[inputState.specie[index]])
             listWidget.addItem("Position: (%f, %f, %f)" % (inputState.pos[3*index], inputState.pos[3*index+1], inputState.pos[3*index+2]))
             listWidget.addItem("Charge: %f" % inputState.charge[index])
             
@@ -966,7 +966,7 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Specie: %s" % refState.specieList[refState.specie[index]]))
+            row.addWidget(QtGui.QLabel("Species: %s" % refState.specieList[refState.specie[index]]))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
