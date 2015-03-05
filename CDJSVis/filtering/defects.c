@@ -25,7 +25,6 @@ static int basicDefectClassification(double, int, char *,int *, double *, int, c
 static int identifySplitInterstitialsNew(int, int *, int, int *, int *, double *, double *, int *, double *, int *, double);
 static int refineDefectsUsingAcna(int, int *, int, int *, double, int *, double *, double *, double *, double *, int, int *);
 static int compare_two_nebs(const void *, const void *);
-//static int checkVacancyRecursive(int, int, int *, int *, int *, struct NeighbourList2 *, struct NeighbourList2 *, int *, int *);
 
 
 /*******************************************************************************
@@ -295,117 +294,6 @@ static int compare_two_nebs(const void * a, const void * b)
     else return 0;
 }
 
-
-/*******************************************************************************
- * check if vacancy is part of a split interstitial
- *******************************************************************************/
-//static int checkVacancyRecursive(int vacIndex, int NSplit, int *splitInts, int *vacs, int *ints, struct NeighbourList2 *nebListVacs,
-//        struct NeighbourList2 *nebListInts, int *vacMask, int *intMask)
-//{
-//    int i, splitCount, splitIndexes[2];
-//    struct NeighbourList2 vacNebs;
-//    int numVacNebs;
-//    
-//    
-//    /* return if this vacancy has already been checked */
-//    if (vacMask[vacIndex]) return NSplit;
-//
-//    /* we are checking this vacancy now */
-//    vacMask[vacIndex] = 1;
-//    
-//    /* list of neighbouring interstitials for this vacancy */
-//    vacNebs = nebListVacs[vacIndex];
-//    numVacNebs = vacNebs.neighbourCount;
-//    
-//    /* skip if doesn't have at least 2 neighbouring interstitials */
-//    if (numVacNebs < 2) return NSplit;
-//
-//#ifdef DEBUGSPLIT
-//    printf("DEFECTSC: Start checking vacancy %d (num int nebs %d)\n", vacIndex, numVacNebs);
-//#endif
-//
-//    /* we need to find two suitable ints within the cut-off, we loop
-//     * over the neighbouring interstitials of this vacancy until we
-//     * we find two suitable neighbours or we run out of neighbours */
-//    i = 0;
-//    splitCount = 0;
-//    while (splitCount < 2 && i < numVacNebs)
-//    {
-//        int j, isnneb;
-//        struct Neighbour vacNeb = vacNebs.neighbour[i];
-//        struct NeighbourList2 intNebs = nebListInts[vacNeb.index];
-//        int numIntNebs = intNebs.neighbourCount;
-//        
-//        /* check if this interstitial is closest to this vacancy */
-//        isnneb = 0;
-//        j = 0;
-//        while (intMask[vacNeb.index] == 0 && isnneb == 0 && j < numIntNebs)
-//        {
-//            struct Neighbour intNeb = intNebs.neighbour[j];
-//            int vacIndex2 = intNeb.index;
-//            
-//            /* not the closest, so we check the vacancy that is closer */
-//            if (vacIndex2 != vacIndex)
-//            {
-//#ifdef DEBUGSPLIT
-//                printf("DEFECTSC: Need to check vacancy %d first (interstitial %d)\n", vacIndex2, vacNeb.index);
-//#endif
-//
-//                /* call self */
-//                NSplit = checkVacancyRecursive(vacIndex2, NSplit, splitInts, vacs, ints, nebListVacs, nebListInts, vacMask, intMask);
-//            }
-//            /* it is the closest, so we store it as possible split int atom with this vacancy */
-//            else 
-//            {
-//                isnneb = 1;
-//                splitIndexes[splitCount++] = vacNeb.index;
-//            }
-//            
-//            j++;
-//        }
-//        
-//        i++;
-//    }
-//    
-//    //TODO: we could check the angle they form as well!!??
-//    
-//    /* check if this is a split interstitial */
-//    if (splitCount == 2)
-//    {
-//        int n3 = 3 * NSplit;
-//        
-//#ifdef DEBUGSPLIT
-//        printf("DEFECTSC: Vacancy %d is split: %d, %d\n", vacIndex, splitIndexes[0], splitIndexes[1]);
-//#endif
-//
-//        /* store vacancy in split interstitials array */
-//        splitInts[n3] = vacs[vacIndex];
-//
-//        /* remove from vacancies array */
-//        vacs[vacIndex] = -1;
-//
-//        /* store interstitials */
-//        for (i = 0; i < 2; i++)
-//        {
-//            int intIndex = splitIndexes[i];
-//
-//            /* store in split interstitials array */
-//            splitInts[n3 + i + 1] = ints[intIndex];
-//
-//            /* remove from interstitials array */
-//            ints[intIndex] = -1;
-//
-//            /* set mask */
-//            intMask[intIndex] = 1;
-//        }
-//        
-//        NSplit++;
-//    }
-//    
-//    return NSplit;
-//}
-
-
 /*******************************************************************************
  * identify split interstitials (new)
  *******************************************************************************/
@@ -633,17 +521,6 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
             return 7;
         }
     }
-    
-    /* sanity check */
-//    if (NVacancies != NSplit + NInterstitials)
-//    {
-//        char errstring[256];
-//
-//        sprintf(errstring, "Number of interstitials and vacancies do not match after split detection (%d != %d + %d)",
-//                NVacancies, NInterstitials, NSplit);
-//        PyErr_SetString(PyExc_RuntimeError, errstring);
-//        return 7;
-//    }
 
     /* store counters */
     counters[0] = NVacancies;
