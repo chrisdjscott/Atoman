@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* Improve split interstitial detection to work in clusters of interstitials too
+
 **150303**
 
 * Handle case where file name contains colons (was wrongly detecting them as SFTP files)
