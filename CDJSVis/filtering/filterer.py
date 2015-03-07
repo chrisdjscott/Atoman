@@ -472,7 +472,7 @@ class Filterer(object):
             elif filterName == "Bond order":
                 self.bondOrderFilter(filterSettings)
             
-            elif filterName == "Atom index":
+            elif filterName == "Atom ID":
                 self.atomIndexFilter(filterSettings)
             
             elif filterName == "ACNA":

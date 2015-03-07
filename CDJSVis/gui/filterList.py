@@ -67,7 +67,7 @@ class FilterList(QtGui.QWidget):
         "Voronoi neighbours",
         "Voronoi volume",
         "Bond order",
-        "Atom index",
+        "Atom ID",
         "ACNA",
     ]
     defaultFilters.sort()

@@ -2047,11 +2047,11 @@ class SliceSettingsDialog(GenericSettingsDialog):
         self.hide()
 
 ################################################################################
-class AtomIndexSettingsDialog(GenericSettingsDialog):
+class AtomIdSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        super(AtomIndexSettingsDialog, self).__init__(title, parent)
+        super(AtomIdSettingsDialog, self).__init__(title, parent)
         
-        self.filterType = "Atom index"
+        self.filterType = "Atom ID"
         
         self.minVal = 0
         self.maxVal = 1000000
