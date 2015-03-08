@@ -1250,21 +1250,45 @@ class Filterer(object):
         Atom index filter
         
         """
-        lattice = self.pipelinePage.inputState
+        # first we validate the string
+        text = settings.lineEdit.text()
+        self.logger.debug("Atom ID raw text: '%s'", text)
         
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
+        if not text:
+        	self.logger.warning("No visible atoms specified in AtomID filter")
+        	NVisible = 0
         
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # run displacement filter
-        NVisible = filtering_c.atomIndexFilter(self.visibleAtoms, lattice.atomID, settings.filteringEnabled, settings.minVal, settings.maxVal, 
-                                               NScalars, fullScalars, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
+        else:
+			# parse text
+			array = text.split(",")
+			num = len(array)
+			rangeArray = np.empty((num, 2), np.int32)
+			for i, item in enumerate(array):
+				if "-" in item:
+					minval, maxval = map(int, item.split("-"))
+				else:
+					minval = maxval = int(item)
+			
+				self.logger.debug("  %d: %d -> %d", i, minval, maxval)
+				rangeArray[i][0] = minval
+				rangeArray[i][1] = maxval
+		
+			# input state
+			lattice = self.pipelinePage.inputState
+		
+			# old scalars arrays (resize as appropriate)
+			NScalars, fullScalars = self.makeFullScalarsArray()
+		
+			# full vectors array
+			NVectors, fullVectors = self.makeFullVectorsArray()
+		
+			# run displacement filter
+			NVisible = filtering_c.atomIndexFilter(self.visibleAtoms, lattice.atomID, rangeArray, 
+												   NScalars, fullScalars, NVectors, fullVectors)
+		
+			# update scalars dict
+			self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+			self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
         
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)

@@ -2053,57 +2053,14 @@ class AtomIdSettingsDialog(GenericSettingsDialog):
         
         self.filterType = "Atom ID"
         
-        self.minVal = 0
-        self.maxVal = 1000000
+        # only allow numbers, commas and hyphens
+        rx = QtCore.QRegExp("[0-9]+(?:[-,]?[0-9]+)*")
+        validator = QtGui.QRegExpValidator(rx, self)
         
-        groupLayout = self.addFilteringGroupBox(slot=self.filteringToggled, checked=True)
-        
-        label = QtGui.QLabel("Min:")
-        self.minValSpinBox = QtGui.QSpinBox()
-        self.minValSpinBox.setSingleStep(1)
-        self.minValSpinBox.setMinimum(0)
-        self.minValSpinBox.setMaximum(100000000)
-        self.minValSpinBox.setValue(self.minVal)
-        self.minValSpinBox.valueChanged.connect(self.setMinVal)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.minValSpinBox)
-        groupLayout.addLayout(row)
-        
-        label = QtGui.QLabel("Max:")
-        self.maxValSpinBox = QtGui.QSpinBox()
-        self.maxValSpinBox.setSingleStep(1)
-        self.maxValSpinBox.setMinimum(0)
-        self.maxValSpinBox.setMaximum(100000000)
-        self.maxValSpinBox.setValue(self.maxVal)
-        self.maxValSpinBox.valueChanged.connect(self.setMaxVal)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.maxValSpinBox)
-        groupLayout.addLayout(row)
-    
-    def filteringToggled(self, arg):
-        """
-        Filtering toggled
-        
-        """
-        self.filteringEnabled = arg
-    
-    def setMinVal(self, val):
-        """
-        Set the minimum coordination number.
-        
-        """
-        self.minVal = val
-
-    def setMaxVal(self, val):
-        """
-        Set the maximum coordination number.
-        
-        """
-        self.maxVal = val
+        self.lineEdit = QtGui.QLineEdit()
+        self.lineEdit.setValidator(validator)
+        self.lineEdit.setToolTip("Comma separated list of atom IDs or ranges of atom IDs (hyphenated) that are visible (eg. '22,30-33' will show atom IDs 22, 30, 31, 32 and 33)")
+        self.contentLayout.addRow("Visible IDs", self.lineEdit)
 
 ################################################################################
 class CoordinationNumberSettingsDialog(GenericSettingsDialog):

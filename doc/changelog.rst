@@ -5,6 +5,7 @@ Changelog
 **dev**
 
 * Improve split interstitial detection to work in clusters of interstitials too
+* Improve Atom ID filter to accept ranges and lists of atom IDs
 
 **150303**
 
