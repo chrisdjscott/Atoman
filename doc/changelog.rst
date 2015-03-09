@@ -6,6 +6,7 @@ Changelog
 
 * Improve split interstitial detection to work in clusters of interstitials too
 * Improve Atom ID filter to accept ranges and lists of atom IDs
+* Improve ACNA refinement of point defects to work in clusters of defects too
 
 **150303**
 
