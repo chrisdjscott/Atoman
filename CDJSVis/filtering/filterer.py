@@ -1255,40 +1255,45 @@ class Filterer(object):
         self.logger.debug("Atom ID raw text: '%s'", text)
         
         if not text:
-        	self.logger.warning("No visible atoms specified in AtomID filter")
-        	NVisible = 0
+            self.logger.warning("No visible atoms specified in AtomID filter")
+            NVisible = 0
         
         else:
-			# parse text
-			array = text.split(",")
-			num = len(array)
-			rangeArray = np.empty((num, 2), np.int32)
-			for i, item in enumerate(array):
-				if "-" in item:
-					minval, maxval = map(int, item.split("-"))
-				else:
-					minval = maxval = int(item)
-			
-				self.logger.debug("  %d: %d -> %d", i, minval, maxval)
-				rangeArray[i][0] = minval
-				rangeArray[i][1] = maxval
-		
-			# input state
-			lattice = self.pipelinePage.inputState
-		
-			# old scalars arrays (resize as appropriate)
-			NScalars, fullScalars = self.makeFullScalarsArray()
-		
-			# full vectors array
-			NVectors, fullVectors = self.makeFullVectorsArray()
-		
-			# run displacement filter
-			NVisible = filtering_c.atomIndexFilter(self.visibleAtoms, lattice.atomID, rangeArray, 
-												   NScalars, fullScalars, NVectors, fullVectors)
-		
-			# update scalars dict
-			self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-			self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
+            # parse text
+            array = [val for val in text.split(",") if val]
+            num = len(array)
+            rangeArray = np.empty((num, 2), np.int32)
+            for i, item in enumerate(array):
+                if "-" in item:
+                    values = [val for val in item.split("-") if val]
+                    minval = int(values[0])
+                    if len(values) == 1:
+                        maxval = minval
+                    else:
+                        maxval = int(values[1])
+                else:
+                    minval = maxval = int(item)
+            
+                self.logger.debug("  %d: %d -> %d", i, minval, maxval)
+                rangeArray[i][0] = minval
+                rangeArray[i][1] = maxval
+        
+            # input state
+            lattice = self.pipelinePage.inputState
+        
+            # old scalars arrays (resize as appropriate)
+            NScalars, fullScalars = self.makeFullScalarsArray()
+        
+            # full vectors array
+            NVectors, fullVectors = self.makeFullVectorsArray()
+        
+            # run displacement filter
+            NVisible = filtering_c.atomIndexFilter(self.visibleAtoms, lattice.atomID, rangeArray, 
+                                                   NScalars, fullScalars, NVectors, fullVectors)
+        
+            # update scalars dict
+            self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+            self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
         
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
