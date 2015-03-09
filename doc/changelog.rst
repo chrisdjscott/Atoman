@@ -2,6 +2,11 @@
 Changelog
 =========
 
+**dev**
+
+* Improve split interstitial detection to work in clusters of interstitials too
+* Improve Atom ID filter to accept ranges and lists of atom IDs
+
 **150303**
 
 * Handle case where file name contains colons (was wrongly detecting them as SFTP files)

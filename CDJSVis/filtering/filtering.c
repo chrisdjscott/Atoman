@@ -1386,21 +1386,23 @@ voronoiNeighboursFilter(PyObject *self, PyObject *args)
 static PyObject* 
 atomIndexFilter(PyObject *self, PyObject *args)
 {
-    int NVisibleIn, *visibleAtoms, NScalars, filteringEnabled, *atomID, minVal, maxVal, NVectors;
+    int NVisibleIn, *visibleAtoms, NScalars, *atomID, NVectors, numr;
     double *fullScalars;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *atomIDIn=NULL;
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
+    PyArrayObject *rangeArray=NULL;
     
-    int i, id, index, NVisible, j;
+    int i, NVisible;
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!iiiiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &atomIDIn, 
-            &filteringEnabled, &minVal, &maxVal, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, 
+    if (!PyArg_ParseTuple(args, "O!O!O!iO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &atomIDIn, 
+            &PyArray_Type, &rangeArray, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, 
             &PyArray_Type, &fullVectors))
         return NULL;
     
+    /* check array types */
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
     NVisibleIn = (int) visibleAtomsIn->dimensions[0];
@@ -1413,29 +1415,46 @@ atomIndexFilter(PyObject *self, PyObject *args)
     
     if (not_doubleVector(fullVectors)) return NULL;
     
+    if (not_intVector(rangeArray)) return NULL;
+    numr = (int) rangeArray->dimensions[0];
+    
     NVisible = 0;
     for (i = 0; i < NVisibleIn; i++)
     {
-        index = visibleAtoms[i];
+        int j;
+        int index = visibleAtoms[i];
+        int id = atomID[index];
+        int visible = 0;
         
-        id = atomID[index];
-        if (filteringEnabled && (id < minVal || id > maxVal))
-            continue;
-        
-        /* handle full scalars array */
-        for (j = 0; j < NScalars; j++)
+        /* loop over ranges, looking to see if this atom is visible */
+        for (j = 0; j < numr; j++)
         {
-            fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            int minid = IIND2(rangeArray, j, 0);
+            int maxid = IIND2(rangeArray, j, 1);
+            if (id >= minid && id <= maxid)
+            {
+                visible = 1;
+                break;
+            }
         }
         
-        for (j = 0; j < NVectors; j++)
+        if (visible)
         {
-            DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
-            DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
-            DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
-        }
+            /* handle full scalars array */
+            for (j = 0; j < NScalars; j++)
+            {
+                fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            }
         
-        visibleAtoms[NVisible++] = index;
+            for (j = 0; j < NVectors; j++)
+            {
+                DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
+                DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
+                DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
+            }
+        
+            visibleAtoms[NVisible++] = index;
+        }
     }
     
     return Py_BuildValue("i", NVisible);

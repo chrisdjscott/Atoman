@@ -246,7 +246,7 @@ class SFTPBrowserDialog(QtGui.QDialog):
                 self.logger.debug("Test connection ok: '%s'", connectionID)
             
             except:
-                self.logger.error("Test connection failed (%s): %r", connectionID, sys.exc_info())
+                self.logger.exception("Test connection failed (%s)", connectionID)
                 return
             
             # add widget

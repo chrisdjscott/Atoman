@@ -14,6 +14,7 @@ Analysis
     :maxdepth: 2
    
     filters/acna
+    filters/atomID
     filters/bond_order
     filters/cluster
 
