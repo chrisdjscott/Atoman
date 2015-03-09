@@ -1250,11 +1250,18 @@ class Filterer(object):
         Atom index filter
         
         """
-        # first we validate the string
+        # input string
         text = settings.lineEdit.text()
         self.logger.debug("Atom ID raw text: '%s'", text)
         
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
+    
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
         if not text:
+            # return no visible atoms if input string was empty
             self.logger.warning("No visible atoms specified in AtomID filter")
             NVisible = 0
         
@@ -1281,19 +1288,13 @@ class Filterer(object):
             # input state
             lattice = self.pipelinePage.inputState
         
-            # old scalars arrays (resize as appropriate)
-            NScalars, fullScalars = self.makeFullScalarsArray()
-        
-            # full vectors array
-            NVectors, fullVectors = self.makeFullVectorsArray()
-        
             # run displacement filter
             NVisible = filtering_c.atomIndexFilter(self.visibleAtoms, lattice.atomID, rangeArray, 
                                                    NScalars, fullScalars, NVectors, fullVectors)
         
-            # update scalars dict
-            self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-            self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
         
         # resize visible atoms
         self.visibleAtoms.resize(NVisible, refcheck=False)
