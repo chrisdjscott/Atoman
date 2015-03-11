@@ -1041,9 +1041,6 @@ class ColouringOptionsWindow(QtGui.QDialog):
                 logger.debug("Adding: '%s'", scalarType)
                 self.colouringCombo.addItem(scalarType)
                 self.addScalarWidget(scalarType)
-        
-        # ensure same one is selected???
-        
     
     def scalarBarTextChanged(self, text):
         """
