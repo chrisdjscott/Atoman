@@ -13,8 +13,8 @@
 #include "array_utils.h"
 #include "atom_structure.h"
 
-#define DEBUG
-#define DEBUGACNA
+//#define DEBUG
+//#define DEBUGACNA
 
 static PyObject* findDefects(PyObject*, PyObject*);
 static int findDefectClusters(int, double *, int *, int *, struct Boxes *, double, double *, int *);
