@@ -45,7 +45,8 @@ If these are not installed in default system locations you can set the paths to 
 
 You can either build the code in-place or install it into the Python site-packages directory, for example within a [virtualenv](http://virtualenv.readthedocs.org/en/latest/).
 
-In both cases you should first copy the config file: `cp setup.cfg.example setup.cfg` and add/edit any relevant sections. Normally this file can be left as is.
+In both cases you should first copy the config file: `cp setup.cfg.example setup.cfg` and add/edit any relevant sections. There are some comments in the file although, although
+normally it can be left as is.
 
 ### In-place build
 
