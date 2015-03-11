@@ -23,7 +23,7 @@ import numpy as np
 
 from ..visutils.utilities import iconPath
 from . import filterList
-from . import picker as picker_c
+from . import picker
 from . import infoDialogs
 from . import utils
 from ..rendering import highlight
@@ -885,10 +885,13 @@ class PipelineForm(QtGui.QWidget):
             
             result = np.empty(3, np.float64)
             
-            status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos, 
-                                         inputState.pos, refState.pos, pickPBC, inputState.cellDims,
-                                         inputState.specie, refState.specie, inputState.specieCovalentRadius, 
-                                         refState.specieCovalentRadius, result)
+            status = picker.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos, 
+                                       inputState.pos, refState.pos, pickPBC, inputState.cellDims,
+                                       inputState.specie, refState.specie, inputState.specieCovalentRadius, 
+                                       refState.specieCovalentRadius, result)
+            
+            if status:
+                raise RuntimeError("Picker exited with non zero status (%d)" % status)
             
             tmp_type, tmp_index, tmp_sep = result
             

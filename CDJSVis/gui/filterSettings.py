@@ -84,6 +84,16 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         # help page
         self.helpPage = None
+        
+        # does this filter provide scalars
+        self.providedScalars = []
+    
+    def addProvidedScalar(self, name):
+        """
+        Add scalar option
+        
+        """
+        self.providedScalars.append(name)
     
     def addHorizontalDivider(self, displaySettings=False):
         """
@@ -1613,6 +1623,7 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         super(DisplacementSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Displacement"
+        self.addProvidedScalar("Displacement")
         
         self.minDisplacement = 1.2
         self.maxDisplacement = 1000.0
@@ -2068,6 +2079,7 @@ class CoordinationNumberSettingsDialog(GenericSettingsDialog):
         super(CoordinationNumberSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Coordination number"
+        self.addProvidedScalar("Coordination number")
         
         self.minCoordNum = 0
         self.maxCoordNum = 100
@@ -2127,6 +2139,7 @@ class VoronoiNeighboursSettingsDialog(GenericSettingsDialog):
         super(VoronoiNeighboursSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Voronoi neighbours"
+        self.addProvidedScalar("Voronoi neighbours")
         
         self.minVoroNebs = 0
         self.maxVoroNebs = 999
@@ -2190,6 +2203,7 @@ class VoronoiVolumeSettingsDialog(GenericSettingsDialog):
         super(VoronoiVolumeSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Voronoi volume"
+        self.addProvidedScalar("Voronoi volume")
         
         self.minVoroVol = 0.0
         self.maxVoroVol = 9999.99
@@ -2253,6 +2267,8 @@ class BondOrderSettingsDialog(GenericSettingsDialog):
         super(BondOrderSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Bond order"
+        self.addProvidedScalar("Q4")
+        self.addProvidedScalar("Q6")
         
         self.minQ4 = 0.0
         self.maxQ4 = 99.99
@@ -2393,6 +2409,7 @@ class AcnaSettingsDialog(GenericSettingsDialog):
         super(AcnaSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "ACNA"
+        self.addProvidedScalar("ACNA")
         
         self.maxBondDistance = 5.0
         self.filteringEnabled = False
