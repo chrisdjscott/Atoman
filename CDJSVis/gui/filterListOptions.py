@@ -11,7 +11,6 @@ from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
 from . import genericForm
-from __builtin__ import False
 
 
 ################################################################################
