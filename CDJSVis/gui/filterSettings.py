@@ -84,6 +84,16 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         # help page
         self.helpPage = None
+        
+        # does this filter provide scalars
+        self.providedScalars = []
+    
+    def addProvidedScalar(self, name):
+        """
+        Add scalar option
+        
+        """
+        self.providedScalars.append(name)
     
     def addHorizontalDivider(self, displaySettings=False):
         """
@@ -1613,6 +1623,7 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         super(DisplacementSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Displacement"
+        self.addProvidedScalar("Displacement")
         
         self.minDisplacement = 1.2
         self.maxDisplacement = 1000.0
@@ -2047,63 +2058,20 @@ class SliceSettingsDialog(GenericSettingsDialog):
         self.hide()
 
 ################################################################################
-class AtomIndexSettingsDialog(GenericSettingsDialog):
+class AtomIdSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        super(AtomIndexSettingsDialog, self).__init__(title, parent)
+        super(AtomIdSettingsDialog, self).__init__(title, parent)
         
-        self.filterType = "Atom index"
+        self.filterType = "Atom ID"
         
-        self.minVal = 0
-        self.maxVal = 1000000
+        # only allow numbers, commas and hyphens
+        rx = QtCore.QRegExp("[0-9]+(?:[-,]?[0-9]+)*")
+        validator = QtGui.QRegExpValidator(rx, self)
         
-        groupLayout = self.addFilteringGroupBox(slot=self.filteringToggled, checked=True)
-        
-        label = QtGui.QLabel("Min:")
-        self.minValSpinBox = QtGui.QSpinBox()
-        self.minValSpinBox.setSingleStep(1)
-        self.minValSpinBox.setMinimum(0)
-        self.minValSpinBox.setMaximum(100000000)
-        self.minValSpinBox.setValue(self.minVal)
-        self.minValSpinBox.valueChanged.connect(self.setMinVal)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.minValSpinBox)
-        groupLayout.addLayout(row)
-        
-        label = QtGui.QLabel("Max:")
-        self.maxValSpinBox = QtGui.QSpinBox()
-        self.maxValSpinBox.setSingleStep(1)
-        self.maxValSpinBox.setMinimum(0)
-        self.maxValSpinBox.setMaximum(100000000)
-        self.maxValSpinBox.setValue(self.maxVal)
-        self.maxValSpinBox.valueChanged.connect(self.setMaxVal)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.maxValSpinBox)
-        groupLayout.addLayout(row)
-    
-    def filteringToggled(self, arg):
-        """
-        Filtering toggled
-        
-        """
-        self.filteringEnabled = arg
-    
-    def setMinVal(self, val):
-        """
-        Set the minimum coordination number.
-        
-        """
-        self.minVal = val
-
-    def setMaxVal(self, val):
-        """
-        Set the maximum coordination number.
-        
-        """
-        self.maxVal = val
+        self.lineEdit = QtGui.QLineEdit()
+        self.lineEdit.setValidator(validator)
+        self.lineEdit.setToolTip("Comma separated list of atom IDs or ranges of atom IDs (hyphenated) that are visible (eg. '22,30-33' will show atom IDs 22, 30, 31, 32 and 33)")
+        self.contentLayout.addRow("Visible IDs", self.lineEdit)
 
 ################################################################################
 class CoordinationNumberSettingsDialog(GenericSettingsDialog):
@@ -2111,6 +2079,7 @@ class CoordinationNumberSettingsDialog(GenericSettingsDialog):
         super(CoordinationNumberSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Coordination number"
+        self.addProvidedScalar("Coordination number")
         
         self.minCoordNum = 0
         self.maxCoordNum = 100
@@ -2170,6 +2139,7 @@ class VoronoiNeighboursSettingsDialog(GenericSettingsDialog):
         super(VoronoiNeighboursSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Voronoi neighbours"
+        self.addProvidedScalar("Voronoi neighbours")
         
         self.minVoroNebs = 0
         self.maxVoroNebs = 999
@@ -2233,6 +2203,7 @@ class VoronoiVolumeSettingsDialog(GenericSettingsDialog):
         super(VoronoiVolumeSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Voronoi volume"
+        self.addProvidedScalar("Voronoi volume")
         
         self.minVoroVol = 0.0
         self.maxVoroVol = 9999.99
@@ -2296,6 +2267,8 @@ class BondOrderSettingsDialog(GenericSettingsDialog):
         super(BondOrderSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Bond order"
+        self.addProvidedScalar("Q4")
+        self.addProvidedScalar("Q6")
         
         self.minQ4 = 0.0
         self.maxQ4 = 99.99
@@ -2436,6 +2409,7 @@ class AcnaSettingsDialog(GenericSettingsDialog):
         super(AcnaSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "ACNA"
+        self.addProvidedScalar("ACNA")
         
         self.maxBondDistance = 5.0
         self.filteringEnabled = False

@@ -13,16 +13,19 @@
 #include "array_utils.h"
 #include "atom_structure.h"
 
+//#define DEBUG
+//#define DEBUGACNA
+
 static PyObject* findDefects(PyObject*, PyObject*);
 static int findDefectClusters(int, double *, int *, int *, struct Boxes *, double, double *, int *);
 static int findDefectNeighbours(int, int, int, int *, double *, struct Boxes *, double, double *, int *);
 static int basicDefectClassification(double, int, char *,int *, double *, int, char *, int *, double *, int *,
         double *, int *, int *, int *, int *, int *);
-static int identifySplitInterstitials(int, int *, int, int *, int *, double *, double *, int *, double *, int *, double);
+//static int identifySplitInterstitials(int, int *, int, int *, int *, double *, double *, int *, double *, int *, double);
 static int identifySplitInterstitialsNew(int, int *, int, int *, int *, double *, double *, int *, double *, int *, double);
 static int refineDefectsUsingAcna(int, int *, int, int *, double, int *, double *, double *, double *, double *, int, int *);
 static int compare_two_nebs(const void *, const void *);
-static int checkVacancyRecursive(int, int, int *, int *, int *, struct NeighbourList2 *, struct NeighbourList2 *, int *, int *);
+static int checkVacancyACNARecursive(int, int, int *, int *, int *, struct NeighbourList2 *, struct NeighbourList2 *, int *, int *);
 
 
 /*******************************************************************************
@@ -292,89 +295,6 @@ static int compare_two_nebs(const void * a, const void * b)
     else return 0;
 }
 
-
-/*******************************************************************************
- * check if vacancy is part of a split interstitial
- *******************************************************************************/
-static int checkVacancyRecursive(int vacIndex, int NSplit, int *splitInts, int *vacs, int *ints, struct NeighbourList2 *nebListVacs,
-        struct NeighbourList2 *nebListInts, int *vacMask, int *intMask)
-{
-    int i, splitCount, splitIndexes[2];
-    struct NeighbourList2 vacNebs;
-    int numVacNebs;
-    
-    
-    /* return if this vacancy has already been checked */
-    if (vacMask[vacIndex]) return NSplit;
-    
-    /* we are checking this vacancy now */
-    vacMask[vacIndex] = 1;
-    
-    /* list of neighbouring interstitials for this vacancy */
-    vacNebs = nebListVacs[vacIndex];
-    numVacNebs = vacNebs.neighbourCount;
-    
-    /* we need to find two suitable ints within the cut-off */
-    i = 0;
-    splitCount = 0;
-    while (splitCount < 2 && i < numVacNebs)
-    {
-        int j, isnneb;
-        struct Neighbour vacNeb = vacNebs.neighbour[i];
-        struct NeighbourList2 intNebs = nebListInts[vacNeb.index];
-        int numIntNebs = intNebs.neighbourCount;
-        
-        /* check if this interstitial is closest to this vacancy */
-        isnneb = 0;
-        j = 0;
-        while (intMask[vacNeb.index] == 0 && isnneb == 0 && j < numIntNebs)
-        {
-            struct Neighbour intNeb = intNebs.neighbour[j];
-            int vacIndex2 = intNeb.index;
-            
-            /* not the closest, so we check the vacancy that is closer */
-            if (intNeb.index != vacIndex)
-            {
-                /* call self */
-                NSplit = checkVacancyRecursive(vacIndex2, NSplit, splitInts, vacs, ints, nebListVacs, nebListInts, vacMask, intMask);
-            }
-            /* it is the closest, so we store it as possible split int atom with this vacancy */
-            else 
-            {
-                isnneb = 1;
-                splitIndexes[splitCount++] = vacNeb.index;
-            }
-            
-            j++;
-        }
-        
-        i++;
-    }
-    
-    //TODO: we could check the angle they form as well!!??
-    
-    if (splitCount == 2)
-    {
-        int n3 = 3 * NSplit;
-        
-        /* this is a split interstitial */
-        splitInts[n3] = vacs[vacIndex];
-        vacs[vacIndex] = -1;
-        for (i = 0; i < 2; i++)
-        {
-            int intIndex = splitIndexes[i];
-            splitInts[n3 + i + 1] = ints[intIndex];
-            ints[intIndex] = -1;
-            intMask[intIndex] = 1;
-        }
-        
-        NSplit++;
-    }
-    
-    return NSplit;
-}
-
-
 /*******************************************************************************
  * identify split interstitials (new)
  *******************************************************************************/
@@ -383,7 +303,6 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
         double *pos, double *refPos, int *PBC, double *cellDims, int *counters, double vacancyRadius)
 {
     int i, NSplit;
-    int *intMask, *vacMask;
     double *intPos, *vacPos, maxSep;
     struct NeighbourList2 *nebListInts;
     struct NeighbourList2 *nebListVacs;
@@ -463,29 +382,111 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
     for (i = 0; i < NInterstitials; i++)
         qsort(nebListInts[i].neighbour, nebListInts[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
     
-    /* mask arrays */
-    intMask = calloc(NInterstitials, sizeof(int));
-    if (intMask == NULL)
+#ifdef DEBUGSPLIT
+    printf("DEFECTSC: Vacancy neb lists\n");
+    for (i = 0; i < NVacancies; i++)
     {
-        PyErr_SetString(PyExc_MemoryError, "Could not allocate intMask");
-        freeNeighbourList2(nebListVacs, NVacancies);
-        freeNeighbourList2(nebListInts, NInterstitials);
-        return 5;
+        int j;
+
+        printf("DEFECTSC:   Vacancy %d\n", i);
+        for (j = 0; j < nebListVacs[i].neighbourCount; j++)
+        {
+            struct Neighbour neb = nebListVacs[i].neighbour[j];
+            printf("DEFECTSC:     Neb %d: int index %d; sep %lf\n", j, neb.index, neb.separation);
+        }
     }
-    vacMask = calloc(NVacancies, sizeof(int));
-    if (vacMask == NULL)
+
+    printf("DEFECTSC: Interstitial neb lists\n");
+    for (i = 0; i < NInterstitials; i++)
     {
-        PyErr_SetString(PyExc_MemoryError, "Could not allocate vacMask");
-        freeNeighbourList2(nebListVacs, NVacancies);
-        freeNeighbourList2(nebListInts, NInterstitials);
-        free(intMask);
-        return 6;
+        int j;
+
+        printf("DEFECTSC:   Interstitial %d\n", i);
+        for (j = 0; j < nebListInts[i].neighbourCount; j++)
+        {
+            struct Neighbour neb = nebListInts[i].neighbour[j];
+            printf("DEFECTSC:     Neb %d: vac index %d; sep %lf\n", j, neb.index, neb.separation);
+        }
     }
+#endif
     
     /* loop over vacancies, checking if they belong to a split interstitial */
     NSplit = 0;
     for (i = 0; i < NVacancies; i++)
-        NSplit = checkVacancyRecursive(i, NSplit, splitInterstitials, vacancies, interstitials, nebListVacs, nebListInts, vacMask, intMask);
+    {
+        int numVacNebs;
+        struct NeighbourList2 vacNebs;
+        
+        /* list of neighbouring interstitials for this vacancy */
+        vacNebs = nebListVacs[i];
+        numVacNebs = vacNebs.neighbourCount;
+        
+#ifdef DEBUGSPLIT
+        printf("DEFECTSC: Checking if vacancy %d (%d) belongs to a split interstitial\n", i, vacancies[i]);
+        printf("DEFECTSC:   Number of neighbouring interstitials: %d\n", numVacNebs);
+#endif
+        
+        /* proceed only if have at least 2 neighbouring interstitials */
+        if (numVacNebs > 1)
+        {
+            int j, splitCount, splitIndexes[2];
+            
+            /* loop over neighbouring interstitials until we find 2 interstitials that are closest
+             * to this vacancy or we run out of neighbours
+             */
+            j = 0;
+            splitCount = 0;
+            while (j < numVacNebs && splitCount != 2)
+            {
+                struct Neighbour vacNeb = vacNebs.neighbour[j];
+                struct NeighbourList2 intNebs = nebListInts[vacNeb.index];
+                int numIntNebs = intNebs.neighbourCount;
+                
+                /* check if closest vacancy is this one */
+                if (numIntNebs > 0 && intNebs.neighbour[0].index == i)
+                {
+                    splitIndexes[splitCount++] = vacNeb.index;
+                    
+#ifdef DEBUGSPLIT
+                    printf("DEFECTSC:     Interstitial neighbour %d (%d) is closest to this vacancy (separation = %lf)\n", j, vacNeb.index, vacNeb.separation);
+#endif
+                }
+                
+                j++;
+            }
+            
+            /* check if we have found a split interstitial */
+            if (splitCount == 2)
+            {
+                int n3 = 3 * NSplit;
+                
+#ifdef DEBUGSPLIT
+                printf("DEFECTSC:   Vacancy %d is split: %d, %d\n", i, splitIndexes[0], splitIndexes[1]);
+#endif
+
+                /* store vacancy in split interstitials array */
+                splitInterstitials[n3] = vacancies[i];
+
+                /* remove from vacancies array */
+                vacancies[i] = -1;
+
+                /* store interstitials */
+                for (j = 0; j < 2; j++)
+                {
+                    int intIndex = splitIndexes[j];
+
+                    /* store in split interstitials array */
+                    splitInterstitials[n3 + j + 1] = interstitials[intIndex];
+
+                    /* remove from interstitials array */
+                    interstitials[intIndex] = -1;
+                }
+                
+                NSplit++;
+            }
+            
+        }
+    }
     
 #ifdef DEBUG
     printf("DEFECTSC: Found %d split interstitials\n", NSplit);
@@ -494,12 +495,10 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
     /* free memory */
     freeNeighbourList2(nebListVacs, NVacancies);
     freeNeighbourList2(nebListInts, NInterstitials);
-    free(intMask);
-    free(vacMask);
     
     if (NSplit)
     {
-        int count;
+        int count, numIntIn = NInterstitials;
         
         /* recreate interstitials arrays */
         count = 0;
@@ -512,8 +511,18 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
         for (i = 0; i < NVacancies; i++)
             if (vacancies[i] != -1) vacancies[count++] = vacancies[i];
         NVacancies = count;
+
+        /* sanity check */
+        if (numIntIn != NInterstitials + NSplit * 2)
+        {
+            char errstring[256];
+            sprintf(errstring, "Interstitial atoms lost/gained during split detection: %d + %d * 2 != %d (%d vacancies)", NInterstitials,
+                    NSplit, numIntIn, NVacancies);
+            PyErr_SetString(PyExc_RuntimeError, errstring);
+            return 7;
+        }
     }
-    
+
     /* store counters */
     counters[0] = NVacancies;
     counters[1] = NInterstitials;
@@ -525,395 +534,517 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
 /*******************************************************************************
  * identify split interstitials
  *******************************************************************************/
-static int
-identifySplitInterstitials(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, int *splitInterstitials,
-        double *pos, double *refPos, int *PBC, double *cellDims, int *counters, double vacancyRadius)
+//static int
+//identifySplitInterstitials(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, int *splitInterstitials,
+//        double *pos, double *refPos, int *PBC, double *cellDims, int *counters, double vacancyRadius)
+//{
+//    int i, count, NDefects, boxstat;
+//    int *NDefectsCluster, *defectClusterSplit, NClusters;
+//    int NVacNew, NIntNew, NSplitInterstitials;
+//    double *defectPos, splitIntRad;
+//    double approxBoxWidth;
+//    struct Boxes *boxes;
+//    
+//
+//#ifdef DEBUG
+//    printf("DEFECTSC: Identifying split interstitials\n");
+//#endif
+//    
+//    /* build positions array of all defects */
+//    NDefects = NVacancies + NInterstitials;
+//    defectPos = malloc(3 * NDefects * sizeof(double));
+//    if (defectPos == NULL)
+//    {
+//        PyErr_SetString(PyExc_MemoryError, "Could not allocate defectPos");
+//        return 1;
+//    }
+//    
+//    /* add defects positions: vac then int */
+//    count = 0;
+//    for (i = 0; i < NVacancies; i++)
+//    {
+//        int index = vacancies[i];
+//        int index3 = 3 * index;
+//        int c3 = count * 3;
+//        defectPos[c3    ] = refPos[index3    ];
+//        defectPos[c3 + 1] = refPos[index3 + 1];
+//        defectPos[c3 + 2] = refPos[index3 + 2];
+//        
+//        count++;
+//    }
+//    
+//    for (i = 0; i < NInterstitials; i++)
+//    {
+//        int index = interstitials[i];
+//        int index3 = 3 * index;
+//        int c3 = count * 3;
+//        defectPos[c3    ] = pos[index3    ];
+//        defectPos[c3 + 1] = pos[index3 + 1];
+//        defectPos[c3 + 2] = pos[index3 + 2];
+//        
+//        count++;
+//    }
+//    
+//    splitIntRad = 2.0 * vacancyRadius;
+//    
+//    /* box defects */
+//    approxBoxWidth = (splitIntRad < 3.0) ? 3.0 : splitIntRad;
+//    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
+//    if (boxes == NULL)
+//    {
+//        free(defectPos);
+//        return 2;
+//    }
+//    boxstat = putAtomsInBoxes(NDefects, defectPos, boxes);
+//    if (boxstat)
+//    {
+//        free(defectPos);
+//        return 3;
+//    }
+//    
+//    /* number of defects per cluster */
+//    NDefectsCluster = malloc(NDefects * sizeof(int));
+//    if (NDefectsCluster == NULL)
+//    {
+//        PyErr_SetString(PyExc_MemoryError, "Could not allocate NDefectsCluster");
+//        free(defectPos);
+//        freeBoxes(boxes);
+//        return 4;
+//    }
+//    
+//    /* cluster number */
+//    defectClusterSplit = malloc(NDefects * sizeof(int));
+//    if (defectClusterSplit == NULL)
+//    {
+//        PyErr_SetString(PyExc_MemoryError, "Could not allocate defectClusterSplit");
+//        free(defectPos);
+//        free(NDefectsCluster);
+//        freeBoxes(boxes);
+//        return 5;
+//    }
+//    
+//    /* find clusters */
+//    NClusters = findDefectClusters(NDefects, defectPos, defectClusterSplit, NDefectsCluster, boxes, splitIntRad, cellDims, PBC);
+//    
+//    /* free */
+//    freeBoxes(boxes);
+//    free(defectPos);
+//    
+//    if (NClusters < 0)
+//    {
+//        free(NDefectsCluster);
+//        free(defectClusterSplit);
+//        return 6;
+//    }
+//    
+//    NDefectsCluster = realloc(NDefectsCluster, NClusters * sizeof(int));
+//    if (NDefectsCluster == NULL)
+//    {
+//        PyErr_SetString(PyExc_MemoryError, "Could not reallocate NDefectsCluster");
+//        free(NDefectsCluster);
+//        free(defectClusterSplit);
+//        return 7;
+//    }
+//    
+//    NVacNew = NVacancies;
+//    NIntNew = NInterstitials;
+//    NSplitInterstitials = 0;
+//    
+//    /* find split ints */
+//    for (i = 0; i < NClusters; i++)
+//    {
+//        if (NDefectsCluster[i] == 3)
+//        {
+//            int j, vacCount, splitIndexes[3];
+//
+//            /* check if 2 interstitials and 1 vacancy */
+////                printf("  POSSIBLE SPLIT INTERSTITIAL\n");
+//            
+//            count = 0;
+//            vacCount = 0;
+//            for (j = 0; j < NDefects; j++)
+//            {
+//                if (defectClusterSplit[j] == i)
+//                {
+//                    if (j < NVacancies) vacCount++;
+//                    
+//                    splitIndexes[count] = j;
+//                    count++;
+//                }
+//            }
+//            
+//            if (vacCount == 1)
+//            {
+////                    printf("    FOUND SPLIT INTERSTITIAL\n");
+//                
+//                /* indexes */
+//                count = 1;
+//                for (j = 0; j < 3; j++)
+//                {
+//                    int index;
+//
+//                    index = splitIndexes[j];
+//                    
+//                    if (index < NVacancies)
+//                    {
+//                        int index2;
+//
+//                        index2 = vacancies[index];
+//                        vacancies[index] = -1;
+//                        splitInterstitials[3*NSplitInterstitials] = index2;
+//                        NVacNew--;
+//                    }
+//                    else
+//                    {
+//                        int index2;
+//
+//                        index2 = interstitials[index - NVacancies];
+//                        interstitials[index - NVacancies] = -1;
+//                        splitInterstitials[3*NSplitInterstitials+count] = index2;
+//                        NIntNew--;
+//                        count++;
+//                    }
+//                }
+//                NSplitInterstitials++;
+//            }
+//        }
+//    }
+//    
+//    /* free memory */
+//    free(defectClusterSplit);
+//    free(NDefectsCluster);
+//    
+//    /* recreate interstitials array */
+//    count = 0;
+//    for (i = 0; i < NInterstitials; i++)
+//    {
+//        if (interstitials[i] != -1)
+//        {
+//            interstitials[count] = interstitials[i];
+//            count++;
+//        }
+//    }
+//    NInterstitials = count;
+//    
+//    /* recreate vacancies array */
+//    count = 0;
+//    for (i = 0; i < NVacancies; i++)
+//    {
+//        if (vacancies[i] != -1)
+//        {
+//            vacancies[count] = vacancies[i];
+//            count++;
+//        }
+//    }
+//    NVacancies = count;
+//
+//    /* store counters */
+//    counters[0] = NVacancies;
+//    counters[1] = NInterstitials;
+//    counters[2] = NSplitInterstitials;
+//    
+//    return 0;
+//}
+
+/*******************************************************************************
+ * check if vacancy is linked to an ACNA interstitial
+ *******************************************************************************/
+static int checkVacancyACNARecursive(int vacIndex, int numChanges, int *vacs, int *ints, int *acnaInts, struct NeighbourList2 *nebListVacs,
+        struct NeighbourList2 *nebListInts, int *vacMask, int *intMask)
 {
-    int i, count, NDefects, boxstat;
-    int *NDefectsCluster, *defectClusterSplit, NClusters;
-    int NVacNew, NIntNew, NSplitInterstitials;
-    double *defectPos, splitIntRad;
-    double approxBoxWidth;
-    struct Boxes *boxes;
+    int i, foundNeb;
+    struct NeighbourList2 vacNebs;
+    int numVacNebs, nebIndex = -1;
     
+    
+    /* return if this vacancy has already been checked */
+    if (vacMask[vacIndex]) return numChanges;
 
-#ifdef DEBUG
-    printf("DEFECTSC: Identifying split interstitials\n");
+    /* we are checking this vacancy now */
+    vacMask[vacIndex] = 1;
+    
+    /* list of neighbouring interstitials for this vacancy */
+    vacNebs = nebListVacs[vacIndex];
+    numVacNebs = vacNebs.neighbourCount;
+    
+    /* skip if doesn't have any neighbouring interstitials */
+    if (numVacNebs < 1) return numChanges;
+
+#ifdef DEBUGACNA
+    printf("DEFECTSC: Start checking vacancy %d (num int nebs %d)\n", vacIndex, numVacNebs);
 #endif
-    
-    /* build positions array of all defects */
-    NDefects = NVacancies + NInterstitials;
-    defectPos = malloc(3 * NDefects * sizeof(double));
-    if (defectPos == NULL)
-    {
-        PyErr_SetString(PyExc_MemoryError, "Could not allocate defectPos");
-        return 1;
-    }
-    
-    /* add defects positions: vac then int */
-    count = 0;
-    for (i = 0; i < NVacancies; i++)
-    {
-        int index = vacancies[i];
-        int index3 = 3 * index;
-        int c3 = count * 3;
-        defectPos[c3    ] = refPos[index3    ];
-        defectPos[c3 + 1] = refPos[index3 + 1];
-        defectPos[c3 + 2] = refPos[index3 + 2];
-        
-        count++;
-    }
-    
-    for (i = 0; i < NInterstitials; i++)
-    {
-        int index = interstitials[i];
-        int index3 = 3 * index;
-        int c3 = count * 3;
-        defectPos[c3    ] = pos[index3    ];
-        defectPos[c3 + 1] = pos[index3 + 1];
-        defectPos[c3 + 2] = pos[index3 + 2];
-        
-        count++;
-    }
-    
-    splitIntRad = 2.0 * vacancyRadius;
-    
-    /* box defects */
-    approxBoxWidth = (splitIntRad < 3.0) ? 3.0 : splitIntRad;
-    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
-    if (boxes == NULL)
-    {
-        free(defectPos);
-        return 2;
-    }
-    boxstat = putAtomsInBoxes(NDefects, defectPos, boxes);
-    if (boxstat)
-    {
-        free(defectPos);
-        return 3;
-    }
-    
-    /* number of defects per cluster */
-    NDefectsCluster = malloc(NDefects * sizeof(int));
-    if (NDefectsCluster == NULL)
-    {
-        PyErr_SetString(PyExc_MemoryError, "Could not allocate NDefectsCluster");
-        free(defectPos);
-        freeBoxes(boxes);
-        return 4;
-    }
-    
-    /* cluster number */
-    defectClusterSplit = malloc(NDefects * sizeof(int));
-    if (defectClusterSplit == NULL)
-    {
-        PyErr_SetString(PyExc_MemoryError, "Could not allocate defectClusterSplit");
-        free(defectPos);
-        free(NDefectsCluster);
-        freeBoxes(boxes);
-        return 5;
-    }
-    
-    /* find clusters */
-    NClusters = findDefectClusters(NDefects, defectPos, defectClusterSplit, NDefectsCluster, boxes, splitIntRad, cellDims, PBC);
-    
-    /* free */
-    freeBoxes(boxes);
-    free(defectPos);
-    
-    if (NClusters < 0)
-    {
-        free(NDefectsCluster);
-        free(defectClusterSplit);
-        return 6;
-    }
-    
-    NDefectsCluster = realloc(NDefectsCluster, NClusters * sizeof(int));
-    if (NDefectsCluster == NULL)
-    {
-        PyErr_SetString(PyExc_MemoryError, "Could not reallocate NDefectsCluster");
-        free(NDefectsCluster);
-        free(defectClusterSplit);
-        return 7;
-    }
-    
-    NVacNew = NVacancies;
-    NIntNew = NInterstitials;
-    NSplitInterstitials = 0;
-    
-    /* find split ints */
-    for (i = 0; i < NClusters; i++)
-    {
-        if (NDefectsCluster[i] == 3)
-        {
-            int j, vacCount, splitIndexes[3];
 
-            /* check if 2 interstitials and 1 vacancy */
-//                printf("  POSSIBLE SPLIT INTERSTITIAL\n");
+    /* we loop over the neighbouring interstitials of this vacancy until we
+     * we find a suitable neighbour or we run out of neighbours
+     */
+    i = 0;
+    foundNeb = 0;
+    while (foundNeb == 0 && i < numVacNebs)
+    {
+        int j;
+        struct Neighbour vacNeb = vacNebs.neighbour[i];
+        struct NeighbourList2 intNebs = nebListInts[vacNeb.index];
+        int numIntNebs = intNebs.neighbourCount;
+        
+        /* check if this interstitial is closest to this vacancy */
+        j = 0;
+        while (intMask[vacNeb.index] == 0 && foundNeb == 0 && j < numIntNebs)
+        {
+            struct Neighbour intNeb = intNebs.neighbour[j];
+            int vacIndex2 = intNeb.index;
             
-            count = 0;
-            vacCount = 0;
-            for (j = 0; j < NDefects; j++)
+            /* not the closest, so we check the vacancy that is closer */
+            if (vacIndex2 != vacIndex)
             {
-                if (defectClusterSplit[j] == i)
-                {
-                    if (j < NVacancies) vacCount++;
-                    
-                    splitIndexes[count] = j;
-                    count++;
-                }
+#ifdef DEBUGACNA
+                printf("DEFECTSC: Need to check vacancy %d first (interstitial %d)\n", vacIndex2, vacNeb.index);
+#endif
+
+                /* call self */
+                numChanges = checkVacancyACNARecursive(vacIndex2, numChanges, vacs, ints, acnaInts, nebListVacs, nebListInts, vacMask, intMask);
+            }
+            /* it is the closest, so we store it as possible split int atom with this vacancy */
+            else 
+            {
+                foundNeb = 1;
+                nebIndex = vacNeb.index;
             }
             
-            if (vacCount == 1)
-            {
-//                    printf("    FOUND SPLIT INTERSTITIAL\n");
-                
-                /* indexes */
-                count = 1;
-                for (j = 0; j < 3; j++)
-                {
-                    int index;
-
-                    index = splitIndexes[j];
-                    
-                    if (index < NVacancies)
-                    {
-                        int index2;
-
-                        index2 = vacancies[index];
-                        vacancies[index] = -1;
-                        splitInterstitials[3*NSplitInterstitials] = index2;
-                        NVacNew--;
-                    }
-                    else
-                    {
-                        int index2;
-
-                        index2 = interstitials[index - NVacancies];
-                        interstitials[index - NVacancies] = -1;
-                        splitInterstitials[3*NSplitInterstitials+count] = index2;
-                        NIntNew--;
-                        count++;
-                    }
-                }
-                NSplitInterstitials++;
-            }
+            j++;
         }
+        
+        i++;
     }
     
-    /* free memory */
-    free(defectClusterSplit);
-    free(NDefectsCluster);
-    
-    /* recreate interstitials array */
-    count = 0;
-    for (i = 0; i < NInterstitials; i++)
+    /* check if this is a split interstitial */
+    if (foundNeb)
     {
-        if (interstitials[i] != -1)
-        {
-            interstitials[count] = interstitials[i];
-            count++;
-        }
+        int intIndex = acnaInts[nebIndex];
+        
+#ifdef DEBUGACNA
+        printf("DEFECTSC: Vacancy %d combines with interstitial %d\n", vacIndex, intIndex);
+#endif
+
+        /* remove from vacancies array */
+        vacs[vacIndex] = -1;
+
+        /* remove from interstitials array */
+        ints[intIndex] = -1;
+
+        /* set mask */
+        intMask[nebIndex] = 1;
+        
+        numChanges++;
     }
-    NInterstitials = count;
     
-    /* recreate vacancies array */
-    count = 0;
-    for (i = 0; i < NVacancies; i++)
-    {
-        if (vacancies[i] != -1)
-        {
-            vacancies[count] = vacancies[i];
-            count++;
-        }
-    }
-    NVacancies = count;
-    
-    /* store counters */
-    counters[0] = NVacancies;
-    counters[1] = NInterstitials;
-    counters[2] = NSplitInterstitials;
-    
-    return 0;
+    return numChanges;
 }
 
 /*******************************************************************************
- * Use ACNA to refine the defects
+ * Use ACNA to refine the defects.
+ * 
+ * First we make a list of all interstitials that have the ideal ACNA value.
+ * Next we build lists of neighbours for ints and vacs and sort these lists.
+ * Looping over vacancies we find the closest int that is not closer to another
+ * vac and mark as normal atoms
  *******************************************************************************/
 static int
 refineDefectsUsingAcna(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, double vacancyRadius,
         int *PBC, double *cellDims, double *pos, double *refPos, double *acnaArray, int acnaStructureType, int *counters)
 {
-    int i, boxstat;
-    int numChanges = 0;
-    double maxSep, maxSep2, *defectPos;
-    double approxBoxWidth;
-    struct Boxes *boxes;
+    int i;
+    int numAcnaInts, *acnaInts;
     
     
 #ifdef DEBUG
     printf("DEFECTSC: Refining defects using ACNA...\n");
 #endif
     
-    /* first make defect pos and box */
-    /* build positions array of all defects */
-    defectPos = malloc(3 * NInterstitials * sizeof(double));
-    if (defectPos == NULL)
+    /* first we make a list of interstitials that have the ideal ACNA value */
+    acnaInts = malloc(NInterstitials * sizeof(int));
+    if (acnaInts == NULL)
     {
-        PyErr_SetString(PyExc_MemoryError, "Could not allocate defectPos");
-        return 1;
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate acnaInts");
+        return 101;
     }
-    
-    /* add defects positions: int then split */
+    numAcnaInts = 0;
     for (i = 0; i < NInterstitials; i++)
     {
-        int index  = interstitials[i];
-        int i3 = i * 3;
-        int ind3 = index * 3;
-        defectPos[i3    ] = pos[ind3    ];
-        defectPos[i3 + 1] = pos[ind3 + 1];
-        defectPos[i3 + 2] = pos[ind3 + 2];
+        int index = interstitials[i];
+        int acnaVal = (int) acnaArray[index];
+        /* we store the index in the interstitials array */
+        if (acnaVal == acnaStructureType) acnaInts[numAcnaInts++] = i;
     }
+    //TODO: realloc if different size
     
-    /* max separation */
-    maxSep = 2.0 * vacancyRadius;
-    maxSep2 = maxSep * maxSep;
+#ifdef DEBUG
+    printf("DEFECTSC: Number of interstitials with ideal ACNA type: %d\n", numAcnaInts);
+#endif
     
-    /* box defects */
-    approxBoxWidth = (maxSep < 3.0) ? 3.0 : maxSep;
-    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
-    if (boxes == NULL)
+    if (numAcnaInts > 0 && NVacancies > 0)
     {
-        free(defectPos);
-        return 2;
-    }
-    boxstat = putAtomsInBoxes(NInterstitials, defectPos, boxes);
-    free(defectPos);
-    if (boxstat) return 3;
-    
-    /* loop over vacancies and see if there is a single neighbouring intersitial */
-    for (i = 0; i < NVacancies; i++)
-    {
-        int vacIndex, j, exitLoop, boxNebListSize;
-        int boxNebList[27] , boxIndex;
-        int nebIntCount = 0;
-        int foundIndex = -1;
-        int foundIntIndex = -1;
-        double refxpos, refypos, refzpos;
-//            double foundSep2;
+        int *intMask, *vacMask, numChanges;
+        double *intPos, *vacPos, maxSep;
+        struct NeighbourList2 *nebListInts;
+        struct NeighbourList2 *nebListVacs;
         
-        vacIndex = vacancies[i];
-        
-        refxpos = refPos[3*vacIndex];
-        refypos = refPos[3*vacIndex+1];
-        refzpos = refPos[3*vacIndex+2];
-        
-        /* get box index of this atom */
-        boxIndex = boxIndexOfAtom(refxpos, refypos, refzpos, boxes);
-        if (boxIndex < 0)
+        /* build positions array of all vacancies and interstitials */
+        vacPos = malloc(3 * NVacancies * sizeof(double));
+        if (vacPos == NULL)
         {
-            freeBoxes(boxes);
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate vacPos");
+            free(acnaInts);
+            return 1;
+        }
+        intPos = malloc(3 * numAcnaInts * sizeof(double));
+        if (intPos == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate intPos");
+            free(vacPos);
+            free(acnaInts);
+            return 2;
+        }
+        
+        /* add vacancy positions */
+        for (i = 0; i < NVacancies; i++)
+        {
+            int index = vacancies[i];
+            int index3 = 3 * index;
+            int i3 = 3 * i;
+            vacPos[i3    ] = refPos[index3    ];
+            vacPos[i3 + 1] = refPos[index3 + 1];
+            vacPos[i3 + 2] = refPos[index3 + 2];
+        }
+        
+        /* interstitial positions */
+        for (i = 0; i < numAcnaInts; i++)
+        {
+            int intIndex = acnaInts[i];
+            int index = interstitials[intIndex];
+            int index3 = 3 * index;
+            int i3 = i * 3;
+            intPos[i3    ] = pos[index3    ];
+            intPos[i3 + 1] = pos[index3 + 1];
+            intPos[i3 + 2] = pos[index3 + 2];
+        }
+        
+        /* max separation */
+        maxSep = 2.0 * vacancyRadius;
+        
+        /* construct list of neighbouring interstitials for each vacancy */
+        nebListVacs = constructNeighbourList2DiffPos(NVacancies, vacPos, numAcnaInts, intPos, cellDims, PBC, maxSep);
+        
+        if (nebListVacs == NULL)
+        {
+            free(vacPos);
+            free(intPos);
+            free(acnaInts);
+            return 3;
+        }
+        
+        /* construct list of neighbouring vacancies for each interstitial */
+        nebListInts = constructNeighbourList2DiffPos(numAcnaInts, intPos, NVacancies, vacPos, cellDims, PBC, maxSep);
+        
+        /* free position arrays (only required for constructing neighbour lists) */
+        free(intPos);
+        free(vacPos);
+        
+        if (nebListInts == NULL)
+        {
+            freeNeighbourList2(nebListVacs, NVacancies);
+            free(acnaInts);
             return 4;
         }
         
-        /* find neighbouring boxes */
-        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
-        
-        /* loop over neighbouring boxes */
-        exitLoop = 0;
-        for (j = 0; j < boxNebListSize; j++)
-        {
-            int k, checkBox;
-
-            if (exitLoop) break;
-            
-            checkBox = boxNebList[j];
-            
-            /* now loop over all reference atoms in the box */
-            for (k = 0; k < boxes->boxNAtoms[checkBox]; k++)
-            {
-                int index, intIndex;
-                double xpos, ypos, zpos, sep2;
-
-                intIndex = boxes->boxAtoms[checkBox][k];
-                index = interstitials[intIndex];
-                
-                /* skip if this interstitial has already been detected as lattice atom */
-                if (index < 0) continue;
-                
-                /* pos of interstitial */
-                xpos = pos[3*index];
-                ypos = pos[3*index+1];
-                zpos = pos[3*index+2];
-                
-                /* separation */
-                sep2 = atomicSeparation2(refxpos, refypos, refzpos, xpos, ypos, zpos, 
-                                         cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
-                
-                if (sep2 < maxSep2)
-                {
-                    if (++nebIntCount > 1)
-                    {
-                        exitLoop = 1;
-                        break;
-                    }
-                    
-                    foundIndex = index;
-                    foundIntIndex = intIndex;
-//                        foundSep2 = sep2;
-                }
-            }
-        }
-        
-        if (nebIntCount == 1)
-        {
-            int acnaVal;
-            
-//                printf("DEBUG: found 1 neb for vac; checking acna val\n");
-            
-            /* check ACNA for FCC (hardcoded for now, not good...) */
-            acnaVal = (int) acnaArray[foundIndex];
-//                printf("DEBUG:   acna val is %d (%d)\n", acnaVal, ATOM_STRUCTURE_FCC);
-            if (acnaVal == acnaStructureType)
-            {
-//                    printf("DEBUG:   this should not be a Frenkel pair... (sep = %lf)\n", sqrt(foundSep2));
-                
-                vacancies[i] = -1;
-                interstitials[foundIntIndex] = -1;
-                
-                numChanges++;
-            }
-            
-            /* could also check extending local vac rad and see if that helps... */
-            
-            
-        }
-        
-        
-    }
-    
-    /* free */
-    freeBoxes(boxes);
-    
-    /* recreate vacancies/interstitials arrays */
-#ifdef DEBUG
-    printf("DEFECTSC: number of changes during ACNA refinement = %d\n", numChanges);
-#endif
-    if (numChanges)
-    {
-        int count;
-
-        /* recreate interstitials array */
-        count = 0;
-        for (i = 0; i < NInterstitials; i++)
-            if (interstitials[i] != -1) interstitials[count++] = interstitials[i];
-        NInterstitials = count;
-        
-        /* recreate vacancies array */
-        count = 0;
+        /* sort the neighbour lists by separation */
         for (i = 0; i < NVacancies; i++)
-            if (vacancies[i] != -1) vacancies[count++] = vacancies[i];
-        NVacancies = count;
+            qsort(nebListVacs[i].neighbour, nebListVacs[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
+        
+        for (i = 0; i < numAcnaInts; i++)
+            qsort(nebListInts[i].neighbour, nebListInts[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
+        
+#ifdef DEBUGACNA
+        printf("DEFECTSC: Vacancy neb lists\n");
+        for (i = 0; i < NVacancies; i++)
+        {
+            int j;
+    
+            printf("DEFECTSC:   Vacancy %d\n", i);
+            for (j = 0; j < nebListVacs[i].neighbourCount; j++)
+            {
+                struct Neighbour neb = nebListVacs[i].neighbour[j];
+                printf("DEFECTSC:     Neb %d: int index %d; sep %lf\n", j, neb.index, neb.separation);
+            }
+        }
+    
+        printf("DEFECTSC: Interstitial neb lists\n");
+        for (i = 0; i < numAcnaInts; i++)
+        {
+            int j;
+    
+            printf("DEFECTSC:   Interstitial %d\n", i);
+            for (j = 0; j < nebListInts[i].neighbourCount; j++)
+            {
+                struct Neighbour neb = nebListInts[i].neighbour[j];
+                printf("DEFECTSC:     Neb %d: vac index %d; sep %lf\n", j, neb.index, neb.separation);
+            }
+        }
+#endif        
+        
+        /* set up mask arrays */
+        intMask = calloc(numAcnaInts, sizeof(int));
+        if (intMask == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate intMask");
+            free(acnaInts);
+            freeNeighbourList2(nebListVacs, NVacancies);
+            freeNeighbourList2(nebListInts, numAcnaInts);
+            return 5;
+        }
+        vacMask = calloc(NVacancies, sizeof(int));
+        if (vacMask == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate vacMask");
+            free(acnaInts);
+            free(intMask);
+            freeNeighbourList2(nebListVacs, NVacancies);
+            freeNeighbourList2(nebListInts, numAcnaInts);
+            return 6;
+        }
+        
+        /* loop over vacancies, checking if they combine with an ACNA interstitial */
+        numChanges = 0;
+        for (i = 0; i < NVacancies; i++)
+            numChanges = checkVacancyACNARecursive(i, numChanges, vacancies, interstitials, acnaInts, nebListVacs, nebListInts, vacMask, intMask);
+        
+        /* recreate vacancies/interstitials arrays */
+#ifdef DEBUG
+        printf("DEFECTSC: number of changes during ACNA refinement = %d\n", numChanges);
+#endif
+        
+        /* free memory */
+        free(vacMask);
+        free(intMask);
+        free(acnaInts);
+        freeNeighbourList2(nebListVacs, NVacancies);
+        freeNeighbourList2(nebListInts, numAcnaInts);
+        
+        if (numChanges)
+        {
+            int count;
+    
+            /* recreate interstitials array */
+            count = 0;
+            for (i = 0; i < NInterstitials; i++)
+                if (interstitials[i] != -1) interstitials[count++] = interstitials[i];
+            NInterstitials = count;
+            
+            /* recreate vacancies array */
+            count = 0;
+            for (i = 0; i < NVacancies; i++)
+                if (vacancies[i] != -1) vacancies[count++] = vacancies[i];
+            NVacancies = count;
+        }
     }
     
     /* store counters */
@@ -1143,10 +1274,10 @@ findDefects(PyObject *self, PyObject *args)
         splitTime = omp_get_wtime();
 #endif
         
-//        status = identifySplitInterstitialsNew(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
-//                cellDims, defectCounters, vacancyRadius);
-        status = identifySplitInterstitials(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
-                        cellDims, defectCounters, vacancyRadius);
+        status = identifySplitInterstitialsNew(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
+                cellDims, defectCounters, vacancyRadius);
+//        status = identifySplitInterstitials(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
+//                        cellDims, defectCounters, vacancyRadius);
         if (status)
         {
             if (driftCompensation) free(refPos);

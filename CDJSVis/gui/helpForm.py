@@ -41,7 +41,7 @@ class HelpFormSphinx(QtGui.QDialog):
         backAction = QtGui.QAction(QtGui.QIcon(iconPath("oxygen/go-previous.png")), "&Back", self)
         backAction.triggered.connect(self.webView.back)
         homeAction = QtGui.QAction(QtGui.QIcon(iconPath("oxygen/go-home.png")), "&Home", self)
-        homeAction.triggered.connect(functools.partial(self.loadUrl, "qrc:///doc/index.html"))
+        homeAction.triggered.connect(functools.partial(self.loadPage, "index.html"))
         forwardAction = QtGui.QAction(QtGui.QIcon(iconPath("oxygen/go-next.png")), "&Foward", self)
         forwardAction.triggered.connect(self.webView.forward)
         

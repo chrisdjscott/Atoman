@@ -11,7 +11,6 @@ from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
 from . import genericForm
-from __builtin__ import False
 
 
 ################################################################################
@@ -895,7 +894,11 @@ class ColouringOptionsWindow(QtGui.QDialog):
             
         else:
             scalarsDict = self.parent.filterer.scalarsDict
-            scalars = scalarsDict[scalarType]
+            try:
+                scalars = scalarsDict[scalarType]
+            except KeyError:
+                logger.warning("You must run the filters before setting to scalar range")
+                return
         
         minVal = min(scalars)
         maxVal = max(scalars)
@@ -985,8 +988,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
         iniText = str(self.colouringCombo.currentText())
         logger.debug("Initially selected: '%s'", iniText)
         
-        # ref to scalarsDict
-        scalarsDict = self.parent.filterer.scalarsDict
+        # scalars provided by current filters
+        currentFiltersScalars = self.parent.getCurrentFilterScalars()
         
         # lattice scalars dict
         inputState = self.parent.pipelinePage.inputState
@@ -998,13 +1001,13 @@ class ColouringOptionsWindow(QtGui.QDialog):
         for i in xrange(4, self.colouringCombo.count()):
             previousScalarTypes.append(str(self.colouringCombo.itemText(i)))
         
-        logger.debug("New scalars: %r", scalarsDict.keys())
-        logger.debug("New scalars (L): %r", latticeScalarsNames)
+        logger.debug("New scalars (Lattice): %r", latticeScalarsNames)
+        logger.debug("New scalars (Filters): %r", currentFiltersScalars)
         logger.debug("Old scalars: %r", previousScalarTypes)
         
         # check if need to remove any scalar types
         for i, name in enumerate(previousScalarTypes):
-            if name not in scalarsDict and name not in latticeScalarsNames:
+            if name not in currentFiltersScalars and name not in latticeScalarsNames:
                 logger.debug("Removing '%s'", name)
                 
                 # if selected set zero
@@ -1018,7 +1021,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
                         self.removeScalarWidget(name)
         
         # add new
-        for scalarType in scalarsDict:
+        for scalarType in currentFiltersScalars:
             # already in?
             if scalarType in previousScalarTypes:
                 logger.debug("Skipping '%s'; already exists", scalarType)

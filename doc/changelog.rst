@@ -2,6 +2,15 @@
 Changelog
 =========
 
+**150312**
+
+* Improve split interstitial detection to work in clusters of interstitials too
+* Improve Atom ID filter to accept ranges and lists of atom IDs
+* Improve ACNA refinement of point defects to work in clusters of defects too
+* Colouring options are available as soon as a filter is added
+* Change default oxygen radius to 0.66
+* Fix bug when rendering bonds and colouring by charge
+
 **150303**
 
 * Handle case where file name contains colons (was wrongly detecting them as SFTP files)

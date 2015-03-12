@@ -472,7 +472,7 @@ class Filterer(object):
             elif filterName == "Bond order":
                 self.bondOrderFilter(filterSettings)
             
-            elif filterName == "Atom index":
+            elif filterName == "Atom ID":
                 self.atomIndexFilter(filterSettings)
             
             elif filterName == "ACNA":
@@ -1250,17 +1250,47 @@ class Filterer(object):
         Atom index filter
         
         """
-        lattice = self.pipelinePage.inputState
+        # input string
+        text = settings.lineEdit.text()
+        self.logger.debug("Atom ID raw text: '%s'", text)
         
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
-        
+    
         # full vectors array
         NVectors, fullVectors = self.makeFullVectorsArray()
         
-        # run displacement filter
-        NVisible = filtering_c.atomIndexFilter(self.visibleAtoms, lattice.atomID, settings.filteringEnabled, settings.minVal, settings.maxVal, 
-                                               NScalars, fullScalars, NVectors, fullVectors)
+        if not text:
+            # return no visible atoms if input string was empty
+            self.logger.warning("No visible atoms specified in AtomID filter")
+            NVisible = 0
+        
+        else:
+            # parse text
+            array = [val for val in text.split(",") if val]
+            num = len(array)
+            rangeArray = np.empty((num, 2), np.int32)
+            for i, item in enumerate(array):
+                if "-" in item:
+                    values = [val for val in item.split("-") if val]
+                    minval = int(values[0])
+                    if len(values) == 1:
+                        maxval = minval
+                    else:
+                        maxval = int(values[1])
+                else:
+                    minval = maxval = int(item)
+            
+                self.logger.debug("  %d: %d -> %d", i, minval, maxval)
+                rangeArray[i][0] = minval
+                rangeArray[i][1] = maxval
+        
+            # input state
+            lattice = self.pipelinePage.inputState
+        
+            # run displacement filter
+            NVisible = filtering_c.atomIndexFilter(self.visibleAtoms, lattice.atomID, rangeArray, 
+                                                   NScalars, fullScalars, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)

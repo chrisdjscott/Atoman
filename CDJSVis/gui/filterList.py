@@ -67,7 +67,7 @@ class FilterList(QtGui.QWidget):
         "Voronoi neighbours",
         "Voronoi volume",
         "Bond order",
-        "Atom index",
+        "Atom ID",
         "ACNA",
     ]
     defaultFilters.sort()
@@ -494,6 +494,18 @@ class FilterList(QtGui.QWidget):
         
         return currentNames
     
+    def getCurrentFilterScalars(self):
+        """
+        Return a list of the scalars provided by the current filters
+        
+        """
+        currentScalars = []
+        for i in xrange(self.listItems.count()):
+            item = self.listItems.item(i)
+            currentScalars.extend(item.filterSettings.providedScalars)
+        
+        return currentScalars
+    
     def clearList(self):
         """
         Clear filters and actors from list.
@@ -520,6 +532,9 @@ class FilterList(QtGui.QWidget):
         
         if self.filterer.scalarBarAdded:
             self.scalarBarButton.setChecked(0)
+        
+        # refresh available scalars
+        self.colouringOptions.refreshScalarColourOption()
         
         self.filterTab.refreshOnScreenInfo()
     
@@ -718,6 +733,9 @@ class FilterList(QtGui.QWidget):
                 
                 if str(filterName) == "Point defects":
                     self.defectFilterSelected = True
+                
+                # refresh available scalars
+                self.colouringOptions.refreshScalarColourOption()
     
     def removeFilter(self, row=None):
         """
@@ -746,6 +764,9 @@ class FilterList(QtGui.QWidget):
         
         if filterName.startswith("Point defects"):
             self.defectFilterSelected = False
+        
+        # refresh available scalars
+        self.colouringOptions.refreshScalarColourOption()
     
     def createSettingsForm(self, filterName):
         """

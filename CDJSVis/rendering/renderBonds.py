@@ -33,13 +33,8 @@ def getScalarValue(lattice, index, scalars, scalarsIndex, colouringOptions):
     elif colouringOptions.colourBy == "Height":
         scalar = lattice.pos[3*index+colouringOptions.heightAxis]
     
-    elif colouringOptions.colourBy == "Atom property":
-        if colouringOptions.atomPropertyType == "Kinetic energy":
-            scalar = lattice.KE[index]
-        elif colouringOptions.atomPropertyType == "Potential energy":
-            scalar = lattice.PE[index]
-        else:
-            scalar = lattice.charge[index]
+    elif colouringOptions.colourBy == "Charge":
+        scalar = lattice.charge[index]
     
     else:
         scalar = scalars[scalarsIndex]
