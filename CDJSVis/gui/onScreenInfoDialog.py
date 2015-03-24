@@ -213,7 +213,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.textList.addItem(TextListWidgetItem("Cluster count", "{0} clusters", {"{0}": "Cluster count"}, "Top left", True))
         self.textList.addItem(TextListWidgetItem("Time", "{0} {1}", {"{0}": "Time", "{1}": "Units"}, "Top right", True))
         self.textList.addItem(TextListWidgetItem("KMC step", "Step {0}", {"{0}": "Step number"}, "Top right", True))
-        self.textList.addItem(TextListWidgetItem("Energy barrier", "{0} eV", {"{0}": "Energy barrier"}, "Top right", True))
+        self.textList.addItem(TextListWidgetItem("Barrier", "{0} eV", {"{0}": "Barrier"}, "Top right", True))
         self.textList.addItem(TextListWidgetItem("Temperature", "{0} K", {"{0}": "Temperature"}, "Top right", True))
         
         # refresh additional available options

@@ -742,6 +742,11 @@ class RendererWindow(QtGui.QWidget):
         if inputState is None:
             inputState = Lattice()
         
+        # add lattice attributes
+        self.logger.debug("Adding Lattice attributes: %r", inputState.attributes.keys())
+        for key, value in inputState.attributes.iteritems():
+            self.onScreenInfo[key] = value
+        
         # atom count
         self.onScreenInfo["Atom count"] = (inputState.NAtoms,)
         
