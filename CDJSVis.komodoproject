@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Komodo Project File - DO NOT EDIT -->
+<project id="01f37be3-57cb-4dd0-80af-161ed91f2ecc" kpf_version="5" name="CDJSVis.komodoproject">
+<preference-set idref="01f37be3-57cb-4dd0-80af-161ed91f2ecc" id="project" preftype="project">
+  <boolean id="genericLinter:ActionScript">1</boolean>
+  <string relative="path" id="import_dirname"></string>
+  <string id="jshint_linter_chooser">default</string>
+  <string id="jslint_linter_chooser">default</string>
+  <boolean id="languages/Ada/newBOM">0</boolean>
+  <string id="languages/Ada/newEncoding">Default Encoding</string>
+  <boolean id="languages/Apache/newBOM">0</boolean>
+  <string id="languages/Apache/newEncoding">Default Encoding</string>
+  <boolean id="languages/Baan/newBOM">0</boolean>
+  <string id="languages/Baan/newEncoding">Default Encoding</string>
+  <boolean id="languages/Batch/newBOM">0</boolean>
+  <string id="languages/Batch/newEncoding">Default Encoding</string>
+  <boolean id="languages/Bullant/newBOM">0</boolean>
+  <string id="languages/Bullant/newEncoding">Default Encoding</string>
+  <boolean id="languages/C#/newBOM">0</boolean>
+  <string id="languages/C#/newEncoding">Default Encoding</string>
+  <boolean id="languages/C++/newBOM">0</boolean>
+  <string id="languages/C++/newEncoding">Default Encoding</string>
+  <boolean id="languages/CSS/newBOM">0</boolean>
+  <string id="languages/CSS/newEncoding">Default Encoding</string>
+  <boolean id="languages/Diff/newBOM">0</boolean>
+  <string id="languages/Diff/newEncoding">Default Encoding</string>
+  <boolean id="languages/Eiffel/newBOM">0</boolean>
+  <string id="languages/Eiffel/newEncoding">Default Encoding</string>
+  <boolean id="languages/Errors/C++/newBOM">0</boolean>
+  <string id="languages/Errors/C++/newEncoding">Default Encoding</string>
+  <boolean id="languages/Fortran 77/newBOM">0</boolean>
+  <string id="languages/Fortran 77/newEncoding">Default Encoding</string>
+  <boolean id="languages/Fortran/newBOM">0</boolean>
+  <string id="languages/Fortran/newEncoding">Default Encoding</string>
+  <boolean id="languages/HTML/newBOM">0</boolean>
+  <string id="languages/HTML/newEncoding">Default Encoding</string>
+  <boolean id="languages/IDL/newBOM">0</boolean>
+  <string id="languages/IDL/newEncoding">Default Encoding</string>
+  <boolean id="languages/Java/newBOM">0</boolean>
+  <string id="languages/Java/newEncoding">Default Encoding</string>
+  <boolean id="languages/JavaScript/newBOM">0</boolean>
+  <string id="languages/JavaScript/newEncoding">Default Encoding</string>
+  <boolean id="languages/LaTeX/newBOM">0</boolean>
+  <string id="languages/LaTeX/newEncoding">Default Encoding</string>
+  <boolean id="languages/Lisp/newBOM">0</boolean>
+  <string id="languages/Lisp/newEncoding">Default Encoding</string>
+  <boolean id="languages/Lua/newBOM">0</boolean>
+  <string id="languages/Lua/newEncoding">Default Encoding</string>
+  <boolean id="languages/Makefile/newBOM">0</boolean>
+  <string id="languages/Makefile/newEncoding">Default Encoding</string>
+  <boolean id="languages/Makefile/useTabs">1</boolean>
+  <boolean id="languages/Matlab/newBOM">0</boolean>
+  <string id="languages/Matlab/newEncoding">Default Encoding</string>
+  <boolean id="languages/Node.js/newBOM">0</boolean>
+  <string id="languages/Node.js/newEncoding">utf-8</string>
+  <boolean id="languages/PHP/newBOM">0</boolean>
+  <string id="languages/PHP/newEncoding">Default Encoding</string>
+  <boolean id="languages/Pascal/newBOM">0</boolean>
+  <string id="languages/Pascal/newEncoding">Default Encoding</string>
+  <boolean id="languages/Perl/newBOM">0</boolean>
+  <string id="languages/Perl/newEncoding">Default Encoding</string>
+  <boolean id="languages/Python/newBOM">0</boolean>
+  <string id="languages/Python/newEncoding">ascii</string>
+  <boolean id="languages/Python3/newBOM">0</boolean>
+  <string id="languages/Python3/newEncoding">utf-8</string>
+  <long id="languages/RHTML/indentWidth">2</long>
+  <boolean id="languages/RHTML/newBOM">0</boolean>
+  <string id="languages/RHTML/newEncoding">Default Encoding</string>
+  <long id="languages/Ruby/indentWidth">2</long>
+  <boolean id="languages/Ruby/newBOM">0</boolean>
+  <string id="languages/Ruby/newEncoding">Default Encoding</string>
+  <boolean id="languages/SQL/newBOM">0</boolean>
+  <string id="languages/SQL/newEncoding">Default Encoding</string>
+  <boolean id="languages/Tcl/newBOM">0</boolean>
+  <string id="languages/Tcl/newEncoding">Default Encoding</string>
+  <boolean id="languages/Text/newBOM">0</boolean>
+  <string id="languages/Text/newEncoding">Default Encoding</string>
+  <boolean id="languages/VisualBasic/newBOM">0</boolean>
+  <string id="languages/VisualBasic/newEncoding">utf-8</string>
+  <boolean id="languages/XML/newBOM">0</boolean>
+  <string id="languages/XML/newEncoding">utf-8</string>
+  <boolean id="languages/XSLT/newBOM">0</boolean>
+  <string id="languages/XSLT/newEncoding">utf-8</string>
+  <boolean id="languages/nnCrontab/newBOM">0</boolean>
+  <string id="languages/nnCrontab/newEncoding">Default Encoding</string>
+  <long id="prefs_version">1</long>
+  <string id="pythonDefaultInterpreter"></string>
+  <string relative="path" id="pythonExtraPaths"></string>
+</preference-set>
+</project>
