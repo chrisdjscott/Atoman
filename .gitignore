@@ -16,3 +16,4 @@ CDJSVis.egg-info/
 setup.cfg
 .coverage
 .komodotools/
+*.komodoproject
