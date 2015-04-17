@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**dev**
+
+* Disable multiple reference site check in defects filter
+
 **150312**
 
 * Improve split interstitial detection to work in clusters of interstitials too

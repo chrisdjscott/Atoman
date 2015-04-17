@@ -190,21 +190,24 @@ basicDefectClassification(double vacancyRadius, int NAtoms, char *specieList, in
                     if (sep2 < nearestSep2)
                     {
                         /* assume that the vacancy radius is chosen so that atoms cannot belong to multiple sites */
-                        if (!possibleInterstitial[index])
-                        {
-                            char errstring[256];
-                            sprintf(errstring, "Input atom associated with multiple reference sites (index = %d, site = %d).", index, i);
-                            PyErr_SetString(PyExc_RuntimeError, errstring);
-                            freeBoxes(boxes);
-                            free(possibleOnAntisite);
-                            free(possibleAntisite);
-                            free(possibleInterstitial);
-                            free(possibleVacancy);
-                            return 8;
-                        }
+                        //if (!possibleInterstitial[index])
+                        //{
+                        //    char errstring[256];
+                        //    sprintf(errstring, "Input atom associated with multiple reference sites (index = %d, site = %d).", index, i);
+                        //    PyErr_SetString(PyExc_RuntimeError, errstring);
+                        //    freeBoxes(boxes);
+                        //    free(possibleOnAntisite);
+                        //    free(possibleAntisite);
+                        //    free(possibleInterstitial);
+                        //    free(possibleVacancy);
+                        //    return 8;
+                        //}
 
-                        nearestSep2 = sep2;
-                        nearestIndex = index;
+                        if (possibleInterstitial[index])
+                        {
+                            nearestSep2 = sep2;
+                            nearestIndex = index;
+                        }
                     }
                     
                     occupancyCount++;
