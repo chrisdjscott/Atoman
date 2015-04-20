@@ -831,7 +831,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.filterSpecies = False
         self.filterSpeciesCheck = QtGui.QCheckBox()
         self.filterSpeciesCheck.setChecked(self.filterSpecies)
-        self.filterSpeciesCheck.setToolTip("Filter visible defects by specie")
+        self.filterSpeciesCheck.setToolTip("Filter visible defects by species")
         self.filterSpeciesCheck.stateChanged.connect(self.filterSpeciesToggled)
         
         self.specieList = QtGui.QListWidget(self)

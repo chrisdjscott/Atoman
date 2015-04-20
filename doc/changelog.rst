@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**150420.1**
+
+* Fix bug regarding split interstitials and filtering defects by species
+
 **150420**
 
 * Disable multiple reference site check in defects filter

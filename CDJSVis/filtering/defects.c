@@ -1332,6 +1332,37 @@ findDefects(PyObject *self, PyObject *args)
             }
         }
         NInterstitials = NIntNew;
+        
+        NSplitNew = 0;
+        for (i = 0; i < NSplitInterstitials; i++)
+        {
+            int i3 = 3 * i;
+            int indexa = splitInterstitials[i3 + 1];
+            int indexb = splitInterstitials[i3 + 2];
+            int speca = specie[indexa];
+            int specb = specie[indexb];
+            int j;
+            int skip = 0;
+            
+            for (j = 0; j < exclSpecInputDim; j++)
+            {
+                if (speca == exclSpecInput[j] || specb == exclSpecInput[j])
+                {
+                    skip = 1;
+                    break;
+                }
+            }
+            
+            if (!skip)
+            {
+                int n3 = NSplitNew * 3;
+                
+                splitInterstitials[n3    ] = splitInterstitials[i3];
+                splitInterstitials[n3 + 1] = indexa;
+                splitInterstitials[n3 + 2] = indexb;
+            }
+        }
+        NSplitInterstitials = NSplitNew;
     }
     
     if (!includeVacs) NVacancies = 0;
