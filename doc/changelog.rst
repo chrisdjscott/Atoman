@@ -2,10 +2,11 @@
 Changelog
 =========
 
-**dev**
+**150420**
 
 * Disable multiple reference site check in defects filter
 * Set the default PBCs for newly loaded systems
+* Fix bug preventing lattice attributes being displayed
 
 **150312**
 
