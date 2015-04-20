@@ -9,8 +9,10 @@ import os
 import logging
 import datetime
 import multiprocessing as mp
+import functools
 
 from PySide import QtGui, QtCore
+import numpy as np
 
 from ..visutils.utilities import iconPath, resourcePath
 from ..visutils import utilities
@@ -766,6 +768,16 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         places, for example the "Bond order" and "ACNA" filters and RDF plotting. The 
         default is "0" which will run on all available threads.
     
+    **DISABLE_MOUSE_WHEEL**
+        Setting this option disables the use of the mouse wheel for zooming in/out of
+        the VTK window. This was added because it is easy to accidentally touch the
+        Apple Magic mouse and zoom in/out really far.
+    
+    **DEFAULT_PBCS**
+        Set the default periodic boundary conditions for all subsequently loaded
+        systems. This does not effect systems that are currently loaded or systems
+        that are generated.
+    
     """
     def __init__(self, parent):
         super(GeneralSettingsForm, self).__init__(parent)
@@ -791,7 +803,7 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         ompNumThreadsSpin.setMaximum(maxthread)
         ompNumThreadsSpin.setValue(ini)
         ompNumThreadsSpin.valueChanged.connect(self.ompNumThreadsChanged)
-        ompNumThreadsSpin.setToolTip("The number of threads that can be used by OpenMP")
+        ompNumThreadsSpin.setToolTip('The number of threads that can be used by OpenMP. "0" means use all available processors.')
         self.layout.addRow("OpenMP threads", ompNumThreadsSpin)
         
         # disable mouse wheel
@@ -809,7 +821,45 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         disableMouseWheelCheck.stateChanged.connect(self.disableMouseWheelChanged)
         self.layout.addRow("Disable mouse wheel (VTK)", disableMouseWheelCheck)
         
+        # default PBCs
+        xpbc = int(self.settings.value("defaultPBC/x", 1))
+        ypbc = int(self.settings.value("defaultPBC/y", 1))
+        zpbc = int(self.settings.value("defaultPBC/z", 1))
+        self.defaultPBC = np.array([xpbc, ypbc, zpbc], dtype=np.int32)
+        self.logger.debug("Default PBCs (initial value): %r", list(self.defaultPBC))
+        row = QtGui.QHBoxLayout()
+        xyz = ["x", "y", "z"]
+        for i in xrange(3):
+            check = QtGui.QCheckBox(xyz[i])
+            if self.defaultPBC[i]:
+                check.setCheckState(QtCore.Qt.Checked)
+            else:
+                check.setCheckState(QtCore.Qt.Unchecked)
+            check.stateChanged.connect(functools.partial(self.defaultPBCChanged, i))
+            check.setToolTip('Set the default PBC value in the "%s" direction for subsequently loaded systems' % xyz[i])
+            row.addWidget(check)
+        self.layout.addRow("Default PBCs", row)
+        
         self.init()
+    
+    def defaultPBCChanged(self, axis, state):
+        """
+        Default PBC has changed
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.defaultPBC[axis] = 0
+        else:
+            self.defaultPBC[axis] = 1
+        
+        if axis == 0:
+            self.settings.setValue("defaultPBC/x", int(self.defaultPBC[0]))
+        elif axis == 1:
+            self.settings.setValue("defaultPBC/y", int(self.defaultPBC[1]))
+        else:
+            self.settings.setValue("defaultPBC/z", int(self.defaultPBC[2]))
+        
+        self.logger.debug("Updated default PBCs: %r", list(self.defaultPBC))
     
     def disableMouseWheelChanged(self, state):
         """

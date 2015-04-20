@@ -134,6 +134,10 @@ class LoadSystemForm(GenericForm):
         Called when a file is loaded
         
         """
+        # default PBC
+        state.PBC[:] = self.mainWindow.preferences.generalForm.defaultPBC[:]
+        
+        # load file
         self.systemsDialog.file_loaded(state, filename, fileFormat, sftpPath, linked)
 
 ################################################################################

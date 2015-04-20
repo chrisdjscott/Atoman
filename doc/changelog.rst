@@ -5,6 +5,7 @@ Changelog
 **dev**
 
 * Disable multiple reference site check in defects filter
+* Set the default PBCs for newly loaded systems
 
 **150312**
 
