@@ -4,6 +4,8 @@
  ** Filtering routines written in C to improve performance
  *******************************************************************************/
 
+#define DEBUG
+
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
@@ -1539,7 +1541,7 @@ slipFilter(PyObject *self, PyObject *args)
 {
     // we need: refPos, pos, minPos, maxPos, cellDims, PBC, visibleAtoms
     int NVisibleIn, *PBC, NScalars, filteringEnabled, driftCompensation, refPosDim, NVectors;
-    double minSlip, maxSlip, *cellDims, *minPos, *maxPos;
+    double minSlip, maxSlip, *cellDims;
     PyArrayObject *visibleAtoms=NULL;
     PyArrayObject *refPosOrig=NULL;
     PyArrayObject *PBCIn=NULL;
@@ -1549,21 +1551,22 @@ slipFilter(PyObject *self, PyObject *args)
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *fullScalars=NULL;
     PyArrayObject *fullVectors=NULL;
-    PyArrayObject *minPosIn=NULL;
-    PyArrayObject *maxPosIn=NULL;
     
-    int i, NVisible;
+    int i, NVisible, boxstat;
     int *slippedAtoms;
     double *refPos, *visiblePos, *slipx, *slipy, *slipz;
     double approxBoxWidth;
     struct Boxes *boxes;
     
+#ifdef DEBUG
+    printf("SLIPC: Entering slip C lib\n");
+#endif
+    
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!ddiO!iiO!iO!O!O!", &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalars, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!ddiO!iiO!iO!", &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalars, 
             &PyArray_Type, &pos, &PyArray_Type, &refPosOrig, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, 
             &minSlip, &maxSlip, &NScalars, &PyArray_Type, &fullScalars, &filteringEnabled, &driftCompensation, 
-            &PyArray_Type, &driftVector, &NVectors, &PyArray_Type, &fullVectors, &PyArray_Type, &minPosIn, 
-            &PyArray_Type, &maxPosIn))
+            &PyArray_Type, &driftVector, &NVectors, &PyArray_Type, &fullVectors))
         return NULL;
     
     if (not_intVector(visibleAtoms)) return NULL;
@@ -1579,12 +1582,6 @@ slipFilter(PyObject *self, PyObject *args)
     if (not_doubleVector(cellDimsIn)) return NULL;
     cellDims = pyvector_to_Cptr_double(cellDimsIn);
     
-    if (not_doubleVector(maxPosIn)) return NULL;
-    maxPos = pyvector_to_Cptr_double(maxPosIn);
-    
-    if (not_doubleVector(minPosIn)) return NULL;
-    minPos = pyvector_to_Cptr_double(minPosIn);
-    
     if (not_intVector(PBCIn)) return NULL;
     PBC = pyvector_to_Cptr_int(PBCIn);
     
@@ -1593,6 +1590,11 @@ slipFilter(PyObject *self, PyObject *args)
     if (not_doubleVector(driftVector)) return NULL;
     
     if (not_doubleVector(fullVectors)) return NULL;
+    
+#ifdef DEBUG
+    printf("SLIPC: Parsed args\n");
+    printf("SLIPC: NVisibleIn = %d\n", NVisibleIn);
+#endif
     
     /* drift compensation */
     if (driftCompensation)
@@ -1618,7 +1620,7 @@ slipFilter(PyObject *self, PyObject *args)
     }
     
     /* visible pos */
-    visiblePos = malloc(NVisibleIn * sizeof(double));
+    visiblePos = malloc(3 * NVisibleIn * sizeof(double));
     if (visiblePos == NULL)
     {
         if (driftCompensation) free(refPos);
@@ -1638,18 +1640,33 @@ slipFilter(PyObject *self, PyObject *args)
     
     /* boxAtoms */
     approxBoxWidth = 5.0; // detect automatically!!
-    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-    putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
-    
-    /* free visiblePos (only required for boxing) */
+    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
+    if (boxes == NULL)
+    {
+        free(visiblePos);
+        if (driftCompensation) free(refPos);
+        return NULL;
+    }
+    boxstat = putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
     free(visiblePos);
+    if (boxstat)
+    {
+        if (driftCompensation) free(refPos);
+        freeBoxes(boxes);
+        return NULL;
+    }
     
     /* allocate slip arrays */
     slipx = calloc(NVisibleIn, sizeof(double));
     if (slipx == NULL);
     {
+        int err = errno;
+        char errstring[512];
+        
         if (driftCompensation) free(refPos);
-        PyErr_SetString(PyExc_RuntimeError, "Could not allocate slipx in slipFilter");
+        freeBoxes(boxes);
+        sprintf(errstring, "Allocate slipx (slipFilter) failed: '%s'", strerror(err));
+        PyErr_SetString(PyExc_RuntimeError, errstring);
         return NULL;
     }
     
@@ -1658,6 +1675,7 @@ slipFilter(PyObject *self, PyObject *args)
     {
         if (driftCompensation) free(refPos);
         free(slipx);
+        freeBoxes(boxes);
         PyErr_SetString(PyExc_RuntimeError, "Could not allocate slipy in slipFilter");
         return NULL;
     }
@@ -1668,6 +1686,7 @@ slipFilter(PyObject *self, PyObject *args)
         if (driftCompensation) free(refPos);
         free(slipx);
         free(slipy);
+        freeBoxes(boxes);
         PyErr_SetString(PyExc_RuntimeError, "Could not allocate slipz in slipFilter");
         return NULL;
     }
@@ -1679,6 +1698,7 @@ slipFilter(PyObject *self, PyObject *args)
         free(slipx);
         free(slipy);
         free(slipz);
+        freeBoxes(boxes);
         PyErr_SetString(PyExc_RuntimeError, "Could not allocate slippedAtoms in slipFilter");
         return NULL;
     }
@@ -1697,6 +1717,16 @@ slipFilter(PyObject *self, PyObject *args)
         
         /* find box for ref pos of this visible atom */
         boxIndex = boxIndexOfAtom(refxposi, refyposi, refzposi, boxes);
+        if (boxIndex < 0)
+        {
+            if (driftCompensation) free(refPos);
+            free(slipx);
+            free(slipy);
+            free(slipz);
+            free(slippedAtoms);
+            freeBoxes(boxes);
+            return NULL;
+        }
         
         /* box neighbourhood */
         getBoxNeighbourhood(boxIndex, boxNebList, boxes);
@@ -1707,6 +1737,16 @@ slipFilter(PyObject *self, PyObject *args)
             int k;
             
             boxIndex = boxNebList[j];
+            if (boxIndex < 0)
+            {
+                if (driftCompensation) free(refPos);
+                free(slipx);
+                free(slipy);
+                free(slipz);
+                free(slippedAtoms);
+                freeBoxes(boxes);
+                return NULL;
+            }
             
             /* loop over atoms in box */
             for (k = 0; k < boxes->boxNAtoms[boxIndex]; k++)
@@ -1818,8 +1858,13 @@ slipFilter(PyObject *self, PyObject *args)
     free(slipy);
     free(slipz);
     free(slippedAtoms);
+    freeBoxes(boxes);
     if (driftCompensation) free(refPos);
     else refPos = NULL;
+    
+#ifdef DEBUG
+    printf("SLIPC: Leaving slip C lib\n");
+#endif
     
     return Py_BuildValue("i", NVisible);
 }

@@ -69,6 +69,7 @@ class FilterList(QtGui.QWidget):
         "Bond order",
         "Atom ID",
         "ACNA",
+        "Slip",
     ]
     defaultFilters.sort()
     

@@ -481,6 +481,9 @@ class Filterer(object):
             elif filterName.startswith("Scalar: "):
                 self.genericScalarFilter(filterName, filterSettings)
             
+            elif filterName.startswith("Slip"):
+                self.slipFilter(filterSettings)
+            
             else:
                 self.logger.warning("Unrecognised filter: '%s'; skipping", filterName)
             
@@ -696,6 +699,41 @@ class Filterer(object):
         # store scalars
         scalars.resize(NVisible, refcheck=False)
         self.scalarsDict["Voronoi volume"] = scalars
+    
+    def slipFilter(self, settings):
+        """
+        Slip filter
+        
+        """
+        # input and ref
+        inputState = self.pipelinePage.inputState
+        refState = self.pipelinePage.refState
+        
+        # new scalars array
+        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
+        
+        # old scalars arrays (resize as appropriate)
+        NScalars, fullScalars = self.makeFullScalarsArray()
+        
+        # full vectors array
+        NVectors, fullVectors = self.makeFullVectorsArray()
+        
+        # call C library
+        NVisible = filtering_c.slipFilter(self.visibleAtoms, scalars, inputState.pos, refState.pos, inputState.cellDims,
+                                          inputState.PBC, settings.minSlip, settings.maxSlip, NScalars, fullScalars,
+                                          settings.filteringEnabled, self.parent.driftCompensation, self.driftVector,
+                                          NVectors, fullVectors)
+        
+        # update scalars dict
+        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
+        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
+        
+        # resize visible atoms
+        self.visibleAtoms.resize(NVisible, refcheck=False)
+
+        # store scalars
+        scalars.resize(NVisible, refcheck=False)
+        self.scalarsDict["Slip"] = scalars
     
     def bondOrderFilter(self, settings):
         """
