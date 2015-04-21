@@ -10,10 +10,8 @@ filter with no spaces. Eg "Point defects" becomes
 @author: Chris Scott
 
 """
-import sys
 import logging
 import functools
-import textwrap
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -22,11 +20,6 @@ from ..visutils.utilities import iconPath
 from . import genericForm
 from ..rendering import slicePlane
 from ..state.atoms import elements
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -51,7 +44,7 @@ class GenericSettingsDialog(QtGui.QDialog):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle(title)
-        self.setWindowIcon(QtGui.QIcon(iconPath("preferences-system.svg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/configure.png")))
 #        self.resize(500,300)
         
         dialogLayout = QtGui.QVBoxLayout()
@@ -91,6 +84,16 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         # help page
         self.helpPage = None
+        
+        # does this filter provide scalars
+        self.providedScalars = []
+    
+    def addProvidedScalar(self, name):
+        """
+        Add scalar option
+        
+        """
+        self.providedScalars.append(name)
     
     def addHorizontalDivider(self, displaySettings=False):
         """
@@ -828,7 +831,7 @@ class PointDefectsSettingsDialog(GenericSettingsDialog):
         self.filterSpecies = False
         self.filterSpeciesCheck = QtGui.QCheckBox()
         self.filterSpeciesCheck.setChecked(self.filterSpecies)
-        self.filterSpeciesCheck.setToolTip("Filter visible defects by specie")
+        self.filterSpeciesCheck.setToolTip("Filter visible defects by species")
         self.filterSpeciesCheck.stateChanged.connect(self.filterSpeciesToggled)
         
         self.specieList = QtGui.QListWidget(self)
@@ -1620,6 +1623,7 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         super(DisplacementSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Displacement"
+        self.addProvidedScalar("Displacement")
         
         self.minDisplacement = 1.2
         self.maxDisplacement = 1000.0
@@ -1766,88 +1770,6 @@ class DisplacementSettingsDialog(GenericSettingsDialog):
         
         """
         self.maxDisplacement = val
-
-
-################################################################################
-class KineticEnergySettingsDialog(GenericSettingsDialog):
-    def __init__(self, mainWindow, title, parent=None):
-        super(KineticEnergySettingsDialog, self).__init__(title, parent)
-        
-        self.filterType = "Kinetic energy"
-        
-        self.minKE = -1000.0
-        self.maxKE = 1000.0
-        
-        self.minKESpinBox = QtGui.QDoubleSpinBox()
-        self.minKESpinBox.setSingleStep(0.1)
-        self.minKESpinBox.setMinimum(-9999.0)
-        self.minKESpinBox.setMaximum(9999.0)
-        self.minKESpinBox.setValue(self.minKE)
-        self.minKESpinBox.valueChanged.connect(self.setMinKE)
-        self.contentLayout.addRow("Min KE", self.minKESpinBox)
-        
-        self.maxKESpinBox = QtGui.QDoubleSpinBox()
-        self.maxKESpinBox.setSingleStep(0.1)
-        self.maxKESpinBox.setMinimum(-9999.0)
-        self.maxKESpinBox.setMaximum(9999.0)
-        self.maxKESpinBox.setValue(self.maxKE)
-        self.maxKESpinBox.valueChanged.connect(self.setMaxKE)
-        self.contentLayout.addRow("Max KE", self.maxKESpinBox)
-    
-    def setMinKE(self, val):
-        """
-        Set the minimum KE.
-        
-        """
-        self.minKE = val
-
-    def setMaxKE(self, val):
-        """
-        Set the maximum KE.
-        
-        """
-        self.maxKE = val
-
-
-################################################################################
-class PotentialEnergySettingsDialog(GenericSettingsDialog):
-    def __init__(self, mainWindow, title, parent=None):
-        super(PotentialEnergySettingsDialog, self).__init__(title, parent)
-        
-        self.filterType = "Potential energy"
-        
-        self.minPE = -1000.0
-        self.maxPE = 1000.0
-        
-        self.minPESpinBox = QtGui.QDoubleSpinBox()
-        self.minPESpinBox.setSingleStep(0.1)
-        self.minPESpinBox.setMinimum(-9999.0)
-        self.minPESpinBox.setMaximum(9999.0)
-        self.minPESpinBox.setValue(self.minPE)
-        self.minPESpinBox.valueChanged.connect(self.setMinPE)
-        self.contentLayout.addRow("Min PE", self.minPESpinBox)
-        
-        self.maxPESpinBox = QtGui.QDoubleSpinBox()
-        self.maxPESpinBox.setSingleStep(0.1)
-        self.maxPESpinBox.setMinimum(-9999.0)
-        self.maxPESpinBox.setMaximum(9999.0)
-        self.maxPESpinBox.setValue(self.maxPE)
-        self.maxPESpinBox.valueChanged.connect(self.setMaxPE)
-        self.contentLayout.addRow("Max PE", self.maxPESpinBox)
-    
-    def setMinPE(self, val):
-        """
-        Set the minimum PE.
-        
-        """
-        self.minPE = val
-
-    def setMaxPE(self, val):
-        """
-        Set the maximum PE.
-        
-        """
-        self.maxPE = val
 
 
 ################################################################################
@@ -2136,63 +2058,20 @@ class SliceSettingsDialog(GenericSettingsDialog):
         self.hide()
 
 ################################################################################
-class AtomIndexSettingsDialog(GenericSettingsDialog):
+class AtomIdSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        super(AtomIndexSettingsDialog, self).__init__(title, parent)
+        super(AtomIdSettingsDialog, self).__init__(title, parent)
         
-        self.filterType = "Atom index"
+        self.filterType = "Atom ID"
         
-        self.minVal = 0
-        self.maxVal = 1000000
+        # only allow numbers, commas and hyphens
+        rx = QtCore.QRegExp("[0-9]+(?:[-,]?[0-9]+)*")
+        validator = QtGui.QRegExpValidator(rx, self)
         
-        groupLayout = self.addFilteringGroupBox(slot=self.filteringToggled, checked=True)
-        
-        label = QtGui.QLabel("Min:")
-        self.minValSpinBox = QtGui.QSpinBox()
-        self.minValSpinBox.setSingleStep(1)
-        self.minValSpinBox.setMinimum(0)
-        self.minValSpinBox.setMaximum(100000000)
-        self.minValSpinBox.setValue(self.minVal)
-        self.minValSpinBox.valueChanged.connect(self.setMinVal)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.minValSpinBox)
-        groupLayout.addLayout(row)
-        
-        label = QtGui.QLabel("Max:")
-        self.maxValSpinBox = QtGui.QSpinBox()
-        self.maxValSpinBox.setSingleStep(1)
-        self.maxValSpinBox.setMinimum(0)
-        self.maxValSpinBox.setMaximum(100000000)
-        self.maxValSpinBox.setValue(self.maxVal)
-        self.maxValSpinBox.valueChanged.connect(self.setMaxVal)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.maxValSpinBox)
-        groupLayout.addLayout(row)
-    
-    def filteringToggled(self, arg):
-        """
-        Filtering toggled
-        
-        """
-        self.filteringEnabled = arg
-    
-    def setMinVal(self, val):
-        """
-        Set the minimum coordination number.
-        
-        """
-        self.minVal = val
-
-    def setMaxVal(self, val):
-        """
-        Set the maximum coordination number.
-        
-        """
-        self.maxVal = val
+        self.lineEdit = QtGui.QLineEdit()
+        self.lineEdit.setValidator(validator)
+        self.lineEdit.setToolTip("Comma separated list of atom IDs or ranges of atom IDs (hyphenated) that are visible (eg. '22,30-33' will show atom IDs 22, 30, 31, 32 and 33)")
+        self.contentLayout.addRow("Visible IDs", self.lineEdit)
 
 ################################################################################
 class CoordinationNumberSettingsDialog(GenericSettingsDialog):
@@ -2200,6 +2079,7 @@ class CoordinationNumberSettingsDialog(GenericSettingsDialog):
         super(CoordinationNumberSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Coordination number"
+        self.addProvidedScalar("Coordination number")
         
         self.minCoordNum = 0
         self.maxCoordNum = 100
@@ -2259,6 +2139,7 @@ class VoronoiNeighboursSettingsDialog(GenericSettingsDialog):
         super(VoronoiNeighboursSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Voronoi neighbours"
+        self.addProvidedScalar("Voronoi neighbours")
         
         self.minVoroNebs = 0
         self.maxVoroNebs = 999
@@ -2322,6 +2203,7 @@ class VoronoiVolumeSettingsDialog(GenericSettingsDialog):
         super(VoronoiVolumeSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Voronoi volume"
+        self.addProvidedScalar("Voronoi volume")
         
         self.minVoroVol = 0.0
         self.maxVoroVol = 9999.99
@@ -2385,6 +2267,8 @@ class BondOrderSettingsDialog(GenericSettingsDialog):
         super(BondOrderSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Bond order"
+        self.addProvidedScalar("Q4")
+        self.addProvidedScalar("Q6")
         
         self.minQ4 = 0.0
         self.maxQ4 = 99.99
@@ -2525,6 +2409,7 @@ class AcnaSettingsDialog(GenericSettingsDialog):
         super(AcnaSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "ACNA"
+        self.addProvidedScalar("ACNA")
         
         self.maxBondDistance = 5.0
         self.filteringEnabled = False
@@ -2604,3 +2489,48 @@ class AcnaSettingsDialog(GenericSettingsDialog):
         
         """
         self.maxBondDistance = val
+
+################################################################################
+
+class GenericScalarFilterSettingsDialog(GenericSettingsDialog):
+    """
+    Settings for generic scalar value filterer
+    
+    """
+    def __init__(self, mainWindow, filterType, title, parent=None):
+        super(GenericScalarFilterSettingsDialog, self).__init__(title, parent)
+        
+        self.filterType = filterType
+        
+        self.minVal = -10000.0
+        self.maxVal = 10000.0
+        
+        self.minValSpinBox = QtGui.QDoubleSpinBox()
+        self.minValSpinBox.setSingleStep(0.1)
+        self.minValSpinBox.setMinimum(-99999.0)
+        self.minValSpinBox.setMaximum(99999.0)
+        self.minValSpinBox.setValue(self.minVal)
+        self.minValSpinBox.valueChanged.connect(self.setMinVal)
+        self.contentLayout.addRow("Minimum", self.minValSpinBox)
+        
+        self.maxValSpinBox = QtGui.QDoubleSpinBox()
+        self.maxValSpinBox.setSingleStep(0.1)
+        self.maxValSpinBox.setMinimum(-99999.0)
+        self.maxValSpinBox.setMaximum(99999.0)
+        self.maxValSpinBox.setValue(self.maxVal)
+        self.maxValSpinBox.valueChanged.connect(self.setMaxVal)
+        self.contentLayout.addRow("Maximum", self.maxValSpinBox)
+    
+    def setMinVal(self, val):
+        """
+        Set the minimum value.
+        
+        """
+        self.minVal = val
+
+    def setMaxVal(self, val):
+        """
+        Set the maximum value.
+        
+        """
+        self.maxVal = val

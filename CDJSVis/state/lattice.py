@@ -12,6 +12,7 @@ import numpy as np
 
 from .atoms import elements
 from ..algebra import vectors
+from . import _lattice
 # from ..md import forces
 
 
@@ -24,13 +25,7 @@ class Lattice(object):
     """
     def __init__(self):
         self.NAtoms = 0
-        
-        self.simTime = None
-        self.barrier = None
-        self.kmcStep = None
-        self.temperature = None
-        
-        self.cellDims = np.empty(3, np.float64)
+        self.cellDims = np.array([100, 100, 100], np.float64)
         
         dt = np.dtype((str, 2))
         self.specieList = np.empty(0, dt)
@@ -46,14 +41,22 @@ class Lattice(object):
         self.atomID = np.empty(0, np.int32)
         self.specie = np.empty(0, np.int32)
         self.pos = np.empty(0, np.float64)
-        self.KE = np.empty(0, np.float64)
-        self.PE = np.empty(0, np.float64)
         self.charge = np.empty(0, np.float64)
         
         self.scalarsDict = {}
+        self.scalarsFiles = {}
         self.vectorsDict = {}
+        self.vectorsFiles = {}
+        self.attributes = {}
         
         self.PBC = np.ones(3, np.int32)
+    
+    def wrapAtoms(self):
+        """
+        Wrap atoms that have left the periodic cell.
+        
+        """
+        return _lattice.wrapAtoms(self.NAtoms, self.pos, self.cellDims, self.PBC)
     
     def atomSeparation(self, index1, index2, pbc):
         """
@@ -96,8 +99,6 @@ class Lattice(object):
         self.atomID = np.empty(NAtoms, np.int32)
         self.specie = np.empty(NAtoms, np.int32)
         self.pos = np.empty(3 * NAtoms, np.float64)
-        self.KE = np.zeros(NAtoms, np.float64)
-        self.PE = np.zeros(NAtoms, np.float64)
         self.charge = np.zeros(NAtoms, np.float64)
         
         dt = np.dtype((str, 2))
@@ -113,15 +114,11 @@ class Lattice(object):
          
         self.cellDims = np.zeros(3, np.float64)
         
-        self.simTime = None
-        self.barrier = None
-        self.kmcStep = None
-        self.temperature = None
-        
         self.scalarsDict = {}
         self.scalarsFiles = {}
         self.vectorsDict = {}
         self.vectorsFiles = {}
+        self.attributes = {}
         
         self.PBC = np.ones(3, np.int32)
     
@@ -130,13 +127,22 @@ class Lattice(object):
         Calculate temperature in K
         
         """
+        if "Kinetic energy" in self.scalarsDict:
+            ke = self.scalarsDict["Kinetic energy"]
+        
+        elif "KE" in self.scalarsDict:
+            ke = self.scalarsDict["KE"]
+        
+        else:
+            return None
+        
         if NMoving is None:
             NMoving = self.NAtoms
         
-        keSum = np.sum(self.KE)
+        keSum = np.sum(ke)
         
         if keSum == 0:
-            temperature = None
+            temperature = 0.0
         
         else:
             boltzmann = 8.6173324e-5
@@ -189,7 +195,7 @@ class Lattice(object):
         rgbnew[0][2] = rgbtemp[2]            
         self.specieRGB = np.append(self.specieRGB, rgbnew, axis=0)
     
-    def addAtom(self, sym, pos, charge, atomID=None, KE=0.0, PE=0.0):
+    def addAtom(self, sym, pos, charge, atomID=None, scalarVals={}, vectorVals={}):
         """
         Add an atom to the lattice
         
@@ -211,9 +217,6 @@ class Lattice(object):
         self.specie = np.append(self.specie, np.int32(specInd))
         self.pos = np.append(self.pos, pos)
         self.charge = np.append(self.charge, charge)
-#         self.force = np.append(self.force, np.zeros(3, np.float64))
-        self.KE = np.append(self.KE, KE)
-        self.PE = np.append(self.PE, PE)
         
         # wrap positions
         
@@ -234,10 +237,28 @@ class Lattice(object):
         
         self.NAtoms += 1
         
-#         logger = logging.getLogger(__name__)
-#         logger.warning("Clearing scalars/vectors due to adding atom")
-        self.scalarsDict = {}
-        self.vectorsDict = {}
+        logger = logging.getLogger(__name__)
+        
+        for scalarName in self.scalarsDict.keys():
+            if scalarName in scalarVals:
+                newval = scalarVals[scalarName]
+                self.scalarsDict[scalarName] = np.append(self.scalarsDict[scalarName], np.float64(newval))
+            
+            else:
+                self.scalarsDict.pop(scalarName)
+                logger.warning("Removing '%s' scalars from Lattice (addAtom)", scalarName)
+        
+        for vectorName in self.vectorsDict.keys():
+            newval = []
+            if vectorName in vectorVals:
+                newval = vectorVals[vectorName]
+            
+            if len(newval) == 3:
+                self.vectorsDict[vectorName] = np.append(self.vectorsDict[vectorName], np.asarray(newval, dtype=np.float64))
+            
+            else:
+                self.vectorsDict.pop(vectorName)
+                logger.warning("Removing '%s' vectors from Lattice (addAtom)", vectorName)
     
     def removeAtom(self, index):
         """
@@ -257,13 +278,11 @@ class Lattice(object):
         if self.specieCount[specInd] == 0:
             self.removeSpecie(specInd)
         
-        self.KE = np.delete(self.KE, index)
-        self.PE = np.delete(self.PE, index)
+        for scalarName in self.scalarsDict.keys():
+            self.scalarsDict[scalarName] = np.delete(self.scalarsDict[scalarName], index)
         
-#         logger = logging.getLogger(__name__)
-#         logger.warning("Clearing scalars/vectors due to removing atom")
-        self.scalarsDict = {}
-        self.vectorsDict = {}
+        for vectorName in self.vectorsDict.keys():
+            self.vectorsDict[vectorName] = np.delete(self.vectorsDict[vectorName], [3*index,3*index+1,3*index+2])
     
     def removeSpecie(self, index):
         """
@@ -359,11 +378,6 @@ class Lattice(object):
         
         NAtoms = lattice.NAtoms
         
-        self.simTime = lattice.simTime
-        self.barrier = lattice.barrier
-        self.kmcStep = lattice.kmcStep
-        self.temperature = lattice.temperature
-        
         # copy dims
         self.cellDims[0] = lattice.cellDims[0]
         self.cellDims[1] = lattice.cellDims[1]
@@ -391,14 +405,10 @@ class Lattice(object):
         self.atomID = np.empty(NAtoms, np.int32)
         self.specie = np.empty(NAtoms, np.int32)
         self.pos = np.empty(3 * NAtoms, np.float64)
-        self.KE = np.empty(NAtoms, np.float64)
-        self.PE = np.empty(NAtoms, np.float64)
         self.charge = np.empty(NAtoms, np.float64)
         for i in xrange(NAtoms):
             self.atomID[i] = lattice.atomID[i]
             self.specie[i] = lattice.specie[i]
-            self.KE[i] = lattice.KE[i]
-            self.PE[i] = lattice.PE[i]
             self.charge[i] = lattice.charge[i]
             for j in xrange(3):
                 self.pos[3*i+j] = lattice.pos[3*i+j]
@@ -412,5 +422,8 @@ class Lattice(object):
         
         self.scalarsDict = copy.deepcopy(lattice.scalarsDict)
         self.vectorsDict = copy.deepcopy(lattice.vectorsDict)
+        self.scalarsFiles = copy.deepcopy(lattice.scalarsFiles)
+        self.vectorsFiles = copy.deepcopy(lattice.vectorsFiles)
+        self.attributes = copy.deepcopy(lattice.attributes)
         
         self.PBC = copy.deepcopy(lattice.PBC)

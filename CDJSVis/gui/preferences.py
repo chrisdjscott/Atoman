@@ -6,24 +6,17 @@ Preferences dialog.
 
 """
 import os
-import sys
 import logging
 import datetime
 import multiprocessing as mp
-import textwrap
+import functools
 
 from PySide import QtGui, QtCore
+import numpy as np
 
-from . import genericForm
 from ..visutils.utilities import iconPath, resourcePath
 from ..visutils import utilities
 # from ..md import forces
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 ################################################################################
 
@@ -775,6 +768,16 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         places, for example the "Bond order" and "ACNA" filters and RDF plotting. The 
         default is "0" which will run on all available threads.
     
+    **DISABLE_MOUSE_WHEEL**
+        Setting this option disables the use of the mouse wheel for zooming in/out of
+        the VTK window. This was added because it is easy to accidentally touch the
+        Apple Magic mouse and zoom in/out really far.
+    
+    **DEFAULT_PBCS**
+        Set the default periodic boundary conditions for all subsequently loaded
+        systems. This does not effect systems that are currently loaded or systems
+        that are generated.
+    
     """
     def __init__(self, parent):
         super(GeneralSettingsForm, self).__init__(parent)
@@ -800,7 +803,7 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         ompNumThreadsSpin.setMaximum(maxthread)
         ompNumThreadsSpin.setValue(ini)
         ompNumThreadsSpin.valueChanged.connect(self.ompNumThreadsChanged)
-        ompNumThreadsSpin.setToolTip("The number of threads that can be used by OpenMP")
+        ompNumThreadsSpin.setToolTip('The number of threads that can be used by OpenMP. "0" means use all available processors.')
         self.layout.addRow("OpenMP threads", ompNumThreadsSpin)
         
         # disable mouse wheel
@@ -818,7 +821,45 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         disableMouseWheelCheck.stateChanged.connect(self.disableMouseWheelChanged)
         self.layout.addRow("Disable mouse wheel (VTK)", disableMouseWheelCheck)
         
+        # default PBCs
+        xpbc = int(self.settings.value("defaultPBC/x", 1))
+        ypbc = int(self.settings.value("defaultPBC/y", 1))
+        zpbc = int(self.settings.value("defaultPBC/z", 1))
+        self.defaultPBC = np.array([xpbc, ypbc, zpbc], dtype=np.int32)
+        self.logger.debug("Default PBCs (initial value): %r", list(self.defaultPBC))
+        row = QtGui.QHBoxLayout()
+        xyz = ["x", "y", "z"]
+        for i in xrange(3):
+            check = QtGui.QCheckBox(xyz[i])
+            if self.defaultPBC[i]:
+                check.setCheckState(QtCore.Qt.Checked)
+            else:
+                check.setCheckState(QtCore.Qt.Unchecked)
+            check.stateChanged.connect(functools.partial(self.defaultPBCChanged, i))
+            check.setToolTip('Set the default PBC value in the "%s" direction for subsequently loaded systems' % xyz[i])
+            row.addWidget(check)
+        self.layout.addRow("Default PBCs", row)
+        
         self.init()
+    
+    def defaultPBCChanged(self, axis, state):
+        """
+        Default PBC has changed
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.defaultPBC[axis] = 0
+        else:
+            self.defaultPBC[axis] = 1
+        
+        if axis == 0:
+            self.settings.setValue("defaultPBC/x", int(self.defaultPBC[0]))
+        elif axis == 1:
+            self.settings.setValue("defaultPBC/y", int(self.defaultPBC[1]))
+        else:
+            self.settings.setValue("defaultPBC/z", int(self.defaultPBC[2]))
+        
+        self.logger.debug("Updated default PBCs: %r", list(self.defaultPBC))
     
     def disableMouseWheelChanged(self, state):
         """
@@ -869,7 +910,7 @@ class PreferencesDialog(QtGui.QDialog):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Preferences")
-        self.setWindowIcon(QtGui.QIcon(iconPath("applications-system.svg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/configure.png")))
         self.resize(360, 540)
         
         self.buttonCount = 0
@@ -885,34 +926,34 @@ class PreferencesDialog(QtGui.QDialog):
         
         # general settings
         self.generalForm = GeneralSettingsForm(self)
-        self.toolbox.addItem(self.generalForm, QtGui.QIcon(iconPath("applications-system.svg")), "General")
+        self.toolbox.addItem(self.generalForm, QtGui.QIcon(iconPath("oxygen/applications-system.png")), "General")
         
         # log file settings
         self.logFileForm = LogFileSettingsForm(self)
-        self.toolbox.addItem(self.logFileForm, QtGui.QIcon(iconPath("accessories-text-editor.svg")), "Log file")
+        self.toolbox.addItem(self.logFileForm, QtGui.QIcon(iconPath("oxygen/accessories-text-editor.png")), "Log file")
         
         # rendering tab
         self.renderingForm = RenderingSettingsForm(self)
-        self.toolbox.addItem(self.renderingForm, QtGui.QIcon(iconPath("applications-graphics.svg")), "Rendering")
+        self.toolbox.addItem(self.renderingForm, QtGui.QIcon(iconPath("oxygen/applications-graphics.png")), "Rendering")
         
         # povray tab
         self.povrayForm = PovraySettingsForm(self)
-        self.toolbox.addItem(self.povrayForm, QtGui.QIcon(iconPath("pov-icon.svg")), "POV-Ray")
+        self.toolbox.addItem(self.povrayForm, QtGui.QIcon(iconPath("other/pov-icon.svg")), "POV-Ray")
         
         # ffmpeg tab
         self.ffmpegForm = FfmpegSettingsForm(self)
-        self.toolbox.addItem(self.ffmpegForm, QtGui.QIcon(iconPath("ffmpeg.png")), "FFmpeg")
+        self.toolbox.addItem(self.ffmpegForm, QtGui.QIcon(iconPath("other/ffmpeg.png")), "FFmpeg")
         
         # matplotlib tab
         self.matplotlibForm = MatplotlibSettingsForm(self)
-        self.toolbox.addItem(self.matplotlibForm, QtGui.QIcon(iconPath("Plotter.png")), "Matplotlib")
+        self.toolbox.addItem(self.matplotlibForm, QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")), "Matplotlib")
         
         # forces tab
         self.forcesForm = ForcesSettingsForm(self)
         self.toolbox.addItem(self.forcesForm, QtGui.QIcon(iconPath("capital_f.gif")), "Forces")
         
         # help button (links to help page on preferences dialog)
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Help-icon.png")), "Show help")
+        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/system-help.png")), "Show help")
         helpButton.setToolTip("Show help page")
         helpButton.setFixedWidth(150)
         helpButton.setAutoDefault(0)

@@ -44,7 +44,8 @@ generatePu3GaLattice(PyObject *self, PyObject *args)
     PyArrayObject *PBCIn=NULL;
     
     const int unitCellNAtoms = 4;
-    int i, loopStop[3], count, numpyDims[1], numAtoms;
+    int i, loopStop[3], count, numAtoms;
+    npy_intp numpyDims[1];
     int unitCellSpecie[unitCellNAtoms], countGa;
     int *gaIndexes, numGaRemove, requiredNGa;
     int numRemoved, counter[2];
@@ -149,17 +150,17 @@ generatePu3GaLattice(PyObject *self, PyObject *args)
         return NULL;
     }
     
-    numpyDims[0] = 3 * count;
-    pos = (PyArrayObject *) PyArray_FromDims(1, numpyDims, NPY_FLOAT64);
+    numpyDims[0] = (npy_intp) (3 * count);
+    pos = (PyArrayObject *) PyArray_SimpleNew(1, numpyDims, NPY_FLOAT64);
     
-    numpyDims[0] = count;
-    charge = (PyArrayObject *) PyArray_FromDims(1, numpyDims, NPY_FLOAT64);
+    numpyDims[0] = (npy_intp) count;
+    charge = (PyArrayObject *) PyArray_SimpleNew(1, numpyDims, NPY_FLOAT64);
     
-    numpyDims[0] = count;
-    specie = (PyArrayObject *) PyArray_FromDims(1, numpyDims, NPY_INT32);
+    numpyDims[0] = (npy_intp) count;
+    specie = (PyArrayObject *) PyArray_SimpleNew(1, numpyDims, NPY_INT32);
     
     numpyDims[0] = 2;
-    specieCount = (PyArrayObject *) PyArray_FromDims(1, numpyDims, NPY_INT32);
+    specieCount = (PyArrayObject *) PyArray_SimpleNew(1, numpyDims, NPY_INT32);
     for (i = 0; i < 2; i++) IIND1(specieCount, i) = 0;
     
     /* second pass to fill the arrays */

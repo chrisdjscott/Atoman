@@ -7,7 +7,6 @@ Additional dialogs.
 
 """
 import os
-import sys
 import copy
 import logging
 
@@ -18,12 +17,6 @@ from . import genericForm
 from ..state.atoms import elements
 from ..visutils.utilities import resourcePath, iconPath
 from ..visutils import utilities
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -518,7 +511,7 @@ class AddBondDialog(QtGui.QDialog):
         self.setModal(1)
         
         self.setWindowTitle("Add bond")
-        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("other/molecule1.png")))
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
@@ -578,7 +571,7 @@ class BondEditorDialog(QtGui.QDialog):
         self.setModal(0)
         
         self.setWindowTitle("Bonds editor")
-        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("other/molecule1.png")))
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
@@ -596,7 +589,7 @@ class BondEditorDialog(QtGui.QDialog):
         self.bondsCombo.currentIndexChanged.connect(self.setWidgetStack)
         
         # add button
-        addButton = QtGui.QPushButton(QtGui.QIcon(iconPath("list-add.svg")), "")
+        addButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-add.png")), "")
         addButton.setFixedWidth(35)
         addButton.setToolTip("Add new bond pair")
         addButton.setStatusTip("Add new bond pair")
@@ -847,7 +840,7 @@ class ElementEditor(QtGui.QDialog):
         self.setModal(0)
         
         self.setWindowTitle("Element editor")
-        self.setWindowIcon(QtGui.QIcon(iconPath("periodic-table-icon.png")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("other/periodic-table-icon.png")))
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
@@ -1062,7 +1055,7 @@ class ImageViewer(QtGui.QDialog):
         self.mainWindow = mainWindow
         
         self.setWindowTitle("Image Viewer:")
-        self.setWindowIcon(QtGui.QIcon(iconPath("applications-graphics.svg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/applications-graphics.png")))
         
         # main layout
         dialogLayout = QtGui.QHBoxLayout()
@@ -1101,7 +1094,7 @@ class ImageViewer(QtGui.QDialog):
         columnLayout.addWidget(self.imageLabel)
         
         # delete button
-        deleteImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-delete.svg")), "Delete image")
+        deleteImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-delete.png")), "Delete image")
         deleteImageButton.clicked.connect(self.deleteImage)
         deleteImageButton.setStatusTip("Delete image")
         deleteImageButton.setAutoDefault(False)
@@ -1195,7 +1188,7 @@ class NotifyFeatureWindow(QtGui.QDialog):
         # image
         pic = QtGui.QLabel()
         pic.resize(200, 200)
-        pic.setPixmap(QtGui.QPixmap(iconPath("preferences-desktop-font.svg")))
+        pic.setPixmap(QtGui.QPixmap(iconPath("oxygen/preferences-desktop-font.png")))
         row = QtGui.QHBoxLayout()
         row.setAlignment(QtCore.Qt.AlignHCenter)
         row.addWidget(pic)
@@ -1337,6 +1330,8 @@ class RotateViewPointDialog(QtGui.QDialog):
         
 #         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
+        self.setWindowTitle("Rotate view point")
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/transform-rotate.png")))
         self.setModal(0)
         
         self.rw = rw
@@ -1431,28 +1426,89 @@ class ReplicateCellDialog(QtGui.QDialog):
         self.setLayout(layout)
         
         # x
-        self.replicateInXCheck = QtGui.QCheckBox()
-        self.replicateInXCheck.setCheckState(QtCore.Qt.Unchecked)
-        self.replicateInXCheck.setToolTip("Replicate the cell in the x direction")
+        self.replicateInXSpin = QtGui.QSpinBox()
+        self.replicateInXSpin.setMinimum(0)
+        self.replicateInXSpin.setMaximum(10)
+        self.replicateInXSpin.setValue(0)
+        self.replicateInXSpin.setToolTip("Number of times to replicate the cell in the x direction")
         if not pbc[0]:
-            self.replicateInXCheck.setEnabled(False)
-        layout.addRow("Replicate in x", self.replicateInXCheck)
+            self.replicateInXSpin.setEnabled(False)
+        layout.addRow("Replicate in x", self.replicateInXSpin)
         
         # y
-        self.replicateInYCheck = QtGui.QCheckBox()
-        self.replicateInYCheck.setCheckState(QtCore.Qt.Unchecked)
-        self.replicateInYCheck.setToolTip("Replicate the cell in the y direction")
+        self.replicateInYSpin = QtGui.QSpinBox()
+        self.replicateInYSpin.setMinimum(0)
+        self.replicateInYSpin.setMaximum(10)
+        self.replicateInYSpin.setValue(0)
+        self.replicateInYSpin.setToolTip("Number of times to replicate the cell in the y direction")
         if not pbc[1]:
-            self.replicateInYCheck.setEnabled(False)
-        layout.addRow("Replicate in y", self.replicateInYCheck)
+            self.replicateInYSpin.setEnabled(False)
+        layout.addRow("Replicate in y", self.replicateInYSpin)
         
         # z
-        self.replicateInZCheck = QtGui.QCheckBox()
-        self.replicateInZCheck.setCheckState(QtCore.Qt.Unchecked)
-        self.replicateInZCheck.setToolTip("Replicate the cell in the z direction")
+        self.replicateInZSpin = QtGui.QSpinBox()
+        self.replicateInZSpin.setMinimum(0)
+        self.replicateInZSpin.setMaximum(10)
+        self.replicateInZSpin.setValue(0)
+        self.replicateInZSpin.setToolTip("Number of times to replicate the cell in the z direction")
         if not pbc[2]:
-            self.replicateInZCheck.setEnabled(False)
-        layout.addRow("Replicate in z", self.replicateInZCheck)
+            self.replicateInYSpin.setEnabled(False)
+        layout.addRow("Replicate in z", self.replicateInZSpin)
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        layout.addRow(buttonBox)
+
+################################################################################
+
+class ShiftCellDialog(QtGui.QDialog):
+    """
+    Ask user which directions they want to replicate the cell in
+    
+    """
+    def __init__(self, pbc, cellDims, parent=None):
+        super(ShiftCellDialog, self).__init__(parent)
+        
+        self.setWindowTitle("Shift cell options")
+        
+        # layout
+        layout = QtGui.QFormLayout()
+        self.setLayout(layout)
+        
+        # x
+        self.shiftXSpin = QtGui.QDoubleSpinBox()
+        self.shiftXSpin.setMinimum(-cellDims[0])
+        self.shiftXSpin.setMaximum(cellDims[0])
+        self.shiftXSpin.setSingleStep(1)
+        self.shiftXSpin.setValue(0)
+        self.shiftXSpin.setToolTip("Distance to shift the cell in the x direction")
+        if not pbc[0]:
+            self.shiftXSpin.setEnabled(False)
+        layout.addRow("Shift in x", self.shiftXSpin)
+        
+        # y
+        self.shiftYSpin = QtGui.QDoubleSpinBox()
+        self.shiftYSpin.setMinimum(-cellDims[1])
+        self.shiftYSpin.setMaximum(cellDims[1])
+        self.shiftYSpin.setSingleStep(1)
+        self.shiftYSpin.setValue(0)
+        self.shiftYSpin.setToolTip("Distance to shift the cell in the y direction")
+        if not pbc[1]:
+            self.shiftYSpin.setEnabled(False)
+        layout.addRow("Shift in y", self.shiftYSpin)
+        
+        # z
+        self.shiftZSpin = QtGui.QDoubleSpinBox()
+        self.shiftZSpin.setMinimum(-cellDims[2])
+        self.shiftZSpin.setMaximum(cellDims[2])
+        self.shiftZSpin.setSingleStep(1)
+        self.shiftZSpin.setValue(0)
+        self.shiftZSpin.setToolTip("Distance to shift the cell in the z direction")
+        if not pbc[2]:
+            self.shiftZSpin.setEnabled(False)
+        layout.addRow("Shift in z", self.shiftZSpin)
         
         # button box
         buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)

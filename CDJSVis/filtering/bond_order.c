@@ -251,8 +251,8 @@ bondOrderFilter(PyObject *self, PyObject *args)
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
     
-    int i, j, index, NVisible;
-    int maxSep2;
+    int i, j, NVisible;
+    int maxSep2, boxstat;
     double approxBoxWidth, q4, q6;
     double *visiblePos;
     struct Boxes *boxes;
@@ -303,24 +303,35 @@ bondOrderFilter(PyObject *self, PyObject *args)
     visiblePos = malloc(3 * NVisibleIn * sizeof(double));
     if (visiblePos == NULL)
     {
-        printf("ERROR: could not allocate visiblePos\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate visiblePos");
+        return NULL;
     }
     
-    for (i=0; i<NVisibleIn; i++)
+    for (i = 0; i < NVisibleIn; i++)
     {
-        index = visibleAtoms[i];
-        
-        visiblePos[3*i] = pos[3*index];
-        visiblePos[3*i+1] = pos[3*index+1];
-        visiblePos[3*i+2] = pos[3*index+2];
+        int index = visibleAtoms[i];
+        int ind3 = 3 * index;
+        int i3 = 3 * i;
+        visiblePos[i3    ] = pos[ind3    ];
+        visiblePos[i3 + 1] = pos[ind3 + 1];
+        visiblePos[i3 + 2] = pos[ind3 + 2];
     }
     
     /* box visible atoms */
     approxBoxWidth = maxBondDistance;
     maxSep2 = maxBondDistance * maxBondDistance;
-    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-    putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
+    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
+    if (boxes == NULL)
+    {
+        free(visiblePos);
+        return NULL;
+    }
+    boxstat = putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
+    if (boxstat)
+    {
+        free(visiblePos);
+        return NULL;
+    }
     
     /* build neighbour list (this should be separate function) */
     nebList = constructNeighbourList(NVisibleIn, visiblePos, boxes, cellDims, PBC, maxSep2);
@@ -328,6 +339,8 @@ bondOrderFilter(PyObject *self, PyObject *args)
     /* only required for building neb list */
     free(visiblePos);
     freeBoxes(boxes);
+    
+    if (nebList == NULL) return NULL;
     
     /* allocate results structure */
     results = malloc(NVisibleIn * sizeof(struct AtomStructureResults));

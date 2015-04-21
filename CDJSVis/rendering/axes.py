@@ -11,7 +11,7 @@ import vtk
 
 ################################################################################
 
-class AxesBasic(vtk.vtkActorCollection):
+class AxesBasic(object):
     """
     @author: Marc Robinson
     
@@ -33,15 +33,17 @@ class AxesBasic(vtk.vtkActorCollection):
         self.ylabelActor.SetScale(3, 3, 3)
         self.zlabelActor = vtk.vtkFollower()
         self.zlabelActor.SetScale(3, 3, 3)
-        self.AddItem(self.Edgesx)
-        self.AddItem(self.Edgesy)
-        self.AddItem(self.Edgesz)
-        self.AddItem(self.conexActor)
-        self.AddItem(self.coneyActor)
-        self.AddItem(self.conezActor)
-        self.AddItem(self.xlabelActor)
-        self.AddItem(self.ylabelActor)
-        self.AddItem(self.zlabelActor)
+        
+        self.actorsList = []
+        self.actorsList.append(self.Edgesx)
+        self.actorsList.append(self.Edgesy)
+        self.actorsList.append(self.Edgesz)
+        self.actorsList.append(self.conexActor)
+        self.actorsList.append(self.coneyActor)
+        self.actorsList.append(self.conezActor)
+        self.actorsList.append(self.xlabelActor)
+        self.actorsList.append(self.ylabelActor)
+        self.actorsList.append(self.zlabelActor)
         
         self.ren = ren
         self.reinit = reinit
@@ -50,31 +52,17 @@ class AxesBasic(vtk.vtkActorCollection):
     
     def remove(self):
         
-        self.InitTraversal()
-        tmpactor = self.GetNextItem()
-        while tmpactor is not None:
-            try:
-                self.ren.RemoveActor(tmpactor)
-            except:
-                pass
-            
-            tmpactor = self.GetNextItem()
-            
+        for actor in self.actorsList:
+            self.ren.RemoveActor(actor)
+        
         self.reinit()
         
         self.visible = 0
     
     def add(self):
         
-        self.InitTraversal()
-        tmpactor = self.GetNextItem()
-        while tmpactor is not None:
-            try:
-                self.ren.AddActor(tmpactor)
-            except:
-                pass
-            
-            tmpactor = self.GetNextItem()
+        for actor in self.actorsList:
+            self.ren.AddActor(actor)
             
         self.reinit()
         
@@ -101,8 +89,6 @@ class AxesBasic(vtk.vtkActorCollection):
         Tubesx.SetInputConnection(linex.GetOutputPort())
         Tubesx.SetRadius(0.5)
         Tubesx.SetNumberOfSides(5)
-        Tubesx.UseDefaultNormalOn()
-        Tubesx.SetDefaultNormal(.577, .577, .577)
         TubeMapperx = vtk.vtkPolyDataMapper()
         TubeMapperx.SetInputConnection(Tubesx.GetOutputPort())
         self.Edgesx.SetMapper(TubeMapperx)
@@ -118,8 +104,6 @@ class AxesBasic(vtk.vtkActorCollection):
         Tubesy.SetInputConnection(liney.GetOutputPort())
         Tubesy.SetRadius(0.5)
         Tubesy.SetNumberOfSides(5)
-        Tubesy.UseDefaultNormalOn()
-        Tubesy.SetDefaultNormal(.577, .577, .577)
         TubeMappery = vtk.vtkPolyDataMapper()
         TubeMappery.SetInputConnection(Tubesy.GetOutputPort())
         
@@ -136,8 +120,6 @@ class AxesBasic(vtk.vtkActorCollection):
         Tubesz.SetInputConnection(linez.GetOutputPort())
         Tubesz.SetRadius(0.5)
         Tubesz.SetNumberOfSides(5)
-        Tubesz.UseDefaultNormalOn()
-        Tubesz.SetDefaultNormal(.577, .577, .577)
         TubeMapperz = vtk.vtkPolyDataMapper()
         TubeMapperz.SetInputConnection(Tubesz.GetOutputPort())
         

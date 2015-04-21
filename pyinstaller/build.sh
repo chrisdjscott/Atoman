@@ -5,7 +5,8 @@
 ##   it can be used when app is frozen
 
 # CONFIG
-PYINSTALLER_PATH="${HOME}/git/pyinstaller/pyinstaller.py"
+#PYINSTALLER_PATH="python ${HOME}/git/pyinstaller/pyinstaller.py"
+PYINSTALLER_PATH="pyinstaller"
 # END CONFIG
 
 VERSION=$(git describe)
@@ -27,11 +28,18 @@ python setup.py test
 
 cd pyinstaller
 
-python ${PYINSTALLER_PATH} CDJSVis.spec
+${PYINSTALLER_PATH} CDJSVis.spec
 
 cd dist
 
-echo zip -r CDJSVis-${VERSION}.zip CDJSVis.app
-zip -r CDJSVis-${VERSION}.zip CDJSVis.app
+if [[ $VERSION != v* ]] ;
+then
+    ZIP_VER=v${VERSION}
+else
+    ZIP_VER=${VERSION}
+fi
+
+echo zip -r CDJSVis-${ZIP_VER}.zip CDJSVis.app
+zip -r CDJSVis-${ZIP_VER}.zip CDJSVis.app
 
 exit 0

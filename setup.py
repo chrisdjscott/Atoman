@@ -13,7 +13,6 @@ import subprocess
 import shutil
 import platform
 
-from CDJSVis.visutils import utilities
 from CDJSVis.visutils import version
 
 VERSION = version.getVersion()
@@ -45,64 +44,14 @@ if HAVE_SPHINX:
             BuildDoc.run(self)
             
             # copy doc to CDJSVis
-            if os.path.exists(os.path.join("doc", "_build", "html", "index.html")):
+            sphinxHtmlDir = os.path.join("build", "sphinx", "html")
+            if os.path.exists(os.path.join(sphinxHtmlDir, "index.html")):
                 if os.path.isdir(os.path.join("CDJSVis", "doc")):
                     shutil.rmtree(os.path.join("CDJSVis", "doc"))
-                
-                shutil.copytree(os.path.join("doc", "_build", "html"), os.path.join("CDJSVis", "doc"))
-                
-                # edit resources file
-                os.chdir("CDJSVis")
-                
-                fn = "resources.qrc"
-                f = open(fn)
-                lines = f.readlines()
-                f.close()
-        
-                count = 0
-                for line in lines:
-                    if line.startswith("</qresource>"):
-                        break
-                    count += 1
-        
-                lines = lines[:count]
-                lines.append("\n")
-        
-                if os.path.exists(os.path.join("doc", ".buildinfo")):
-                    os.unlink(os.path.join("doc", ".buildinfo"))
-        
-                count = 0
-                for root, dirs, files in os.walk("doc"):
-                    for addfn in files:
-                        lines.append("    <file>%s</file>\n" % os.path.join(root, addfn))
-                        count += 1
-        
-                lines.append("</qresource>\n")
-                lines.append("</RCC>\n")
-        
-                f = open("resources_mod.qrc", "w")
-                f.write("".join(lines))
-                f.close()
-                
-                # compile resource file
-                command = "%s resources_mod.qrc > resources.py" % PYRCC
-                print command
-                os.system(command)
-                
-                # delete doc/ dir and modified qrc file, no longer required
-                os.unlink("resources_mod.qrc")
-                shutil.rmtree("doc")
-                
-                os.chdir("..")
-
-# look for rcc exe
-PYRCC = utilities.checkForExe("pyside-rcc")
-# on mac it is appended with python version
-if not PYRCC:
-    PYRCC = utilities.checkForExe("pyside-rcc-%d.%d" % (sys.version_info[0], sys.version_info[1]))
-# fail
-if not PYRCC:
-    raise RuntimeError("Cannot locate pyside-rcc executable")
+                shutil.copytree(sphinxHtmlDir, os.path.join("CDJSVis", "doc"))
+            
+            else:
+                raise RuntimeError("Could not locate Sphinx documentation HTML files")
 
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
@@ -132,17 +81,17 @@ def do_clean():
        
         pyc_files = glob.glob(os.path.join(root, "*.pyc"))
         for pyc_file in pyc_files:
-#            print "rm CDJSVis/%s" % os.path.relpath(pyc_file)
             os.unlink(pyc_file)
-
-#         cmd = "rm -f %s %s" % (os.path.join(root, "*.pyc"), os.path.join(root, "*.pyo"))
-#         print cmd
     
     os.chdir(cwd)
     
     if os.path.isdir("doc/_build"):
         print "rm -rf doc/_build"
         shutil.rmtree(os.path.join("doc", "_build"))
+    
+    if os.path.isdir("CDJSVis/doc"):
+        print "rm -rf CDJSVis/doc"
+        shutil.rmtree(os.path.join("CDJSVis", "doc"))
 
 def setup_package():
     # clean?
@@ -155,16 +104,6 @@ def setup_package():
     else:
         cmdclass = {}
     
-    # recompile resources file if cannot import it
-    try:
-        from CDJSVis import resources
-    except ImportError:
-        os.chdir("CDJSVis")
-        command = "%s resources.qrc > resources.py" % PYRCC
-        print command
-        os.system(command)
-        os.chdir("..")
-    
     # metadata
     metadata = dict(
         name = "CDJSVis",
@@ -172,7 +111,7 @@ def setup_package():
         maintainer_email = "chris@chrisdjscott.co.uk",
         description = "CDJSVis Atomistic Visualisation and Analysis Library",
          long_description = "CDJSVis Atomistic Visualisation and Analysis Library",
-        url = "http://chrisdjscott.com",
+        url = "http://vis.chrisdjscott.com.uk",
         author = "Chris Scott",
         author_email = "chris@chrisdjscott.co.uk",
 #         download_url = "",

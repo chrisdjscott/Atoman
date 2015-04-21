@@ -2,6 +2,88 @@
 Changelog
 =========
 
+**150420.1**
+
+* Fix bug regarding split interstitials and filtering defects by species
+
+**150420**
+
+* Disable multiple reference site check in defects filter
+* Set the default PBCs for newly loaded systems
+* Fix bug preventing lattice attributes being displayed
+
+**150312**
+
+* Improve split interstitial detection to work in clusters of interstitials too
+* Improve Atom ID filter to accept ranges and lists of atom IDs
+* Improve ACNA refinement of point defects to work in clusters of defects too
+* Colouring options are available as soon as a filter is added
+* Change default oxygen radius to 0.66
+* Fix bug when rendering bonds and colouring by charge
+
+**150303**
+
+* Handle case where file name contains colons (was wrongly detecting them as SFTP files)
+
+**150226**
+
+* Revert change regarding displaying antisites
+* Fix bug preventing "Solid colour" from working
+* "Crop box" filter works with "Point defects" filter
+* "Slice" filter works with "Point defects" filter
+
+**150223**
+
+* Fix bug that could have prevented some bonds being displayed
+* No longer require qresources file; doc and icons are added as data instead
+
+**150211**
+
+* Fix bug preventing Lattice being reloaded
+
+**150206**
+
+* Better error handling during type conversion when reading lattice files
+* Add option to shift the lattice in periodic directions
+* Add dialog to display information about a loaded system
+
+**150204.1**
+
+* Fix bug when colouring by lattice scalars
+
+**150204**
+
+* Better error handling from C code (raise exception instead of exiting)
+* Better normalisation of RDF
+* Fix bug when picking split interstitials
+* Improve "Replicate cell" option
+* Display Exception if running filters fails
+
+**150126**
+
+* Added generic file input module (much easier to add new lattice file formats)
+* Add progress dialog to status bar
+* Show progress when unzipping and reading files
+* Show progress when copying file via SFTP browser
+* Refresh plot options when running a single list
+* Systems dialog moved to tab in toolbar
+* Add option to change ambient, specular, specular power on actors
+* Replace most icons with icons from the Oxygen icon theme
+
+**150114**
+
+* Try and autodetect the number format for the sequencer
+* Add option to normalise a vector before rendering/scaling it
+* Fix min value when specifying bin width in plot histogram
+* All scalar/vector data shown on atom info windows
+* Improved scalar data handling on Lattice
+* Ability to read LBOMD xyz files with velocities
+
+**v150105**
+
+* If max index on sequencer is less than min index we auto detect the max
+* SFTP browser and sequencer work with zipped files
+
 **v141212**
 
 * Close info windows when clearing a filter list

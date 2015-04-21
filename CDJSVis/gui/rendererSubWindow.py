@@ -6,7 +6,6 @@ Mdi sub window for displaying VTK render window.
 @author: Chris Scott
 
 """
-import sys
 import logging
 
 from PySide import QtGui, QtCore
@@ -15,7 +14,7 @@ from .QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import vtk
 import numpy as np
 
-from ..visutils.utilities import iconPath, resourcePath
+from ..visutils.utilities import iconPath
 from ..visutils import utilities
 from . import dialogs
 from . import onScreenInfoDialog
@@ -23,11 +22,6 @@ from ..rendering import renderer
 from .outputDialog import OutputDialog
 from ..rendering.text import vtkRenderWindowText
 from ..state.lattice import Lattice
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -83,41 +77,41 @@ class RendererWindow(QtGui.QWidget):
                                            tip="Toggle cell frame visibility")
         
         # button to display axes
-        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon2.svg", 
+        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon.svg", 
                                            tip="Toggle axes visiblity")
         
         # reset camera to cell
-        setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="set_cam_cell.svg", 
-                                           tip="Reset camera to cell")
+        setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="oxygen/zoom-fit-best.png", 
+                                               tip="Reset camera to cell")
         
         # rotate image
-        rotateViewPoint = self.createAction("Rotate view point", slot=self.rotateViewPoint, icon="object-rotate.png",
+        rotateViewPoint = self.createAction("Rotate view point", slot=self.rotateViewPoint, icon="oxygen/transform-rotate.png",
                                             tip="Rotate view point")
         
         # text selector
         openTextSelectorAction = self.createAction("On-screen info", self.showTextSelector, 
-                                                   icon="preferences-desktop-font.svg", 
+                                                   icon="oxygen/preferences-desktop-font.png", 
                                                    tip="Show on-screen text selector")
         
         # output dialog
-        showOutputDialogAction = self.createAction("Output dialog", slot=self.showOutputDialog, icon="loadandsave-icon.svg",
+        showOutputDialogAction = self.createAction("Output dialog", slot=self.showOutputDialog, icon="oxygen/document-save.png",
                                                    tip="Show output dialog")
         
         # background colour
         backgroundColourAction = self.createAction("Toggle background colour", slot=self.toggleBackgroundColour, 
-                                                   icon="preferences-desktop-screensaver.svg",
+                                                   icon="oxygen/preferences-desktop-display-color.png",
                                                    tip="Toggle background colour")
         
         # aa up
-        aaUpAction = self.createAction("Increase anti-aliasing", slot=self.increaseAA, icon="go-up.svg",
+        aaUpAction = self.createAction("Increase anti-aliasing", slot=self.increaseAA, icon="oxygen/go-up.png",
                                        tip="Increase anti-aliasing")
         
         # aa up
-        aaDownAction = self.createAction("Decrease anti-aliasing", slot=self.decreaseAA, icon="go-down.svg",
+        aaDownAction = self.createAction("Decrease anti-aliasing", slot=self.decreaseAA, icon="oxygen/go-down.png",
                                        tip="Decrease anti-aliasing")
         
         # camera settings
-        cameraSettingsAction = self.createAction("Camera settings", slot=self.showCameraSettings, icon="cam.png", tip="Show camera settings")
+        cameraSettingsAction = self.createAction("Camera settings", slot=self.showCameraSettings, icon="oxygen/camera-photo.png", tip="Show camera settings")
         
         # parallel projection action
         projectionAction = self.createAction("Parallel projection", slot=self.toggleProjection, icon="perspective-ava.svg", tip="Parallel projection", checkable=True)
@@ -396,17 +390,19 @@ class RendererWindow(QtGui.QWidget):
         # remove actors from filter lists
         for filterList in filterLists:
             filterer = filterList.filterer
-            actorsCollection = filterer.actorsCollection
+            for actorName, val in filterer.actorsDict.iteritems():
+                if isinstance(val, dict):
+#                     self.logger.debug("Removing actors for: '%s'", actorName)
+                    for actorName2, actorObj in val.iteritems():
+                        if actorObj.visible:
+#                             self.logger.debug("  Removing actor: '%s'", actorName2)
+                            self.vtkRen.RemoveActor(actorObj.actor)
             
-            actorsCollection.InitTraversal()
-            actor = actorsCollection.GetNextItem()
-            while actor is not None:
-                try:
-                    self.vtkRen.RemoveActor(actor)
-                except:
-                    pass
-                
-                actor = actorsCollection.GetNextItem()
+                else:
+                    actorObj = val
+                    if actorObj.visible:
+#                         self.logger.debug("Removing actor: '%s'", actorName)
+                        self.vtkRen.RemoveActor(actorObj.actor)
             
             if filterer.scalarBarAdded:
                 # which scalar bar
@@ -435,17 +431,19 @@ class RendererWindow(QtGui.QWidget):
         
         for filterList in filterLists:
             filterer = filterList.filterer
-            actorsCollection = filterer.actorsCollection
+            for actorName, val in filterer.actorsDict.iteritems():
+                if isinstance(val, dict):
+#                     self.logger.debug("Adding actors for: '%s'", actorName)
+                    for actorName2, actorObj in val.iteritems():
+#                             self.logger.debug("  Adding actor: '%s'", actorName2)
+                        if actorObj.visible:
+                            self.vtkRen.AddActor(actorObj.actor)
             
-            actorsCollection.InitTraversal()
-            actor = actorsCollection.GetNextItem()
-            while actor is not None:
-                try:
-                    self.vtkRen.AddActor(actor)
-                except:
-                    pass
-                
-                actor = actorsCollection.GetNextItem()
+                else:
+                    actorObj = val
+                    if actorObj.visible:
+#                         self.logger.debug("Adding actor: '%s'", actorName)
+                        self.vtkRen.AddActor(actorObj.actor)
             
             if filterer.scalarBarAdded:
                 # which scalar bar
@@ -488,6 +486,16 @@ class RendererWindow(QtGui.QWidget):
         
         return inputState
     
+    def postInputChanged(self):
+        """
+        Refresh stuff when the input system has changed
+        
+        """
+        self.textSelector.refresh()
+        self.outputDialog.plotTab.rdfForm.refresh()
+        self.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
+        self.outputDialog.imageTab.imageSequenceTab.resetPrefix()
+    
     def pipelineChanged(self, index):
         """
         Current pipeline changed.
@@ -510,8 +518,9 @@ class RendererWindow(QtGui.QWidget):
         # refresh text
         self.refreshOnScreenInfo()
         
-        # output dialog
-        self.outputDialog.imageTab.imageSequenceTab.resetPrefix()
+        # refresh optiona etc
+        if self.getCurrentInputState() is not None:
+            self.postInputChanged()
     
     def showOutputDialog(self):
         """
@@ -733,29 +742,27 @@ class RendererWindow(QtGui.QWidget):
         if inputState is None:
             inputState = Lattice()
         
+        # add lattice attributes
+        self.logger.debug("Adding Lattice attributes: %r", inputState.attributes.keys())
+        for key, value in inputState.attributes.iteritems():
+            self.onScreenInfo[key] = value
+        
         # atom count
         self.onScreenInfo["Atom count"] = (inputState.NAtoms,)
         
-        # sim time
-        if inputState.simTime is not None:
-            self.onScreenInfo["Simulation time"] = tuple(utilities.simulationTimeLine(inputState.simTime).split())
-        
-        # barrier
-        if inputState.barrier is not None:
-            self.onScreenInfo["Energy barrier"] = (inputState.barrier,)
-        
-        # KMC step
-        if inputState.kmcStep is not None:
-            self.onScreenInfo["KMC step"] = (inputState.kmcStep,)
-        
+        # Lattice attributes
+        for key, value in inputState.attributes.iteritems():
+            if key == "Time":
+                self.onScreenInfo[key] = tuple(utilities.simulationTimeLine(value).split())
+            
+            else:
+                self.onScreenInfo[key] = (value,)        
+
         # lattice temperature
-        if inputState.temperature is None:
+        if not "Temperature" in inputState.attributes:
             temperature = inputState.calcTemperature()
-        else:
-            temperature = inputState.temperature
-        
-        if temperature is not None:
-            self.onScreenInfo["Temperature"] = ("%.3f" % temperature,)
+            if temperature is not None:
+                self.onScreenInfo["Temperature"] = ("%.3f" % temperature,)
         
         # filter lists
         filterLists = self.getFilterLists()

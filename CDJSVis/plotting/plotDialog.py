@@ -20,12 +20,6 @@ from matplotlib import rc
 
 from ..visutils.utilities import iconPath
 
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
-
 
 ################################################################################
 
@@ -44,7 +38,7 @@ class PlotDialog(QtGui.QDialog):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Plotter - %s" % dlgTitle)
-        self.setWindowIcon(QtGui.QIcon(iconPath("Plotter.png")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")))
         
         # settings
         settings = self.mainWindow.preferences.matplotlibForm
@@ -59,7 +53,7 @@ class PlotDialog(QtGui.QDialog):
         
         # set dimension of dialog
         self.dlgWidth = figWidth * figDpi + 20
-        self.dlgHeight = figHeight * figDpi + 80
+        self.dlgHeight = figHeight * figDpi + 100
         self.resize(self.dlgWidth, self.dlgHeight)
         
         # make size fixed
@@ -119,24 +113,33 @@ class PlotDialog(QtGui.QDialog):
         if "title" in settingsDict:
             self.axes.set_title(settingsDict["title"], fontsize=fontsize)
         
+        # tight layout
+        self.fig.tight_layout()
+        
         # draw canvas
         self.canvas.draw()
         
         # write to file button
         writeDataButton = QtGui.QPushButton("Write csv")
         writeDataButton.setAutoDefault(False)
+        writeDataButton.setDefault(False)
         writeDataButton.clicked.connect(self.writeData)
         writeDataButton.setToolTip("Write csv file containing plot data")
         
-        # row
-        row = QtGui.QHBoxLayout()
-        row.addWidget(self.mplToolbar)
-        row.addWidget(writeDataButton)
+        # close button
+        closeButton = QtGui.QPushButton("Close")
+        closeButton.clicked.connect(self.accept)
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox()
+        buttonBox.addButton(writeDataButton, QtGui.QDialogButtonBox.ActionRole)
+        buttonBox.addButton(closeButton, QtGui.QDialogButtonBox.AcceptRole)
         
         # layout
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.canvas)
-        vbox.addLayout(row)
+        vbox.addWidget(self.mplToolbar)
+        vbox.addWidget(buttonBox)
         
         self.mainWidget.setLayout(vbox)
     

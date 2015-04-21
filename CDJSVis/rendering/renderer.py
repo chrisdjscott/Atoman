@@ -29,6 +29,7 @@ from .utils import setRes, setupLUT, getScalar, setMapperScalarRange, makeScalar
 from . import utils
 from . import _rendering
 from ..visutils.threading_vis import GenericRunnable
+from ..algebra import vectors as vectorslib
 
 
 ################################################################################
@@ -141,6 +142,8 @@ class Renderer(object):
         
         """
         ref = self.getRefState()
+        if ref is None:
+            return
         
         dims = ref.cellDims
         
@@ -862,7 +865,6 @@ class PovrayColouringOptions(object):
     """
     def __init__(self, colouringOptions):
         self.colourBy = colouringOptions.colourBy
-        self.atomPropertyType = colouringOptions.atomPropertyType
         self.heightAxis = colouringOptions.heightAxis
 
 ################################################################################
@@ -885,13 +887,14 @@ class PovRayAtomsWriter(QtCore.QObject):
     finished = QtCore.Signal(int, float, str)
     allDone = QtCore.Signal()
     
-    def __init__(self, filename, visibleAtoms, lattice, scalarsDict, colouringOptions, displayOptions, lut, uniqueId):
+    def __init__(self, filename, visibleAtoms, lattice, scalarsDict, latticeScalarsDict, colouringOptions, displayOptions, lut, uniqueId):
         super(PovRayAtomsWriter, self).__init__()
         
         self.filename = filename
         self.visibleAtoms = visibleAtoms
         self.lattice = lattice
         self.scalarsDict = scalarsDict
+        self.latticeScalarsDict = latticeScalarsDict
         self.colouringOptions = PovrayColouringOptions(colouringOptions)
         self.lut = lut
         self.displayOptions = PovrayDisplayOptions(displayOptions)
@@ -908,14 +911,13 @@ class PovRayAtomsWriter(QtCore.QObject):
         visibleAtoms = self.visibleAtoms
         lattice = self.lattice
         scalarsDict = self.scalarsDict
+        latticeScalarsDict = self.latticeScalarsDict
         colouringOptions = self.colouringOptions
         displayOptions = self.displayOptions
         lut = self.lut
         specie = lattice.specie
         pos = lattice.pos
         charge = lattice.charge
-        KE = lattice.KE
-        PE = lattice.PE
         
         # scalars type
         scalarsType = getScalarsType(colouringOptions)
@@ -933,14 +935,13 @@ class PovRayAtomsWriter(QtCore.QObject):
                 scalar = specInd
             elif scalarsType == 1:
                 scalar = pos[3*index+colouringOptions.heightAxis]
-            elif scalarsType == 2:
-                scalar = KE[index]
-            elif scalarsType == 3:
-                scalar = PE[index]
             elif scalarsType == 4:
                 scalar = charge[index]
             else:
-                scalar = scalarsDict[colouringOptions.colourBy][i]
+                if colouringOptions.colourBy.startswith("Lattice: "):
+                    scalar = latticeScalarsDict[colouringOptions.colourBy[9:]][i]
+                else:
+                    scalar = scalarsDict[colouringOptions.colourBy][i]
             
             # colour for povray file
             rgb = np.empty(3, np.float64)
@@ -975,7 +976,11 @@ def writePovrayAtoms(filename, visibleAtoms, lattice, scalarsDict, colouringOpti
     # scalars type
     scalarsType = getScalarsType(colouringOptions)
     if scalarsType == 5:
-        scalarsArray = scalarsDict[colouringOptions.colourBy]
+        if colouringOptions.colourBy.startswith("Lattice: "):
+            scalarsArray = lattice.scalarsDict[colouringOptions.colourBy[9:]]
+        else:
+            scalarsArray = scalarsDict[colouringOptions.colourBy]
+    
     else:
         scalarsArray = np.array([], dtype=np.float64)
     
@@ -984,74 +989,10 @@ def writePovrayAtoms(filename, visibleAtoms, lattice, scalarsDict, colouringOpti
     
     # call C routine to write atoms to file
     output_c.writePOVRAYAtoms(filename, visibleAtoms, lattice.specie, lattice.pos, lattice.specieCovalentRadius, 
-                              lattice.PE, lattice.KE, lattice.charge, scalarsArray, scalarsType, 
-                              colouringOptions.heightAxis, rgbcalc.cfunc)
+                              lattice.charge, scalarsArray, scalarsType, colouringOptions.heightAxis, rgbcalc.cfunc)
 
 ################################################################################
-
-def getSpecieVTKArrays(visibleAtoms, lattice, scalarsDict, colouringOptions, vectorsDict, vectorsOptions):
-    """
-    Split visible atoms pos/scalar arrays by specie
-    
-    """
-    logger = logging.getLogger(__name__)
-    logger.debug("Creating VTK specie arrays")
-    
-    # specie counter
-    NSpecies = len(lattice.specieList)
-    specieCount = np.zeros(NSpecies, np.int32)
-    
-    # scalar type
-    scalarType = getScalarsType(colouringOptions)
-    
-    # scalars array
-    if scalarType == 5:
-        scalarsArray = scalarsDict[colouringOptions.colourBy]
-    else:
-        scalarsArray = np.array([], dtype=np.float64)
-    
-    if vectorsOptions.selectedVectorsName is not None:
-        vectorsArray = vectorsDict[vectorsOptions.selectedVectorsName] * vectorsOptions.vectorScaleFactor
-    else:
-        vectorsArray = np.array([], dtype=np.float64)
-    
-    # call C lib
-    resultList = _rendering.splitVisAtomsBySpecie(visibleAtoms, NSpecies, lattice.specie, specieCount, lattice.pos, lattice.PE, lattice.KE, 
-                                                  lattice.charge, scalarsArray, scalarType, colouringOptions.heightAxis, 
-                                                  vectorsArray)
-    
-    # check result
-    speciePosArrays = []
-    specieScalarArrays = []
-    specieVectorArrays = []
-    for sposarr, sscalarr, svectarr in resultList:
-        speciePosArrays.append(sposarr)
-        specieScalarArrays.append(sscalarr)
-        if vectorsOptions.selectedVectorsName is not None:
-            specieVectorArrays.append(svectarr)
-    assert len(speciePosArrays) == NSpecies
-    assert len(specieScalarArrays) == NSpecies
-    
-    # make points from numpy array
-    atomPointsList = []
-    atomScalarsList = []
-    atomVectorsList = []
-    for specInd in xrange(NSpecies):
-        specPos = speciePosArrays[specInd]
-        specScalar = specieScalarArrays[specInd]
-        
-        points = vtk.vtkPoints()
-        points.SetData(numpy_support.numpy_to_vtk(specPos, deep=1))
-        atomPointsList.append(points)
-        atomScalarsList.append(numpy_support.numpy_to_vtk(specScalar, deep=1))
-        if vectorsOptions.selectedVectorsName is not None:
-            specVector = specieVectorArrays[specInd]
-            atomVectorsList.append(numpy_support.numpy_to_vtk(specVector, deep=1))
-    
-    return atomPointsList, atomScalarsList, atomVectorsList, specieCount
-
-################################################################################
-def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOptions, povFileName, scalarsDict, displayOptions, 
+def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOptions, povFileName, scalarsDict, latticeScalarsDict, displayOptions, 
                                pipelinePage, povFinishedSlot, vectorsDict, vectorsOptions, NVisibleForRes=None, sequencer=False):
     """
     Make the actors for the filtered system
@@ -1091,7 +1032,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     povtime = time.time()
     povFilePath = os.path.join(mainWindow.tmpDirectory, povFileName)
     uniqueId = uuid.uuid4()
-    povAtomWriter = PovRayAtomsWriter(povFilePath, visibleAtoms, lattice, scalarsDict, colouringOptions, displayOptions, lut, uniqueId)
+    povAtomWriter = PovRayAtomsWriter(povFilePath, visibleAtoms, lattice, scalarsDict, latticeScalarsDict, colouringOptions, displayOptions, lut, uniqueId)
     
     # write pov atoms now if we're running sequencer, otherwise in separate thread
     logger.debug("Preparing to write POV-Ray atoms (sequencer=%s) (%s)", sequencer, uniqueId)
@@ -1125,17 +1066,16 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     
     # scalars array
     if scalarType == 5:
-        scalarsArray = scalarsDict[colouringOptions.colourBy]
+        if colouringOptions.colourBy.startswith("Lattice: "):
+            scalarsArray = latticeScalarsDict[colouringOptions.colourBy[9:]]
+        else:
+            scalarsArray = scalarsDict[colouringOptions.colourBy]
     
     else:
         if scalarType == 0:
             scalarsFull = np.asarray(lattice.specie, dtype=np.float64)
         elif scalarType == 1:
             scalarsFull = lattice.pos[colouringOptions.heightAxis::3]
-        elif scalarType == 2:
-            scalarsFull = lattice.KE
-        elif scalarType == 3:
-            scalarsFull = lattice.PE
         elif scalarType == 4:
             scalarsFull = lattice.charge
         else:
@@ -1203,6 +1143,8 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     # actor
     atomsActor = vtk.vtkActor()
     atomsActor.SetMapper(atomsMapper)
+    atomsActor.GetProperty().SetSpecular(0.4)
+    atomsActor.GetProperty().SetSpecularPower(50)
     actorsDict["Atoms"] = utils.ActorObject(atomsActor)
     
     # check for vectors
@@ -1214,7 +1156,10 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
         logger.debug("Adding arrows for vector data: '%s'", vectorsName)
         
         # vectors
-        vects = numpy_support.numpy_to_vtk(vectorsDict[vectorsName], deep=1)
+        npvects = vectorsDict[vectorsName]
+        if vectorsOptions.vectorNormalise:
+            npvects = vectorslib.normalise(npvects)
+        vects = numpy_support.numpy_to_vtk(npvects, deep=1)
         vects.SetName("vectors")
         
         # polydata
@@ -1277,6 +1222,9 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
         scalarBar_white = makeScalarBar(lut, colouringOptions, (0, 0, 0))
         scalarBar_black = makeScalarBar(lut, colouringOptions, (1, 1, 1))
     
+    # visible specie count
+    visSpecCount = _rendering.countVisibleBySpecie(visibleAtoms, NSpecies, lattice.specie)
+    
     getActorsTime = time.time() - getActorsTime
     logger.debug("Get actors time: %f s", getActorsTime)
 #     logger.debug("  Set points time (new): %f s", povtime + setPointsTime2)
@@ -1285,7 +1233,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
 #     for i, t1 in enumerate(t1s):
 #         logger.debug("  Make actors time (%d): %f s", i, t1)
     
-    return scalarBar_white, scalarBar_black, lattice.specieCount
+    return scalarBar_white, scalarBar_black, visSpecCount
 
 ################################################################################
 def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 
@@ -1461,6 +1409,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
+            intsActor.GetProperty().SetSpecular(0.4)
+            intsActor.GetProperty().SetSpecularPower(50)
             
             actorsDictLocal["Interstitials ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
     
@@ -1532,6 +1482,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
+            intsActor.GetProperty().SetSpecular(0.4)
+            intsActor.GetProperty().SetSpecularPower(50)
             
             actorsDictLocal["Split ints ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
         
@@ -1651,6 +1603,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             intsActor = vtk.vtkActor()
             intsActor.SetMapper(intsMapper)
+            intsActor.GetProperty().SetSpecular(0.4)
+            intsActor.GetProperty().SetSpecularPower(50)
             
             actorsDictLocal["Antisites occupying ({0})".format(inputLattice.specieList[i])] = utils.ActorObject(intsActor)
     

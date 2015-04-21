@@ -23,19 +23,11 @@ import numpy as np
 
 from ..visutils.utilities import iconPath
 from . import filterList
-from ..rendering.text import vtkRenderWindowText
-from ..visutils import utilities
-from . import picker as picker_c
+from . import picker
 from . import infoDialogs
 from . import utils
 from ..rendering import highlight
 from . import dialogs
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -50,7 +42,6 @@ class PipelineForm(QtGui.QWidget):
         self.pipelineString = pipelineString
         self.systemsDialog = mainWindow.systemsDialog
         
-        self.log = self.mainWindow.console.write
         self.logger = logging.getLogger(__name__)
         
         self.rendererWindows = self.mainWindow.rendererWindows
@@ -73,8 +64,8 @@ class PipelineForm(QtGui.QWidget):
         self.currentRunID = None
         self.abspath = None
         self.PBC = None
-        
-        self.analysisPipelineFormHidden = True
+        self.linkedLattice = None
+        self.fromSFTP = None
         
         # layout
         filterTabLayout = QtGui.QVBoxLayout(self)
@@ -101,9 +92,9 @@ class PipelineForm(QtGui.QWidget):
         
         # reference selector
         self.refCombo = QtGui.QComboBox()
+        self.refCombo.setFixedWidth(220)
+        self.refCombo.setToolTip("Select the reference system for this pipeline")
         self.refCombo.currentIndexChanged.connect(self.refChanged)
-        for fn in self.systemsDialog.getDisplayNames():
-            self.refCombo.addItem(fn)    
         
         # add to row
         rowLayout.addWidget(QtGui.QLabel("Reference:"))
@@ -119,9 +110,9 @@ class PipelineForm(QtGui.QWidget):
         
         # reference selector
         self.inputCombo = QtGui.QComboBox()
+        self.inputCombo.setFixedWidth(220)
+        self.inputCombo.setToolTip("Select the input system for this pipeline")
         self.inputCombo.currentIndexChanged.connect(self.inputChanged)
-        for fn in self.systemsDialog.getDisplayNames():
-            self.inputCombo.addItem(fn)
         
         # add to row
         rowLayout.addWidget(QtGui.QLabel("Input:"))
@@ -141,15 +132,15 @@ class PipelineForm(QtGui.QWidget):
         rowLayout.setSpacing(0)
         
         #----- buttons for new/trash filter list
-        runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('view-refresh-all.svg')),'Apply lists')
+        runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/view-refresh.png')),'Apply lists')
         runAll.setStatusTip("Apply all property/filter lists")
         runAll.setToolTip("Apply all property/filter lists")
         runAll.clicked.connect(self.runAllFilterLists)
-        add = QtGui.QPushButton(QtGui.QIcon(iconPath('tab-new.svg')),'New list')
+        add = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/tab-new-background.png')),'New list')
         add.setToolTip("New property/filter list")
         add.setStatusTip("New property/filter list")
         add.clicked.connect(self.addFilterList)
-        clear = QtGui.QPushButton(QtGui.QIcon(iconPath('edit-delete.svg')),'Clear lists')
+        clear = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/tab-close-other.png')),'Clear lists')
         clear.setStatusTip("Clear all property/filter lists")
         clear.setToolTip("Clear all property/filter lists")
         clear.clicked.connect(self.clearAllFilterLists)
@@ -176,11 +167,22 @@ class PipelineForm(QtGui.QWidget):
         group.setAlignment(QtCore.Qt.AlignHCenter)
         
         groupLayout = QtGui.QVBoxLayout(group)
+        groupLayout.setSpacing(0)
+        groupLayout.setContentsMargins(0,0,0,0)
         
         self.replicateCellButton = QtGui.QPushButton("Replicate cell")
         self.replicateCellButton.clicked.connect(self.replicateCell)
         self.replicateCellButton.setToolTip("Replicate in periodic directions")
-        groupLayout.addWidget(self.replicateCellButton)
+        self.shiftCellButton = QtGui.QPushButton("Shift cell")
+        self.shiftCellButton.clicked.connect(self.shiftCell)
+        self.shiftCellButton.setToolTip("Shift cell in periodic directions")
+        hbox = QtGui.QHBoxLayout()
+        hbox.setContentsMargins(0,0,0,0)
+        hbox.addStretch(1)
+        hbox.addWidget(self.shiftCellButton)
+        hbox.addWidget(self.replicateCellButton)
+        hbox.addStretch(1)
+        groupLayout.addLayout(hbox)
         
         self.PBCXCheckBox = QtGui.QCheckBox("x")
         self.PBCXCheckBox.setChecked(1)
@@ -204,13 +206,82 @@ class PipelineForm(QtGui.QWidget):
         
         filterTabLayout.addWidget(group)
         
+        # add systems to combos
+        for fn in self.systemsDialog.getDisplayNames():
+            self.refCombo.addItem(fn)
+        
+        for fn in self.systemsDialog.getDisplayNames():
+            self.inputCombo.addItem(fn)
+        
         # refresh if ref already loaded
         if self.mainWindow.refLoaded:
             self.refreshAllFilters()
     
+    def shiftCell(self):
+        """
+        Shift cell
+        
+        """
+        # lattice
+        lattice = self.inputState
+        
+        # show dialog
+        dlg = dialogs.ShiftCellDialog(self.PBC, lattice.cellDims, parent=self)
+        status = dlg.exec_()
+        
+        if status == QtGui.QDialog.Accepted:
+            # amount
+            shift = np.empty(3, np.float64)
+            shift[0] = dlg.shiftXSpin.value()
+            shift[1] = dlg.shiftYSpin.value()
+            shift[2] = dlg.shiftZSpin.value()
+            
+            # loop over atoms
+            if shift[0] or shift[1] or shift[2]:
+                self.logger.debug("Shifting cell: x = %f; y = %f; z = %f", shift[0], shift[1], shift[2])
+                
+                # progress update interval
+                progressInterval = int(lattice.NAtoms / 10)
+                if progressInterval < 50:
+                    progressInterval = 50
+                elif progressInterval > 500:
+                    progressInterval = 500
+                
+                # set override cursor
+                QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+                try:
+                    # add progress dialog
+                    self.mainWindow.updateProgress(0, lattice.NAtoms, "Shifting cell")
+                    
+                    # loop over atoms
+                    for i in xrange(lattice.NAtoms):
+                        i3 = 3 * i
+                        for j in xrange(3):
+                            lattice.pos[i3 + j] += shift[j]
+                        
+                        # progress
+                        if i % progressInterval == 0:
+                            self.mainWindow.updateProgress(i, lattice.NAtoms, "Shifting cell")
+                    
+                    # wrap atoms back into periodic cell
+                    lattice.wrapAtoms()
+                
+                finally:
+                    self.mainWindow.hideProgressBar()
+                    QtGui.QApplication.restoreOverrideCursor()
+                
+                # run post ref render of Renderer (redraws cell)
+                for rw in self.rendererWindows:
+                    if rw.currentPipelineIndex == self.pipelineIndex:
+                        rw.renderer.postRefRender()
+                        rw.textSelector.refresh()
+                
+                # run post input loaded method
+                self.postInputLoaded()
+    
     def replicateCell(self):
         """
-        Replicate cell?
+        Replicate cell
         
         """
         self.logger.warning("'Replicate cell' is an experimental feature!")
@@ -219,25 +290,23 @@ class PipelineForm(QtGui.QWidget):
         status = dlg.exec_()
         
         if status == QtGui.QDialog.Accepted:
-            print "Replicating cell"
-            
             repDirs = np.zeros(3, np.int32)
             replicate = False
             
-            if dlg.replicateInXCheck.isChecked():
-                repDirs[0] = 1
+            numx = dlg.replicateInXSpin.value()
+            if numx:
+                repDirs[0] = numx
                 replicate = True
-                self.PBCXCheckBox.setCheckState(QtCore.Qt.Unchecked)
             
-            if dlg.replicateInYCheck.isChecked():
-                repDirs[1] = 1
+            numy = dlg.replicateInYSpin.value()
+            if numy:
+                repDirs[1] = numy
                 replicate = True
-                self.PBCYCheckBox.setCheckState(QtCore.Qt.Unchecked)
             
-            if dlg.replicateInZCheck.isChecked():
-                repDirs[2] = 1
+            numz = dlg.replicateInZSpin.value()
+            if numz:
+                repDirs[2] = numz
                 replicate = True
-                self.PBCZCheckBox.setCheckState(QtCore.Qt.Unchecked)
             
             if replicate:
                 self.logger.warning("Replicating cell: this will modify the current input state everywhere")
@@ -245,30 +314,80 @@ class PipelineForm(QtGui.QWidget):
                 
                 #TODO: write in C
                 lattice = self.inputState
-                numatoms = lattice.NAtoms
-                halfCell = lattice.cellDims / 2.0
                 newpos = np.empty(3, np.float64)
                 cellDims = lattice.cellDims
-                for i in xrange(numatoms):
-                    sym = lattice.atomSym(i)
-                    pos = lattice.atomPos(i)
-                    q = lattice.charge[i]
-                    ke = lattice.KE[i]
-                    pe = lattice.PE[i]
-                    for j in xrange(3):
-                        if repDirs[j]:
-                            if pos[j] < halfCell[j]:
-                                newpos[:] = pos[:]
-                                newpos[j] += cellDims[j]
-                                lattice.addAtom(sym, newpos, q, KE=ke, PE=pe)
-                            
-                            else:
-                                newpos[:] = pos[:]
-                                newpos[j] -= cellDims[j]
-                                lattice.addAtom(sym, newpos, q, KE=ke, PE=pe)
                 
-                # run all filter lists
-                self.runAllFilterLists()
+                # calculate final number of atoms
+                numfin = lattice.NAtoms
+                for i in xrange(3):
+                    numfin += numfin * repDirs[i]
+                numadd = numfin - lattice.NAtoms
+                self.logger.debug("Replicating cell: adding %d atoms", numadd)
+                
+                # progress update interval
+                progressInterval = int(numadd / 10)
+                if progressInterval < 50:
+                    progressInterval = 50
+                elif progressInterval > 500:
+                    progressInterval = 500
+                
+                # set override cursor
+                QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+                try:
+                    # add progress dialog
+                    self.mainWindow.updateProgress(0, numadd, "Replicating cell")
+                    
+                    # loop over directions
+                    count = 0
+                    for i in xrange(3):
+                        self.logger.debug("Replicating along axis %d: %d times", i, repDirs[i])
+                        
+                        # store num atoms at beginning of this direction
+                        NAtoms = lattice.NAtoms
+                        
+                        # loop over number of replications in this direction
+                        for j in xrange(repDirs[i]):
+                            # loop over atoms
+                            for k in xrange(NAtoms):
+                                # attributes to copy to new atom
+                                sym = lattice.atomSym(k)
+                                q = lattice.charge[k]
+                                scalarVals = {}
+                                for name, scalarsArray in lattice.scalarsDict.iteritems():
+                                    scalarVals[name] = scalarsArray[k]
+                                vectorVals = {}
+                                for name, vectorsArray in lattice.vectorsDict.iteritems():
+                                    vectorVals[name] = vectorsArray[k]
+                                
+                                # new position
+                                pos = lattice.atomPos(k)
+                                newpos[:] = pos[:]
+                                newpos[i] += (j + 1) * cellDims[i]
+                                
+                                # add atom
+                                lattice.addAtom(sym, newpos, q, scalarVals=scalarVals, vectorVals=vectorVals)
+                                
+                                # progress
+                                count += 1
+                                if count % progressInterval == 0:
+                                    self.mainWindow.updateProgress(count, numadd, "Replicating cell")
+                                    
+                        # change cell dimension
+                        lattice.cellDims[i] += cellDims[i] * repDirs[i]
+                        self.logger.debug("New cellDims along axis %d: %f", i, lattice.cellDims[i])
+                
+                finally:
+                    self.mainWindow.hideProgressBar()
+                    QtGui.QApplication.restoreOverrideCursor()
+                
+                # run post ref render of Renderer (redraws cell)
+                for rw in self.rendererWindows:
+                    if rw.currentPipelineIndex == self.pipelineIndex:
+                        rw.renderer.postRefRender()
+                        rw.textSelector.refresh()
+                
+                # run post input loaded method
+                self.postInputLoaded()
     
     def PBCXChanged(self, val):
         """
@@ -328,6 +447,11 @@ class PipelineForm(QtGui.QWidget):
         """
         self.refCombo.addItem(filename)
         self.inputCombo.addItem(filename)
+        
+        if not self.mainToolbar.tabWidget.isTabEnabled(1):
+            # enable and switch to analysis tab after first file is loaded
+            self.mainToolbar.tabWidget.setTabEnabled(1, True)
+            self.mainToolbar.tabWidget.setCurrentIndex(1)
     
     def removeStateOption(self, index):
         """
@@ -350,13 +474,12 @@ class PipelineForm(QtGui.QWidget):
         
         diff = False
         for i in xrange(3):
-#             if inp.cellDims[i] != ref.cellDims[i]:
             if math.fabs(inp.cellDims[i] - ref.cellDims[i]) > 1e-4:
                 diff = True
                 break
         
         if diff:
-            self.mainWindow.console.write("WARNING: cell dims differ")
+            self.logger.warning("Cell dims differ")
             
         return diff
     
@@ -391,22 +514,11 @@ class PipelineForm(QtGui.QWidget):
         self.removeInfoWindows()
         self.refreshAllFilters()
         
-        if self.analysisPipelineFormHidden:
-            self.mainToolbar.analysisPipelinesForm.show()
-            self.analysisPipelineFormHidden = False
-        
-        else:
-            # auto run filters... ?
-            pass
-        
         for rw in self.rendererWindows:
             if rw.currentPipelineIndex == self.pipelineIndex:
-                rw.textSelector.refresh()
-                rw.outputDialog.plotTab.rdfForm.refresh()
-                rw.outputDialog.imageTab.imageSequenceTab.resetPrefix()
+                rw.postInputChanged()
         
         settings = self.mainWindow.preferences.renderingForm
-        
         if self.inputState.NAtoms <= settings.maxAtomsAutoRun:
             self.runAllFilterLists()
     
@@ -442,7 +554,6 @@ class PipelineForm(QtGui.QWidget):
         if status:
             # must change input too
             self.inputCombo.setCurrentIndex(index)
-#             self.inputChanged(index)
     
     def inputChanged(self, index):
         """
@@ -460,10 +571,12 @@ class PipelineForm(QtGui.QWidget):
             return
         
         self.inputState = state
-        self.inputStackIndex = item.stackIndex
         self.filename = item.displayName
         self.extension = item.extension
         self.abspath = item.abspath
+        self.fileFormat = item.fileFormat
+        self.linkedLattice = item.linkedLattice
+        self.fromSFTP = item.fromSFTP
         self.PBC = state.PBC
         self.setPBCChecks()
         
@@ -473,7 +586,6 @@ class PipelineForm(QtGui.QWidget):
         if status:
             # must change ref too
             self.refCombo.setCurrentIndex(index)
-#             self.refChanged(index)
         
         # post input loaded
         self.postInputLoaded()
@@ -497,13 +609,6 @@ class PipelineForm(QtGui.QWidget):
         for filterList in self.filterLists:
             filterList.removeInfoWindows()
     
-    def showFilterSummary(self):
-        """
-        Show filtering summary.
-        
-        """
-        pass
-    
     def removeOnScreenInfo(self):
         """
         Remove on screen info.
@@ -518,7 +623,7 @@ class PipelineForm(QtGui.QWidget):
         Clear all actors.
         
         """
-        self.log("Clearing all actors")
+        self.logger.debug("Clearing all actors")
         
         for filterList in self.filterLists:
             filterList.filterer.removeActors()
@@ -550,6 +655,7 @@ class PipelineForm(QtGui.QWidget):
             progDiag = utils.showProgressDialog("Applying lists", "Applying lists...", self)
         
         try:
+            status = 0
             count = 0
             for filterList in self.filterLists:
                 self.logger.info("  Running filter list %d", count)
@@ -569,11 +675,19 @@ class PipelineForm(QtGui.QWidget):
                 if rw.currentPipelineIndex == self.pipelineIndex:
                     rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
         
+        except:
+            exctype, value = sys.exc_info()[:2]
+            self.logger.exception("Run all filter lists failed!")
+            self.mainWindow.displayError("Run all filter lists failed!\n\n%s: %s" % (exctype, value))
+            status = 1
+        
         finally:
             if not sequencer:
                 utils.cancelProgressDialog(progDiag)
         
         self.mainWindow.setStatus("Ready")
+        
+        return status
     
     def refreshOnScreenInfo(self):
         """
@@ -613,7 +727,7 @@ class PipelineForm(QtGui.QWidget):
         Clear all the filter lists
         
         """
-        self.log("Clearing all filter lists")
+        self.logger.debug("Clearing all filter lists")
         for filterList in self.filterLists:
             filterList.clearList()
             self.removeFilterList()
@@ -663,7 +777,7 @@ class PipelineForm(QtGui.QWidget):
         Refresh filter settings
         
         """
-        self.log("Refreshing filters", 3)
+        self.logger.debug("Refreshing filters")
         for filterList in self.filterLists:
             currentSettings = filterList.getCurrentFilterSettings()
             for filterSettings in currentSettings:
@@ -671,6 +785,8 @@ class PipelineForm(QtGui.QWidget):
             
             filterList.bondsOptions.refresh()
             filterList.vectorsOptions.refresh()
+            filterList.colouringOptions.refreshScalarColourOption()
+            filterList.refreshAvailableFilters()
     
     def gatherVisibleAtoms(self):
         """
@@ -764,14 +880,18 @@ class PipelineForm(QtGui.QWidget):
             onAntisites = filterer.onAntisites
             splitInts = filterer.splitInterstitials
             scalarsDict = filterer.scalarsDict
+            latticeScalarsDict = filterer.latticeScalarsDict
+            vectorsDict = filterer.vectorsDict
             
             result = np.empty(3, np.float64)
             
-            status = picker_c.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos, 
-                                         inputState.pos, refState.pos, pickPBC, inputState.cellDims,
-                                         minPos, maxPos, inputState.specie, 
-                                         refState.specie, inputState.specieCovalentRadius, 
-                                         refState.specieCovalentRadius, result)
+            status = picker.pickObject(visibleAtoms, vacancies, interstitials, onAntisites, splitInts, pickPos, 
+                                       inputState.pos, refState.pos, pickPBC, inputState.cellDims,
+                                       inputState.specie, refState.specie, inputState.specieCovalentRadius, 
+                                       refState.specieCovalentRadius, result)
+            
+            if status:
+                raise RuntimeError("Picker exited with non zero status (%d)" % status)
             
             tmp_type, tmp_index, tmp_sep = result
             
@@ -799,6 +919,12 @@ class PipelineForm(QtGui.QWidget):
                 minSepScalars = {}
                 for scalarType, scalarArray in scalarsDict.iteritems():
                     minSepScalars[scalarType] = scalarArray[tmp_index]
+                for scalarType, scalarArray in latticeScalarsDict.iteritems():
+                    minSepScalars[scalarType] = scalarArray[tmp_index]
+                
+                minSepVectors = {}
+                for vectorType, vectorArray in vectorsDict.iteritems():
+                    minSepVectors[vectorType] = vectorArray[tmp_index]
         
         logger.debug("Closest object to pick: %f (threshold: %f)", minSep, 0.1)
         
@@ -810,7 +936,7 @@ class PipelineForm(QtGui.QWidget):
                 viewAction = QtGui.QAction("View atom", self)
                 viewAction.setToolTip("View atom info")
                 viewAction.setStatusTip("View atom info")
-                viewAction.triggered.connect(functools.partial(self.viewAtomClicked, minSepIndex, minSepType, minSepFilterList, minSepScalars, defList))
+                viewAction.triggered.connect(functools.partial(self.viewAtomClicked, minSepIndex, minSepType, minSepFilterList, minSepScalars, minSepVectors, defList))
                 
                 editAction = QtGui.QAction("Edit atom", self)
                 editAction.setToolTip("Edit atom")
@@ -841,7 +967,7 @@ class PipelineForm(QtGui.QWidget):
             
             else:
                 # show the info window
-                self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalars, defList)
+                self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalars, minSepVectors, defList)
     
     def checkIfAtomVisible(self, index):
         """
@@ -858,7 +984,7 @@ class PipelineForm(QtGui.QWidget):
         
         return visible, visibleFilterList
     
-    def showInfoWindow(self, minSepIndex, minSepType, minSepFilterList, minSepScalars, defList):
+    def showInfoWindow(self, minSepIndex, minSepType, minSepFilterList, minSepScalars, minSepVectors, defList):
         """
         Show info window
         
@@ -879,11 +1005,11 @@ class PipelineForm(QtGui.QWidget):
         else:
             if minSepType == 0:
                 # atom info window
-                window = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalars, minSepFilterList, parent=self)
+                window = infoDialogs.AtomInfoWindow(self, minSepIndex, minSepScalars, minSepVectors, minSepFilterList, parent=self)
             
             else:
                 # defect info window
-                window = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, minSepFilterList, parent=self)
+                window = infoDialogs.DefectInfoWindow(self, minSepIndex, minSepType, defList, minSepScalars, minSepVectors, minSepFilterList, parent=self)
             
             # store window for reuse
             minSepFilterList.infoWindows[windowKey] = window
@@ -894,7 +1020,7 @@ class PipelineForm(QtGui.QWidget):
         # show window
         window.show()
     
-    def viewAtomClicked(self, minSepIndex, minSepType, minSepFilterList, minSepScalars, defList):
+    def viewAtomClicked(self, minSepIndex, minSepType, minSepFilterList, minSepScalars, minSepVectors, defList):
         """
         View atom
         
@@ -902,7 +1028,7 @@ class PipelineForm(QtGui.QWidget):
         logger = self.logger
         logger.debug("View atom action; Index is %d", minSepIndex)
         
-        self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalars, defList)
+        self.showInfoWindow(minSepIndex, minSepType, minSepFilterList, minSepScalars, minSepVectors, defList)
     
     def editAtomClicked(self, index):
         """

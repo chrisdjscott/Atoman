@@ -3,7 +3,6 @@
 Additional options for filter lists.
 
 """
-import sys
 import functools
 import logging
 import math
@@ -12,12 +11,6 @@ from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
 from . import genericForm
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -443,6 +436,8 @@ class BondsOptionsWindow(QtGui.QDialog):
     much slower to render and interact with.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, mainWindow, parent=None):
         super(BondsOptionsWindow, self).__init__(parent)
         
@@ -453,7 +448,7 @@ class BondsOptionsWindow(QtGui.QDialog):
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Bonds options")
-        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("other/molecule1.png")))
         
         self.mainWindow = mainWindow
         
@@ -581,10 +576,11 @@ class BondsOptionsWindow(QtGui.QDialog):
         self.drawBonds = state
         
         if self.drawBonds:
-            self.parent.bondsOptionsButton.setText("Bonds options: On")
-        
+            text = "Bonds options: On"
         else:
-            self.parent.bondsOptionsButton.setText("Bonds options: Off")
+            text = "Bonds options: Off"
+        
+        self.modified.emit(text)
     
     def refresh(self):
         """
@@ -685,6 +681,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
     to set the text that appears on the scalar bar.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, parent=None):
         super(ColouringOptionsWindow, self).__init__(parent)
         
@@ -695,7 +693,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
 #        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Filter list colouring options")
-        self.setWindowIcon(QtGui.QIcon(iconPath("painticon.png")))
+        self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/applications-graphics.png")))
         
         # defaults
         self.colourBy = "Specie"
@@ -707,7 +705,6 @@ class ColouringOptionsWindow(QtGui.QDialog):
                                float(self.solidColour.green()) / 255.0,
                                float(self.solidColour.blue()) / 255.0)
         self.scalarBarText = "Height in Y (A)"
-        self.atomPropertyType = "Kinetic energy"
         
         # layout
         windowLayout = QtGui.QVBoxLayout(self)
@@ -717,8 +714,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.colouringCombo.addItem("Specie")
         self.colouringCombo.addItem("Height")
         self.colouringCombo.addItem("Solid colour")
-        self.colouringCombo.addItem("Atom property")
-#        self.colouringCombo.addItem("Scalar")
+        self.colouringCombo.addItem("Charge")
         self.colouringCombo.currentIndexChanged.connect(self.colourByChanged)
         
         windowLayout.addWidget(self.colouringCombo)
@@ -807,57 +803,50 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.stackedWidget.addWidget(solidColourOptions)
         
         # atom property widget
-        atomPropertyOptions = genericForm.GenericForm(self, 0, "Atom property options")
-        
-        # type
-        self.propertyTypeCombo = QtGui.QComboBox()
-        self.propertyTypeCombo.addItems(("Kinetic energy", "Potential energy", "Charge"))
-        self.propertyTypeCombo.currentIndexChanged.connect(self.propertyTypeChanged)
-        row = atomPropertyOptions.newRow()
-        row.addWidget(self.propertyTypeCombo)
+        chargeOptions = genericForm.GenericForm(self, 0, "Charge colouring options")
         
         # min/max
-        self.propertyMinSpin = QtGui.QDoubleSpinBox()
-        self.propertyMinSpin.setSingleStep(0.1)
-        self.propertyMinSpin.setMinimum(-9999.0)
-        self.propertyMinSpin.setMaximum(9999.0)
-        self.propertyMinSpin.setValue(0)
+        self.chargeMinSpin = QtGui.QDoubleSpinBox()
+        self.chargeMinSpin.setSingleStep(0.1)
+        self.chargeMinSpin.setMinimum(-9999.0)
+        self.chargeMinSpin.setMaximum(9999.0)
+        self.chargeMinSpin.setValue(0)
         
-        self.propertyMaxSpin = QtGui.QDoubleSpinBox()
-        self.propertyMaxSpin.setSingleStep(0.1)
-        self.propertyMaxSpin.setMinimum(-9999.0)
-        self.propertyMaxSpin.setMaximum(9999.0)
-        self.propertyMaxSpin.setValue(1)
+        self.chargeMaxSpin = QtGui.QDoubleSpinBox()
+        self.chargeMaxSpin.setSingleStep(0.1)
+        self.chargeMaxSpin.setMinimum(-9999.0)
+        self.chargeMaxSpin.setMaximum(9999.0)
+        self.chargeMaxSpin.setValue(1)
         
         label = QtGui.QLabel( " Min " )
         label2 = QtGui.QLabel( " Max " )
         
-        row = atomPropertyOptions.newRow()
+        row = chargeOptions.newRow()
         row.addWidget(label)
-        row.addWidget(self.propertyMinSpin)
+        row.addWidget(self.chargeMinSpin)
         
-        row = atomPropertyOptions.newRow()
+        row = chargeOptions.newRow()
         row.addWidget(label2)
-        row.addWidget(self.propertyMaxSpin)
+        row.addWidget(self.chargeMaxSpin)
         
         # set to scalar range
-        setToPropertyRangeButton = QtGui.QPushButton("Set to scalar range")
-        setToPropertyRangeButton.setAutoDefault(0)
-        setToPropertyRangeButton.clicked.connect(self.setToPropertyRange)
+        setToChargeRangeButton = QtGui.QPushButton("Set to charge range")
+        setToChargeRangeButton.setAutoDefault(0)
+        setToChargeRangeButton.clicked.connect(self.setToChargeRange)
         
-        row = atomPropertyOptions.newRow()
-        row.addWidget(setToPropertyRangeButton)
+        row = chargeOptions.newRow()
+        row.addWidget(setToChargeRangeButton)
         
         # scalar bar text
-        self.scalarBarTextEdit3 = QtGui.QLineEdit("<insert title>")
+        self.scalarBarTextEdit3 = QtGui.QLineEdit("Charge")
         
         label = QtGui.QLabel("Scalar bar title:")
-        row = atomPropertyOptions.newRow()
+        row = chargeOptions.newRow()
         row.addWidget(label)
-        row = atomPropertyOptions.newRow()
+        row = chargeOptions.newRow()
         row.addWidget(self.scalarBarTextEdit3)
         
-        self.stackedWidget.addWidget(atomPropertyOptions)
+        self.stackedWidget.addWidget(chargeOptions)
         
         # scalar widgets
         self.scalarWidgets = {}
@@ -871,40 +860,21 @@ class ColouringOptionsWindow(QtGui.QDialog):
         buttonBox.rejected.connect(self.reject)
         windowLayout.addWidget(buttonBox)
     
-    def propertyTypeChanged(self, val):
-        """
-        Property type changed.
-        
-        """
-        self.atomPropertyType = str(self.propertyTypeCombo.currentText())
-        
-        self.parent.colouringOptionsButton.setText("Colouring options: %s" % self.atomPropertyType)
-        self.scalarBarTextEdit3.setText(self.atomPropertyType)
-    
-    def setToPropertyRange(self):
+    def setToChargeRange(self):
         """
         Set min/max to scalar range.
         
         """
         lattice = self.parent.filterTab.inputState
         
-        if self.atomPropertyType == "Kinetic energy":
-            minVal = min(lattice.KE)
-            maxVal = max(lattice.KE)
-        
-        elif self.atomPropertyType == "Potential energy":
-            minVal = min(lattice.PE)
-            maxVal = max(lattice.PE)
-        
-        else:
-            minVal = min(lattice.charge)
-            maxVal = max(lattice.charge)
+        minVal = min(lattice.charge)
+        maxVal = max(lattice.charge)
         
         if minVal == maxVal:
             maxVal += 1
         
-        self.propertyMinSpin.setValue(minVal)
-        self.propertyMaxSpin.setValue(maxVal)
+        self.chargeMinSpin.setValue(minVal)
+        self.chargeMaxSpin.setValue(maxVal)
     
     def setToScalarRange(self, scalarType):
         """
@@ -914,10 +884,24 @@ class ColouringOptionsWindow(QtGui.QDialog):
         logger = logging.getLogger(__name__)
         logger.debug("Setting to scalar range (%s)", scalarType)
         
-        scalarsDict = self.parent.filterer.scalarsDict
+        if scalarType.startswith("Lattice: "):
+            key = scalarType[9:]
+            if key in self.parent.filterer.latticeScalarsDict:
+                scalarsDict = self.parent.filterer.latticeScalarsDict
+            else:
+                scalarsDict = self.parent.pipelinePage.inputState.scalarsDict
+            scalars = scalarsDict[key]
+            
+        else:
+            scalarsDict = self.parent.filterer.scalarsDict
+            try:
+                scalars = scalarsDict[scalarType]
+            except KeyError:
+                logger.warning("You must run the filters before setting to scalar range")
+                return
         
-        minVal = min(scalarsDict[scalarType])
-        maxVal = max(scalarsDict[scalarType])
+        minVal = min(scalars)
+        maxVal = max(scalars)
         if math.fabs(minVal - maxVal) < 0.01:
             maxVal += 1
         
@@ -975,7 +959,12 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(setToScalarRangeButton)
          
         # scalar bar text
-        scalarBarTextEdit = QtGui.QLineEdit("%s" % name)
+        if name.startswith("Lattice: "):
+            scalarBarName = name[9:]
+        else:
+            scalarBarName = name
+        
+        scalarBarTextEdit = QtGui.QLineEdit("%s" % scalarBarName)
         self.scalarBarTexts[name] = scalarBarTextEdit
          
         label = QtGui.QLabel("Scalar bar title:")
@@ -999,20 +988,26 @@ class ColouringOptionsWindow(QtGui.QDialog):
         iniText = str(self.colouringCombo.currentText())
         logger.debug("Initially selected: '%s'", iniText)
         
-        # ref to scalarsDict
-        scalarsDict = self.parent.filterer.scalarsDict
+        # scalars provided by current filters
+        currentFiltersScalars = self.parent.getCurrentFilterScalars()
+        
+        # lattice scalars dict
+        inputState = self.parent.pipelinePage.inputState
+        latticeScalarsDict = inputState.scalarsDict
+        latticeScalarsNames = ["Lattice: {0}".format(key) for key in latticeScalarsDict.keys()]
         
         # list of previous scalar types
         previousScalarTypes = []
         for i in xrange(4, self.colouringCombo.count()):
             previousScalarTypes.append(str(self.colouringCombo.itemText(i)))
         
-        logger.debug("New scalars: %r", scalarsDict.keys())
+        logger.debug("New scalars (Lattice): %r", latticeScalarsNames)
+        logger.debug("New scalars (Filters): %r", currentFiltersScalars)
         logger.debug("Old scalars: %r", previousScalarTypes)
         
         # check if need to remove any scalar types
         for i, name in enumerate(previousScalarTypes):
-            if name not in scalarsDict:
+            if name not in currentFiltersScalars and name not in latticeScalarsNames:
                 logger.debug("Removing '%s'", name)
                 
                 # if selected set zero
@@ -1026,10 +1021,21 @@ class ColouringOptionsWindow(QtGui.QDialog):
                         self.removeScalarWidget(name)
         
         # add new
-        for scalarType in scalarsDict:
+        for scalarType in currentFiltersScalars:
             # already in?
             if scalarType in previousScalarTypes:
                 logger.debug("Skipping '%s'; already exists", scalarType)
+            
+            else:
+                logger.debug("Adding: '%s'", scalarType)
+                self.colouringCombo.addItem(scalarType)
+                self.addScalarWidget(scalarType)
+        
+        for scalarType in latticeScalarsNames:
+            # already in?
+            if scalarType in previousScalarTypes:
+                logger.debug("Skipping '%s'; already exists", scalarType)
+            
             else:
                 logger.debug("Adding: '%s'", scalarType)
                 self.colouringCombo.addItem(scalarType)
@@ -1096,13 +1102,12 @@ class ColouringOptionsWindow(QtGui.QDialog):
         """
         self.colourBy = str(self.colouringCombo.currentText())
         
-        if self.colourBy == "Atom property":
-            colourByText = str(self.propertyTypeCombo.currentText())
-            self.scalarBarTextEdit3.setText(self.atomPropertyType)
+        if self.colourBy.startswith("Lattice: "):
+            cbtext = self.colourBy[9:] + "(L)"
         else:
-            colourByText = self.colourBy
+            cbtext = self.colourBy
         
-        self.parent.colouringOptionsButton.setText("Colouring options: %s" % colourByText)
+        self.modified.emit("Colouring: %s" % cbtext)
         
         self.stackedWidget.setCurrentIndex(index)
     
@@ -1132,6 +1137,8 @@ class TraceOptionsWindow(QtGui.QDialog):
       much slower to render and interact with.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, mainWindow, parent=None):
         super(TraceOptionsWindow, self).__init__(parent)
         
@@ -1250,6 +1257,13 @@ class TraceOptionsWindow(QtGui.QDialog):
         
         """
         self.drawTraceVectors = drawVectors
+        
+        if self.drawTraceVectors:
+            text = "Trace options: On"
+        else:
+            text = "Trace options: Off"
+        
+        self.modified.emit(text)
 
 ################################################################################
 
@@ -1265,6 +1279,8 @@ class VectorsOptionsWindow(QtGui.QDialog):
     * "Vector resolution" sets the resolution of the arrows cone and shaft.
     
     """
+    modified = QtCore.Signal(str)
+    
     def __init__(self, mainWindow, parent=None):
         super(VectorsOptionsWindow, self).__init__(parent)
         
@@ -1288,6 +1304,7 @@ class VectorsOptionsWindow(QtGui.QDialog):
         self.vectorRadiusVTK = 0.03
         self.vectorResolution = 6
         self.vectorScaleFactor = 1.0
+        self.vectorNormalise = False
         
         # layout
         layout = QtGui.QFormLayout(self)
@@ -1300,6 +1317,13 @@ class VectorsOptionsWindow(QtGui.QDialog):
         self.vectorsList.itemChanged.connect(self.listItemChanged)
         layout.addRow(self.vectorsList)
         
+        # normalise vectors
+        normaliseVectorsCheck = QtGui.QCheckBox()
+        normaliseVectorsCheck.setChecked(self.vectorNormalise)
+        normaliseVectorsCheck.setToolTip("Normalise the vector before applying the scaling")
+        normaliseVectorsCheck.stateChanged.connect(self.normaliseChanged)
+        layout.addRow("Normalise vector", normaliseVectorsCheck)
+        
         # scale vectors
         scaleVectorsCheck = QtGui.QDoubleSpinBox()
         scaleVectorsCheck.setMinimum(0.1)
@@ -1307,8 +1331,8 @@ class VectorsOptionsWindow(QtGui.QDialog):
         scaleVectorsCheck.setSingleStep(0.1)
         scaleVectorsCheck.setValue(self.vectorScaleFactor)
         scaleVectorsCheck.valueChanged.connect(self.vectorScaleFactorChanged)
-        scaleVectorsCheck.setToolTip("Scale the vectors by this amount")
-        layout.addRow("Scale vectors", scaleVectorsCheck)
+        scaleVectorsCheck.setToolTip("Scale the vector by this amount")
+        layout.addRow("Scale vector", scaleVectorsCheck)
         
         # vtk radius
 #         vtkRadiusSpin = QtGui.QDoubleSpinBox()
@@ -1346,6 +1370,17 @@ class VectorsOptionsWindow(QtGui.QDialog):
         
         # always refresh
         self.refresh()
+    
+    def normaliseChanged(self, state):
+        """
+        Normalise check changed
+        
+        """
+        if state == QtCore.Qt.Unchecked:
+            self.vectorNormalise = False
+        
+        else:
+            self.vectorNormalise = True
     
     def vectorScaleFactorChanged(self, val):
         """
@@ -1386,11 +1421,11 @@ class VectorsOptionsWindow(QtGui.QDialog):
             if changedItem.vectorsName == self.selectedVectorsName:
                 self.logger.debug("Deselecting vectors: '%s'", self.selectedVectorsName)
                 self.selectedVectorsName = None
-                self.parent.vectorsOptionsButton.setText("Vectors options: None")
+                self.modified.emit("Vectors options: None")
         
         else:
             self.selectedVectorsName = changedItem.vectorsName
-            self.parent.vectorsOptionsButton.setText("Vectors options: '{0}'".format(self.selectedVectorsName))
+            self.modified.emit("Vectors options: '{0}'".format(self.selectedVectorsName))
             
             # deselect others
             for i in xrange(self.vectorsList.count()):
@@ -1428,7 +1463,7 @@ class VectorsOptionsWindow(QtGui.QDialog):
             # make this 'and' so that if a lattice is missing one specie we still
             # keep the pair in case it comes back later... 
             if item.vectorsName not in inputState.vectorsDict:
-                self.logger.debug("  Removing vectors option: '%s'", item.name)
+                self.logger.debug("  Removing vectors option: '%s'", item.vectorsName)
                 item = self.vectorsList.takeItem(i)
                 if self.selectedVectorsName == item.vectorsName:
                     self.selectedVectorsName = None
@@ -1497,6 +1532,9 @@ class ActorsOptionsWindow(QtGui.QDialog):
         
         # defaults
         self.refreshing = False
+        self.ambientSpins = []
+        self.specularSpins = []
+        self.specularPowerSpins = []
         
         # layout
         layout = QtGui.QFormLayout(self)
@@ -1504,9 +1542,9 @@ class ActorsOptionsWindow(QtGui.QDialog):
         
         # draw vectors list widget
         self.tree = QtGui.QTreeWidget()
-        self.tree.setColumnCount(1)
+        self.tree.setColumnCount(4)
         self.tree.itemChanged.connect(self.itemChanged)
-        self.tree.setHeaderLabel("Visibility")
+        self.tree.setHeaderLabels(("Visibility", "Ambient", "Specular", "Specular power"))
         layout.addRow(self.tree)
         
         # button box
@@ -1524,6 +1562,11 @@ class ActorsOptionsWindow(QtGui.QDialog):
         
         #TODO: if child is unchecked, parent should be too
         #TODO: when all children are checked, parent should be checked too
+        
+        print "ITEM CHANGED", item, column
+        if column != 0:
+            print "  IGNORING"
+            return
         
         if item.checkState(0) == QtCore.Qt.Unchecked:
             if item.childCount():
@@ -1625,6 +1668,9 @@ class ActorsOptionsWindow(QtGui.QDialog):
             
             # clear the tree
             self.tree.clear()
+            del self.ambientSpins[:]
+            del self.specularSpins[:]
+            del self.specularPowerSpins[:]
             
             # populate
             for key in sorted(actorsDict.keys()):
@@ -1638,20 +1684,85 @@ class ActorsOptionsWindow(QtGui.QDialog):
                     parent.setCheckState(0, QtCore.Qt.Checked)
                     
                     for actorName in sorted(val.keys()):
-                        item = QtGui.QTreeWidgetItem(parent)
-                        item.setText(0, actorName)
-                        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                        item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
-                        item.setCheckState(0, QtCore.Qt.Checked)
+                        self.addItem(parent, key, actorName)
                 
                 else:
-                    actorName = key
-                    
-                    item = QtGui.QTreeWidgetItem(self.tree)
-                    item.setText(0, actorName)
-                    item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
-                    item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
-                    item.setCheckState(0, QtCore.Qt.Checked)
+                    self.addItem(self.tree, None, key)
         
         finally:
             self.refreshing = False
+    
+    def addItem(self, parent, parentName, name):
+        """
+        Add item with parent and name
+        
+        """
+        flt = self.parent.filterer
+        
+        item = QtGui.QTreeWidgetItem(parent)
+        item.setText(0, name)
+        item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
+        item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
+        item.setCheckState(0, QtCore.Qt.Checked)
+        
+        spin = QtGui.QDoubleSpinBox()
+        minval = 0
+        maxval = 1
+        spin.setMinimum(minval)
+        spin.setMaximum(maxval)
+        current = flt.getActorAmbient(name, parentName)
+        assert current <= maxval and current >= minval
+        spin.setValue(current)
+        spin.setSingleStep(0.1)
+        spin.valueChanged.connect(functools.partial(self.ambientSpinChanged, name, parentName))
+        self.ambientSpins.append(spin)
+        self.tree.setItemWidget(item, 1, spin)
+        
+        spin = QtGui.QDoubleSpinBox()
+        minval = 0
+        maxval = 1
+        spin.setMinimum(minval)
+        spin.setMaximum(maxval)
+        current = flt.getActorSpecular(name, parentName)
+        assert current <= maxval and current >= minval
+        spin.setValue(current)
+        spin.setSingleStep(0.1)
+        spin.valueChanged.connect(functools.partial(self.specularSpinChanged, name, parentName))
+        self.specularSpins.append(spin)
+        self.tree.setItemWidget(item, 2, spin)
+        
+        spin = QtGui.QDoubleSpinBox()
+        minval = 0
+        maxval = 1000
+        spin.setMinimum(minval)
+        spin.setMaximum(maxval)
+        current = flt.getActorSpecularPower(name, parentName)
+        assert current <= maxval and current >= minval
+        spin.setValue(current)
+        spin.setSingleStep(1)
+        spin.valueChanged.connect(functools.partial(self.specularPowerSpinChanged, name, parentName))
+        self.specularPowerSpins.append(spin)
+        self.tree.setItemWidget(item, 3, spin)
+        
+    
+    def ambientSpinChanged(self, name, parentName, val):
+        """
+        Ambient spin changed
+        
+        """
+        self.parent.filterer.setActorAmbient(name, parentName, val)
+    
+    def specularSpinChanged(self, name, parentName, val):
+        """
+        Specular spin changed
+        
+        """
+        self.parent.filterer.setActorSpecular(name, parentName, val)
+    
+    def specularPowerSpinChanged(self, name, parentName, val):
+        """
+        Specular power spin changed
+        
+        """
+        self.parent.filterer.setActorSpecularPower(name, parentName, val)
+    

@@ -1,6 +1,6 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2012
+ ** Copyright Chris Scott 2015
  ** Functions associated with spatially decomposing a system of atoms into boxes
  ** 
  ** 
@@ -15,8 +15,7 @@
  *******************************************************************************/
 
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <math.h>
 #include "boxeslib.h"
 
@@ -24,41 +23,35 @@
 
 /*******************************************************************************
  ** create and return pointer to Boxes structure
- ** #TODO: if PBCs are set min/max pos should be equal to cell dims
  *******************************************************************************/
-struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos, int *PBC, double *cellDims)
+struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
 {
     int i;
     double cellLength;
     struct Boxes *boxes;
     
     
+    //TODO: limit the number of boxes; use long instead?
+    
     /* allocate space for boxes struct */
     boxes = malloc(1 * sizeof(struct Boxes));
     if (boxes == NULL)
     {
-        printf("ERROR: could not allocate boxes\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate boxes");
+        return NULL;
     }
     
     /* setup boxes */
-    for (i=0; i<3; i++)
+    for (i = 0; i < 3; i++)
     {
         /* store some parameters */
         boxes->PBC[i] = PBC[i];
         boxes->cellDims[i] = cellDims[i];
         
-        /* if PBC box cell, otherwise box min-max pos */
-        if (boxes->PBC[i] == 0)
-        {
-            boxes->minPos[i] = minPos[i];
-            boxes->maxPos[i] = maxPos[i];
-        }
-        else
-        {
-            boxes->minPos[i] = 0.0;
-            boxes->maxPos[i] = boxes->cellDims[i];
-        }
+        /* Always box cell only, atoms outside will be either wrapped (PBCs) or
+         * placed in nearest outer box (no PBCs) */
+        boxes->minPos[i] = 0.0;
+        boxes->maxPos[i] = boxes->cellDims[i];
         
         /* size of the region in this direction */
         cellLength = boxes->maxPos[i] - boxes->minPos[i];
@@ -79,17 +72,20 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
     boxes->boxNAtoms = calloc(boxes->totNBoxes, sizeof(int));
     if (boxes->boxNAtoms == NULL)
     {
-        printf("ERROR: could not allocate boxNAtoms\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate boxNAtoms");
+        free(boxes);
+        return NULL;
     }
     
     boxes->boxAtoms = malloc(boxes->totNBoxes * sizeof(int *));
     if (boxes->boxAtoms == NULL)
     {
-        printf("ERROR: could not allocate boxAtoms\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate boxAtoms");
+        free(boxes->boxNAtoms);
+        free(boxes);
+        return NULL;
     }
-        
+    
     return boxes;
 }
 
@@ -97,9 +93,10 @@ struct Boxes * setupBoxes(double approxBoxWidth, double *minPos, double *maxPos,
 /*******************************************************************************
  ** put atoms into boxes
  *******************************************************************************/
-void putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
+int putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
 {
     int i, boxIndex, newsize;
+    int status = 0;
     
     
     for (i=0; i<NAtoms; i++)
@@ -113,8 +110,11 @@ void putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
             boxes->boxAtoms[boxIndex] = malloc(boxes->allocChunk * sizeof(int));
             if (boxes->boxAtoms[boxIndex] == NULL)
             {
-                printf("ERROR: could not allocate boxAtoms[%d]\n", boxIndex);
-                exit(50);
+                char errstring[128];
+                sprintf(errstring, "Could not allocate boxAtoms[%d]", boxIndex);
+                PyErr_SetString(PyExc_MemoryError, errstring);
+                freeBoxes(boxes);
+                return 1;
             }
         }
         
@@ -125,15 +125,19 @@ void putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
             boxes->boxAtoms[boxIndex] = realloc(boxes->boxAtoms[boxIndex], newsize * sizeof(int));
             if (boxes->boxAtoms[boxIndex] == NULL)
             {
-                printf("ERROR: could not reallocate boxAtoms[%d]: %d\n", boxIndex, newsize);
-                exit(50);
+                char errstring[128];
+                sprintf(errstring, "Could not reallocate boxAtoms[%d]: %d", boxIndex, newsize);
+                PyErr_SetString(PyExc_MemoryError, errstring);
+                freeBoxes(boxes);
+                return 1;
             }
         }
         
         /* add atom to box */
-        boxes->boxAtoms[boxIndex][boxes->boxNAtoms[boxIndex]] = i;
-        boxes->boxNAtoms[boxIndex]++;
+        boxes->boxAtoms[boxIndex][boxes->boxNAtoms[boxIndex]++] = i;
     }
+    
+    return status;
 }
 
 
@@ -237,10 +241,14 @@ int boxIndexOfAtom(double xpos, double ypos, double zpos, struct Boxes *boxes)
     
     if (boxIndex < 0)
     {
-        printf("WARNING: boxIndexOfAtom (CLIB): boxIndex < 0: %d, %d %d %d\n", boxIndex, posintx, posinty, posintz);
-        printf("         pos = %f %f %f, box widths = %f %f %f, NBoxes = %d %d %d\n", xpos, ypos, zpos, boxes->boxWidth[0], boxes->boxWidth[1], 
+        fprintf(stderr, "Error: boxIndexOfAtom (CLIB): boxIndex < 0: %d, %d %d %d\n", boxIndex, posintx, posinty, posintz);
+        fprintf(stderr, "       pos = %f %f %f, box widths = %f %f %f, NBoxes = %d %d %d\n", xpos, ypos, zpos, boxes->boxWidth[0], boxes->boxWidth[1], 
                 boxes->boxWidth[2], boxes->NBoxes[0], boxes->NBoxes[1], boxes->NBoxes[2]);
-        printf("         min box pos = %f %f %f\n", boxes->minPos[0], boxes->minPos[1], boxes->minPos[2]);
+        fprintf(stderr, "       min box pos = %f %f %f\n", boxes->minPos[0], boxes->minPos[1], boxes->minPos[2]);
+        
+        PyErr_SetString(PyExc_RuntimeError, "Box index is negative");
+        return -1;
+        
     }
     
     return boxIndex;
@@ -290,66 +298,97 @@ int boxIndexFromIJK(int xindex, int yindex, int zindex, struct Boxes *boxes)
 
 /*******************************************************************************
  ** returns neighbourhood of given box
+ ** boxNeighbourList must be of size >= 27
  *******************************************************************************/
-void getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes)
+int getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes)
 {
     int mainBoxIJK[3];
-    int i, j, k;
-    int posintx, posinty, posintz;
-    int index, count;
+    int i, count;
+    int lstart[3], lfinish[3];
     
     
     /* first get i,j,k indices of the main box */
-    boxIJKIndices( 3, mainBoxIJK, mainBox, boxes );
-            
+    boxIJKIndices(3, mainBoxIJK, mainBox, boxes);
+    
+    /* handle cases where we have less than three boxes in a direction */
+    for (i = 0; i < 3; i++)
+    {
+        int num = boxes->NBoxes[i];
+        
+        if (num == 1)
+        {
+            lstart[i] = 0;
+            lfinish[i] = 1;
+        }
+        else if (num == 2)
+        {
+            lstart[i] = 0;
+            lfinish[i] = 2;
+        }
+        else
+        {
+            lstart[i] = -1;
+            lfinish[i] = 2;
+        }
+    }
+    
+    //TODO: only wrap if using PBC, don't bother otherwise!
+    
     /* loop over each direction */
     count = 0;
-    for ( i=0; i<3; i++ )
+    for (i = lstart[0]; i < lfinish[0]; i++)
     {
-        posintx = mainBoxIJK[0] - 1 + i;
+        int j;
+        int posintx = mainBoxIJK[0] + i;
+        
         /* wrap */
-        if ( posintx < 0 )
+        if (posintx < 0)
         {
             posintx += boxes->NBoxes[0];
         }
-        else if ( posintx >= boxes->NBoxes[0] )
+        else if (posintx >= boxes->NBoxes[0])
         {
             posintx -= boxes->NBoxes[0];
         }
         
-        for ( j=0; j<3; j++ )
+        for (j = lstart[1]; j < lfinish[1]; j++)
         {
-            posinty = mainBoxIJK[1] - 1 + j;
+            int k;
+            int posinty = mainBoxIJK[1] + j;
+            
             /* wrap */
             if ( posinty < 0 )
             {
                 posinty += boxes->NBoxes[1];
             }
-            else if ( posinty >= boxes->NBoxes[1] )
+            else if (posinty >= boxes->NBoxes[1])
             {
                 posinty -= boxes->NBoxes[1];
             }
             
-            for ( k=0; k<3; k++ )
+            for (k = lstart[2]; k < lfinish[2]; k++)
             {
-                posintz = mainBoxIJK[2] - 1 + k;
+                int index;
+                int posintz = mainBoxIJK[2] + k;
+                
                 /* wrap */
-                if ( posintz < 0 )
+                if (posintz < 0)
                 {
                     posintz += boxes->NBoxes[2];
                 }
-                else if ( posintz >= boxes->NBoxes[2] )
+                else if (posintz >= boxes->NBoxes[2])
                 {
                     posintz -= boxes->NBoxes[2];
                 }
                 
                 /* get index of box from this i,j,k */
-                index = boxIndexFromIJK( posintx, posinty, posintz, boxes );
-                boxNeighbourList[count] = index;
-                count++;
+                index = boxIndexFromIJK(posintx, posinty, posintz, boxes);
+                boxNeighbourList[count++] = index;
             }
         }
     }
+    
+    return count;
 }
 
 
@@ -361,14 +400,12 @@ void freeBoxes(struct Boxes *boxes)
     int i;
     
     
-    for (i=0; i<boxes->totNBoxes; i++)
+    for (i = 0; i < boxes->totNBoxes; i++)
     {
-        if (boxes->boxNAtoms[i] > 0)
-        {
-            free(boxes->boxAtoms[i]);
-        }
+        if (boxes->boxNAtoms[i]) free(boxes->boxAtoms[i]);
     }
     free(boxes->boxAtoms);
     free(boxes->boxNAtoms);
     free(boxes);
+    boxes->totNBoxes = 0;
 }

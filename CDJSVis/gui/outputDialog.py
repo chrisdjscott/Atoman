@@ -6,7 +6,6 @@ The output tab for the main toolbar
 
 """
 import os
-import sys
 import shutil
 import subprocess
 import copy
@@ -29,12 +28,6 @@ from ..plotting import rdf as rdf_c
 from ..algebra import _vectors as vectors_c
 from ..plotting import plotDialog
 from . import utils
-
-try:
-    from .. import resources
-except ImportError:
-    print "ERROR: could not import resources: ensure setup.py ran correctly"
-    sys.exit(36)
 
 
 ################################################################################
@@ -156,26 +149,6 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
         ppindex = pp.pipelineIndex
         lattice = pp.inputState
         
-        # add PE plot option
-        scalarsArray = lattice.PE
-        if np.min(scalarsArray) == 0 == np.max(scalarsArray):
-            self.logger.debug(" Skipping PE: all zero")
-        else:
-            self.logger.debug(" Adding PE plot")
-            scalarsName = "Potential energy"
-            scalarsID = "%s (%d)" % (scalarsName, ppindex)
-            self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
-        
-        # add KE plot option
-        scalarsArray = lattice.KE
-        if np.min(scalarsArray) == 0 == np.max(scalarsArray):
-            self.logger.debug(" Skipping KE: all zero")
-        else:
-            self.logger.debug(" Adding KE plot")
-            scalarsName = "Kinetic energy"
-            scalarsID = "%s (%d)" % (scalarsName, ppindex)
-            self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
-        
         # add charge plot option
         scalarsArray = lattice.charge
         if np.min(scalarsArray) == 0 == np.max(scalarsArray):
@@ -253,6 +226,24 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
             # loop over scalars in scalarsDict on filterer
             for scalarsName, scalarsArray in filterList.filterer.scalarsDict.iteritems():
                 # make unique id
+                scalarsID = "%s (%s)" % (scalarsName, filterListID)
+                
+                # add
+                self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
+            
+            # loop over scalars in latticeScalarsDict on filterer
+            latticeScalarKeys = filterList.pipelinePage.inputState.scalarsDict.keys()
+            for key in latticeScalarKeys:
+                if key in filterList.filterer.latticeScalarsDict:
+                    scalarsArray = filterList.filterer.latticeScalarsDict[key]
+                    self.logger.debug("Using Filterer scalars for '%s'", key)
+                
+                else:
+                    scalarsArray = filterList.pipelinePage.inputState.scalarsDict[key]
+                    self.logger.debug("Using Lattice scalars for '%s'", key)
+            
+                # make unique id
+                scalarsName = key
                 scalarsID = "%s (%s)" % (scalarsName, filterListID)
                 
                 # add
@@ -413,7 +404,7 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         row.addWidget(showAsFractionCheck)
         
         # plot button
-        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Plotter.png")), "Plot")
+        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")), "Plot")
         plotButton.clicked.connect(self.makePlot)
         row = self.newRow()
         row.addWidget(plotButton)
@@ -481,7 +472,7 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
             binWidth = self.binWidth
             
             # min
-            tmp = int(minVal / binWidth)
+            tmp = math.floor(minVal / binWidth)
             assert tmp * binWidth <= minVal and (tmp + 1) * binWidth > minVal
             minVal = tmp * binWidth
             
@@ -546,7 +537,7 @@ class RDFForm(genericForm.GenericForm):
         self.spec2 = "ALL"
         self.binMin = 2.0
         self.binMax = 10.0
-        self.NBins = 100
+        self.binWidth = 0.1
         
         # bond type
         label = QtGui.QLabel("Bond type:")
@@ -574,7 +565,7 @@ class RDFForm(genericForm.GenericForm):
         binMinSpin = QtGui.QDoubleSpinBox()
         binMinSpin.setMinimum(0.0)
         binMinSpin.setMaximum(500.0)
-        binMinSpin.setSingleStep(0.01)
+        binMinSpin.setSingleStep(1.0)
         binMinSpin.setValue(self.binMin)
         binMinSpin.valueChanged.connect(self.binMinChanged)
         row.addWidget(binMinSpin)
@@ -585,26 +576,26 @@ class RDFForm(genericForm.GenericForm):
         binMaxSpin = QtGui.QDoubleSpinBox()
         binMaxSpin.setMinimum(0.0)
         binMaxSpin.setMaximum(500.0)
-        binMaxSpin.setSingleStep(0.01)
+        binMaxSpin.setSingleStep(1.0)
         binMaxSpin.setValue(self.binMax)
         binMaxSpin.valueChanged.connect(self.binMaxChanged)
         row.addWidget(binMaxSpin)
         
         # num bins
-        label = QtGui.QLabel("Number of bins:")
+        label = QtGui.QLabel("Bin width:")
         row = self.newRow()
         row.addWidget(label)
         
-        numBinsSpin = QtGui.QSpinBox()
-        numBinsSpin.setMinimum(2)
-        numBinsSpin.setMaximum(100000)
-        numBinsSpin.setSingleStep(1)
-        numBinsSpin.setValue(self.NBins)
-        numBinsSpin.valueChanged.connect(self.numBinsChanged)
-        row.addWidget(numBinsSpin)
+        binWidthSpin = QtGui.QDoubleSpinBox()
+        binWidthSpin.setMinimum(0.01)
+        binWidthSpin.setMaximum(1.00)
+        binWidthSpin.setSingleStep(0.1)
+        binWidthSpin.setValue(self.binWidth)
+        binWidthSpin.valueChanged.connect(self.binWidthChanged)
+        row.addWidget(binWidthSpin)
         
         # plot button
-        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("Plotter.png")), "Plot")
+        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")), "Plot")
         plotButton.clicked.connect(self.plotRDF)
         row = self.newRow()
         row.addWidget(plotButton)
@@ -702,7 +693,9 @@ class RDFForm(genericForm.GenericForm):
             spec2Index = int(np.where(specieList == self.spec2)[0][0])
         
         # prelims
-        rdfArray = np.zeros(self.NBins, np.float64)
+        numBins = int((self.binMax - self.binMin) / self.binWidth)
+        rdfArray = np.zeros(numBins, np.float64)
+        self.logger.debug("Bin width is %f; number of bins is %d", self.binWidth, numBins)
         
         # show progress dialog
         progDiag = utils.showProgressDialog("Calculating RDF", "Calculating RDF...", self)
@@ -712,22 +705,20 @@ class RDFForm(genericForm.GenericForm):
         
         try:
             # then calculate
-            rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.minPos,
-                               inputLattice.maxPos, inputLattice.cellDims, pp.PBC, self.binMin, self.binMax, self.NBins,
-                               rdfArray, ompNumThreads)
+            rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.cellDims,
+                               pp.PBC, self.binMin, self.binMax, self.binWidth, numBins, rdfArray, ompNumThreads)
         
         finally:
             utils.cancelProgressDialog(progDiag)
         
         # then plot
-        interval = (self.binMax - self.binMin) / float(self.NBins)
-        xn = np.arange(self.binMin + interval / 2.0, self.binMax, interval, dtype=np.float64)
+        xn = np.arange(self.binMin + self.binWidth / 2.0, self.binMax, self.binWidth, dtype=np.float64)
         
         # prepare to plot
         settingsDict = {}
         settingsDict["title"] = "Radial distribution function"
-        settingsDict["xlabel"] = "Bond length (A)"
-        settingsDict["ylabel"] = "%s - %s G(r)" % (self.spec1, self.spec2)
+        settingsDict["xlabel"] = "Bond length (Angstroms)"
+        settingsDict["ylabel"] = "g(r) (%s - %s)" % (self.spec1, self.spec2)
         
         # show plot dialog
         dialog = plotDialog.PlotDialog(self, self.mainWindow, "Radial distribution function ", 
@@ -735,12 +726,12 @@ class RDFForm(genericForm.GenericForm):
                                        settingsDict=settingsDict)
         dialog.show()
     
-    def numBinsChanged(self, val):
+    def binWidthChanged(self, val):
         """
         Num bins changed.
         
         """
-        self.NBins = val
+        self.binWidth = val
     
     def binMinChanged(self, val):
         """
@@ -826,7 +817,7 @@ class FileTab(QtGui.QWidget):
         label = QtGui.QLabel("File name: ")
         self.outputFileName = QtGui.QLineEdit("lattice.dat")
         self.outputFileName.setFixedWidth(120)
-        saveFileButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
+        saveFileButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/document-save.png")), "")
         saveFileButton.setToolTip("Save to file")
         saveFileButton.clicked.connect(self.saveToFile)
         
@@ -837,7 +828,7 @@ class FileTab(QtGui.QWidget):
         # dialog
         row = fileNameGroup.newRow()
         
-        saveFileDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Save to file")
+        saveFileDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "Save to file")
         saveFileDialogButton.setToolTip("Save to file")
         saveFileDialogButton.setCheckable(0)
         saveFileDialogButton.setFixedWidth(150)
@@ -941,11 +932,11 @@ class ImageTab(QtGui.QWidget):
         renderTypeButtonGroup.setExclusive(1)
         renderTypeButtonGroup.buttonClicked[int].connect(self.setRenderType)
         
-        self.POVButton = QtGui.QPushButton(QtGui.QIcon(iconPath("pov-icon.svg")), "POV-Ray")
+        self.POVButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/pov-icon.svg")), "POV-Ray")
         self.POVButton.setCheckable(1)
         self.POVButton.setChecked(0)
         
-        self.VTKButton = QtGui.QPushButton(QtGui.QIcon(iconPath("vtk-icon.svg")), "VTK")
+        self.VTKButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/vtk-icon.svg")), "VTK")
         self.VTKButton.setCheckable(1)
         self.VTKButton.setChecked(1)
         
@@ -1177,7 +1168,7 @@ class SingleImageTab(QtGui.QWidget):
         label = QtGui.QLabel("File name")
         self.imageFileName = QtGui.QLineEdit("image")
         self.imageFileName.setFixedWidth(120)
-        saveImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("image-x-generic.svg")), "")
+        saveImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/document-save.png")), "")
         saveImageButton.setToolTip("Save image")
         saveImageButton.clicked.connect(functools.partial(self.saveSingleImage, True))
         
@@ -1193,7 +1184,7 @@ class SingleImageTab(QtGui.QWidget):
         rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
-        saveImageDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('document-open.svg')), "Save image")
+        saveImageDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "Save image")
         saveImageDialogButton.setToolTip("Save image")
         saveImageDialogButton.setCheckable(0)
         saveImageDialogButton.setFixedWidth(150)
@@ -1419,9 +1410,10 @@ class ImageSequenceTab(QtGui.QWidget):
         self.logger = logging.getLogger(__name__+".ImageSequenceTab")
         
         # initial values
-        self.numberFormat = "%04d"
+        self.numberFormats = ["%04d", "%d"]
+        self.numberFormat = self.numberFormats[0]
         self.minIndex = 0
-        self.maxIndex = 10
+        self.maxIndex = -1
         self.interval = 1
         self.fileprefixText = "guess"
         self.overwrite = False
@@ -1464,7 +1456,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.fileprefix.setFixedWidth(120)
         self.fileprefix.textChanged[str].connect(self.fileprefixChanged)
         
-        resetPrefixButton = QtGui.QPushButton(QtGui.QIcon(iconPath("edit-paste.svg")), "")
+        resetPrefixButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-find.png")), "")
         resetPrefixButton.setStatusTip("Set prefix to input file")
         resetPrefixButton.setToolTip("Set prefix to input file")
         resetPrefixButton.clicked.connect(self.resetPrefix)
@@ -1491,8 +1483,7 @@ class ImageSequenceTab(QtGui.QWidget):
         
 #        label = QtGui.QLabel("Number format")
         self.numberFormatCombo = QtGui.QComboBox()
-        self.numberFormatCombo.addItem("%04d")
-        self.numberFormatCombo.addItem("%d")
+        self.numberFormatCombo.addItems(self.numberFormats)
         self.numberFormatCombo.currentIndexChanged[str].connect(self.numberFormatChanged)
         
 #        rowLayout.addWidget(label)
@@ -1515,10 +1506,11 @@ class ImageSequenceTab(QtGui.QWidget):
         label = QtGui.QLabel("to")
         
         self.maxIndexSpinBox = QtGui.QSpinBox()
-        self.maxIndexSpinBox.setMinimum(1)
+        self.maxIndexSpinBox.setMinimum(-1)
         self.maxIndexSpinBox.setMaximum(99999)
         self.maxIndexSpinBox.setValue(self.maxIndex)
         self.maxIndexSpinBox.valueChanged[int].connect(self.maxIndexChanged)
+        self.maxIndexSpinBox.setToolTip("The max index (inclusive; if less than min index do all we can find)")
         
         label2 = QtGui.QLabel("by")
         
@@ -1615,7 +1607,7 @@ class ImageSequenceTab(QtGui.QWidget):
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        startSequencerButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
+        startSequencerButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/go-last.png")), "START")
         startSequencerButton.setStatusTip("Start sequencer")
         startSequencerButton.setToolTip("Start sequencer")
         startSequencerButton.clicked.connect(self.startSequencer)
@@ -1731,7 +1723,18 @@ class ImageSequenceTab(QtGui.QWidget):
             
             count += 1
         
-        return filename[:lim]
+        if lim is None:
+            array = os.path.splitext(filename)
+            
+            if array[1] == '.gz' or array[1] == '.bz2':
+                array = os.path.splitext(array[0])
+            
+            filename = array[0]
+        
+        else:
+            filename = filename[:lim]
+        
+        return filename
     
     def startSequencer(self):
         """
@@ -1745,6 +1748,8 @@ class ImageSequenceTab(QtGui.QWidget):
         Run the sequencer
         
         """
+        self.logger.info("Running sequencer")
+        
         if self.parent.renderType == "POV":
             settings = self.mainWindow.preferences.povrayForm
             povray = utilities.checkForExe(settings.pathToPovray)
@@ -1760,15 +1765,24 @@ class ImageSequenceTab(QtGui.QWidget):
         # get pipeline page
         pipelinePage = self.rendererWindow.getCurrentPipelinePage()
         
+        # check this is not a generated system
+        if pipelinePage.fileFormat is None:
+            self.logger.error("Cannot sequence a generated file")
+            self.mainWindow.displayError("Cannot sequence a generated file")
+            return
+        
         # formatted string
-        fileText = "%s%s.%s" % (str(self.fileprefix.text()), self.numberFormat, pipelinePage.extension)
+        fileText = "%s%s%s" % (str(self.fileprefix.text()), self.numberFormat, pipelinePage.extension)
         
         # check abspath (for sftp)
         abspath = pipelinePage.abspath
         sftpBrowser = None
-        if ":" in abspath:
-            self.logger.debug("Sequencing SFTP file")
-            sftpHost, sftpFile = abspath.split(":")
+        if pipelinePage.fromSFTP:
+            self.logger.debug("Sequencing SFTP file: '%s'", abspath)
+            array = abspath.split(":")
+            sftpHost = array[0]
+            # handle case where ":"'s are in the file path
+            sftpFile = ":".join(array[1:])
             self.logger.debug("Host: '%s'; path: '%s'", sftpHost, sftpFile)
             
             sysDiag = self.mainWindow.systemsDialog
@@ -1800,19 +1814,46 @@ class ImageSequenceTab(QtGui.QWidget):
             return
         
         # check last file exists
-        lastFile = fileText % self.maxIndex
-        if sftpBrowser is None:
-            lastFileExists = utilities.checkForFile(lastFile)
+        if self.maxIndex > self.minIndex:
+            lastFile = fileText % self.maxIndex
+            if sftpBrowser is None:
+                lastFileExists = utilities.checkForFile(lastFile)
+            else:
+                rp = os.path.join(os.path.dirname(sftpFile), lastFile)
+                self.logger.debug("Checking last file exists (SFTP): '%s'", rp)
+                lastFileExists = bool(sftpBrowser.checkPathExists(rp)) or bool(sftpBrowser.checkPathExists(rp+".gz")) or bool(sftpBrowser.checkPathExists(rp+".bz2"))
+            
+            if not lastFileExists:
+                self.warnFileNotPresent(lastFile, tag="last")
+                return
+            
+            maxIndex = self.maxIndex
+        
         else:
-            rp = os.path.join(os.path.dirname(sftpFile), lastFile)
-            self.logger.debug("Checking last file exists (SFTP): '%s'", rp)
-            lastFileExists = bool(sftpBrowser.checkPathExists(rp)) or bool(sftpBrowser.checkPathExists(rp+".gz")) or bool(sftpBrowser.checkPathExists(rp+".bz2"))
-        
-        if not lastFileExists:
-            self.warnFileNotPresent(lastFile, tag="last")
-            return
-        
-        self.logger.info("Running sequencer")
+            # find greatest file
+            self.logger.info("Auto-detecting last sequencer file")
+            
+            lastIndex = self.minIndex
+            lastFile = fileText % lastIndex
+            
+            if sftpBrowser is None:
+                def _checkForLastFile(fn):
+                    return utilities.checkForFile(fn)
+            
+            else:
+                def _checkForLastFile(fn):
+                    rp = os.path.join(os.path.dirname(sftpFile), lastFile)
+                    return bool(sftpBrowser.checkPathExists(rp)) or bool(sftpBrowser.checkPathExists(rp+".gz")) or bool(sftpBrowser.checkPathExists(rp+".bz2"))
+            
+            while _checkForLastFile(lastFile):
+                lastIndex += 1
+                lastFile = fileText % lastIndex
+            
+            lastIndex -= 1
+            lastFile = fileText % lastIndex
+            maxIndex = lastIndex
+            
+            self.logger.info("Last file detected as: '%s'", lastFile)
         
         # store current input state
         origInput = copy.deepcopy(self.rendererWindow.getCurrentInputState())
@@ -1820,30 +1861,13 @@ class ImageSequenceTab(QtGui.QWidget):
         # pipeline index
         pipelineIndex = self.rendererWindow.currentPipelineIndex
         
-        # stack index from systems dialog
-        ida, idb = pipelinePage.inputStackIndex
-        
-        if ida != 0:
-            self.logger.error("Cannot sequence a generated lattice")
-            return
-        
-        self.logger.debug("  Input stack index: %d, %d", ida, idb)
-        
+        # systems dialog
         systemsDialog = self.mainWindow.systemsDialog
-        iniStackIndexa = systemsDialog.new_system_stack.currentIndex()
+        loadPage = systemsDialog.load_system_form
         
-        systemsDialog.new_system_stack.setCurrentIndex(ida)
-        in_page = systemsDialog.new_system_stack.currentWidget()
-        iniStackIndexb = in_page.stackedWidget.currentIndex()
-        
-        in_page.stackedWidget.setCurrentIndex(idb)
-        readerForm = in_page.stackedWidget.currentWidget()
+        # reader 
+        readerForm = loadPage.readerForm
         reader = readerForm.latticeReader
-        
-        # back to original
-        in_page.stackedWidget.setCurrentIndex(iniStackIndexb)
-        systemsDialog.new_system_stack.setCurrentIndex(iniStackIndexa)
-        
         self.logger.debug("  Reader: %s %s", str(readerForm), str(reader))
         
         # directory
@@ -1873,7 +1897,7 @@ class ImageSequenceTab(QtGui.QWidget):
             saveText2 = saveText + "_2"
         
         # progress dialog
-        NSteps = int((self.maxIndex - self.minIndex) / self.interval) + 1
+        NSteps = int((maxIndex - self.minIndex) / self.interval) + 1
         progDialog = QtGui.QProgressDialog("Running sequencer...", "Cancel", self.minIndex, NSteps)
         progDialog.setWindowModality(QtCore.Qt.WindowModal)
         progDialog.setWindowTitle("Progress")
@@ -1887,7 +1911,7 @@ class ImageSequenceTab(QtGui.QWidget):
         previousPos = None
         try:
             count = 0
-            for i in xrange(self.minIndex, self.maxIndex + self.interval, self.interval):
+            for i in xrange(self.minIndex, maxIndex + self.interval, self.interval):
                 if sftpBrowser is None:
                     currentFile = fileText % i
                     self.logger.info("Current file: '%s'", currentFile)
@@ -1925,12 +1949,7 @@ class ImageSequenceTab(QtGui.QWidget):
                     sftpBrowser.copySystem(remoteFile, currentFile)
                 
                 # read in state
-                if reader.requiresRef:
-                    status, state = reader.readFile(currentFile, readerForm.currentRefState, rouletteIndex=i-1)
-                
-                else:
-                    status, state = reader.readFile(currentFile, rouletteIndex=i-1)
-                
+                status, state = reader.readFile(currentFile, pipelinePage.fileFormat, rouletteIndex=i-1, linkedLattice=pipelinePage.linkedLattice)
                 if status:
                     self.logger.error("Sequencer read file failed with status: %d" % status)
                     break
@@ -1939,6 +1958,9 @@ class ImageSequenceTab(QtGui.QWidget):
                 if self.flickerFlag:
                     self.eliminateFlicker(state, previousPos, pipelinePage)
                     previousPos = copy.deepcopy(state.pos)
+                
+                # set PBCs the same
+                state.PBC[:] = origInput.PBC[:]
                 
                 # attempt to read any scalars/vectors files
                 for vectorsName, vectorsFile in origInput.vectorsFiles.iteritems():
@@ -2179,8 +2201,28 @@ class ImageSequenceTab(QtGui.QWidget):
         else:
             ext = pp.extension
         
-        text = "%s%s.%s" % (self.fileprefix.text(), self.numberFormat, ext)
-        self.firstFileLabel.setText(text % (self.minIndex,))
+        text = "%s%s%s" % (self.fileprefix.text(), self.numberFormat, ext)
+        
+        foundFormat = False
+        testfn = text % self.minIndex
+        if not (os.path.isfile(testfn) or os.path.isfile(testfn+'.gz') or os.path.isfile(testfn+'.bz2')):
+            self.logger.debug("First file does not exist; checking other number formats")
+            for i, nfmt in enumerate(self.numberFormats):
+                if nfmt == self.numberFormat:
+                    continue
+                
+                testText = "%s%s%s" % (self.fileprefix.text(), nfmt, ext)
+                testfn = testText % self.minIndex
+                if os.path.isfile(testfn) or os.path.isfile(testfn+'.gz') or os.path.isfile(testfn+'.bz2'):
+                    foundFormat = True
+                    break
+            
+            if foundFormat:
+                self.logger.debug("Found suitable number format: '%s'", nfmt)
+                self.numberFormatCombo.setCurrentIndex(i)
+        
+        if not foundFormat:
+            self.firstFileLabel.setText(text % (self.minIndex,))
     
     def minIndexChanged(self, val):
         """
@@ -2316,7 +2358,7 @@ class ImageRotateTab(QtGui.QWidget):
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        startRotatorButton = QtGui.QPushButton(QtGui.QIcon(iconPath("loadandsave-icon.svg")), "START")
+        startRotatorButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/go-last.png")), "START")
         startRotatorButton.setToolTip("Start sequencer")
         startRotatorButton.clicked.connect(self.startRotator)
         

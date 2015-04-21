@@ -10,7 +10,6 @@
 #include "utilities.h"
 #include "array_utils.h"
 
-
 static PyObject* pickObject(PyObject*, PyObject*);
 
 
@@ -40,7 +39,7 @@ pickObject(PyObject *self, PyObject *args)
 {
     int visibleAtomsDim, *visibleAtoms, vacsDim, *vacs, intsDim, *ints, onAntsDim, *onAnts, splitsDim, *splits;
     int *PBC, *specie, *refSpecie;
-    double *pickPos, *pos, *refPos, *cellDims, *minPos, *maxPos, *specieCovRad, *refSpecieCovRad, *result;  
+    double *pickPos, *pos, *refPos, *cellDims, *specieCovRad, *refSpecieCovRad, *result;  
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *vacsIn=NULL;
     PyArrayObject *intsIn=NULL;
@@ -51,8 +50,6 @@ pickObject(PyObject *self, PyObject *args)
     PyArrayObject *refPosIn=NULL;
     PyArrayObject *PBCIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
-    PyArrayObject *minPosIn=NULL;
-    PyArrayObject *maxPosIn=NULL;
     PyArrayObject *specieIn=NULL;
     PyArrayObject *refSpecieIn=NULL;
     PyArrayObject *specieCovRadIn=NULL;
@@ -63,11 +60,11 @@ pickObject(PyObject *self, PyObject *args)
     
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!O!O!O!O!O!O!O!O!O!O!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &vacsIn, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!O!O!O!O!O!O!O!O!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &vacsIn, 
             &PyArray_Type, &intsIn, &PyArray_Type, &onAntsIn, &PyArray_Type, &splitsIn, &PyArray_Type, &pickPosIn, &PyArray_Type, 
-            &posIn, &PyArray_Type, &refPosIn, &PyArray_Type, &PBCIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &minPosIn, 
-            &PyArray_Type, &maxPosIn, &PyArray_Type, &specieIn, &PyArray_Type, &refSpecieIn, &PyArray_Type, &specieCovRadIn,
-            &PyArray_Type, &refSpecieCovRadIn, &PyArray_Type, &resultIn))
+            &posIn, &PyArray_Type, &refPosIn, &PyArray_Type, &PBCIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &specieIn,
+            &PyArray_Type, &refSpecieIn, &PyArray_Type, &specieCovRadIn, &PyArray_Type, &refSpecieCovRadIn, &PyArray_Type,
+            &resultIn))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -105,12 +102,6 @@ pickObject(PyObject *self, PyObject *args)
     if (not_intVector(PBCIn)) return NULL;
     PBC = pyvector_to_Cptr_int(PBCIn);
     
-    if (not_doubleVector(minPosIn)) return NULL;
-    minPos = pyvector_to_Cptr_double(minPosIn);
-    
-    if (not_doubleVector(maxPosIn)) return NULL;
-    maxPos = pyvector_to_Cptr_double(maxPosIn);
-    
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
     
@@ -130,14 +121,17 @@ pickObject(PyObject *self, PyObject *args)
     // this should be detected automatically depending on cell size...
     approxBoxWidth = 4.0;
     
-    
     if (visibleAtomsDim > 0)
     {
-        int i, boxIndex, boxNebList[27];
-        int minSepIndex;
+        int i, boxIndex, boxNebList[27], boxstat;
+        int minSepIndex, boxNebListSize;
         double minSep, minSep2, minSepRad;
         double *visPos;
         struct Boxes *boxes;
+        
+#ifdef DEBUG
+        printf("PICKC: Picking atom\n");
+#endif
         
         /* vis atoms pos */
         visPos = malloc(3 * visibleAtomsDim * sizeof(double));
@@ -152,27 +146,42 @@ pickObject(PyObject *self, PyObject *args)
             int i3 = 3 * i;
             int index = visibleAtoms[i];
             int index3 = 3 * index;
-            
             visPos[i3    ] = pos[index3    ];
             visPos[i3 + 1] = pos[index3 + 1];
             visPos[i3 + 2] = pos[index3 + 2];
         }
         
         /* box vis atoms */
-        boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-        putAtomsInBoxes(visibleAtomsDim, visPos, boxes);
+        boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
+        if (boxes == NULL)
+        {
+            free(visPos);
+            return NULL;
+        }
+        boxstat = putAtomsInBoxes(visibleAtomsDim, visPos, boxes);
+        if (boxstat)
+        {
+            free(visPos);
+            return NULL;
+        }
         
         /* box index of picked pos */
         boxIndex = boxIndexOfAtom(pickPos[0], pickPos[1], pickPos[2], boxes);
+        if (boxIndex < 0)
+        {
+            free(visPos);
+            freeBoxes(boxes);
+            return NULL;
+        }
         
         /* neighbouring boxes */
-        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over neighbouring boxes, looking for nearest atom */
         minSep2 = 9999999.0;
         minSepIndex = -1;
         minSepRad = 0.0;
-        for (i = 0; i < 27; i++)
+        for (i = 0; i < boxNebListSize; i++)
         {
             int k;
             
@@ -223,11 +232,15 @@ pickObject(PyObject *self, PyObject *args)
     else
     {
         int i, NVis, count, minSepIndex;
-        int boxIndex, boxNebList[27];
-        int minSepType;
+        int boxIndex, boxNebList[27], boxstat;
+        int minSepType, boxNebListSize;
         double *visPos, *visCovRad, minSep, minSep2;
         double minSepRad;
         struct Boxes *boxes;
+        
+#ifdef DEBUG
+        printf("PICKC: Picking defect\n");
+#endif
         
         /* build positions array of all defects */
         NVis = vacsDim + intsDim + onAntsDim + splitsDim;
@@ -292,7 +305,7 @@ pickObject(PyObject *self, PyObject *args)
             int i3 = 3 * i;
             int index, c3, index3;
             
-            index = splits[i3];
+            index = splits[i3    ];
             index3 = index * 3;
             c3 = count * 3;
             visPos[c3    ] = refPos[index3    ];
@@ -300,7 +313,7 @@ pickObject(PyObject *self, PyObject *args)
             visPos[c3 + 2] = refPos[index3 + 2];
             visCovRad[count++] = refSpecieCovRad[refSpecie[index]];
             
-            index = splits[i3];
+            index = splits[i3 + 1];
             index3 = index * 3;
             c3 = count * 3;
             visPos[c3    ] = pos[index3    ];
@@ -308,7 +321,7 @@ pickObject(PyObject *self, PyObject *args)
             visPos[c3 + 2] = pos[index3 + 2];
             visCovRad[count++] = specieCovRad[specie[index]];
             
-            index = splits[i3];
+            index = splits[i3 + 2];
             index3 = index * 3;
             c3 = count * 3;
             visPos[c3    ] = pos[index3    ];
@@ -318,20 +331,39 @@ pickObject(PyObject *self, PyObject *args)
         }
         
         /* box vis atoms */
-        boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-        putAtomsInBoxes(NVis, visPos, boxes);
+        boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
+        if (boxes == NULL)
+        {
+            free(visPos);
+            free(visCovRad);
+            return NULL;
+        }
+        boxstat = putAtomsInBoxes(NVis, visPos, boxes);
+        if (boxstat)
+        {
+            free(visPos);
+            free(visCovRad);
+            return NULL;
+        }
         
         /* box index of picked pos */
         boxIndex = boxIndexOfAtom(pickPos[0], pickPos[1], pickPos[2], boxes);
+        if (boxIndex < 0)
+        {
+            free(visPos);
+            free(visCovRad);
+            freeBoxes(boxes);
+            return NULL;
+        }
         
         /* neighbouring boxes */
-        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over neighbouring boxes, looking for nearest atom */
         minSep2 = 9999999.0;
         minSepIndex = -1;
         minSepRad = 0.0;
-        for (i = 0; i < 27; i++)
+        for (i = 0; i < boxNebListSize; i++)
         {
             int k;
             
@@ -401,6 +433,10 @@ pickObject(PyObject *self, PyObject *args)
         free(visPos);
         free(visCovRad);
     }
+    
+#ifdef DEBUG
+    printf("PICKC: End\n");
+#endif
     
     return Py_BuildValue("i", 0);
 }

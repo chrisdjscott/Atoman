@@ -23,6 +23,7 @@ from CDJSVis.filtering import acna
 from CDJSVis.state import latticeReaders
 from CDJSVis.algebra import vectors
 from CDJSVis.filtering import voronoi
+from CDJSVis.filtering import clusters
 
 
 class Settings(object):
@@ -128,7 +129,13 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None):
     Point defects filter
     
     """
-    cellDims = refLattice.cellDims
+    if len(refLattice.cellDims) == 9:
+        cellDims = np.empty(3, np.float64)
+        cellDims[0] = refLattice.cellDims[0]
+        cellDims[1] = refLattice.cellDims[4]
+        cellDims[2] = refLattice.cellDims[8]
+    else:
+        cellDims = refLattice.cellDims
     pbc = np.ones(3, np.int32)
     
     if settings.useAcna:
@@ -139,6 +146,8 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None):
         acnaArray = np.empty(inputLattice.NAtoms, np.float64)
         NScalars = 0
         fullScalars = np.empty(NScalars, np.float64)
+        NVectors = 0
+        fullVectors = np.empty(NVectors, np.float64)
         structVis = np.ones(len(filterer.Filterer.knownStructures), np.int32)
         
         # counter array
@@ -149,7 +158,7 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None):
         
         acna.adaptiveCommonNeighbourAnalysis(visAtoms, inputLattice.pos, acnaArray, inputLattice.minPos, inputLattice.maxPos, 
                                              cellDims, pbc	, NScalars, fullScalars, settings.acnaMaxBondDistance, counters, 
-                                             0, structVis, numThreads) 
+                                             0, structVis, numThreads, NVectors, fullVectors) 
         
         # store counters
         d = {}
@@ -214,10 +223,6 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None):
     
     NDefectsByType = np.zeros(6, np.int32)
     
-    # set min/max pos to lattice (for boxing)
-    minPos = refLattice.minPos
-    maxPos = refLattice.maxPos
-    
     if settings.findClusters:
         defectCluster = np.empty(inputLattice.NAtoms + refLattice.NAtoms, np.int32)
     
@@ -228,7 +233,7 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None):
     status = _defects.findDefects(settings.showVacancies, settings.showInterstitials, settings.showAntisites, NDefectsByType, vacancies, 
                                   interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
                                   inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
-                                  refLattice.pos, cellDims, pbc, settings.vacancyRadius, minPos, maxPos, 
+                                  refLattice.pos, cellDims, pbc, settings.vacancyRadius,
                                   settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
                                   onAntSpecCount, splitIntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials, 
                                   settings.identifySplitInts, settings.driftCompensation, driftVector, acnaArray, settings.acnaStructureType)
@@ -376,6 +381,8 @@ def computeACNA(inputState, settings):
     scalars = np.zeros(inputState.NAtoms, dtype=np.float64)
     NScalars = 0
     fullScalars = np.empty(NScalars, np.float64)
+    NVectors = 0
+    fullVectors = np.empty(NVectors, np.float64)
     
     pbc = np.ones(3, np.int32)
     
@@ -384,7 +391,8 @@ def computeACNA(inputState, settings):
     
     NVisible = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.minPos, inputState.maxPos, 
                                                     inputState.cellDims, pbc, NScalars, fullScalars, settings.maxBondDistance,
-                                                    counters, settings.filteringEnabled, settings.structureVisibility)
+                                                    counters, settings.filteringEnabled, settings.structureVisibility, 1,
+                                                    NVectors, fullVectors)
     
     # resize visible atoms
     visibleAtoms.resize(NVisible, refcheck=False)
@@ -424,37 +432,40 @@ def main():
     xyz_reader = latticeReaders.LbomdXYZReader("/tmp", latticeReaders.basic_log, latticeReaders.basic_displayWarning, 
                                                    latticeReaders.basic_displayError)
     
-    work_dir = "/Volumes/Users_HD/Users/macdjs/postdoc/work.new/cascades/1keV_Ga_concentration/0/5percent/output.dir/system3/direction33"
+    work_dir = os.getcwd()
     
-    ref_file = os.path.join(work_dir, "ref.dat")
-    animref_file = os.path.join(work_dir, "animation-reference.xyz")
-    fin_file = os.path.join(work_dir, "final-relaxed.dat")
-    fin_file2 = os.path.join(work_dir, "PuGaH0200.xyz")
-    early_file = os.path.join(work_dir, "PuGaH0020.xyz")
+    fin_file = sys.argv[1]
+    ref_file = sys.argv[2]
+    
+#     ref_file = os.path.join(work_dir, "ref.dat")
+#     animref_file = os.path.join(work_dir, "animation-reference.xyz")
+#     fin_file = os.path.join(work_dir, "final-relaxed.dat")
+#     fin_file2 = os.path.join(work_dir, "PuGaH0200.xyz")
+#     early_file = os.path.join(work_dir, "PuGaH0020.xyz")
     
     status, ref = dat_reader.readFile(ref_file)
     assert not status
-    status, animref = ref_reader.readFile(animref_file)
-    assert not status
+#     status, animref = ref_reader.readFile(animref_file)
+#     assert not status
     status, finrel = dat_reader.readFile(fin_file)
     assert not status
-    status, fin = xyz_reader.readFile(fin_file2, animref)
-    assert not status
-    status, early = xyz_reader.readFile(early_file, animref)
-    assert not status
+#     status, fin = xyz_reader.readFile(fin_file2, animref)
+#     assert not status
+#     status, early = xyz_reader.readFile(early_file, animref)
+#     assert not status
     
     print "="*120
     
     # compute normal defects
     settings = Settings(showAntisites=0, vacancyRadius=1.3, driftCompensation=1)
-    res = findDefects(early, ref, settings)
+    res = findDefects(finrel, ref, settings)
     print "NDEF", res[0]
     
     print "="*120
     
     # compute defects with ACNA
     settings = Settings(showAntisites=0, vacancyRadius=1.3, driftCompensation=1, useAcna=True)
-    res = findDefects(early, ref, settings)
+    res = findDefects(finrel, ref, settings)
     print "NDEF", res[0]
     
 

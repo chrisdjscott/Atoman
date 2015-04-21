@@ -15,7 +15,7 @@ Required:
 * [NumPy](http://www.numpy.org/)
 * [SciPy](http://www.scipy.org/)
 * [Matplotlib](http://matplotlib.org/)
-* [PySide](https://pypi.python.org/pypi/PySide) (including 'pyside-rcc' (commonly included in 'pyside-tools' or similar))
+* [PySide](https://pypi.python.org/pypi/PySide)
 * [Pillow](https://pillow.readthedocs.org/)
 * [VTK](http://www.vtk.org/) (with the Python bindings enabled)
 * [Sphinx](http://sphinx-doc.org/)
@@ -45,6 +45,25 @@ If these are not installed in default system locations you can set the paths to 
 
 You can either build the code in-place or install it into the Python site-packages directory, for example within a [virtualenv](http://virtualenv.readthedocs.org/en/latest/).
 
+In both cases you should first copy the config file: `cp setup.cfg.example setup.cfg` and add/edit any relevant sections. There are some comments in the file although
+normally it can be left as is.
+
+### In-place build
+
+Build the documentation (includes inplace build of extensions):
+
+```
+python setup.py build_sphinx
+```
+
+and verify the tests run with no errors:
+
+```
+python setup.py test
+```
+
+Then you can add the `/path/to/CDJSVis` directory to you PYTHONPATH and PATH and run cdjsvis.py from anywhere.
+
 ### Installing to Python site-packages
 
 Build the documentation (includes inplace build of extensions):
@@ -67,22 +86,6 @@ python setup.py install
 ```
 
 If you are not using a virtual environment you may need to `sudo` the last (install) command.
-
-### In-place build
-
-Build the documentation (includes inplace build of extensions):
-
-```
-python setup.py build_sphinx
-```
-
-and verify the tests run with no errors:
-
-```
-python setup.py test
-```
-
-Then you can add the `/path/to/CDJSVis` directory to you PYTHONPATH and PATH and run cdjsvis.py from anywhere.
 
 ## Building application (Mac OS X)
 

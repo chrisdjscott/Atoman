@@ -89,7 +89,7 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
     
-    int i, NVisible;
+    int i, NVisible, status;
     double *visiblePos, approxBoxWidth, maxSep2;
     struct Boxes *boxes;
     struct NeighbourList2 *nebList;
@@ -144,26 +144,35 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     visiblePos = malloc(3 * NVisibleIn * sizeof(double));
     if (visiblePos == NULL)
     {
-        printf("ERROR: could not allocate visiblePos\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate visiblePos");
+        return NULL;
     }
     
-    for (i=0; i<NVisibleIn; i++)
+    for (i = 0; i < NVisibleIn; i++)
     {
-        int index;
-        
-        index = visibleAtoms[i];
-        
-        visiblePos[3*i] = pos[3*index];
-        visiblePos[3*i+1] = pos[3*index+1];
-        visiblePos[3*i+2] = pos[3*index+2];
+        int index = visibleAtoms[i];
+        int ind3 = 3 * index;
+        int i3 = 3 * i;
+        visiblePos[i3    ] = pos[ind3    ];
+        visiblePos[i3 + 1] = pos[ind3 + 1];
+        visiblePos[i3 + 2] = pos[ind3 + 2];
     }
     
     /* box visible atoms */
     approxBoxWidth = maxBondDistance;
     maxSep2 = maxBondDistance * maxBondDistance;
-    boxes = setupBoxes(approxBoxWidth, minPos, maxPos, PBC, cellDims);
-    putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
+    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
+    if (boxes == NULL)
+    {
+        free(visiblePos);
+        return NULL;
+    }
+    status = putAtomsInBoxes(NVisibleIn, visiblePos, boxes);
+    if (status)
+    {
+        free(visiblePos);
+        return NULL;
+    }
     
     /* create neighbour list */
     nebList = constructNeighbourList2(NVisibleIn, visiblePos, boxes, cellDims, PBC, maxSep2);
@@ -171,6 +180,8 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     /* only required for building neb list */
     freeBoxes(boxes);
     free(visiblePos);
+    
+    if (nebList == NULL) return NULL;
     
 /* now we order the neighbour lists by separation */
     
@@ -187,12 +198,12 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     #pragma omp parallel for
     for (i = 0; i < NVisibleIn; i++)
     {
-    	int atomStructure;
+        int atomStructure;
         
         atomStructure = analyseAtom(i, nebList);
-    	scalars[i] = (double) atomStructure;
+        scalars[i] = (double) atomStructure;
         #pragma omp atomic
-    	counters[atomStructure]++;
+        counters[atomStructure]++;
     }
     
 /* there should be option to only show atoms of specific structure type */
@@ -241,103 +252,103 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
  *******************************************************************************/
 static int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
 {
-	int i, j, nn, ok, visInd1, visInd2;
-	double localScaling, localCutoff;
-	double localScalingSum;
-	
-	
-	/* check we have the minimum number of neighbours */
-	if (nebList[mainIndex].neighbourCount < MIN_REQUIRED_NEBS)
-		return ATOM_STRUCTURE_DISORDERED;
-	
+    int i, j, nn, ok, visInd1, visInd2;
+    double localScaling, localCutoff;
+    double localScalingSum;
+    
+    
+    /* check we have the minimum number of neighbours */
+    if (nebList[mainIndex].neighbourCount < MIN_REQUIRED_NEBS)
+        return ATOM_STRUCTURE_DISORDERED;
+    
 /* first we test for FCC, HCP, Icosohedral (12 1NN) */
-	
-	/* number of neighbours to test for */
-	nn = 12;
-	
-	/* check enough nebs */
-	if (nebList[mainIndex].neighbourCount < nn)
-		return ATOM_STRUCTURE_DISORDERED;
-	
-	/* compute local cutoff */
-	localScaling = 0.0;
-	for (i = 0; i < nn; i++)
-	{
-		localScaling += nebList[mainIndex].neighbour[i].separation;
-	}
-	localScaling /= nn;
-	localCutoff = localScaling * (1.0 + M_SQRT2) / 2.0;
-	
-	/* at this point I feel like we should check that the 12 NN are within localCutoff ????? */
-	ok = 1;
-	for (i = 0; i < nn; i++)
-	{
-		if (nebList[mainIndex].neighbour[i].separation > localCutoff)
-		{
-			ok = 0;
-			break;
-		}
-	}
-	
-	if (ok)
-	{
-		int n421;
-		int n422;
-		int n555;
-		unsigned int neighbourArray[MAX_REQUIRED_NEBS] = {0};
-		
-		/* determine bonding between neighbours, based on local cutoff */
-		for (i = 0; i < nn; i++)
-		{
-			visInd1 = nebList[mainIndex].neighbour[i].index;
-			setNeighbourBond(neighbourArray, i, i, 0);
-			for (j = i + 1; j < nn; j++)
-			{
-				visInd2 = nebList[mainIndex].neighbour[j].index;
-				setNeighbourBond(neighbourArray, i, j, checkForNeighbourBond(visInd1, visInd2, nebList, localCutoff));
-			}
-		}
-		
-		n421 = 0;
-		n422 = 0;
-		n555 = 0;
-		for (i = 0; i < nn; i++)
-		{
-		    int numCommonNeighbours;
-		    int numNeighbourBonds;
-		    int maxChainLength;
-		    unsigned int commonNeighbours;
-		    unsigned int neighbourBonds[MAX_REQUIRED_NEBS*MAX_REQUIRED_NEBS] = {0};
-		    
-		    /* number of common neighbours */
-			numCommonNeighbours = findCommonNeighbours(neighbourArray, i, &commonNeighbours);
-			if (numCommonNeighbours != 4 && numCommonNeighbours != 5)
-				break;
-			
-			/* number of bonds among common neighbours */
-			numNeighbourBonds = findNeighbourBonds(neighbourArray, commonNeighbours, nn, neighbourBonds);
-			if (numNeighbourBonds != 2 && numNeighbourBonds != 5)
-			    break;
-			
-			/* number of bonds in the longest continuous chain */
-			maxChainLength = calcMaxChainLength(neighbourBonds, numNeighbourBonds);
-			if (numCommonNeighbours == 4 && numNeighbourBonds == 2)
-			{
-			    if (maxChainLength == 1) n421++;
-			    else if (maxChainLength == 2) n422++;
-			    else break;
-			}
-			else if (numCommonNeighbours == 5 && numNeighbourBonds == 5 && maxChainLength == 5) n555++;
-			else break;
-		}
-		if (n421 == 12) return ATOM_STRUCTURE_FCC;
-		else if (n421 == 6 && n422 == 6) return ATOM_STRUCTURE_HCP;
-		else if (n555 == 12) return ATOM_STRUCTURE_ICOSAHEDRAL;
-	}
-	
+    
+    /* number of neighbours to test for */
+    nn = 12;
+    
+    /* check enough nebs */
+    if (nebList[mainIndex].neighbourCount < nn)
+        return ATOM_STRUCTURE_DISORDERED;
+    
+    /* compute local cutoff */
+    localScaling = 0.0;
+    for (i = 0; i < nn; i++)
+    {
+        localScaling += nebList[mainIndex].neighbour[i].separation;
+    }
+    localScaling /= nn;
+    localCutoff = localScaling * (1.0 + M_SQRT2) / 2.0;
+    
+    /* at this point I feel like we should check that the 12 NN are within localCutoff ????? */
+    ok = 1;
+    for (i = 0; i < nn; i++)
+    {
+        if (nebList[mainIndex].neighbour[i].separation > localCutoff)
+        {
+            ok = 0;
+            break;
+        }
+    }
+    
+    if (ok)
+    {
+        int n421;
+        int n422;
+        int n555;
+        unsigned int neighbourArray[MAX_REQUIRED_NEBS] = {0};
+        
+        /* determine bonding between neighbours, based on local cutoff */
+        for (i = 0; i < nn; i++)
+        {
+            visInd1 = nebList[mainIndex].neighbour[i].index;
+            setNeighbourBond(neighbourArray, i, i, 0);
+            for (j = i + 1; j < nn; j++)
+            {
+                visInd2 = nebList[mainIndex].neighbour[j].index;
+                setNeighbourBond(neighbourArray, i, j, checkForNeighbourBond(visInd1, visInd2, nebList, localCutoff));
+            }
+        }
+        
+        n421 = 0;
+        n422 = 0;
+        n555 = 0;
+        for (i = 0; i < nn; i++)
+        {
+            int numCommonNeighbours;
+            int numNeighbourBonds;
+            int maxChainLength;
+            unsigned int commonNeighbours;
+            unsigned int neighbourBonds[MAX_REQUIRED_NEBS*MAX_REQUIRED_NEBS] = {0};
+            
+            /* number of common neighbours */
+            numCommonNeighbours = findCommonNeighbours(neighbourArray, i, &commonNeighbours);
+            if (numCommonNeighbours != 4 && numCommonNeighbours != 5)
+                break;
+            
+            /* number of bonds among common neighbours */
+            numNeighbourBonds = findNeighbourBonds(neighbourArray, commonNeighbours, nn, neighbourBonds);
+            if (numNeighbourBonds != 2 && numNeighbourBonds != 5)
+                break;
+            
+            /* number of bonds in the longest continuous chain */
+            maxChainLength = calcMaxChainLength(neighbourBonds, numNeighbourBonds);
+            if (numCommonNeighbours == 4 && numNeighbourBonds == 2)
+            {
+                if (maxChainLength == 1) n421++;
+                else if (maxChainLength == 2) n422++;
+                else break;
+            }
+            else if (numCommonNeighbours == 5 && numNeighbourBonds == 5 && maxChainLength == 5) n555++;
+            else break;
+        }
+        if (n421 == 12) return ATOM_STRUCTURE_FCC;
+        else if (n421 == 6 && n422 == 6) return ATOM_STRUCTURE_HCP;
+        else if (n555 == 12) return ATOM_STRUCTURE_ICOSAHEDRAL;
+    }
+    
 /* next we test for BCC (8 1NN + 6 2NN) */
-	
-	/* number of neighbours to test for */
+    
+    /* number of neighbours to test for */
     nn = 14;
     
     /* check enough nebs */
@@ -418,8 +429,8 @@ static int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
         }
         if (n666 == 8 && n444 == 6) return ATOM_STRUCTURE_BCC;
     }
-	
-	return ATOM_STRUCTURE_DISORDERED;
+    
+    return ATOM_STRUCTURE_DISORDERED;
 }
 
 /*******************************************************************************
@@ -556,19 +567,19 @@ static int findNeighbourBonds(unsigned int *neighbourArray, unsigned int commonN
 static int findCommonNeighbours(unsigned int *neighbourArray, int neighbourIndex, unsigned int *commonNeighbours)
 {
 #ifdef __GNUC__
-	*commonNeighbours = neighbourArray[neighbourIndex];
-	
-	/* Count the number of bits set in neighbor bit field. */
-	return __builtin_popcount(*commonNeighbours); // GNU g++ specific
+    *commonNeighbours = neighbourArray[neighbourIndex];
+    
+    /* Count the number of bits set in neighbor bit field. */
+    return __builtin_popcount(*commonNeighbours); // GNU g++ specific
 #else
-	unsigned int v;
-	
-	*commonNeighbours = neighbourArray[neighbourIndex];
-	
-	/* Count the number of bits set in neighbor bit field. */
-	v = *commonNeighbours - ((*commonNeighbours >> 1) & 0x55555555);
-	v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
-	return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+    unsigned int v;
+    
+    *commonNeighbours = neighbourArray[neighbourIndex];
+    
+    /* Count the number of bits set in neighbor bit field. */
+    v = *commonNeighbours - ((*commonNeighbours >> 1) & 0x55555555);
+    v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
+    return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
 #endif
 }
 
@@ -577,20 +588,20 @@ static int findCommonNeighbours(unsigned int *neighbourArray, int neighbourIndex
  *******************************************************************************/
 static int checkForNeighbourBond(int visInd1, int visInd2, struct NeighbourList2 *nebList, double cutoff)
 {
-	int i, bonded;
-	
-	
-	bonded = 0;
-	for (i = 0; i < nebList[visInd1].neighbourCount; i++)
-	{
-		if (nebList[visInd1].neighbour[i].index == visInd2 && nebList[visInd1].neighbour[i].separation <= cutoff)
-		{
-			bonded = 1;
-			break;
-		}
-	}
-	
-	return bonded;
+    int i, bonded;
+    
+    
+    bonded = 0;
+    for (i = 0; i < nebList[visInd1].neighbourCount; i++)
+    {
+        if (nebList[visInd1].neighbour[i].index == visInd2 && nebList[visInd1].neighbour[i].separation <= cutoff)
+        {
+            bonded = 1;
+            break;
+        }
+    }
+    
+    return bonded;
 }
 
 /*******************************************************************************
@@ -598,14 +609,14 @@ static int checkForNeighbourBond(int visInd1, int visInd2, struct NeighbourList2
  *******************************************************************************/
 static void setNeighbourBond(unsigned int *neighbourArray, int index1, int index2, int bonded)
 {
-	if (bonded)
-	{
-		neighbourArray[index1] |= (1<<index2);
-		neighbourArray[index2] |= (1<<index1);
-	}
-	else
-	{
-		neighbourArray[index1] &= ~(1<<index2);
-		neighbourArray[index2] &= ~(1<<index1);
-	}
+    if (bonded)
+    {
+        neighbourArray[index1] |= (1<<index2);
+        neighbourArray[index2] |= (1<<index1);
+    }
+    else
+    {
+        neighbourArray[index1] &= ~(1<<index2);
+        neighbourArray[index2] &= ~(1<<index1);
+    }
 }

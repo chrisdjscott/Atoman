@@ -26,11 +26,11 @@ struct Boxes
 };
 
 /* available functions */
-struct Boxes * setupBoxes(double, double *, double *, int *, double *);
+struct Boxes * setupBoxes(double, int *, double *);
 
 int boxIndexOfAtom( double, double, double, struct Boxes *);
 
-void putAtomsInBoxes(int, double *, struct Boxes *);
+int putAtomsInBoxes(int, double *, struct Boxes *);
 
 void freeBoxes(struct Boxes *);
 
@@ -38,6 +38,6 @@ void boxIJKIndices(int, int *, int, struct Boxes *);
 
 int boxIndexFromIJK(int, int, int, struct Boxes *);
 
-void getBoxNeighbourhood(int, int *, struct Boxes *);
+int getBoxNeighbourhood(int, int *, struct Boxes *);
 
 #endif
