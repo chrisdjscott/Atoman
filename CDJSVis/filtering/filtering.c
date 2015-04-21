@@ -1807,6 +1807,7 @@ slipFilter(PyObject *self, PyObject *args)
                     DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
                 }
                 
+                DIND1(scalars, NVisible) = DIND1(scalars, i);
                 IIND1(visibleAtoms, NVisible++) = IIND1(visibleAtoms, i);
             }
         }
