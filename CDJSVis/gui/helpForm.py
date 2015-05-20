@@ -65,7 +65,7 @@ class HelpFormSphinx(QtGui.QDialog):
         layout.addWidget(toolbar)
         layout.addWidget(self.webView)
         
-        self.resize(900, 700)
+        self.resize(950, 700)
     
     def loadUrl(self, url):
         """
