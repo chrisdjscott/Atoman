@@ -17,3 +17,4 @@ setup.cfg
 .coverage
 .komodotools/
 *.komodoproject
+dist/
