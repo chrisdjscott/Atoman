@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**150609**
+
+* Fix bug preventing split interstitials from being displayed
+
 **150527**
 
 * Fix bug preventing displaying file dialog when loading scalar/vector data.
