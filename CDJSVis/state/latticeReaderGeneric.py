@@ -676,12 +676,20 @@ class LatticeReaderGeneric(object):
             # now take scalars
             elif len(data.shape) == 1 and data.shape[0] == lattice.NAtoms:
                 self.logger.debug("Saving '%s' scalar data to Lattice", key)
-                lattice.scalarsDict[key] = data
+                # for now we require all scalar data to be stored as float (will change this if I have time)
+                if data.dtype != np.float64:
+                    lattice.scalarsDict[key] = data.astype(np.float64)
+                else:
+                    lattice.scalarsDict[key] = data
             
             # now take vectors
             elif len(data.shape) == 2 and data.shape[0] == lattice.NAtoms and data.shape[1] == 3:
                 self.logger.debug("Saving '%s' vector data to Lattice", key)
-                lattice.vectorsDict[key] = data
+                # for now we require all vector data to be stored as float (will change this if I have time)
+                if data.dtype != np.float64:
+                    lattice.vectorsDict[key] = data.astype(np.float64)
+                else:
+                    lattice.vectorsDict[key] = data
             
             else:
                 raise RuntimeError("Unrecognised shape data extracted from lattice: %s (%r)" % (key, data.shape))
