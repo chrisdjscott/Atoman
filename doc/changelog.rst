@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**150616**
+
+* Fix bug when loading FAILSAFE files: make sure all scalar/vector data is stored as float (for now)
+
 **150609**
 
 * Fix bug preventing split interstitials from being displayed
