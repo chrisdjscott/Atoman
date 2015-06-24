@@ -4,7 +4,7 @@
  ** Filtering routines written in C to improve performance
  *******************************************************************************/
 
-#define DEBUG
+//#define DEBUG
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -1554,7 +1554,8 @@ slipFilter(PyObject *self, PyObject *args)
     
     int i, NVisible, boxstat;
     int *slippedAtoms;
-    double *refPos, *visiblePos, *slipx, *slipy, *slipz;
+    double *refPos, *visiblePos;
+    double *slipx, *slipy, *slipz;
     double approxBoxWidth;
     struct Boxes *boxes;
     
@@ -1599,6 +1600,10 @@ slipFilter(PyObject *self, PyObject *args)
     /* drift compensation */
     if (driftCompensation)
     {
+#ifdef DEBUG
+        printf("SLIPC: Applying drift to refPos...\n");
+#endif
+        
         refPos = malloc(refPosDim * sizeof(double));
         if (refPos == NULL)
         {
@@ -1639,6 +1644,9 @@ slipFilter(PyObject *self, PyObject *args)
     }
     
     /* boxAtoms */
+#ifdef DEBUG
+    printf("SLIPC: Boxing atoms...\n");
+#endif
     approxBoxWidth = 5.0; // detect automatically!!
     boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
     if (boxes == NULL)
@@ -1657,8 +1665,11 @@ slipFilter(PyObject *self, PyObject *args)
     }
     
     /* allocate slip arrays */
+#ifdef DEBUG
+    printf("SLIPC: Allocating slip arrays...\n");
+#endif
     slipx = calloc(NVisibleIn, sizeof(double));
-    if (slipx == NULL);
+    if (slipx == NULL)
     {
         int err = errno;
         char errstring[512];
@@ -1666,54 +1677,69 @@ slipFilter(PyObject *self, PyObject *args)
         if (driftCompensation) free(refPos);
         freeBoxes(boxes);
         sprintf(errstring, "Allocate slipx (slipFilter) failed: '%s'", strerror(err));
-        PyErr_SetString(PyExc_RuntimeError, errstring);
+        PyErr_SetString(PyExc_MemoryError, errstring);
         return NULL;
     }
     
     slipy = calloc(NVisibleIn, sizeof(double));
-    if (slipy == NULL);
+    if (slipy == NULL)
     {
+        int err = errno;
+        char errstring[512];
+        
         if (driftCompensation) free(refPos);
         free(slipx);
         freeBoxes(boxes);
-        PyErr_SetString(PyExc_RuntimeError, "Could not allocate slipy in slipFilter");
+        sprintf(errstring, "Allocate slipy (slipFilter) failed: '%s'", strerror(err));
+        PyErr_SetString(PyExc_MemoryError, errstring);
         return NULL;
     }
     
     slipz = calloc(NVisibleIn, sizeof(double));
-    if (slipz == NULL);
+    if (slipz == NULL)
     {
+        int err = errno;
+        char errstring[512];
+        
         if (driftCompensation) free(refPos);
         free(slipx);
         free(slipy);
         freeBoxes(boxes);
-        PyErr_SetString(PyExc_RuntimeError, "Could not allocate slipz in slipFilter");
+        sprintf(errstring, "Allocate slipz (slipFilter) failed: '%s'", strerror(err));
+        PyErr_SetString(PyExc_MemoryError, errstring);
         return NULL;
     }
     
     slippedAtoms = calloc(NVisibleIn, sizeof(int));
-    if (slippedAtoms == NULL);
+    if (slippedAtoms == NULL)
     {
+        int err = errno;
+        char errstring[512];
+        
         if (driftCompensation) free(refPos);
         free(slipx);
         free(slipy);
         free(slipz);
         freeBoxes(boxes);
-        PyErr_SetString(PyExc_RuntimeError, "Could not allocate slippedAtoms in slipFilter");
+        sprintf(errstring, "Allocate slippedAtoms (slipFilter) failed: '%s'", strerror(err));
+        PyErr_SetString(PyExc_MemoryError, errstring);
         return NULL;
     }
     
     /* loop over visible atoms */
+#ifdef DEBUG
+    printf("SLIPC: Beginning main loop...\n");
+#endif
     for (i = 0; i < NVisibleIn; i++)
     {
-        int j, index, index3, boxIndex, boxNebList[27];
+        int j, index, index3, boxIndex, boxNebList[27], boxNebListSize;
         double refxposi, refyposi, refzposi;
         
         index = IIND1(visibleAtoms, i);
         index3 = index * 3;
-        refxposi = DIND1(refPos, index3    );
-        refyposi = DIND1(refPos, index3 + 1);
-        refzposi = DIND1(refPos, index3 + 2);
+        refxposi = refPos[index3    ];
+        refyposi = refPos[index3 + 1];
+        refzposi = refPos[index3 + 2];
         
         /* find box for ref pos of this visible atom */
         boxIndex = boxIndexOfAtom(refxposi, refyposi, refzposi, boxes);
@@ -1729,10 +1755,10 @@ slipFilter(PyObject *self, PyObject *args)
         }
         
         /* box neighbourhood */
-        getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over boxes */
-        for (j = 0; j < 27; j++)
+        for (j = 0; j < boxNebListSize; j++)
         {
             int k;
             
@@ -1767,8 +1793,10 @@ slipFilter(PyObject *self, PyObject *args)
                     refzposj = refPos[index23 + 2];
                     
                     /* separation between reference positions */
-                    sep2 = atomicSeparation2(refxposi, refyposi, refzposi, refxposj, refyposj, refzposj,
-                            cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
+                    sep2 = atomicSeparation2(refxposi, refyposi, refzposi,
+                                             refxposj, refyposj, refzposj,
+                                             cellDims[0], cellDims[1], cellDims[2],
+                                             PBC[0], PBC[1], PBC[2]);
                     
                     /* why 9, should this be an input and/or linked to approxBoxWidth!!?? */
                     /* we only compare to atoms that were local in the reference */
@@ -1811,6 +1839,9 @@ slipFilter(PyObject *self, PyObject *args)
     }
     
     /* store slip value */
+#ifdef DEBUG
+    printf("SLIPC: Storing slip values...\n");
+#endif
     for (i = 0; i < NVisibleIn; i++)
     {
         if (slippedAtoms[i])
@@ -1826,6 +1857,10 @@ slipFilter(PyObject *self, PyObject *args)
     /* filtering */
     if (filteringEnabled)
     {
+#ifdef DEBUG
+        printf("SLIPC: Applying filter...\n");
+#endif
+    
         NVisible = 0;
         for (i = 0; i < NVisibleIn; i++)
         {
@@ -1852,8 +1887,12 @@ slipFilter(PyObject *self, PyObject *args)
             }
         }
     }
+    else NVisible = NVisibleIn;
     
     /* free */
+#ifdef DEBUG
+    printf("SLIPC: Freeing memory...\n");
+#endif
     free(slipx);
     free(slipy);
     free(slipz);
