@@ -2,6 +2,18 @@
 Changelog
 =========
 
+**150616**
+
+* Fix bug when loading FAILSAFE files: make sure all scalar/vector data is stored as float (for now)
+
+**150609**
+
+* Fix bug preventing split interstitials from being displayed
+
+**150527**
+
+* Fix bug preventing displaying file dialog when loading scalar/vector data.
+
 **150420.1**
 
 * Fix bug regarding split interstitials and filtering defects by species

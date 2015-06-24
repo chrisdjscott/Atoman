@@ -375,10 +375,8 @@ class SystemsDialog(QtGui.QWidget):
             self.logger.debug("Got name for scalar data: '%s'", scalarName)
             
             # get filename
-            self.tmpHide()
             filename = QtGui.QFileDialog.getOpenFileName(self, "Select file containing scalar data: '{0}'".format(scalarName), os.getcwd())[0]
             filename = str(filename)
-            self.showAgain()
             
             if len(filename):
                 # read file
@@ -467,10 +465,8 @@ class SystemsDialog(QtGui.QWidget):
             self.logger.debug("Got name for vector data: '%s'", vectorName)
             
             # get filename
-            self.tmpHide()
             filename = QtGui.QFileDialog.getOpenFileName(self, "Select file containing vector data: '{0}'".format(vectorName), os.getcwd())[0]
             filename = str(filename)
-            self.showAgain()
             
             if len(filename):
                 # read file

@@ -754,33 +754,37 @@ class MainWindow(QtGui.QMainWindow):
         """
         msgBox = QtGui.QMessageBox(self)
         
+        # get the version right
         if __version__.startswith("v"):
             myVersion = __version__
         else:
             myVersion = "v" + __version__
         
+        # construct paragraph with software versions
+        softline = "Python %s - Qt %s - PySide %s - VTK %s - NumPy %s - SciPy %s - Matplotlib %s" % (platform.python_version(),
+                                                                                                     QtCore.__version__, PySide.__version__,
+                                                                                                     vtk.vtkVersion.GetVTKVersion(),
+                                                                                                     np.__version__, scipy.__version__,
+                                                                                                     matplotlib.__version__)
+        
+        # add paramiko if available
         try:
             import paramiko
-            
-            msgBox.setText("""<p><b>CDJSVis</b> %s</p>
-                              <p>Copyright &copy; %d Chris Scott</p>
-                              <p>This application can be used to visualise atomistic simulations.</p>
-                              <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
-                                 by Marc Robinson.</p>
-                              <p>Python %s - Qt %s - PySide %s - VTK %s - NumPy %s - SciPy %s - Matplotlib %s - paramiko %s on %s</p>""" % (
-                              myVersion, datetime.date.today().year, platform.python_version(), QtCore.__version__, PySide.__version__,
-                              vtk.vtkVersion.GetVTKVersion(), np.__version__, scipy.__version__, matplotlib.__version__, paramiko.__version__, 
-                              platform.system()))
         
         except ImportError:
-            msgBox.setText("""<p><b>CDJSVis</b> %s</p>
-                              <p>Copyright &copy; %d Chris Scott</p>
-                              <p>This application can be used to visualise atomistic simulations.</p>
-                              <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
-                                 by Marc Robinson.</p>
-                              <p>Python %s - Qt %s - PySide %s - VTK %s - NumPy %s - SciPy %s - Matplotlib %s on %s</p>""" % (
-                              myVersion, datetime.date.today().year, platform.python_version(), QtCore.__version__, PySide.__version__,
-                              vtk.vtkVersion.GetVTKVersion(), np.__version__, scipy.__version__, matplotlib.__version__, platform.system()))
+            pass
+        
+        else:
+            softline += " - paramiko %s" % paramiko.__version__
+        
+        softline += " on %s" % platform.system()
+        
+        msgBox.setText("""<p><b>CDJSVis</b> %s</p>
+                          <p>Copyright &copy; %d Chris Scott</p>
+                          <p>This application can be used to visualise atomistic simulations.</p>
+                          <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
+                             by Marc Robinson.</p>
+                          <p>%s</p>""" % (myVersion, datetime.date.today().year, softline))
         
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         msgBox.setStandardButtons(QtGui.QMessageBox.Ok)

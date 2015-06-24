@@ -1360,6 +1360,7 @@ findDefects(PyObject *self, PyObject *args)
                 splitInterstitials[n3    ] = splitInterstitials[i3];
                 splitInterstitials[n3 + 1] = indexa;
                 splitInterstitials[n3 + 2] = indexb;
+                NSplitNew++;
             }
         }
         NSplitInterstitials = NSplitNew;
