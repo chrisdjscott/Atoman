@@ -1388,10 +1388,12 @@ class RotateViewPointDialog(QtGui.QDialog):
         Apply the rotation
         
         """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
         angle = self.angleSpin.value()
         direction = str(self.directionCombo.currentText())
-        
-        renderer = self.rw.renderer
+        logger.debug("Appling rotation: %s by %f degrees", direction, angle)
         
         if direction == "Right" or direction == "Left":
             if direction == "Right":
@@ -1399,6 +1401,8 @@ class RotateViewPointDialog(QtGui.QDialog):
             
             # apply rotation
             renderer.camera.Azimuth(angle)
+            renderer.camera.OrthogonalizeViewUp()
+            logger.debug("Calling: azimuth %f", angle)
         
         else:
             if direction == "Up":
@@ -1406,6 +1410,8 @@ class RotateViewPointDialog(QtGui.QDialog):
             
             # apply rotation
             renderer.camera.Elevation(angle)
+            renderer.camera.OrthogonalizeViewUp()
+            logger.debug("Calling: elevation %f", angle)
         
         renderer.reinit()
 
