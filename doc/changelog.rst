@@ -2,6 +2,12 @@
 Changelog
 =========
 
+**150811**
+
+* Add basic slip filter
+* Fix bug that might prevent scalar bar being displayed
+* Orthogonalise view up vector after rotating lattice
+
 **150616**
 
 * Fix bug when loading FAILSAFE files: make sure all scalar/vector data is stored as float (for now)
