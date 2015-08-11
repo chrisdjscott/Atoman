@@ -228,11 +228,11 @@ class GenericSettingsDialog(QtGui.QDialog):
 
 
 ################################################################################
-class SpecieSettingsDialog(GenericSettingsDialog):
+class SpeciesSettingsDialog(GenericSettingsDialog):
     def __init__(self, mainWindow, title, parent=None):
-        super(SpecieSettingsDialog, self).__init__(title, parent)
+        super(SpeciesSettingsDialog, self).__init__(title, parent)
         
-        self.filterType = "Specie"
+        self.filterType = "Species"
         
         # specie list
         self.specieList = QtGui.QListWidget(self)
@@ -261,7 +261,7 @@ class SpecieSettingsDialog(GenericSettingsDialog):
         Refresh the specie list
         
         """
-        self.logger.debug("Refreshing specie filter options")
+        self.logger.debug("Refreshing species filter options")
         
         inputSpecieList = self.pipelinePage.inputState.specieList
         refSpecieList = self.pipelinePage.refState.specieList
@@ -276,7 +276,7 @@ class SpecieSettingsDialog(GenericSettingsDialog):
             
             # remove if doesn't exist in both ref and input
             if item.symbol not in inputSpecieList and item.symbol not in refSpecieList:
-                self.logger.debug("  Removing specie option: %s", item.symbol)
+                self.logger.debug("  Removing species option: %s", item.symbol)
                 self.specieList.takeItem(i) # does this delete it?
             
             else:
@@ -289,10 +289,10 @@ class SpecieSettingsDialog(GenericSettingsDialog):
         # add species that aren't already added
         for sym in uniqueCurrentSpecies:
             if sym in currentSpecies:
-                self.logger.debug("  Keeping specie option: %s", sym)
+                self.logger.debug("  Keeping species option: %s", sym)
             
             else:
-                self.logger.debug("  Adding specie option: %s", sym)
+                self.logger.debug("  Adding species option: %s", sym)
                 name = elements.atomName(sym)
                 item = SpecieListItem(sym, name=name)
                 self.specieList.addItem(item)

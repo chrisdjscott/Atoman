@@ -422,7 +422,7 @@ class Filterer(object):
             
             self.logger.info("Running filter: '%s'", filterName)
             
-            if filterName == "Specie":
+            if filterName == "Species":
                 self.filterSpecie(filterSettings)
             
             elif filterName == "Crop box":

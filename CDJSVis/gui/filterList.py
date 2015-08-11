@@ -55,7 +55,7 @@ class FilterList(QtGui.QWidget):
     """
     # all available filters
     defaultFilters = [
-        "Specie", 
+        "Species", 
         "Point defects", 
         "Crop box", 
         "Cluster", 
