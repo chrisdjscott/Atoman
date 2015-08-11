@@ -66,6 +66,7 @@ class PipelineForm(QtGui.QWidget):
         self.PBC = None
         self.linkedLattice = None
         self.fromSFTP = None
+        self.scalarBarAdded = False
         
         # layout
         filterTabLayout = QtGui.QVBoxLayout(self)
