@@ -10,7 +10,7 @@ __version__ = subprocess.Popen(["git", "describe"], stdout=subprocess.PIPE).comm
 
 a = Analysis(['../cdjsvis.py'],
              pathex=[],
-             hiddenimports=[],
+             hiddenimports=['scipy.linalg.cython_blas', 'scipy.linalg.cython_lapack'],
              hookspath=None)
 
 # data files
