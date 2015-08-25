@@ -78,17 +78,15 @@ def computeDriftVector(inputState, refState, cellDims, pbc):
     
     return driftVector
 
-def calculateDefectClusterVolumes(inputLattice, refLattice, vacancies, clusterList, voronoiOptions):
+def calculateDefectClusterVolumes(inputLattice, refLattice, vacancies, clusterList, voronoiOptions, pbc=np.ones(3, np.int32)):
     """
     Calculate volumes of defect clusters
     
     """
     logging.debug("Calculating volumes of defect clusters")
     
-    PBC = np.ones(3, np.int32)
-    
     # compute Voronoi
-    vor = voronoi.computeVoronoiDefects(inputLattice, refLattice, vacancies, voronoiOptions)
+    vor = voronoi.computeVoronoiDefects(inputLattice, refLattice, vacancies, voronoiOptions, pbc)
     
     count = 0
     for cluster in clusterList:
