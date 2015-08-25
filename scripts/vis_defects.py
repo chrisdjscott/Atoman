@@ -296,7 +296,6 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None, pbc=np.ones(
         logging.debug("Split interstitial analysis")
         
         PBC = pbc
-        cellDims = inputLattice.cellDims
         
         for i in xrange(NSplit):
             ind1 = splitInterstitials[3*i+1]
@@ -335,6 +334,7 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None, pbc=np.ones(
             clusterListIndex = clusterIndexMapper[clusterIndex]
             
             clusterList[clusterListIndex].vacancies.append(atomIndex)
+            clusterList[clusterListIndex].vacAsIndex.append(i)
         
         for i in xrange(NInt):
             atomIndex = interstitials[i]
@@ -387,6 +387,14 @@ def computeACNA(inputState, settings):
     ACNA filter
     
     """
+    if len(inputState.cellDims) == 9:
+        cellDims = np.empty(3, np.float64)
+        cellDims[0] = inputState.cellDims[0]
+        cellDims[1] = inputState.cellDims[4]
+        cellDims[2] = inputState.cellDims[8]
+    else:
+        cellDims = inputState.cellDims
+    
     visibleAtoms = np.arange(inputState.NAtoms, dtype=np.int32)
     scalars = np.zeros(inputState.NAtoms, dtype=np.float64)
     NScalars = 0
@@ -400,7 +408,7 @@ def computeACNA(inputState, settings):
     counters = np.zeros(7, np.int32)
     
     NVisible = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.minPos, inputState.maxPos, 
-                                                    inputState.cellDims, pbc, NScalars, fullScalars, settings.maxBondDistance,
+                                                    cellDims, pbc, NScalars, fullScalars, settings.maxBondDistance,
                                                     counters, settings.filteringEnabled, settings.structureVisibility, 1,
                                                     NVectors, fullVectors)
     
