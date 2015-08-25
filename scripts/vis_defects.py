@@ -60,8 +60,9 @@ class VoronoiOptions(object):
     Dummy Voronoi options class
     
     """
-    def __init__(self, useRadii=False):
+    def __init__(self, useRadii=False, faceAreaThreshold=0.1):
         self.useRadii = useRadii
+        self.faceAreaThreshold = faceAreaThreshold
 
 def computeDriftVector(inputState, refState, cellDims, pbc):
     """
