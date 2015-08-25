@@ -11,7 +11,6 @@ be easier to use them separately
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-import math
 import logging
 
 import numpy as np
@@ -86,6 +85,16 @@ def calculateDefectClusterVolumes(inputLattice, refLattice, vacancies, clusterLi
     """
     logging.debug("Calculating volumes of defect clusters")
     
+    if len(inputLattice.cellDims) == 9:
+        dims_mod = True
+        cellDims = inputLattice.cellDims
+        inputLattice.cellDims = np.empty(3, np.float64)
+        inputLattice.cellDims[0] = cellDims[0]
+        inputLattice.cellDims[1] = cellDims[4]
+        inputLattice.cellDims[2] = cellDims[8]
+    else:
+        dims_mod = False
+    
     # compute Voronoi
     vor = voronoi.computeVoronoiDefects(inputLattice, refLattice, vacancies, voronoiOptions, pbc)
     
@@ -122,8 +131,11 @@ def calculateDefectClusterVolumes(inputLattice, refLattice, vacancies, clusterLi
         logging.debug("    volume is %f", volume)
         
         count += 1
+    
+    if dims_mod:
+        inputLattice.cellDims = cellDims
 
-def findDefects(inputLattice, refLattice, settings, acnaArray=None):
+def findDefects(inputLattice, refLattice, settings, acnaArray=None, pbc=np.ones(3, np.int32)):
     """
     Point defects filter
     
@@ -135,7 +147,6 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None):
         cellDims[2] = refLattice.cellDims[8]
     else:
         cellDims = refLattice.cellDims
-    pbc = np.ones(3, np.int32)
     
     if settings.useAcna:
         logging.debug("Computing ACNA from point defects filter...")
@@ -282,7 +293,7 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None):
                 logging.debug("    %d %s on %s antisites", onAntSpecCount[i][j], inputLattice.specieList[j], refLattice.specieList[i])
     
     if settings.identifySplitInts:
-        logging.debug("Splint interstitial analysis")
+        logging.debug("Split interstitial analysis")
         
         PBC = pbc
         cellDims = inputLattice.cellDims
