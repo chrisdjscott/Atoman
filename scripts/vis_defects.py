@@ -407,10 +407,9 @@ def computeACNA(inputState, settings):
     # counter array
     counters = np.zeros(7, np.int32)
     
-    NVisible = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.minPos, inputState.maxPos, 
-                                                    cellDims, pbc, NScalars, fullScalars, settings.maxBondDistance,
-                                                    counters, settings.filteringEnabled, settings.structureVisibility, 1,
-                                                    NVectors, fullVectors)
+    NVisible = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, cellDims, pbc, NScalars, fullScalars,
+                                                    settings.maxBondDistance, counters, settings.filteringEnabled, settings.structureVisibility,
+                                                    1, NVectors, fullVectors)
     
     # resize visible atoms
     visibleAtoms.resize(NVisible, refcheck=False)

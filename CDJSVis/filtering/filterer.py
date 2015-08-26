@@ -795,10 +795,9 @@ class Filterer(object):
         # counter array
         counters = np.zeros(7, np.int32)
         
-        NVisible = acna.adaptiveCommonNeighbourAnalysis(self.visibleAtoms, inputState.pos, scalars, inputState.minPos, inputState.maxPos, 
-                                                        inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.maxBondDistance,
-                                                        counters, settings.filteringEnabled, settings.structureVisibility, ompNumThreads, NVectors, 
-                                                        fullVectors)
+        NVisible = acna.adaptiveCommonNeighbourAnalysis(self.visibleAtoms, inputState.pos, scalars, inputState.cellDims, self.pipelinePage.PBC,
+                                                        NScalars, fullScalars, settings.maxBondDistance, counters, settings.filteringEnabled,
+                                                        settings.structureVisibility, ompNumThreads, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -1496,8 +1495,8 @@ class Filterer(object):
             # counter array
             counters = np.zeros(7, np.int32)
             
-            acna.adaptiveCommonNeighbourAnalysis(visAtoms, inputLattice.pos, acnaArray, inputLattice.minPos, inputLattice.maxPos, 
-                                                 inputLattice.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, 
+            acna.adaptiveCommonNeighbourAnalysis(visAtoms, inputLattice.pos, acnaArray, inputLattice.cellDims,
+                                                 self.pipelinePage.PBC, NScalars, fullScalars, 
                                                  settings.acnaMaxBondDistance, counters, 0, structVis, ompNumThreads, 
                                                  NVectors, fullVectors) 
             

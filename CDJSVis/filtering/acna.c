@@ -76,15 +76,13 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
 {
     int NVisibleIn, *visibleAtoms, *PBC, NScalars, *counters, filteringEnabled, *structureVisibility, NVectors;
     int OMP_NUM_THREADS;
-    double *pos, *scalars, *minPos, *maxPos, *cellDims, *fullScalars, maxBondDistance;
+    double *pos, *scalars, *cellDims, *fullScalars, maxBondDistance;
     PyArrayObject *posIn=NULL;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *PBCIn=NULL;
     PyArrayObject *countersIn=NULL;
     PyArrayObject *structureVisibilityIn=NULL;
     PyArrayObject *scalarsIn=NULL;
-    PyArrayObject *minPosIn=NULL;
-    PyArrayObject *maxPosIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
@@ -96,10 +94,9 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
 /* parse and check arguments from Python */
     
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!O!iO!dO!iO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn, 
-            &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, 
-            &PyArray_Type, &fullScalarsIn, &maxBondDistance, &PyArray_Type, &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn,
-            &OMP_NUM_THREADS, &NVectors, &PyArray_Type, &fullVectors))
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!iO!dO!iO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn,
+            &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, &PyArray_Type, &fullScalarsIn, &maxBondDistance, &PyArray_Type,
+            &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn, &OMP_NUM_THREADS, &NVectors, &PyArray_Type, &fullVectors))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -111,12 +108,6 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
     if (not_doubleVector(scalarsIn)) return NULL;
     scalars = pyvector_to_Cptr_double(scalarsIn);
-    
-    if (not_doubleVector(minPosIn)) return NULL;
-    minPos = pyvector_to_Cptr_double(minPosIn);
-    
-    if (not_doubleVector(maxPosIn)) return NULL;
-    maxPos = pyvector_to_Cptr_double(maxPosIn);
     
     if (not_doubleVector(cellDimsIn)) return NULL;
     cellDims = pyvector_to_Cptr_double(cellDimsIn);
