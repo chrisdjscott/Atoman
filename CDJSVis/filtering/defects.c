@@ -1397,7 +1397,10 @@ findDefects(PyObject *self, PyObject *args)
     
     if (!includeAnts) NAntisites = 0;
     
-//    printf("NVACS %d; NINTS %d; NSPLITINTS %d\n", NVacancies, NInterstitials, NSplitInterstitials);
+#ifdef DEBUG
+    printf("DEFECTSC: Defect count after filter by type: %d vacancies; %d interstitials; %d split interstitials; %d antisites\n", 
+            NVacancies, NInterstitials, NSplitInterstitials, NAntisites);
+#endif
     
     /* find clusters of defects */
     if (findClustersFlag)
@@ -1405,6 +1408,10 @@ findDefects(PyObject *self, PyObject *args)
         int count;
         double *defectPos;
 
+#ifdef DEBUG
+        printf("DEFECTSC: Finding clusters of defects...\n");
+#endif
+        
         /* build positions array of all defects */
         NDefects = NVacancies + NInterstitials + NAntisites + 3 * NSplitInterstitials;
         defectPos = malloc(3 * NDefects * sizeof(double));
@@ -1659,6 +1666,10 @@ findDefects(PyObject *self, PyObject *args)
         /* free stuff */
         free(NDefectsCluster);
         free(NDefectsClusterNew);
+        
+#ifdef DEBUG
+        printf("DEFECTSC: Found %d defect clusters\n", NClusters);
+#endif
     }
     
     /* counters */
@@ -1670,7 +1681,7 @@ findDefects(PyObject *self, PyObject *args)
     NDefectsType[3] = NAntisites;
     NDefectsType[5] = NSplitInterstitials;
     
-    /* specie counters */
+    /* species counters */
     for (i = 0; i < NVacancies; i++)
     {
         int index = vacancies[i];

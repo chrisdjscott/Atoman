@@ -407,5 +407,4 @@ void freeBoxes(struct Boxes *boxes)
     free(boxes->boxAtoms);
     free(boxes->boxNAtoms);
     free(boxes);
-    boxes->totNBoxes = 0;
 }
