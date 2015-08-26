@@ -166,9 +166,9 @@ def findDefects(inputLattice, refLattice, settings, acnaArray=None, pbc=np.ones(
         # number of threads
         numThreads = 1
         
-        acna.adaptiveCommonNeighbourAnalysis(visAtoms, inputLattice.pos, acnaArray, inputLattice.minPos, inputLattice.maxPos, 
-                                             cellDims, pbc	, NScalars, fullScalars, settings.acnaMaxBondDistance, counters, 
-                                             0, structVis, numThreads, NVectors, fullVectors) 
+        acna.adaptiveCommonNeighbourAnalysis(visAtoms, inputLattice.pos, acnaArray, cellDims, pbc, NScalars, fullScalars,
+                                             settings.acnaMaxBondDistance, counters, 0, structVis, numThreads, NVectors,
+                                             fullVectors) 
         
         # store counters
         d = {}
