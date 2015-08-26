@@ -238,15 +238,13 @@ bondOrderFilter(PyObject *self, PyObject *args)
 {
     int NVisibleIn, *visibleAtoms, *PBC, NScalars, filterQ4Enabled, filterQ6Enabled;
     int OMP_NUM_THREADS, NVectors;
-    double maxBondDistance, *scalarsQ4, *scalarsQ6, *minPos, *maxPos, *cellDims;
+    double maxBondDistance, *scalarsQ4, *scalarsQ6, *cellDims;
     double *pos, *fullScalars, minQ4, maxQ4, minQ6, maxQ6;
     PyArrayObject *posIn=NULL;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *PBCIn=NULL;
     PyArrayObject *scalarsQ4In=NULL;
     PyArrayObject *scalarsQ6In=NULL;
-    PyArrayObject *minPosIn=NULL;
-    PyArrayObject *maxPosIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
@@ -260,11 +258,11 @@ bondOrderFilter(PyObject *self, PyObject *args)
     struct AtomStructureResults *results;
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!dO!O!O!O!O!O!iO!iddiddiiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &maxBondDistance, 
-            &PyArray_Type, &scalarsQ4In, &PyArray_Type, &scalarsQ6In, &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, 
-            &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, &PyArray_Type, &fullScalarsIn, &filterQ4Enabled, &minQ4, 
-            &maxQ4, &filterQ6Enabled, &minQ6, &maxQ6, &OMP_NUM_THREADS, &NVectors, &PyArray_Type, &fullVectors))
-            return NULL;
+    if (!PyArg_ParseTuple(args, "O!O!dO!O!O!O!iO!iddiddiiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &maxBondDistance,
+            &PyArray_Type, &scalarsQ4In, &PyArray_Type, &scalarsQ6In, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars,
+            &PyArray_Type, &fullScalarsIn, &filterQ4Enabled, &minQ4, &maxQ4, &filterQ6Enabled, &minQ6, &maxQ6, &OMP_NUM_THREADS,
+            &NVectors, &PyArray_Type, &fullVectors))
+        return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
@@ -278,12 +276,6 @@ bondOrderFilter(PyObject *self, PyObject *args)
     
     if (not_doubleVector(scalarsQ6In)) return NULL;
     scalarsQ6 = pyvector_to_Cptr_double(scalarsQ6In);
-    
-    if (not_doubleVector(minPosIn)) return NULL;
-    minPos = pyvector_to_Cptr_double(minPosIn);
-    
-    if (not_doubleVector(maxPosIn)) return NULL;
-    maxPos = pyvector_to_Cptr_double(maxPosIn);
     
     if (not_doubleVector(cellDimsIn)) return NULL;
     cellDims = pyvector_to_Cptr_double(cellDimsIn);
