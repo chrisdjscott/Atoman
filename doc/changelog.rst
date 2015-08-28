@@ -2,6 +2,11 @@
 Changelog
 =========
 
+**dev**
+
+* Fix bug that could have caused a segfault in some C libraries
+* Add option to generate H.264 mp4 movies (default)
+
 **150811**
 
 * Add basic slip filter

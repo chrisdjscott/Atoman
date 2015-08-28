@@ -1054,7 +1054,7 @@ class ImageTab(QtGui.QWidget):
         Log message for create movie object
         
         """
-        logger = logging.getLogger(__name__)
+        logger = logging.getLogger(__name__+".MovieGenerator")
         method = getattr(logger, level, None)
         if method is not None:
             method(message)
@@ -1087,14 +1087,16 @@ class ImageTab(QtGui.QWidget):
         generator = MovieGenerator()
         generator.log.connect(self.createMovieLogger)
         generator.allDone.connect(generator.deleteLater)
-        
+         
         # runnable for sending to thread pool
         runnable = threading_vis.GenericRunnable(generator, args=(ffmpeg, framerate, inputText, self.imageFormat, 
                                                                   bitrate, outputprefix, outputsuffix))
         runnable.setAutoDelete(False)
-        
+         
         # add to thread pool
         QtCore.QThreadPool.globalInstance().start(runnable)
+        
+#         generator.run(ffmpeg, framerate, inputText, self.imageFormat, bitrate, outputprefix, outputsuffix)
 
 ################################################################################
 
@@ -1114,29 +1116,68 @@ class MovieGenerator(QtCore.QObject):
         Create movie
         
         """
+        ffmpegTime = time.time()
         try:
-            command = "'%s' -r %d -y -i %s.%s -r %d -b %dk '%s.%s'" % (ffmpeg, framerate, saveText, 
-                                                                       imageFormat, 25, bitrate, 
-                                                                       outputPrefix, outputSuffix)
+            if outputSuffix == "mp4":
+                # determine image size
+                firstFile = "%s.%s" % (saveText, imageFormat)
+                firstFile = firstFile % 0
+                self.log.emit("debug", "Checking first file size: '%s'" % firstFile)
+                
+                im = Image.open(firstFile)
+                width, height = im.size
+                self.log.emit("debug", "Image size: %s x %s" % (width, height))
+                
+                # h264 requires width and height be divisible by 2
+                newWidth = width - 1 if width % 2 else width
+                newHeight = height - 1 if height % 2 else height
+                if newWidth != width:
+                    self.log.emit("debug", "Resizing image width: %d -> %d" % (width, newWidth))
+                if newHeight != height:
+                    self.log.emit("debug", "Resizing image height: %d -> %d" % (height, newHeight))
+                
+                # construct command; scale if required
+                if newWidth == width and newHeight == height:
+                    # no scaling required
+                    command = "'%s' -r %d -y -i %s.%s -c:v h264 -r %d -b:v %dk '%s.%s'" % (ffmpeg, framerate, saveText,
+                                                                                           imageFormat, 25, bitrate,
+                                                                                           outputPrefix, outputSuffix)
+                
+                else:
+                    # scaling required
+                    command = "'%s' -r %d -y -i %s.%s -vf scale=%d:%d -c:v h264 -r %d -b:v %dk '%s.%s'" % (ffmpeg, framerate, saveText,
+                                                                                                           imageFormat, newWidth, newHeight,
+                                                                                                           25, bitrate, outputPrefix,
+                                                                                                           outputSuffix)
+                
+                # run command
+                self.log.emit("debug", 'Command: "%s"' % command)
+                process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, 
+                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                output, stderr = process.communicate()
+                status = process.poll()
             
-            self.log.emit("debug", 'Command: "%s"' % command)
+            else:
+                command = "'%s' -r %d -y -i %s.%s -r %d -b:v %dk '%s.%s'" % (ffmpeg, framerate, saveText, 
+                                                                             imageFormat, 25, bitrate, 
+                                                                             outputPrefix, outputSuffix)
+                
+                self.log.emit("debug", 'Command: "%s"' % command)
+                
+                process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, 
+                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                 
+                output, stderr = process.communicate()
+                status = process.poll()
             
-            ffmpegTime = time.time()
-            
-            process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, 
-                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-             
-            output, stderr = process.communicate()
-            status = process.poll()
             if status:
                 self.log.emit("error", "FFmpeg failed (%d)" % status)
                 self.log.emit("error", output)
                 self.log.emit("error", stderr)
-            
-            ffmpegTime = time.time() - ffmpegTime
-            self.log.emit("debug", "FFmpeg time taken: %f s" % ffmpegTime)
         
         finally:
+            ffmpegTime = time.time() - ffmpegTime
+            self.log.emit("debug", "FFmpeg time taken: %f s" % ffmpegTime)
             self.allDone.emit()
 
 ################################################################################
@@ -1317,7 +1358,7 @@ class CreateMovieBox(QtGui.QGroupBox):
         # defaults
         self.framerate = 10
         self.prefix = "movie"
-        self.suffix = "flv"
+        self.suffix = "mp4"
         
         # layout
         self.contentLayout = QtGui.QVBoxLayout(self)
@@ -1358,9 +1399,9 @@ class CreateMovieBox(QtGui.QGroupBox):
         rowLayout.addWidget(label)
         
         containerCombo = QtGui.QComboBox()
+        containerCombo.addItem("mp4")
         containerCombo.addItem("flv")
         containerCombo.addItem("mpg")
-#         containerCombo.addItem("mp4")
         containerCombo.addItem("avi")
 #         containerCombo.addItem("mov")
         containerCombo.currentIndexChanged[str].connect(self.suffixChanged)
