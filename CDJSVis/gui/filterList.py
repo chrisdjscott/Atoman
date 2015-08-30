@@ -9,12 +9,12 @@ import sys
 import logging
 import functools
 import copy
+import importlib
 
 from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
 from ..filtering import filterer
-from . import filterSettings
 from . import filterListOptions
 from . import utils
 from . import infoDialogs
@@ -242,7 +242,7 @@ class FilterList(QtGui.QWidget):
         # colouring options
         self.colouringOptions = filterListOptions.ColouringOptionsWindow(parent=self)
         item = OptionsListItem(self.colouringOptions)
-        item.setText("Colouring: Specie")
+        item.setText("Colouring: Species")
         self.colouringOptions.modified.connect(item.setText)
         self.optionsList.addItem(item)
         
@@ -503,7 +503,7 @@ class FilterList(QtGui.QWidget):
         currentScalars = []
         for i in xrange(self.listItems.count()):
             item = self.listItems.item(i)
-            currentScalars.extend(item.filterSettings.providedScalars)
+            currentScalars.extend(item.filterSettings.getProvidedScalars())
         
         return currentScalars
     
@@ -779,21 +779,36 @@ class FilterList(QtGui.QWidget):
         if filterName.startswith("Scalar: "):
             self.logger.debug("Creating settings dialog for: '%s'", filterName)
             
+            # title for form
             title = "%s settings (List %d - %d)" % (filterName, self.tab, self.filterCounter)
-            form = filterSettings.GenericScalarFilterSettingsDialog(self.mainWindow, filterName, title, parent=self)
+            
+            # load module
+            from .filterSettings import genericScalarSettingsDialog
+            
+            # load form
+            form = genericScalarSettingsDialog.GenericScalarSettingsDialog(self.mainWindow, filterName, title, parent=self)
             self.filterCounter += 1
         
         else:
             words = str(filterName).title().split()
             
             dialogName = "%sSettingsDialog" % "".join(words)
+            moduleName = dialogName[:1].lower() + dialogName[1:]
+            self.logger.debug("Loading settings dialog module: '%s'", moduleName)
             self.logger.debug("Creating settings dialog: '%s'", dialogName)
             
-            formObject = getattr(filterSettings, dialogName, None)
+            # load module
+            formModule = importlib.import_module(".{0}".format(moduleName), package="CDJSVis.gui.filterSettings")
+            
+            # load dialog
+            formObject = getattr(formModule, dialogName, None)
             if formObject is not None:
                 title = "%s settings (List %d - %d)" % (filterName, self.tab, self.filterCounter)
                 form = formObject(self.mainWindow, title, parent=self)
                 self.filterCounter += 1
+            
+            else:
+                self.logger.error("Could not locate form '%s' in module '%s'", dialogName, moduleName)
         
         return form
     
