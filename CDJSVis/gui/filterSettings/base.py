@@ -15,7 +15,6 @@ import logging
 from PySide import QtGui, QtCore
 
 from ...visutils.utilities import iconPath
-from .. import genericForm
 
 
 ################################################################################
@@ -120,43 +119,6 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         self.mainWindow.helpWindow.loadPage(self.helpPage)
         self.mainWindow.showHelp()
-    
-    def addFilteringGroupBox(self, title="Enable filtering", slot=None, checked=False):
-        """Add a group box that contains filtering options."""
-        # widget
-        grp = QtGui.QGroupBox(title)
-        grp.setCheckable(True)
-        
-        # layout
-        grpLayout = QtGui.QVBoxLayout()
-        grpLayout.setAlignment(QtCore.Qt.AlignTop)
-        grpLayout.setContentsMargins(0,0,0,0)
-        grpLayout.setSpacing(0)
-        grp.setLayout(grpLayout)
-        
-        # connect toggled signal
-        if slot is not None:
-            grp.toggled.connect(slot)
-        
-        # initial check status
-        grp.setChecked(checked)
-        
-        # add to form layout
-        row = self.newRow()
-        row.addWidget(grp)
-        
-        return grpLayout
-    
-    def newRow(self, align=None):
-        """New filter settings row."""
-        row = genericForm.FormRow(align=align)
-        self.contentLayout.addWidget(row)
-        
-        return row
-    
-    def removeRow(self,row):
-        """Remove filter settings row."""
-        self.contentLayout.removeWidget(row)  
     
     def closeEvent(self, event):
         self.hide()

@@ -3,7 +3,7 @@
 Contains GUI forms for the coordination number filter.
 
 """
-from PySide import QtGui
+from PySide import QtGui, QtCore
 
 from . import base
 
@@ -23,41 +23,48 @@ class CoordinationNumberSettingsDialog(base.GenericSettingsDialog):
         
         self.minCoordNum = 0
         self.maxCoordNum = 100
+        self.filteringEnabled = False
         
-        groupLayout = self.addFilteringGroupBox(slot=self.filteringToggled, checked=False)
+        # filter check
+        filterCheck = QtGui.QCheckBox()
+        filterCheck.setChecked(self.filteringEnabled)
+        filterCheck.setToolTip("Filter by coordination number")
+        filterCheck.stateChanged.connect(self.filteringToggled)
+        self.contentLayout.addRow("<b>Filter by coordination</b>", filterCheck)
         
-        label = QtGui.QLabel("Min:")
         self.minCoordNumSpinBox = QtGui.QSpinBox()
         self.minCoordNumSpinBox.setSingleStep(1)
         self.minCoordNumSpinBox.setMinimum(0)
         self.minCoordNumSpinBox.setMaximum(999)
         self.minCoordNumSpinBox.setValue(self.minCoordNum)
         self.minCoordNumSpinBox.valueChanged.connect(self.setMinCoordNum)
+        self.minCoordNumSpinBox.setToolTip("Minimum visible coordination number")
+        self.minCoordNumSpinBox.setEnabled(self.filteringEnabled)
+        self.contentLayout.addRow("Minimum", self.minCoordNumSpinBox)
         
-        row = QtGui.QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.minCoordNumSpinBox)
-        groupLayout.addLayout(row)
-        
-        label = QtGui.QLabel("Max:")
         self.maxCoordNumSpinBox = QtGui.QSpinBox()
         self.maxCoordNumSpinBox.setSingleStep(1)
         self.maxCoordNumSpinBox.setMinimum(0)
         self.maxCoordNumSpinBox.setMaximum(999)
         self.maxCoordNumSpinBox.setValue(self.maxCoordNum)
         self.maxCoordNumSpinBox.valueChanged.connect(self.setMaxCoordNum)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(label)
-        row.addWidget(self.maxCoordNumSpinBox)
-        groupLayout.addLayout(row)
+        self.maxCoordNumSpinBox.setToolTip("Maximum visible coordination number")
+        self.maxCoordNumSpinBox.setEnabled(self.filteringEnabled)
+        self.contentLayout.addRow("Maximum", self.maxCoordNumSpinBox)
     
-    def filteringToggled(self, arg):
+    def filteringToggled(self, state):
         """
         Filtering toggled
         
         """
-        self.filteringEnabled = arg
+        if state == QtCore.Qt.Unchecked:
+            self.filteringEnabled = False
+        
+        else:
+            self.filteringEnabled = True
+        
+        self.minCoordNumSpinBox.setEnabled(self.filteringEnabled)
+        self.maxCoordNumSpinBox.setEnabled(self.filteringEnabled)
     
     def setMinCoordNum(self, val):
         """
