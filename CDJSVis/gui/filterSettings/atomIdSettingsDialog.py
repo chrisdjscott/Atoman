@@ -20,11 +20,17 @@ class AtomIdSettingsDialog(base.GenericSettingsDialog):
         
         self.filterType = "Atom ID"
         
+        self.filterString = ""
+        
         # only allow numbers, commas and hyphens
         rx = QtCore.QRegExp("[0-9]+(?:[-,]?[0-9]+)*")
         validator = QtGui.QRegExpValidator(rx, self)
         
-        self.lineEdit = QtGui.QLineEdit()
+        self.lineEdit = QtGui.QLineEdit(self.filterString)
         self.lineEdit.setValidator(validator)
         self.lineEdit.setToolTip("Comma separated list of atom IDs or ranges of atom IDs (hyphenated) that are visible (eg. '22,30-33' will show atom IDs 22, 30, 31, 32 and 33)")
         self.contentLayout.addRow("Visible IDs", self.lineEdit)
+    
+    def editingFinished(self):
+        """Line edit has been editted."""
+        self.filterString = str(self.lineEdit.text())

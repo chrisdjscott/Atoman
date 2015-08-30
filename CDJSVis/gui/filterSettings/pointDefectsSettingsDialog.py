@@ -43,6 +43,13 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.vacOpacity = 0.8
         self.vacSpecular = 0.4
         self.vacSpecularPower = 10
+        self.useAcna = False
+        self.acnaMaxBondDistance = 5.0
+        self.filterSpecies = False
+        self.drawDisplacementVectors = False
+        self.bondThicknessVTK = 0.4
+        self.bondThicknessPOV = 0.4
+        self.bondNumSides = 5
         
         # vacancy radius option
         self.vacRadSpinBox = QtGui.QDoubleSpinBox()
@@ -92,7 +99,6 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.addHorizontalDivider()
         
         # use acna options
-        self.useAcna = False
         useAcnaCheck = QtGui.QCheckBox()
         useAcnaCheck.setChecked(self.useAcna)
         useAcnaCheck.stateChanged.connect(self.useAcnaToggled)
@@ -102,7 +108,6 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.contentLayout.addRow("<b>Use ACNA</b>", useAcnaCheck)
         
         # acna max bond distance
-        self.acnaMaxBondDistance = 5.0
         self.maxBondDistanceSpin = QtGui.QDoubleSpinBox()
         self.maxBondDistanceSpin.setSingleStep(0.1)
         self.maxBondDistanceSpin.setMinimum(2.0)
@@ -191,7 +196,6 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.addHorizontalDivider()
         
         # filter species group
-        self.filterSpecies = False
         self.filterSpeciesCheck = QtGui.QCheckBox()
         self.filterSpeciesCheck.setChecked(self.filterSpecies)
         self.filterSpeciesCheck.setToolTip("Filter visible defects by species")
@@ -286,11 +290,6 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.displaySettingsLayout.addRow("Vacancy specular power", vacSpecularPowerSpin)
         
         self.addHorizontalDivider(displaySettings=True)
-        
-        self.drawDisplacementVectors = False
-        self.bondThicknessVTK = 0.4
-        self.bondThicknessPOV = 0.4
-        self.bondNumSides = 5
         
         # draw displacement vector settings
         self.drawVectorsCheck = QtGui.QCheckBox()

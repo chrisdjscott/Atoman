@@ -27,6 +27,7 @@ class DisplacementSettingsDialog(base.GenericSettingsDialog):
         self.bondThicknessPOV = 0.4
         self.bondNumSides = 5
         self.drawDisplacementVectors = False
+        self.filteringEnabled = False
         
         # draw displacement vector settings
         self.drawVectorsCheck = QtGui.QCheckBox()
@@ -69,7 +70,6 @@ class DisplacementSettingsDialog(base.GenericSettingsDialog):
         self.drawVectorsChanged(QtCore.Qt.Unchecked)
         
         # filtering options
-        self.filteringEnabled = False
         filterCheck = QtGui.QCheckBox()
         filterCheck.setChecked(self.filteringEnabled)
         filterCheck.setToolTip("Filter atoms by displacement")
