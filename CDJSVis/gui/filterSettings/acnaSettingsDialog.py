@@ -9,6 +9,7 @@ import numpy as np
 from PySide import QtGui, QtCore
 
 from . import base
+from ...filtering.filters import acnaFilter
 
 
 ################################################################################
@@ -23,16 +24,14 @@ class AcnaSettingsDialog(base.GenericSettingsDialog):
         
         self.filterType = "ACNA"
         self.addProvidedScalar("ACNA")
-        
-        self.maxBondDistance = 5.0
-        self.filteringEnabled = False
+        self._settings = acnaFilter.AcnaFilterSettings()
         
         self.maxBondDistanceSpin = QtGui.QDoubleSpinBox()
         self.maxBondDistanceSpin.setSingleStep(0.1)
         self.maxBondDistanceSpin.setMinimum(2.0)
         self.maxBondDistanceSpin.setMaximum(9.99)
-        self.maxBondDistanceSpin.setValue(self.maxBondDistance)
-        self.maxBondDistanceSpin.valueChanged[float].connect(self.setMaxBondDistance)
+        self.maxBondDistanceSpin.setValue(self._settings.getSetting("maxBondDistance"))
+        self.maxBondDistanceSpin.valueChanged[float].connect(functools.partial(self._settings.updateSetting, "maxBondDistance"))
         self.maxBondDistanceSpin.setToolTip("This is used for spatially decomposing the system. "
                                             "This should be set large enough that the required neighbours will be included.")
         self.contentLayout.addRow("Max bond distance", self.maxBondDistanceSpin)
@@ -43,7 +42,7 @@ class AcnaSettingsDialog(base.GenericSettingsDialog):
         
         # filter check
         filterByStructureCheck = QtGui.QCheckBox()
-        filterByStructureCheck.setChecked(self.filteringEnabled)
+        filterByStructureCheck.setChecked(self._settings.getSetting("filteringEnabled"))
         filterByStructureCheck.setToolTip("Filter atoms by structure type")
         filterByStructureCheck.stateChanged.connect(self.filteringToggled)
         self.contentLayout.addRow("<b>Filter by structure</b>", filterByStructureCheck)
@@ -57,7 +56,7 @@ class AcnaSettingsDialog(base.GenericSettingsDialog):
             self.contentLayout.addRow(structure, cb)
             self.structureChecks[structure] = cb
             
-            if not self.filteringEnabled:
+            if not self._settings.getSetting("filteringEnabled"):
                 cb.setEnabled(False)
         
         self.structureVisibility = np.ones(len(filterer.knownStructures), dtype=np.int32)
@@ -69,36 +68,17 @@ class AcnaSettingsDialog(base.GenericSettingsDialog):
         Visibility toggled for one structure type
         
         """
-        if checkState == QtCore.Qt.Unchecked:
-            self.structureVisibility[index] = 0
-        
-        else:
-            self.structureVisibility[index] = 1
+        visible = 0 if checkState == QtCore.Qt.Unchecked else 1
+        self._settings.updateSettingArray("structureVisibility", index, visible)
     
     def filteringToggled(self, state):
         """
         Filtering toggled
         
         """
-        if state == QtCore.Qt.Unchecked:
-            self.filteringEnabled = False
-            
-            # disable structure checks
-            for key in self.structureChecks:
-                cb = self.structureChecks[key]
-                cb.setEnabled(False)
-        
-        else:
-            self.filteringEnabled = True
-            
-            # enable structure checks
-            for key in self.structureChecks:
-                cb = self.structureChecks[key]
-                cb.setEnabled(True)
-    
-    def setMaxBondDistance(self, val):
-        """
-        Set the max bond distance
-        
-        """
-        self.maxBondDistance = val
+        enabled = False if state == QtCore.Qt.Unchecked else True
+        self._settings.updateSetting("filteringEnabled", enabled)
+        # disable structure checks
+        for key in self.structureChecks:
+            cb = self.structureChecks[key]
+            cb.setEnabled(enabled)

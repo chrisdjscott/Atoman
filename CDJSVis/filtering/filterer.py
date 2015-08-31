@@ -418,7 +418,10 @@ class Filterer(object):
             filterName = array[0].strip()
             
             # filter settings
-            filterSettings = currentSettings[i]
+            filterSettingsGui = currentSettings[i]
+            filterSettings = filterSettingsGui.getSettings()
+            if filterSettings is None:
+            	filterSettings = filterSettingsGui
             
             self.logger.info("Running filter: '%s'", filterName)
             
@@ -755,10 +758,16 @@ class Filterer(object):
         # num threads
         ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
         
-        NVisible = bond_order.bondOrderFilter(self.visibleAtoms, inputState.pos, settings.maxBondDistance, scalarsQ4, scalarsQ6,
-                                                inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.filterQ4Enabled,
-                                                settings.minQ4, settings.maxQ4, settings.filterQ6Enabled, settings.minQ6, settings.maxQ6,
-                                                ompNumThreads, NVectors, fullVectors)
+        maxBondDistance = settings.getSetting("maxBondDistance")
+        filterQ4Enabled = int(settings.getSetting("filterQ4Enabled"))
+        filterQ6Enabled = int(settings.getSetting("filterQ6Enabled"))
+        minQ4 = int(settings.getSetting("minQ4"))
+        maxQ4 = int(settings.getSetting("maxQ4"))
+        minQ6 = int(settings.getSetting("minQ6"))
+        maxQ6 = int(settings.getSetting("maxQ6"))
+        NVisible = bond_order.bondOrderFilter(self.visibleAtoms, inputState.pos, maxBondDistance, scalarsQ4, scalarsQ6,
+                                                inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, filterQ4Enabled,
+                                                minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, ompNumThreads, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -795,9 +804,13 @@ class Filterer(object):
         # counter array
         counters = np.zeros(7, np.int32)
         
+        maxBondDistance = settings.getSetting("maxBondDistance")
+        filteringEnabled = int(settings.getSetting("filteringEnabled"))
+        structureVisibility = settings.getSetting("structureVisibility")
+        
         NVisible = acna.adaptiveCommonNeighbourAnalysis(self.visibleAtoms, inputState.pos, scalars, inputState.cellDims, self.pipelinePage.PBC,
-                                                        NScalars, fullScalars, settings.maxBondDistance, counters, settings.filteringEnabled,
-                                                        settings.structureVisibility, ompNumThreads, NVectors, fullVectors)
+                                                        NScalars, fullScalars, maxBondDistance, counters, filteringEnabled,
+                                                        structureVisibility, ompNumThreads, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -1288,7 +1301,7 @@ class Filterer(object):
         
         """
         # input string
-        text = settings.lineEdit.text()
+        text = settings.getSetting("filterString")
         self.logger.debug("Atom ID raw text: '%s'", text)
         
         # old scalars arrays (resize as appropriate)

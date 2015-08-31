@@ -6,6 +6,7 @@ Contains GUI forms for the atom ID filter.
 from PySide import QtGui, QtCore
 
 from . import base
+from ...filtering.filters import atomIdFilter
 
 
 ################################################################################
@@ -20,7 +21,7 @@ class AtomIdSettingsDialog(base.GenericSettingsDialog):
         
         self.filterType = "Atom ID"
         
-        self.filterString = ""
+        self._settings = atomIdFilter.AtomIdFilterSettings()
         
         # only allow numbers, commas and hyphens
         rx = QtCore.QRegExp("[0-9]+(?:[-,]?[0-9]+)*")
@@ -33,4 +34,4 @@ class AtomIdSettingsDialog(base.GenericSettingsDialog):
     
     def editingFinished(self):
         """Line edit has been editted."""
-        self.filterString = str(self.lineEdit.text())
+        self._settings.updateSetting("filterString", str(self.lineEdit.text()))

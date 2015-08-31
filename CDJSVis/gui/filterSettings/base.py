@@ -75,13 +75,19 @@ class GenericSettingsDialog(QtGui.QDialog):
         dialogLayout.addWidget(self.buttonBox)
         
         # filtering enabled by default
-        self.filteringEnabled = True
+#         self.filteringEnabled = True
         
         # help page
         self.helpPage = None
         
         # does this filter provide scalars
         self._providedScalars = []
+        
+        self._settings = None
+    
+    def getSettings(self):
+        """Return the settings object."""
+        return self._settings
     
     def addProvidedScalar(self, name):
         """Add scalar option."""
