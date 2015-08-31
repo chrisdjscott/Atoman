@@ -15,6 +15,7 @@ import logging
 from PySide import QtGui, QtCore
 
 from ...visutils.utilities import iconPath
+import functools
 
 
 ################################################################################
@@ -84,6 +85,100 @@ class GenericSettingsDialog(QtGui.QDialog):
         self._providedScalars = []
         
         self._settings = None
+    
+    def addSpinBox(self, setting, minVal=None, maxVal=None, step=None, toolTip=None, label=None, settingEnabled=None):
+        """
+        Add a QSpinBox to the content layout with the given label.
+        
+        """
+        # spin box
+        spin = QtGui.QSpinBox()
+        
+        # optional configuration
+        if minVal is not None:
+            spin.setMinimum(minVal)
+        if maxVal is not None:
+            spin.setMaximum(maxVal)
+        if step is not None:
+            spin.setSingleStep(step)
+        if toolTip is not None:
+            spin.setToolTip(toolTip)
+        if settingEnabled is not None:
+            spin.setEnabled(self._settings.getSetting(settingEnabled))
+        
+        # set initial value
+        spin.setValue(self._settings.getSetting(setting))
+        
+        # connect slot to updateSetting
+        spin.valueChanged.connect(functools.partial(self._settings.updateSetting, setting))
+        
+        # optionally add to content layout
+        if label is not None:
+            self.contentLayout.addRow(label, spin)
+        
+        return spin
+    
+    def addDoubleSpinBox(self, setting, minVal=None, maxVal=None, step=None, toolTip=None, label=None, settingEnabled=None):
+        """
+        Add a QDoubleSpinBox to the content layout with the given label.
+        
+        """
+        # spin box
+        spin = QtGui.QDoubleSpinBox()
+        
+        # optional configuration
+        if minVal is not None:
+            spin.setMinimum(minVal)
+        if maxVal is not None:
+            spin.setMaximum(maxVal)
+        if step is not None:
+            spin.setSingleStep(step)
+        if toolTip is not None:
+            spin.setToolTip(toolTip)
+        if settingEnabled is not None:
+            spin.setEnabled(self._settings.getSetting(settingEnabled))
+        
+        # set initial value
+        spin.setValue(self._settings.getSetting(setting))
+        
+        # connect slot to updateSetting
+        spin.valueChanged.connect(functools.partial(self._settings.updateSetting, setting))
+        
+        # optionally add to content layout
+        if label is not None:
+            self.contentLayout.addRow(label, spin)
+        
+        return spin
+    
+    def addCheckBox(self, setting, toolTip=None, label=None, extraSlot=None):
+        """
+        Add a check box.
+        
+        """
+        # check box
+        check = QtGui.QCheckBox()
+        
+        # initial check status
+        check.setChecked(self._settings.getSetting(setting))
+        
+        # optional configuration
+        if toolTip is not None:
+            check.setToolTip(toolTip)
+        
+        # connect stateChanged signal
+        def slot(state):
+            enabled = False if state == QtCore.Qt.Unchecked else True
+            self._settings.updateSetting(setting, enabled)
+            if extraSlot is not None:
+                extraSlot(enabled)
+        
+        check.stateChanged.connect(slot)
+        
+        # optionally add to content layout
+        if label is not None:
+            self.contentLayout.addRow(label, check)
+        
+        return check
     
     def getSettings(self):
         """Return the settings object."""

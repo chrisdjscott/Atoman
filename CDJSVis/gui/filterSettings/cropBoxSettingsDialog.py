@@ -3,10 +3,12 @@
 Contains GUI forms for the crop box filter.
 
 """
-from PySide import QtGui
+import functools
+
+from PySide import QtGui, QtCore
 
 from . import base
-
+from ...filtering.filters import cropBoxFilter
 
 ################################################################################
 
@@ -20,36 +22,27 @@ class CropBoxSettingsDialog(base.GenericSettingsDialog):
         
         self.filterType = "Crop box"
         
-        self.xmin = 0.0
-        self.xmax = 0.0
-        self.ymin = 0.0
-        self.ymax = 0.0
-        self.zmin = 0.0
-        self.zmax = 0.0
-        self.xEnabled = 0
-        self.yEnabled = 0
-        self.zEnabled = 0
-        self.invertSelection = 0
+        self._settings = cropBoxFilter.CropBoxFilterSettings()
         
         # x
         self.xCropCheckBox = QtGui.QCheckBox()
-        self.xCropCheckBox.setChecked(0)
+        self.xCropCheckBox.setChecked(self._settings.getSetting("xEnabled"))
         self.xCropCheckBox.setToolTip("Enable cropping in the x direction")
-        self.xCropCheckBox.stateChanged[int].connect(self.changedXEnabled)
+        self.xCropCheckBox.stateChanged.connect(self.changedXEnabled)
         self.xMinRangeSpinBox = QtGui.QDoubleSpinBox()
         self.xMinRangeSpinBox.setSingleStep(1)
         self.xMinRangeSpinBox.setMinimum(-9999.0)
         self.xMinRangeSpinBox.setMaximum(9999.0)
-        self.xMinRangeSpinBox.setValue(self.xmin)
+        self.xMinRangeSpinBox.setValue(self._settings.getSetting("xmin"))
         self.xMinRangeSpinBox.setToolTip("Minimum x value")
-        self.xMinRangeSpinBox.valueChanged.connect(self.setXMin)
+        self.xMinRangeSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "xmin"))
         self.xMaxRangeSpinBox = QtGui.QDoubleSpinBox()
         self.xMaxRangeSpinBox.setSingleStep(1)
         self.xMaxRangeSpinBox.setMinimum(-9999.0)
         self.xMaxRangeSpinBox.setMaximum(9999.0)
-        self.xMaxRangeSpinBox.setValue(self.xmax)
+        self.xMaxRangeSpinBox.setValue(self._settings.getSetting("xmax"))
         self.xMaxRangeSpinBox.setToolTip("Maximum x value")
-        self.xMaxRangeSpinBox.valueChanged.connect(self.setXMax)
+        self.xMaxRangeSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "xmax"))
         hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.xMinRangeSpinBox)
         hbox.addWidget(QtGui.QLabel("-"))
@@ -66,23 +59,23 @@ class CropBoxSettingsDialog(base.GenericSettingsDialog):
         
         # y
         self.yCropCheckBox = QtGui.QCheckBox()
-        self.yCropCheckBox.setChecked(0)
+        self.yCropCheckBox.setChecked(self._settings.getSetting("yEnabled"))
         self.yCropCheckBox.setToolTip("Enable cropping in the y direction")
-        self.yCropCheckBox.stateChanged[int].connect(self.changedYEnabled)
+        self.yCropCheckBox.stateChanged.connect(self.changedYEnabled)
         self.yMinRangeSpinBox = QtGui.QDoubleSpinBox()
         self.yMinRangeSpinBox.setSingleStep(1)
         self.yMinRangeSpinBox.setMinimum(-9999.0)
         self.yMinRangeSpinBox.setMaximum(9999.0)
-        self.yMinRangeSpinBox.setValue(self.ymin)
+        self.yMinRangeSpinBox.setValue(self._settings.getSetting("ymin"))
         self.yMinRangeSpinBox.setToolTip("Minimum y value")
-        self.yMinRangeSpinBox.valueChanged.connect(self.setYMin)
+        self.yMinRangeSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "ymin"))
         self.yMaxRangeSpinBox = QtGui.QDoubleSpinBox()
         self.yMaxRangeSpinBox.setSingleStep(1)
         self.yMaxRangeSpinBox.setMinimum(-9999.0)
         self.yMaxRangeSpinBox.setMaximum(9999.0)
-        self.yMaxRangeSpinBox.setValue(self.ymax)
+        self.yMaxRangeSpinBox.setValue(self._settings.getSetting("ymax"))
         self.yMaxRangeSpinBox.setToolTip("Maximum y value")
-        self.yMaxRangeSpinBox.valueChanged.connect(self.setYMax)
+        self.yMaxRangeSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "ymax"))
         hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.yMinRangeSpinBox)
         hbox.addWidget(QtGui.QLabel("-"))
@@ -99,23 +92,23 @@ class CropBoxSettingsDialog(base.GenericSettingsDialog):
         
         # z
         self.zCropCheckBox = QtGui.QCheckBox()
-        self.zCropCheckBox.setChecked(0)
+        self.zCropCheckBox.setChecked(self._settings.getSetting("zEnabled"))
         self.zCropCheckBox.setToolTip("Enable cropping in the z direction")
-        self.zCropCheckBox.stateChanged[int].connect(self.changedZEnabled)
+        self.zCropCheckBox.stateChanged.connect(self.changedZEnabled)
         self.zMinRangeSpinBox = QtGui.QDoubleSpinBox()
         self.zMinRangeSpinBox.setSingleStep(1)
         self.zMinRangeSpinBox.setMinimum(-9999.0)
         self.zMinRangeSpinBox.setMaximum(9999.0)
-        self.zMinRangeSpinBox.setValue(self.zmin)
+        self.zMinRangeSpinBox.setValue(self._settings.getSetting("zmin"))
         self.zMinRangeSpinBox.setToolTip("Minimum z value")
-        self.zMinRangeSpinBox.valueChanged.connect(self.setZMin)
+        self.zMinRangeSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "zmin"))
         self.zMaxRangeSpinBox = QtGui.QDoubleSpinBox()
         self.zMaxRangeSpinBox.setSingleStep(1)
         self.zMaxRangeSpinBox.setMinimum(-9999.0)
         self.zMaxRangeSpinBox.setMaximum(9999.0)
-        self.zMaxRangeSpinBox.setValue(self.zmax)
+        self.zMaxRangeSpinBox.setValue(self._settings.getSetting("zmax"))
         self.zMaxRangeSpinBox.setToolTip("Maximum z value")
-        self.zMaxRangeSpinBox.valueChanged.connect(self.setZMax)
+        self.zMaxRangeSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "zmax"))
         hbox = QtGui.QHBoxLayout()
         hbox.addWidget(self.zMinRangeSpinBox)
         hbox.addWidget(QtGui.QLabel("-"))
@@ -132,7 +125,7 @@ class CropBoxSettingsDialog(base.GenericSettingsDialog):
         
         # invert selection
         self.invertCheckBox = QtGui.QCheckBox()
-        self.invertCheckBox.setChecked(0)
+        self.invertCheckBox.setChecked(self._settings.getSetting("invertSelection"))
         self.invertCheckBox.stateChanged.connect(self.invertChanged)
         self.invertCheckBox.setToolTip("Invert selection")
         self.contentLayout.addRow("Invert selection", self.invertCheckBox)
@@ -144,16 +137,10 @@ class CropBoxSettingsDialog(base.GenericSettingsDialog):
         self.setToLatticeButton.clicked.connect(self.setCropToLattice)
         self.contentLayout.addRow(self.setToLatticeButton)
     
-    def invertChanged(self, index):
-        """
-        Invert setting changed.
-        
-        """
-        if self.invertCheckBox.isChecked():
-            self.invertSelection = 1
-        
-        else:
-            self.invertSelection = 0
+    def invertChanged(self, state):
+        """Invert setting changed."""
+        invert = False if state == QtCore.Qt.Unchecked else True
+        self._settings.updateSetting("invertSelection", invert)
     
     def setCropToLattice(self):
         self.xMinRangeSpinBox.setValue(0.0)
@@ -163,61 +150,42 @@ class CropBoxSettingsDialog(base.GenericSettingsDialog):
         self.zMinRangeSpinBox.setValue(0.0)
         self.zMaxRangeSpinBox.setValue(self.pipelinePage.inputState.cellDims[2])
     
-    def changedXEnabled(self):
-        if self.xCropCheckBox.isChecked():
-            self.xEnabled = 1
-        else:
-            self.xEnabled = 0
+    def changedXEnabled(self, state):
+        """Toggle crop in x direction."""
+        enabled = False if state == QtCore.Qt.Unchecked else True
+        self._settings.updateSetting("xEnabled", enabled)
     
-    def changedYEnabled(self):
-        if self.yCropCheckBox.isChecked():
-            self.yEnabled = 1
-        else:
-            self.yEnabled = 0
+    def changedYEnabled(self, state):
+        """Toggle crop in y direction."""
+        enabled = False if state == QtCore.Qt.Unchecked else True
+        self._settings.updateSetting("yEnabled", enabled)
     
-    def changedZEnabled(self):
-        if self.zCropCheckBox.isChecked():
-            self.zEnabled = 1
-        else:
-            self.zEnabled = 0
-    
-    def setXMin(self, val):
-        self.xmin = val
-    
-    def setXMax(self, val):
-        self.xmax = val
-    
-    def setYMin(self, val):
-        self.ymin = val
-    
-    def setYMax(self, val):
-        self.ymax = val
-    
-    def setZMin(self, val):
-        self.zmin = val
-    
-    def setZMax(self, val):
-        self.zmax = val
+    def changedZEnabled(self, state):
+        """Toggle crop in z direction."""
+        enabled = False if state == QtCore.Qt.Unchecked else True
+        self._settings.updateSetting("zEnabled", enabled)
     
     def refresh(self):
-        self.xMinRangeSpinBox.setValue(self.xmin)
-        self.xMaxRangeSpinBox.setValue(self.xmax)
-        self.yMinRangeSpinBox.setValue(self.ymin)
-        self.yMaxRangeSpinBox.setValue(self.ymax)
-        self.zMinRangeSpinBox.setValue(self.zmin)
-        self.zMaxRangeSpinBox.setValue(self.zmax)
-        self.xCropCheckBox.setChecked( self.xEnabled )
-        self.yCropCheckBox.setChecked( self.yEnabled )
-        self.zCropCheckBox.setChecked( self.zEnabled )
+        """Refresh GUI."""
+        self.xMinRangeSpinBox.setValue(self._settings.getSetting("xmin"))
+        self.xMaxRangeSpinBox.setValue(self._settings.getSetting("xmax"))
+        self.yMinRangeSpinBox.setValue(self._settings.getSetting("ymin"))
+        self.yMaxRangeSpinBox.setValue(self._settings.getSetting("ymax"))
+        self.zMinRangeSpinBox.setValue(self._settings.getSetting("zmin"))
+        self.zMaxRangeSpinBox.setValue(self._settings.getSetting("zmax"))
+        self.xCropCheckBox.setChecked(self._settings.getSetting("xEnabled"))
+        self.yCropCheckBox.setChecked(self._settings.getSetting("yEnabled"))
+        self.zCropCheckBox.setChecked(self._settings.getSetting("zEnabled"))
     
     def reset(self):
-        self.xmin = 0.0
-        self.xmax = 0.0
-        self.ymin = 0.0
-        self.ymax = 0.0
-        self.zmin = 0.0
-        self.zmax = 0.0
-        self.xEnabled = 0
-        self.yEnabled = 0
-        self.zEnabled = 0
+        """Reset crop settings."""
+        self._settings.updateSetting("xmin", 0.0)
+        self._settings.updateSetting("xmax", 0.0)
+        self._settings.updateSetting("ymin", 0.0)
+        self._settings.updateSetting("ymax", 0.0)
+        self._settings.updateSetting("zmin", 0.0)
+        self._settings.updateSetting("zmax", 0.0)
+        self._settings.updateSetting("xEnabled", False)
+        self._settings.updateSetting("yEnabled", False)
+        self._settings.updateSetting("zEnabled", False)
         self.refresh()

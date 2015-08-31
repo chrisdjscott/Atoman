@@ -26,17 +26,10 @@ class AcnaSettingsDialog(base.GenericSettingsDialog):
         self.addProvidedScalar("ACNA")
         self._settings = acnaFilter.AcnaFilterSettings()
         
-        self.maxBondDistanceSpin = QtGui.QDoubleSpinBox()
-        self.maxBondDistanceSpin.setSingleStep(0.1)
-        self.maxBondDistanceSpin.setMinimum(2.0)
-        self.maxBondDistanceSpin.setMaximum(9.99)
-        self.maxBondDistanceSpin.setValue(self._settings.getSetting("maxBondDistance"))
-        self.maxBondDistanceSpin.valueChanged[float].connect(functools.partial(self._settings.updateSetting, "maxBondDistance"))
-        self.maxBondDistanceSpin.setToolTip("This is used for spatially decomposing the system. "
-                                            "This should be set large enough that the required neighbours will be included.")
-        self.contentLayout.addRow("Max bond distance", self.maxBondDistanceSpin)
-        
-        filterer = self.parent.filterer
+        # max bond distance spin box
+        toolTip = "This is used for spatially decomposing the system. "
+        toolTip += "This should be set large enough that the required neighbours will be included."
+        self.addDoubleSpinBox("maxBondDistance", label="Max bond distance", minVal=2.0, maxVal=9.99, step=0.1, toolTip=toolTip)
         
         self.addHorizontalDivider()
         
@@ -48,6 +41,7 @@ class AcnaSettingsDialog(base.GenericSettingsDialog):
         self.contentLayout.addRow("<b>Filter by structure</b>", filterByStructureCheck)
         
         # filter options group
+        filterer = self.parent.filterer
         self.structureChecks = {}
         for i, structure in enumerate(filterer.knownStructures):
             cb = QtGui.QCheckBox()
@@ -78,6 +72,7 @@ class AcnaSettingsDialog(base.GenericSettingsDialog):
         """
         enabled = False if state == QtCore.Qt.Unchecked else True
         self._settings.updateSetting("filteringEnabled", enabled)
+        
         # disable structure checks
         for key in self.structureChecks:
             cb = self.structureChecks[key]

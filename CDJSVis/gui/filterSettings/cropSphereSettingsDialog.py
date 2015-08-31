@@ -3,9 +3,12 @@
 Contains GUI forms for the crop sphere filter.
 
 """
-from PySide import QtGui
+import functools
+
+from PySide import QtGui, QtCore
 
 from . import base
+from ...filtering.filters import cropSphereFilter
 
 
 ################################################################################
@@ -20,6 +23,7 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
         
         self.filterType = "Crop sphere"
         
+        self._settings = cropSphereFilter.CropSphereFilterSettings()
         self.xCentre = 0.0
         self.yCentre = 0.0
         self.zCentre = 0.0
@@ -30,25 +34,25 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
         self.xCentreSpinBox.setSingleStep(0.01)
         self.xCentreSpinBox.setMinimum(-9999.0)
         self.xCentreSpinBox.setMaximum( 9999.0)
-        self.xCentreSpinBox.setValue(self.xCentre)
+        self.xCentreSpinBox.setValue(self._settings.getSetting("xCentre"))
         self.xCentreSpinBox.setToolTip("Centre of crop region (x)")
-        self.xCentreSpinBox.valueChanged.connect(self.xCentreChanged)
+        self.xCentreSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "xCentre"))
         
         self.yCentreSpinBox = QtGui.QDoubleSpinBox()
         self.yCentreSpinBox.setSingleStep(0.01)
         self.yCentreSpinBox.setMinimum(-9999.0)
         self.yCentreSpinBox.setMaximum( 9999.0)
-        self.yCentreSpinBox.setValue(self.yCentre)
+        self.yCentreSpinBox.setValue(self._settings.getSetting("yCentre"))
         self.yCentreSpinBox.setToolTip("Centre of crop region (y)")
-        self.yCentreSpinBox.valueChanged.connect(self.yCentreChanged)
+        self.yCentreSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "yCentre"))
         
         self.zCentreSpinBox = QtGui.QDoubleSpinBox()
         self.zCentreSpinBox.setSingleStep(0.01)
         self.zCentreSpinBox.setMinimum(-9999.0)
         self.zCentreSpinBox.setMaximum( 9999.0)
-        self.zCentreSpinBox.setValue(self.zCentre)
+        self.zCentreSpinBox.setValue(self._settings.getSetting("zCentre"))
         self.zCentreSpinBox.setToolTip("Centre of crop region (z)")
-        self.zCentreSpinBox.valueChanged.connect(self.zCentreChanged)
+        self.zCentreSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "zCentre"))
         
         self.contentLayout.addRow("Centre (x)", self.xCentreSpinBox)
         self.contentLayout.addRow("Centre (y)", self.yCentreSpinBox)
@@ -59,14 +63,14 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
         self.radiusSpinBox.setSingleStep(1)
         self.radiusSpinBox.setMinimum(0.0)
         self.radiusSpinBox.setMaximum(9999.0)
-        self.radiusSpinBox.setValue(self.radius)
+        self.radiusSpinBox.setValue(self._settings.getSetting("radius"))
         self.radiusSpinBox.setToolTip("Radius of sphere")
-        self.radiusSpinBox.valueChanged.connect(self.radiusChanged)
+        self.radiusSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "radius"))
         self.contentLayout.addRow("Radius", self.radiusSpinBox)
         
         # invert selection
         self.invertCheckBox = QtGui.QCheckBox()
-        self.invertCheckBox.setChecked(0)
+        self.invertCheckBox.setChecked(self._settings.getSetting("invertSelection"))
         self.invertCheckBox.setToolTip("Invert selection")
         self.invertCheckBox.stateChanged.connect(self.invertChanged)
         self.contentLayout.addRow("Invert selection", self.invertCheckBox)
@@ -78,50 +82,13 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
         self.setToLatticeButton.clicked.connect(self.setToLattice)
         self.contentLayout.addRow(self.setToLatticeButton)
     
-    def invertChanged(self, index):
-        """
-        Invert setting changed.
-        
-        """
-        if self.invertCheckBox.isChecked():
-            self.invertSelection = 1
-        
-        else:
-            self.invertSelection = 0
+    def invertChanged(self, state):
+        """Invert setting changed."""
+        invert = False if state == QtCore.Qt.Unchecked else True
+        self._settings.updateSetting("invertSelection", invert)
     
     def setToLattice(self):
-        """
-        Set centre to lattice centre.
-        
-        """
+        """Set centre to lattice centre."""
         self.xCentreSpinBox.setValue(self.pipelinePage.inputState.cellDims[0] / 2.0)
         self.yCentreSpinBox.setValue(self.pipelinePage.inputState.cellDims[1] / 2.0)
         self.zCentreSpinBox.setValue(self.pipelinePage.inputState.cellDims[2] / 2.0)
-    
-    def radiusChanged(self, val):
-        """
-        Radius changed.
-        
-        """
-        self.radius = val
-    
-    def xCentreChanged(self, val):
-        """
-        X centre changed.
-        
-        """
-        self.xCentre = val
-    
-    def yCentreChanged(self, val):
-        """
-        Y centre changed.
-        
-        """
-        self.yCentre = val
-    
-    def zCentreChanged(self, val):
-        """
-        Z centre changed.
-        
-        """
-        self.zCentre = val

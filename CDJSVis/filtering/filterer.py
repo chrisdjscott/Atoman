@@ -1354,13 +1354,25 @@ class Filterer(object):
         Crop lattice
         
         """
+        # settings
+        xmin = settings.getSetting("xmin")
+        xmax = settings.getSetting("xmax")
+        ymin = settings.getSetting("ymin")
+        ymax = settings.getSetting("ymax")
+        zmin = settings.getSetting("zmin")
+        zmax = settings.getSetting("zmax")
+        xEnabled = int(settings.getSetting("xEnabled"))
+        yEnabled = int(settings.getSetting("yEnabled"))
+        zEnabled = int(settings.getSetting("zEnabled"))
+        invertSelection = int(settings.getSetting("invertSelection"))
+        
         if self.parent.defectFilterSelected:
             inp = self.pipelinePage.inputState
             ref = self.pipelinePage.refState
             
             result = filtering_c.cropDefectsFilter(self.interstitials, self.vacancies, self.antisites, self.onAntisites, self.splitInterstitials,
-                                                   inp.pos, ref.pos, settings.xmin, settings.xmax, settings.ymin, settings.ymax, settings.zmin,
-                                                   settings.zmax, settings.xEnabled, settings.yEnabled, settings.zEnabled, settings.invertSelection)
+                                                   inp.pos, ref.pos, xmin, xmax, ymin, ymax, zmin, zmax, xEnabled, yEnabled, zEnabled,
+                                                   invertSelection)
             
             # unpack
             NInt, NVac, NAnt, NSplit = result
@@ -1379,10 +1391,8 @@ class Filterer(object):
             # full vectors array
             NVectors, fullVectors = self.makeFullVectorsArray()
             
-            NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin,
-                                              settings.ymax, settings.zmin, settings.zmax, settings.xEnabled,
-                                              settings.yEnabled, settings.zEnabled, settings.invertSelection, NScalars,
-                                              fullScalars, NVectors, fullVectors)
+            NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, xmin, xmax, ymin, ymax, zmin, zmax, xEnabled,
+                                              yEnabled, zEnabled, invertSelection, NScalars, fullScalars, NVectors, fullVectors)
             
             # update scalars dict
             self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -1404,8 +1414,13 @@ class Filterer(object):
         # full vectors array
         NVectors, fullVectors = self.makeFullVectorsArray()
         
-        NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, settings.xCentre, settings.yCentre, settings.zCentre, 
-                                                settings.radius, lattice.cellDims, self.pipelinePage.PBC, settings.invertSelection, 
+        xCentre = settings.getSetting("xCentre")
+        yCentre = settings.getSetting("yCentre")
+        zCentre = settings.getSetting("zCentre")
+        radius = settings.getSetting("radius")
+        invertSelection = int(settings.getSetting("invertSelection"))
+        NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, xCentre, yCentre, zCentre, 
+                                                radius, lattice.cellDims, self.pipelinePage.PBC, invertSelection, 
                                                 NScalars, fullScalars, NVectors, fullVectors)
         
         # update scalars dict
@@ -1472,7 +1487,9 @@ class Filterer(object):
         NVectors, fullVectors = self.makeFullVectorsArray()
         
         self.logger.debug("Calling chargeFilter C function")
-        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge, 
+        minCharge = settings.getSetting("minCharge")
+        maxCharge = settings.getSetting("maxCharge")
+        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, minCharge, maxCharge, 
                                             NScalars, fullScalars, NVectors, fullVectors)
         
         # update scalars dict
@@ -2220,10 +2237,12 @@ class Filterer(object):
         NVectors, fullVectors = self.makeFullVectorsArray()
         
         # run filter
+        filteringEnabled = int(filterSettings.getSetting("filteringEnabled"))
+        minCoordNum = filterSettings.getSetting("minCoordNum")
+        maxCoordNum = filterSettings.getSetting("maxCoordNum")
         NVisible = filtering_c.coordNumFilter(self.visibleAtoms, inputState.pos, inputState.specie, NSpecies, bondMinArray, bondMaxArray,
-                                              maxBond, inputState.cellDims, self.pipelinePage.PBC, scalars, filterSettings.minCoordNum,
-                                              filterSettings.maxCoordNum, NScalars, fullScalars, filterSettings.filteringEnabled, NVectors,
-                                              fullVectors)
+                                              maxBond, inputState.cellDims, self.pipelinePage.PBC, scalars, minCoordNum, maxCoordNum,
+                                              NScalars, fullScalars, filteringEnabled, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
