@@ -201,7 +201,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         
         # add default options
         self.textList.addItem(TextListWidgetItem("Atom count", "{0} atoms", {"{0}": "Atom count"}, "Top left", True))
-        self.textList.addItem(TextListWidgetItem("Visible count", "{0} visible", {"{0}": "Visible count"}, "Top left", False))
+        self.textList.addItem(TextListWidgetItem("Visible count", "{0} visible", {"{0}": "Visible count"}, "Top left", True))
         self.textList.addItem(TextListWidgetItem("Visible specie count", "{0} {1}", {"{0}": "Count", "{1}": "Specie"}, 
                                                  "Top left", False, multiLine=True))
         self.textList.addItem(TextListWidgetItem("Defect count", "{0} {1}", {"{0}": "Count", "{1}": "Defect type"}, "Top left", 

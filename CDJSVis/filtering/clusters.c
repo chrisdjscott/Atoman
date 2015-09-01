@@ -44,14 +44,12 @@ static PyObject*
 findClusters(PyObject *self, PyObject *args)
 {
     int NVisibleIn, *visibleAtoms, *clusterArray, *PBC, minClusterSize, maxClusterSize, *results, NScalars, NVectors;
-    double *pos, neighbourRad, *cellDims, *minPos, *maxPos, *fullScalars;
+    double *pos, neighbourRad, *cellDims, *fullScalars;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *posIn=NULL;
     PyArrayObject *clusterArrayIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *PBCIn=NULL;
-    PyArrayObject *minPosIn=NULL;
-    PyArrayObject *maxPosIn=NULL;
     PyArrayObject *resultsIn=NULL;
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
@@ -67,9 +65,9 @@ findClusters(PyObject *self, PyObject *args)
     
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!dO!O!O!O!iiO!iO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &clusterArrayIn, 
-            &neighbourRad, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &PyArray_Type, &minPosIn, &PyArray_Type, &maxPosIn, &minClusterSize, 
-            &maxClusterSize, &PyArray_Type, &resultsIn, &NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, &fullVectors))
+    if (!PyArg_ParseTuple(args, "O!O!O!dO!O!iiO!iO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &clusterArrayIn,
+            &neighbourRad, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &minClusterSize, &maxClusterSize, &PyArray_Type, &resultsIn,
+			&NScalars, &PyArray_Type, &fullScalarsIn, &NVectors, &PyArray_Type, &fullVectors))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -81,12 +79,6 @@ findClusters(PyObject *self, PyObject *args)
     
     if (not_intVector(clusterArrayIn)) return NULL;
     clusterArray = pyvector_to_Cptr_int(clusterArrayIn);
-    
-    if (not_doubleVector(minPosIn)) return NULL;
-    minPos = pyvector_to_Cptr_double(minPosIn);
-    
-    if (not_doubleVector(maxPosIn)) return NULL;
-    maxPos = pyvector_to_Cptr_double(maxPosIn);
     
     if (not_doubleVector(cellDimsIn)) return NULL;
     cellDims = pyvector_to_Cptr_double(cellDimsIn);

@@ -1315,9 +1315,10 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
             
             count += 1
         
+        hullCol = settings.getSetting("hullCol")
+        hullOpacity = settings.getSetting("hullOpacity")
         nl("  }")
-        nl("  pigment { color rgbt <%f,%f,%f,%f> }" % (settings.hullCol[0], settings.hullCol[1], 
-                                                       settings.hullCol[2], 1.0 - settings.hullOpacity))
+        nl("  pigment { color rgbt <%f,%f,%f,%f> }" % (hullCol[0], hullCol[1], hullCol[2], 1.0 - hullOpacity))
         nl("  finish { diffuse 0.4 ambient 0.25 phong 0.9 }")
         nl("}")
         nl("")
@@ -1804,9 +1805,7 @@ def getActorsForHullFacets(facets, pos, mainWindow, actorsDict, settings, caller
     # actor
     actor = vtk.vtkActor()
     actor.SetMapper(mapper)
-    actor.GetProperty().SetOpacity(settings.hullOpacity)
-    actor.GetProperty().SetColor(settings.hullCol[0], settings.hullCol[1], settings.hullCol[2])
-    
-    d = {}
-    
+    actor.GetProperty().SetOpacity(settings.getSetting("hullOpacity"))
+    hullCol = settings.getSetting("hullCol")
+    actor.GetProperty().SetColor(hullCol[0], hullCol[1], hullCol[2])
     actorsDict["Hulls - ({0})".format(caller)] = utils.ActorObject(actor)

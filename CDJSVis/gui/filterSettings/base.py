@@ -86,7 +86,7 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         self._settings = None
     
-    def addSpinBox(self, setting, minVal=None, maxVal=None, step=None, toolTip=None, label=None, settingEnabled=None):
+    def addSpinBox(self, setting, minVal=None, maxVal=None, step=None, toolTip=None, label=None, settingEnabled=None, displayLayout=False):
         """
         Add a QSpinBox to the content layout with the given label.
         
@@ -114,11 +114,14 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         # optionally add to content layout
         if label is not None:
-            self.contentLayout.addRow(label, spin)
+            if displayLayout:
+                self.displaySettingsLayout.addRow(label, spin)
+            else:
+                self.contentLayout.addRow(label, spin)
         
         return spin
     
-    def addDoubleSpinBox(self, setting, minVal=None, maxVal=None, step=None, toolTip=None, label=None, settingEnabled=None):
+    def addDoubleSpinBox(self, setting, minVal=None, maxVal=None, step=None, toolTip=None, label=None, settingEnabled=None, displayLayout=False):
         """
         Add a QDoubleSpinBox to the content layout with the given label.
         
@@ -146,11 +149,14 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         # optionally add to content layout
         if label is not None:
-            self.contentLayout.addRow(label, spin)
+            if displayLayout:
+                self.displaySettingsLayout.addRow(label, spin)
+            else:
+                self.contentLayout.addRow(label, spin)
         
         return spin
     
-    def addCheckBox(self, setting, toolTip=None, label=None, extraSlot=None):
+    def addCheckBox(self, setting, toolTip=None, label=None, extraSlot=None, displayLayout=False, settingEnabled=None):
         """
         Add a check box.
         
@@ -164,6 +170,8 @@ class GenericSettingsDialog(QtGui.QDialog):
         # optional configuration
         if toolTip is not None:
             check.setToolTip(toolTip)
+        if settingEnabled is not None:
+            check.setEnabled(self._settings.getSetting(settingEnabled))
         
         # connect stateChanged signal
         def slot(state):
@@ -176,7 +184,10 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         # optionally add to content layout
         if label is not None:
-            self.contentLayout.addRow(label, check)
+            if displayLayout:
+                self.displaySettingsLayout.addRow(label, check)
+            else:
+                self.contentLayout.addRow(label, check)
         
         return check
     

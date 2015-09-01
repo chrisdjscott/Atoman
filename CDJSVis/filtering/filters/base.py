@@ -48,4 +48,17 @@ class BaseSettings(object):
 
 class BaseFilter(object):
     """Filters should inherit from this object."""
+    def __init__(self):
+        self._scalars = {}
+        self._vectors = {}
     
+    def getScalars(self):
+        """Return the current scalars."""
+        return self._scalars
+    
+    def getVectors(self):
+        """Return the current vectors."""
+        return self._vectors
+    
+    def apply(self, *args, **kwargs):
+        raise NotImplementedError("apply method not implemented")

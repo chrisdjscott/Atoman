@@ -23,3 +23,4 @@ class ClusterFilterSettings(base.BaseSettings):
         self.registerSetting("hullOpacity", default=0.5)
         self.registerSetting("minClusterSize", default=8)
         self.registerSetting("maxClusterSize", default=-1)
+        self.registerSetting("drawConvexHulls", default=False)

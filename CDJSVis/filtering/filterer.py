@@ -421,7 +421,7 @@ class Filterer(object):
             filterSettingsGui = currentSettings[i]
             filterSettings = filterSettingsGui.getSettings()
             if filterSettings is None:
-            	filterSettings = filterSettingsGui
+                filterSettings = filterSettingsGui
             
             self.logger.info("Running filter: '%s'", filterName)
             
@@ -451,10 +451,10 @@ class Filterer(object):
             elif filterName == "Cluster":
                 self.clusterFilter(filterSettings)
                 
-                if filterSettings.drawConvexHulls:
+                if filterSettings.getSetting("drawConvexHulls"):
                     self.clusterFilterDrawHulls(filterSettings, hullFile)
                 
-                if filterSettings.calculateVolumes:
+                if filterSettings.getSetting("calculateVolumes"):
                     self.clusterFilterCalculateVolumes(filterSettings)
             
             elif filterName == "Crop sphere":
@@ -550,7 +550,7 @@ class Filterer(object):
                 self.povrayAtomsWritten = True
         
         else:
-            if filterName == "Cluster" and filterSettings.drawConvexHulls and filterSettings.hideAtoms:
+            if filterName == "Cluster" and filterSettings.getSetting("drawConvexHulls") and filterSettings.getSetting("hideAtoms"):
                 pass
             
             else:
@@ -1928,17 +1928,13 @@ class Filterer(object):
             PBC = self.pipelinePage.PBC
         
         if minSize is None:
-            minSize = settings.minClusterSize
+            minSize = settings.getSetting("minClusterSize")
         
         if maxSize is None:
-            maxSize = settings.maxClusterSize
+            maxSize = settings.getSetting("maxClusterSize")
         
         if nebRad is None:
-            nebRad = settings.neighbourRadius
-        
-        # set min/max pos to lattice (for boxing)
-        minPos = np.zeros(3, np.float64)
-        maxPos = copy.deepcopy(lattice.cellDims)
+            nebRad = settings.getSetting("neighbourRadius")
         
         # old scalars arrays (resize as appropriate)
         NScalars, fullScalars = self.makeFullScalarsArray()
@@ -1947,7 +1943,7 @@ class Filterer(object):
         NVectors, fullVectors = self.makeFullVectorsArray()
         
         clusters_c.findClusters(self.visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
-                                minPos, maxPos, minSize, maxSize, result, NScalars, fullScalars, NVectors, fullVectors)
+                                minSize, maxSize, result, NScalars, fullScalars, NVectors, fullVectors)
         
         NVisible = result[0]
         NClusters = result[1]
@@ -2061,8 +2057,10 @@ class Filterer(object):
                 clusterPos[3*i+1] = lattice.pos[3*index+1]
                 clusterPos[3*i+2] = lattice.pos[3*index+2]
             
+            neighbourRadius = settings.getSetting("neighbourRadius")
+            
             clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
-                                                 self.pipelinePage.PBC, appliedPBCs, settings.neighbourRadius)
+                                                 self.pipelinePage.PBC, appliedPBCs, neighbourRadius)
             
             facets = None
             if len(cluster) > 3:
@@ -2075,7 +2073,7 @@ class Filterer(object):
             # now render
             if facets is not None:
                 #TODO: make sure not facets more than neighbour rad from cell
-                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
+                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
                 
                 renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, actorsDictLocal, 
                                                 settings, "Cluster {0}".format(clusterIndex))
@@ -2102,7 +2100,7 @@ class Filterer(object):
                     # render
                     if facets is not None:
                         #TODO: make sure not facets more than neighbour rad from cell
-                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
+                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
                         
                         renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, actorsDictLocal, settings,
                                                         "Cluster {0} (PBC {1})".format(clusterIndex, count))
@@ -2122,8 +2120,8 @@ class Filterer(object):
         # this will not work properly over PBCs at the moment
         lattice = self.pipelinePage.inputState
         
-        # draw them as they are
-        if filterSettings.calculateVolumesHull:
+        # calculate volumes
+        if filterSettings.getSetting("calculateVolumesHull"):
             count = 0
             for cluster in self.clusterList:
                 # first make pos array for this cluster
@@ -2143,8 +2141,9 @@ class Filterer(object):
                     PBC = self.pipelinePage.PBC
                     if PBC[0] or PBC[1] or PBC[2]:
                         appliedPBCs = np.zeros(7, np.int32)
+                        neighbourRadius = filterSettings.getSetting("neighbourRadius")
                         clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
-                                                             PBC, appliedPBCs, filterSettings.neighbourRadius)
+                                                             PBC, appliedPBCs, neighbourRadius)
                     
                     volume, area = clusters.findConvexHullVolume(len(cluster), clusterPos)
                 
@@ -2158,7 +2157,7 @@ class Filterer(object):
                 
                 count += 1
         
-        elif filterSettings.calculateVolumesVoro:
+        elif filterSettings.getSetting("calculateVolumesVoro"):
             # compute Voronoi
             self.calculateVoronoi()
             vor = self.voronoi
