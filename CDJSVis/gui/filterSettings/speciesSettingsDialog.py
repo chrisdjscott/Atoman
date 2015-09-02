@@ -7,6 +7,7 @@ from PySide import QtGui, QtCore
 
 from . import base
 from ...state.atoms import elements
+from ...filtering.filters import speciesFilter
 
 
 ################################################################################
@@ -50,26 +51,28 @@ class SpeciesSettingsDialog(base.GenericSettingsDialog):
         
         self.filterType = "Species"
         
-        # specie list
+        # settings
+        self._settings = speciesFilter.SpeciesFilterSettings()
+        
+        # species list
         self.specieList = QtGui.QListWidget(self)
 #         self.specieList.setFixedHeight(100)
         self.specieList.setFixedWidth(200)
+        self.specieList.itemChanged.connect(self.speciesListChanged)
         self.contentLayout.addRow(self.specieList)
         
         self.refresh()
     
-    def getVisibleSpecieList(self):
-        """
-        Return list of visible species
-        
-        """
-        visibleSpecieList = []
+    def speciesListChanged(self, *args):
+        """Species selection has changed."""
+        visibleSpeciesList = []
         for i in xrange(self.specieList.count()):
             item = self.specieList.item(i)
             if item.checkState() == QtCore.Qt.Checked:
-                visibleSpecieList.append(item.symbol)
+                visibleSpeciesList.append(item.symbol)
         
-        return visibleSpecieList
+        self.logger.debug("Species selection has changed: %r", visibleSpeciesList)
+        self._settings.updateSetting("visibleSpeciesList", visibleSpeciesList)
     
     def refresh(self):
         """
@@ -111,3 +114,6 @@ class SpeciesSettingsDialog(base.GenericSettingsDialog):
                 name = elements.atomName(sym)
                 item = SpeciesListItem(sym, name=name)
                 self.specieList.addItem(item)
+        
+        # update visible species list
+        self.speciesListChanged()

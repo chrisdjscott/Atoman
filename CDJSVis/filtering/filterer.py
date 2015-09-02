@@ -1155,7 +1155,7 @@ class Filterer(object):
         Filter by specie
         
         """
-        visibleSpecieList = settings.getVisibleSpecieList()
+        visibleSpecieList = settings.getSetting("visibleSpeciesList")
         specieList = self.pipelinePage.inputState.specieList
         
         # make visible specie array

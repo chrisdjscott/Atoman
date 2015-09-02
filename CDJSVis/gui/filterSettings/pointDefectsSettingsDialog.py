@@ -332,7 +332,7 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         self.logger.debug("Species selection has changed: %r", visibleSpeciesList)
         
-        self._settings.updateSetting("visibleSpeciesList", value=visibleSpeciesList)
+        self._settings.updateSetting("visibleSpeciesList", visibleSpeciesList)
     
     def refresh(self):
         """
