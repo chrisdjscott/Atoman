@@ -36,6 +36,7 @@ class PointDefectsFilterSettings(base.BaseSettings):
         self.registerSetting("vacSpecularPower", default=10)
         self.registerSetting("useAcna", default=False)
         self.registerSetting("acnaMaxBondDistance", default=5.0)
+        self.registerSetting("acnaStructureType", default=1)
         self.registerSetting("filterSpecies", default=False)
         self.registerSetting("visibleSpeciesList", default=[])
         self.registerSetting("drawDisplacementVectors", default=False)

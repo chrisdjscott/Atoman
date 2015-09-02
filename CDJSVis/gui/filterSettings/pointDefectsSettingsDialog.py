@@ -3,10 +3,14 @@
 Contains GUI forms for the point defects filter.
 
 """
+import logging
+
 from PySide import QtGui, QtCore
 
 from . import base
 from .speciesSettingsDialog import SpeciesListItem
+from ...filtering.filters import pointDefectsFilter
+from ...filtering import filterer
 
 
 ################################################################################
@@ -20,47 +24,14 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         super(PointDefectsSettingsDialog, self).__init__(title, parent)
         
         self.filterType = "Point defects"
+        self.logger = logging.getLogger(__name__)
         
         # settings
-        self.vacancyRadius = 1.3
-        self.showInterstitials = 1
-        self.showAntisites = 1
-        self.showVacancies = 1
-        self.findClusters = 0
-        self.neighbourRadius = 3.5
-        self.minClusterSize = 3
-        self.maxClusterSize = -1
-        self.hullCol = [0]*3
-        self.hullCol[2] = 1
-        self.hullOpacity = 0.5
-        self.calculateVolumes = False
-        self.calculateVolumesVoro = True
-        self.calculateVolumesHull = False
-        self.drawConvexHulls = 0
-        self.hideDefects = 0
-        self.identifySplitInts = 1
-        self.vacScaleSize = 0.75
-        self.vacOpacity = 0.8
-        self.vacSpecular = 0.4
-        self.vacSpecularPower = 10
-        self.useAcna = False
-        self.acnaMaxBondDistance = 5.0
-        self.filterSpecies = False
-        self.drawDisplacementVectors = False
-        self.bondThicknessVTK = 0.4
-        self.bondThicknessPOV = 0.4
-        self.bondNumSides = 5
+        self._settings = pointDefectsFilter.PointDefectsFilterSettings()
         
         # vacancy radius option
-        self.vacRadSpinBox = QtGui.QDoubleSpinBox()
-        self.vacRadSpinBox.setSingleStep(0.1)
-        self.vacRadSpinBox.setMinimum(0.01)
-        self.vacRadSpinBox.setMaximum(10.0)
-        self.vacRadSpinBox.setValue(self.vacancyRadius)
-        self.vacRadSpinBox.setToolTip("The vacancy radius is used to determine if an input atom "
-                                      "is associated with a reference site.")
-        self.vacRadSpinBox.valueChanged[float].connect(self.vacRadChanged)
-        self.contentLayout.addRow("Vacancy radius", self.vacRadSpinBox)
+        self.addDoubleSpinBox("vacancyRadius", minVal=0.01, maxVal=10, step=0.1, label="Vacancy radius",
+                              toolTip="The vacancy radius is used to determine if an input atom is associated with a reference site")
         
         self.addHorizontalDivider()
         
@@ -89,94 +60,54 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.addHorizontalDivider()
         
         # identify split ints check box
-        self.identifySplitsCheck = QtGui.QCheckBox()
-        self.identifySplitsCheck.setChecked(1)
-        self.identifySplitsCheck.stateChanged.connect(self.identifySplitsChanged)
-        self.identifySplitsCheck.setToolTip("Attempt to identify split interstitials (2 interstitials and 1 vacancy). "
-                                            "Note: a split interstitial is counted as 1 defect, not 3.")
-        self.contentLayout.addRow("Identify split interstitials", self.identifySplitsCheck)
+        self.addCheckBox("identifySplitInts", toolTip="Turn split interstitial detection on", label="Identify split interstitials")
         
         self.addHorizontalDivider()
         
         # use acna options
-        useAcnaCheck = QtGui.QCheckBox()
-        useAcnaCheck.setChecked(self.useAcna)
-        useAcnaCheck.stateChanged.connect(self.useAcnaToggled)
-        useAcnaCheck.setToolTip("Use Adaptive Common Neighbour Analysis to complement the comparison "
-                                "to a reference system. Interstitials with the selected structure are "
-                                "not classified as defects if they have a neighbouring vacancy.")
-        self.contentLayout.addRow("<b>Use ACNA</b>", useAcnaCheck)
+        toolTip = "Use Adaptive Common Neighbour Analysis to complement the comparison "
+        toolTip += "to a reference system. Interstitials with the selected structure are "
+        toolTip += "not classified as defects if they have a neighbouring vacancy."
+        self.addCheckBox("useAcna", toolTip=toolTip, label="<b>Use ACNA</b>", extraSlot=self.useAcnaToggled)
         
         # acna max bond distance
-        self.maxBondDistanceSpin = QtGui.QDoubleSpinBox()
-        self.maxBondDistanceSpin.setSingleStep(0.1)
-        self.maxBondDistanceSpin.setMinimum(2.0)
-        self.maxBondDistanceSpin.setMaximum(9.99)
-        self.maxBondDistanceSpin.setValue(self.acnaMaxBondDistance)
-        self.maxBondDistanceSpin.valueChanged[float].connect(self.setAcnaMaxBondDistance)
-        self.maxBondDistanceSpin.setToolTip("This value is used for spatially decomposing the system. It "
-                                            "should be set large enough to include all required atoms. "
-                                            "If unsure just set it to something big, eg. 10.0")
-        self.contentLayout.addRow("Max bond distance", self.maxBondDistanceSpin)
+        toolTip = "This value is used for spatially decomposing the system. It should be set large enough to "
+        toolTip += "include all required atoms. If unsure just set it to something big, eg. 10.0"
+        self.maxBondDistanceSpin = self.addDoubleSpinBox("acnaMaxBondDistance", minVal=2, maxVal=9.99, step=0.1, toolTip=toolTip,
+                                                         label="Max bond distance", settingEnabled="useAcna")
         
         # acna ideal structure
-        self.acnaStructureType = 1
-        self.acnaStructureCombo = QtGui.QComboBox()
-        filterer = self.parent.filterer
-        self.acnaStructureCombo.addItems(filterer.knownStructures)
-        self.acnaStructureCombo.setCurrentIndex(self.acnaStructureType)
-        self.acnaStructureCombo.currentIndexChanged.connect(self.acnaStructureTypeChanged)
-        self.contentLayout.addRow("Structure", self.acnaStructureCombo)
-        
-        # make sure set up properly
-        self.useAcnaToggled(QtCore.Qt.Unchecked)
+        knownStructures = filterer.Filterer.knownStructures
+        self.acnaStructureCombo = self.addComboBox("acnaStructureType", items=knownStructures, label="Structure",
+                                                   toolTip="Select the ideal structure for the given lattice",
+                                                   settingEnabled="useAcna")
         
         self.addHorizontalDivider()
         
         # find clusters settings
-        findClustersCheck = QtGui.QCheckBox()
-        findClustersCheck.setToolTip("Identify clusters of defects in the system.")
-        findClustersCheck.stateChanged.connect(self.findClustersChanged)
-        findClustersCheck.setChecked(self.findClusters)
-        self.contentLayout.addRow("<b>Identify clusters</b>", findClustersCheck)
+        self.addCheckBox("findClusters", toolTip="Identify clusters of defects in the system.", label="<b>Identify clusters</b>",
+                         extraSlot=self.findClustersChanged)
         
         # neighbour rad spin box
-        self.nebRadSpinBox = QtGui.QDoubleSpinBox()
-        self.nebRadSpinBox.setSingleStep(0.1)
-        self.nebRadSpinBox.setMinimum(0.01)
-        self.nebRadSpinBox.setMaximum(100.0)
-        self.nebRadSpinBox.setValue(self.neighbourRadius)
-        self.nebRadSpinBox.valueChanged[float].connect(self.nebRadChanged)
-        self.nebRadSpinBox.setToolTip("Clusters are constructed using a recursive algorithm where "
-                                      "two defects are said to be neighbours if their separation "
-                                      "is less than this value.")
-        self.contentLayout.addRow("Neighbour radius", self.nebRadSpinBox)
+        toolTip = "Clusters are constructed using a recursive algorithm where two defects are said to be neighbours "
+        toolTip += "if their separation is less than this value."
+        self.nebRadSpinBox = self.addDoubleSpinBox("neighbourRadius", minVal=0.01, maxVal=99, step=0.1, toolTip=toolTip,
+                                                   label="Neighbour radius", settingEnabled="findClusters")
         
         # minimum size spin box
-        self.minNumSpinBox = QtGui.QSpinBox()
-        self.minNumSpinBox.setMinimum(1)
-        self.minNumSpinBox.setMaximum(1000)
-        self.minNumSpinBox.setValue(self.minClusterSize)
-        self.minNumSpinBox.valueChanged[int].connect(self.minNumChanged)
-        self.minNumSpinBox.setToolTip("Only show clusters that contain more than this number of defects.")
-        self.contentLayout.addRow("Minimum cluster size", self.minNumSpinBox)
+        self.minNumSpinBox = self.addSpinBox("minClusterSize", minVal=1, maxVal=1000, label="Minimum cluster size",
+                                             toolTip="Only show clusters that contain more than this number of defects.",
+                                             settingEnabled="findClusters")
         
         # maximum size spin box
-        self.maxNumSpinBox = QtGui.QSpinBox()
-        self.maxNumSpinBox.setMinimum(-1)
-        self.maxNumSpinBox.setMaximum(9999)
-        self.maxNumSpinBox.setValue(self.maxClusterSize)
-        self.maxNumSpinBox.valueChanged[int].connect(self.maxNumChanged)
-        self.maxNumSpinBox.setToolTip("Only show clusters that contain less than this number of defects. "
-                                      "Set to '-1' to disable this condition.")
-        self.contentLayout.addRow("Maximum cluster size", self.maxNumSpinBox)
+        toolTip = "Only show clusters that contain less than this number of defects. Set to -1 to disable this condition."
+        self.maxNumSpinBox = self.addSpinBox("maxClusterSize", minVal=-11, maxVal=1000, label="Maximum cluster size",
+                                             toolTip=toolTip, settingEnabled="findClusters")
         
         # calculate volumes options
-        self.calcVolsCheck = QtGui.QCheckBox()
-        self.calcVolsCheck.setToolTip("Calculate volumes of defect clusters.")
-        self.calcVolsCheck.stateChanged.connect(self.calcVolsChanged)
-        self.calcVolsCheck.setChecked(self.calculateVolumes)
-        self.contentLayout.addRow("<b>Calculate volumes</b>", self.calcVolsCheck)
+        self.calcVolsCheck = self.addCheckBox("calculateVolumes", toolTip="Calculate volumes of defect clusters.",
+                                              label="<b>Calculate volumes</b>", extraSlot=self.calcVolsChanged,
+                                              settingEnabled="findClusters")
         
         # radio buttons
         self.convHullVolRadio = QtGui.QRadioButton(parent=self.calcVolsCheck)
@@ -189,22 +120,23 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.voroVolRadio.setChecked(True)
         self.contentLayout.addRow("Convex hull volumes", self.convHullVolRadio)
         self.contentLayout.addRow("Sum Voronoi volumes", self.voroVolRadio)
-        
-        # make sure setup properly
-        self.calcVolsChanged(QtCore.Qt.Unchecked)
+        enabled = True if self._settings.getSetting("findClusters") and self._settings.getSetting("calculateVolumes") else False
+        self.convHullVolRadio.setEnabled(enabled)
+        self.voroVolRadio.setEnabled(enabled)
         
         self.addHorizontalDivider()
         
         # filter species group
         self.filterSpeciesCheck = QtGui.QCheckBox()
-        self.filterSpeciesCheck.setChecked(self.filterSpecies)
+        self.filterSpeciesCheck.setChecked(self._settings.getSetting("filterSpecies"))
         self.filterSpeciesCheck.setToolTip("Filter visible defects by species")
         self.filterSpeciesCheck.stateChanged.connect(self.filterSpeciesToggled)
         
         self.specieList = QtGui.QListWidget(self)
         self.specieList.setFixedHeight(80)
         self.specieList.setFixedWidth(100)
-        self.specieList.setEnabled(self.filterSpecies)
+        self.specieList.setEnabled(self._settings.getSetting("filterSpecies"))
+        self.specieList.itemChanged.connect(self.speciesListChanged)
         
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(self.filterSpeciesCheck)
@@ -212,14 +144,13 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.contentLayout.addRow("Filter species", vbox)
         
         # draw hulls options
-        self.drawHullsCheck = QtGui.QCheckBox()
-        self.drawHullsCheck.setChecked(False)
-        self.drawHullsCheck.setToolTip("Draw convex hulls of defect clusters")
-        self.drawHullsCheck.stateChanged.connect(self.drawHullsChanged)
-        self.displaySettingsLayout.addRow("<b>Draw convex hulls</b>", self.drawHullsCheck)
+        self.drawHullsCheck = self.addCheckBox("drawConvexHulls", toolTip="Draw convex hulls around defect clusters",
+                                               label="<b>Draw convex hulls</b>", extraSlot=self.drawHullsChanged,
+                                               displayLayout=True, settingEnabled="findClusters")
         
         # hull colour
-        col = QtGui.QColor(self.hullCol[0]*255.0, self.hullCol[1]*255.0, self.hullCol[2]*255.0)
+        hullCol = self._settings.getSetting("hullCol")
+        col = QtGui.QColor(hullCol[0]*255.0, hullCol[1]*255.0, hullCol[2]*255.0)
         self.hullColourButton = QtGui.QPushButton("")
         self.hullColourButton.setFixedWidth(50)
         self.hullColourButton.setFixedHeight(30)
@@ -229,165 +160,68 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.displaySettingsLayout.addRow("Hull colour", self.hullColourButton)
         
         # hull opacity
-        self.hullOpacitySpinBox = QtGui.QDoubleSpinBox()
-        self.hullOpacitySpinBox.setSingleStep(0.01)
-        self.hullOpacitySpinBox.setMinimum(0.01)
-        self.hullOpacitySpinBox.setMaximum(1.0)
-        self.hullOpacitySpinBox.setValue(self.hullOpacity)
-        self.hullOpacitySpinBox.setToolTip("The opacity of the convex hulls")
-        self.hullOpacitySpinBox.valueChanged[float].connect(self.hullOpacityChanged)
-        self.displaySettingsLayout.addRow("Hull opacity", self.hullOpacitySpinBox)
+        self.hullOpacitySpinBox = self.addDoubleSpinBox("hullOpacity", minVal=0.01, maxVal=1, step=0.01, displayLayout=True,
+                                                        toolTip="The opacity of the convex hulls", label="Hull opacity")
         
         # hide atoms
-        self.hideAtomsCheckBox = QtGui.QCheckBox()
-        self.hideAtomsCheckBox.stateChanged.connect(self.hideDefectsChanged)
-        self.hideAtomsCheckBox.setToolTip("Don't show the defects when rendering the convex hulls")
-        self.displaySettingsLayout.addRow("Hide defects", self.hideAtomsCheckBox)
+        self.hideAtomsCheckBox = self.addCheckBox("hideDefects", toolTip="Do not show the defects when rendering the convex hulls",
+                                                  label="Hide defects", displayLayout=True)
         
-        self.drawHullsChanged(QtCore.Qt.Unchecked)
+        enabled = True if self._settings.getSetting("findClusters") and self._settings.getSetting("drawConvexHulls") else False
+        self.hullColourButton.setEnabled(enabled)
+        self.hullOpacitySpinBox.setEnabled(enabled)
+        self.hideAtomsCheckBox.setEnabled(enabled)
         
         self.addHorizontalDivider(displaySettings=True)
         
         # vac display settings
         # scale size
-        vacScaleSizeSpin = QtGui.QDoubleSpinBox()
-        vacScaleSizeSpin.setMinimum(0.1)
-        vacScaleSizeSpin.setMaximum(2.0)
-        vacScaleSizeSpin.setSingleStep(0.1)
-        vacScaleSizeSpin.setValue(self.vacScaleSize)
-        vacScaleSizeSpin.valueChanged.connect(self.vacScaleSizeChanged)
-        vacScaleSizeSpin.setToolTip("When rendering vacancies scale the atomic radius by this amount (usually < 1)")
-        self.displaySettingsLayout.addRow("Vacancy scale size", vacScaleSizeSpin)
+        self.addDoubleSpinBox("vacScaleSize", minVal=0.1, maxVal=2, step=0.1, label="Vacancy scale size", displayLayout=True,
+                              toolTip="When rendering vacancies scale the atomic radius by this amount (usually < 1)")
         
         # opacity
-        vacOpacitySpin = QtGui.QDoubleSpinBox()
-        vacOpacitySpin.setMinimum(0.01)
-        vacOpacitySpin.setMaximum(1.0)
-        vacOpacitySpin.setSingleStep(0.1)
-        vacOpacitySpin.setValue(self.vacOpacity)
-        vacOpacitySpin.setToolTip("The opacity value for vacancies.")
-        vacOpacitySpin.valueChanged.connect(self.vacOpacityChanged)
-        self.displaySettingsLayout.addRow("Vacancy opacity", vacOpacitySpin)
+        self.addDoubleSpinBox("vacOpacity", minVal=0.01, maxVal=1, step=0.1, label="Vacancy opacity", displayLayout=True,
+                              toolTip="The opacity value for vacancies.")
         
         # specular
-        vacSpecularSpin = QtGui.QDoubleSpinBox()
-        vacSpecularSpin.setMinimum(0.01)
-        vacSpecularSpin.setMaximum(1.0)
-        vacSpecularSpin.setSingleStep(0.01)
-        vacSpecularSpin.setValue(self.vacSpecular)
-        vacSpecularSpin.setToolTip("Vacancy specular value")
-        vacSpecularSpin.valueChanged.connect(self.vacSpecularChanged)
-        self.displaySettingsLayout.addRow("Vacancy specular", vacSpecularSpin)
+        self.addDoubleSpinBox("vacSpecular", minVal=0.01, maxVal=1, step=0.01, label="Vacancy specular", displayLayout=True,
+                              toolTip="The specular value for vacancies.")
         
         # specular power
-        vacSpecularPowerSpin = QtGui.QDoubleSpinBox()
-        vacSpecularPowerSpin.setMinimum(0)
-        vacSpecularPowerSpin.setMaximum(100)
-        vacSpecularPowerSpin.setSingleStep(0.1)
-        vacSpecularPowerSpin.setValue(self.vacSpecularPower)
-        vacSpecularPowerSpin.setToolTip("Vacancy specu;ar power value")
-        vacSpecularPowerSpin.valueChanged.connect(self.vacSpecularPowerChanged)
-        self.displaySettingsLayout.addRow("Vacancy specular power", vacSpecularPowerSpin)
+        self.addDoubleSpinBox("vacSpecularPower", minVal=0, maxVal=100, step=0.1, label="Vacancy specular power", displayLayout=True,
+                              toolTip="The specular power value for vacancies.")
         
         self.addHorizontalDivider(displaySettings=True)
         
         # draw displacement vector settings
-        self.drawVectorsCheck = QtGui.QCheckBox()
-        self.drawVectorsCheck.stateChanged.connect(self.drawVectorsChanged)
-        self.drawVectorsCheck.setCheckState(QtCore.Qt.Unchecked)
-        self.drawVectorsCheck.setToolTip("Draw displacement vectors (movement) of defects")
-        self.disableDrawVectorsCheck()
-        
-        self.displaySettingsLayout.addRow("<b>Draw displacement vectors</b>", self.drawVectorsCheck)
+        self.drawVectorsCheck = self.addCheckBox("drawDisplacementVectors", toolTip="Draw displacement vectors (movement) of defects",
+                                                 label="<b>Draw displacement vectors</b>", extraSlot=self.drawVectorsChanged,
+                                                 displayLayout=True)
         
         # vtk thickness
-        self.vtkThickSpin = QtGui.QDoubleSpinBox()
-        self.vtkThickSpin.setMinimum(0.01)
-        self.vtkThickSpin.setMaximum(10)
-        self.vtkThickSpin.setSingleStep(0.1)
-        self.vtkThickSpin.setValue(self.bondThicknessVTK)
-        self.vtkThickSpin.valueChanged.connect(self.vtkThickChanged)
-        self.vtkThickSpin.setToolTip("Thickness of lines showing defect movement (VTK)")
-        self.displaySettingsLayout.addRow("Bond thickness (VTK)", self.vtkThickSpin)
+        self.vtkThickSpin = self.addDoubleSpinBox("bondThicknessVTK", minVal=0.01, maxVal=10, step=0.1, displayLayout=True,
+                                                  toolTip="Thickness of lines showing defect movement (VTK)",
+                                                  label="Bond thickness (VTK)")
         
         # pov thickness
-        self.povThickSpin = QtGui.QDoubleSpinBox()
-        self.povThickSpin.setMinimum(0.01)
-        self.povThickSpin.setMaximum(10)
-        self.povThickSpin.setSingleStep(0.01)
-        self.povThickSpin.setValue(self.bondThicknessPOV)
-        self.povThickSpin.valueChanged.connect(self.povThickChanged)
-        self.povThickSpin.setToolTip("Thickness of lines showing defect movement (POV-Ray)")
-        self.displaySettingsLayout.addRow("Bond thickness (POV)", self.povThickSpin)
+        self.povThickSpin = self.addDoubleSpinBox("bondThicknessPOV", minVal=0.01, maxVal=10, step=0.1, displayLayout=True,
+                                                  toolTip="Thickness of lines showing defect movement (POV-Ray)",
+                                                  label="Bond thickness (POV)")
         
         # num sides
-        self.numSidesSpin = QtGui.QSpinBox()
-        self.numSidesSpin.setMinimum(3)
-        self.numSidesSpin.setMaximum(999)
-        self.numSidesSpin.setSingleStep(1)
-        self.numSidesSpin.setValue(self.bondNumSides)
-        self.numSidesSpin.valueChanged.connect(self.numSidesChanged)
-        self.numSidesSpin.setToolTip("Number of sides when rendering displacement vectors (more looks better but is slower)")
-        self.displaySettingsLayout.addRow("Bond number of sides", self.numSidesSpin)
+        self.numSidesSpin = self.addSpinBox("bondNumSides", minVal=3, maxVal=99, step=1, displayLayout=True, label="Bond number of sides",
+                                            toolTip="Number of sides when rendering displacement vectors (more looks better but is slower)")
         
-        self.drawVectorsChanged(QtCore.Qt.Unchecked)
-        self.findClustersChanged(QtCore.Qt.Unchecked)
-        
+        self.disableDrawVectorsCheck()
         self.refresh()
     
-    def acnaStructureTypeChanged(self, index):
-        """
-        ACNA structure type has changed
-        
-        """
-        self.acnaStructureType = index
-    
-    def setAcnaMaxBondDistance(self, val):
-        """
-        Set max bond distance for ACNA
-        
-        """
-        self.acnaMaxBondDistance = val
-    
-    def useAcnaToggled(self, state):
+    def useAcnaToggled(self, enabled):
         """
         Use ACNA toggled
         
         """
-        if state == QtCore.Qt.Unchecked:
-            self.useAcna = False
-            
-            # disable associated
-            self.maxBondDistanceSpin.setEnabled(False)
-            self.acnaStructureCombo.setEnabled(False)
-        
-        else:
-            self.useAcna = True
-            
-            # disable associated
-            self.maxBondDistanceSpin.setEnabled(True)
-            self.acnaStructureCombo.setEnabled(True)
-    
-    def numSidesChanged(self, val):
-        """
-        Number of sides changed.
-        
-        """
-        self.bondNumSides = val
-    
-    def vtkThickChanged(self, val):
-        """
-        VTK thickness changed.
-        
-        """
-        self.bondThicknessVTK = val
-    
-    def povThickChanged(self, val):
-        """
-        POV thickness changed.
-        
-        """
-        self.bondThicknessPOV = val
+        self.maxBondDistanceSpin.setEnabled(enabled)
+        self.acnaStructureCombo.setEnabled(enabled)
     
     def enableDrawVectorsCheck(self):
         """
@@ -395,9 +229,10 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         """
         self.drawVectorsCheck.setEnabled(True)
-        if self.drawDisplacementVectors:
+        if self._settings.getSetting("drawDisplacementVectors"):
             self.vtkThickSpin.setEnabled(True)
             self.povThickSpin.setEnabled(True)
+            self.numSidesSpin.setEnabled(True)
     
     def disableDrawVectorsCheck(self):
         """
@@ -405,154 +240,42 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         """
         self.drawVectorsCheck.setEnabled(False)
-        if self.drawDisplacementVectors:
-            self.vtkThickSpin.setEnabled(False)
-            self.povThickSpin.setEnabled(False)
-        
+        self.vtkThickSpin.setEnabled(False)
+        self.povThickSpin.setEnabled(False)
+        self.numSidesSpin.setEnabled(False)
     
-    def drawVectorsChanged(self, state):
+    def drawVectorsChanged(self, enabled):
         """
         Draw displacement vectors toggled
         
         """
-        if state == QtCore.Qt.Unchecked:
-            self.drawDisplacementVectors = False
-            
-            self.vtkThickSpin.setEnabled(False)
-            self.povThickSpin.setEnabled(False)
-            self.numSidesSpin.setEnabled(False)
+        self.logger.debug("Draw defect displacement vectors: %r", enabled)
+        self.vtkThickSpin.setEnabled(enabled)
+        self.povThickSpin.setEnabled(enabled)
+        self.numSidesSpin.setEnabled(enabled)
         
-        else:
-            self.drawDisplacementVectors = True
-            
-            self.vtkThickSpin.setEnabled(True)
-            self.povThickSpin.setEnabled(True)
-            self.numSidesSpin.setEnabled(True)
-        
-        self.logger.debug("Draw defect displacement vectors: %r", self.drawDisplacementVectors)
-    
-    def vacSpecularPowerChanged(self, val):
-        """
-        Vac specular power changed.
-        
-        """
-        self.vacSpecularPower = val
-    
-    def vacSpecularChanged(self, val):
-        """
-        Vac specular changed.
-        
-        """
-        self.vacSpecular = val
-    
-    def vacOpacityChanged(self, val):
-        """
-        Vac opacity changed.
-        
-        """
-        self.vacOpacity = val
-    
-    def vacScaleSizeChanged(self, val):
-        """
-        Vac scale size changed.
-        
-        """
-        self.vacScaleSize = val
-    
-    def identifySplitsChanged(self, state):
-        """
-        Identity splits changed.
-        
-        """
-        if self.identifySplitsCheck.isChecked():
-            self.identifySplitInts = 1
-        
-        else:
-            self.identifySplitInts = 0
-    
-    def hideDefectsChanged(self, val):
-        """
-        Hide atoms check changed.
-        
-        """
-        if self.hideAtomsCheckBox.isChecked():
-            self.hideDefects = 1
-        
-        else:
-            self.hideDefects = 0
-    
-    def minNumChanged(self, val):
-        """
-        Change min cluster size.
-        
-        """
-        self.minClusterSize = val
-    
-    def maxNumChanged(self, val):
-        """
-        Change max cluster size.
-        
-        """
-        self.maxClusterSize = val
-    
-    def nebRadChanged(self, val):
-        """
-        Change neighbour radius.
-        
-        """
-        self.neighbourRadius = val
-    
-    def disableCalcVolsCheck(self):
-        """
-        Disable calc vols check box
-        
-        """
-        self.calcVolsCheck.setEnabled(False)
-        if self.calculateVolumes:
-            self.convHullVolRadio.setEnabled(False)
-            self.voroVolRadio.setEnabled(False)
-    
-    def enableCalcVolsCheck(self):
+    def toggleCalcVolsCheck(self, enabled):
         """
         Enable calc vols check box
         
         """
-        self.calcVolsCheck.setEnabled(True)
-        if self.calculateVolumes:
-            self.convHullVolRadio.setEnabled(True)
-            self.voroVolRadio.setEnabled(True)
+        self.calcVolsCheck.setEnabled(enabled)
+        
+        enabled = enabled and self._settings.getSetting("calculateVolumes")
+        self.convHullVolRadio.setEnabled(enabled)
+        self.voroVolRadio.setEnabled(enabled)
     
-    def findClustersChanged(self, state):
+    def findClustersChanged(self, enabled):
         """
         Change find volumes setting.
         
         """
-        if state == QtCore.Qt.Unchecked:
-            self.findClusters = 0
-            
-            # disable associated settings
-            self.nebRadSpinBox.setEnabled(False)
-            self.minNumSpinBox.setEnabled(False)
-            self.maxNumSpinBox.setEnabled(False)
-            self.disableCalcVolsCheck()
-            self.disableDrawHullsCheck()
-        
-        else:
-            self.findClusters = 1
-            
-            # enable associated settings
-            self.nebRadSpinBox.setEnabled(True)
-            self.minNumSpinBox.setEnabled(True)
-            self.maxNumSpinBox.setEnabled(True)
-            self.enableCalcVolsCheck()
-            self.enableDrawHullsCheck()
-    
-    def vacRadChanged(self, val):
-        """
-        Update vacancy radius
-        
-        """
-        self.vacancyRadius = val
+        # disable associated settings
+        self.nebRadSpinBox.setEnabled(enabled)
+        self.minNumSpinBox.setEnabled(enabled)
+        self.maxNumSpinBox.setEnabled(enabled)
+        self.toggleCalcVolsCheck(enabled)
+        self.toggleDrawHullsCheck(enabled)
     
     def intVisChanged(self, val):
         """
@@ -560,9 +283,9 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         """
         if self.intTypeCheckBox.isChecked():
-            self.showInterstitials = 1
+            self._settings.updateSetting("showInterstitials", True)
         else:
-            self.showInterstitials = 0
+            self._settings.updateSetting("showInterstitials", False)
     
     def vacVisChanged(self, val):
         """
@@ -570,9 +293,9 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         """
         if self.vacTypeCheckBox.isChecked():
-            self.showVacancies = 1
+            self._settings.updateSetting("showVacancies", True)
         else:
-            self.showVacancies = 0
+            self._settings.updateSetting("showVacancies", False)
     
     def antVisChanged(self, val):
         """
@@ -580,41 +303,36 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         """
         if self.antTypeCheckBox.isChecked():
-            self.showAntisites = 1
+            self._settings.updateSetting("showAntisites", True)
         else:
-            self.showAntisites = 0
+            self._settings.updateSetting("showAntisites", False)
     
     def filterSpeciesToggled(self, state):
         """
         Filter species toggled
         
         """
-        if state == QtCore.Qt.Unchecked:
-            self.filterSpecies = False
-            self.specieList.setEnabled(False)
-        
-        else:
-            self.filterSpecies = True
-            self.specieList.setEnabled(True)
+        filterSpecies = False if state == QtCore.Qt.Unchecked else True
+        self._settings.updateSetting("filterSpecies", filterSpecies)
+        self.specieList.setEnabled(filterSpecies)
     
-    def getVisibleSpecieList(self):
-        """
-        Return list of visible species
-        
-        """
-        visibleSpecieList = []
-        if self.filterSpecies:
+    def speciesListChanged(self, *args):
+        """Species selection has changed."""
+        visibleSpeciesList = []
+        if self._settings.getSetting("filterSpecies"):
             for i in xrange(self.specieList.count()):
                 item = self.specieList.item(i)
                 if item.checkState() == QtCore.Qt.Checked:
-                    visibleSpecieList.append(item.symbol)
+                    visibleSpeciesList.append(item.symbol)
         
         else:
             for i in xrange(self.specieList.count()):
                 item = self.specieList.item(i)
-                visibleSpecieList.append(item.symbol)
+                visibleSpeciesList.append(item.symbol)
         
-        return visibleSpecieList
+        self.logger.debug("Species selection has changed: %r", visibleSpeciesList)
+        
+        self._settings.updateSetting("visibleSpeciesList", value=visibleSpeciesList)
     
     def refresh(self):
         """
@@ -658,59 +376,36 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
                 item = SpeciesListItem(sym)
                 self.specieList.addItem(item)
         
+        # update the visible species list
+        self.speciesListChanged()
+        
         # enable/disable draw vectors
         if inputState.NAtoms == refState.NAtoms:
             self.enableDrawVectorsCheck()
         else:
             self.disableDrawVectorsCheck()
     
-    def disableDrawHullsCheck(self):
+    def toggleDrawHullsCheck(self, enabled):
         """
-        Disable the check box and associated widgets
+        Toggle the check box and associated widgets
         
         """
-        self.drawHullsCheck.setEnabled(False)
-        if self.drawConvexHulls:
-            self.hullColourButton.setEnabled(False)
-            self.hullOpacitySpinBox.setEnabled(False)
-            self.hideAtomsCheckBox.setEnabled(False)
-    
-    def enableDrawHullsCheck(self):
-        """
-        Enable the check box and associated widgets
+        self.drawHullsCheck.setEnabled(enabled)
         
-        """
-        self.drawHullsCheck.setEnabled(True)
-        if self.drawConvexHulls:
-            self.hullColourButton.setEnabled(True)
-            self.hullOpacitySpinBox.setEnabled(True)
-            self.hideAtomsCheckBox.setEnabled(True)
+        enabled = self._settings.getSetting("drawConvexHulls")
+        self.hullColourButton.setEnabled(enabled)
+        self.hullOpacitySpinBox.setEnabled(enabled)
+        self.hideAtomsCheckBox.setEnabled(enabled)
     
-    def drawHullsChanged(self, state):
+    def drawHullsChanged(self, enabled):
         """
         Change draw hulls setting.
         
         """
-        if state == QtCore.Qt.Unchecked:
-            self.drawConvexHulls = 0
-            
-            self.hullColourButton.setEnabled(False)
-            self.hullOpacitySpinBox.setEnabled(False)
-            self.hideAtomsCheckBox.setEnabled(False)
-        
-        else:
-            self.drawConvexHulls = 1
-            
-            self.hullColourButton.setEnabled(True)
-            self.hullOpacitySpinBox.setEnabled(True)
-            self.hideAtomsCheckBox.setEnabled(True)
-    
-    def hullOpacityChanged(self, val):
-        """
-        Change hull opacity setting.
-        
-        """
-        self.hullOpacity = val
+        self.logger.debug("Drawing hulls changed (%s)", enabled)
+        self.hullColourButton.setEnabled(enabled)
+        self.hullOpacitySpinBox.setEnabled(enabled)
+        self.hideAtomsCheckBox.setEnabled(enabled)
     
     def showColourDialog(self):
         """
@@ -722,9 +417,9 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         if col.isValid():
             self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
             
-            self.hullCol[0] = float(col.red()) / 255.0
-            self.hullCol[1] = float(col.green()) / 255.0
-            self.hullCol[2] = float(col.blue()) / 255.0
+            self._settings.updateSettingArray("hullCol", 0, float(col.red()) / 255.0)
+            self._settings.updateSettingArray("hullCol", 1, float(col.green()) / 255.0)
+            self._settings.updateSettingArray("hullCol", 2, float(col.blue()) / 255.0)
     
     def calcVolsMethodChanged(self, val=None):
         """

@@ -823,15 +823,15 @@ class RendererWindow(QtGui.QWidget):
                 NAnt += filterList.filterer.NAnt
                 
                 # defects settings
-                defectsSettings = filterList.getCurrentFilterSettings()[0]
+                defectsSettings = filterList.getCurrentFilterSettings()[0].getSettings()
                 
-                if defectsSettings.showVacancies:
+                if defectsSettings.getSetting("showVacancies"):
                     showVacs = True
                 
-                if defectsSettings.showInterstitials:
+                if defectsSettings.getSetting("showInterstitials"):
                     showInts = True
                 
-                if defectsSettings.showAntisites:
+                if defectsSettings.getSetting("showAntisites"):
                     showAnts = True
         
         if defectFilterActive:
@@ -877,7 +877,7 @@ class RendererWindow(QtGui.QWidget):
                 for i, cnt in enumerate(intSpecCount):
                     self.onScreenInfo["Defect species count"].append([(cnt, specListInput[i], "interstitials"), specRGBInput[i]])
                 
-                if defectsSettings.identifySplitInts:
+                if defectsSettings.getSetting("identifySplitInts"):
                     for i in xrange(len(specListInput)):
                         for j in xrange(i, len(specListInput)):
                             if j == i:

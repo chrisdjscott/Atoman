@@ -191,6 +191,36 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         return check
     
+    def addComboBox(self, setting, items, toolTip=None, label=None, displayLayout=False, settingEnabled=None):
+        """
+        Add a combo box.
+        
+        """
+        # combo box
+        combo = QtGui.QComboBox()
+        
+        # add items
+        combo.addItems(items)
+        
+        # set current index
+        combo.setCurrentIndex(self._settings.getSetting(setting))
+        
+        # optional configuration
+        if toolTip is not None:
+            combo.setToolTip(toolTip)
+        if settingEnabled is not None:
+            combo.setEnabled(self._settings.getSetting(settingEnabled))
+        
+        # connect currentIndexChanged signal
+        combo.currentIndexChanged.connect(functools.partial(self._settings.updateSetting, setting))
+        
+        # optionally add to content layout
+        if label is not None:
+            if displayLayout:
+                self.displaySettingsLayout.addRow(label, combo)
+            else:
+                self.contentLayout.addRow(label, combo)
+    
     def getSettings(self):
         """Return the settings object."""
         return self._settings

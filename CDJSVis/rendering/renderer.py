@@ -1521,7 +1521,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             vacsPolyData.GetPointData().SetScalars(intScalarsList[i])
             
             vacsGlyphSource = vtk.vtkCubeSource()
-            scaleVacs = 2.0 * filterSettings.vacScaleSize
+            scaleVacs = 2.0 * filterSettings.getSetting("vacScaleSize")
             vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
             vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
             vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
@@ -1543,9 +1543,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             vacsActor = vtk.vtkActor()
             vacsActor.SetMapper(vacsMapper)
-            vacsActor.GetProperty().SetSpecular(filterSettings.vacSpecular)
-            vacsActor.GetProperty().SetSpecularPower(filterSettings.vacSpecularPower)
-            vacsActor.GetProperty().SetOpacity(filterSettings.vacOpacity)
+            vacsActor.GetProperty().SetSpecular(filterSettings.getSetting("vacSpecular"))
+            vacsActor.GetProperty().SetSpecularPower(filterSettings.getSetting("vacSpecularPower"))
+            vacsActor.GetProperty().SetOpacity(filterSettings.getSetting("vacOpacity"))
             
             actorsDictLocal["Split vacs ({0})".format(refLattice.specieList[i])] = utils.ActorObject(vacsActor)
     
@@ -1645,7 +1645,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             vacsPolyData.GetPointData().SetScalars(intScalarsList[i])
             
             vacsGlyphSource = vtk.vtkCubeSource()
-            scaleVacs = 2.0 * filterSettings.vacScaleSize
+            scaleVacs = 2.0 * filterSettings.getSetting("vacScaleSize")
             vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
             vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
             vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
@@ -1667,9 +1667,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             vacsActor = vtk.vtkActor()
             vacsActor.SetMapper(vacsMapper)
-            vacsActor.GetProperty().SetSpecular(filterSettings.vacSpecular)
-            vacsActor.GetProperty().SetSpecularPower(filterSettings.vacSpecularPower)
-            vacsActor.GetProperty().SetOpacity(filterSettings.vacOpacity)
+            vacsActor.GetProperty().SetSpecular(filterSettings.getSetting("vacSpecular"))
+            vacsActor.GetProperty().SetSpecularPower(filterSettings.getSetting("vacSpecularPower"))
+            vacsActor.GetProperty().SetOpacity(filterSettings.getSetting("vacOpacity"))
             
             actorsDictLocal["Vacancies ({0})".format(refLattice.specieList[i])] = utils.ActorObject(vacsActor)
     

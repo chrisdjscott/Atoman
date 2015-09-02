@@ -518,18 +518,21 @@ class Filterer(object):
         povfile = "pipeline%d_atoms%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
         if self.parent.defectFilterSelected:
             # defects filter always first (for now...)
-            filterSettings = currentSettings[0]
+            filterSettingsGui = currentSettings[0]
+            filterSettings = filterSettingsGui.getSettings()
+            if filterSettings is None:
+                filterSettings = filterSettingsGui
             
             # render convex hulls
-            if filterSettings.findClusters and filterSettings.drawConvexHulls:
+            if filterSettings.getSetting("findClusters") and filterSettings.getSetting("drawConvexHulls"):
                 self.pointDefectFilterDrawHulls(filterSettings, hullFile)
             
             # cluster volume
-            if filterSettings.findClusters and filterSettings.calculateVolumes:
+            if filterSettings.getSetting("findClusters") and filterSettings.getSetting("calculateVolumes"):
                 self.pointDefectFilterCalculateClusterVolumes(filterSettings)
             
             # render defects
-            if filterSettings.findClusters and filterSettings.drawConvexHulls and filterSettings.hideDefects:
+            if filterSettings.getSetting("findClusters") and filterSettings.getSetting("drawConvexHulls") and filterSettings.getSetting("hideDefects"):
                 pass
             
             else:
@@ -1510,7 +1513,7 @@ class Filterer(object):
         inputLattice = self.pipelinePage.inputState
         refLattice = self.pipelinePage.refState
         
-        if settings.useAcna:
+        if settings.getSetting("useAcna"):
             self.logger.debug("Computing ACNA from point defects filter...")
             
             # dummy visible atoms and scalars arrays
@@ -1528,9 +1531,10 @@ class Filterer(object):
             # counter array
             counters = np.zeros(7, np.int32)
             
+            maxBondDistance = settings.getSetting("acnaMaxBondDistance")
             acna.adaptiveCommonNeighbourAnalysis(visAtoms, inputLattice.pos, acnaArray, inputLattice.cellDims,
                                                  self.pipelinePage.PBC, NScalars, fullScalars, 
-                                                 settings.acnaMaxBondDistance, counters, 0, structVis, ompNumThreads, 
+                                                 maxBondDistance, counters, 0, structVis, ompNumThreads, 
                                                  NVectors, fullVectors) 
             
             # store counters
@@ -1547,9 +1551,8 @@ class Filterer(object):
         # set up arrays
         interstitials = np.empty(inputLattice.NAtoms, np.int32)
         
-        if settings.identifySplitInts:
+        if settings.getSetting("identifySplitInts"):
             splitInterstitials = np.empty(inputLattice.NAtoms, np.int32)
-        
         else:
             splitInterstitials = np.empty(0, np.int32)
                 
@@ -1559,7 +1562,8 @@ class Filterer(object):
         onAntisites = np.empty(refLattice.NAtoms, np.int32)
         
         # set up excluded specie arrays
-        visibleSpecieList = settings.getVisibleSpecieList()
+        visibleSpecieList = settings.getSetting("visibleSpeciesList")
+        self.logger.debug("Visible species list: %r", visibleSpecieList)
         
         exclSpecsInput = []
         for i, spec in enumerate(inputLattice.specieList):
@@ -1574,28 +1578,37 @@ class Filterer(object):
         exclSpecsRef = np.asarray(exclSpecsRef, dtype=np.int32)
         
         # specie counter arrays
-        vacSpecCount = np.zeros( len(refLattice.specieList), np.int32 )
-        intSpecCount = np.zeros( len(inputLattice.specieList), np.int32 )
-        antSpecCount = np.zeros( len(refLattice.specieList), np.int32 )
-        onAntSpecCount = np.zeros( (len(refLattice.specieList), len(inputLattice.specieList)), np.int32 )
-        splitIntSpecCount = np.zeros( (len(inputLattice.specieList), len(inputLattice.specieList)), np.int32 )
+        vacSpecCount = np.zeros(len(refLattice.specieList), np.int32)
+        intSpecCount = np.zeros(len(inputLattice.specieList), np.int32)
+        antSpecCount = np.zeros(len(refLattice.specieList), np.int32)
+        onAntSpecCount = np.zeros((len(refLattice.specieList), len(inputLattice.specieList)), np.int32)
+        splitIntSpecCount = np.zeros((len(inputLattice.specieList), len(inputLattice.specieList)), np.int32)
         
         NDefectsByType = np.zeros(6, np.int32)
         
-        if settings.findClusters:
+        if settings.getSetting("findClusters"):
             defectCluster = np.empty(inputLattice.NAtoms + refLattice.NAtoms, np.int32)
-        
         else:
             defectCluster = np.empty(0, np.int32)
         
         # call C library
-        status = defects_c.findDefects(settings.showVacancies, settings.showInterstitials, settings.showAntisites, NDefectsByType, vacancies, 
-                                       interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
-                                       inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
-                                       refLattice.pos, refLattice.cellDims, self.pipelinePage.PBC, settings.vacancyRadius,
-                                       settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
-                                       onAntSpecCount, splitIntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials, 
-                                       settings.identifySplitInts, self.parent.driftCompensation, self.driftVector, acnaArray, settings.acnaStructureType)
+        showVacancies = settings.getSetting("showVacancies")
+        showInterstitials = settings.getSetting("showInterstitials")
+        showAntisites = settings.getSetting("showAntisites")
+        vacancyRadius = settings.getSetting("vacancyRadius")
+        findClusters = settings.getSetting("findClusters")
+        neighbourRadius = settings.getSetting("neighbourRadius")
+        minClusterSize = settings.getSetting("minClusterSize")
+        maxClusterSize = settings.getSetting("maxClusterSize")
+        identifySplitInts = settings.getSetting("identifySplitInts")
+        acnaStructureType = settings.getSetting("acnaStructureType")
+        defects_c.findDefects(showVacancies, showInterstitials, showAntisites, NDefectsByType, vacancies, 
+                              interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
+                              inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
+                              refLattice.pos, refLattice.cellDims, self.pipelinePage.PBC, vacancyRadius,
+                              findClusters, neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
+                              onAntSpecCount, splitIntSpecCount, minClusterSize, maxClusterSize, splitInterstitials, 
+                              identifySplitInts, self.parent.driftCompensation, self.driftVector, acnaArray, acnaStructureType)
         
         # summarise
         NDef = NDefectsByType[0]
@@ -1612,17 +1625,17 @@ class Filterer(object):
         # report counters
         self.logger.info("Found %d defects", NDef)
         
-        if settings.showVacancies:
+        if settings.getSetting("showVacancies"):
             self.logger.info("  %d vacancies", NVac)
             for i in xrange(len(refLattice.specieList)):
                 self.logger.info("    %d %s vacancies", vacSpecCount[i], refLattice.specieList[i])
         
-        if settings.showInterstitials:
+        if settings.getSetting("showInterstitials"):
             self.logger.info("  %d interstitials", NInt + NSplit)
             for i in xrange(len(inputLattice.specieList)):
                 self.logger.info("    %d %s interstitials", intSpecCount[i], inputLattice.specieList[i])
         
-            if settings.identifySplitInts:
+            if settings.getSetting("identifySplitInts"):
                 self.logger.info("    %d split interstitials", NSplit)
                 for i in xrange(len(inputLattice.specieList)):
                     for j in xrange(i, len(inputLattice.specieList)):
@@ -1632,7 +1645,7 @@ class Filterer(object):
                             N = splitIntSpecCount[i][j] + splitIntSpecCount[j][i]
                         self.logger.info("      %d %s - %s split interstitials", N, inputLattice.specieList[i], inputLattice.specieList[j])
         
-        if settings.showAntisites:
+        if settings.getSetting("showAntisites"):
             self.logger.info("  %d antisites", NAnt)
             for i in xrange(len(refLattice.specieList)):
                 for j in xrange(len(inputLattice.specieList)):
@@ -1641,7 +1654,7 @@ class Filterer(object):
                     
                     self.logger.info("    %d %s on %s antisites", onAntSpecCount[i][j], inputLattice.specieList[j], refLattice.specieList[i])
         
-        if settings.identifySplitInts:
+        if settings.getSetting("identifySplitInts"):
             self.logger.info("Splint interstitial analysis")
             
             PBC = self.pipelinePage.PBC
@@ -1662,7 +1675,7 @@ class Filterer(object):
         # sort clusters here
         self.clusterList = []
         clusterList = self.clusterList
-        if settings.findClusters:
+        if settings.getSetting("findClusters"):
             NClusters = NDefectsByType[4]
             
             defectCluster.resize(NDef)
@@ -1732,7 +1745,7 @@ class Filterer(object):
                 clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
         
         # draw displacement vectors
-        if settings.drawVectorsCheck.isEnabled() and settings.drawDisplacementVectors:
+        if settings.getSetting("drawDisplacementVectors") and inputLattice.NAtoms == refLattice.NAtoms:
             self.logger.debug("Drawing displacement vectors for interstitials (%d)", NInt)
             
             # need to make a unique list for interstitials and split intersitials and antisites
@@ -1742,8 +1755,8 @@ class Filterer(object):
             bondVectorArray = np.empty(3 * NInt, np.float64)
             drawTrace = np.empty(NInt, np.int32)
             numBonds = bonds_c.calculateDisplacementVectors(interstitials, inputLattice.pos, refLattice.pos, 
-                                                          refLattice.cellDims, self.pipelinePage.PBC, bondVectorArray,
-                                                          drawTrace)
+                                                            refLattice.cellDims, self.pipelinePage.PBC, bondVectorArray,
+                                                            drawTrace)
             
             self.logger.debug("  Number of interstitial displacement vectors to draw = %d (/ %d)", numBonds, NInt)
             
@@ -1769,7 +1782,7 @@ class Filterer(object):
         refLattice = self.pipelinePage.refState
         clusterList = self.clusterList
         
-        if settings.calculateVolumesHull:
+        if settings.getSetting("calculateVolumesHull"):
             count = 0
             for cluster in clusterList:
                 # first make pos array for this cluster
@@ -1783,7 +1796,7 @@ class Filterer(object):
                 else:
                     appliedPBCs = np.zeros(7, np.int32)
                     clusters_c.prepareClusterToDrawHulls(NDefects, clusterPos, inputLattice.cellDims, 
-                                                         self.pipelinePage.PBC, appliedPBCs, settings.neighbourRadius)
+                                                         self.pipelinePage.PBC, appliedPBCs, settings.getSetting("neighbourRadius"))
                     
                     cluster.volume, cluster.facetArea = clusters.findConvexHullVolume(NDefects, clusterPos)
                 
@@ -1793,7 +1806,7 @@ class Filterer(object):
                 
                 count += 1
         
-        elif settings.calculateVolumesVoro:
+        elif settings.getSetting("calculateVolumesVoro"):
             # compute Voronoi
             vor = voronoi.computeVoronoiDefects(inputLattice, refLattice, self.vacancies, self.voronoiOptions, self.pipelinePage.PBC)
             
@@ -1858,10 +1871,11 @@ class Filterer(object):
             appliedPBCs = np.zeros(7, np.int32)
             clusterPos = cluster.makeClusterPos(inputLattice, refLattice)
             NDefects = len(clusterPos) / 3
+            neighbourRadius = settings.getSetting("neighbourRadius")
             
             # determine if the cluster crosses PBCs
             clusters_c.prepareClusterToDrawHulls(NDefects, clusterPos, inputLattice.cellDims, 
-                                                 self.pipelinePage.PBC, appliedPBCs, settings.neighbourRadius)
+                                                 self.pipelinePage.PBC, appliedPBCs, neighbourRadius)
             
             facets = None
             if NDefects > 3:
@@ -1874,7 +1888,7 @@ class Filterer(object):
             # now render
             if facets is not None:
                 # make sure not facets more than neighbour rad from cell
-                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, 
+                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * neighbourRadius, self.pipelinePage.PBC, 
                                                   inputLattice.cellDims)
                 
                 renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, actorsDictLocal, 
@@ -1902,7 +1916,7 @@ class Filterer(object):
                     # render
                     if facets is not None:
                         #TODO: make sure not facets more than neighbour rad from cell
-                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, 
+                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * neighbourRadius, 
                                                           self.pipelinePage.PBC, inputLattice.cellDims)
                         
                         renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, actorsDictLocal, 
