@@ -3,12 +3,12 @@
 Contains GUI forms for the Voronoi volume filter.
 
 """
-from PySide import QtGui, QtCore
-
 from . import base
+from ...filtering.filters import voronoiVolumeFilter
 
 
 ################################################################################
+
 class VoronoiVolumeSettingsDialog(base.GenericSettingsDialog):
     """
     Settings for Voronoi volume filter
@@ -20,61 +20,19 @@ class VoronoiVolumeSettingsDialog(base.GenericSettingsDialog):
         self.filterType = "Voronoi volume"
         self.addProvidedScalar("Voronoi volume")
         
-        self.minVoroVol = 0.0
-        self.maxVoroVol = 9999.99
-        self.filteringEnabled = False
+        # settings
+        self._settings = voronoiVolumeFilter.VoronoiVolumeFilterSettings()
         
-        # filter check
-        filterCheck = QtGui.QCheckBox()
-        filterCheck.setChecked(self.filteringEnabled)
-        filterCheck.setToolTip("Filter by Voronoi volume")
-        filterCheck.stateChanged.connect(self.filteringToggled)
-        self.contentLayout.addRow("<b>Filter by Voronoi volume</b>", filterCheck)
+        # filtering options
+        self.addCheckBox("filteringEnabled", toolTip="Filter atoms by slip", label="<b>Enable filtering</b>", extraSlot=self.filteringToggled)
         
-        self.minVoroVolSpin = QtGui.QDoubleSpinBox()
-        self.minVoroVolSpin.setSingleStep(0.01)
-        self.minVoroVolSpin.setMinimum(0.0)
-        self.minVoroVolSpin.setMaximum(9999.99)
-        self.minVoroVolSpin.setValue(self.minVoroVol)
-        self.minVoroVolSpin.valueChanged[float].connect(self.setMinVoroVol)
-        self.minVoroVolSpin.setEnabled(self.filteringEnabled)
-        self.minVoroVolSpin.setToolTip("Minimum visible Voronoi volume")
-        self.contentLayout.addRow("Minimum", self.minVoroVolSpin)
+        self.minVoroVolSpin = self.addDoubleSpinBox("minVoroVol", minVal=0, maxVal=9999, step=0.1, toolTip="Minimum visible Voronoi volume",
+                                                    label="Minimum", settingEnabled="filteringEnabled")
         
-        self.maxVoroVolSpin = QtGui.QDoubleSpinBox()
-        self.maxVoroVolSpin.setSingleStep(0.01)
-        self.maxVoroVolSpin.setMinimum(0.0)
-        self.maxVoroVolSpin.setMaximum(9999.99)
-        self.maxVoroVolSpin.setValue(self.maxVoroVol)
-        self.maxVoroVolSpin.valueChanged[float].connect(self.setMaxVoroVol)
-        self.maxVoroVolSpin.setEnabled(self.filteringEnabled)
-        self.maxVoroVolSpin.setToolTip("Maximum visible Voronoi volume")
-        self.contentLayout.addRow("Maximum", self.maxVoroVolSpin)
+        self.maxVoroVolSpin = self.addDoubleSpinBox("maxVoroVol", minVal=0, maxVal=9999, step=0.1, toolTip="Maximum visible Voronoi volume",
+                                                    label="Maximum", settingEnabled="filteringEnabled")
     
-    def filteringToggled(self, state):
-        """
-        Filtering toggled
-        
-        """
-        if state == QtCore.Qt.Unchecked:
-            self.filteringEnabled = False
-        
-        else:
-            self.filteringEnabled = True
-        
-        self.minVoroVolSpin.setEnabled(self.filteringEnabled)
-        self.maxVoroVolSpin.setEnabled(self.filteringEnabled)
-    
-    def setMinVoroVol(self, val):
-        """
-        Set the minimum Voronoi volume.
-        
-        """
-        self.minVoroVol = val
-
-    def setMaxVoroVol(self, val):
-        """
-        Set the maximum Voronoi volume.
-        
-        """
-        self.maxVoroVol = val
+    def filteringToggled(self, enabled):
+        """Filtering toggled."""
+        self.minVoroVolSpin.setEnabled(enabled)
+        self.maxVoroVolSpin.setEnabled(enabled)

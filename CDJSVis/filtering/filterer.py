@@ -651,8 +651,11 @@ class Filterer(object):
         # make array of neighbours
         num_nebs_array = vor.atomNumNebsArray()
         
-        NVisible = filtering_c.voronoiNeighboursFilter(self.visibleAtoms, num_nebs_array, settings.minVoroNebs, settings.maxVoroNebs, 
-                                                       scalars, NScalars, fullScalars, settings.filteringEnabled, NVectors, fullVectors)
+        minVoroNebs = settings.getSetting("minVoroNebs")
+        maxVoroNebs = settings.getSetting("maxVoroNebs")
+        filteringEnabled = settings.getSetting("filteringEnabled")
+        NVisible = filtering_c.voronoiNeighboursFilter(self.visibleAtoms, num_nebs_array, minVoroNebs, maxVoroNebs, 
+                                                       scalars, NScalars, fullScalars, filteringEnabled, NVectors, fullVectors)
         
         # update scalars/vectors dicts
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
@@ -692,8 +695,11 @@ class Filterer(object):
         # make array of volumes
         atom_volumes = vor.atomVolumesArray()
         
-        NVisible = filtering_c.voronoiVolumeFilter(self.visibleAtoms, atom_volumes, settings.minVoroVol, settings.maxVoroVol, 
-                                                   scalars, NScalars, fullScalars, settings.filteringEnabled, NVectors, fullVectors)
+        minVoroVol = settings.getSetting("minVoroVol")
+        maxVoroVol = settings.getSetting("maxVoroVol")
+        filteringEnabled = settings.getSetting("filteringEnabled")
+        NVisible = filtering_c.voronoiVolumeFilter(self.visibleAtoms, atom_volumes, minVoroVol, maxVoroVol, 
+                                                   scalars, NScalars, fullScalars, filteringEnabled, NVectors, fullVectors)
         
         # update scalars dict
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)

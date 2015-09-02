@@ -3,8 +3,6 @@
 Contains GUI forms for the slip filter.
 
 """
-from PySide import QtGui, QtCore
-
 from . import base
 from ...filtering.filters import slipFilter
 

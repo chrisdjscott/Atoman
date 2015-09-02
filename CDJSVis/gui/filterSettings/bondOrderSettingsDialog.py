@@ -3,8 +3,6 @@
 Contains GUI forms for the bond order filter.
 
 """
-from PySide import QtGui, QtCore
-
 from . import base
 from ...filtering.filters import bondOrderFilter
 

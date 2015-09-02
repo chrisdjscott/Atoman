@@ -3,9 +3,8 @@
 Contains GUI forms for the Voronoi neighbours filter.
 
 """
-from PySide import QtGui, QtCore
-
 from . import base
+from ...filtering.filters import voronoiNeighboursFilter
 
 
 ################################################################################
@@ -20,62 +19,21 @@ class VoronoiNeighboursSettingsDialog(base.GenericSettingsDialog):
         self.filterType = "Voronoi neighbours"
         self.addProvidedScalar("Voronoi neighbours")
         
-        self.minVoroNebs = 0
-        self.maxVoroNebs = 999
-        self.filteringEnabled = False
+        # settings
+        self._settings = voronoiNeighboursFilter.VoronoiNeighboursFilterSettings()
         
-        # filter check
-        filterCheck = QtGui.QCheckBox()
-        filterCheck.setChecked(self.filteringEnabled)
-        filterCheck.setToolTip("Filter by Voronoi neighbours")
-        filterCheck.stateChanged.connect(self.filteringToggled)
-        self.contentLayout.addRow("<b>Filter by Voronoi neighbours</b>", filterCheck)
+        # filtering options
+        self.addCheckBox("filteringEnabled", toolTip="Filter atoms by Voronoi neighbours", label="<b>Enable filtering</b>",
+                         extraSlot=self.filteringToggled)
         
-        self.minVoroNebsSpin = QtGui.QSpinBox()
-        self.minVoroNebsSpin.setSingleStep(1)
-        self.minVoroNebsSpin.setMinimum(0)
-        self.minVoroNebsSpin.setMaximum(999)
-        self.minVoroNebsSpin.setValue(self.minVoroNebs)
-        self.minVoroNebsSpin.valueChanged[int].connect(self.setMinVoroNebs)
-        self.minVoroNebsSpin.setEnabled(self.filteringEnabled)
-        self.minVoroNebsSpin.setToolTip("Minimum number of Voronoi neighbours")
-        self.contentLayout.addRow("Minimum", self.minVoroNebsSpin)
+        self.minVoroNebsSpin = self.addSpinBox("minVoroNebs", minVal=0, maxVal=999, step=1, toolTip="Minimum number of Voronoi neighbours",
+                                               label="Minimum", settingEnabled="filteringEnabled")
         
-        
-        self.maxVoroNebsSpin = QtGui.QSpinBox()
-        self.maxVoroNebsSpin.setSingleStep(1)
-        self.maxVoroNebsSpin.setMinimum(0)
-        self.maxVoroNebsSpin.setMaximum(999)
-        self.maxVoroNebsSpin.setValue(self.maxVoroNebs)
-        self.maxVoroNebsSpin.valueChanged[int].connect(self.setMaxVoroNebs)
-        self.maxVoroNebsSpin.setEnabled(self.filteringEnabled)
-        self.maxVoroNebsSpin.setToolTip("Maximum number of Voronoi neighbours")
-        self.contentLayout.addRow("Maximum", self.maxVoroNebsSpin)
+        self.maxVoroNebsSpin = self.addSpinBox("maxVoroNebs", minVal=0, maxVal=999, step=1, toolTip="Maximum number of Voronoi neighbours",
+                                               label="Maximum", settingEnabled="filteringEnabled")
     
-    def filteringToggled(self, state):
-        """
-        Filtering toggled
-        
-        """
-        if state == QtCore.Qt.Unchecked:
-            self.filteringEnabled = False
-        
-        else:
-            self.filteringEnabled = True
-        
-        self.minVoroNebsSpin.setEnabled(self.filteringEnabled)
-        self.maxVoroNebsSpin.setEnabled(self.filteringEnabled)
-    
-    def setMinVoroNebs(self, val):
-        """
-        Set the minimum Voronoi neighbours.
-        
-        """
-        self.minVoroNebs = val
-
-    def setMaxVoroNebs(self, val):
-        """
-        Set the maximum Voronoi neighbours.
-        
-        """
-        self.maxVoroNebs = val
+    def filteringToggled(self, enabled):
+        """Filtering toggled."""
+        print "ENABLED", enabled
+        self.minVoroNebsSpin.setEnabled(enabled)
+        self.maxVoroNebsSpin.setEnabled(enabled)
