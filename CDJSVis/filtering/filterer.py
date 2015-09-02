@@ -433,7 +433,7 @@ class Filterer(object):
             
             elif filterName == "Displacement":
                 self.displacementFilter(filterSettings)
-                drawDisplacementVectors = filterSettings.drawDisplacementVectors
+                drawDisplacementVectors = filterSettings.getSetting("drawDisplacementVectors")
                 displacementSettings = filterSettings
             
             elif filterName == "Point defects":
@@ -1235,10 +1235,13 @@ class Filterer(object):
             NVectors, fullVectors = self.makeFullVectorsArray()
             
             # run displacement filter
+            minDisplacement = settings.getSetting("minDisplacement")
+            maxDisplacement = settings.getSetting("maxDisplacement")
+            filteringEnabled = int(settings.getSetting("filteringEnabled"))
             NVisible = filtering_c.displacementFilter(self.visibleAtoms, scalars, inputState.pos, refState.pos, refState.cellDims, 
-                                                      self.pipelinePage.PBC, settings.minDisplacement, settings.maxDisplacement, 
-                                                      NScalars, fullScalars, settings.filteringEnabled, self.parent.driftCompensation, 
-                                                      self.driftVector, NVectors, fullVectors)
+                                                      self.pipelinePage.PBC, minDisplacement, maxDisplacement, NScalars, fullScalars,
+                                                      filteringEnabled, self.parent.driftCompensation, self.driftVector, NVectors,
+                                                      fullVectors)
             
             # update scalars dict
             self.storeFullScalarsArray(NVisible, NScalars, fullScalars)

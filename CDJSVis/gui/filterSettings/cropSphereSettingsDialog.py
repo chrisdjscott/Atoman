@@ -24,11 +24,6 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
         self.filterType = "Crop sphere"
         
         self._settings = cropSphereFilter.CropSphereFilterSettings()
-        self.xCentre = 0.0
-        self.yCentre = 0.0
-        self.zCentre = 0.0
-        self.radius = 1.0
-        self.invertSelection = 0
         
         self.xCentreSpinBox = QtGui.QDoubleSpinBox()
         self.xCentreSpinBox.setSingleStep(0.01)

@@ -231,9 +231,9 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict
     logger = logging.getLogger(__name__)
     
     # SETTINGS
-    bondThicknessVTK = bondsOptions.bondThicknessVTK
-    bondThicknessPOV = bondsOptions.bondThicknessPOV
-    bondNumSides = bondsOptions.bondNumSides
+    bondThicknessVTK = bondsOptions.getSetting("bondThicknessVTK")
+    bondThicknessPOV = bondsOptions.getSetting("bondThicknessPOV")
+    bondNumSides = bondsOptions.getSetting("bondNumSides")
     # END SETTINGS
     
     # scalar type
