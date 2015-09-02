@@ -725,9 +725,12 @@ class Filterer(object):
         NVectors, fullVectors = self.makeFullVectorsArray()
         
         # call C library
+        minSlip = settings.getSetting("minSlip")
+        maxSlip = settings.getSetting("maxSlip")
+        filteringEnabled = settings.getSetting("filteringEnabled")
         NVisible = filtering_c.slipFilter(self.visibleAtoms, scalars, inputState.pos, refState.pos, inputState.cellDims,
-                                          inputState.PBC, settings.minSlip, settings.maxSlip, NScalars, fullScalars,
-                                          settings.filteringEnabled, self.parent.driftCompensation, self.driftVector,
+                                          inputState.PBC, minSlip, maxSlip, NScalars, fullScalars,
+                                          filteringEnabled, self.parent.driftCompensation, self.driftVector,
                                           NVectors, fullVectors)
         
         # update scalars dict

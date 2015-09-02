@@ -6,6 +6,7 @@ Contains GUI forms for the slip filter.
 from PySide import QtGui, QtCore
 
 from . import base
+from ...filtering.filters import slipFilter
 
 
 ################################################################################
@@ -21,62 +22,22 @@ class SlipSettingsDialog(base.GenericSettingsDialog):
         self.filterType = "Slip"
         self.addProvidedScalar("Slip")
         
-        self.minSlip = 0.0
-        self.maxSlip = 9999.0
-        self.filteringEnabled = False
+        # settings
+        self._settings = slipFilter.SlipFilterSettings()
         
         # filtering options
-        filterCheck = QtGui.QCheckBox()
-        filterCheck.setChecked(self.filteringEnabled)
-        filterCheck.setToolTip("Filter atoms by slip")
-        filterCheck.stateChanged.connect(self.filteringToggled)
-        self.contentLayout.addRow("<b>Enable filtering</b>", filterCheck)
+        self.addCheckBox("filteringEnabled", toolTip="Filter atoms by slip", label="<b>Enable filtering</b>", extraSlot=self.filteringToggled)
         
-        self.minSlipSpin = QtGui.QDoubleSpinBox()
-        self.minSlipSpin.setSingleStep(0.1)
-        self.minSlipSpin.setMinimum(0.0)
-        self.minSlipSpin.setMaximum(9999.0)
-        self.minSlipSpin.setValue(self.minSlip)
-        self.minSlipSpin.valueChanged.connect(self.setMinSlip)
-        self.minSlipSpin.setEnabled(False)
-        self.contentLayout.addRow("Min", self.minSlipSpin)
+        self.minSlipSpin = self.addDoubleSpinBox("minSlip", minVal=0, maxVal=9999, step=0.1, toolTip="Minimum visible slip",
+                                                 label="Minimum", settingEnabled="filteringEnabled")
         
-        self.maxSlipSpin = QtGui.QDoubleSpinBox()
-        self.maxSlipSpin.setSingleStep(0.1)
-        self.maxSlipSpin.setMinimum(0.0)
-        self.maxSlipSpin.setMaximum(9999.0)
-        self.maxSlipSpin.setValue(self.maxSlip)
-        self.maxSlipSpin.valueChanged.connect(self.setMaxSlip)
-        self.maxSlipSpin.setEnabled(False)
-        self.contentLayout.addRow("Max", self.maxSlipSpin)
+        self.maxSlipSpin = self.addDoubleSpinBox("maxSlip", minVal=0, maxVal=9999, step=0.1, toolTip="Maximum visible slip",
+                                                 label="Maximum", settingEnabled="filteringEnabled")
     
-    def filteringToggled(self, state):
+    def filteringToggled(self, enabled):
         """
         Filtering toggled
         
         """
-        if state == QtCore.Qt.Unchecked:
-            self.filteringEnabled = False
-            
-            self.minSlipSpin.setEnabled(False)
-            self.maxSlipSpin.setEnabled(False)
-        
-        else:
-            self.filteringEnabled = True
-            
-            self.minSlipSpin.setEnabled(True)
-            self.maxSlipSpin.setEnabled(True)
-    
-    def setMinSlip(self, val):
-        """
-        Set the minimum slip.
-        
-        """
-        self.minSlip = val
-
-    def setMaxSlip(self, val):
-        """
-        Set the maximum slip.
-        
-        """
-        self.maxSlip = val
+        self.minSlipSpin.setEnabled(enabled)
+        self.maxSlipSpin.setEnabled(enabled)
