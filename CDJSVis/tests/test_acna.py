@@ -59,7 +59,7 @@ class TestACNABCC(unittest.TestCase):
         
         # call bond order filter
         nthreads = 1
-        NVis = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, self.lattice.pos, scalars, self.lattice.minPos, self.lattice.maxPos, 
+        NVis = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, self.lattice.pos, scalars,
                                                     self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
                                                     maxBondDistance, counters, filteringEnabled, structureVisibility, nthreads,
                                                     0, np.empty(0, np.float64))
@@ -86,7 +86,7 @@ class TestACNABCC(unittest.TestCase):
         
         # call bond order filter
         nthreads = 4
-        NVis = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, self.lattice.pos, scalars, self.lattice.minPos, self.lattice.maxPos, 
+        NVis = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, self.lattice.pos, scalars,
                                                     self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
                                                     maxBondDistance, counters, filteringEnabled, structureVisibility, nthreads,
                                                     0, np.empty(0, np.float64))
@@ -145,7 +145,7 @@ class TestACNAFCC(unittest.TestCase):
          
         # call bond order filter
         nthreads = 1
-        NVis = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, self.lattice.pos, scalars, self.lattice.minPos, self.lattice.maxPos, 
+        NVis = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, self.lattice.pos, scalars,
                                                     self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
                                                     maxBondDistance, counters, filteringEnabled, structureVisibility, nthreads,
                                                     0, np.empty(0, np.float64))
@@ -172,7 +172,7 @@ class TestACNAFCC(unittest.TestCase):
          
         # call bond order filter
         nthreads = 4
-        NVis = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, self.lattice.pos, scalars, self.lattice.minPos, self.lattice.maxPos, 
+        NVis = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, self.lattice.pos, scalars,
                                                     self.lattice.cellDims, np.ones(3, np.int32), 0, np.empty(0, np.float64), 
                                                     maxBondDistance, counters, filteringEnabled, structureVisibility, nthreads,
                                                     0, np.empty(0, np.float64))
