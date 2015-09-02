@@ -1441,14 +1441,23 @@ class Filterer(object):
         Slice filter.
         
         """
+        # settings
+        x0 = settings.getSetting("x0")
+        y0 = settings.getSetting("y0")
+        z0 = settings.getSetting("z0")
+        xn = settings.getSetting("xn")
+        yn = settings.getSetting("yn")
+        zn = settings.getSetting("zn")
+        invert = settings.getSetting("invert")
+        
+        # filter
         if self.parent.defectFilterSelected:
             inp = self.pipelinePage.inputState
             ref = self.pipelinePage.refState
             
             self.logger.debug("Calling sliceDefectsFilter C function")
             result = filtering_c.sliceDefectsFilter(self.interstitials, self.vacancies, self.antisites, self.onAntisites, self.splitInterstitials,
-                                                    inp.pos, ref.pos, settings.x0, settings.y0, settings.z0, settings.xn, settings.yn, settings.zn,
-                                                    settings.invert)
+                                                    inp.pos, ref.pos, x0, y0, z0, xn, yn, zn, invert)
             
             # unpack
             NInt, NVac, NAnt, NSplit = result
@@ -1468,8 +1477,7 @@ class Filterer(object):
             NVectors, fullVectors = self.makeFullVectorsArray()
             
             self.logger.debug("Calling sliceFilter C function")
-            NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, settings.x0, settings.y0, settings.z0, 
-                                               settings.xn, settings.yn, settings.zn, settings.invert, NScalars, fullScalars, 
+            NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, x0, y0, z0, xn, yn, zn, invert, NScalars, fullScalars,
                                                NVectors, fullVectors)
             
             # update scalars dict

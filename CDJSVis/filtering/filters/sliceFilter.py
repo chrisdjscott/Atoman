@@ -14,7 +14,6 @@ class SliceFilterSettings(base.BaseSettings):
     def __init__(self):
         super(SliceFilterSettings, self).__init__()
         
-        self.registerSetting("showSlicePlaneChecked", default=False)
         self.registerSetting("x0", default=0.0)
         self.registerSetting("y0", default=0.0)
         self.registerSetting("z0", default=0.0)

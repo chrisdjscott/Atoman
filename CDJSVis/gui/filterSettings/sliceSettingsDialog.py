@@ -7,6 +7,7 @@ from PySide import QtGui, QtCore
 
 from . import base
 from ...rendering import slicePlane
+from ...filtering.filters import sliceFilter
 
 
 ################################################################################
@@ -22,15 +23,14 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         # slice plane
         self.slicePlane = slicePlane.SlicePlane(self.pipelinePage)
         
+        # settings
+        self._settings = sliceFilter.SliceFilterSettings()
+        
         # defaults
         lattice = self.pipelinePage.inputState
-        self.x0 = lattice.cellDims[0] / 2.0
-        self.y0 = lattice.cellDims[1] / 2.0
-        self.z0 = lattice.cellDims[2] / 2.0
-        self.xn = 1.0
-        self.yn = 0.0
-        self.zn = 0.0
-        self.invert = 0
+        self._settings.updateSetting("x0", lattice.cellDims[0] / 2.0)
+        self._settings.updateSetting("y0", lattice.cellDims[1] / 2.0)
+        self._settings.updateSetting("z0", lattice.cellDims[2] / 2.0)
         self.showSlicePlaneChecked = False
         
         # show slice plane
@@ -46,7 +46,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         x0SpinBox.setSingleStep(1)
         x0SpinBox.setMinimum(-1000)
         x0SpinBox.setMaximum(1000)
-        x0SpinBox.setValue(self.x0)
+        x0SpinBox.setValue(self._settings.getSetting("x0"))
         x0SpinBox.setToolTip("Plane centre x value")
         x0SpinBox.valueChanged.connect(self.x0Changed)
         
@@ -54,7 +54,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         y0SpinBox.setSingleStep(1)
         y0SpinBox.setMinimum(-1000)
         y0SpinBox.setMaximum(1000)
-        y0SpinBox.setValue(self.y0)
+        y0SpinBox.setValue(self._settings.getSetting("y0"))
         y0SpinBox.setToolTip("Plane centre y value")
         y0SpinBox.valueChanged.connect(self.y0Changed)
         
@@ -62,7 +62,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         z0SpinBox.setSingleStep(1)
         z0SpinBox.setMinimum(-1000)
         z0SpinBox.setMaximum(1000)
-        z0SpinBox.setValue(self.z0)
+        z0SpinBox.setValue(self._settings.getSetting("z0"))
         z0SpinBox.setToolTip("Plane centre z value")
         z0SpinBox.valueChanged.connect(self.z0Changed)
         
@@ -79,7 +79,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         xnSpinBox.setSingleStep(0.1)
         xnSpinBox.setMinimum(-1000)
         xnSpinBox.setMaximum(1000)
-        xnSpinBox.setValue(self.xn)
+        xnSpinBox.setValue(self._settings.getSetting("xn"))
         xnSpinBox.setToolTip("Plane normal x value")
         xnSpinBox.valueChanged.connect(self.xnChanged)
         
@@ -87,7 +87,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         ynSpinBox.setSingleStep(0.1)
         ynSpinBox.setMinimum(-1000)
         ynSpinBox.setMaximum(1000)
-        ynSpinBox.setValue(self.yn)
+        ynSpinBox.setValue(self._settings.getSetting("yn"))
         ynSpinBox.setToolTip("Plane normal y value")
         ynSpinBox.valueChanged.connect(self.ynChanged)
         
@@ -95,7 +95,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         znSpinBox.setSingleStep(0.1)
         znSpinBox.setMinimum(-1000)
         znSpinBox.setMaximum(1000)
-        znSpinBox.setValue(self.zn)
+        znSpinBox.setValue(self._settings.getSetting("zn"))
         znSpinBox.setToolTip("Plane normal z value")
         znSpinBox.valueChanged.connect(self.znChanged)
         
@@ -140,17 +140,15 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         Change invert.
         
         """
-        if self.invertCheck.isChecked():
-            self.invert = 1
-        else:
-            self.invert = 0
+        checked = False if state == QtCore.Qt.Unchecked else True
+        self._settings.updateSetting("invert", checked)
     
     def x0Changed(self, val):
         """
         x0 changed.
         
         """
-        self.x0 = val
+        self._settings.updateSetting("x0", val)
         self.showSlicePlane()
     
     def y0Changed(self, val):
@@ -158,7 +156,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         y0 changed.
         
         """
-        self.y0 = val
+        self._settings.updateSetting("y0", val)
         self.showSlicePlane()
     
     def z0Changed(self, val):
@@ -166,7 +164,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         z0 changed.
         
         """
-        self.z0 = val
+        self._settings.updateSetting("z0", val)
         self.showSlicePlane()
     
     def xnChanged(self, val):
@@ -174,7 +172,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         xn changed.
         
         """
-        self.xn = val
+        self._settings.updateSetting("xn", val)
         self.showSlicePlane()
     
     def ynChanged(self, val):
@@ -182,7 +180,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         yn changed.
         
         """
-        self.yn = val
+        self._settings.updateSetting("yn", val)
         self.showSlicePlane()
     
     def znChanged(self, val):
@@ -190,7 +188,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         zn changed.
         
         """
-        self.zn = val
+        self._settings.updateSetting("zn", val)
         self.showSlicePlane()
     
     def showSlicePlane(self):
@@ -205,8 +203,8 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         
         
         # args to pass
-        p = (self.x0, self.y0, self.z0)
-        n = (self.xn, self.yn, self.zn)
+        p = (self._settings.getSetting("x0"), self._settings.getSetting("y0"), self._settings.getSetting("z0"))
+        n = (self._settings.getSetting("xn"), self._settings.getSetting("yn"), self._settings.getSetting("zn"))
         
         # update actor
         self.slicePlane.update(p, n)
@@ -229,5 +227,6 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         """
         if self.showSlicePlaneChecked:
             self.showSlicePlaneCheck.setCheckState(QtCore.Qt.Unchecked)
+            self.showSlicePlaneChecked = False
         
         self.hide()
