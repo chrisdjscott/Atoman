@@ -30,7 +30,7 @@ def getScalarsType(colouringOptions):
     
     """
     # scalar type
-    if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
+    if colouringOptions.colourBy == "Species" or colouringOptions.colourBy == "Solid colour":
         scalarType = 0
     
     elif colouringOptions.colourBy == "Height":
@@ -121,7 +121,7 @@ def setMapperScalarRange(mapper, colouringOptions, NSpecies):
     Set scalar range on mapper
     
     """
-    if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
+    if colouringOptions.colourBy == "Species" or colouringOptions.colourBy == "Solid colour":
         mapper.SetScalarRange(0, NSpecies - 1)
     
     elif colouringOptions.colourBy == "Height":
@@ -141,7 +141,7 @@ def getScalar(colouringOptions, lattice, atomIndex, scalarVal=None):
     Return the correct scalar value for using with LUT
     
     """
-    if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
+    if colouringOptions.colourBy == "Species" or colouringOptions.colourBy == "Solid colour":
         scalar = lattice.specie[atomIndex]
     
     elif colouringOptions.colourBy == "Height":
@@ -170,7 +170,7 @@ def setupLUT(specieList, specieRGB, colouringOptions):
     
     lut = vtk.vtkLookupTable()
     
-    if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
+    if colouringOptions.colourBy == "Species" or colouringOptions.colourBy == "Solid colour":
         NSpecies = len(specieList)
         
         lut.SetNumberOfColors(NSpecies)
@@ -179,7 +179,7 @@ def setupLUT(specieList, specieRGB, colouringOptions):
         lut.SetRange(0, NSpecies - 1)
         
         for i in xrange(NSpecies):
-            if colouringOptions.colourBy == "Specie":
+            if colouringOptions.colourBy == "Species":
                 lut.SetTableValue(i, specieRGB[i][0], specieRGB[i][1], specieRGB[i][2], 1.0)
             
             elif colouringOptions.colourBy == "Solid colour":

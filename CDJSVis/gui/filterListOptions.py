@@ -696,7 +696,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/applications-graphics.png")))
         
         # defaults
-        self.colourBy = "Specie"
+        self.colourBy = "Species"
         self.heightAxis = 1
         self.minVal = 0.0
         self.maxVal = 1.0

@@ -202,11 +202,11 @@ class OnScreenInfoDialog(QtGui.QDialog):
         # add default options
         self.textList.addItem(TextListWidgetItem("Atom count", "{0} atoms", {"{0}": "Atom count"}, "Top left", True))
         self.textList.addItem(TextListWidgetItem("Visible count", "{0} visible", {"{0}": "Visible count"}, "Top left", True))
-        self.textList.addItem(TextListWidgetItem("Visible specie count", "{0} {1}", {"{0}": "Count", "{1}": "Specie"}, 
-                                                 "Top left", False, multiLine=True))
+        self.textList.addItem(TextListWidgetItem("Visible species count", "{0} {1}", {"{0}": "Count", "{1}": "Species"}, 
+                                                 "Top left", True, multiLine=True))
         self.textList.addItem(TextListWidgetItem("Defect count", "{0} {1}", {"{0}": "Count", "{1}": "Defect type"}, "Top left", 
                                                  True, multiLine=True))
-        self.textList.addItem(TextListWidgetItem("Defect specie count", "{0} {1} {2}", {"{0}": "Count", "{1}": "Specie", "{2}": "Defect type"}, 
+        self.textList.addItem(TextListWidgetItem("Defect species count", "{0} {1} {2}", {"{0}": "Count", "{1}": "Species", "{2}": "Defect type"}, 
                                                  "Top left", True, multiLine=True))
         self.textList.addItem(TextListWidgetItem("ACNA structure count", "{0} {1}", {"{0}": "Count", "{1}": "Structure"}, 
                                                  "Top left", True, multiLine=True))

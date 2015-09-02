@@ -792,9 +792,9 @@ class RendererWindow(QtGui.QWidget):
                         visSpecCount = np.add(visSpecCount, filterList.filterer.visibleSpecieCount)
         
             specieList = inputState.specieList
-            self.onScreenInfo["Visible specie count"] = []
+            self.onScreenInfo["Visible species count"] = []
             for i, cnt in enumerate(visSpecCount):
-                self.onScreenInfo["Visible specie count"].append((cnt, specieList[i]))
+                self.onScreenInfo["Visible species count"].append((cnt, specieList[i]))
         
         # structure counters
         for filterList in filterLists:
@@ -867,15 +867,15 @@ class RendererWindow(QtGui.QWidget):
             specRGBInput = inputState.specieRGB
             specRGBRef = refState.specieRGB
             
-            self.onScreenInfo["Defect specie count"] = []
+            self.onScreenInfo["Defect species count"] = []
             
             if showVacs:
                 for i, cnt in enumerate(vacSpecCount):
-                    self.onScreenInfo["Defect specie count"].append([(cnt, specListRef[i], "vacancies"), specRGBRef[i]])
+                    self.onScreenInfo["Defect species count"].append([(cnt, specListRef[i], "vacancies"), specRGBRef[i]])
             
             if showInts:
                 for i, cnt in enumerate(intSpecCount):
-                    self.onScreenInfo["Defect specie count"].append([(cnt, specListInput[i], "interstitials"), specRGBInput[i]])
+                    self.onScreenInfo["Defect species count"].append([(cnt, specListInput[i], "interstitials"), specRGBInput[i]])
                 
                 if defectsSettings.identifySplitInts:
                     for i in xrange(len(specListInput)):
@@ -887,14 +887,14 @@ class RendererWindow(QtGui.QWidget):
                                 N = splitSpecCount[i][j] + splitSpecCount[j][i]
                                 rgb = (specRGBInput[i] + specRGBInput[j]) / 2.0
                             
-                            self.onScreenInfo["Defect specie count"].append([(N, "%s-%s" % (specListInput[i], specListInput[j]), "split ints"), rgb])
+                            self.onScreenInfo["Defect species count"].append([(N, "%s-%s" % (specListInput[i], specListInput[j]), "split ints"), rgb])
             
             if showAnts:
                 for i in xrange(len(specListRef)):
                     for j in xrange(len(specListInput)):
                         if i == j:
                             continue
-                        self.onScreenInfo["Defect specie count"].append([(antSpecCount[i][j], "%s on %s" % (specListInput[j], specListRef[i]), "antisites"), specRGBRef[i]])
+                        self.onScreenInfo["Defect species count"].append([(antSpecCount[i][j], "%s on %s" % (specListInput[j], specListRef[i]), "antisites"), specRGBRef[i]])
         
         # alignment/position stuff
         topyLeft = self.vtkRenWinInteract.height() - 5
@@ -914,7 +914,7 @@ class RendererWindow(QtGui.QWidget):
                 self.logger.debug("Item '%s' not in onScreenInfo dict", item)
             
             else:
-                if item == "Visible specie count":
+                if item == "Visible species count":
                     for j, specline in enumerate(line):
                         r, g, b = inputState.specieRGB[j]
                         r, g, b = self.checkTextRGB(r, g, b)
@@ -964,7 +964,7 @@ class RendererWindow(QtGui.QWidget):
                         
                         self.onScreenInfoActors.AddItem(actor)
                 
-                elif item == "Defect specie count":
+                elif item == "Defect species count":
                     for array in line:
                         lineArgs = array[0]
                         r, g, b = array[1]

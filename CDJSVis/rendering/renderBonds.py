@@ -27,7 +27,7 @@ def getScalarValue(lattice, index, scalars, scalarsIndex, colouringOptions):
     Set the scalar value.
     
     """
-    if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
+    if colouringOptions.colourBy == "Species" or colouringOptions.colourBy == "Solid colour":
         scalar = lattice.specie[index]
     
     elif colouringOptions.colourBy == "Height":

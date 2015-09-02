@@ -1218,7 +1218,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     # scalar bar
     scalarBar_white = None
     scalarBar_black = None
-    if colouringOptions.colourBy != "Specie" and colouringOptions.colourBy != "Solid colour":
+    if colouringOptions.colourBy != "Species" and colouringOptions.colourBy != "Solid colour":
         scalarBar_white = makeScalarBar(lut, colouringOptions, (0, 0, 0))
         scalarBar_black = makeScalarBar(lut, colouringOptions, (1, 1, 1))
     
@@ -1746,7 +1746,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     # scalar bar
     scalarBar_white = None
     scalarBar_black = None
-    if colouringOptions.colourBy != "Specie" and colouringOptions.colourBy != "Solid colour":
+    if colouringOptions.colourBy != "Species" and colouringOptions.colourBy != "Solid colour":
         scalarBar_white = makeScalarBar(lut, colouringOptions, (0, 0, 0))
         scalarBar_black = makeScalarBar(lut, colouringOptions, (1, 1, 1))
     
