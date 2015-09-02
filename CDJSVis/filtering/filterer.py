@@ -2257,7 +2257,7 @@ class Filterer(object):
         scalars.resize(NVisible, refcheck=False)
         self.scalarsDict["Coordination number"] = scalars
     
-    def genericScalarFilter(self, filterName, filterSettings):
+    def genericScalarFilter(self, filterName, settings):
         """
         Generic scalar filter
         
@@ -2273,8 +2273,10 @@ class Filterer(object):
         scalarsArray = self.pipelinePage.inputState.scalarsDict[scalarsName]
         
         # run filter
-        NVisible = filtering_c.genericScalarFilter(self.visibleAtoms, scalarsArray, filterSettings.minVal, filterSettings.maxVal,
-                                                   NScalars, fullScalars, NVectors, fullVectors)
+        minVal = settings.getSetting("minVal")
+        maxVal = settings.getSetting("maxVal")
+        NVisible = filtering_c.genericScalarFilter(self.visibleAtoms, scalarsArray, minVal, maxVal, NScalars, fullScalars,
+                                                   NVectors, fullVectors)
         
         # update scalars/vectors
         self.storeFullScalarsArray(NVisible, NScalars, fullScalars)

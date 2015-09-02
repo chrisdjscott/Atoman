@@ -3,8 +3,6 @@
 Contains GUI forms for the displacement filter.
 
 """
-from PySide import QtGui, QtCore
-
 from . import base
 from ...filtering.filters import displacementFilter
 
