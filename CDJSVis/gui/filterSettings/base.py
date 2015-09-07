@@ -220,6 +220,8 @@ class GenericSettingsDialog(QtGui.QDialog):
                 self.displaySettingsLayout.addRow(label, combo)
             else:
                 self.contentLayout.addRow(label, combo)
+        
+        return combo
     
     def getSettings(self):
         """Return the settings object."""
