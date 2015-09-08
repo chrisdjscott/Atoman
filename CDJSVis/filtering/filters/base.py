@@ -3,6 +3,7 @@
 Base module for filters.
 
 """
+import logging
 
 ################################################################################
 
@@ -48,9 +49,28 @@ class BaseSettings(object):
 
 class BaseFilter(object):
     """Filters should inherit from this object."""
-    def __init__(self):
+    def __init__(self, filterName):
+        # filter name
+        self.filterName = filterName
+        
+        # attributes
         self._scalars = {}
         self._vectors = {}
+        self._text = {}
+        
+        # logger
+        loggerName = __name__
+        words = str(filterName).title().split()
+        dialogName = "%sFilter" % "".join(words)
+        moduleName = dialogName[:1].lower() + dialogName[1:]
+        array = loggerName.split(".")
+        array[-1] = moduleName
+        loggerName = ".".join(array)
+        self.logger = logging.getLogger(loggerName)
+    
+    def getText(self):
+        """Return text from this filter."""
+        return self._text
     
     def getScalars(self):
         """Return the current scalars."""
