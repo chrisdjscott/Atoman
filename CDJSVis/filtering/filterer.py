@@ -20,7 +20,6 @@ from .filters import _filtering as filtering_c
 from . import _defects as defects_c
 from . import _clusters as clusters_c
 from . import bonds as bonds_c
-from . import bond_order as bond_order
 from ..rendering import renderer
 from ..rendering import renderBonds
 from ..algebra import vectors
@@ -801,50 +800,6 @@ class Filterer(object):
         # store scalars
         scalars.resize(NVisible, refcheck=False)
         self.scalarsDict["Slip"] = scalars
-    
-    def bondOrderFilter(self, settings):
-        """
-        Bond order filter
-        
-        """
-        inputState = self.pipelinePage.inputState
-        
-        # new scalars array
-        scalarsQ4 = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        scalarsQ6 = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # num threads
-        ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
-        
-        maxBondDistance = settings.getSetting("maxBondDistance")
-        filterQ4Enabled = int(settings.getSetting("filterQ4Enabled"))
-        filterQ6Enabled = int(settings.getSetting("filterQ6Enabled"))
-        minQ4 = int(settings.getSetting("minQ4"))
-        maxQ4 = int(settings.getSetting("maxQ4"))
-        minQ6 = int(settings.getSetting("minQ6"))
-        maxQ6 = int(settings.getSetting("maxQ6"))
-        NVisible = bond_order.bondOrderFilter(self.visibleAtoms, inputState.pos, maxBondDistance, scalarsQ4, scalarsQ6,
-                                                inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, filterQ4Enabled,
-                                                minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, ompNumThreads, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-
-        # store scalars
-        scalarsQ4.resize(NVisible, refcheck=False)
-        scalarsQ6.resize(NVisible, refcheck=False)
-        self.scalarsDict["Q4"] = scalarsQ4
-        self.scalarsDict["Q6"] = scalarsQ6
     
     def calculateVoronoi(self):
         """

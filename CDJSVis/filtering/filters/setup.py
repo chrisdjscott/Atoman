@@ -19,14 +19,14 @@ def configuration(parent_package='', top_path=None):
                          extra_compile_args=["-fopenmp"],
                          include_dirs=[incdir, ".."])
     
-#     config.add_extension("bond_order", 
-#                          ["bond_order.c", "../visclibs/utilities.c",
-#                           "../visclibs/boxeslib.c", "../visclibs/neb_list.c",
-#                           "../visclibs/array_utils.c"],
-#                          libraries=["gsl", "gslcblas", "gomp"],
-#                          extra_compile_args=["-fopenmp"],
-#                          include_dirs=[incdir])
-#     
+    config.add_extension("_bond_order", 
+                         ["bond_order.c", "../../visclibs/utilities.c",
+                          "../../visclibs/boxeslib.c", "../../visclibs/neb_list.c",
+                          "../../visclibs/array_utils.c"],
+                         libraries=["gsl", "gslcblas", "gomp"],
+                         extra_compile_args=["-fopenmp"],
+                         include_dirs=[incdir])
+     
 #     config.add_extension("bonds", 
 #                          ["bonds.c", "../visclibs/utilities.c",
 #                           "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],

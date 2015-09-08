@@ -46,9 +46,9 @@ static struct PyMethodDef methods[] = {
  ** Module initialisation function
  *******************************************************************************/
 PyMODINIT_FUNC
-initbond_order(void)
+init_bond_order(void)
 {
-    (void)Py_InitModule("bond_order", methods);
+    (void)Py_InitModule("_bond_order", methods);
     import_array();
 }
 

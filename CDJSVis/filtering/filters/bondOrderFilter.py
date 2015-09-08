@@ -47,6 +47,9 @@ The bond order calculator has the following parameters:
 
 """
 from . import base
+from . import _bond_order
+
+import numpy as np
 
 
 ################################################################################
@@ -74,3 +77,43 @@ class BondOrderFilter(base.BaseFilter):
     The Bond Order filter.
     
     """
+    def apply(self, filterInput, settings):
+        """Run the bond order filter."""
+        # unpack inputs
+        inputState = filterInput.inputState
+        NScalars = filterInput.NScalars
+        fullScalars = filterInput.fullScalars
+        NVectors = filterInput.NVectors
+        fullVectors = filterInput.fullVectors
+        ompNumThreads = filterInput.ompNumThreads
+        visibleAtoms = filterInput.visibleAtoms
+        
+        # settings
+        maxBondDistance = settings.getSetting("maxBondDistance")
+        filterQ4Enabled = int(settings.getSetting("filterQ4Enabled"))
+        filterQ6Enabled = int(settings.getSetting("filterQ6Enabled"))
+        minQ4 = settings.getSetting("minQ4")
+        maxQ4 = settings.getSetting("maxQ4")
+        minQ6 = settings.getSetting("minQ6")
+        maxQ6 = settings.getSetting("maxQ6")
+        
+        # new scalars array
+        scalarsQ4 = np.zeros(len(visibleAtoms), dtype=np.float64)
+        scalarsQ6 = np.zeros(len(visibleAtoms), dtype=np.float64)
+        
+        # call C lib
+        NVisible = _bond_order.bondOrderFilter(visibleAtoms, inputState.pos, maxBondDistance, scalarsQ4, scalarsQ6,
+                                               inputState.cellDims, inputState.PBC, NScalars, fullScalars, filterQ4Enabled,
+                                               minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, ompNumThreads, NVectors, fullVectors)
+        
+        # resize visible atoms and scalars
+        visibleAtoms.resize(NVisible, refcheck=False)
+        scalarsQ4.resize(NVisible, refcheck=False)
+        scalarsQ6.resize(NVisible, refcheck=False)
+        
+        # create result and add scalars
+        result = base.FilterResult()
+        result.addScalars("Q4", scalarsQ4)
+        result.addScalars("Q6", scalarsQ6)
+        
+        return result
