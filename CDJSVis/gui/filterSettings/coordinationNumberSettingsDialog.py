@@ -19,9 +19,8 @@ class CoordinationNumberSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(CoordinationNumberSettingsDialog, self).__init__(title, parent)
+        super(CoordinationNumberSettingsDialog, self).__init__(title, parent, "Coordination number")
         
-        self.filterType = "Coordination number"
         self.addProvidedScalar("Coordination number")
         
         self._settings = coordinationNumberFilter.CoordinationNumberFilterSettings()

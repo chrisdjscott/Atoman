@@ -16,9 +16,7 @@ class ClusterSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(ClusterSettingsDialog, self).__init__(title, parent)
-        
-        self.filterType = "Clusters"
+        super(ClusterSettingsDialog, self).__init__(title, parent, "Clusters")
         
         self._settings = clusterFilter.ClusterFilterSettings()
         

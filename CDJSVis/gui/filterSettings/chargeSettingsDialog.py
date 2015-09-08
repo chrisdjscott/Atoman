@@ -19,9 +19,7 @@ class ChargeSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(ChargeSettingsDialog, self).__init__(title, parent)
-        
-        self.filterType = "Charge"
+        super(ChargeSettingsDialog, self).__init__(title, parent, "Charge")
         
         self._settings = chargeFilter.ChargeFilterSettings()
         

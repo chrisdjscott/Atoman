@@ -15,9 +15,8 @@ class SlipSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(SlipSettingsDialog, self).__init__(title, parent)
+        super(SlipSettingsDialog, self).__init__(title, parent, "Slip")
         
-        self.filterType = "Slip"
         self.addProvidedScalar("Slip")
         
         # settings

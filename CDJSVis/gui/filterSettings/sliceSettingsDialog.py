@@ -18,7 +18,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(SliceSettingsDialog, self).__init__(title, parent)
+        super(SliceSettingsDialog, self).__init__(title, parent, "Slice")
         
         # slice plane
         self.slicePlane = slicePlane.SlicePlane(self.pipelinePage)

@@ -18,9 +18,7 @@ class CropBoxSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(CropBoxSettingsDialog, self).__init__(title, parent)
-        
-        self.filterType = "Crop box"
+        super(CropBoxSettingsDialog, self).__init__(title, parent, "Crop box")
         
         self._settings = cropBoxFilter.CropBoxFilterSettings()
         

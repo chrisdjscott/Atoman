@@ -15,7 +15,7 @@ class GenericScalarSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, filterType, title, parent=None):
-        super(GenericScalarSettingsDialog, self).__init__(title, parent)
+        super(GenericScalarSettingsDialog, self).__init__(title, parent, "Generic scalar")
         
         self.filterType = filterType
         

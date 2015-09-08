@@ -21,9 +21,8 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(PointDefectsSettingsDialog, self).__init__(title, parent)
+        super(PointDefectsSettingsDialog, self).__init__(title, parent, "Point defects")
         
-        self.filterType = "Point defects"
         self.logger = logging.getLogger(__name__)
         
         # settings

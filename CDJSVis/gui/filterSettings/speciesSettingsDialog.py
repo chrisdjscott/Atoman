@@ -47,9 +47,7 @@ class SpeciesSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(SpeciesSettingsDialog, self).__init__(title, parent)
-        
-        self.filterType = "Species"
+        super(SpeciesSettingsDialog, self).__init__(title, parent, "Species")
         
         # settings
         self._settings = speciesFilter.SpeciesFilterSettings()

@@ -20,9 +20,8 @@ class AcnaSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(AcnaSettingsDialog, self).__init__(title, parent)
+        super(AcnaSettingsDialog, self).__init__(title, parent, "ACNA")
         
-        self.filterType = "ACNA"
         self.addProvidedScalar("ACNA")
         self._settings = acnaFilter.AcnaFilterSettings()
         

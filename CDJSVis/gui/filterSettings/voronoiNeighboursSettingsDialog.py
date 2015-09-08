@@ -14,9 +14,8 @@ class VoronoiNeighboursSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(VoronoiNeighboursSettingsDialog, self).__init__(title, parent)
+        super(VoronoiNeighboursSettingsDialog, self).__init__(title, parent, "Voronoi neighbours")
         
-        self.filterType = "Voronoi neighbours"
         self.addProvidedScalar("Voronoi neighbours")
         
         # settings

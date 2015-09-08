@@ -15,9 +15,8 @@ class BondOrderSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(BondOrderSettingsDialog, self).__init__(title, parent)
+        super(BondOrderSettingsDialog, self).__init__(title, parent, "Bond order")
         
-        self.filterType = "Bond order"
         self.addProvidedScalar("Q4")
         self.addProvidedScalar("Q6")
         

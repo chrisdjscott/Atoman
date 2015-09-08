@@ -20,7 +20,7 @@ import functools
 
 ################################################################################
 class GenericSettingsDialog(QtGui.QDialog):
-    def __init__(self, title, parent):
+    def __init__(self, title, parent, filterType):
         super(GenericSettingsDialog, self).__init__(parent)
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
@@ -28,8 +28,17 @@ class GenericSettingsDialog(QtGui.QDialog):
         self.parent = parent
         self.mainWindow = self.parent.mainWindow
         self.pipelinePage = self.parent.filterTab
+        self.filterType = filterType
         
-        self.logger = logging.getLogger(__name__)
+        # logger
+        loggerName = __name__
+        words = str(filterType).title().split()
+        dialogName = "%sSettingsDialog" % "".join(words)
+        moduleName = dialogName[:1].lower() + dialogName[1:]
+        array = loggerName.split(".")
+        array[-1] = moduleName
+        loggerName = ".".join(array)
+        self.logger = logging.getLogger(loggerName)
         
         # get tab and filter id's
         array = title.split("(")[1].split(")")[0].split()

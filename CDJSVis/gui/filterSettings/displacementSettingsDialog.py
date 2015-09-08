@@ -15,9 +15,8 @@ class DisplacementSettingsDialog(base.GenericSettingsDialog):
     
     """
     def __init__(self, mainWindow, title, parent=None):
-        super(DisplacementSettingsDialog, self).__init__(title, parent)
+        super(DisplacementSettingsDialog, self).__init__(title, parent, "Displacement")
         
-        self.filterType = "Displacement"
         self.addProvidedScalar("Displacement")
         
         # settings
