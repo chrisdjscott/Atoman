@@ -15,7 +15,8 @@ import importlib
 import numpy as np
 from PySide import QtGui, QtCore
 
-from . import _filtering as filtering_c
+# from . import _filtering as filtering_c
+from .filters import _filtering as filtering_c
 from . import _defects as defects_c
 from . import _clusters as clusters_c
 from . import bonds as bonds_c
@@ -1312,60 +1313,6 @@ class Filterer(object):
         
         # store pos for next step
         self.previousPosForTrace = copy.deepcopy(inputState.pos)
-    
-    def atomIndexFilter(self, settings):
-        """
-        Atom index filter
-        
-        """
-        # input string
-        text = settings.getSetting("filterString")
-        self.logger.debug("Atom ID raw text: '%s'", text)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-    
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        if not text:
-            # return no visible atoms if input string was empty
-            self.logger.warning("No visible atoms specified in AtomID filter")
-            NVisible = 0
-        
-        else:
-            # parse text
-            array = [val for val in text.split(",") if val]
-            num = len(array)
-            rangeArray = np.empty((num, 2), np.int32)
-            for i, item in enumerate(array):
-                if "-" in item:
-                    values = [val for val in item.split("-") if val]
-                    minval = int(values[0])
-                    if len(values) == 1:
-                        maxval = minval
-                    else:
-                        maxval = int(values[1])
-                else:
-                    minval = maxval = int(item)
-            
-                self.logger.debug("  %d: %d -> %d", i, minval, maxval)
-                rangeArray[i][0] = minval
-                rangeArray[i][1] = maxval
-        
-            # input state
-            lattice = self.pipelinePage.inputState
-        
-            # run displacement filter
-            NVisible = filtering_c.atomIndexFilter(self.visibleAtoms, lattice.atomID, rangeArray, 
-                                                   NScalars, fullScalars, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
     
     def cropFilter(self, settings):
         """

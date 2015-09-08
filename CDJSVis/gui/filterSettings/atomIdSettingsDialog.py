@@ -28,8 +28,10 @@ class AtomIdSettingsDialog(base.GenericSettingsDialog):
         self.lineEdit = QtGui.QLineEdit(self._settings.getSetting("filterString"))
         self.lineEdit.setValidator(validator)
         self.lineEdit.setToolTip("Comma separated list of atom IDs or ranges of atom IDs (hyphenated) that are visible (eg. '22,30-33' will show atom IDs 22, 30, 31, 32 and 33)")
+        self.lineEdit.editingFinished.connect(self.editingFinished)
         self.contentLayout.addRow("Visible IDs", self.lineEdit)
     
     def editingFinished(self):
         """Line edit has been editted."""
+        self.logger.debug("Editing finished: '%s'", self.lineEdit.text())
         self._settings.updateSetting("filterString", str(self.lineEdit.text()))
