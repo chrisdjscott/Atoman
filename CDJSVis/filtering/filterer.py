@@ -10,6 +10,7 @@ import copy
 import time
 import logging
 import itertools
+import importlib
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -19,7 +20,6 @@ from . import _defects as defects_c
 from . import _clusters as clusters_c
 from . import bonds as bonds_c
 from . import bond_order as bond_order
-from . import acna
 from ..rendering import renderer
 from ..rendering import renderBonds
 from ..algebra import vectors
@@ -27,6 +27,7 @@ from . import clusters
 from ..state.atoms import elements
 from . import voronoi
 from ..rendering import renderVoronoi
+from .filters import base
 
 
 ################################################################################
@@ -423,72 +424,122 @@ class Filterer(object):
             if filterSettings is None:
                 filterSettings = filterSettingsGui
             
-            self.logger.info("Running filter: '%s'", filterName)
+            # determine the name of filter module
+            words = str(filterName).title().split()
+            filterObjectName = "%sFilter" % "".join(words)
+            moduleName = filterObjectName[:1].lower() + filterObjectName[1:]
+            self.logger.debug("Loading filter module: '%s'", moduleName)
+            self.logger.debug("Creating filter object: '%s'", filterObjectName)
             
-            if filterName == "Species":
-                self.filterSpecie(filterSettings)
+            # load module
+            filterModule = importlib.import_module(".{0}".format(moduleName), package="CDJSVis.filtering.filters")
             
-            elif filterName == "Crop box":
-                self.cropFilter(filterSettings)
-            
-            elif filterName == "Displacement":
-                self.displacementFilter(filterSettings)
-                drawDisplacementVectors = filterSettings.getSetting("drawDisplacementVectors")
-                displacementSettings = filterSettings
-            
-            elif filterName == "Point defects":
-                interstitials, vacancies, antisites, onAntisites, splitInterstitials = self.pointDefectFilter(filterSettings)
-                
-                self.interstitials = interstitials
-                self.vacancies = vacancies
-                self.antisites = antisites
-                self.onAntisites = onAntisites
-                self.splitInterstitials = splitInterstitials
-            
-            elif filterName == "Charge":
-                self.chargeFilter(filterSettings)
-            
-            elif filterName == "Cluster":
-                self.clusterFilter(filterSettings)
-                
-                if filterSettings.getSetting("drawConvexHulls"):
-                    self.clusterFilterDrawHulls(filterSettings, hullFile)
-                
-                if filterSettings.getSetting("calculateVolumes"):
-                    self.clusterFilterCalculateVolumes(filterSettings)
-            
-            elif filterName == "Crop sphere":
-                self.cropSphereFilter(filterSettings)
-            
-            elif filterName == "Slice":
-                self.sliceFilter(filterSettings)
-            
-            elif filterName == "Coordination number":
-                self.coordinationNumberFilter(filterSettings)
-            
-            elif filterName == "Voronoi volume":
-                self.voronoiVolumeFilter(filterSettings)
-            
-            elif filterName == "Voronoi neighbours":
-                self.voronoiNeighboursFilter(filterSettings)
-            
-            elif filterName == "Bond order":
-                self.bondOrderFilter(filterSettings)
-            
-            elif filterName == "Atom ID":
-                self.atomIndexFilter(filterSettings)
-            
-            elif filterName == "ACNA":
-                self.acnaFilter(filterSettings)
-            
-            elif filterName.startswith("Scalar: "):
-                self.genericScalarFilter(filterName, filterSettings)
-            
-            elif filterName.startswith("Slip"):
-                self.slipFilter(filterSettings)
+            # load dialog
+            filterObject = getattr(filterModule, filterObjectName, None)
+            if filterObject is None:
+                self.logger.error("Could not locate filter object for: '%s'", filterNameString)
             
             else:
-                self.logger.warning("Unrecognised filter: '%s'; skipping", filterName)
+                self.logger.info("Running filter: '%s'", filterName)
+                
+                # filter
+                filterObject = filterObject(filterName)
+                
+                # construct filter input object
+                filterInput = base.FilterInput()
+                filterInput.visibleAtoms = self.visibleAtoms
+                filterInput.inputState = self.pipelinePage.inputState
+                filterInput.refState = self.pipelinePage.refState
+                filterInput.ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
+                filterInput.voronoiOptions = self.voronoiOptions
+                filterInput.bondDict = elements.bondDict
+                filterInput.NScalars, filterInput.fullScalars = self.makeFullScalarsArray()
+                filterInput.NVectors, filterInput.fullVectors = self.makeFullVectorsArray()
+                
+                # run the filter
+                result = filterObject.apply(filterInput, filterSettings)
+                
+                # cluster list
+                if result.hasClusterList():
+                    self.clusterList = result.getClusterList()
+                
+                # structure counters
+                if result.hasStructureCounterDict:
+                    self.structureCounterDicts[result.getStructureCounterName()] = result.getStructureCounterDict()
+                
+                # full vectors/scalars
+                self.storeFullScalarsArray(len(self.visibleAtoms), filterInput.NScalars, filterInput.fullScalars)
+                self.storeFullVectorsArray(len(self.visibleAtoms), filterInput.NVectors, filterInput.fullVectors)
+                
+                # new scalars
+                self.scalarsDict.update(result.getScalars())
+                
+            
+            
+#             if filterName == "Species":
+#                 self.filterSpecie(filterSettings)
+#             
+#             elif filterName == "Crop box":
+#                 self.cropFilter(filterSettings)
+#             
+#             elif filterName == "Displacement":
+#                 self.displacementFilter(filterSettings)
+#                 drawDisplacementVectors = filterSettings.getSetting("drawDisplacementVectors")
+#                 displacementSettings = filterSettings
+#             
+#             elif filterName == "Point defects":
+#                 interstitials, vacancies, antisites, onAntisites, splitInterstitials = self.pointDefectFilter(filterSettings)
+#                 
+#                 self.interstitials = interstitials
+#                 self.vacancies = vacancies
+#                 self.antisites = antisites
+#                 self.onAntisites = onAntisites
+#                 self.splitInterstitials = splitInterstitials
+#             
+#             elif filterName == "Charge":
+#                 self.chargeFilter(filterSettings)
+#             
+#             elif filterName == "Cluster":
+#                 self.clusterFilter(filterSettings)
+#                 
+#                 if filterSettings.getSetting("drawConvexHulls"):
+#                     self.clusterFilterDrawHulls(filterSettings, hullFile)
+#                 
+#                 if filterSettings.getSetting("calculateVolumes"):
+#                     self.clusterFilterCalculateVolumes(filterSettings)
+#             
+#             elif filterName == "Crop sphere":
+#                 self.cropSphereFilter(filterSettings)
+#             
+#             elif filterName == "Slice":
+#                 self.sliceFilter(filterSettings)
+#             
+#             elif filterName == "Coordination number":
+#                 self.coordinationNumberFilter(filterSettings)
+#             
+#             elif filterName == "Voronoi volume":
+#                 self.voronoiVolumeFilter(filterSettings)
+#             
+#             elif filterName == "Voronoi neighbours":
+#                 self.voronoiNeighboursFilter(filterSettings)
+#             
+#             elif filterName == "Bond order":
+#                 self.bondOrderFilter(filterSettings)
+#             
+#             elif filterName == "Atom ID":
+#                 self.atomIndexFilter(filterSettings)
+#             
+#             elif filterName == "ACNA":
+#                 self.acnaFilter(filterSettings)
+#             
+#             elif filterName.startswith("Scalar: "):
+#                 self.genericScalarFilter(filterName, filterSettings)
+#             
+#             elif filterName.startswith("Slip"):
+#                 self.slipFilter(filterSettings)
+#             
+#             else:
+#                 self.logger.warning("Unrecognised filter: '%s'; skipping", filterName)
             
             # write to log
             if self.parent.defectFilterSelected:
@@ -793,54 +844,6 @@ class Filterer(object):
         scalarsQ6.resize(NVisible, refcheck=False)
         self.scalarsDict["Q4"] = scalarsQ4
         self.scalarsDict["Q6"] = scalarsQ6
-    
-    def acnaFilter(self, settings):
-        """
-        Adaptive common neighbour analysis
-        
-        """
-        inputState = self.pipelinePage.inputState
-        
-        # new scalars array
-        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # number of openmp threads
-        ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
-        
-        # counter array
-        counters = np.zeros(7, np.int32)
-        
-        maxBondDistance = settings.getSetting("maxBondDistance")
-        filteringEnabled = int(settings.getSetting("filteringEnabled"))
-        structureVisibility = settings.getSetting("structureVisibility")
-        
-        NVisible = acna.adaptiveCommonNeighbourAnalysis(self.visibleAtoms, inputState.pos, scalars, inputState.cellDims, self.pipelinePage.PBC,
-                                                        NScalars, fullScalars, maxBondDistance, counters, filteringEnabled,
-                                                        structureVisibility, ompNumThreads, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-
-        # store scalars
-        scalars.resize(NVisible, refcheck=False)
-        self.scalarsDict["ACNA"] = scalars
-        
-        # store counters
-        d = {}
-        for i, structure in enumerate(self.knownStructures):
-            if counters[i] > 0:
-                d[structure] = counters[i]
-        self.structureCounterDicts["ACNA structure count"] = d
     
     def calculateVoronoi(self):
         """

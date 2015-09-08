@@ -5,6 +5,87 @@ Base module for filters.
 """
 import logging
 
+import numpy as np
+
+
+################################################################################
+
+class FilterResult(object):
+    """
+    Result object returned by a filter.
+    
+    """
+    def __init__(self):
+        self._clusterList = []
+        self._structureCounterDict = {}
+        self._structureCounterDictName = None
+        self._scalars = {}
+        self._vectors = {}
+        self._text = {}
+    
+    def addScalars(self, name, scalars):
+        """Add the given scalars."""
+        self._scalars[name] = scalars
+    
+    def getScalars(self):
+        """Return scalars."""
+        return self._scalars
+    
+    def addVectors(self, name, vectors):
+        """Add the given vectors."""
+        self._vectors[name] = vectors
+    
+    def hasStructureCounterDict(self):
+        """Returns True if there is a structure counter dict."""
+        return True if self._structureCounterDictName is not None else False
+    
+    def setStructureCounterName(self, name):
+        """Set the name for the structure counter."""
+        self._structureCounterDictName = name
+    
+    def addStructureCount(self, structure, count):
+        """Add structure counter dict."""
+        self._structureCounterDict[structure] = count
+    
+    def getStructureCounterName(self):
+        """Return the structure counter name."""
+        return self._structureCounterDictName
+    
+    def getStructureCounterDict(self):
+        """Return the structure counter dict."""
+        return self._structureCounterDict
+    
+    def addCluster(self, cluster):
+        """Add cluster to the cluster list."""
+        self._clusterList.append(cluster)
+    
+    def getClusterList(self):
+        """Return the cluster list."""
+        return self._clusterList
+    
+    def hasClusterList(self):
+        """Returns True if the cluster list is not empty."""
+        return True if len(self._clusterList) else False
+
+################################################################################
+
+class FilterInput(object):
+    """
+    Input object for filters.
+    
+    """
+    def __init__(self):
+        self.visibleAtoms = None
+        self.inputState = None
+        self.refState = None
+        self.fullScalars = np.empty(0, np.float64)
+        self.NScalars = 0
+        self.fullVectors = np.empty(0, np.float64)
+        self.NVectors = 0
+        self.ompNumThreads = 1
+        self.voronoiOptions = None
+        self.bondDict = None
+
 ################################################################################
 
 class BaseSettings(object):
@@ -53,11 +134,6 @@ class BaseFilter(object):
         # filter name
         self.filterName = filterName
         
-        # attributes
-        self._scalars = {}
-        self._vectors = {}
-        self._text = {}
-        
         # logger
         loggerName = __name__
         words = str(filterName).title().split()
@@ -67,18 +143,6 @@ class BaseFilter(object):
         array[-1] = moduleName
         loggerName = ".".join(array)
         self.logger = logging.getLogger(loggerName)
-    
-    def getText(self):
-        """Return text from this filter."""
-        return self._text
-    
-    def getScalars(self):
-        """Return the current scalars."""
-        return self._scalars
-    
-    def getVectors(self):
-        """Return the current vectors."""
-        return self._vectors
     
     def apply(self, *args, **kwargs):
         raise NotImplementedError("apply method not implemented")

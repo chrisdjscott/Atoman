@@ -11,13 +11,7 @@ def configuration(parent_package='', top_path=None):
     # config
     config = Configuration("filtering", parent_package, top_path)
     
-    config.add_extension("acna", 
-                         ["acna.c", "../visclibs/utilities.c",
-                          "../visclibs/boxeslib.c", "../visclibs/neb_list.c",
-                          "../visclibs/array_utils.c"],
-                         libraries=["gsl", "gslcblas", "gomp"],
-                         extra_compile_args=["-fopenmp"],
-                         include_dirs=[incdir])
+    config.add_subpackage("filters")
     
     config.add_extension("bond_order", 
                          ["bond_order.c", "../visclibs/utilities.c",
