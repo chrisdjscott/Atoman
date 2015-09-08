@@ -464,7 +464,7 @@ class Filterer(object):
                     self.clusterList = result.getClusterList()
                 
                 # structure counters
-                if result.hasStructureCounterDict:
+                if result.hasStructureCounterDict():
                     self.structureCounterDicts[result.getStructureCounterName()] = result.getStructureCounterDict()
                 
                 # full vectors/scalars

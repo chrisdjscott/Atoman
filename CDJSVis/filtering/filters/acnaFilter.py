@@ -27,7 +27,7 @@ import numpy as np
 
 from ..filterer import Filterer
 from . import base
-from . import acna
+from . import _acna
 
 
 ################################################################################
@@ -75,7 +75,7 @@ class AcnaFilter(base.BaseFilter):
         counters = np.zeros(len(Filterer.knownStructures), np.int32)
         
         # call C library
-        NVisible = acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.cellDims, pbc,
+        NVisible = _acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.cellDims, pbc,
                                                         NScalars, fullScalars, maxBondDistance, counters, filteringEnabled,
                                                         structureVisibility, ompNumThreads, NVectors, fullVectors)
         
@@ -90,7 +90,7 @@ class AcnaFilter(base.BaseFilter):
         result.addScalars("ACNA", scalars)
         
         # structure counters dict
-        result.setStructureCounterName("ACNA structure type")
+        result.setStructureCounterName("ACNA structure count")
         for i, structure in enumerate(Filterer.knownStructures):
             if counters[i] > 0:
                 result.addStructureCount(structure, counters[i])

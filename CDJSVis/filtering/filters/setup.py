@@ -11,7 +11,7 @@ def configuration(parent_package='', top_path=None):
     # config
     config = Configuration("filters", parent_package, top_path)
     
-    config.add_extension("acna", 
+    config.add_extension("_acna", 
                          ["acna.c", "../../visclibs/utilities.c",
                           "../../visclibs/boxeslib.c", "../../visclibs/neb_list.c",
                           "../../visclibs/array_utils.c"],
