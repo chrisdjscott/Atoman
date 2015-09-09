@@ -505,21 +505,13 @@ class Filterer(object):
                 if (filterName == "Displacement" or filterName == "Point defects") and inputState.NAtoms == refState.NAtoms:
                     drawDisplacementVectors = filterSettings.getSetting("drawDisplacementVectors")
                     displacementSettings = filterSettings
-            
-            
-#             elif filterName == "Displacement":
-#                 self.displacementFilter(filterSettings)
-#                 drawDisplacementVectors = filterSettings.getSetting("drawDisplacementVectors")
-#                 displacementSettings = filterSettings
-#             
-#             elif filterName == "Cluster":
-#                 self.clusterFilter(filterSettings)
-#                 
-#                 if filterSettings.getSetting("drawConvexHulls"):
-#                     self.clusterFilterDrawHulls(filterSettings, hullFile)
-#                 
-#                 if filterSettings.getSetting("calculateVolumes"):
-#                     self.clusterFilterCalculateVolumes(filterSettings)
+                
+                elif filterName == "Cluster":
+                    if filterSettings.getSetting("drawConvexHulls"):
+                        self.clusterFilterDrawHulls(filterSettings, hullFile)
+                     
+                    if filterSettings.getSetting("calculateVolumes"):
+                        self.clusterFilterCalculateVolumes(filterSettings)
             
             # write to log
             if self.parent.defectFilterSelected:
@@ -1083,109 +1075,6 @@ class Filterer(object):
         # store pos for next step
         self.previousPosForTrace = copy.deepcopy(inputState.pos)
     
-    def cropFilter(self, settings):
-        """
-        Crop lattice
-        
-        """
-        # settings
-        xmin = settings.getSetting("xmin")
-        xmax = settings.getSetting("xmax")
-        ymin = settings.getSetting("ymin")
-        ymax = settings.getSetting("ymax")
-        zmin = settings.getSetting("zmin")
-        zmax = settings.getSetting("zmax")
-        xEnabled = int(settings.getSetting("xEnabled"))
-        yEnabled = int(settings.getSetting("yEnabled"))
-        zEnabled = int(settings.getSetting("zEnabled"))
-        invertSelection = int(settings.getSetting("invertSelection"))
-        
-        if self.parent.defectFilterSelected:
-            inp = self.pipelinePage.inputState
-            ref = self.pipelinePage.refState
-            
-            result = filtering_c.cropDefectsFilter(self.interstitials, self.vacancies, self.antisites, self.onAntisites, self.splitInterstitials,
-                                                   inp.pos, ref.pos, xmin, xmax, ymin, ymax, zmin, zmax, xEnabled, yEnabled, zEnabled,
-                                                   invertSelection)
-            
-            # unpack
-            NInt, NVac, NAnt, NSplit = result
-            self.vacancies.resize(NVac, refcheck=False)
-            self.interstitials.resize(NInt, refcheck=False)
-            self.antisites.resize(NAnt, refcheck=False)
-            self.onAntisites.resize(NAnt, refcheck=False)
-            self.splitInterstitials.resize(NSplit*3, refcheck=False)
-        
-        else:
-            lattice = self.pipelinePage.inputState
-            
-            # old scalars arrays (resize as appropriate)
-            NScalars, fullScalars = self.makeFullScalarsArray()
-            
-            # full vectors array
-            NVectors, fullVectors = self.makeFullVectorsArray()
-            
-            NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, xmin, xmax, ymin, ymax, zmin, zmax, xEnabled,
-                                              yEnabled, zEnabled, invertSelection, NScalars, fullScalars, NVectors, fullVectors)
-            
-            # update scalars dict
-            self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-            self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-    
-            # resize visible atoms
-            self.visibleAtoms.resize(NVisible, refcheck=False)
-    
-    def sliceFilter(self, settings):
-        """
-        Slice filter.
-        
-        """
-        # settings
-        x0 = settings.getSetting("x0")
-        y0 = settings.getSetting("y0")
-        z0 = settings.getSetting("z0")
-        xn = settings.getSetting("xn")
-        yn = settings.getSetting("yn")
-        zn = settings.getSetting("zn")
-        invert = settings.getSetting("invert")
-        
-        # filter
-        if self.parent.defectFilterSelected:
-            inp = self.pipelinePage.inputState
-            ref = self.pipelinePage.refState
-            
-            self.logger.debug("Calling sliceDefectsFilter C function")
-            result = filtering_c.sliceDefectsFilter(self.interstitials, self.vacancies, self.antisites, self.onAntisites, self.splitInterstitials,
-                                                    inp.pos, ref.pos, x0, y0, z0, xn, yn, zn, invert)
-            
-            # unpack
-            NInt, NVac, NAnt, NSplit = result
-            self.vacancies.resize(NVac, refcheck=False)
-            self.interstitials.resize(NInt, refcheck=False)
-            self.antisites.resize(NAnt, refcheck=False)
-            self.onAntisites.resize(NAnt, refcheck=False)
-            self.splitInterstitials.resize(NSplit*3, refcheck=False)
-        
-        else:
-            lattice = self.pipelinePage.inputState
-            
-            # old scalars arrays (resize as appropriate)
-            NScalars, fullScalars = self.makeFullScalarsArray()
-            
-            # full vectors array
-            NVectors, fullVectors = self.makeFullVectorsArray()
-            
-            self.logger.debug("Calling sliceFilter C function")
-            NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, x0, y0, z0, xn, yn, zn, invert, NScalars, fullScalars,
-                                               NVectors, fullVectors)
-            
-            # update scalars dict
-            self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-            self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-    
-            # resize visible atoms
-            self.visibleAtoms.resize(NVisible, refcheck=False)
-    
     def pointDefectFilterCalculateClusterVolumes(self, settings):
         """
         Calculate volumes of clusters
@@ -1344,72 +1233,6 @@ class Filterer(object):
                         count += 1
         
         self.actorsDict["Defect clusters"] = actorsDictLocal
-        
-    def clusterFilter(self, settings, PBC=None, minSize=None, maxSize=None, nebRad=None):
-        """
-        Run the cluster filter
-        
-        """
-        lattice = self.pipelinePage.inputState
-        
-        atomCluster = np.empty(len(self.visibleAtoms), np.int32)
-        result = np.empty(2, np.int32)
-        
-        if PBC is not None and len(PBC) == 3:
-            pass
-        else:
-            PBC = self.pipelinePage.PBC
-        
-        if minSize is None:
-            minSize = settings.getSetting("minClusterSize")
-        
-        if maxSize is None:
-            maxSize = settings.getSetting("maxClusterSize")
-        
-        if nebRad is None:
-            nebRad = settings.getSetting("neighbourRadius")
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        clusters_c.findClusters(self.visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
-                                minSize, maxSize, result, NScalars, fullScalars, NVectors, fullVectors)
-        
-        NVisible = result[0]
-        NClusters = result[1]
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-        atomCluster.resize(NVisible, refcheck=False)
-        
-        # store cluster indexes as scalars
-#         self.scalarsDict["Cluster"] = np.asarray(atomCluster, dtype=np.float64)
-        
-        # build cluster lists
-        self.clusterList = []
-        for i in xrange(NClusters):
-            self.clusterList.append(clusters.AtomCluster())
-        
-        # add atoms to cluster lists
-        clusterIndexMapper = {}
-        count = 0
-        for i in xrange(NVisible):
-            atomIndex = self.visibleAtoms[i]
-            clusterIndex = atomCluster[i]
-            
-            if clusterIndex not in clusterIndexMapper:
-                clusterIndexMapper[clusterIndex] = count
-                count += 1
-            
-            clusterListIndex = clusterIndexMapper[clusterIndex]
-            
-            self.clusterList[clusterListIndex].indexes.append(atomIndex)
     
     def clusterFilterDrawHulls(self, settings, hullPovFile):
         """
