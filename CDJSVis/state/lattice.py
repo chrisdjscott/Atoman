@@ -213,7 +213,7 @@ class Lattice(object):
         
         pos = np.asarray(pos, dtype=np.float64)
         
-        self.atomID = np.append(self.specie, np.int32(atomID))
+        self.atomID = np.append(self.atomID, np.int32(atomID))
         self.specie = np.append(self.specie, np.int32(specInd))
         self.pos = np.append(self.pos, pos)
         self.charge = np.append(self.charge, charge)
