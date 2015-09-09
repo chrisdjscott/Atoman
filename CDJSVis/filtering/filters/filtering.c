@@ -1541,7 +1541,7 @@ slipFilter(PyObject *self, PyObject *args)
 {
     // we need: refPos, pos, minPos, maxPos, cellDims, PBC, visibleAtoms
     int NVisibleIn, *PBC, NScalars, filteringEnabled, driftCompensation, refPosDim, NVectors;
-    double minSlip, maxSlip, *cellDims;
+    double minSlip, maxSlip, *cellDims, neighbourCutOff, atomSlipTol;
     PyArrayObject *visibleAtoms=NULL;
     PyArrayObject *refPosOrig=NULL;
     PyArrayObject *PBCIn=NULL;
@@ -1557,6 +1557,7 @@ slipFilter(PyObject *self, PyObject *args)
     double *refPos, *visiblePos;
     double *slipx, *slipy, *slipz;
     double approxBoxWidth;
+    double neighbourCutOff2, atomSlipTol2;
     struct Boxes *boxes;
     
 #ifdef DEBUG
@@ -1564,10 +1565,10 @@ slipFilter(PyObject *self, PyObject *args)
 #endif
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!ddiO!iiO!iO!", &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalars, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!ddiO!iiO!iO!dd", &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalars, 
             &PyArray_Type, &pos, &PyArray_Type, &refPosOrig, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, 
             &minSlip, &maxSlip, &NScalars, &PyArray_Type, &fullScalars, &filteringEnabled, &driftCompensation, 
-            &PyArray_Type, &driftVector, &NVectors, &PyArray_Type, &fullVectors))
+            &PyArray_Type, &driftVector, &NVectors, &PyArray_Type, &fullVectors, &neighbourCutOff, &atomSlipTol))
         return NULL;
     
     if (not_intVector(visibleAtoms)) return NULL;
@@ -1595,6 +1596,8 @@ slipFilter(PyObject *self, PyObject *args)
 #ifdef DEBUG
     printf("SLIPC: Parsed args\n");
     printf("SLIPC: NVisibleIn = %d\n", NVisibleIn);
+    printf("SLIPC: Neighbour cut-off = %lf\n", neighbourCutOff);
+    printf("SLIPC: Atom slip tolerance = %lf\n", atomSlipTol);
 #endif
     
     /* drift compensation */
@@ -1647,7 +1650,7 @@ slipFilter(PyObject *self, PyObject *args)
 #ifdef DEBUG
     printf("SLIPC: Boxing atoms...\n");
 #endif
-    approxBoxWidth = 5.0; // detect automatically!!
+    approxBoxWidth = (neighbourCutOff > 5.0) ? neighbourCutOff : 5.0; // detect automatically!!
     boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
     if (boxes == NULL)
     {
@@ -1730,6 +1733,8 @@ slipFilter(PyObject *self, PyObject *args)
 #ifdef DEBUG
     printf("SLIPC: Beginning main loop...\n");
 #endif
+    neighbourCutOff2 = neighbourCutOff * neighbourCutOff;
+    atomSlipTol2 = atomSlipTol * atomSlipTol;
     for (i = 0; i < NVisibleIn; i++)
     {
         int j, index, index3, boxIndex, boxNebList[27], boxNebListSize;
@@ -1798,9 +1803,8 @@ slipFilter(PyObject *self, PyObject *args)
                                              cellDims[0], cellDims[1], cellDims[2],
                                              PBC[0], PBC[1], PBC[2]);
                     
-                    /* why 9, should this be an input and/or linked to approxBoxWidth!!?? */
                     /* we only compare to atoms that were local in the reference */
-                    if (sep2 < 9.0)
+                    if (sep2 < neighbourCutOff2)
                     {
                         double sepVeci[3], sepVecj[3];
                         double dslipx, dslipy, dslipz, slipMag;
@@ -1820,7 +1824,7 @@ slipFilter(PyObject *self, PyObject *args)
                         dslipz = sepVeci[2] - sepVecj[2];
                         
                         slipMag = dslipx * dslipx + dslipy * dslipy + dslipz * dslipz;
-                        if (slipMag > 0.09) // why 0.09!!??
+                        if (slipMag > atomSlipTol2)
                         {
                             slipx[i] += dslipx;
                             slipy[i] += dslipy;
