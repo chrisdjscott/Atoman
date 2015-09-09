@@ -65,7 +65,7 @@ class TestACNABCC(unittest.TestCase):
         filterInput.fullVectors = np.empty(0, np.float64)
         filterInput.ompNumThreads = 1
         
-        # call bond order filter
+        # call filter
         result = self.filter.apply(filterInput, settings)
         self.assertIsInstance(result, base.FilterResult)
         
@@ -99,7 +99,7 @@ class TestACNABCC(unittest.TestCase):
         filterInput.fullVectors = np.empty(0, np.float64)
         filterInput.ompNumThreads = 4
         
-        # call bond order filter
+        # call filter
         result = self.filter.apply(filterInput, settings)
         self.assertIsInstance(result, base.FilterResult)
         
@@ -164,7 +164,7 @@ class TestACNAFCC(unittest.TestCase):
         filterInput.fullVectors = np.empty(0, np.float64)
         filterInput.ompNumThreads = 1
         
-        # call bond order filter
+        # call filter
         result = self.filter.apply(filterInput, settings)
         self.assertIsInstance(result, base.FilterResult)
         
@@ -198,7 +198,7 @@ class TestACNAFCC(unittest.TestCase):
         filterInput.fullVectors = np.empty(0, np.float64)
         filterInput.ompNumThreads = 4
         
-        # call bond order filter
+        # call filter
         result = self.filter.apply(filterInput, settings)
         self.assertIsInstance(result, base.FilterResult)
         
