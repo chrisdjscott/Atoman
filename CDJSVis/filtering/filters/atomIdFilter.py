@@ -1,7 +1,7 @@
 
 """
-Atom ID filter
-==============
+Atom ID
+=======
 
 This filter is used to show only the atoms with the specified IDs. Mulitple
 atom IDs can be separated by commas and ranges of atom IDs can be specified

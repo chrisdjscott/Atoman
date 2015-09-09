@@ -3,7 +3,51 @@
 Cluster
 =======
 
-This filter will identify clusters of atoms in the system...
+This filter will identify clusters of atoms in the system. It uses a recursive 
+algorithm to build the clusters using a fixed cut-off. There are options to
+calculate the volumes of the clusters and also to draw convex hulls around the
+clusters to highlight them.
+
+Parameters are:
+
+.. glossary::
+
+    Neighbour radius
+        When constructing clusters two atoms are said to belong to the same
+        cluster if their separation is less than this value.
+    
+    Minimum cluster size
+        Clusters are only visible if they contain at least this number of atoms.
+    
+    Maximum cluster size
+        Clusters are only visible if they contain less than this number of atoms.
+        Set this parameter to `-1` if you do not want an upper limit on the
+        cluster size.
+    
+    Draw convex hulls
+        Compute and draw a convex hull around each cluster to highlight it.
+    
+    Hull colour
+        The colour of the convex hulls, if `Draw convex hulls` is selected.
+    
+    Hull opacity
+        The opacity of the convex hulls, if `Draw convex hulls` is selected.
+    
+    Hide atoms
+        If `Draw convex hulls` is selected this will make the atoms invisible,
+        so just the hulls are shown.
+    
+    Calculate volumes
+        Calculate the volumes of the clusters of atoms.
+    
+    Calculate volumes Voronoi
+        Sum the Voronoi volumes of the atoms in the cluster in order to calculate
+        the cluster volume. The Voronoi volumes are computed using the *Voronoi
+        settings* on the :ref:`voronoi_options_label` page.
+    
+    Calculate volumes hull
+        The cluster volume is calculated from the volume of convex hulls of the
+        set of points in the cluster.
 
 """
 import numpy as np

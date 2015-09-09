@@ -3,9 +3,8 @@
 Adaptive common neighbour analysis
 ==================================
 
-The ACNA calculator/filter performs the adaptive common neighbour analysis of Stutowski [1]_.
-
-This classifies an atom as either:
+The ACNA calculator/filter performs the adaptive common neighbour analysis of Stutowski [1]_,
+which classifies an atom as either:
 
 0. Disordered
 1. FCC
@@ -13,12 +12,18 @@ This classifies an atom as either:
 3. BCC
 4. Icosahedral 
 
-On the settings form you must set the parameter *Max bond distance* to be something sensible for your system.  
-This parameter is used to spatially decompose the system in order to speed up the algorithm and should be chosen
-so that the required number of neighbours (14 for BCC, 12 for the others) will be found within this distance of
-a given atom. If in doubt, set it to something large (the code will just run slower).
+Atoms are classified by considering their neighbours and the neighbours of their neighours to
+determine the local structure around a given atom.
 
-More information to follow...
+Parameters for this filter are:
+
+.. glossary::
+
+    Maximum bond distance
+        This parameter is used to spatially decompose the system in order to speed up the algorithm and should be chosen
+        so that the required number of neighbours (14 for BCC, 12 for the others) will be found within this distance of
+        a given atom. If in doubt, set it to something large (the code will just run slower).
+
 
 .. [1] A. Stukowski. *Modelling Simul. Mater. Sci. Eng.* **20** (2012) 045021; `doi: 10.1088/0965-0393/20/4/045021 <http://dx.doi.org/10.1088/0965-0393/20/4/045021>`_.
 

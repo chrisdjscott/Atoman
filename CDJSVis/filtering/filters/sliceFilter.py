@@ -4,7 +4,33 @@ Slice
 =====
 
 This filter allows you to crop atoms by slicing through the lattice with a given plane.
-Atoms on one side of the plane will be cropped.
+Atoms on one side of the plane will be cropped. For convenience there is an option to
+show the current position of the slice plane.
+
+Parameters for this filter:
+
+.. glossary::
+
+    x0
+        The *x* value of the centre of the plane
+    
+    y0
+        The *y* value of the centre of the plane
+    
+    z0
+        The *z* value of the centre of the plane
+    
+    xn
+        The *x* value of the normal of the plane
+    
+    yn
+        The *y* value of the normal of the plane
+    
+    zn
+        The *z* value of the normal of the plane
+    
+    Invert
+        Invert the selection of atoms.
 
 """
 from . import base

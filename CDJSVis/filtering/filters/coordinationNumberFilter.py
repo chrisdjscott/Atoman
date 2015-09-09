@@ -1,6 +1,12 @@
 
 """
-Coordination number filter
+Coordination number
+===================
+
+This filter calculates the coordination number of the atoms in the system.
+It uses the values specified in the bonding table to determine whether two
+atoms are bonded. If no minimum/maximum bond lengths are specified for a
+given pair of elements then bonds between them will not be counted.
 
 """
 import numpy as np

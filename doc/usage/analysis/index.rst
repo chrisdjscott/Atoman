@@ -18,9 +18,14 @@ Analysis
     filters/bondOrder
     filters/charge
     filters/cluster
+    filters/coordinationNumber
+    filters/cropBox
     filters/cropSphere
+    filters/displacement
     filters/pointDefects
+    filters/slice
     filters/slip
+    filters/species
     filters/voronoiNeighbours
     filters/voronoiVolume
 

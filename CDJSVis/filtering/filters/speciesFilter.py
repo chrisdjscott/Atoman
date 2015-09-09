@@ -1,7 +1,7 @@
 
 """
-Species filter
-==============
+Species
+=======
 
 This filter allows you to filter atoms by their species. Only atoms of the
 selected species will be visible.

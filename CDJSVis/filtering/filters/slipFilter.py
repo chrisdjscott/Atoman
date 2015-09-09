@@ -1,7 +1,7 @@
 
 """
-Slip filter
-===========
+Slip
+====
 
 The slip filter...
 
