@@ -481,8 +481,6 @@ class Filterer(object):
                 filterInput.onAntisites = self.onAntisites
                 filterInput.defectFilterSelected = self.parent.defectFilterSelected
                 
-
-                
                 # run the filter
                 result = filterObject.apply(filterInput, filterSettings)
                 

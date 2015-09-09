@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from ..filtering import _filtering
+from ..filtering.filters import _filtering
 
 
 ################################################################################
