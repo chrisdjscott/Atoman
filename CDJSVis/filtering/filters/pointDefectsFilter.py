@@ -299,27 +299,3 @@ class PointDefectsFilter(base.BaseFilter):
         result.setClusterList(clusterList)
         
         return result
-        
-        # draw displacement vectors
-#         if settings.getSetting("drawDisplacementVectors") and inputLattice.NAtoms == refLattice.NAtoms:
-#             self.logger.debug("Drawing displacement vectors for interstitials (%d)", NInt)
-#             
-#             # need to make a unique list for interstitials and split intersitials and antisites
-#             
-#             
-#             # calculate vectors
-#             bondVectorArray = np.empty(3 * NInt, np.float64)
-#             drawTrace = np.empty(NInt, np.int32)
-#             numBonds = bonds_c.calculateDisplacementVectors(interstitials, inputLattice.pos, refLattice.pos, 
-#                                                             refLattice.cellDims, self.pipelinePage.PBC, bondVectorArray,
-#                                                             drawTrace)
-#             
-#             self.logger.debug("  Number of interstitial displacement vectors to draw = %d (/ %d)", numBonds, NInt)
-#             
-#             # pov file for bonds
-#             povfile = "pipeline%d_intdispvects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
-#             
-#             # draw displacement vectors as bonds
-#             renderBonds.renderDisplacementVectors(interstitials, self.mainWindow, self.pipelinePage, self.actorsDict, 
-#                                                   self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
-#                                                   drawTrace, settings)
