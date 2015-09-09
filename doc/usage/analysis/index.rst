@@ -15,9 +15,13 @@ Analysis
    
     filters/acna
     filters/atomID
-    filters/bond_order
+    filters/bondOrder
+    filters/charge
     filters/cluster
-
+    filters/cropSphere
+    filters/slip
+    filters/voronoiNeighbours
+    filters/voronoiVolume
 
 Each filter list also contains some additional options:
 

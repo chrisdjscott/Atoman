@@ -85,6 +85,9 @@ class FilterInput(object):
         self.ompNumThreads = 1
         self.voronoiOptions = None
         self.bondDict = None
+        self.voronoi = None
+        self.driftCompensation = False
+        self.driftVector = np.zeros(3, np.float64)
 
 ################################################################################
 
@@ -143,6 +146,9 @@ class BaseFilter(object):
         array[-1] = moduleName
         loggerName = ".".join(array)
         self.logger = logging.getLogger(loggerName)
+        
+        # attributes
+        self.requiresVoronoi = False
     
     def apply(self, *args, **kwargs):
         raise NotImplementedError("apply method not implemented")

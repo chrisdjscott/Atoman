@@ -379,7 +379,9 @@ class Filterer(object):
         inputState = self.pipelinePage.inputState
         NAtoms = inputState.NAtoms
         
+        # set up visible atoms or defect arrays
         if not self.parent.defectFilterSelected:
+            self.logger.debug("Setting all atoms visible initially")
             self.visibleAtoms = np.arange(NAtoms, dtype=np.int32)
             self.NVis = NAtoms
             self.logger.info("%d visible atoms", len(self.visibleAtoms))
@@ -395,6 +397,10 @@ class Filterer(object):
             for vectorsName, vectors in inputState.vectorsDict.iteritems():
                 self.logger.debug("  Adding '%s' vectors", vectorsName)
                 self.vectorsDict[vectorsName] = vectors
+        
+        
+        
+        
         
         # pov-ray hull file
         hullFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_hulls%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID)))
@@ -425,9 +431,13 @@ class Filterer(object):
                 filterSettings = filterSettingsGui
             
             # determine the name of filter module
-            words = str(filterName).title().split()
-            filterObjectName = "%sFilter" % "".join(words)
-            moduleName = filterObjectName[:1].lower() + filterObjectName[1:]
+            if filterName.startswith("Scalar: "):
+                moduleName = "genericScalarFilter"
+                filterObjectName = "GenericScalarFilter"
+            else:
+                words = str(filterName).title().split()
+                filterObjectName = "%sFilter" % "".join(words)
+                moduleName = filterObjectName[:1].lower() + filterObjectName[1:]
             self.logger.debug("Loading filter module: '%s'", moduleName)
             self.logger.debug("Creating filter object: '%s'", filterObjectName)
             
@@ -445,6 +455,10 @@ class Filterer(object):
                 # filter
                 filterObject = filterObject(filterName)
                 
+                # check if we need to compute the Voronoi tessellation
+                if filterObject.requiresVoronoi:
+                    self.calculateVoronoi()
+                
                 # construct filter input object
                 filterInput = base.FilterInput()
                 filterInput.visibleAtoms = self.visibleAtoms
@@ -455,6 +469,9 @@ class Filterer(object):
                 filterInput.bondDict = elements.bondDict
                 filterInput.NScalars, filterInput.fullScalars = self.makeFullScalarsArray()
                 filterInput.NVectors, filterInput.fullVectors = self.makeFullVectorsArray()
+                filterInput.voronoi = self.voronoi
+                filterInput.driftCompensation = self.parent.driftCompensation
+                filterInput.driftVector = self.driftVector
                 
                 # run the filter
                 result = filterObject.apply(filterInput, filterSettings)
@@ -675,132 +692,6 @@ class Filterer(object):
         
         self.logger.debug("Povray atoms written in %f s (%s)", povtime, uniqueID)
     
-    def voronoiNeighboursFilter(self, settings):
-        """
-        Voronoi neighbours filter
-        
-        """
-        # calculate Voronoi tessellation
-        status = self.calculateVoronoi()
-        
-        if status:
-            self.logger.error("Calculate Voronoi volume failed")
-            self.visibleAtoms.resize(0, refcheck=False)
-            return status
-        
-        vor = self.voronoi
-        
-        # new scalars array
-        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        
-        # full scalars array
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # make array of neighbours
-        num_nebs_array = vor.atomNumNebsArray()
-        
-        minVoroNebs = settings.getSetting("minVoroNebs")
-        maxVoroNebs = settings.getSetting("maxVoroNebs")
-        filteringEnabled = settings.getSetting("filteringEnabled")
-        NVisible = filtering_c.voronoiNeighboursFilter(self.visibleAtoms, num_nebs_array, minVoroNebs, maxVoroNebs, 
-                                                       scalars, NScalars, fullScalars, filteringEnabled, NVectors, fullVectors)
-        
-        # update scalars/vectors dicts
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-
-        # store scalars
-        scalars.resize(NVisible, refcheck=False)
-        self.scalarsDict["Voronoi neighbours"] = scalars
-    
-    def voronoiVolumeFilter(self, settings):
-        """
-        Voronoi volume filter
-        
-        """
-        # calculate Voronoi tessellation
-        status = self.calculateVoronoi()
-        
-        if status:
-            self.logger.error("Calculate Voronoi volume failed")
-            self.visibleAtoms.resize(0, refcheck=False)
-            return status
-        
-        vor = self.voronoi
-        
-        # new scalars array
-        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # make array of volumes
-        atom_volumes = vor.atomVolumesArray()
-        
-        minVoroVol = settings.getSetting("minVoroVol")
-        maxVoroVol = settings.getSetting("maxVoroVol")
-        filteringEnabled = settings.getSetting("filteringEnabled")
-        NVisible = filtering_c.voronoiVolumeFilter(self.visibleAtoms, atom_volumes, minVoroVol, maxVoroVol, 
-                                                   scalars, NScalars, fullScalars, filteringEnabled, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-
-        # store scalars
-        scalars.resize(NVisible, refcheck=False)
-        self.scalarsDict["Voronoi volume"] = scalars
-    
-    def slipFilter(self, settings):
-        """
-        Slip filter
-        
-        """
-        # input and ref
-        inputState = self.pipelinePage.inputState
-        refState = self.pipelinePage.refState
-        
-        # new scalars array
-        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # call C library
-        minSlip = settings.getSetting("minSlip")
-        maxSlip = settings.getSetting("maxSlip")
-        filteringEnabled = settings.getSetting("filteringEnabled")
-        NVisible = filtering_c.slipFilter(self.visibleAtoms, scalars, inputState.pos, refState.pos, inputState.cellDims,
-                                          inputState.PBC, minSlip, maxSlip, NScalars, fullScalars,
-                                          filteringEnabled, self.parent.driftCompensation, self.driftVector,
-                                          NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-
-        # store scalars
-        scalars.resize(NVisible, refcheck=False)
-        self.scalarsDict["Slip"] = scalars
-    
     def calculateVoronoi(self):
         """
         Calc voronoi tesselation
@@ -810,8 +701,6 @@ class Filterer(object):
         inputState = self.pipelinePage.inputState
         if self.voronoi is None:
             self.voronoi = voronoi.computeVoronoi(inputState, self.voronoiOptions, PBC)
-        
-        return 0
     
     def renderVoronoi(self):
         """
@@ -1115,37 +1004,6 @@ class Filterer(object):
                 vectors_cp.resize((NVisible, 3), refcheck=False)
                 self.vectorsDict[key] = vectors_cp
     
-    def filterSpecie(self, settings):
-        """
-        Filter by specie
-        
-        """
-        visibleSpecieList = settings.getSetting("visibleSpeciesList")
-        specieList = self.pipelinePage.inputState.specieList
-        
-        # make visible specie array
-        visSpecArray = []
-        for i, sym in enumerate(specieList):
-            if sym in visibleSpecieList:
-                visSpecArray.append(i)
-        visSpecArray = np.asarray(visSpecArray, dtype=np.int32)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        NVisible = filtering_c.specieFilter(self.visibleAtoms, visSpecArray, self.pipelinePage.inputState.specie, NScalars, fullScalars, 
-                                            NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-    
     def renderDisplacementVectors(self, settings):
         """
         Compute and render displacement vectors for visible atoms
@@ -1321,35 +1179,6 @@ class Filterer(object):
             # resize visible atoms
             self.visibleAtoms.resize(NVisible, refcheck=False)
     
-    def cropSphereFilter(self, settings):
-        """
-        Crop sphere filter.
-        
-        """
-        lattice = self.pipelinePage.inputState
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        xCentre = settings.getSetting("xCentre")
-        yCentre = settings.getSetting("yCentre")
-        zCentre = settings.getSetting("zCentre")
-        radius = settings.getSetting("radius")
-        invertSelection = int(settings.getSetting("invertSelection"))
-        NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, xCentre, yCentre, zCentre, 
-                                                radius, lattice.cellDims, self.pipelinePage.PBC, invertSelection, 
-                                                NScalars, fullScalars, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-    
     def sliceFilter(self, settings):
         """
         Slice filter.
@@ -1400,32 +1229,6 @@ class Filterer(object):
     
             # resize visible atoms
             self.visibleAtoms.resize(NVisible, refcheck=False)
-    
-    def chargeFilter(self, settings):
-        """
-        Charge filter.
-        
-        """
-        lattice = self.pipelinePage.inputState
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        self.logger.debug("Calling chargeFilter C function")
-        minCharge = settings.getSetting("minCharge")
-        maxCharge = settings.getSetting("maxCharge")
-        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, minCharge, maxCharge, 
-                                            NScalars, fullScalars, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
     
     def pointDefectFilter(self, settings, acnaArray=None):
         """
@@ -2117,31 +1920,3 @@ class Filterer(object):
         
         else:
             self.logger.error("Method to calculate cluster volumes not specified")
-    
-    def genericScalarFilter(self, filterName, settings):
-        """
-        Generic scalar filter
-        
-        """
-        self.logger.debug("Generic scalar filter: '%s'", filterName)
-        
-        # full scalars/vectors
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # scalars array (the full, unmodified one stored on the Lattice)
-        scalarsName = filterName[8:]
-        scalarsArray = self.pipelinePage.inputState.scalarsDict[scalarsName]
-        
-        # run filter
-        minVal = settings.getSetting("minVal")
-        maxVal = settings.getSetting("maxVal")
-        NVisible = filtering_c.genericScalarFilter(self.visibleAtoms, scalarsArray, minVal, maxVal, NScalars, fullScalars,
-                                                   NVectors, fullVectors)
-        
-        # update scalars/vectors
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
