@@ -15,9 +15,7 @@ import importlib
 import numpy as np
 from PySide import QtGui, QtCore
 
-# from . import _filtering as filtering_c
 from .filters import _filtering as filtering_c
-from . import _defects as defects_c
 from . import _clusters as clusters_c
 from . import bonds as bonds_c
 from ..rendering import renderer
@@ -398,9 +396,14 @@ class Filterer(object):
                 self.logger.debug("  Adding '%s' vectors", vectorsName)
                 self.vectorsDict[vectorsName] = vectors
         
-        
-        
-        
+        else:
+            # initialise defect arrays
+            refState = self.pipelinePage.refState
+            self.interstitials = np.empty(inputState.NAtoms, dtype=np.int32)
+            self.vacancies = np.empty(refState.NAtoms, dtype=np.int32)
+            self.antisites = np.empty(refState.NAtoms, dtype=np.int32)
+            self.onAntisites = np.empty(refState.NAtoms, dtype=np.int32)
+            self.splitInterstitials = np.empty(3 * refState.NAtoms, dtype=np.int32)
         
         # pov-ray hull file
         hullFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_hulls%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID)))
@@ -472,6 +475,14 @@ class Filterer(object):
                 filterInput.voronoi = self.voronoi
                 filterInput.driftCompensation = self.parent.driftCompensation
                 filterInput.driftVector = self.driftVector
+                filterInput.vacancies = self.vacancies
+                filterInput.interstitials = self.interstitials
+                filterInput.splitInterstitials = self.splitInterstitials
+                filterInput.antisites = self.antisites
+                filterInput.onAntisites = self.onAntisites
+                filterInput.defectFilterSelected = self.parent.defectFilterSelected
+                
+
                 
                 # run the filter
                 result = filterObject.apply(filterInput, filterSettings)
@@ -604,8 +615,9 @@ class Filterer(object):
                 pass
             
             else:
-                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.actorsDict, 
-                                                                self.colouringOptions, filterSettings, self.displayOptions, self.pipelinePage)
+                counters = renderer.getActorsForFilteredDefects(self.interstitials, self.vacancies, self.antisites, self.onAntisites,
+                                                                self.splitInterstitials, self.actorsDict, self.colouringOptions,
+                                                                filterSettings, self.displayOptions, self.pipelinePage)
                 
                 self.vacancySpecieCount = counters[0]
                 self.interstitialSpecieCount = counters[1]
@@ -616,8 +628,8 @@ class Filterer(object):
                 
                 # write pov-ray file too
                 povfile = "pipeline%d_defects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
-                renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow, 
-                                            self.displayOptions, splitInterstitials, self.pipelinePage)
+                renderer.writePovrayDefects(povfile, self.vacancies, self.interstitials, self.antisites, self.onAntisites,
+                                            filterSettings, self.mainWindow, self.displayOptions, self.splitInterstitials, self.pipelinePage)
                 self.povrayAtomsWritten = True
         
         else:
@@ -1038,50 +1050,6 @@ class Filterer(object):
         renderBonds.renderDisplacementVectors(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsDict, 
                                               self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
                                               drawBondVector, settings)
-    
-    def displacementFilter(self, settings):
-        """
-        Displacement filter
-        
-        """
-        # only run displacement filter if input and reference NAtoms are the same
-        inputState = self.pipelinePage.inputState
-        refState = self.pipelinePage.refState
-        
-        if inputState.NAtoms != refState.NAtoms:
-            self.logger.warning("Cannot run displacement filter with different numbers of input and reference atoms: skipping this filter list")
-            #TODO: display warning too
-            self.visibleAtoms.resize(0, refcheck=False)
-        
-        else:
-            # new scalars array
-            scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-            
-            # old scalars arrays (resize as appropriate)
-            NScalars, fullScalars = self.makeFullScalarsArray()
-            
-            # full vectors array
-            NVectors, fullVectors = self.makeFullVectorsArray()
-            
-            # run displacement filter
-            minDisplacement = settings.getSetting("minDisplacement")
-            maxDisplacement = settings.getSetting("maxDisplacement")
-            filteringEnabled = int(settings.getSetting("filteringEnabled"))
-            NVisible = filtering_c.displacementFilter(self.visibleAtoms, scalars, inputState.pos, refState.pos, refState.cellDims, 
-                                                      self.pipelinePage.PBC, minDisplacement, maxDisplacement, NScalars, fullScalars,
-                                                      filteringEnabled, self.parent.driftCompensation, self.driftVector, NVectors,
-                                                      fullVectors)
-            
-            # update scalars dict
-            self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-            self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-            
-            # resize visible atoms
-            self.visibleAtoms.resize(NVisible, refcheck=False)
-            
-            # store scalars
-            scalars.resize(NVisible, refcheck=False)
-            self.scalarsDict["Displacement"] = scalars
     
     def renderTrace(self):
         """

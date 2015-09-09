@@ -36,14 +36,14 @@ def configuration(parent_package='', top_path=None):
 #                          ["clusters.c", "../visclibs/utilities.c",
 #                           "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
 #                           include_dirs=[incdir])
-#     
-#     config.add_extension("_defects", 
-#                          ["defects.c", "../visclibs/utilities.c",
-#                           "../visclibs/boxeslib.c", "../visclibs/neb_list.c",
-#                           "../visclibs/array_utils.c"],
-#                           libraries=["gsl", "gslcblas", "gomp"],
-#                           extra_compile_args=["-fopenmp"],
-#                           include_dirs=[incdir])
+     
+    config.add_extension("_defects", 
+                         ["defects.c", "../../visclibs/utilities.c",
+                          "../../visclibs/boxeslib.c", "../../visclibs/neb_list.c",
+                          "../../visclibs/array_utils.c"],
+                          libraries=["gsl", "gslcblas", "gomp"],
+                          extra_compile_args=["-fopenmp"],
+                          include_dirs=[incdir, ".."])
      
     config.add_extension("_filtering", 
                          ["filtering.c", "../../visclibs/utilities.c",

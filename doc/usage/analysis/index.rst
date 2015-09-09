@@ -19,6 +19,7 @@ Analysis
     filters/charge
     filters/cluster
     filters/cropSphere
+    filters/pointDefects
     filters/slip
     filters/voronoiNeighbours
     filters/voronoiVolume

@@ -55,9 +55,9 @@ class FilterResult(object):
         """Return the structure counter dict."""
         return self._structureCounterDict
     
-    def addCluster(self, cluster):
-        """Add cluster to the cluster list."""
-        self._clusterList.append(cluster)
+    def setClusterList(self, clusterList):
+        """Set the cluster list."""
+        self._clusterList = clusterList
     
     def getClusterList(self):
         """Return the cluster list."""
@@ -88,6 +88,12 @@ class FilterInput(object):
         self.voronoi = None
         self.driftCompensation = False
         self.driftVector = np.zeros(3, np.float64)
+        self.vacancies = np.empty(0, np.float64)
+        self.interstitials = np.empty(0, np.float64)
+        self.splitInterstitials = np.empty(0, np.float64)
+        self.antisites = np.empty(0, np.float64)
+        self.onAntisites = np.empty(0, np.float64)
+        self.defectFilterSelected = False
 
 ################################################################################
 
