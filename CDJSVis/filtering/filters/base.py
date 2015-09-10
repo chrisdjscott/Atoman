@@ -102,6 +102,15 @@ class BaseSettings(object):
     def __init__(self):
         self._settings = {}
     
+    def printSettings(self, func=None):
+        """Print the settings."""
+        if not callable(func):
+            def func(text):
+                print text
+        for key in sorted(self._settings.keys()):
+            value = self._settings[key]
+            func("%s => %r" % (key, value))
+    
     def registerSetting(self, name, default=None):
         """Register the given setting."""
         if name in self._settings:

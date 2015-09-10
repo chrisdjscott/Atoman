@@ -665,8 +665,7 @@ cropFilter(PyObject *self, PyObject *args)
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
     
-    int i, j, index, NVisible, add;
-    double rx, ry, rz;
+    int i, NVisible;
     
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "O!O!ddddddiiiiiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
@@ -685,18 +684,21 @@ cropFilter(PyObject *self, PyObject *args)
     fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
     
     if (not_doubleVector(fullVectors)) return NULL;
-    
+
     NVisible = 0;
     for (i=0; i<NVisibleIn; i++)
     {
-        index = visibleAtoms[i];
+        int index = visibleAtoms[i];
+        int index3 = 3 * index;
+        int add;
+        double rx, ry, rz;
         
-        rx = pos[3*index];
-        ry = pos[3*index+1];
-        rz = pos[3*index+2];
+        rx = pos[index3    ];
+        ry = pos[index3 + 1];
+        rz = pos[index3 + 2];
         
         add = 1;
-        if (xEnabled == 1)
+        if (xEnabled)
         {
             if (rx < xmin || rx > xmax)
             {
@@ -704,7 +706,7 @@ cropFilter(PyObject *self, PyObject *args)
             }
         }
         
-        if (add && yEnabled == 1)
+        if (add && yEnabled)
         {
             if (ry < ymin || ry > ymax)
             {
@@ -712,7 +714,7 @@ cropFilter(PyObject *self, PyObject *args)
             }
         }
         
-        if (add && zEnabled == 1)
+        if (add && zEnabled)
         {
             if (rz < zmin || rz > zmax)
             {
@@ -722,15 +724,21 @@ cropFilter(PyObject *self, PyObject *args)
         
         if ((add && !invertSelection) || (!add && invertSelection))
         {
+            int j;
+
             /* handle full scalars array */
             for (j = 0; j < NScalars; j++)
-                fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            {
+                int jn = NVisibleIn * j;
+            	fullScalars[jn + NVisible] = fullScalars[jn + i];
+            }
             
             for (j = 0; j < NVectors; j++)
             {
-                DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
-                DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
-                DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
+                int jn = NVisibleIn * j;
+            	DIND2(fullVectors, jn + NVisible, 0) = DIND2(fullVectors, jn + i, 0);
+                DIND2(fullVectors, jn + NVisible, 1) = DIND2(fullVectors, jn + i, 1);
+                DIND2(fullVectors, jn + NVisible, 2) = DIND2(fullVectors, jn + i, 2);
             }
             
             visibleAtoms[NVisible++] = index;
