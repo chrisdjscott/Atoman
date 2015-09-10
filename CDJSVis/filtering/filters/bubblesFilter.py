@@ -51,5 +51,17 @@ class BubbleFilter(base.BaseFilter):
         visibleAtoms = filterInput.visibleAtoms
         inputState = filterInput.visibleAtoms
         refState = filterInput.refState
+        
+        
+        # settings
+        bubblesSpecies = settings.getSetting("bubbleSpecies")
+        if not len(bubblesSpecies):
+            self.logger.warning("No bubble species have been specified therefore no bubbles can be detected!")
+            visibleAtoms.resize(0, refcheck=False)
+            result = base.FilterResult()
+            return result
+        
+        
+        
     
     

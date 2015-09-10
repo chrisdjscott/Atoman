@@ -3,7 +3,7 @@ Usage
 =====
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
     
    input/index
    analysis/index
