@@ -216,7 +216,7 @@ class Lattice(object):
         self.atomID = np.append(self.atomID, np.int32(atomID))
         self.specie = np.append(self.specie, np.int32(specInd))
         self.pos = np.append(self.pos, pos)
-        self.charge = np.append(self.charge, charge)
+        self.charge = np.append(self.charge, np.float64(charge))
         
         # wrap positions
         
@@ -270,7 +270,6 @@ class Lattice(object):
         self.specie = np.delete(self.specie, index)
         self.pos = np.delete(self.pos, [3*index,3*index+1,3*index+2])
         self.charge = np.delete(self.charge, index)
-        self.force = np.delete(self.force, [3*index,3*index+1,3*index+2])
         self.NAtoms -= 1
         
         # modify specie list / counter if required
