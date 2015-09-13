@@ -7,6 +7,8 @@ import os
 import copy
 import re
 import logging
+import tempfile
+import shutil
 
 import numpy as np
 
@@ -435,12 +437,23 @@ class LatticeReaderGeneric(object):
     Generic format Lattice reader
     
     """
-    def __init__(self, tmpLocation, updateProgress=None, hideProgress=None):
-        self.tmpLocation = tmpLocation
+    def __init__(self, tmpLocation=None, updateProgress=None, hideProgress=None):
+        if tmpLocation is None:
+            self.tmpLocation = tempfile.mkdtemp()
+        else:
+            self.tmpLocation = tmpLocation
+        
         self.logger = logging.getLogger(__name__+".LatticeReaderGeneric")
         self.updateProgress = updateProgress
         self.hideProgress = hideProgress
         self.intRegex = re.compile(r'[0-9]+')
+    
+    def __del__(self):
+        if os.path.exists(self.tmpLocation):
+            try:
+                shutil.rmtree(self.tmpLocation)
+            except:
+                pass
     
     def unzipFile(self, filename):
         """

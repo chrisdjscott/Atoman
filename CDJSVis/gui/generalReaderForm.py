@@ -1,15 +1,14 @@
 
 """
-File input is handled by the lattice reader forms on the systems dialog.
-The file type should be selected from the drop down menu.
+File input is handled by the *Input* tab on the main toolbar. Initially the file format
+will try to be determined automatically, however in the case of ambiguity a dialog will
+popup asking the user for input.
+File formats are defined in the *file_formats.IN* file (more on this and a link...).
 Multiple files can be loaded at the same time by shift/cmd clicking them.
-
-Basically you should always leave this as 'AUTO DETECT'. The available formats are listed below. 
 
 """
 import os
 import sys
-import platform
 import logging
 import glob
 
@@ -40,7 +39,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         vbox = QtGui.QVBoxLayout()
         
         # lattice reader
-        self.latticeReader = latticeReaderGeneric.LatticeReaderGeneric(self.tmpLocation, updateProgress=self.mainWindow.updateProgress, 
+        self.latticeReader = latticeReaderGeneric.LatticeReaderGeneric(tmpLocation=self.tmpLocation, updateProgress=self.mainWindow.updateProgress, 
                                                                        hideProgress=self.mainWindow.hideProgressBar)
         
         # open dialog
