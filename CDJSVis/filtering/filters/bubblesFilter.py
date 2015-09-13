@@ -87,9 +87,12 @@ class BubblesFilter(base.BaseFilter):
             else:
                 i += 1
         self.logger.debug("%d atoms in input after removing bubble species", lattice.NAtoms)
-        lattice.cellDims = lattice.cellDims9 # debugging
-        lattice.writeLattice("noBubbleSpecies.dat")
-        lattice.cellDims = lattice.cellDims3
+        with open("noBubbleSpecies.dat", "w") as f:
+            f.write("%d\n" % lattice.NAtoms)
+            f.write("%f %f %f\n" % tuple(lattice.cellDims))
+            for i in xrange(lattice.NAtoms):
+                f.write("%s %f %f %f %f\n" % (lattice.atomSym(i), lattice.pos[3*i], lattice.pos[3*i+1], lattice.pos[3*i+2],
+                                              lattice.charge[i]))
         
         # locate clusters of vacancies
         defectsFilter = pointDefectsFilter.PointDefectsFilter("Point defects")
