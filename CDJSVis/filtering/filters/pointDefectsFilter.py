@@ -205,8 +205,8 @@ class PointDefectsFilter(base.BaseFilter):
                     
                     self.logger.info("    %d %s on %s antisites", onAntSpecCount[i][j], inputLattice.specieList[j], refLattice.specieList[i])
         
-        if settings.getSetting("identifySplitInts"):
-            self.logger.info("Splint interstitial analysis")
+        if settings.getSetting("showInterstitials") and settings.getSetting("identifySplitInts"):
+            self.logger.info("Split interstitial analysis")
             
             PBC = inputLattice.PBC
             cellDims = inputLattice.cellDims
