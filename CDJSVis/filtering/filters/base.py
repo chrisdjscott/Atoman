@@ -17,6 +17,7 @@ class FilterResult(object):
     """
     def __init__(self):
         self._clusterList = []
+        self._bubbleList = []
         self._structureCounterDict = {}
         self._structureCounterDictName = None
         self._scalars = {}
@@ -66,6 +67,18 @@ class FilterResult(object):
     def hasClusterList(self):
         """Returns True if the cluster list is not empty."""
         return True if len(self._clusterList) else False
+    
+    def setBubbleList(self, bubbleList):
+        """Set the bubble list."""
+        self._bubbleList = bubbleList
+    
+    def getBubbleList(self):
+        """Return the bubble list."""
+        return self._bubbleList
+    
+    def hasBubbleList(self):
+        """Returns True if the bubble list is not empty."""
+        return True if len(self._bubbleList) else False
 
 ################################################################################
 

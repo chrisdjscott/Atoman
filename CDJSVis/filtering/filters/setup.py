@@ -40,6 +40,13 @@ def configuration(parent_package='', top_path=None):
                           "../../visclibs/boxeslib.c", "../../visclibs/array_utils.c"],
                           include_dirs=[incdir])
     
+    config.add_extension("_bubbles", 
+                         ["bubbles.c", "../../visclibs/neb_list.c",
+                          "../../visclibs/array_utils.c"],
+                          libraries=[],
+                          extra_compile_args=[],
+                          include_dirs=[incdir, ".."])
+    
     return config
 
 if __name__ == "__main__":
