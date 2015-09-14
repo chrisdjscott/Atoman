@@ -42,7 +42,8 @@ def configuration(parent_package='', top_path=None):
     
     config.add_extension("_bubbles", 
                          ["bubbles.c", "../../visclibs/neb_list.c",
-                          "../../visclibs/array_utils.c"],
+                          "../../visclibs/array_utils.c", "../../visclibs/boxeslib.c",
+                          "../../visclibs/utilities.c"],
                           libraries=[],
                           extra_compile_args=[],
                           include_dirs=[incdir, ".."])
