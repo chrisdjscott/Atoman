@@ -187,7 +187,7 @@ class BubblesFilter(base.BaseFilter):
             bubble.setVacancies(vacClusters[clusterIndex].vacancies)
             bubble.setBubbleAtoms(bubbleAtoms)
             bubble.setVolume(vacClusterVolumes[clusterIndex])
-            print "Adding bubble %d: ratio is %f; volume is %f" % (i, bubble.getRatio(), bubble.getVolume())
+            self.logger.debug("Adding bubble %d: ratio is %f; volume is %f", i, bubble.getRatio(), bubble.getVolume())
             bubbleList.append(bubble)
         
         # optionally show H that do not belong to a bubble as atoms too!?
