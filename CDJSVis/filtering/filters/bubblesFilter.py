@@ -117,6 +117,7 @@ class BubblesFilter(base.BaseFilter):
         defectsSettings.updateSetting("vacancyRadius", settings.getSetting("vacancyRadius"))
         defectsSettings.updateSetting("showInterstitials", False)
         defectsSettings.updateSetting("showAntisites", False)
+        defectsSettings.updateSetting("identifySplitInts", False)
         defectsSettings.updateSetting("findClusters", True)
         defectsSettings.updateSetting("neighbourRadius", settings.getSetting("vacNebRad"))
         defectsSettings.updateSetting("minClusterSize", 1)
@@ -130,6 +131,8 @@ class BubblesFilter(base.BaseFilter):
         defectsInput.antisites = np.empty(refState.NAtoms, np.int32)
         defectsInput.onAntisites = np.empty(refState.NAtoms, np.int32)
         defectsInput.splitInterstitials = np.empty(3 * refState.NAtoms, np.int32)
+        defectsInput.driftCompensation = filterInput.driftCompensation
+        defectsInput.driftVector = filterInput.driftVector
         
         defectsResult = defectsFilter.apply(defectsInput, defectsSettings)
         vacClusters = defectsResult.getClusterList()
