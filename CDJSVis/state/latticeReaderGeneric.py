@@ -438,18 +438,25 @@ class LatticeReaderGeneric(object):
     
     """
     def __init__(self, tmpLocation=None, updateProgress=None, hideProgress=None):
+        self.logger = logging.getLogger(__name__+".LatticeReaderGeneric")
+        
+        # create tmp dir if one isn't passed
         if tmpLocation is None:
+            self.rmTmpDir = True
             self.tmpLocation = tempfile.mkdtemp()
+            self.logger.debug("Created tmp directory: '%s'", self.tmpLocation)
         else:
+            self.rmTmpDir = False
             self.tmpLocation = tmpLocation
         
-        self.logger = logging.getLogger(__name__+".LatticeReaderGeneric")
+        
         self.updateProgress = updateProgress
         self.hideProgress = hideProgress
         self.intRegex = re.compile(r'[0-9]+')
     
     def __del__(self):
-        if os.path.exists(self.tmpLocation):
+        # remove the temporary directory if we created it
+        if self.rmTmpDir and os.path.exists(self.tmpLocation):
             try:
                 shutil.rmtree(self.tmpLocation)
             except:
