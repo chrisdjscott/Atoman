@@ -339,6 +339,9 @@ class Lattice(object):
         Return index of specie in specie list.
         
         """
+        if sym not in self.specieList:
+            raise ValueError("Species '%s' is not in the species list" % sym)
+        
         index = None
         for i in xrange(len(self.specieList)):
             if self.specieList[i] == sym:
