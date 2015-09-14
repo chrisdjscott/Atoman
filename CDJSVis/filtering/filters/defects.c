@@ -13,7 +13,7 @@
 #include "array_utils.h"
 #include "atom_structure.h"
 
-#define DEBUG
+//#define DEBUG
 //#define DEBUGACNA
 
 static PyObject* findDefects(PyObject*, PyObject*);
@@ -1270,6 +1270,36 @@ findDefects(PyObject *self, PyObject *args)
 #endif
     }
     
+    /* identify split interstitials */
+    if (identifySplits && NVacancies > 0 && NInterstitials > 1)
+    {
+#ifdef DEBUG
+        splitTime = omp_get_wtime();
+#endif
+        
+        status = identifySplitInterstitialsNew(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
+                cellDims, defectCounters, vacancyRadius);
+//        status = identifySplitInterstitials(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
+//                        cellDims, defectCounters, vacancyRadius);
+        if (status)
+        {
+            if (driftCompensation) free(refPos);
+            return NULL;
+        }
+        
+        /* unpack counters */
+        NVacancies = defectCounters[0];
+        NInterstitials = defectCounters[1];
+        NSplitInterstitials = defectCounters[2];
+        
+#ifdef DEBUG
+        splitTime = omp_get_wtime() - splitTime;
+        printf("DEFECTSC: Defect count after split interstitial identification: %d vacancies; %d interstitials; %d split interstitials\n", 
+                NVacancies, NInterstitials, NSplitInterstitials);
+#endif
+    }
+    else NSplitInterstitials = 0;
+    
     /* exclude defect types and species here... */
     if (!includeInts) NInterstitials = 0;
     else
@@ -1364,38 +1394,9 @@ findDefects(PyObject *self, PyObject *args)
     if (!includeAnts) NAntisites = 0;
     
 #ifdef DEBUG
-    printf("DEFECTSC: Defect count after filter by type: %d vacancies; %d interstitials; %d antisites\n", NVacancies, NInterstitials, NAntisites);
+    printf("DEFECTSC: Defect count after filter by type: %d vacancies; %d interstitials; %d split interstitials; %d antisites\n", 
+            NVacancies, NInterstitials, NSplitInterstitials, NAntisites);
 #endif
-    
-    /* identify split interstitials */
-    if (identifySplits && NVacancies > 0 && NInterstitials > 1)
-    {
-#ifdef DEBUG
-        splitTime = omp_get_wtime();
-#endif
-        
-        status = identifySplitInterstitialsNew(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
-                cellDims, defectCounters, vacancyRadius);
-//        status = identifySplitInterstitials(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
-//                        cellDims, defectCounters, vacancyRadius);
-        if (status)
-        {
-            if (driftCompensation) free(refPos);
-            return NULL;
-        }
-        
-        /* unpack counters */
-        NVacancies = defectCounters[0];
-        NInterstitials = defectCounters[1];
-        NSplitInterstitials = defectCounters[2];
-        
-#ifdef DEBUG
-        splitTime = omp_get_wtime() - splitTime;
-        printf("DEFECTSC: Defect count after split interstitial identification: %d vacancies; %d interstitials; %d split interstitials\n", 
-                NVacancies, NInterstitials, NSplitInterstitials);
-#endif
-    }
-    else NSplitInterstitials = 0;
     
     /* find clusters of defects */
     if (findClustersFlag)
