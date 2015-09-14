@@ -32,5 +32,6 @@ struct NeighbourList2
 struct NeighbourList2 * constructNeighbourList2(int, double *, struct Boxes *, double *, int *, double);
 struct NeighbourList2 * constructNeighbourList2DiffPos(int, double *, int, double *, double *, int *, double);
 void freeNeighbourList2(struct NeighbourList2 *, int);
+int compare_nebs_separation(const void *, const void *);
 
 #endif
