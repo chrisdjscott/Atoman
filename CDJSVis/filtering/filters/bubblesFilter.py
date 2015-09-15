@@ -142,7 +142,7 @@ class BubblesFilter(base.BaseFilter):
         
         # first compute voronoi
         voronoiOptions = VoroOptsSimple()
-        vor = voronoi.computeVoronoiDefects(lattice, refState, defectsInput.vacancies, voronoiOptions, inputState.PBC)
+        vor = voronoi.computeVoronoiDefects(inputState, refState, defectsInput.vacancies, voronoiOptions, inputState.PBC)
         vacClusterVolumes = np.empty(len(vacClusters), np.float64)
         vacClusterSizes = np.zeros(len(vacClusters), np.int32)
         vacClusterIndexes = np.empty(len(defectsInput.vacancies), dtype=np.int32)
@@ -181,12 +181,18 @@ class BubblesFilter(base.BaseFilter):
             clusterIndex = bubbleMapper[i]
             bubbleAtoms = bubbleIndices[i]
             
+            # volume (add bubble atom volumes)
+            volume = vacClusterVolumes[clusterIndex]
+            for index in bubbleAtoms:
+                volume += vor.atomVolume(index)
+            
+            # create bubble object
             bubble = Bubble()
             bubble.setRefState(refState)
             bubble.setInputState(inputState)
             bubble.setVacancies(vacClusters[clusterIndex].vacancies)
             bubble.setBubbleAtoms(bubbleAtoms)
-            bubble.setVolume(vacClusterVolumes[clusterIndex])
+            bubble.setVolume(volume)
             self.logger.debug("Adding bubble %d: ratio is %f; volume is %f", i, bubble.getRatio(), bubble.getVolume())
             bubbleList.append(bubble)
         
@@ -226,6 +232,10 @@ class Bubble(object):
     def setVacancies(self, vacancies):
         """Set the vacancies."""
         self._vacancies = np.asarray(vacancies, dtype=np.int32)
+    
+    def getVacancy(self, index):
+        """Return the given vacancy."""
+        
     
     def setBubbleAtoms(self, bubbleAtoms):
         """Set the bubble atoms."""
