@@ -1,8 +1,10 @@
 
 """
-Lattice generator forms.
+Lattice generation
+==================
 
-@author: Chris Scott
+In the *Generate new system* section of the *Input* tab of the main toolbar lattices
+of different types and sizes can be generated.
 
 """
 from PySide import QtGui, QtCore

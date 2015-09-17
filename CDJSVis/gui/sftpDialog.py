@@ -1,5 +1,8 @@
 
 """
+SFTP browser
+============
+
 The SFTP browser can be used to load files on a remote system that is running an SFTP
 server.  To add a connection you must specify the hostname.  If you don't specify a
 username your current username will be used.  You don't need to specify a password if you

@@ -1,8 +1,11 @@
 
 """
-File input is handled by the *Input* tab on the main toolbar. Initially the file format
-will try to be determined automatically, however in the case of ambiguity a dialog will
-popup asking the user for input.
+File input
+==========
+
+File input is handled by the *Load new system* box on the *Input* tab of the main toolbar.
+Initially the file format will try to be determined automatically, however in the case of
+ambiguity a dialog will popup asking the user for input.
 File formats are defined in the *file_formats.IN* file (more on this and a link...).
 Multiple files can be loaded at the same time by shift/cmd clicking them.
 

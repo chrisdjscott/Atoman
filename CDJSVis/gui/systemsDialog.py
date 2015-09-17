@@ -1,10 +1,12 @@
 
 """
-Data input is handled by the systems dialog. 
-From here you can load or generate a lattice; view loaded lattices; set input/ref system, etc.
+Data input is handled by the *Input* tab of the main toolbar.
+From here you can load or generate a lattice, view loaded lattices, etc.
 Once loaded, systems will be added to the "Loaded systems" list.  
-Systems can be removed from the list by selecting them (multiple selection is possible) and clicking the minus sign. 
-Note that systems that are currently selected on an analysis pipeline, as either a ref or input, cannot be removed.
+Various actions can be performed on the loaded systems by right clicking them, such as
+removing them from the list.
+Note that systems that are currently selected on an analysis pipeline, as either a ref
+or input, cannot be removed.
 
 """
 import os
