@@ -3,24 +3,33 @@
  ** Bubbles C functions
  *******************************************************************************/
 
-//#define DEBUG
+#define DEBUG
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
+#include "utilities.h"
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "array_utils.h"
 
 
+static PyObject* identifyBubbles(PyObject*, PyObject*);
 static PyObject* putBubbleAtomsInClusters(PyObject*, PyObject*);
-static int compare_two_nebs(const void *, const void *);
+static int classifyVacsAndInts(double, int, double*, int, double*, int*, double*, int*, int*, int*, int, int*);
+static int identifySplitInterstitialsNew(int, int*, int, int*, int*, double*, double*, int*, double*, int*, double);
+static int refineVacancies(int, int*, int, int*, int, int*, int, int*, double*, double*, int*, double*, int*, double);
+static int findVacancyClusters(int, int*, double*, int*, double, double*, int*);
+static int findDefectNeighbours(int, int, int, int*, double*, struct Boxes*, double, double*, int*);
+static int getClusterIndexForBubbleAtoms(int, int*, double*, int, int*, double*, int*, int*, double*, int*, double, int, int*);
+static int compare_two_nebs(const void*, const void*);
 
 
 /*******************************************************************************
  ** List of python methods available in this module
  *******************************************************************************/
 static struct PyMethodDef methods[] = {
+    {"identifyBubbles", identifyBubbles, METH_VARARGS, "Identify bubbles"},
     {"putBubbleAtomsInClusters", putBubbleAtomsInClusters, METH_VARARGS, "Associate bubble atoms with a vacancy cluster"},
     {NULL, NULL, 0, NULL}
 };
@@ -34,6 +43,1133 @@ init_bubbles(void)
     (void)Py_InitModule("_bubbles", methods);
     import_array();
 }
+
+/*******************************************************************************
+ ** Find bubbles:
+ **   - First identify vacancies and interstitials
+ **   - Apply ACNA (if required)
+ **   - Identify Splits
+ **   - Associate H with vacs (associated if within vacancyBubbleRadius)
+ **   - If an unassociated vac is within 'x' of an interstitial (splits included), remove from vacancies
+ **   - Find clusters of vacancies using modified list
+ **   - Associate H with vacs to identify bubbles... (as before...)
+ *******************************************************************************/
+static PyObject*
+identifyBubbles(PyObject *self, PyObject *args)
+{
+    int NAtoms, NRefAtoms, driftCompensation, NBubbleAtoms;
+    double vacBubbleRad, vacancyRadius, vacNebRad;
+    PyArrayObject *posIn=NULL;
+    PyArrayObject *refPosIn=NULL;
+    PyArrayObject *driftVectorIn=NULL;
+    PyArrayObject *cellDimsIn=NULL;
+    PyArrayObject *pbcIn=NULL;
+    PyArrayObject *bubbleAtomIndexesIn=NULL;
+    PyArrayObject *acnaArrayIn=NULL;
+    PyObject *result=NULL;
+    
+    
+#ifdef DEBUG
+    printf("BUBBLESC: Identifying bubbles\n");
+#endif
+    
+    /* parse arguments */
+    if (PyArg_ParseTuple(args, "iO!iO!iO!O!O!iO!dO!dd", &NAtoms, &PyArray_Type, &posIn, &NRefAtoms, &PyArray_Type, &refPosIn,
+            &driftCompensation, &PyArray_Type, &driftVectorIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &pbcIn, &NBubbleAtoms,
+            &PyArray_Type, &bubbleAtomIndexesIn, &vacBubbleRad, &PyArray_Type, &acnaArrayIn, &vacancyRadius, &vacNebRad))
+    {
+        int *pbc, *bubbleAtomIndexes, acnaArrayDim, status, counters[3];
+        int *vacancies, *interstitials, *splitInterstitials=NULL;
+        int NVacancies, NInterstitials, NSplitInterstitials;
+        int *vacancyCluster, *bubbleAtomCluster, *NBubbleAtomsCluster;
+        double *pos, *refPos, *refPosTmp, *cellDims, *driftVector, *acnaArray;
+        
+#ifdef DEBUG
+        printf("BUBBLESC:   Vacancy radius is %lf\n", vacancyRadius);
+        printf("BUBBLESC:   Vacancy bubble radius is %lf\n", vacBubbleRad);
+        printf("BUBBLESC:   Vacancy neighbour radius is %lf\n", vacNebRad);
+#endif
+        
+        /* C pointers to Python arrays and checking types */
+        if (not_doubleVector(posIn)) return NULL;
+        pos = pyvector_to_Cptr_double(posIn);
+        
+        if (not_doubleVector(refPosIn)) return NULL;
+        refPosTmp = pyvector_to_Cptr_double(refPosIn);
+        
+        if (not_doubleVector(driftVectorIn)) return NULL;
+        driftVector = pyvector_to_Cptr_double(driftVectorIn);
+        
+        if (not_intVector(bubbleAtomIndexesIn)) return NULL;
+        bubbleAtomIndexes = pyvector_to_Cptr_int(bubbleAtomIndexesIn);
+        
+        if (not_doubleVector(cellDimsIn)) return NULL;
+        cellDims = pyvector_to_Cptr_double(cellDimsIn);
+        
+        if (not_intVector(pbcIn)) return NULL;
+        pbc = pyvector_to_Cptr_int(pbcIn);
+        
+        if (not_doubleVector(acnaArrayIn)) return NULL;
+        acnaArray = pyvector_to_Cptr_double(acnaArrayIn);
+        acnaArrayDim = (int) acnaArrayIn->dimensions[0];
+        
+        /* drift compensation - modify reference positions */
+        if (driftCompensation)
+        {
+            int i;
+            
+#ifdef DEBUG
+            printf("BUBBLESC:   Drift compensation: %lf %lf %lf\n", driftVector[0], driftVector[1], driftVector[2]);
+#endif
+            
+            refPos = malloc(3 * NRefAtoms * sizeof(double));
+            if (refPos == NULL)
+            {
+                PyErr_SetString(PyExc_MemoryError, "Could not allocate refPos");
+                return NULL;
+            }
+            
+            for (i = 0; i < NRefAtoms; i++)
+            {
+                int i3 = 3 * i;
+                refPos[i3    ] = refPosTmp[i3    ] + driftVector[0];
+                refPos[i3 + 1] = refPosTmp[i3 + 1] + driftVector[1];
+                refPos[i3 + 2] = refPosTmp[i3 + 2] + driftVector[2];
+            }
+        }
+        else refPos = refPosTmp;        
+        
+        /* allocate defect arrays */
+        vacancies = malloc(NRefAtoms * sizeof(int));
+        if (vacancies == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate vacancies");
+            if (driftCompensation) free(refPos);
+            return NULL;
+        }
+        
+        interstitials = malloc(NAtoms * sizeof(int));
+        if (interstitials == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate interstitials");
+            if (driftCompensation) free(refPos);
+            free(vacancies);
+            return NULL;
+        }
+        
+        /* basic defect classification (vacancies and interstitials) */
+        status = classifyVacsAndInts(vacancyRadius, NAtoms, pos, NRefAtoms, refPos, pbc, cellDims, counters,
+                vacancies, interstitials, NBubbleAtoms, bubbleAtomIndexes);
+        if (status)
+        {
+            if (driftCompensation) free(refPos);
+            free(vacancies);
+            free(interstitials);
+            return NULL;
+        }
+        
+        /* unpack counters */
+        NVacancies = counters[0];
+        NInterstitials = counters[1];
+        
+#ifdef DEBUG
+        printf("BUBBLESC:   Basic defect classification: %d vacancies; %d interstitials\n", NVacancies, NInterstitials);
+#endif
+        
+        /* TODO: add ACNA stuff here! */
+        
+        
+        
+        /* Identify split interstitials */
+        if (NVacancies > 0 && NInterstitials > 1)
+        {
+            /* allocate array */
+            splitInterstitials = malloc(3 * NVacancies * sizeof(int));
+            if (splitInterstitials == NULL)
+            {
+                PyErr_SetString(PyExc_MemoryError, "Could not allocate splitInterstitials");
+                if (driftCompensation) free(refPos);
+                free(vacancies);
+                free(interstitials);
+                return NULL;
+            }
+            
+            /* identify splits */
+            status = identifySplitInterstitialsNew(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, pbc,
+                    cellDims, counters, vacancyRadius);
+            if (status)
+            {
+                if (driftCompensation) free(refPos);
+                free(vacancies);
+                free(interstitials);
+                free(splitInterstitials);
+                return NULL;
+            }
+            
+            /* unpack counters */
+            NVacancies = counters[0];
+            NInterstitials = counters[1];
+            NSplitInterstitials = counters[2];
+            
+            /* if no splits, free the memory here */
+            if (NSplitInterstitials == 0) free(splitInterstitials);
+            
+#ifdef DEBUG
+            printf("BUBBLESC:   Defect count after split interstitial identification: %d vacancies; %d interstitials; %d split interstitials\n", 
+                    NVacancies, NInterstitials, NSplitInterstitials);
+#endif
+        }
+        else NSplitInterstitials = 0;
+        
+        /* Associate vacancies with bubble atoms */
+        status = refineVacancies(NBubbleAtoms, bubbleAtomIndexes, NVacancies, vacancies, NInterstitials, interstitials,
+                NSplitInterstitials, splitInterstitials, pos, refPos, counters, cellDims, pbc, vacBubbleRad);
+        if (status)
+        {
+            if (driftCompensation) free(refPos);
+            free(vacancies);
+            free(interstitials);
+            if (NSplitInterstitials) free(splitInterstitials);
+            return NULL;
+        }
+        
+        NVacancies = counters[0];
+        
+#ifdef DEBUG
+        printf("BUBBLESC:     Number of vacancies after refining: %d\n", NVacancies);
+#endif        
+        
+        /* allocate array for storing cluster index */
+        vacancyCluster = malloc(NVacancies * sizeof(int));
+        if (vacancyCluster == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate vacancyCluster");
+            if (driftCompensation) free(refPos);
+            free(vacancies);
+            free(interstitials);
+            if (NSplitInterstitials) free(splitInterstitials);
+            return NULL;
+        }
+        
+        /* clusters of vacancies */
+        status = findVacancyClusters(NVacancies, vacancies, refPos, vacancyCluster, vacNebRad, cellDims, pbc);
+        
+        /* allocate arrays for storing cluster indices of bubble atoms and counters */
+        bubbleAtomCluster = malloc(NBubbleAtoms * sizeof(int));
+        if (bubbleAtomCluster == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate bubbleAtomCluster");
+            if (driftCompensation) free(refPos);
+            free(vacancies);
+            free(interstitials);
+            if (NSplitInterstitials) free(splitInterstitials);
+            free(vacancyCluster);
+            return NULL;
+        }
+        
+        NBubbleAtomsCluster = malloc(NBubbleAtomsCluster * sizeof(int));
+        if (NBubbleAtomsCluster == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate NBubbleAtomsCluster");
+            if (driftCompensation) free(refPos);
+            free(vacancies);
+            free(interstitials);
+            if (NSplitInterstitials) free(splitInterstitials);
+            free(vacancyCluster);
+            free(bubbleAtomCluster);
+            return NULL;
+        }
+        
+        /* cluster index for bubble atoms */
+//        status = getClusterIndexForBubbleAtoms(NBubbleAtoms, bubbleAtomIndexes, pos, NVacancies, vacancies, refPos, bubbleAtomCluster,
+//                NBubbleAtomsCluster, cellDims, pbc, vacBubbleRad, )
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        /* free */
+        free(vacancies);
+        free(interstitials);
+        if (NSplitInterstitials) free(splitInterstitials);
+        if (driftCompensation) free(refPos);
+        free(vacancyCluster);
+        free(bubbleAtomCluster);
+        free(NBubbleAtomsCluster);
+        
+        /* result */
+        result = Py_BuildValue("i", 0);
+    }
+    
+#ifdef DEBUG
+    printf("BUBBLESC: End\n");
+#endif    
+    return result;
+}
+
+/*******************************************************************************
+ * Determine the cluster index for the bubble atoms
+ *******************************************************************************/
+static int
+getClusterIndexForBubbleAtoms(int NBubbleAtoms, int *bubbleAtomIndices, double *pos, int NVacancies, int *vacancies, double *refPos,
+        int *bubbleAtomCluster, int *NBubbleAtomsCluster, double *cellDims, int *pbc, double vacBubbleRad, int NClusters, int *counters)
+{
+    int i, numBubbles;
+    double *vacPos, *bubbleAtomPos;
+    struct NeighbourList2 *nebList;
+    
+    
+#ifdef DEBUG
+    printf("BUBBLESC:   Finding cluster indices for bubble atoms...\n");
+#endif
+    
+    /* vacancy positions */
+    vacPos = malloc(3 * NVacancies * sizeof(double));
+    if (vacPos == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate vacPos");
+        return 1;
+    }
+    for (i = 0; i < NVacancies; i++)
+    {
+        int i3 = 3 * i;
+        int indx3 = 3 * vacancies[i];
+        vacPos[i3    ] = refPos[indx3    ];
+        vacPos[i3 + 1] = refPos[indx3 + 1];
+        vacPos[i3 + 2] = refPos[indx3 + 2];
+    }
+    
+    /* bubble atom positions */
+    bubbleAtomPos = malloc(3 * NBubbleAtoms * sizeof(double));
+    if (bubbleAtomPos == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate bubbleAtomPos");
+        return 2;
+    }
+    for (i = 0; i < NBubbleAtoms; i++)
+    {
+        int i3 = 3 * i;
+        int indx3 = 3 * bubbleAtomIndices[i];
+        bubbleAtomPos[i3    ] = pos[indx3    ];
+        bubbleAtomPos[i3 + 1] = pos[indx3 + 1];
+        bubbleAtomPos[i3 + 2] = pos[indx3 + 2];
+    }
+    
+    /* we build a neighbour list for each bubble atom, containing neighbouring vacancies */
+    nebList = constructNeighbourList2DiffPos(NBubbleAtoms, bubbleAtomPos, NVacancies, vacPos, cellDims, pbc, vacBubbleRad);
+    free(vacPos);
+    free(bubbleAtomPos);
+    if (nebList == NULL) return 3;
+    
+    /* sort the neighbour list by separation */
+    for (i = 0; i < NBubbleAtoms; i++)
+        qsort(nebList[i].neighbour, nebList[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
+    
+    /* initialise array for storing cluster indexes of bubble atoms */
+    for (i = 0; i < NBubbleAtoms; i++) bubbleAtomCluster[i] = -1;
+    
+    /* loop over bubble atoms and put in clusters (note it is possible for a bubble atom not to belong to a cluster!) */
+    for (i = 0; i < NBubbleAtoms; i++)
+    {
+        if (nebList[i].neighbourCount > 0)
+        {
+            struct Neighbour neb = nebList[i].neighbour[0];
+            if (neb.separation < vacBubbleRad)
+            {
+                int vacIndex = neb.index;
+                int clusterIndex = vacClusterIndexes[vacIndex];
+                bubbleAtomCluster[i] = clusterIndex;
+                NBubbleAtomsCluster[clusterIndex]++;
+            }
+        }
+    }
+    
+    /* free */
+    freeNeighbourList2(nebList, NBubbleAtoms);
+    
+    /* number of bubbles */
+    numBubbles = 0;
+    for (i = 0; i < NClusters; i++) if (NBubbleAtomsCluster[i] > 0) numBubbles++;
+#ifdef DEBUG
+    printf("BUBBLESC:     Number of bubbles: %d\n", numBubbles);
+#endif
+    counters[0] = numBubbles;
+    
+    return 0;
+}
+
+/*******************************************************************************
+ * Find clusters of vacancies
+ *******************************************************************************/
+static int
+findVacancyClusters(int NVacancies, int *vacancies, double *refPos, int *defectCluster, double clusterRadius, double *cellDims, int *pbc)
+{
+    int i, boxstat, NClusters, maxNumInCluster;
+    int *NDefectsCluster;
+    double *defectPos, approxBoxWidth, maxSep2;
+    struct Boxes *boxes;
+    
+
+#ifdef DEBUG
+    printf("BUBBLESC:   Finding clusters of vacancies...\n");
+#endif
+    
+    /* build positions array of all defects */
+    defectPos = malloc(3 * NVacancies * sizeof(double));
+    if (defectPos == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate defectPos");
+        return 1;
+    }
+    
+    /* add defects positions: vac then int then ant */
+    for (i = 0; i < NVacancies; i++)
+    {
+        int index  = vacancies[i];
+        int i3 = i * 3;
+        int index3 = index * 3;
+        defectPos[i3    ] = refPos[index3    ];
+        defectPos[i3 + 1] = refPos[index3 + 1];
+        defectPos[i3 + 2] = refPos[index3 + 2];
+    }
+    
+    /* box defects */
+    approxBoxWidth = clusterRadius;
+    boxes = setupBoxes(approxBoxWidth, pbc, cellDims);
+    if (boxes == NULL)
+    {
+        free(defectPos);
+        return 2;
+    }
+    boxstat = putAtomsInBoxes(NVacancies, defectPos, boxes);
+    if (boxstat)
+    {
+        free(defectPos);
+        return 3;
+    }
+    
+    /* number of defects per cluster */
+    NDefectsCluster = malloc(NVacancies * sizeof(int));
+    if (NDefectsCluster == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate NDefectsCluster");
+        free(defectPos);
+        freeBoxes(boxes);
+        return 4;
+    }
+    
+    /* rad squared */
+    maxSep2 = clusterRadius * clusterRadius;
+    
+    /* initialise cluster array
+     * = -1 : not yet allocated
+     * > -1 : cluster ID of defect
+     */
+    for (i = 0; i < NVacancies; i++) defectCluster[i] = -1;
+    
+    /* loop over defects */
+    NClusters = 0;
+    maxNumInCluster = -9999;
+    for (i = 0; i < NVacancies; i++)
+    {
+        /* skip if atom already allocated */
+        if (defectCluster[i] == -1)
+        {
+            int numInCluster;
+            
+            /* allocate cluster ID */
+            defectCluster[i] = NClusters;
+            NClusters++;
+            
+            numInCluster = 1;
+            
+            /* recursive search for cluster atoms */
+            numInCluster = findDefectNeighbours(i, defectCluster[i], numInCluster, defectCluster, defectPos, boxes, maxSep2, cellDims, pbc);
+            if (numInCluster < 0) return -1;
+            
+            NDefectsCluster[defectCluster[i]] = numInCluster;
+            maxNumInCluster = (numInCluster > maxNumInCluster) ? numInCluster : maxNumInCluster;
+        }
+    }
+    
+    freeBoxes(boxes);
+    free(defectPos);
+    
+    if (NClusters < 0)
+    {
+        free(NDefectsCluster);
+        return 5;
+    }
+    
+    NDefectsCluster = realloc(NDefectsCluster, NClusters * sizeof(int));
+    if (NDefectsCluster == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not reallocate NDefectsCluster");
+        return 6;
+    }
+    
+    
+    
+    
+    /* free stuff */
+    free(NDefectsCluster);
+    
+#ifdef DEBUG
+    printf("BUBBLESC:     Found %d vacancy clusters\n", NClusters);
+#endif
+
+    return 0;
+}
+
+/*******************************************************************************
+ * recursive search for neighbouring defects
+ *******************************************************************************/
+static int findDefectNeighbours(int index, int clusterID, int numInCluster, int* atomCluster, double *pos, struct Boxes *boxes, 
+                                double maxSep2, double *cellDims, int *PBC)
+{
+    int i, j, index2, boxNebListSize;
+    int boxIndex, boxNebList[27];
+    double sep2;
+    
+    
+    /* box of primary atom */
+    boxIndex = boxIndexOfAtom(pos[3*index], pos[3*index+1], pos[3*index+2], boxes);
+    if (boxIndex < 0) return -1;
+        
+    /* find neighbouring boxes */
+    boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+    
+    /* loop over neighbouring boxes */
+    for (i = 0; i < boxNebListSize; i++)
+    {
+        boxIndex = boxNebList[i];
+        
+        for (j=0; j<boxes->boxNAtoms[boxIndex]; j++)
+        {
+            index2 = boxes->boxAtoms[boxIndex][j];
+            
+            /* skip itself or if already searched */
+            if ((index == index2) || (atomCluster[index2] != -1)) continue;
+            
+            /* calculate separation */
+            sep2 = atomicSeparation2( pos[3*index], pos[3*index+1], pos[3*index+2], pos[3*index2], pos[3*index2+1], pos[3*index2+2], 
+                                      cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2] );
+            
+            /* check if neighbours */
+            if (sep2 < maxSep2)
+            {
+                atomCluster[index2] = clusterID;
+                numInCluster++;
+                
+                /* search for neighbours to this new cluster atom */
+                numInCluster = findDefectNeighbours(index2, clusterID, numInCluster, atomCluster, pos, boxes, maxSep2, cellDims, PBC);
+                if (numInCluster < 0) return -1;
+            }
+        }
+    }
+    
+    return numInCluster;
+}
+
+/*******************************************************************************
+ * Refine the list of vacancies:
+ *   - Vacancies that are close to a H will remain as vacancies
+ *   - Vacancies that are close to an interstitial are taken out of the list
+ *******************************************************************************/
+static int
+refineVacancies(int NBubbleAtoms, int *bubbleIndices, int NVacanciesOld, int *vacancies, int NInterstitials, int *interstitials,
+        int NSplitInterstitials, int *splitInterstitials, double *pos, double *refPos, int *counters, double *cellDims, int *pbc,
+        double vacBubbleRad)
+{
+    int i, NVacancies, count, NIntsForPos, *vacMask;
+    double *vacPos, *bubbleAtomPos, *intPos;
+    struct NeighbourList2 *nebListBubs, *nebListInts;
+    
+    
+#ifdef DEBUG
+    printf("BUBBLESC:   Refining list of vacancies...\n");
+#endif
+    
+    /* vacancy positions */
+    vacPos = malloc(3 * NVacanciesOld * sizeof(double));
+    if (vacPos == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate vacPos");
+        return 1;
+    }
+    for (i = 0; i < NVacanciesOld; i++)
+    {
+        int i3 = 3 * i;
+        int indx3 = 3 * vacancies[i];
+        vacPos[i3    ] = refPos[indx3    ];
+        vacPos[i3 + 1] = refPos[indx3 + 1];
+        vacPos[i3 + 2] = refPos[indx3 + 2];
+    }
+    
+    /* bubble atom positions */
+    bubbleAtomPos = malloc(3 * NBubbleAtoms * sizeof(double));
+    if (bubbleAtomPos == NULL)
+    {
+        free(vacPos);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate bubbleAtomPos");
+        return 2;
+    }
+    for (i = 0; i < NBubbleAtoms; i++)
+    {
+        int i3 = 3 * i;
+        int indx3 = 3 * bubbleIndices[i];
+        bubbleAtomPos[i3    ] = pos[indx3    ];
+        bubbleAtomPos[i3 + 1] = pos[indx3 + 1];
+        bubbleAtomPos[i3 + 2] = pos[indx3 + 2];
+    }
+    
+    /* we build a neighbour list for each vacancy, containing neighbouring bubble atoms */
+    nebListBubs = constructNeighbourList2DiffPos(NVacanciesOld, vacPos, NBubbleAtoms, bubbleAtomPos, cellDims, pbc, vacBubbleRad);
+    free(bubbleAtomPos);
+    if (nebListBubs == NULL)
+    {
+        free(vacPos);
+        return 3;
+    }
+    
+    /* sort the neighbour list by separation */
+    for (i = 0; i < NVacanciesOld; i++)
+        qsort(nebListBubs[i].neighbour, nebListBubs[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
+    
+    /* interstitial positions */
+    NIntsForPos = NInterstitials + 2 * NSplitInterstitials;
+    intPos = malloc(3 * NIntsForPos * sizeof(double));
+    if (intPos == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate intPos");
+        freeNeighbourList2(nebListBubs, NVacanciesOld);
+        free(vacPos);
+    }
+    count = 0;
+    for (i = 0; i < NInterstitials; i++)
+    {
+        int c3 = count * 3;
+        int indx3 = 3 * interstitials[i];
+        intPos[c3    ] = pos[indx3    ];
+        intPos[c3 + 1] = pos[indx3 + 1];
+        intPos[c3 + 2] = pos[indx3 + 2];
+        count++;
+    }
+    for (i = 0; i < NSplitInterstitials; i++)
+    {
+        int j;
+        
+        for (j = 1; j < 3; j++)
+        {
+            int c3 = count * 3;
+            int indx3 = 3 * splitInterstitials[3 * i + j];
+            intPos[c3    ] = pos[indx3    ];
+            intPos[c3 + 1] = pos[indx3 + 1];
+            intPos[c3 + 2] = pos[indx3 + 2];
+            count++;
+        }
+    }
+    
+    /* we build a neighbour list for each vacancy, containing neighbouring interstitial atoms */
+    nebListInts = constructNeighbourList2DiffPos(NVacanciesOld, vacPos, NIntsForPos, intPos, cellDims, pbc, vacBubbleRad);
+    free(intPos);
+    free(vacPos);
+    if (nebListInts == NULL)
+    {
+        freeNeighbourList2(nebListBubs, NVacanciesOld);
+        return 4;
+    }
+    
+    /* sort the neighbour list by separation */
+    for (i = 0; i < NVacanciesOld; i++)
+        qsort(nebListInts[i].neighbour, nebListInts[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
+    
+    /* vacancy mask array */
+    vacMask = calloc(NVacanciesOld, sizeof(int));
+    if (vacMask == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate vacMask");
+        freeNeighbourList2(nebListBubs, NVacanciesOld);
+        freeNeighbourList2(nebListInts, NVacanciesOld);
+        return 5;
+    }
+    
+    /* mark vacs with neighbour bubble atoms as definitely vacancies */
+    for (i = 0; i < NVacanciesOld; i++)
+    {
+        if (nebListBubs[i].neighbourCount > 0)
+        {
+            if (nebListBubs[i].neighbour[0].separation < vacBubbleRad)
+            vacMask[i] = 1;
+        }
+    }
+    
+    /* mark vacancies with neighbour ints as not vacancies */
+    for (i = 0; i < NVacanciesOld; i++)
+    {
+        if (vacMask[i] == 0 && nebListInts[i].neighbourCount > 0)
+        {
+            if (nebListInts[i].neighbour[0].separation < vacBubbleRad)
+            {
+                vacMask[i] = -1;
+            }
+        }
+    }
+    
+    /* free neighbour lists */
+    freeNeighbourList2(nebListBubs, NVacanciesOld);
+    freeNeighbourList2(nebListInts, NVacanciesOld);
+    
+    /* refresh vacancies array */
+    NVacancies = 0;
+    for (i = 0; i < NVacanciesOld; i++)
+    {
+        if (vacMask[i] > -1)
+        {
+            vacancies[NVacancies++] = vacancies[i];
+        }
+    }
+    
+    /* free */
+    free(vacMask);
+    
+    /* store new number of vacancies */
+    counters[0] = NVacancies;
+    
+    return 0;
+}
+
+
+/*******************************************************************************
+ * identify split interstitials (new)
+ *******************************************************************************/
+static int
+identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, int *splitInterstitials,
+        double *pos, double *refPos, int *PBC, double *cellDims, int *counters, double vacancyRadius)
+{
+    int i, NSplit;
+    double *intPos, *vacPos, maxSep;
+    struct NeighbourList2 *nebListInts;
+    struct NeighbourList2 *nebListVacs;
+    
+
+#ifdef DEBUG
+    printf("DEFECTSC: Identifying split interstitials (new)\n");
+#endif
+    
+    /* build positions array of all vacancies and interstitials */
+    vacPos = malloc(3 * NVacancies * sizeof(double));
+    if (vacPos == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate vacPos");
+        return 1;
+    }
+    intPos = malloc(3 * NInterstitials * sizeof(double));
+    if (intPos == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate intPos");
+        free(vacPos);
+        return 2;
+    }
+    
+    /* add vacancy positions */
+    for (i = 0; i < NVacancies; i++)
+    {
+        int index = vacancies[i];
+        int index3 = 3 * index;
+        int i3 = 3 * i;
+        vacPos[i3    ] = refPos[index3    ];
+        vacPos[i3 + 1] = refPos[index3 + 1];
+        vacPos[i3 + 2] = refPos[index3 + 2];
+    }
+    
+    /* interstitial positions */
+    for (i = 0; i < NInterstitials; i++)
+    {
+        int index = interstitials[i];
+        int index3 = 3 * index;
+        int i3 = i * 3;
+        intPos[i3    ] = pos[index3    ];
+        intPos[i3 + 1] = pos[index3 + 1];
+        intPos[i3 + 2] = pos[index3 + 2];
+    }
+    
+    /* max separation */
+    maxSep = 2.0 * vacancyRadius;
+    
+    /* construct list of neighbouring interstitials for each vacancy */
+    nebListVacs = constructNeighbourList2DiffPos(NVacancies, vacPos, NInterstitials, intPos, cellDims, PBC, maxSep);
+    
+    if (nebListVacs == NULL)
+    {
+        free(vacPos);
+        free(intPos);
+        return 3;
+    }
+    
+    /* construct list of neighbouring vacancies for each interstitial */
+    nebListInts = constructNeighbourList2DiffPos(NInterstitials, intPos, NVacancies, vacPos, cellDims, PBC, maxSep);
+    
+    /* free position arrays (only required for constructing neighbour lists) */
+    free(intPos);
+    free(vacPos);
+    
+    if (nebListInts == NULL)
+    {
+        freeNeighbourList2(nebListVacs, NVacancies);
+        return 4;
+    }
+    
+    /* sort the neighbour lists by separation */
+    for (i = 0; i < NVacancies; i++)
+        qsort(nebListVacs[i].neighbour, nebListVacs[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
+    
+    for (i = 0; i < NInterstitials; i++)
+        qsort(nebListInts[i].neighbour, nebListInts[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
+    
+#ifdef DEBUGSPLIT
+    printf("DEFECTSC: Vacancy neb lists\n");
+    for (i = 0; i < NVacancies; i++)
+    {
+        int j;
+
+        printf("DEFECTSC:   Vacancy %d\n", i);
+        for (j = 0; j < nebListVacs[i].neighbourCount; j++)
+        {
+            struct Neighbour neb = nebListVacs[i].neighbour[j];
+            printf("DEFECTSC:     Neb %d: int index %d; sep %lf\n", j, neb.index, neb.separation);
+        }
+    }
+
+    printf("DEFECTSC: Interstitial neb lists\n");
+    for (i = 0; i < NInterstitials; i++)
+    {
+        int j;
+
+        printf("DEFECTSC:   Interstitial %d\n", i);
+        for (j = 0; j < nebListInts[i].neighbourCount; j++)
+        {
+            struct Neighbour neb = nebListInts[i].neighbour[j];
+            printf("DEFECTSC:     Neb %d: vac index %d; sep %lf\n", j, neb.index, neb.separation);
+        }
+    }
+#endif
+    
+    /* loop over vacancies, checking if they belong to a split interstitial */
+    NSplit = 0;
+    for (i = 0; i < NVacancies; i++)
+    {
+        int numVacNebs;
+        struct NeighbourList2 vacNebs;
+        
+        /* list of neighbouring interstitials for this vacancy */
+        vacNebs = nebListVacs[i];
+        numVacNebs = vacNebs.neighbourCount;
+        
+#ifdef DEBUGSPLIT
+        printf("DEFECTSC: Checking if vacancy %d (%d) belongs to a split interstitial\n", i, vacancies[i]);
+        printf("DEFECTSC:   Number of neighbouring interstitials: %d\n", numVacNebs);
+#endif
+        
+        /* proceed only if have at least 2 neighbouring interstitials */
+        if (numVacNebs > 1)
+        {
+            int j, splitCount, splitIndexes[2];
+            
+            /* loop over neighbouring interstitials until we find 2 interstitials that are closest
+             * to this vacancy or we run out of neighbours
+             */
+            j = 0;
+            splitCount = 0;
+            while (j < numVacNebs && splitCount != 2)
+            {
+                struct Neighbour vacNeb = vacNebs.neighbour[j];
+                struct NeighbourList2 intNebs = nebListInts[vacNeb.index];
+                int numIntNebs = intNebs.neighbourCount;
+                
+                /* check if closest vacancy is this one */
+                if (numIntNebs > 0 && intNebs.neighbour[0].index == i)
+                {
+                    splitIndexes[splitCount++] = vacNeb.index;
+                    
+#ifdef DEBUGSPLIT
+                    printf("DEFECTSC:     Interstitial neighbour %d (%d) is closest to this vacancy (separation = %lf)\n", j, vacNeb.index, vacNeb.separation);
+#endif
+                }
+                
+                j++;
+            }
+            
+            /* check if we have found a split interstitial */
+            if (splitCount == 2)
+            {
+                int n3 = 3 * NSplit;
+                
+#ifdef DEBUGSPLIT
+                printf("DEFECTSC:   Vacancy %d is split: %d, %d\n", i, splitIndexes[0], splitIndexes[1]);
+#endif
+
+                /* store vacancy in split interstitials array */
+                splitInterstitials[n3] = vacancies[i];
+
+                /* remove from vacancies array */
+                vacancies[i] = -1;
+
+                /* store interstitials */
+                for (j = 0; j < 2; j++)
+                {
+                    int intIndex = splitIndexes[j];
+
+                    /* store in split interstitials array */
+                    splitInterstitials[n3 + j + 1] = interstitials[intIndex];
+
+                    /* remove from interstitials array */
+                    interstitials[intIndex] = -1;
+                }
+                
+                NSplit++;
+            }
+            
+        }
+    }
+    
+#ifdef DEBUG
+    printf("DEFECTSC: Found %d split interstitials\n", NSplit);
+#endif
+    
+    /* free memory */
+    freeNeighbourList2(nebListVacs, NVacancies);
+    freeNeighbourList2(nebListInts, NInterstitials);
+    
+    if (NSplit)
+    {
+        int count, numIntIn = NInterstitials;
+        
+        /* recreate interstitials arrays */
+        count = 0;
+        for (i = 0; i < NInterstitials; i++)
+            if (interstitials[i] != -1) interstitials[count++] = interstitials[i];
+        NInterstitials = count;
+        
+        /* recreate vacancies array */
+        count = 0;
+        for (i = 0; i < NVacancies; i++)
+            if (vacancies[i] != -1) vacancies[count++] = vacancies[i];
+        NVacancies = count;
+
+        /* sanity check */
+        if (numIntIn != NInterstitials + NSplit * 2)
+        {
+            char errstring[256];
+            sprintf(errstring, "Interstitial atoms lost/gained during split detection: %d + %d * 2 != %d (%d vacancies)", NInterstitials,
+                    NSplit, numIntIn, NVacancies);
+            PyErr_SetString(PyExc_RuntimeError, errstring);
+            return 7;
+        }
+    }
+
+    /* store counters */
+    counters[0] = NVacancies;
+    counters[1] = NInterstitials;
+    counters[2] = NSplit;
+    
+    return 0;
+}
+
+/*******************************************************************************
+ ** Classify vacancies and interstitials
+ *******************************************************************************/
+static int
+classifyVacsAndInts(double vacancyRadius, int NAtoms, double *pos, int refNAtoms, double *refPos,
+        int *PBC, double *cellDims, int *counters, int *vacancies, int *interstitials,
+        int NBubbleAtoms, int *bubbleAtomIndexes)
+{
+    int boxstat, i;
+    int *possibleVacancy, *possibleInterstitial;
+    int NVacancies, NInterstitials;
+    int *bubbleAtomMask;
+    double approxBoxWidth, vacRad2;
+    struct Boxes *boxes;
+    
+    
+    /* approx width, must be at least vacRad
+     * should vary depending on size of cell
+     * ie. don't want too many boxes
+     */
+    approxBoxWidth = (vacancyRadius > 3.0) ? vacancyRadius : 3.0;
+    
+    /* box atoms */
+    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
+    if (boxes == NULL) return 1;
+    boxstat = putAtomsInBoxes(NAtoms, pos, boxes);
+    if (boxstat) return 2;
+    
+    /* allocate local arrays for checking atoms */
+    possibleVacancy = malloc(refNAtoms * sizeof(int));
+    if (possibleVacancy == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate possibleVacancy");
+        freeBoxes(boxes);
+        return 3;
+    }
+    
+    possibleInterstitial = malloc(NAtoms * sizeof(int));
+    if (possibleInterstitial == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate possibleInterstitial");
+        freeBoxes(boxes);
+        free(possibleVacancy);
+        return 4;
+    }
+    
+    bubbleAtomMask = calloc(NAtoms, sizeof(int));
+    if (bubbleAtomMask == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate bubbleAtomMask");
+        freeBoxes(boxes);
+        free(possibleVacancy);
+        free(possibleInterstitial);
+        return 4;
+    }
+    
+    /* initialise arrays */
+    for (i = 0; i < NAtoms; i++) possibleInterstitial[i] = 1;
+    for (i = 0; i < refNAtoms; i++) possibleVacancy[i] = 1;
+    for (i = 0; i < NBubbleAtoms; i++) 
+    {
+        int index = bubbleAtomIndexes[i];
+        bubbleAtomMask[index] = 1;
+        possibleInterstitial[index] = 0;
+    }
+    
+    /* constant */
+    vacRad2 = vacancyRadius * vacancyRadius;
+    
+    /* loop over reference sites */
+    for (i = 0; i < refNAtoms; i++)
+    {
+        int boxNebList[27], boxIndex, j, boxNebListSize;
+        int nearestIndex = -1;
+        int occupancyCount = 0;
+        int i3 = 3 * i;
+        double refxpos, refypos, refzpos;
+        double nearestSep2 = 9999.0;
+
+        refxpos = refPos[i3    ];
+        refypos = refPos[i3 + 1];
+        refzpos = refPos[i3 + 2];
+
+        /* get box index of this atom */
+        boxIndex = boxIndexOfAtom(refxpos, refypos, refzpos, boxes);
+        if (boxIndex < 0)
+        {
+            freeBoxes(boxes);
+            free(possibleInterstitial);
+            free(possibleVacancy);
+            free(bubbleAtomMask);
+            return 7;
+        }
+
+        /* find neighbouring boxes */
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+
+//        printf("Checking site %d for occupancy (%lf, %lf, %lf)\n", i, refxpos, refypos, refzpos);
+        
+        /* loop over neighbouring boxes */
+        for (j = 0; j < boxNebListSize; j++)
+        {
+            int checkBox, k;
+
+            checkBox = boxNebList[j];
+
+            /* loop over all input atoms in the box */
+            for (k = 0; k < boxes->boxNAtoms[checkBox]; k++)
+            {
+                int index, index3;
+                double xpos, ypos, zpos, sep2;
+
+                /* index of this input atom */
+                index = boxes->boxAtoms[checkBox][k];
+
+                /* skip if a bubble atom */
+                if (bubbleAtomMask[index]) continue;
+                
+                /* atom position */
+                index3 = 3 * index;
+                xpos = pos[index3    ];
+                ypos = pos[index3 + 1];
+                zpos = pos[index3 + 2];
+
+                /* atomic separation of possible vacancy and possible interstitial */
+                sep2 = atomicSeparation2(xpos, ypos, zpos, refxpos, refypos, refzpos,
+                                         cellDims[0], cellDims[1], cellDims[2],
+                                         PBC[0], PBC[1], PBC[2]);
+
+                /* if within vacancy radius, is it an antisite or normal lattice point */
+                if (sep2 < vacRad2)
+                {
+//                    printf("  Input atom %d within vac rad: sep = %lf (%lf, %lf, %lf)\n", index, sqrt(sep2), xpos, ypos, zpos);
+                    
+                    /* check whether this is the closest atom to this vacancy */
+                    if (sep2 < nearestSep2)
+                    {
+                        if (possibleInterstitial[index])
+                        {
+                            nearestSep2 = sep2;
+                            nearestIndex = index;
+                        }
+                    }
+                    
+                    occupancyCount++;
+                }
+            }
+        }
+
+        /* classify - check the atom that was closest to this site (within the vacancy radius) */
+        if (nearestIndex != -1)
+        {
+//            printf("Classifying site %d: nearest index = %d (sep = %lf)\n", i, nearestIndex, sqrt(nearestSep2));
+
+            /* not an interstitial or vacancy */
+            possibleInterstitial[nearestIndex] = 0;
+            possibleVacancy[i] = 0;
+
+//            if (occupancyCount > 1)
+//                printf("INFO: Occupancy for site %d = %d\n", i, occupancyCount);
+        }
+    }
+    
+    /* free box arrays */
+    freeBoxes(boxes);
+
+    /* now classify defects */
+    /* vacancies */
+    NVacancies = 0;
+    for (i = 0; i < refNAtoms; i++ )
+        if (possibleVacancy[i] == 1) vacancies[NVacancies++] = i;
+    
+    /* interstitials */
+    NInterstitials = 0;
+    for (i = 0; i < NAtoms; i++ )
+        if (possibleInterstitial[i] == 1) interstitials[NInterstitials++] = i;
+    
+    /* store counters */
+    counters[0] = NVacancies;
+    counters[1] = NInterstitials;
+    
+    /* free arrays */
+    free(possibleVacancy);
+    free(possibleInterstitial);
+    free(bubbleAtomMask);
+    
+    return 0;
+}
+
 
 /*******************************************************************************
  ** Associate bubble atoms with a vacancy cluster

@@ -54,7 +54,7 @@ class BubblesFilterSettings(base.BaseSettings):
         self.registerSetting("bubbleSpecies", [])
         self.registerSetting("vacancyRadius", 1.3)
         self.registerSetting("vacNebRad", 4.0)
-        self.registerSetting("vacancyBubbleRadius", 3.0)
+        self.registerSetting("vacancyBubbleRadius", 3.0) # should be less than above!?
     
 
 
@@ -66,6 +66,126 @@ class BubblesFilter(base.BaseFilter):
     
     """
     def apply(self, filterInput, settings):
+        """Apply the bubbles filter."""
+        if not isinstance(settings, BubblesFilterSettings):
+            raise TypeError("BubbleFilter requires a settings object of type BubbleFilterSettings.")
+        
+        if not isinstance(filterInput, base.FilterInput):
+            raise TypeError("BubbleFilter requires an input object of type FilterInput")
+        
+        # unpack input object
+        inputState = filterInput.inputState
+        refState = filterInput.refState
+        
+        # settings
+        bubbleSpecies = settings.getSetting("bubbleSpecies")
+        if not len(bubbleSpecies):
+            self.logger.warning("No bubble species have been specified therefore no bubbles can be detected!")
+            result = base.FilterResult()
+            return result
+        self.logger.debug("Bubble species: %r", bubbleSpecies)
+        
+        # how many bubbles species atoms
+        numBubbleAtoms = 0
+        for sym in bubbleSpecies:
+            index = inputState.getSpecieIndex(sym)
+            numBubbleAtoms += inputState.specieCount[index]
+            self.logger.debug("%d %s atoms in the lattice", inputState.specieCount[index], sym)
+        self.logger.debug("Total number of bubble atoms in the lattice: %d", numBubbleAtoms)
+        
+        # loop over and remove (write in C!)
+        # we count down since there is a good chance the bubbles were added to the lattice last
+        bubbleAtomIndexes = []
+        for i in xrange(inputState.NAtoms):
+            if inputState.atomSym(i) in bubbleSpecies:
+                bubbleAtomIndexes.append(i)
+        bubbleAtomIndexes = np.asarray(bubbleAtomIndexes, dtype=np.int32)
+        assert len(bubbleAtomIndexes) == numBubbleAtoms
+        
+        # compute ACNA if required...
+        
+        
+        
+        
+        # call C library
+        vacancyRadius = settings.getSetting("vacancyRadius")
+        vacBubbleRad = settings.getSetting("vacancyBubbleRadius")
+        vacNebRad = settings.getSetting("vacNebRad")
+        acnaArray = np.empty(0, np.float64)
+        _bubbles.identifyBubbles(inputState.NAtoms, inputState.pos, refState.NAtoms, refState.pos, filterInput.driftCompensation,
+                                 filterInput.driftVector, inputState.cellDims, inputState.PBC, numBubbleAtoms, bubbleAtomIndexes,
+                                 vacBubbleRad, acnaArray, vacancyRadius, vacNebRad)
+        
+        
+        
+        
+        # compute voronoi volumes of atoms
+#         voronoiOptions = VoroOptsSimple()
+#         vor = voronoi.computeVoronoiDefects(inputState, refState, defectsInput.vacancies, voronoiOptions, inputState.PBC)
+#         vacClusterVolumes = np.empty(len(vacClusters), np.float64)
+#         vacClusterSizes = np.zeros(len(vacClusters), np.int32)
+#         vacClusterIndexes = np.empty(len(defectsInput.vacancies), dtype=np.int32)
+#         count = 0
+#         for cluster in vacClusters:
+#             # add volumes of vacancies
+#             volume = 0.0
+#             for i in xrange(cluster.getNVacancies()):
+#                 vacind = cluster.vacAsIndex[i]
+#                 index = lattice.NAtoms + vacind
+#                 volume += vor.atomVolume(index)
+#                 vacClusterIndexes[vacind] = count
+#             
+#             # store volume
+#             cluster.volume = volume
+#             vacClusterVolumes[count] = volume
+#             self.logger.info("  Cluster %d (%d vacancies): volume is %f", count, cluster.getNDefects(), volume)
+#             
+#             # store size and vacancy indexes
+#             vacClusterSizes[count] = cluster.getNVacancies()
+#             
+#             count += 1
+#         
+#         # associate H with vacancies -- for each H list vacs within specific radius and associate with closest one
+#         vacancyBubbleRadius = settings.getSetting("vacancyBubbleRadius")
+#         result = _bubbles.putBubbleAtomsInClusters(inputState.NAtoms, inputState.pos, refState.NAtoms, refState.pos, filterInput.driftCompensation,
+#                                                    filterInput.driftVector, inputState.cellDims, inputState.PBC, numBubbleAtoms, bubbleAtomIndexes,
+#                                                    len(defectsInput.vacancies), defectsInput.vacancies, len(vacClusters), vacClusterIndexes,
+#                                                    vacancyBubbleRadius)
+#         bubbleIndices, bubbleMapper = result
+#         
+#         # create list of bubbles
+#         numBubbles = len(bubbleIndices)
+#         bubbleList = []
+#         for i in xrange(numBubbles):
+#             clusterIndex = bubbleMapper[i]
+#             bubbleAtoms = bubbleIndices[i]
+#             
+#             # volume (add bubble atom volumes)
+#             volume = vacClusterVolumes[clusterIndex]
+#             for index in bubbleAtoms:
+#                 volume += vor.atomVolume(index)
+#             
+#             # create bubble object
+#             bubble = Bubble()
+#             bubble.setRefState(refState)
+#             bubble.setInputState(inputState)
+#             bubble.setVacancies(vacClusters[clusterIndex].vacancies)
+#             bubble.setBubbleAtoms(bubbleAtoms)
+#             bubble.setVolume(volume)
+#             self.logger.debug("Adding bubble %d: ratio is %f; volume is %f", i, bubble.getRatio(), bubble.getVolume())
+#             bubbleList.append(bubble)
+        
+        # optionally show H that do not belong to a bubble as atoms too!?
+        
+        
+        
+        # result
+        result = base.FilterResult()
+#         result.setBubbleList(bubbleList)
+        
+        return result
+    
+    def applyOld(self, filterInput, settings):
         """Apply the bubbles filter."""
         if not isinstance(settings, BubblesFilterSettings):
             raise TypeError("BubbleFilter requires a settings object of type BubbleFilterSettings.")
