@@ -3,7 +3,7 @@
  ** Bubbles C functions
  *******************************************************************************/
 
-#define DEBUG
+//#define DEBUG
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -18,10 +18,11 @@ static PyObject* identifyBubbles(PyObject*, PyObject*);
 static PyObject* putBubbleAtomsInClusters(PyObject*, PyObject*);
 static int classifyVacsAndInts(double, int, double*, int, double*, int*, double*, int*, int*, int*, int, int*);
 static int identifySplitInterstitialsNew(int, int*, int, int*, int*, double*, double*, int*, double*, int*, double);
-static int refineVacancies(int, int*, int, int*, int, int*, int, int*, double*, double*, int*, double*, int*, double);
-static int findVacancyClusters(int, int*, double*, int*, double, double*, int*);
+static int refineVacancies(int, int*, int, int*, int, int*, int, int*, double*, double*, int*, double*, int*, double, double);
+static int findVacancyClusters(int, int*, double*, int*, int*, double, double*, int*, int*);
 static int findDefectNeighbours(int, int, int, int*, double*, struct Boxes*, double, double*, int*);
-static int getClusterIndexForBubbleAtoms(int, int*, double*, int, int*, double*, int*, int*, double*, int*, double, int, int*);
+static int getClusterIndexForBubbleAtoms(int, int*, double*, int, int*, double*, int*, int*, double*, int*, double, int, int*, int*);
+static PyObject* constructBubbleResult(int, int, int*, int*, int*, int*, int, int*, int, int*);
 static int compare_two_nebs(const void*, const void*);
 
 
@@ -58,7 +59,7 @@ static PyObject*
 identifyBubbles(PyObject *self, PyObject *args)
 {
     int NAtoms, NRefAtoms, driftCompensation, NBubbleAtoms;
-    double vacBubbleRad, vacancyRadius, vacNebRad;
+    double vacBubbleRad, vacancyRadius, vacNebRad, vacIntRad;
     PyArrayObject *posIn=NULL;
     PyArrayObject *refPosIn=NULL;
     PyArrayObject *driftVectorIn=NULL;
@@ -74,20 +75,22 @@ identifyBubbles(PyObject *self, PyObject *args)
 #endif
     
     /* parse arguments */
-    if (PyArg_ParseTuple(args, "iO!iO!iO!O!O!iO!dO!dd", &NAtoms, &PyArray_Type, &posIn, &NRefAtoms, &PyArray_Type, &refPosIn,
+    if (PyArg_ParseTuple(args, "iO!iO!iO!O!O!iO!dO!ddd", &NAtoms, &PyArray_Type, &posIn, &NRefAtoms, &PyArray_Type, &refPosIn,
             &driftCompensation, &PyArray_Type, &driftVectorIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &pbcIn, &NBubbleAtoms,
-            &PyArray_Type, &bubbleAtomIndexesIn, &vacBubbleRad, &PyArray_Type, &acnaArrayIn, &vacancyRadius, &vacNebRad))
+            &PyArray_Type, &bubbleAtomIndexesIn, &vacBubbleRad, &PyArray_Type, &acnaArrayIn, &vacancyRadius, &vacNebRad, &vacIntRad))
     {
         int *pbc, *bubbleAtomIndexes, acnaArrayDim, status, counters[3];
         int *vacancies, *interstitials, *splitInterstitials=NULL;
         int NVacancies, NInterstitials, NSplitInterstitials;
         int *vacancyCluster, *bubbleAtomCluster, *NBubbleAtomsCluster;
+        int *NVacanciesCluster, NVacancyClusters, NBubbles;
         double *pos, *refPos, *refPosTmp, *cellDims, *driftVector, *acnaArray;
         
 #ifdef DEBUG
         printf("BUBBLESC:   Vacancy radius is %lf\n", vacancyRadius);
         printf("BUBBLESC:   Vacancy bubble radius is %lf\n", vacBubbleRad);
         printf("BUBBLESC:   Vacancy neighbour radius is %lf\n", vacNebRad);
+        printf("BUBBLESC:   Vacancy-interstitial association radius is %lf\n", vacIntRad);
 #endif
         
         /* C pointers to Python arrays and checking types */
@@ -223,7 +226,7 @@ identifyBubbles(PyObject *self, PyObject *args)
         
         /* Associate vacancies with bubble atoms */
         status = refineVacancies(NBubbleAtoms, bubbleAtomIndexes, NVacancies, vacancies, NInterstitials, interstitials,
-                NSplitInterstitials, splitInterstitials, pos, refPos, counters, cellDims, pbc, vacBubbleRad);
+                NSplitInterstitials, splitInterstitials, pos, refPos, counters, cellDims, pbc, vacBubbleRad, vacIntRad);
         if (status)
         {
             if (driftCompensation) free(refPos);
@@ -251,8 +254,31 @@ identifyBubbles(PyObject *self, PyObject *args)
             return NULL;
         }
         
+        NVacanciesCluster = malloc(NVacancies * sizeof(int));
+        if (NVacanciesCluster == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate NBubbleAtomsCluster");
+            if (driftCompensation) free(refPos);
+            free(vacancies);
+            free(interstitials);
+            if (NSplitInterstitials) free(splitInterstitials);
+            free(vacancyCluster);
+            return NULL;
+        }
+        
         /* clusters of vacancies */
-        status = findVacancyClusters(NVacancies, vacancies, refPos, vacancyCluster, vacNebRad, cellDims, pbc);
+        status = findVacancyClusters(NVacancies, vacancies, refPos, vacancyCluster, NVacanciesCluster, vacNebRad, cellDims, pbc, counters);
+        if (status)
+        {
+            if (driftCompensation) free(refPos);
+            free(vacancies);
+            free(interstitials);
+            if (NSplitInterstitials) free(splitInterstitials);
+            free(vacancyCluster);
+            free(NVacanciesCluster);
+            return NULL;
+        }
+        NVacancyClusters = counters[0];
         
         /* allocate arrays for storing cluster indices of bubble atoms and counters */
         bubbleAtomCluster = malloc(NBubbleAtoms * sizeof(int));
@@ -264,10 +290,11 @@ identifyBubbles(PyObject *self, PyObject *args)
             free(interstitials);
             if (NSplitInterstitials) free(splitInterstitials);
             free(vacancyCluster);
+            free(NVacanciesCluster);
             return NULL;
         }
         
-        NBubbleAtomsCluster = malloc(NBubbleAtomsCluster * sizeof(int));
+        NBubbleAtomsCluster = calloc(NVacancyClusters, sizeof(int));
         if (NBubbleAtomsCluster == NULL)
         {
             PyErr_SetString(PyExc_MemoryError, "Could not allocate NBubbleAtomsCluster");
@@ -277,21 +304,30 @@ identifyBubbles(PyObject *self, PyObject *args)
             if (NSplitInterstitials) free(splitInterstitials);
             free(vacancyCluster);
             free(bubbleAtomCluster);
+            free(NVacanciesCluster);
             return NULL;
         }
         
         /* cluster index for bubble atoms */
-//        status = getClusterIndexForBubbleAtoms(NBubbleAtoms, bubbleAtomIndexes, pos, NVacancies, vacancies, refPos, bubbleAtomCluster,
-//                NBubbleAtomsCluster, cellDims, pbc, vacBubbleRad, )
+        status = getClusterIndexForBubbleAtoms(NBubbleAtoms, bubbleAtomIndexes, pos, NVacancies, vacancies, refPos, bubbleAtomCluster,
+                NBubbleAtomsCluster, cellDims, pbc, vacBubbleRad, NVacancyClusters, vacancyCluster, counters);
+        if (status)
+        {
+            if (driftCompensation) free(refPos);
+            free(vacancies);
+            free(interstitials);
+            if (NSplitInterstitials) free(splitInterstitials);
+            free(vacancyCluster);
+            free(NVacanciesCluster);
+            free(bubbleAtomCluster);
+            free(NBubbleAtomsCluster);
+            return NULL;
+        }
+        NBubbles = counters[0];
         
-        
-        
-        
-        
-        
-        
-        
-        
+        /* make the bubbles */
+        result = constructBubbleResult(NBubbles, NVacancyClusters, vacancyCluster, NVacanciesCluster, bubbleAtomCluster, NBubbleAtomsCluster,
+                NVacancies, vacancies, NBubbleAtoms, bubbleAtomIndexes);
         
         /* free */
         free(vacancies);
@@ -299,11 +335,9 @@ identifyBubbles(PyObject *self, PyObject *args)
         if (NSplitInterstitials) free(splitInterstitials);
         if (driftCompensation) free(refPos);
         free(vacancyCluster);
+        free(NVacanciesCluster);
         free(bubbleAtomCluster);
         free(NBubbleAtomsCluster);
-        
-        /* result */
-        result = Py_BuildValue("i", 0);
     }
     
 #ifdef DEBUG
@@ -313,11 +347,346 @@ identifyBubbles(PyObject *self, PyObject *args)
 }
 
 /*******************************************************************************
+ * Construct the result
+ *******************************************************************************/
+static PyObject*
+constructBubbleResult(int NBubbles, int NClusters, int *vacancyCluster, int *NVacanciesCluster, int *bubbleAtomCluster, int *NBubbleAtomsCluster,
+        int NVacancies, int *vacancies, int NBubbleAtoms, int *bubbleAtomIndices)
+{
+    int i, count, status;
+    int *bubbleIndexMapper, *bubbleVacCount, *bubbleAtomCount;
+    PyObject *result=NULL;
+    PyObject *bubbleAtomList=NULL;
+    PyObject *bubbleVacList=NULL;
+    PyObject *bubbleVacIndexList=NULL;
+    
+    
+#ifdef DEBUG
+    printf("BUBBLESC:   Constructing result...\n");
+#endif
+    
+    /* array for mapping cluster indices to bubble indices */
+    bubbleIndexMapper = malloc(NClusters * sizeof(int));
+    if (bubbleIndexMapper == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate bubbleIndexMapper");
+        return NULL;
+    }
+    bubbleVacCount = malloc(NBubbles * sizeof(int));
+    if (bubbleVacCount == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate bubbleVacCount");
+        free(bubbleIndexMapper);
+        return NULL;
+    }
+    bubbleAtomCount = malloc(NBubbles * sizeof(int));
+    if (bubbleAtomCount == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate bubbleAtomCount");
+        free(bubbleIndexMapper);
+        free(bubbleVacCount);
+        return NULL;
+    }
+    count = 0;
+    for (i = 0; i < NClusters; i++)
+    {
+        if (NBubbleAtomsCluster[i] > 0)
+        {
+            bubbleVacCount[count] = NVacanciesCluster[i];
+            bubbleAtomCount[count] = NBubbleAtomsCluster[i];
+            bubbleIndexMapper[i] = count++;
+#ifdef DEBUG
+            printf("BUBBLESC:     Mapper: cluster %d -> bubble %d (%d vac, %d atm)\n", i, bubbleIndexMapper[i], NVacanciesCluster[i], NBubbleAtomsCluster[i]);
+#endif
+        }
+        else
+        {   
+            bubbleIndexMapper[i] = -1;
+#ifdef DEBUG
+            printf("BUBBLESC:     Mapper: cluster %d -> not a bubble\n", i);
+#endif
+        }
+    }
+    
+    /* make lists and arrays */
+    bubbleVacList = PyList_New(NBubbles);
+    if (bubbleVacList == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate bubbleVacList");
+        free(bubbleIndexMapper);
+        free(bubbleVacCount);
+        free(bubbleAtomCount);
+        return NULL;
+    }
+    bubbleAtomList = PyList_New(NBubbles);
+    if (bubbleAtomList == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate bubbleAtomList");
+        free(bubbleIndexMapper);
+        free(bubbleVacCount);
+        free(bubbleAtomCount);
+        Py_DECREF(bubbleVacList);
+        return NULL;
+    }
+    bubbleVacIndexList = PyList_New(NBubbles);
+    if (bubbleVacIndexList == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate bubbleVacIndexList");
+        free(bubbleIndexMapper);
+        free(bubbleVacCount);
+        free(bubbleAtomCount);
+        Py_DECREF(bubbleVacList);
+        Py_DECREF(bubbleAtomList);
+        return NULL;
+    }
+    for (i = 0; i < NBubbles; i++)
+    {
+        npy_intp dims[1];
+        PyArrayObject *vacIndices=NULL;
+        PyArrayObject *atomIndices=NULL;
+        PyArrayObject *vacAsIndexes=NULL;
+        
+        /* allocate numpy arrays for storing the vacancy and atom indices of this bubble */
+        dims[0] = bubbleVacCount[i];
+        vacIndices = (PyArrayObject *) PyArray_SimpleNew(1, dims, NPY_INT32);
+        if (vacIndices == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate vacIndices");
+            free(bubbleIndexMapper);
+            free(bubbleVacCount);
+            free(bubbleAtomCount);
+            Py_DECREF(bubbleVacList);
+            Py_DECREF(bubbleAtomList);
+            Py_DECREF(bubbleVacIndexList);
+            return NULL;
+        }
+        dims[0] = bubbleAtomCount[i];
+        atomIndices = (PyArrayObject *) PyArray_SimpleNew(1, dims, NPY_INT32);
+        if (vacIndices == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate vacIndices");
+            free(bubbleIndexMapper);
+            free(bubbleVacCount);
+            free(bubbleAtomCount);
+            Py_DECREF(bubbleVacList);
+            Py_DECREF(bubbleAtomList);
+            Py_DECREF(vacIndices);
+            Py_DECREF(bubbleVacIndexList);
+            return NULL;
+        }
+        dims[0] = bubbleVacCount[i];
+        vacAsIndexes = (PyArrayObject *) PyArray_SimpleNew(1, dims, NPY_INT32);
+        if (vacAsIndexes == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate vacAsIndexes");
+            free(bubbleIndexMapper);
+            free(bubbleVacCount);
+            free(bubbleAtomCount);
+            Py_DECREF(bubbleVacList);
+            Py_DECREF(bubbleAtomList);
+            Py_DECREF(vacIndices);
+            Py_DECREF(atomIndices);
+            Py_DECREF(bubbleVacIndexList);
+            return NULL;
+        }
+        
+        /* put numpy arrays into lists (lists steal ownership) */
+        status = PyList_SetItem(bubbleVacList, i, PyArray_Return(vacIndices));
+        if (status)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Could not set item in bubbleVacList");
+            free(bubbleIndexMapper);
+            free(bubbleVacCount);
+            free(bubbleAtomCount);
+            Py_DECREF(bubbleVacList);
+            Py_DECREF(bubbleAtomList);
+            Py_DECREF(vacIndices);
+            Py_DECREF(atomIndices);
+            Py_DECREF(vacAsIndexes);
+            Py_DECREF(bubbleVacIndexList);
+            return NULL;
+        }
+        status = PyList_SetItem(bubbleAtomList, i, PyArray_Return(atomIndices));
+        if (status)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Could not set item in bubbleVacList");
+            free(bubbleIndexMapper);
+            free(bubbleVacCount);
+            free(bubbleAtomCount);
+            Py_DECREF(bubbleVacList);
+            Py_DECREF(bubbleAtomList);
+            Py_DECREF(atomIndices);
+            Py_DECREF(vacAsIndexes);
+            Py_DECREF(bubbleVacIndexList);
+            return NULL;
+        }
+        status = PyList_SetItem(bubbleVacIndexList, i, PyArray_Return(vacAsIndexes));
+        if (status)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Could not set item in bubbleVacIndexList");
+            free(bubbleIndexMapper);
+            free(bubbleVacCount);
+            free(bubbleAtomCount);
+            Py_DECREF(bubbleVacList);
+            Py_DECREF(bubbleAtomList);
+            Py_DECREF(vacAsIndexes);
+            Py_DECREF(bubbleVacIndexList);
+            return NULL;
+        }
+    }
+    
+    /* loop over vacancies, putting into bubbles */
+    for (i = 0; i < NBubbles; i++) bubbleVacCount[i] = 0;
+    for (i = 0; i < NVacancies; i++)
+    {
+        int clusterIndex = vacancyCluster[i];
+        int bubbleIndex = bubbleIndexMapper[clusterIndex];
+        
+        if (bubbleIndex > -1)
+        {
+            PyArrayObject *bubbleVacIndices=NULL;
+            PyArrayObject *bubbleVacAsIndexes=NULL;
+            
+            /* get the numpy array of vacancy indices for this bubble */
+            bubbleVacIndices = (PyArrayObject *) PyList_GetItem(bubbleVacList, bubbleIndex);
+            if (bubbleVacIndices == NULL)
+            {
+                free(bubbleIndexMapper);
+                free(bubbleVacCount);
+                free(bubbleAtomCount);
+                Py_DECREF(bubbleVacList);
+                Py_DECREF(bubbleAtomList);
+                Py_DECREF(bubbleVacIndexList);
+                return NULL;
+            }
+            bubbleVacAsIndexes = (PyArrayObject *) PyList_GetItem(bubbleVacIndexList, bubbleIndex);
+            if (bubbleVacAsIndexes == NULL)
+            {
+                free(bubbleIndexMapper);
+                free(bubbleVacCount);
+                free(bubbleAtomCount);
+                Py_DECREF(bubbleVacList);
+                Py_DECREF(bubbleAtomList);
+                Py_DECREF(bubbleVacIndexList);
+                return NULL;
+            }
+            
+            /* store this vacancy */
+            IIND1(bubbleVacIndices, bubbleVacCount[bubbleIndex]) = vacancies[i];
+            IIND1(bubbleVacAsIndexes, bubbleVacCount[bubbleIndex]) = i;
+            bubbleVacCount[bubbleIndex]++;
+        }
+    }
+    free(bubbleVacCount);
+    
+    /* loop over bubble atoms, putting into bubbles */
+    for (i = 0; i < NBubbles; i++) bubbleAtomCount[i] = 0;
+    for (i = 0; i < NBubbleAtoms; i++)
+    {
+        int clusterIndex = bubbleAtomCluster[i];
+        int bubbleIndex = bubbleIndexMapper[clusterIndex];
+        
+        if (bubbleIndex > -1)
+        {
+            PyArrayObject *bubbleIndices=NULL;
+            
+            /* get the numpy array of vacancy indices for this bubble */
+            bubbleIndices = (PyArrayObject *) PyList_GetItem(bubbleAtomList, bubbleIndex);
+            if (bubbleIndices == NULL)
+            {
+                free(bubbleIndexMapper);
+                free(bubbleAtomCount);
+                Py_DECREF(bubbleVacList);
+                Py_DECREF(bubbleAtomList);
+                Py_DECREF(bubbleVacIndexList);
+                return NULL;
+            }
+            
+            /* store this vacancy */
+            IIND1(bubbleIndices, bubbleAtomCount[bubbleIndex]) = bubbleAtomIndices[i];
+            bubbleAtomCount[bubbleIndex]++;
+        }
+    }
+    free(bubbleAtomCount);
+    free(bubbleIndexMapper);
+    
+    /* result tuple */
+    result = PyTuple_New(4);
+    if (result == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate result");
+        Py_DECREF(bubbleVacList);
+        Py_DECREF(bubbleAtomList);
+        Py_DECREF(bubbleVacIndexList);
+        return NULL;
+    }
+    status = PyTuple_SetItem(result, 0, bubbleVacList);
+    if (status)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Could not set item on result");
+        Py_DECREF(bubbleVacList);
+        Py_DECREF(bubbleAtomList);
+        Py_DECREF(bubbleVacIndexList);
+        Py_DECREF(result);
+        return NULL;
+    }
+    status = PyTuple_SetItem(result, 1, bubbleAtomList);
+    if (status)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Could not set item on result");
+        Py_DECREF(bubbleAtomList);
+        Py_DECREF(bubbleVacIndexList);
+        Py_DECREF(result);
+        return NULL;
+    }
+    status = PyTuple_SetItem(result, 2, bubbleVacIndexList);
+    if (status)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "Could not set item on result");
+        Py_DECREF(bubbleVacIndexList);
+        Py_DECREF(result);
+        return NULL;
+    }
+    
+    /* create numpy array for vacancies too */
+    {
+        npy_intp dims[1];
+        PyArrayObject *vacsnp=NULL;
+        
+        /* allocate numpy array */
+        dims[0] = NVacancies;
+        vacsnp = (PyArrayObject *) PyArray_SimpleNew(1, dims, NPY_INT32);
+        if (vacsnp == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate vacsnp");
+            Py_DECREF(result);
+            return NULL;
+        }
+        
+        /* populate array with vacancies */
+        for (i = 0; i < NVacancies; i++) IIND1(vacsnp, i) = vacancies[i];
+        
+        /* add to result */
+        status = PyTuple_SetItem(result, 3, PyArray_Return(vacsnp));
+        if (status)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Could not set item on result");
+            Py_DECREF(vacsnp);
+            Py_DECREF(result);
+            return NULL;
+        }
+    }
+    
+    return result;
+}
+
+/*******************************************************************************
  * Determine the cluster index for the bubble atoms
  *******************************************************************************/
 static int
 getClusterIndexForBubbleAtoms(int NBubbleAtoms, int *bubbleAtomIndices, double *pos, int NVacancies, int *vacancies, double *refPos,
-        int *bubbleAtomCluster, int *NBubbleAtomsCluster, double *cellDims, int *pbc, double vacBubbleRad, int NClusters, int *counters)
+        int *bubbleAtomCluster, int *NBubbleAtomsCluster, double *cellDims, int *pbc, double vacBubbleRad, int NClusters,
+        int *vacancyCluster, int *counters)
 {
     int i, numBubbles;
     double *vacPos, *bubbleAtomPos;
@@ -382,7 +751,7 @@ getClusterIndexForBubbleAtoms(int NBubbleAtoms, int *bubbleAtomIndices, double *
             if (neb.separation < vacBubbleRad)
             {
                 int vacIndex = neb.index;
-                int clusterIndex = vacClusterIndexes[vacIndex];
+                int clusterIndex = vacancyCluster[vacIndex];
                 bubbleAtomCluster[i] = clusterIndex;
                 NBubbleAtomsCluster[clusterIndex]++;
             }
@@ -407,10 +776,10 @@ getClusterIndexForBubbleAtoms(int NBubbleAtoms, int *bubbleAtomIndices, double *
  * Find clusters of vacancies
  *******************************************************************************/
 static int
-findVacancyClusters(int NVacancies, int *vacancies, double *refPos, int *defectCluster, double clusterRadius, double *cellDims, int *pbc)
+findVacancyClusters(int NVacancies, int *vacancies, double *refPos, int *defectCluster, int *NDefectsCluster, double clusterRadius,
+        double *cellDims, int *pbc, int *counters)
 {
     int i, boxstat, NClusters, maxNumInCluster;
-    int *NDefectsCluster;
     double *defectPos, approxBoxWidth, maxSep2;
     struct Boxes *boxes;
     
@@ -451,16 +820,6 @@ findVacancyClusters(int NVacancies, int *vacancies, double *refPos, int *defectC
     {
         free(defectPos);
         return 3;
-    }
-    
-    /* number of defects per cluster */
-    NDefectsCluster = malloc(NVacancies * sizeof(int));
-    if (NDefectsCluster == NULL)
-    {
-        PyErr_SetString(PyExc_MemoryError, "Could not allocate NDefectsCluster");
-        free(defectPos);
-        freeBoxes(boxes);
-        return 4;
     }
     
     /* rad squared */
@@ -513,11 +872,7 @@ findVacancyClusters(int NVacancies, int *vacancies, double *refPos, int *defectC
         return 6;
     }
     
-    
-    
-    
-    /* free stuff */
-    free(NDefectsCluster);
+    counters[0] = NClusters;
     
 #ifdef DEBUG
     printf("BUBBLESC:     Found %d vacancy clusters\n", NClusters);
@@ -584,7 +939,7 @@ static int findDefectNeighbours(int index, int clusterID, int numInCluster, int*
 static int
 refineVacancies(int NBubbleAtoms, int *bubbleIndices, int NVacanciesOld, int *vacancies, int NInterstitials, int *interstitials,
         int NSplitInterstitials, int *splitInterstitials, double *pos, double *refPos, int *counters, double *cellDims, int *pbc,
-        double vacBubbleRad)
+        double vacBubbleRad, double vacIntRad)
 {
     int i, NVacancies, count, NIntsForPos, *vacMask;
     double *vacPos, *bubbleAtomPos, *intPos;
@@ -676,7 +1031,7 @@ refineVacancies(int NBubbleAtoms, int *bubbleIndices, int NVacanciesOld, int *va
     }
     
     /* we build a neighbour list for each vacancy, containing neighbouring interstitial atoms */
-    nebListInts = constructNeighbourList2DiffPos(NVacanciesOld, vacPos, NIntsForPos, intPos, cellDims, pbc, vacBubbleRad);
+    nebListInts = constructNeighbourList2DiffPos(NVacanciesOld, vacPos, NIntsForPos, intPos, cellDims, pbc, vacIntRad);
     free(intPos);
     free(vacPos);
     if (nebListInts == NULL)
@@ -705,7 +1060,9 @@ refineVacancies(int NBubbleAtoms, int *bubbleIndices, int NVacanciesOld, int *va
         if (nebListBubs[i].neighbourCount > 0)
         {
             if (nebListBubs[i].neighbour[0].separation < vacBubbleRad)
-            vacMask[i] = 1;
+            {
+                vacMask[i] = 1;
+            }
         }
     }
     
@@ -714,7 +1071,7 @@ refineVacancies(int NBubbleAtoms, int *bubbleIndices, int NVacanciesOld, int *va
     {
         if (vacMask[i] == 0 && nebListInts[i].neighbourCount > 0)
         {
-            if (nebListInts[i].neighbour[0].separation < vacBubbleRad)
+            if (nebListInts[i].neighbour[0].separation < vacIntRad)
             {
                 vacMask[i] = -1;
             }
@@ -759,7 +1116,7 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
     
 
 #ifdef DEBUG
-    printf("DEFECTSC: Identifying split interstitials (new)\n");
+    printf("BUBBLESC:   Identifying split interstitials (new)\n");
 #endif
     
     /* build positions array of all vacancies and interstitials */
@@ -832,34 +1189,6 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
     for (i = 0; i < NInterstitials; i++)
         qsort(nebListInts[i].neighbour, nebListInts[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
     
-#ifdef DEBUGSPLIT
-    printf("DEFECTSC: Vacancy neb lists\n");
-    for (i = 0; i < NVacancies; i++)
-    {
-        int j;
-
-        printf("DEFECTSC:   Vacancy %d\n", i);
-        for (j = 0; j < nebListVacs[i].neighbourCount; j++)
-        {
-            struct Neighbour neb = nebListVacs[i].neighbour[j];
-            printf("DEFECTSC:     Neb %d: int index %d; sep %lf\n", j, neb.index, neb.separation);
-        }
-    }
-
-    printf("DEFECTSC: Interstitial neb lists\n");
-    for (i = 0; i < NInterstitials; i++)
-    {
-        int j;
-
-        printf("DEFECTSC:   Interstitial %d\n", i);
-        for (j = 0; j < nebListInts[i].neighbourCount; j++)
-        {
-            struct Neighbour neb = nebListInts[i].neighbour[j];
-            printf("DEFECTSC:     Neb %d: vac index %d; sep %lf\n", j, neb.index, neb.separation);
-        }
-    }
-#endif
-    
     /* loop over vacancies, checking if they belong to a split interstitial */
     NSplit = 0;
     for (i = 0; i < NVacancies; i++)
@@ -870,11 +1199,6 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
         /* list of neighbouring interstitials for this vacancy */
         vacNebs = nebListVacs[i];
         numVacNebs = vacNebs.neighbourCount;
-        
-#ifdef DEBUGSPLIT
-        printf("DEFECTSC: Checking if vacancy %d (%d) belongs to a split interstitial\n", i, vacancies[i]);
-        printf("DEFECTSC:   Number of neighbouring interstitials: %d\n", numVacNebs);
-#endif
         
         /* proceed only if have at least 2 neighbouring interstitials */
         if (numVacNebs > 1)
@@ -894,13 +1218,7 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
                 
                 /* check if closest vacancy is this one */
                 if (numIntNebs > 0 && intNebs.neighbour[0].index == i)
-                {
                     splitIndexes[splitCount++] = vacNeb.index;
-                    
-#ifdef DEBUGSPLIT
-                    printf("DEFECTSC:     Interstitial neighbour %d (%d) is closest to this vacancy (separation = %lf)\n", j, vacNeb.index, vacNeb.separation);
-#endif
-                }
                 
                 j++;
             }
@@ -909,10 +1227,6 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
             if (splitCount == 2)
             {
                 int n3 = 3 * NSplit;
-                
-#ifdef DEBUGSPLIT
-                printf("DEFECTSC:   Vacancy %d is split: %d, %d\n", i, splitIndexes[0], splitIndexes[1]);
-#endif
 
                 /* store vacancy in split interstitials array */
                 splitInterstitials[n3] = vacancies[i];
@@ -939,7 +1253,7 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
     }
     
 #ifdef DEBUG
-    printf("DEFECTSC: Found %d split interstitials\n", NSplit);
+    printf("DEFECTSC:     Found %d split interstitials\n", NSplit);
 #endif
     
     /* free memory */

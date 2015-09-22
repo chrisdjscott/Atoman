@@ -27,8 +27,9 @@ The following parameters apply to this filter:
         of the vacancy. Bubble atoms will only be associated to the vacancy they
         are closest to.
     
-    
-
+    Vacancy-interstitial association radius
+        A vacancy is ignored if no bubble atom is within `vacancy bubble radius`
+        of it and there is an interstitial within this distance.
 
 """
 import copy
@@ -55,6 +56,7 @@ class BubblesFilterSettings(base.BaseSettings):
         self.registerSetting("vacancyRadius", 1.3)
         self.registerSetting("vacNebRad", 4.0)
         self.registerSetting("vacancyBubbleRadius", 3.0) # should be less than above!?
+        self.registerSetting("vacIntRad", 2.6)
     
 
 
@@ -111,77 +113,63 @@ class BubblesFilter(base.BaseFilter):
         vacancyRadius = settings.getSetting("vacancyRadius")
         vacBubbleRad = settings.getSetting("vacancyBubbleRadius")
         vacNebRad = settings.getSetting("vacNebRad")
+        vacIntRad = settings.getSetting("vacIntRad")
         acnaArray = np.empty(0, np.float64)
-        _bubbles.identifyBubbles(inputState.NAtoms, inputState.pos, refState.NAtoms, refState.pos, filterInput.driftCompensation,
-                                 filterInput.driftVector, inputState.cellDims, inputState.PBC, numBubbleAtoms, bubbleAtomIndexes,
-                                 vacBubbleRad, acnaArray, vacancyRadius, vacNebRad)
+        result = _bubbles.identifyBubbles(inputState.NAtoms, inputState.pos, refState.NAtoms, refState.pos, filterInput.driftCompensation,
+                                          filterInput.driftVector, inputState.cellDims, inputState.PBC, numBubbleAtoms, bubbleAtomIndexes,
+                                          vacBubbleRad, acnaArray, vacancyRadius, vacNebRad, vacIntRad)
         
+        # unpack
+        bubbleVacList = result[0]
+        bubbleAtomList = result[1]
+        bubbleVacAsIndexList = result[2]
+        vacancies = result[3]
+        numBubbles = len(bubbleVacList)
         
+        # compute voronoi volumes of atoms and vacancies
+        voronoiOptions = VoroOptsSimple()
+        vor = voronoi.computeVoronoiDefects(inputState, refState, vacancies, voronoiOptions, inputState.PBC)
         
+        # create list of bubbles
+        bubbleList = []
+        for bubbleIndex in xrange(numBubbles):
+            volume = 0.0
+            
+            # add volumes of bubble atoms
+            bubbleAtoms = bubbleAtomList[bubbleIndex]
+            for index in bubbleAtoms:
+                volume += vor.atomVolume(index)
+            
+            # add volumes of vacancies
+            bubbleVacs = bubbleVacList[bubbleIndex]
+            bubbleVacsAsIndexes = bubbleVacAsIndexList[bubbleIndex]
+            for i in xrange(len(bubbleVacs)):
+                vacind = bubbleVacsAsIndexes[i]
+                index = inputState.NAtoms + vacind
+                volume += vor.atomVolume(index)
         
-        # compute voronoi volumes of atoms
-#         voronoiOptions = VoroOptsSimple()
-#         vor = voronoi.computeVoronoiDefects(inputState, refState, defectsInput.vacancies, voronoiOptions, inputState.PBC)
-#         vacClusterVolumes = np.empty(len(vacClusters), np.float64)
-#         vacClusterSizes = np.zeros(len(vacClusters), np.int32)
-#         vacClusterIndexes = np.empty(len(defectsInput.vacancies), dtype=np.int32)
-#         count = 0
-#         for cluster in vacClusters:
-#             # add volumes of vacancies
-#             volume = 0.0
-#             for i in xrange(cluster.getNVacancies()):
-#                 vacind = cluster.vacAsIndex[i]
-#                 index = lattice.NAtoms + vacind
-#                 volume += vor.atomVolume(index)
-#                 vacClusterIndexes[vacind] = count
-#             
-#             # store volume
-#             cluster.volume = volume
-#             vacClusterVolumes[count] = volume
-#             self.logger.info("  Cluster %d (%d vacancies): volume is %f", count, cluster.getNDefects(), volume)
-#             
-#             # store size and vacancy indexes
-#             vacClusterSizes[count] = cluster.getNVacancies()
-#             
-#             count += 1
-#         
-#         # associate H with vacancies -- for each H list vacs within specific radius and associate with closest one
-#         vacancyBubbleRadius = settings.getSetting("vacancyBubbleRadius")
-#         result = _bubbles.putBubbleAtomsInClusters(inputState.NAtoms, inputState.pos, refState.NAtoms, refState.pos, filterInput.driftCompensation,
-#                                                    filterInput.driftVector, inputState.cellDims, inputState.PBC, numBubbleAtoms, bubbleAtomIndexes,
-#                                                    len(defectsInput.vacancies), defectsInput.vacancies, len(vacClusters), vacClusterIndexes,
-#                                                    vacancyBubbleRadius)
-#         bubbleIndices, bubbleMapper = result
-#         
-#         # create list of bubbles
-#         numBubbles = len(bubbleIndices)
-#         bubbleList = []
-#         for i in xrange(numBubbles):
-#             clusterIndex = bubbleMapper[i]
-#             bubbleAtoms = bubbleIndices[i]
-#             
-#             # volume (add bubble atom volumes)
-#             volume = vacClusterVolumes[clusterIndex]
-#             for index in bubbleAtoms:
-#                 volume += vor.atomVolume(index)
-#             
-#             # create bubble object
-#             bubble = Bubble()
-#             bubble.setRefState(refState)
-#             bubble.setInputState(inputState)
-#             bubble.setVacancies(vacClusters[clusterIndex].vacancies)
-#             bubble.setBubbleAtoms(bubbleAtoms)
-#             bubble.setVolume(volume)
-#             self.logger.debug("Adding bubble %d: ratio is %f; volume is %f", i, bubble.getRatio(), bubble.getVolume())
-#             bubbleList.append(bubble)
+            # create bubble object
+            bubble = Bubble()
+            bubble.setRefState(refState)
+            bubble.setInputState(inputState)
+            bubble.setVacancies(bubbleVacList[bubbleIndex])
+            bubble.setBubbleAtoms(bubbleAtomList[bubbleIndex])
+            bubble.setVolume(volume)
+            self.logger.debug("Adding bubble %d: %d vacancies, %d atoms (ratio: %.2f); volume is %f", bubbleIndex, bubble.getNVacancies(),
+                              bubble.getNAtoms(), bubble.getRatio(), bubble.getVolume())
+            bubbleList.append(bubble)
         
         # optionally show H that do not belong to a bubble as atoms too!?
         
         
         
+        # optionally show all defects!? (differentiate from bubbles somehow...)
+        
+        
+        
         # result
         result = base.FilterResult()
-#         result.setBubbleList(bubbleList)
+        result.setBubbleList(bubbleList)
         
         return result
     
@@ -313,7 +301,8 @@ class BubblesFilter(base.BaseFilter):
             bubble.setVacancies(vacClusters[clusterIndex].vacancies)
             bubble.setBubbleAtoms(bubbleAtoms)
             bubble.setVolume(volume)
-            self.logger.debug("Adding bubble %d: ratio is %f; volume is %f", i, bubble.getRatio(), bubble.getVolume())
+            self.logger.debug("Adding bubble %d: %d vacancies, %d atoms (ratio: %f); volume is %f", i, bubble.getNVacancies(),
+                              bubble.getNAtoms(), bubble.getRatio(), bubble.getVolume())
             bubbleList.append(bubble)
         
         # optionally show H that do not belong to a bubble as atoms too!?
