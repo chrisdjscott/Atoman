@@ -214,6 +214,7 @@ struct NeighbourList2 * constructNeighbourList2(int NAtoms, double *pos, struct 
     {
         nebList[i].chunk = 16;
         nebList[i].neighbourCount = 0;
+        nebList[i].neighbour = NULL;
     }
     
     /* loop over atoms */
@@ -319,6 +320,7 @@ struct NeighbourList2 * constructNeighbourList2DiffPos(int NAtomsRef, double *re
     {
         nebList[i].chunk = 16;
         nebList[i].neighbourCount = 0;
+        nebList[i].neighbour = NULL;
     }
     
     /* loop over ref atoms */
