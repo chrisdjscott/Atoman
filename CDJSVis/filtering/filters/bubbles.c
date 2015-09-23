@@ -598,27 +598,31 @@ constructBubbleResult(int NBubbles, int NClusters, int *vacancyCluster, int *NVa
     for (i = 0; i < NBubbleAtoms; i++)
     {
         int clusterIndex = bubbleAtomCluster[i];
-        int bubbleIndex = bubbleIndexMapper[clusterIndex];
         
-        if (bubbleIndex > -1)
+        if (clusterIndex > -1)
         {
-            PyArrayObject *bubbleIndices=NULL;
-            
-            /* get the numpy array of vacancy indices for this bubble */
-            bubbleIndices = (PyArrayObject *) PyList_GetItem(bubbleAtomList, bubbleIndex);
-            if (bubbleIndices == NULL)
+            int bubbleIndex = bubbleIndexMapper[clusterIndex];
+        
+            if (bubbleIndex > -1)
             {
-                free(bubbleIndexMapper);
-                free(bubbleAtomCount);
-                Py_DECREF(bubbleVacList);
-                Py_DECREF(bubbleAtomList);
-                Py_DECREF(bubbleVacIndexList);
-                return NULL;
-            }
+                PyArrayObject *bubbleIndices=NULL;
             
-            /* store this vacancy */
-            IIND1(bubbleIndices, bubbleAtomCount[bubbleIndex]) = bubbleAtomIndices[i];
-            bubbleAtomCount[bubbleIndex]++;
+                /* get the numpy array of vacancy indices for this bubble */
+                bubbleIndices = (PyArrayObject *) PyList_GetItem(bubbleAtomList, bubbleIndex);
+                if (bubbleIndices == NULL)
+                {
+                    free(bubbleIndexMapper);
+                    free(bubbleAtomCount);
+                    Py_DECREF(bubbleVacList);
+                    Py_DECREF(bubbleAtomList);
+                    Py_DECREF(bubbleVacIndexList);
+                    return NULL;
+                }
+            
+                /* store this vacancy */
+                IIND1(bubbleIndices, bubbleAtomCount[bubbleIndex]) = bubbleAtomIndices[i];
+                bubbleAtomCount[bubbleIndex]++;
+            }
         }
     }
     free(bubbleAtomCount);
