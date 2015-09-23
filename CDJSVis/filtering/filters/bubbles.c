@@ -280,6 +280,19 @@ identifyBubbles(PyObject *self, PyObject *args)
         }
         NVacancyClusters = counters[0];
         
+        /* Reallocate array */
+        NVacanciesCluster = realloc(NVacanciesCluster, NVacancyClusters * sizeof(int));
+        if (NVacanciesCluster == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not reallocate NVacanciesCluster");
+            if (driftCompensation) free(refPos);
+            free(vacancies);
+            free(interstitials);
+            if (NSplitInterstitials) free(splitInterstitials);
+            free(vacancyCluster);
+            return NULL;
+        }
+        
         /* allocate arrays for storing cluster indices of bubble atoms and counters */
         bubbleAtomCluster = malloc(NBubbleAtoms * sizeof(int));
         if (bubbleAtomCluster == NULL)
@@ -356,6 +369,7 @@ constructBubbleResult(int NBubbles, int NClusters, int *vacancyCluster, int *NVa
     int i, count, status;
     int *bubbleIndexMapper, *bubbleVacCount, *bubbleAtomCount;
     PyObject *result=NULL;
+    
     PyObject *bubbleAtomList=NULL;
     PyObject *bubbleVacList=NULL;
     PyObject *bubbleVacIndexList=NULL;
@@ -765,7 +779,7 @@ getClusterIndexForBubbleAtoms(int NBubbleAtoms, int *bubbleAtomIndices, double *
     numBubbles = 0;
     for (i = 0; i < NClusters; i++) if (NBubbleAtomsCluster[i] > 0) numBubbles++;
 #ifdef DEBUG
-    printf("BUBBLESC:     Number of bubbles: %d\n", numBubbles);
+    printf("BUBBLESC:     Number of bubbles: %d (%d vac clusters)\n", numBubbles, NClusters);
 #endif
     counters[0] = numBubbles;
     
@@ -863,13 +877,6 @@ findVacancyClusters(int NVacancies, int *vacancies, double *refPos, int *defectC
     {
         free(NDefectsCluster);
         return 5;
-    }
-    
-    NDefectsCluster = realloc(NDefectsCluster, NClusters * sizeof(int));
-    if (NDefectsCluster == NULL)
-    {
-        PyErr_SetString(PyExc_MemoryError, "Could not reallocate NDefectsCluster");
-        return 6;
     }
     
     counters[0] = NClusters;
