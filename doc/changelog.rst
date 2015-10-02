@@ -2,6 +2,14 @@
 Changelog
 =========
 
+**151002**
+
+* Rewrite filters to be objects, with settings objects
+* Rewrite filter settings forms to use new settings objects
+* Add documentation and tests for many filters
+* Update other parts of the documentation
+* Extra options for Slip filter
+
 **150828**
 
 * Fix bug that could have caused a segfault in some C libraries
