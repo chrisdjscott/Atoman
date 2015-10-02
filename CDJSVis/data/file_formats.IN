@@ -1,4 +1,4 @@
-7
+8
 LBOMD Lattice
  
 0
@@ -221,3 +221,23 @@ d
 Velocity
 d
 3
+CASTEP XYZ
+ 
+0
+
+2
+1
+NAtoms
+i
+1
+SKIP
+s
+1
+2
+Symbol
+i
+1
+Position
+d
+3
+ 
