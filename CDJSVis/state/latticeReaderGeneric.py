@@ -7,6 +7,8 @@ import os
 import copy
 import re
 import logging
+import tempfile
+import shutil
 
 import numpy as np
 
@@ -64,11 +66,16 @@ class FileFormats(object):
             self._maxIdentifierLength = idlen
             self.logger.debug("Max identifier length is: %d", idlen)
     
-    def read(self, filename="file_formats.IN"):
+    def read(self, filename=None):
         """
         Read from file
         
         """
+        # if no file specified, assume in resourcePath
+        if filename is None:
+            filename = utilities.resourcePath("file_formats.IN")
+        
+        # read file
         with open(filename) as f:
             numFormats = int(f.readline())
             
@@ -435,12 +442,30 @@ class LatticeReaderGeneric(object):
     Generic format Lattice reader
     
     """
-    def __init__(self, tmpLocation, updateProgress=None, hideProgress=None):
-        self.tmpLocation = tmpLocation
+    def __init__(self, tmpLocation=None, updateProgress=None, hideProgress=None):
         self.logger = logging.getLogger(__name__+".LatticeReaderGeneric")
+        
+        # create tmp dir if one isn't passed
+        if tmpLocation is None:
+            self.rmTmpDir = True
+            self.tmpLocation = tempfile.mkdtemp()
+            self.logger.debug("Created tmp directory: '%s'", self.tmpLocation)
+        else:
+            self.rmTmpDir = False
+            self.tmpLocation = tmpLocation
+        
+        
         self.updateProgress = updateProgress
         self.hideProgress = hideProgress
         self.intRegex = re.compile(r'[0-9]+')
+    
+    def __del__(self):
+        # remove the temporary directory if we created it
+        if self.rmTmpDir and os.path.exists(self.tmpLocation):
+            try:
+                shutil.rmtree(self.tmpLocation)
+            except:
+                pass
     
     def unzipFile(self, filename):
         """

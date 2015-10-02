@@ -664,7 +664,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
     """
     By default the following colouring options are available:
     
-      * **Specie**: colour by atom specie
+      * **Species**: colour by atom species
       * **Height**: colour by the x, y or z coordinate
       * **Solid colour**: colour all atoms in the filter list by the selected
         colour
@@ -696,7 +696,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/applications-graphics.png")))
         
         # defaults
-        self.colourBy = "Specie"
+        self.colourBy = "Species"
         self.heightAxis = 1
         self.minVal = 0.0
         self.maxVal = 1.0
@@ -711,7 +711,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         # combo box
         self.colouringCombo = QtGui.QComboBox()
-        self.colouringCombo.addItem("Specie")
+        self.colouringCombo.addItem("Species")
         self.colouringCombo.addItem("Height")
         self.colouringCombo.addItem("Solid colour")
         self.colouringCombo.addItem("Charge")
@@ -723,7 +723,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.stackedWidget = QtGui.QStackedWidget(self)
         
         # specie widget
-        self.specieOptions = genericForm.GenericForm(self, 0, "Specie colouring options")
+        self.specieOptions = genericForm.GenericForm(self, 0, "Species colouring options")
         
         self.stackedWidget.addWidget(self.specieOptions)
         

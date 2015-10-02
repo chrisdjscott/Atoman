@@ -1218,7 +1218,7 @@ def getActorsForFilteredSystem(visibleAtoms, mainWindow, actorsDict, colouringOp
     # scalar bar
     scalarBar_white = None
     scalarBar_black = None
-    if colouringOptions.colourBy != "Specie" and colouringOptions.colourBy != "Solid colour":
+    if colouringOptions.colourBy != "Species" and colouringOptions.colourBy != "Solid colour":
         scalarBar_white = makeScalarBar(lut, colouringOptions, (0, 0, 0))
         scalarBar_black = makeScalarBar(lut, colouringOptions, (1, 1, 1))
     
@@ -1315,9 +1315,10 @@ def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
             
             count += 1
         
+        hullCol = settings.getSetting("hullCol")
+        hullOpacity = settings.getSetting("hullOpacity")
         nl("  }")
-        nl("  pigment { color rgbt <%f,%f,%f,%f> }" % (settings.hullCol[0], settings.hullCol[1], 
-                                                       settings.hullCol[2], 1.0 - settings.hullOpacity))
+        nl("  pigment { color rgbt <%f,%f,%f,%f> }" % (hullCol[0], hullCol[1], hullCol[2], 1.0 - hullOpacity))
         nl("  finish { diffuse 0.4 ambient 0.25 phong 0.9 }")
         nl("}")
         nl("")
@@ -1520,7 +1521,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             vacsPolyData.GetPointData().SetScalars(intScalarsList[i])
             
             vacsGlyphSource = vtk.vtkCubeSource()
-            scaleVacs = 2.0 * filterSettings.vacScaleSize
+            scaleVacs = 2.0 * filterSettings.getSetting("vacScaleSize")
             vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
             vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
             vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
@@ -1542,9 +1543,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             vacsActor = vtk.vtkActor()
             vacsActor.SetMapper(vacsMapper)
-            vacsActor.GetProperty().SetSpecular(filterSettings.vacSpecular)
-            vacsActor.GetProperty().SetSpecularPower(filterSettings.vacSpecularPower)
-            vacsActor.GetProperty().SetOpacity(filterSettings.vacOpacity)
+            vacsActor.GetProperty().SetSpecular(filterSettings.getSetting("vacSpecular"))
+            vacsActor.GetProperty().SetSpecularPower(filterSettings.getSetting("vacSpecularPower"))
+            vacsActor.GetProperty().SetOpacity(filterSettings.getSetting("vacOpacity"))
             
             actorsDictLocal["Split vacs ({0})".format(refLattice.specieList[i])] = utils.ActorObject(vacsActor)
     
@@ -1644,7 +1645,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             vacsPolyData.GetPointData().SetScalars(intScalarsList[i])
             
             vacsGlyphSource = vtk.vtkCubeSource()
-            scaleVacs = 2.0 * filterSettings.vacScaleSize
+            scaleVacs = 2.0 * filterSettings.getSetting("vacScaleSize")
             vacsGlyphSource.SetXLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
             vacsGlyphSource.SetYLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
             vacsGlyphSource.SetZLength(scaleVacs * refLattice.specieCovalentRadius[i] * displayOptions.atomScaleFactor)
@@ -1666,9 +1667,9 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             
             vacsActor = vtk.vtkActor()
             vacsActor.SetMapper(vacsMapper)
-            vacsActor.GetProperty().SetSpecular(filterSettings.vacSpecular)
-            vacsActor.GetProperty().SetSpecularPower(filterSettings.vacSpecularPower)
-            vacsActor.GetProperty().SetOpacity(filterSettings.vacOpacity)
+            vacsActor.GetProperty().SetSpecular(filterSettings.getSetting("vacSpecular"))
+            vacsActor.GetProperty().SetSpecularPower(filterSettings.getSetting("vacSpecularPower"))
+            vacsActor.GetProperty().SetOpacity(filterSettings.getSetting("vacOpacity"))
             
             actorsDictLocal["Vacancies ({0})".format(refLattice.specieList[i])] = utils.ActorObject(vacsActor)
     
@@ -1745,7 +1746,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     # scalar bar
     scalarBar_white = None
     scalarBar_black = None
-    if colouringOptions.colourBy != "Specie" and colouringOptions.colourBy != "Solid colour":
+    if colouringOptions.colourBy != "Species" and colouringOptions.colourBy != "Solid colour":
         scalarBar_white = makeScalarBar(lut, colouringOptions, (0, 0, 0))
         scalarBar_black = makeScalarBar(lut, colouringOptions, (1, 1, 1))
     
@@ -1804,9 +1805,7 @@ def getActorsForHullFacets(facets, pos, mainWindow, actorsDict, settings, caller
     # actor
     actor = vtk.vtkActor()
     actor.SetMapper(mapper)
-    actor.GetProperty().SetOpacity(settings.hullOpacity)
-    actor.GetProperty().SetColor(settings.hullCol[0], settings.hullCol[1], settings.hullCol[2])
-    
-    d = {}
-    
+    actor.GetProperty().SetOpacity(settings.getSetting("hullOpacity"))
+    hullCol = settings.getSetting("hullCol")
+    actor.GetProperty().SetColor(hullCol[0], hullCol[1], hullCol[2])
     actorsDict["Hulls - ({0})".format(caller)] = utils.ActorObject(actor)

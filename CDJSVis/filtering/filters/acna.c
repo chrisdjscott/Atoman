@@ -48,9 +48,9 @@ static struct PyMethodDef methods[] = {
  ** Module initialisation function
  *******************************************************************************/
 PyMODINIT_FUNC
-initacna(void)
+init_acna(void)
 {
-    (void)Py_InitModule("acna", methods);
+    (void)Py_InitModule("_acna", methods);
     import_array();
 }
 

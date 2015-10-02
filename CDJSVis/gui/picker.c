@@ -17,7 +17,7 @@ static PyObject* pickObject(PyObject*, PyObject*);
  ** List of python methods available in this module
  *******************************************************************************/
 static struct PyMethodDef methods[] = {
-    {"pickObject", pickObject, METH_VARARGS, "Check if an object has been pickeds"},
+    {"pickObject", pickObject, METH_VARARGS, "Check if an object has been picked"},
     {NULL, NULL, 0, NULL}
 };
 

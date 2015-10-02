@@ -1,4 +1,2 @@
-Lattice generation
-==================
 
-
+.. automodule:: CDJSVis.gui.latticeGeneratorForms

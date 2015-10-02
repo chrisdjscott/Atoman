@@ -214,6 +214,7 @@ struct NeighbourList2 * constructNeighbourList2(int NAtoms, double *pos, struct 
     {
         nebList[i].chunk = 16;
         nebList[i].neighbourCount = 0;
+        nebList[i].neighbour = NULL;
     }
     
     /* loop over atoms */
@@ -319,6 +320,7 @@ struct NeighbourList2 * constructNeighbourList2DiffPos(int NAtomsRef, double *re
     {
         nebList[i].chunk = 16;
         nebList[i].neighbourCount = 0;
+        nebList[i].neighbour = NULL;
     }
     
     /* loop over ref atoms */
@@ -392,6 +394,9 @@ struct NeighbourList2 * constructNeighbourList2DiffPos(int NAtomsRef, double *re
     return nebList;
 }
 
+/*******************************************************************************
+ ** Free the neighbour list
+ *******************************************************************************/
 void freeNeighbourList2(struct NeighbourList2 *nebList, int size)
 {
     int i;
@@ -404,4 +409,18 @@ void freeNeighbourList2(struct NeighbourList2 *nebList, int size)
         }
     }
     free(nebList);
+}
+
+
+/*******************************************************************************
+ ** Function that compares two elements in a neighbour list by separation
+ *******************************************************************************/
+int compare_nebs_separation(const void * a, const void * b)
+{
+    const struct Neighbour *n1 = a;
+    const struct Neighbour *n2 = b;
+    
+    if (n1->separation < n2->separation) return -1;
+    else if (n1->separation > n2->separation) return 1;
+    else return 0;
 }

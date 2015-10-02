@@ -1301,11 +1301,7 @@ findDefects(PyObject *self, PyObject *args)
     else NSplitInterstitials = 0;
     
     /* exclude defect types and species here... */
-    if (!includeInts)
-    {
-        NInterstitials = 0;
-        NSplitInterstitials = 0;
-    }
+    if (!includeInts) NInterstitials = 0;
     else
     {
         NIntNew = 0;

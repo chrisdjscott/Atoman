@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Analysis is performed using an *Analysis pipeline*, found on the *Analysis toolbar* on the left of the application (see image).  
+Analysis is performed using an *Analysis pipeline*, found on the *Analysis toolbar* on the left of the application (see right).  
 Multiple pipelines can be configured at once; a pipeline is viewed in a renderer window. 
 
 An individual pipeline takes a reference and an input system as its input and contains one or more filter/calculator lists.  These

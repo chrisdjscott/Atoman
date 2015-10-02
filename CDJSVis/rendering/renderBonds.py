@@ -27,7 +27,7 @@ def getScalarValue(lattice, index, scalars, scalarsIndex, colouringOptions):
     Set the scalar value.
     
     """
-    if colouringOptions.colourBy == "Specie" or colouringOptions.colourBy == "Solid colour":
+    if colouringOptions.colourBy == "Species" or colouringOptions.colourBy == "Solid colour":
         scalar = lattice.specie[index]
     
     elif colouringOptions.colourBy == "Height":
@@ -231,9 +231,9 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict
     logger = logging.getLogger(__name__)
     
     # SETTINGS
-    bondThicknessVTK = bondsOptions.bondThicknessVTK
-    bondThicknessPOV = bondsOptions.bondThicknessPOV
-    bondNumSides = bondsOptions.bondNumSides
+    bondThicknessVTK = bondsOptions.getSetting("bondThicknessVTK")
+    bondThicknessPOV = bondsOptions.getSetting("bondThicknessPOV")
+    bondNumSides = bondsOptions.getSetting("bondNumSides")
     # END SETTINGS
     
     # scalar type

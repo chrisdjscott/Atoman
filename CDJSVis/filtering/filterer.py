@@ -10,16 +10,14 @@ import copy
 import time
 import logging
 import itertools
+import importlib
 
 import numpy as np
 from PySide import QtGui, QtCore
 
-from . import _filtering as filtering_c
-from . import _defects as defects_c
+from .filters import _filtering as filtering_c
 from . import _clusters as clusters_c
 from . import bonds as bonds_c
-from . import bond_order as bond_order
-from . import acna
 from ..rendering import renderer
 from ..rendering import renderBonds
 from ..algebra import vectors
@@ -27,6 +25,7 @@ from . import clusters
 from ..state.atoms import elements
 from . import voronoi
 from ..rendering import renderVoronoi
+from .filters import base
 
 
 ################################################################################
@@ -374,13 +373,15 @@ class Filterer(object):
         if not self.parent.isPersistentList():
             self.removeActors(sequencer=sequencer)
         
-        # first set up visible atoms arrays
+        # input and reference states
         inputState = self.pipelinePage.inputState
-        NAtoms = inputState.NAtoms
+        refState = self.pipelinePage.refState
         
+        # set up visible atoms or defect arrays
         if not self.parent.defectFilterSelected:
-            self.visibleAtoms = np.arange(NAtoms, dtype=np.int32)
-            self.NVis = NAtoms
+            self.logger.debug("Setting all atoms visible initially")
+            self.visibleAtoms = np.arange(inputState.NAtoms, dtype=np.int32)
+            self.NVis = inputState.NAtoms
             self.logger.info("%d visible atoms", len(self.visibleAtoms))
             
             # set Lattice scalars
@@ -395,13 +396,21 @@ class Filterer(object):
                 self.logger.debug("  Adding '%s' vectors", vectorsName)
                 self.vectorsDict[vectorsName] = vectors
         
+        else:
+            # initialise defect arrays
+            self.interstitials = np.empty(inputState.NAtoms, dtype=np.int32)
+            self.vacancies = np.empty(refState.NAtoms, dtype=np.int32)
+            self.antisites = np.empty(refState.NAtoms, dtype=np.int32)
+            self.onAntisites = np.empty(refState.NAtoms, dtype=np.int32)
+            self.splitInterstitials = np.empty(3 * refState.NAtoms, dtype=np.int32)
+        
         # pov-ray hull file
         hullFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_hulls%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID)))
         
         # drift compensation
         if self.parent.driftCompensation:
-            filtering_c.calculate_drift_vector(NAtoms, self.pipelinePage.inputState.pos, self.pipelinePage.refState.pos, self.pipelinePage.refState.cellDims, 
-                                               self.pipelinePage.PBC, self.driftVector)
+            filtering_c.calculate_drift_vector(inputState.NAtoms, self.pipelinePage.inputState.pos, self.pipelinePage.refState.pos,
+                                               self.pipelinePage.refState.cellDims, self.pipelinePage.PBC, self.driftVector)
             self.logger.info("Calculated drift vector: (%f, %f, %f)" % tuple(self.driftVector))
         
         # run filters
@@ -418,74 +427,89 @@ class Filterer(object):
             filterName = array[0].strip()
             
             # filter settings
-            filterSettings = currentSettings[i]
+            filterSettingsGui = currentSettings[i]
+            filterSettings = filterSettingsGui.getSettings()
+            if filterSettings is None:
+                filterSettings = filterSettingsGui
             
-            self.logger.info("Running filter: '%s'", filterName)
+            # determine the name of filter module
+            if filterName.startswith("Scalar: "):
+                moduleName = "genericScalarFilter"
+                filterObjectName = "GenericScalarFilter"
+            else:
+                words = str(filterName).title().split()
+                filterObjectName = "%sFilter" % "".join(words)
+                moduleName = filterObjectName[:1].lower() + filterObjectName[1:]
+            self.logger.debug("Loading filter module: '%s'", moduleName)
+            self.logger.debug("Creating filter object: '%s'", filterObjectName)
             
-            if filterName == "Species":
-                self.filterSpecie(filterSettings)
+            # load module
+            filterModule = importlib.import_module(".{0}".format(moduleName), package="CDJSVis.filtering.filters")
             
-            elif filterName == "Crop box":
-                self.cropFilter(filterSettings)
-            
-            elif filterName == "Displacement":
-                self.displacementFilter(filterSettings)
-                drawDisplacementVectors = filterSettings.drawDisplacementVectors
-                displacementSettings = filterSettings
-            
-            elif filterName == "Point defects":
-                interstitials, vacancies, antisites, onAntisites, splitInterstitials = self.pointDefectFilter(filterSettings)
-                
-                self.interstitials = interstitials
-                self.vacancies = vacancies
-                self.antisites = antisites
-                self.onAntisites = onAntisites
-                self.splitInterstitials = splitInterstitials
-            
-            elif filterName == "Charge":
-                self.chargeFilter(filterSettings)
-            
-            elif filterName == "Cluster":
-                self.clusterFilter(filterSettings)
-                
-                if filterSettings.drawConvexHulls:
-                    self.clusterFilterDrawHulls(filterSettings, hullFile)
-                
-                if filterSettings.calculateVolumes:
-                    self.clusterFilterCalculateVolumes(filterSettings)
-            
-            elif filterName == "Crop sphere":
-                self.cropSphereFilter(filterSettings)
-            
-            elif filterName == "Slice":
-                self.sliceFilter(filterSettings)
-            
-            elif filterName == "Coordination number":
-                self.coordinationNumberFilter(filterSettings)
-            
-            elif filterName == "Voronoi volume":
-                self.voronoiVolumeFilter(filterSettings)
-            
-            elif filterName == "Voronoi neighbours":
-                self.voronoiNeighboursFilter(filterSettings)
-            
-            elif filterName == "Bond order":
-                self.bondOrderFilter(filterSettings)
-            
-            elif filterName == "Atom ID":
-                self.atomIndexFilter(filterSettings)
-            
-            elif filterName == "ACNA":
-                self.acnaFilter(filterSettings)
-            
-            elif filterName.startswith("Scalar: "):
-                self.genericScalarFilter(filterName, filterSettings)
-            
-            elif filterName.startswith("Slip"):
-                self.slipFilter(filterSettings)
+            # load dialog
+            filterObject = getattr(filterModule, filterObjectName, None)
+            if filterObject is None:
+                self.logger.error("Could not locate filter object for: '%s'", filterNameString)
             
             else:
-                self.logger.warning("Unrecognised filter: '%s'; skipping", filterName)
+                self.logger.info("Running filter: '%s'", filterName)
+                
+                # filter
+                filterObject = filterObject(filterName)
+                
+                # check if we need to compute the Voronoi tessellation
+                if filterObject.requiresVoronoi:
+                    self.calculateVoronoi()
+                
+                # construct filter input object
+                filterInput = base.FilterInput()
+                filterInput.visibleAtoms = self.visibleAtoms
+                filterInput.inputState = self.pipelinePage.inputState
+                filterInput.refState = self.pipelinePage.refState
+                filterInput.ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
+                filterInput.voronoiOptions = self.voronoiOptions
+                filterInput.bondDict = elements.bondDict
+                filterInput.NScalars, filterInput.fullScalars = self.makeFullScalarsArray()
+                filterInput.NVectors, filterInput.fullVectors = self.makeFullVectorsArray()
+                filterInput.voronoi = self.voronoi
+                filterInput.driftCompensation = self.parent.driftCompensation
+                filterInput.driftVector = self.driftVector
+                filterInput.vacancies = self.vacancies
+                filterInput.interstitials = self.interstitials
+                filterInput.splitInterstitials = self.splitInterstitials
+                filterInput.antisites = self.antisites
+                filterInput.onAntisites = self.onAntisites
+                filterInput.defectFilterSelected = self.parent.defectFilterSelected
+                
+                # run the filter
+                result = filterObject.apply(filterInput, filterSettings)
+                
+                # cluster list
+                if result.hasClusterList():
+                    self.clusterList = result.getClusterList()
+                
+                # structure counters
+                if result.hasStructureCounterDict():
+                    self.structureCounterDicts[result.getStructureCounterName()] = result.getStructureCounterDict()
+                
+                # full vectors/scalars
+                self.storeFullScalarsArray(len(self.visibleAtoms), filterInput.NScalars, filterInput.fullScalars)
+                self.storeFullVectorsArray(len(self.visibleAtoms), filterInput.NVectors, filterInput.fullVectors)
+                
+                # new scalars
+                self.scalarsDict.update(result.getScalars())
+                
+                # custom (ideally generalise this too...)
+                if (filterName == "Displacement" or filterName == "Point defects") and inputState.NAtoms == refState.NAtoms:
+                    drawDisplacementVectors = filterSettings.getSetting("drawDisplacementVectors")
+                    displacementSettings = filterSettings
+                
+                elif filterName == "Cluster":
+                    if filterSettings.getSetting("drawConvexHulls"):
+                        self.clusterFilterDrawHulls(filterSettings, hullFile)
+                     
+                    if filterSettings.getSetting("calculateVolumes"):
+                        self.clusterFilterCalculateVolumes(filterSettings)
             
             # write to log
             if self.parent.defectFilterSelected:
@@ -515,23 +539,27 @@ class Filterer(object):
         povfile = "pipeline%d_atoms%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
         if self.parent.defectFilterSelected:
             # defects filter always first (for now...)
-            filterSettings = currentSettings[0]
+            filterSettingsGui = currentSettings[0]
+            filterSettings = filterSettingsGui.getSettings()
+            if filterSettings is None:
+                filterSettings = filterSettingsGui
             
             # render convex hulls
-            if filterSettings.findClusters and filterSettings.drawConvexHulls:
+            if filterSettings.getSetting("findClusters") and filterSettings.getSetting("drawConvexHulls"):
                 self.pointDefectFilterDrawHulls(filterSettings, hullFile)
             
             # cluster volume
-            if filterSettings.findClusters and filterSettings.calculateVolumes:
+            if filterSettings.getSetting("findClusters") and filterSettings.getSetting("calculateVolumes"):
                 self.pointDefectFilterCalculateClusterVolumes(filterSettings)
             
             # render defects
-            if filterSettings.findClusters and filterSettings.drawConvexHulls and filterSettings.hideDefects:
+            if filterSettings.getSetting("findClusters") and filterSettings.getSetting("drawConvexHulls") and filterSettings.getSetting("hideDefects"):
                 pass
             
             else:
-                counters = renderer.getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites, splitInterstitials, self.actorsDict, 
-                                                                self.colouringOptions, filterSettings, self.displayOptions, self.pipelinePage)
+                counters = renderer.getActorsForFilteredDefects(self.interstitials, self.vacancies, self.antisites, self.onAntisites,
+                                                                self.splitInterstitials, self.actorsDict, self.colouringOptions,
+                                                                filterSettings, self.displayOptions, self.pipelinePage)
                 
                 self.vacancySpecieCount = counters[0]
                 self.interstitialSpecieCount = counters[1]
@@ -542,12 +570,16 @@ class Filterer(object):
                 
                 # write pov-ray file too
                 povfile = "pipeline%d_defects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
-                renderer.writePovrayDefects(povfile, vacancies, interstitials, antisites, onAntisites, filterSettings, self.mainWindow, 
-                                            self.displayOptions, splitInterstitials, self.pipelinePage)
+                renderer.writePovrayDefects(povfile, self.vacancies, self.interstitials, self.antisites, self.onAntisites,
+                                            filterSettings, self.mainWindow, self.displayOptions, self.splitInterstitials, self.pipelinePage)
                 self.povrayAtomsWritten = True
+            
+            # draw displacement vectors on interstitials atoms
+            if drawDisplacementVectors:
+                self.renderInterstitialDisplacementVectors(displacementSettings)
         
         else:
-            if filterName == "Cluster" and filterSettings.drawConvexHulls and filterSettings.hideAtoms:
+            if filterName == "Cluster" and filterSettings.getSetting("drawConvexHulls") and filterSettings.getSetting("hideAtoms"):
                 pass
             
             else:
@@ -618,205 +650,6 @@ class Filterer(object):
         
         self.logger.debug("Povray atoms written in %f s (%s)", povtime, uniqueID)
     
-    def voronoiNeighboursFilter(self, settings):
-        """
-        Voronoi neighbours filter
-        
-        """
-        # calculate Voronoi tessellation
-        status = self.calculateVoronoi()
-        
-        if status:
-            self.logger.error("Calculate Voronoi volume failed")
-            self.visibleAtoms.resize(0, refcheck=False)
-            return status
-        
-        vor = self.voronoi
-        
-        # new scalars array
-        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        
-        # full scalars array
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # make array of neighbours
-        num_nebs_array = vor.atomNumNebsArray()
-        
-        NVisible = filtering_c.voronoiNeighboursFilter(self.visibleAtoms, num_nebs_array, settings.minVoroNebs, settings.maxVoroNebs, 
-                                                       scalars, NScalars, fullScalars, settings.filteringEnabled, NVectors, fullVectors)
-        
-        # update scalars/vectors dicts
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-
-        # store scalars
-        scalars.resize(NVisible, refcheck=False)
-        self.scalarsDict["Voronoi neighbours"] = scalars
-    
-    def voronoiVolumeFilter(self, settings):
-        """
-        Voronoi volume filter
-        
-        """
-        # calculate Voronoi tessellation
-        status = self.calculateVoronoi()
-        
-        if status:
-            self.logger.error("Calculate Voronoi volume failed")
-            self.visibleAtoms.resize(0, refcheck=False)
-            return status
-        
-        vor = self.voronoi
-        
-        # new scalars array
-        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # make array of volumes
-        atom_volumes = vor.atomVolumesArray()
-        
-        NVisible = filtering_c.voronoiVolumeFilter(self.visibleAtoms, atom_volumes, settings.minVoroVol, settings.maxVoroVol, 
-                                                   scalars, NScalars, fullScalars, settings.filteringEnabled, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-
-        # store scalars
-        scalars.resize(NVisible, refcheck=False)
-        self.scalarsDict["Voronoi volume"] = scalars
-    
-    def slipFilter(self, settings):
-        """
-        Slip filter
-        
-        """
-        # input and ref
-        inputState = self.pipelinePage.inputState
-        refState = self.pipelinePage.refState
-        
-        # new scalars array
-        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # call C library
-        NVisible = filtering_c.slipFilter(self.visibleAtoms, scalars, inputState.pos, refState.pos, inputState.cellDims,
-                                          inputState.PBC, settings.minSlip, settings.maxSlip, NScalars, fullScalars,
-                                          settings.filteringEnabled, self.parent.driftCompensation, self.driftVector,
-                                          NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-
-        # store scalars
-        scalars.resize(NVisible, refcheck=False)
-        self.scalarsDict["Slip"] = scalars
-    
-    def bondOrderFilter(self, settings):
-        """
-        Bond order filter
-        
-        """
-        inputState = self.pipelinePage.inputState
-        
-        # new scalars array
-        scalarsQ4 = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        scalarsQ6 = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # num threads
-        ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
-        
-        NVisible = bond_order.bondOrderFilter(self.visibleAtoms, inputState.pos, settings.maxBondDistance, scalarsQ4, scalarsQ6,
-                                                inputState.cellDims, self.pipelinePage.PBC, NScalars, fullScalars, settings.filterQ4Enabled,
-                                                settings.minQ4, settings.maxQ4, settings.filterQ6Enabled, settings.minQ6, settings.maxQ6,
-                                                ompNumThreads, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-
-        # store scalars
-        scalarsQ4.resize(NVisible, refcheck=False)
-        scalarsQ6.resize(NVisible, refcheck=False)
-        self.scalarsDict["Q4"] = scalarsQ4
-        self.scalarsDict["Q6"] = scalarsQ6
-    
-    def acnaFilter(self, settings):
-        """
-        Adaptive common neighbour analysis
-        
-        """
-        inputState = self.pipelinePage.inputState
-        
-        # new scalars array
-        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # number of openmp threads
-        ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
-        
-        # counter array
-        counters = np.zeros(7, np.int32)
-        
-        NVisible = acna.adaptiveCommonNeighbourAnalysis(self.visibleAtoms, inputState.pos, scalars, inputState.cellDims, self.pipelinePage.PBC,
-                                                        NScalars, fullScalars, settings.maxBondDistance, counters, settings.filteringEnabled,
-                                                        settings.structureVisibility, ompNumThreads, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-
-        # store scalars
-        scalars.resize(NVisible, refcheck=False)
-        self.scalarsDict["ACNA"] = scalars
-        
-        # store counters
-        d = {}
-        for i, structure in enumerate(self.knownStructures):
-            if counters[i] > 0:
-                d[structure] = counters[i]
-        self.structureCounterDicts["ACNA structure count"] = d
-    
     def calculateVoronoi(self):
         """
         Calc voronoi tesselation
@@ -826,8 +659,6 @@ class Filterer(object):
         inputState = self.pipelinePage.inputState
         if self.voronoi is None:
             self.voronoi = voronoi.computeVoronoi(inputState, self.voronoiOptions, PBC)
-        
-        return 0
     
     def renderVoronoi(self):
         """
@@ -1131,36 +962,37 @@ class Filterer(object):
                 vectors_cp.resize((NVisible, 3), refcheck=False)
                 self.vectorsDict[key] = vectors_cp
     
-    def filterSpecie(self, settings):
+    def renderInterstitialDisplacementVectors(self, settings):
         """
-        Filter by specie
+        Compute and render displacement vectors for interstitials.
         
         """
-        visibleSpecieList = settings.getVisibleSpecieList()
-        specieList = self.pipelinePage.inputState.specieList
+        numint = len(self.interstitials)
+        self.logger.debug("Drawing displacement vectors for interstitials (%d)", numint)
+         
+        # need to make a unique list for interstitials and split intersitials and antisites
         
-        # make visible specie array
-        visSpecArray = []
-        for i, sym in enumerate(specieList):
-            if sym in visibleSpecieList:
-                visSpecArray.append(i)
-        visSpecArray = np.asarray(visSpecArray, dtype=np.int32)
         
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
+        # input/reference lattices
+        inputLattice = self.pipelinePage.inputState
+        refLattice = self.pipelinePage.refState
         
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        NVisible = filtering_c.specieFilter(self.visibleAtoms, visSpecArray, self.pipelinePage.inputState.specie, NScalars, fullScalars, 
-                                            NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
+        # calculate vectors
+        bondVectorArray = np.empty(3 * numint, np.float64)
+        drawTrace = np.empty(numint, np.int32)
+        numBonds = bonds_c.calculateDisplacementVectors(self.interstitials, inputLattice.pos, refLattice.pos, 
+                                                        refLattice.cellDims, inputLattice.PBC, bondVectorArray,
+                                                        drawTrace)
+         
+        self.logger.debug("  Number of interstitial displacement vectors to draw = %d (/ %d)", numBonds, numint)
+         
+        # pov file for bonds
+        povfile = "pipeline%d_intdispvects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
+         
+        # draw displacement vectors as bonds
+        renderBonds.renderDisplacementVectors(self.interstitials, self.mainWindow, self.pipelinePage, self.actorsDict, 
+                                              self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
+                                              drawTrace, settings)
     
     def renderDisplacementVectors(self, settings):
         """
@@ -1196,47 +1028,6 @@ class Filterer(object):
         renderBonds.renderDisplacementVectors(self.visibleAtoms, self.mainWindow, self.pipelinePage, self.actorsDict, 
                                               self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
                                               drawBondVector, settings)
-    
-    def displacementFilter(self, settings):
-        """
-        Displacement filter
-        
-        """
-        # only run displacement filter if input and reference NAtoms are the same
-        inputState = self.pipelinePage.inputState
-        refState = self.pipelinePage.refState
-        
-        if inputState.NAtoms != refState.NAtoms:
-            self.logger.warning("Cannot run displacement filter with different numbers of input and reference atoms: skipping this filter list")
-            #TODO: display warning too
-            self.visibleAtoms.resize(0, refcheck=False)
-        
-        else:
-            # new scalars array
-            scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-            
-            # old scalars arrays (resize as appropriate)
-            NScalars, fullScalars = self.makeFullScalarsArray()
-            
-            # full vectors array
-            NVectors, fullVectors = self.makeFullVectorsArray()
-            
-            # run displacement filter
-            NVisible = filtering_c.displacementFilter(self.visibleAtoms, scalars, inputState.pos, refState.pos, refState.cellDims, 
-                                                      self.pipelinePage.PBC, settings.minDisplacement, settings.maxDisplacement, 
-                                                      NScalars, fullScalars, settings.filteringEnabled, self.parent.driftCompensation, 
-                                                      self.driftVector, NVectors, fullVectors)
-            
-            # update scalars dict
-            self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-            self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-            
-            # resize visible atoms
-            self.visibleAtoms.resize(NVisible, refcheck=False)
-            
-            # store scalars
-            scalars.resize(NVisible, refcheck=False)
-            self.scalarsDict["Displacement"] = scalars
     
     def renderTrace(self):
         """
@@ -1282,448 +1073,6 @@ class Filterer(object):
         # store pos for next step
         self.previousPosForTrace = copy.deepcopy(inputState.pos)
     
-    def atomIndexFilter(self, settings):
-        """
-        Atom index filter
-        
-        """
-        # input string
-        text = settings.lineEdit.text()
-        self.logger.debug("Atom ID raw text: '%s'", text)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-    
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        if not text:
-            # return no visible atoms if input string was empty
-            self.logger.warning("No visible atoms specified in AtomID filter")
-            NVisible = 0
-        
-        else:
-            # parse text
-            array = [val for val in text.split(",") if val]
-            num = len(array)
-            rangeArray = np.empty((num, 2), np.int32)
-            for i, item in enumerate(array):
-                if "-" in item:
-                    values = [val for val in item.split("-") if val]
-                    minval = int(values[0])
-                    if len(values) == 1:
-                        maxval = minval
-                    else:
-                        maxval = int(values[1])
-                else:
-                    minval = maxval = int(item)
-            
-                self.logger.debug("  %d: %d -> %d", i, minval, maxval)
-                rangeArray[i][0] = minval
-                rangeArray[i][1] = maxval
-        
-            # input state
-            lattice = self.pipelinePage.inputState
-        
-            # run displacement filter
-            NVisible = filtering_c.atomIndexFilter(self.visibleAtoms, lattice.atomID, rangeArray, 
-                                                   NScalars, fullScalars, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-    
-    def cropFilter(self, settings):
-        """
-        Crop lattice
-        
-        """
-        if self.parent.defectFilterSelected:
-            inp = self.pipelinePage.inputState
-            ref = self.pipelinePage.refState
-            
-            result = filtering_c.cropDefectsFilter(self.interstitials, self.vacancies, self.antisites, self.onAntisites, self.splitInterstitials,
-                                                   inp.pos, ref.pos, settings.xmin, settings.xmax, settings.ymin, settings.ymax, settings.zmin,
-                                                   settings.zmax, settings.xEnabled, settings.yEnabled, settings.zEnabled, settings.invertSelection)
-            
-            # unpack
-            NInt, NVac, NAnt, NSplit = result
-            self.vacancies.resize(NVac, refcheck=False)
-            self.interstitials.resize(NInt, refcheck=False)
-            self.antisites.resize(NAnt, refcheck=False)
-            self.onAntisites.resize(NAnt, refcheck=False)
-            self.splitInterstitials.resize(NSplit*3, refcheck=False)
-        
-        else:
-            lattice = self.pipelinePage.inputState
-            
-            # old scalars arrays (resize as appropriate)
-            NScalars, fullScalars = self.makeFullScalarsArray()
-            
-            # full vectors array
-            NVectors, fullVectors = self.makeFullVectorsArray()
-            
-            NVisible = filtering_c.cropFilter(self.visibleAtoms, lattice.pos, settings.xmin, settings.xmax, settings.ymin,
-                                              settings.ymax, settings.zmin, settings.zmax, settings.xEnabled,
-                                              settings.yEnabled, settings.zEnabled, settings.invertSelection, NScalars,
-                                              fullScalars, NVectors, fullVectors)
-            
-            # update scalars dict
-            self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-            self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-    
-            # resize visible atoms
-            self.visibleAtoms.resize(NVisible, refcheck=False)
-    
-    def cropSphereFilter(self, settings):
-        """
-        Crop sphere filter.
-        
-        """
-        lattice = self.pipelinePage.inputState
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        NVisible = filtering_c.cropSphereFilter(self.visibleAtoms, lattice.pos, settings.xCentre, settings.yCentre, settings.zCentre, 
-                                                settings.radius, lattice.cellDims, self.pipelinePage.PBC, settings.invertSelection, 
-                                                NScalars, fullScalars, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-    
-    def sliceFilter(self, settings):
-        """
-        Slice filter.
-        
-        """
-        if self.parent.defectFilterSelected:
-            inp = self.pipelinePage.inputState
-            ref = self.pipelinePage.refState
-            
-            self.logger.debug("Calling sliceDefectsFilter C function")
-            result = filtering_c.sliceDefectsFilter(self.interstitials, self.vacancies, self.antisites, self.onAntisites, self.splitInterstitials,
-                                                    inp.pos, ref.pos, settings.x0, settings.y0, settings.z0, settings.xn, settings.yn, settings.zn,
-                                                    settings.invert)
-            
-            # unpack
-            NInt, NVac, NAnt, NSplit = result
-            self.vacancies.resize(NVac, refcheck=False)
-            self.interstitials.resize(NInt, refcheck=False)
-            self.antisites.resize(NAnt, refcheck=False)
-            self.onAntisites.resize(NAnt, refcheck=False)
-            self.splitInterstitials.resize(NSplit*3, refcheck=False)
-        
-        else:
-            lattice = self.pipelinePage.inputState
-            
-            # old scalars arrays (resize as appropriate)
-            NScalars, fullScalars = self.makeFullScalarsArray()
-            
-            # full vectors array
-            NVectors, fullVectors = self.makeFullVectorsArray()
-            
-            self.logger.debug("Calling sliceFilter C function")
-            NVisible = filtering_c.sliceFilter(self.visibleAtoms, lattice.pos, settings.x0, settings.y0, settings.z0, 
-                                               settings.xn, settings.yn, settings.zn, settings.invert, NScalars, fullScalars, 
-                                               NVectors, fullVectors)
-            
-            # update scalars dict
-            self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-            self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-    
-            # resize visible atoms
-            self.visibleAtoms.resize(NVisible, refcheck=False)
-    
-    def chargeFilter(self, settings):
-        """
-        Charge filter.
-        
-        """
-        lattice = self.pipelinePage.inputState
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        self.logger.debug("Calling chargeFilter C function")
-        NVisible = filtering_c.chargeFilter(self.visibleAtoms, lattice.charge, settings.minCharge, settings.maxCharge, 
-                                            NScalars, fullScalars, NVectors, fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-    
-    def pointDefectFilter(self, settings, acnaArray=None):
-        """
-        Point defects filter
-        
-        """
-        inputLattice = self.pipelinePage.inputState
-        refLattice = self.pipelinePage.refState
-        
-        if settings.useAcna:
-            self.logger.debug("Computing ACNA from point defects filter...")
-            
-            # dummy visible atoms and scalars arrays
-            visAtoms = np.arange(inputLattice.NAtoms, dtype=np.int32)
-            acnaArray = np.empty(inputLattice.NAtoms, np.float64)
-            NScalars = 0
-            fullScalars = np.empty(NScalars, np.float64)
-            NVectors = 0
-            fullVectors = np.empty(NVectors, np.float64)
-            structVis = np.ones(len(self.knownStructures), np.int32)
-            
-            # number of threads
-            ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
-            
-            # counter array
-            counters = np.zeros(7, np.int32)
-            
-            acna.adaptiveCommonNeighbourAnalysis(visAtoms, inputLattice.pos, acnaArray, inputLattice.cellDims,
-                                                 self.pipelinePage.PBC, NScalars, fullScalars, 
-                                                 settings.acnaMaxBondDistance, counters, 0, structVis, ompNumThreads, 
-                                                 NVectors, fullVectors) 
-            
-            # store counters
-            d = {}
-            for i, structure in enumerate(self.knownStructures):
-                if counters[i] > 0:
-                    d[structure] = counters[i]
-            
-            self.logger.debug("  %r", d)
-        
-        elif acnaArray is None or len(acnaArray) != inputLattice.NAtoms:
-            acnaArray = np.empty(0, np.float64)
-        
-        # set up arrays
-        interstitials = np.empty(inputLattice.NAtoms, np.int32)
-        
-        if settings.identifySplitInts:
-            splitInterstitials = np.empty(inputLattice.NAtoms, np.int32)
-        
-        else:
-            splitInterstitials = np.empty(0, np.int32)
-                
-        vacancies = np.empty(refLattice.NAtoms, np.int32)
-        
-        antisites = np.empty(refLattice.NAtoms, np.int32)
-        onAntisites = np.empty(refLattice.NAtoms, np.int32)
-        
-        # set up excluded specie arrays
-        visibleSpecieList = settings.getVisibleSpecieList()
-        
-        exclSpecsInput = []
-        for i, spec in enumerate(inputLattice.specieList):
-            if spec not in visibleSpecieList:
-                exclSpecsInput.append(i)
-        exclSpecsInput = np.asarray(exclSpecsInput, dtype=np.int32)
-        
-        exclSpecsRef = []
-        for i, spec in enumerate(refLattice.specieList):
-            if spec not in visibleSpecieList:
-                exclSpecsRef.append(i)
-        exclSpecsRef = np.asarray(exclSpecsRef, dtype=np.int32)
-        
-        # specie counter arrays
-        vacSpecCount = np.zeros( len(refLattice.specieList), np.int32 )
-        intSpecCount = np.zeros( len(inputLattice.specieList), np.int32 )
-        antSpecCount = np.zeros( len(refLattice.specieList), np.int32 )
-        onAntSpecCount = np.zeros( (len(refLattice.specieList), len(inputLattice.specieList)), np.int32 )
-        splitIntSpecCount = np.zeros( (len(inputLattice.specieList), len(inputLattice.specieList)), np.int32 )
-        
-        NDefectsByType = np.zeros(6, np.int32)
-        
-        if settings.findClusters:
-            defectCluster = np.empty(inputLattice.NAtoms + refLattice.NAtoms, np.int32)
-        
-        else:
-            defectCluster = np.empty(0, np.int32)
-        
-        # call C library
-        status = defects_c.findDefects(settings.showVacancies, settings.showInterstitials, settings.showAntisites, NDefectsByType, vacancies, 
-                                       interstitials, antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
-                                       inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
-                                       refLattice.pos, refLattice.cellDims, self.pipelinePage.PBC, settings.vacancyRadius,
-                                       settings.findClusters, settings.neighbourRadius, defectCluster, vacSpecCount, intSpecCount, antSpecCount,
-                                       onAntSpecCount, splitIntSpecCount, settings.minClusterSize, settings.maxClusterSize, splitInterstitials, 
-                                       settings.identifySplitInts, self.parent.driftCompensation, self.driftVector, acnaArray, settings.acnaStructureType)
-        
-        # summarise
-        NDef = NDefectsByType[0]
-        NVac = NDefectsByType[1]
-        NInt = NDefectsByType[2]
-        NAnt = NDefectsByType[3]
-        NSplit = NDefectsByType[5]
-        vacancies.resize(NVac)
-        interstitials.resize(NInt)
-        antisites.resize(NAnt)
-        onAntisites.resize(NAnt)
-        splitInterstitials.resize(NSplit*3)
-        
-        # report counters
-        self.logger.info("Found %d defects", NDef)
-        
-        if settings.showVacancies:
-            self.logger.info("  %d vacancies", NVac)
-            for i in xrange(len(refLattice.specieList)):
-                self.logger.info("    %d %s vacancies", vacSpecCount[i], refLattice.specieList[i])
-        
-        if settings.showInterstitials:
-            self.logger.info("  %d interstitials", NInt + NSplit)
-            for i in xrange(len(inputLattice.specieList)):
-                self.logger.info("    %d %s interstitials", intSpecCount[i], inputLattice.specieList[i])
-        
-            if settings.identifySplitInts:
-                self.logger.info("    %d split interstitials", NSplit)
-                for i in xrange(len(inputLattice.specieList)):
-                    for j in xrange(i, len(inputLattice.specieList)):
-                        if j == i:
-                            N = splitIntSpecCount[i][j]
-                        else:
-                            N = splitIntSpecCount[i][j] + splitIntSpecCount[j][i]
-                        self.logger.info("      %d %s - %s split interstitials", N, inputLattice.specieList[i], inputLattice.specieList[j])
-        
-        if settings.showAntisites:
-            self.logger.info("  %d antisites", NAnt)
-            for i in xrange(len(refLattice.specieList)):
-                for j in xrange(len(inputLattice.specieList)):
-                    if inputLattice.specieList[j] == refLattice.specieList[i]:
-                        continue
-                    
-                    self.logger.info("    %d %s on %s antisites", onAntSpecCount[i][j], inputLattice.specieList[j], refLattice.specieList[i])
-        
-        if settings.identifySplitInts:
-            self.logger.info("Splint interstitial analysis")
-            
-            PBC = self.pipelinePage.PBC
-            cellDims = inputLattice.cellDims
-            
-            for i in xrange(NSplit):
-                ind1 = splitInterstitials[3*i+1]
-                ind2 = splitInterstitials[3*i+2]
-                
-                pos1 = inputLattice.pos[3*ind1:3*ind1+3]
-                pos2 = inputLattice.pos[3*ind2:3*ind2+3]
-                
-                sepVec = vectors.separationVector(pos1, pos2, cellDims, PBC)
-                norm = vectors.normalise(sepVec)
-                
-                self.logger.info("  Orientation of split int %d: (%.3f %.3f %.3f)", i, norm[0], norm[1], norm[2])
-        
-        # sort clusters here
-        self.clusterList = []
-        clusterList = self.clusterList
-        if settings.findClusters:
-            NClusters = NDefectsByType[4]
-            
-            defectCluster.resize(NDef)
-            
-            # build cluster lists
-            for i in xrange(NClusters):
-                clusterList.append(clusters.DefectCluster())
-            
-            # add atoms to cluster lists
-            clusterIndexMapper = {}
-            count = 0
-            for i in xrange(NVac):
-                atomIndex = vacancies[i]
-                clusterIndex = defectCluster[i]
-                
-                if clusterIndex not in clusterIndexMapper:
-                    clusterIndexMapper[clusterIndex] = count
-                    count += 1
-                
-                clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                clusterList[clusterListIndex].vacancies.append(atomIndex)
-                clusterList[clusterListIndex].vacAsIndex.append(i)
-            
-            for i in xrange(NInt):
-                atomIndex = interstitials[i]
-                clusterIndex = defectCluster[NVac + i]
-                
-                if clusterIndex not in clusterIndexMapper:
-                    clusterIndexMapper[clusterIndex] = count
-                    count += 1
-                
-                clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                clusterList[clusterListIndex].interstitials.append(atomIndex)
-            
-            for i in xrange(NAnt):
-                atomIndex = antisites[i]
-                atomIndex2 = onAntisites[i]
-                clusterIndex = defectCluster[NVac + NInt + i]
-                
-                if clusterIndex not in clusterIndexMapper:
-                    clusterIndexMapper[clusterIndex] = count
-                    count += 1
-                
-                clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                clusterList[clusterListIndex].antisites.append(atomIndex)
-                clusterList[clusterListIndex].onAntisites.append(atomIndex2)
-            
-            for i in xrange(NSplit):
-                clusterIndex = defectCluster[NVac + NInt + NAnt + i]
-                
-                if clusterIndex not in clusterIndexMapper:
-                    clusterIndexMapper[clusterIndex] = count
-                    count += 1
-                
-                clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                atomIndex = splitInterstitials[3*i]
-                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
-                
-                atomIndex = splitInterstitials[3*i+1]
-                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
-                
-                atomIndex = splitInterstitials[3*i+2]
-                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
-        
-        # draw displacement vectors
-        if settings.drawVectorsCheck.isEnabled() and settings.drawDisplacementVectors:
-            self.logger.debug("Drawing displacement vectors for interstitials (%d)", NInt)
-            
-            # need to make a unique list for interstitials and split intersitials and antisites
-            
-            
-            # calculate vectors
-            bondVectorArray = np.empty(3 * NInt, np.float64)
-            drawTrace = np.empty(NInt, np.int32)
-            numBonds = bonds_c.calculateDisplacementVectors(interstitials, inputLattice.pos, refLattice.pos, 
-                                                          refLattice.cellDims, self.pipelinePage.PBC, bondVectorArray,
-                                                          drawTrace)
-            
-            self.logger.debug("  Number of interstitial displacement vectors to draw = %d (/ %d)", numBonds, NInt)
-            
-            # pov file for bonds
-            povfile = "pipeline%d_intdispvects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
-            
-            # draw displacement vectors as bonds
-            renderBonds.renderDisplacementVectors(interstitials, self.mainWindow, self.pipelinePage, self.actorsDict, 
-                                                  self.colouringOptions, povfile, self.scalarsDict, numBonds, bondVectorArray, 
-                                                  drawTrace, settings)
-        
-        return interstitials, vacancies, antisites, onAntisites, splitInterstitials
-    
     def pointDefectFilterCalculateClusterVolumes(self, settings):
         """
         Calculate volumes of clusters
@@ -1736,7 +1085,7 @@ class Filterer(object):
         refLattice = self.pipelinePage.refState
         clusterList = self.clusterList
         
-        if settings.calculateVolumesHull:
+        if settings.getSetting("calculateVolumesHull"):
             count = 0
             for cluster in clusterList:
                 # first make pos array for this cluster
@@ -1750,7 +1099,7 @@ class Filterer(object):
                 else:
                     appliedPBCs = np.zeros(7, np.int32)
                     clusters_c.prepareClusterToDrawHulls(NDefects, clusterPos, inputLattice.cellDims, 
-                                                         self.pipelinePage.PBC, appliedPBCs, settings.neighbourRadius)
+                                                         self.pipelinePage.PBC, appliedPBCs, settings.getSetting("neighbourRadius"))
                     
                     cluster.volume, cluster.facetArea = clusters.findConvexHullVolume(NDefects, clusterPos)
                 
@@ -1760,7 +1109,7 @@ class Filterer(object):
                 
                 count += 1
         
-        elif settings.calculateVolumesVoro:
+        elif settings.getSetting("calculateVolumesVoro"):
             # compute Voronoi
             vor = voronoi.computeVoronoiDefects(inputLattice, refLattice, self.vacancies, self.voronoiOptions, self.pipelinePage.PBC)
             
@@ -1825,10 +1174,11 @@ class Filterer(object):
             appliedPBCs = np.zeros(7, np.int32)
             clusterPos = cluster.makeClusterPos(inputLattice, refLattice)
             NDefects = len(clusterPos) / 3
+            neighbourRadius = settings.getSetting("neighbourRadius")
             
             # determine if the cluster crosses PBCs
             clusters_c.prepareClusterToDrawHulls(NDefects, clusterPos, inputLattice.cellDims, 
-                                                 self.pipelinePage.PBC, appliedPBCs, settings.neighbourRadius)
+                                                 self.pipelinePage.PBC, appliedPBCs, neighbourRadius)
             
             facets = None
             if NDefects > 3:
@@ -1841,7 +1191,7 @@ class Filterer(object):
             # now render
             if facets is not None:
                 # make sure not facets more than neighbour rad from cell
-                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, 
+                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * neighbourRadius, self.pipelinePage.PBC, 
                                                   inputLattice.cellDims)
                 
                 renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, actorsDictLocal, 
@@ -1869,7 +1219,7 @@ class Filterer(object):
                     # render
                     if facets is not None:
                         #TODO: make sure not facets more than neighbour rad from cell
-                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, 
+                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * neighbourRadius, 
                                                           self.pipelinePage.PBC, inputLattice.cellDims)
                         
                         renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, actorsDictLocal, 
@@ -1881,76 +1231,6 @@ class Filterer(object):
                         count += 1
         
         self.actorsDict["Defect clusters"] = actorsDictLocal
-        
-    def clusterFilter(self, settings, PBC=None, minSize=None, maxSize=None, nebRad=None):
-        """
-        Run the cluster filter
-        
-        """
-        lattice = self.pipelinePage.inputState
-        
-        atomCluster = np.empty(len(self.visibleAtoms), np.int32)
-        result = np.empty(2, np.int32)
-        
-        if PBC is not None and len(PBC) == 3:
-            pass
-        else:
-            PBC = self.pipelinePage.PBC
-        
-        if minSize is None:
-            minSize = settings.minClusterSize
-        
-        if maxSize is None:
-            maxSize = settings.maxClusterSize
-        
-        if nebRad is None:
-            nebRad = settings.neighbourRadius
-        
-        # set min/max pos to lattice (for boxing)
-        minPos = np.zeros(3, np.float64)
-        maxPos = copy.deepcopy(lattice.cellDims)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        clusters_c.findClusters(self.visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
-                                minPos, maxPos, minSize, maxSize, result, NScalars, fullScalars, NVectors, fullVectors)
-        
-        NVisible = result[0]
-        NClusters = result[1]
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-        atomCluster.resize(NVisible, refcheck=False)
-        
-        # store cluster indexes as scalars
-#         self.scalarsDict["Cluster"] = np.asarray(atomCluster, dtype=np.float64)
-        
-        # build cluster lists
-        self.clusterList = []
-        for i in xrange(NClusters):
-            self.clusterList.append(clusters.AtomCluster())
-        
-        # add atoms to cluster lists
-        clusterIndexMapper = {}
-        count = 0
-        for i in xrange(NVisible):
-            atomIndex = self.visibleAtoms[i]
-            clusterIndex = atomCluster[i]
-            
-            if clusterIndex not in clusterIndexMapper:
-                clusterIndexMapper[clusterIndex] = count
-                count += 1
-            
-            clusterListIndex = clusterIndexMapper[clusterIndex]
-            
-            self.clusterList[clusterListIndex].indexes.append(atomIndex)
     
     def clusterFilterDrawHulls(self, settings, hullPovFile):
         """
@@ -2031,8 +1311,10 @@ class Filterer(object):
                 clusterPos[3*i+1] = lattice.pos[3*index+1]
                 clusterPos[3*i+2] = lattice.pos[3*index+2]
             
+            neighbourRadius = settings.getSetting("neighbourRadius")
+            
             clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
-                                                 self.pipelinePage.PBC, appliedPBCs, settings.neighbourRadius)
+                                                 self.pipelinePage.PBC, appliedPBCs, neighbourRadius)
             
             facets = None
             if len(cluster) > 3:
@@ -2045,7 +1327,7 @@ class Filterer(object):
             # now render
             if facets is not None:
                 #TODO: make sure not facets more than neighbour rad from cell
-                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
+                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
                 
                 renderer.getActorsForHullFacets(facets, clusterPos, self.mainWindow, actorsDictLocal, 
                                                 settings, "Cluster {0}".format(clusterIndex))
@@ -2072,7 +1354,7 @@ class Filterer(object):
                     # render
                     if facets is not None:
                         #TODO: make sure not facets more than neighbour rad from cell
-                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * settings.neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
+                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * neighbourRadius, self.pipelinePage.PBC, lattice.cellDims)
                         
                         renderer.getActorsForHullFacets(facets, tmpClusterPos, self.mainWindow, actorsDictLocal, settings,
                                                         "Cluster {0} (PBC {1})".format(clusterIndex, count))
@@ -2092,8 +1374,8 @@ class Filterer(object):
         # this will not work properly over PBCs at the moment
         lattice = self.pipelinePage.inputState
         
-        # draw them as they are
-        if filterSettings.calculateVolumesHull:
+        # calculate volumes
+        if filterSettings.getSetting("calculateVolumesHull"):
             count = 0
             for cluster in self.clusterList:
                 # first make pos array for this cluster
@@ -2113,8 +1395,9 @@ class Filterer(object):
                     PBC = self.pipelinePage.PBC
                     if PBC[0] or PBC[1] or PBC[2]:
                         appliedPBCs = np.zeros(7, np.int32)
+                        neighbourRadius = filterSettings.getSetting("neighbourRadius")
                         clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
-                                                             PBC, appliedPBCs, filterSettings.neighbourRadius)
+                                                             PBC, appliedPBCs, neighbourRadius)
                     
                     volume, area = clusters.findConvexHullVolume(len(cluster), clusterPos)
                 
@@ -2128,7 +1411,7 @@ class Filterer(object):
                 
                 count += 1
         
-        elif filterSettings.calculateVolumesVoro:
+        elif filterSettings.getSetting("calculateVolumesVoro"):
             # compute Voronoi
             self.calculateVoronoi()
             vor = self.voronoi
@@ -2149,102 +1432,3 @@ class Filterer(object):
         
         else:
             self.logger.error("Method to calculate cluster volumes not specified")
-    
-    def coordinationNumberFilter(self, filterSettings):
-        """
-        Coordination number filter.
-        
-        """
-        inputState = self.pipelinePage.inputState
-        specieList = inputState.specieList
-        NSpecies = len(specieList)
-        bondDict = elements.bondDict
-        
-        bondMinArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
-        bondMaxArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
-        
-        # construct bonds array
-        calcBonds = False
-        maxBond = -1
-        
-        # populate bond arrays
-        for i in xrange(NSpecies):
-            symi = specieList[i]
-            
-            if symi in bondDict:
-                d = bondDict[symi]
-                
-                for j in xrange(NSpecies):
-                    symj = specieList[j]
-                    
-                    if symj in d:
-                        bondMin, bondMax = d[symj]
-                        
-                        bondMinArray[i][j] = bondMin
-                        bondMinArray[j][i] = bondMin
-                        
-                        bondMaxArray[i][j] = bondMax
-                        bondMaxArray[j][i] = bondMax
-                        
-                        if bondMax > maxBond:
-                            maxBond = bondMax
-                        
-                        if bondMax > 0:
-                            calcBonds = True
-                        
-                        self.logger.info("  %s - %s; bond range: %f -> %f", symi, symj, bondMin, bondMax)
-        
-        if not calcBonds:
-            self.logger.warning("No bonds defined: all coordination numbers will be zero")
-        
-        # new scalars array
-        scalars = np.zeros(len(self.visibleAtoms), dtype=np.float64)
-        
-        # old scalars arrays (resize as appropriate)
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        
-        # full vectors array
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # run filter
-        NVisible = filtering_c.coordNumFilter(self.visibleAtoms, inputState.pos, inputState.specie, NSpecies, bondMinArray, bondMaxArray,
-                                              maxBond, inputState.cellDims, self.pipelinePage.PBC, scalars, filterSettings.minCoordNum,
-                                              filterSettings.maxCoordNum, NScalars, fullScalars, filterSettings.filteringEnabled, NVectors,
-                                              fullVectors)
-        
-        # update scalars dict
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)
-        
-        # store scalars
-        scalars.resize(NVisible, refcheck=False)
-        self.scalarsDict["Coordination number"] = scalars
-    
-    def genericScalarFilter(self, filterName, filterSettings):
-        """
-        Generic scalar filter
-        
-        """
-        self.logger.debug("Generic scalar filter: '%s'", filterName)
-        
-        # full scalars/vectors
-        NScalars, fullScalars = self.makeFullScalarsArray()
-        NVectors, fullVectors = self.makeFullVectorsArray()
-        
-        # scalars array (the full, unmodified one stored on the Lattice)
-        scalarsName = filterName[8:]
-        scalarsArray = self.pipelinePage.inputState.scalarsDict[scalarsName]
-        
-        # run filter
-        NVisible = filtering_c.genericScalarFilter(self.visibleAtoms, scalarsArray, filterSettings.minVal, filterSettings.maxVal,
-                                                   NScalars, fullScalars, NVectors, fullVectors)
-        
-        # update scalars/vectors
-        self.storeFullScalarsArray(NVisible, NScalars, fullScalars)
-        self.storeFullVectorsArray(NVisible, NVectors, fullVectors)
-        
-        # resize visible atoms
-        self.visibleAtoms.resize(NVisible, refcheck=False)

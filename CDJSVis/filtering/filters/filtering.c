@@ -665,8 +665,7 @@ cropFilter(PyObject *self, PyObject *args)
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
     
-    int i, j, index, NVisible, add;
-    double rx, ry, rz;
+    int i, NVisible;
     
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "O!O!ddddddiiiiiO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, 
@@ -685,18 +684,21 @@ cropFilter(PyObject *self, PyObject *args)
     fullScalars = pyvector_to_Cptr_double(fullScalarsIn);
     
     if (not_doubleVector(fullVectors)) return NULL;
-    
+
     NVisible = 0;
     for (i=0; i<NVisibleIn; i++)
     {
-        index = visibleAtoms[i];
+        int index = visibleAtoms[i];
+        int index3 = 3 * index;
+        int add;
+        double rx, ry, rz;
         
-        rx = pos[3*index];
-        ry = pos[3*index+1];
-        rz = pos[3*index+2];
+        rx = pos[index3    ];
+        ry = pos[index3 + 1];
+        rz = pos[index3 + 2];
         
         add = 1;
-        if (xEnabled == 1)
+        if (xEnabled)
         {
             if (rx < xmin || rx > xmax)
             {
@@ -704,7 +706,7 @@ cropFilter(PyObject *self, PyObject *args)
             }
         }
         
-        if (add && yEnabled == 1)
+        if (add && yEnabled)
         {
             if (ry < ymin || ry > ymax)
             {
@@ -712,7 +714,7 @@ cropFilter(PyObject *self, PyObject *args)
             }
         }
         
-        if (add && zEnabled == 1)
+        if (add && zEnabled)
         {
             if (rz < zmin || rz > zmax)
             {
@@ -722,15 +724,21 @@ cropFilter(PyObject *self, PyObject *args)
         
         if ((add && !invertSelection) || (!add && invertSelection))
         {
+            int j;
+
             /* handle full scalars array */
             for (j = 0; j < NScalars; j++)
-                fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            {
+                int jn = NVisibleIn * j;
+            	fullScalars[jn + NVisible] = fullScalars[jn + i];
+            }
             
             for (j = 0; j < NVectors; j++)
             {
-                DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
-                DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
-                DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
+                int jn = NVisibleIn * j;
+            	DIND2(fullVectors, jn + NVisible, 0) = DIND2(fullVectors, jn + i, 0);
+                DIND2(fullVectors, jn + NVisible, 1) = DIND2(fullVectors, jn + i, 1);
+                DIND2(fullVectors, jn + NVisible, 2) = DIND2(fullVectors, jn + i, 2);
             }
             
             visibleAtoms[NVisible++] = index;
@@ -1541,7 +1549,7 @@ slipFilter(PyObject *self, PyObject *args)
 {
     // we need: refPos, pos, minPos, maxPos, cellDims, PBC, visibleAtoms
     int NVisibleIn, *PBC, NScalars, filteringEnabled, driftCompensation, refPosDim, NVectors;
-    double minSlip, maxSlip, *cellDims;
+    double minSlip, maxSlip, *cellDims, neighbourCutOff, atomSlipTol;
     PyArrayObject *visibleAtoms=NULL;
     PyArrayObject *refPosOrig=NULL;
     PyArrayObject *PBCIn=NULL;
@@ -1557,6 +1565,7 @@ slipFilter(PyObject *self, PyObject *args)
     double *refPos, *visiblePos;
     double *slipx, *slipy, *slipz;
     double approxBoxWidth;
+    double neighbourCutOff2, atomSlipTol2;
     struct Boxes *boxes;
     
 #ifdef DEBUG
@@ -1564,10 +1573,10 @@ slipFilter(PyObject *self, PyObject *args)
 #endif
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!ddiO!iiO!iO!", &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalars, 
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!O!ddiO!iiO!iO!dd", &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalars, 
             &PyArray_Type, &pos, &PyArray_Type, &refPosOrig, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, 
             &minSlip, &maxSlip, &NScalars, &PyArray_Type, &fullScalars, &filteringEnabled, &driftCompensation, 
-            &PyArray_Type, &driftVector, &NVectors, &PyArray_Type, &fullVectors))
+            &PyArray_Type, &driftVector, &NVectors, &PyArray_Type, &fullVectors, &neighbourCutOff, &atomSlipTol))
         return NULL;
     
     if (not_intVector(visibleAtoms)) return NULL;
@@ -1595,6 +1604,8 @@ slipFilter(PyObject *self, PyObject *args)
 #ifdef DEBUG
     printf("SLIPC: Parsed args\n");
     printf("SLIPC: NVisibleIn = %d\n", NVisibleIn);
+    printf("SLIPC: Neighbour cut-off = %lf\n", neighbourCutOff);
+    printf("SLIPC: Atom slip tolerance = %lf\n", atomSlipTol);
 #endif
     
     /* drift compensation */
@@ -1647,7 +1658,7 @@ slipFilter(PyObject *self, PyObject *args)
 #ifdef DEBUG
     printf("SLIPC: Boxing atoms...\n");
 #endif
-    approxBoxWidth = 5.0; // detect automatically!!
+    approxBoxWidth = (neighbourCutOff > 5.0) ? neighbourCutOff : 5.0; // detect automatically!!
     boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
     if (boxes == NULL)
     {
@@ -1730,6 +1741,8 @@ slipFilter(PyObject *self, PyObject *args)
 #ifdef DEBUG
     printf("SLIPC: Beginning main loop...\n");
 #endif
+    neighbourCutOff2 = neighbourCutOff * neighbourCutOff;
+    atomSlipTol2 = atomSlipTol * atomSlipTol;
     for (i = 0; i < NVisibleIn; i++)
     {
         int j, index, index3, boxIndex, boxNebList[27], boxNebListSize;
@@ -1798,9 +1811,8 @@ slipFilter(PyObject *self, PyObject *args)
                                              cellDims[0], cellDims[1], cellDims[2],
                                              PBC[0], PBC[1], PBC[2]);
                     
-                    /* why 9, should this be an input and/or linked to approxBoxWidth!!?? */
                     /* we only compare to atoms that were local in the reference */
-                    if (sep2 < 9.0)
+                    if (sep2 < neighbourCutOff2)
                     {
                         double sepVeci[3], sepVecj[3];
                         double dslipx, dslipy, dslipz, slipMag;
@@ -1820,7 +1832,7 @@ slipFilter(PyObject *self, PyObject *args)
                         dslipz = sepVeci[2] - sepVecj[2];
                         
                         slipMag = dslipx * dslipx + dslipy * dslipy + dslipz * dslipz;
-                        if (slipMag > 0.09) // why 0.09!!??
+                        if (slipMag > atomSlipTol2)
                         {
                             slipx[i] += dslipx;
                             slipy[i] += dslipy;

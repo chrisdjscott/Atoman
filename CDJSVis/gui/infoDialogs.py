@@ -495,7 +495,8 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             radius = refState.specieCovalentRadius[refState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
             
             # can do this because defect filter is always by itself
-            vacScaleSize = self.filterList.getCurrentFilterSettings()[0].vacScaleSize
+            defectSettings = self.filterList.getCurrentFilterSettings()[0].getSettings()
+            vacScaleSize = defectSettings.getSetting("vacScaleSize")
             radius *= vacScaleSize * 2.0
             
             # highlighter
@@ -539,7 +540,8 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             radius = refState.specieCovalentRadius[refState.specie[vacIndex]] * self.filterList.displayOptions.atomScaleFactor
             
             # can do this because defect filter is always by itself
-            vacScaleSize = self.filterList.getCurrentFilterSettings()[0].vacScaleSize
+            defectSettings = self.filterList.getCurrentFilterSettings()[0].getSettings()
+            vacScaleSize = defectSettings.getSetting("vacScaleSize")
             radius *= vacScaleSize * 2.0
             
             # highlight
@@ -1164,7 +1166,8 @@ class DefectInfoWindow(QtGui.QDialog):
             radius = refState.specieCovalentRadius[refState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
             
             # can do this because defect filter is always by itself
-            vacScaleSize = self.filterList.getCurrentFilterSettings()[0].vacScaleSize
+            defectSettings = self.filterList.getCurrentFilterSettings()[0].getSettings()
+            vacScaleSize = defectSettings.getSetting("vacScaleSize")
             radius *= vacScaleSize * 2.0
             
             # highlighter
@@ -1226,7 +1229,8 @@ class DefectInfoWindow(QtGui.QDialog):
             radius = refState.specieCovalentRadius[refState.specie[vacIndex]] * self.filterList.displayOptions.atomScaleFactor
             
             # can do this because defect filter is always by itself
-            vacScaleSize = self.filterList.getCurrentFilterSettings()[0].vacScaleSize
+            defectSettings = self.filterList.getCurrentFilterSettings()[0].getSettings()
+            vacScaleSize = defectSettings.getSetting("vacScaleSize")
             radius *= vacScaleSize * 2.0
             
             # highlight
