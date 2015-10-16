@@ -41,7 +41,7 @@ static PyObject*
 calculateRDF(PyObject *self, PyObject *args)
 {
     int NVisible, *visibleAtoms, *specie, specieID1, specieID2, *PBC, num;
-    int OMP_NUM_THREADS, NAtoms;
+    int numThreads, NAtoms;
     double *pos, *cellDims, start, finish, *rdf;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *specieIn=NULL;
@@ -50,7 +50,7 @@ calculateRDF(PyObject *self, PyObject *args)
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *rdfIn=NULL;
     
-    int i, boxstat, errcount;
+    int i, boxstat, errorCount;
     int *sel1, *sel2, sel1cnt, sel2cnt, duplicates;
     double approxBoxWidth;
     double interval;
@@ -62,7 +62,7 @@ calculateRDF(PyObject *self, PyObject *args)
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "O!O!O!iiO!O!dddiO!i", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &specieIn,
             &PyArray_Type, &posIn, &specieID1, &specieID2, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &start,
-            &finish, &interval, &num, &PyArray_Type, &rdfIn, &OMP_NUM_THREADS))
+            &finish, &interval, &num, &PyArray_Type, &rdfIn, &numThreads))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -84,18 +84,9 @@ calculateRDF(PyObject *self, PyObject *args)
     
     if (not_intVector(PBCIn)) return NULL;
     PBC = pyvector_to_Cptr_int(PBCIn);
-
-    /* set number of openmp threads to use */
-    omp_set_num_threads(OMP_NUM_THREADS);
     
-    /* approx box width */
-    /* may not be any point boxing... (we can't box by less than `finish`) */
+    /* box width for spatial decomposition must be at least `finish` */
     approxBoxWidth = finish;
-    
-#ifdef DEBUG
-    printf("DBGRDF: NVis %d; NAtom %d; SPEC1 %d; SPEC2 %d\n", NVisible, NAtoms, specieID1, specieID2);
-    printf("DBGRDF: HIST SIZE %d; INTERVAL %lf; START %lf; FINISH %lf\n", num, interval, start, finish);
-#endif
     
     /* create the selections of atoms and check for number of duplicates */
     sel1 = malloc(NVisible * sizeof(int));
@@ -112,35 +103,31 @@ calculateRDF(PyObject *self, PyObject *args)
         return NULL;
     }
     sel1cnt = 0;
+    sel2cnt = 0;
+    duplicates = 0;
     for (i = 0; i < NVisible; i++)
     {
         int index = visibleAtoms[i];
+        
+        /* check if this atom is in the first selection */
         if (specieID1 < 0 || (specieID1 >= 0 && specie[index] == specieID1))
         {
             sel1[i] = 1;
             sel1cnt++;
         }
         else sel1[i] = 0;
-    }
-    sel2cnt = 0;
-    for (i = 0; i < NVisible; i++)
-    {
-        int index = visibleAtoms[i];
+        
+        /* check if this atom is in the second selection */
         if (specieID2 < 0 || (specieID2 >= 0 && specie[index] == specieID2))
         {
             sel2[i] = 1;
             sel2cnt++;
         }
         else sel2[i] = 0;
+        
+        /* count the number of atoms that are in both selections */
+        if (sel1[i] && sel2[i]) duplicates++;
     }
-    duplicates = 0;
-    for (i = 0; i < NVisible; i++) if (sel1[i] && sel2[i]) duplicates++;
-    
-#ifdef DEBUG
-    printf("DBGRDF: SEL1 %d; SEL2 %d; DUP %d\n", sel1cnt, sel2cnt, duplicates);
-#endif
-    
-    //TODO: check length of sel1 and sel2 != 0
     
     /* positions of visible atoms */
     if (NAtoms == NVisible) visiblePos = pos;
@@ -188,8 +175,8 @@ calculateRDF(PyObject *self, PyObject *args)
     finish2 = finish * finish;
     
     /* loop over atoms */
-    errcount = 0;
-    #pragma omp parallel for reduction(+: errcount)
+    errorCount = 0;
+    #pragma omp parallel for reduction(+: errorCount) num_threads(numThreads)
     for (i = 0; i < NVisible; i++)
     {
         int j, index, ind3, boxIndex, boxNebList[27], boxNebListSize;
@@ -207,9 +194,9 @@ calculateRDF(PyObject *self, PyObject *args)
         rya = pos[ind3 + 1];
         rza = pos[ind3 + 2];
         boxIndex = boxIndexOfAtom(rxa, rya, rza, boxes);
-        if (boxIndex < 0) errcount++;
+        if (boxIndex < 0) errorCount++;
         
-        if (!errcount)
+        if (!errorCount)
         {
             /* find neighbouring boxes */
             boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
@@ -235,7 +222,6 @@ calculateRDF(PyObject *self, PyObject *args)
                     /* atom index */
                     index2 = visibleAtoms[visIndex];
                     
-    //                if (index2 <= index) continue; // cannot do this because spec1 and spec2 may differ...
                     /* skip if same atom */
                     if (index == index2) continue;
                     
@@ -267,7 +253,7 @@ calculateRDF(PyObject *self, PyObject *args)
     free(sel1);
     free(sel2);
     
-    if (errcount)
+    if (errorCount)
     {
         PyErr_SetString(PyExc_RuntimeError, "RDF loop failed; probably box index error (check stderr)");
         return NULL;
@@ -281,18 +267,11 @@ calculateRDF(PyObject *self, PyObject *args)
         /* compute inverse of pair density (volume / number of pairs) */
         pair_dens = cellDims[0] * cellDims[1] * cellDims[2];
         pair_dens /= ((double)sel1cnt * (double)sel2cnt - (double)duplicates);
-#ifdef DEBUG
-        printf("DBGRDF: PAIR DENS %lf\n", pair_dens);
-        printf("DBGRDF: npair %d\n", sel1cnt * sel2cnt - duplicates);
-#endif
 
         /* loop over histogram bins */
         for (i = 0; i < num; i++)
         {
             double r_inner, r_outer, norm_f, shellVolume;
-#ifdef DEBUG
-            double histv = rdf[i];
-#endif
 
             if (rdf[i] != 0.0)
             {
@@ -304,10 +283,6 @@ calculateRDF(PyObject *self, PyObject *args)
                 /* normalisation factor is 1 / (pair_density * shellVolume) */
                 norm_f = pair_dens / shellVolume;
                 rdf[i] = rdf[i] * norm_f;
-                
-#ifdef DEBUG
-                printf("HIST %d (%lf -> %lf): histv %lf; vol %lf; norm_f = %lf; rdf %lf\n", i, r_inner, r_outer, histv, shellVolume, norm_f, rdf[i]);
-#endif
             }
         }
     }
