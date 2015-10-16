@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 """
 The output tab for the main toolbar
@@ -24,7 +25,7 @@ from ..visutils import threading_vis
 from ..visutils.utilities import iconPath
 from . import genericForm
 from ..state import _output as output_c
-from ..plotting import rdf as rdf_c
+from ..plotting import rdf
 from ..algebra import _vectors as vectors_c
 from ..plotting import plotDialog
 from . import utils
@@ -674,7 +675,6 @@ class RDFForm(genericForm.GenericForm):
         
         # first gather vis atoms
         visibleAtoms = self.rendererWindow.gatherVisibleAtoms()
-                    
         if not len(visibleAtoms):
             self.mainWindow.displayWarning("No visible atoms: cannot calculate RDF")
             return
@@ -692,27 +692,21 @@ class RDFForm(genericForm.GenericForm):
         else:
             spec2Index = int(np.where(specieList == self.spec2)[0][0])
         
-        # prelims
-        numBins = int((self.binMax - self.binMin) / self.binWidth)
-        rdfArray = np.zeros(numBins, np.float64)
-        self.logger.debug("Bin width is %f; number of bins is %d", self.binWidth, numBins)
-        
-        # show progress dialog
-        progDiag = utils.showProgressDialog("Calculating RDF", "Calculating RDF...", self)
-        
         # num threads
         ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
         
+        # rdf calulator
+        rdfCalculator = rdf.RDFCalculator()
+        
+        # show progress dialog
+        progDiag = utils.showProgressDialog("Calculating RDF", "Calculating RDF...", self)
         try:
             # then calculate
-            rdf_c.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, spec1Index, spec2Index, inputLattice.cellDims,
-                               pp.PBC, self.binMin, self.binMax, self.binWidth, numBins, rdfArray, ompNumThreads)
+            xn, rdfArray = rdfCalculator.calculateRDF(visibleAtoms, inputLattice, self.binMin, self.binMax,
+                                                      self.binWidth, spec1Index, spec2Index, ompNumThreads)
         
         finally:
             utils.cancelProgressDialog(progDiag)
-        
-        # then plot
-        xn = np.arange(self.binMin + self.binWidth / 2.0, self.binMax, self.binWidth, dtype=np.float64)
         
         # prepare to plot
         settingsDict = {}

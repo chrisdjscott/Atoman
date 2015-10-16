@@ -11,7 +11,7 @@ def configuration(parent_package='', top_path=None):
     # config
     config = Configuration("plotting", parent_package, top_path)
     
-    config.add_extension("rdf", 
+    config.add_extension("_rdf", 
                          ["rdf.c", "../visclibs/utilities.c",
                           "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
                          libraries=["gsl", "gslcblas", "gomp"],

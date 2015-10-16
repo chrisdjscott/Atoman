@@ -72,27 +72,28 @@ void atomSeparationVector( double *vector3, double ax, double ay, double az, dou
 /*******************************************************************************
  ** return atomic separation squared
  *******************************************************************************/
-double atomicSeparation2( double ax, double ay, double az, double bx, double by, double bz, double xdim, double ydim, double zdim, int pbcx, int pbcy, int pbcz )
+double atomicSeparation2(double ax, double ay, double az, double bx, double by, double bz, double xdim,
+        double ydim, double zdim, int pbcx, int pbcy, int pbcz)
 {
     double rx, ry, rz, r2;
     
-    /* calculate separation */
+    /* calculate differences */
     rx = ax - bx;
     ry = ay - by;
     rz = az - bz;
     
     /* handle PBCs here if required */
-    if ( pbcx == 1 )
+    if (pbcx == 1)
     {
-        rx = rx - round( rx / xdim ) * xdim;
+        rx = rx - round(rx / xdim) * xdim;
     }
-    if ( pbcy == 1 )
+    if (pbcy == 1)
     {
-        ry = ry - round( ry / ydim ) * ydim;
+        ry = ry - round(ry / ydim) * ydim;
     }
-    if ( pbcz == 1 )
+    if (pbcz == 1)
     {
-        rz = rz - round( rz / zdim ) * zdim;
+        rz = rz - round(rz / zdim) * zdim;
     }
     
     /* separation squared */
