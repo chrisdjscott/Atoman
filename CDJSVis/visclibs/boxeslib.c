@@ -20,9 +20,8 @@
 #include "boxeslib.h"
 
 
-
 /*******************************************************************************
- ** create and return pointer to Boxes structure
+ ** create and return pointer to a Boxes structure
  *******************************************************************************/
 struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
 {
@@ -30,8 +29,6 @@ struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
     double cellLength;
     struct Boxes *boxes;
     
-    
-    //TODO: limit the number of boxes; use long instead?
     
     /* allocate space for boxes struct */
     boxes = malloc(1 * sizeof(struct Boxes));
@@ -41,7 +38,7 @@ struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
         return NULL;
     }
     
-    /* setup boxes */
+    /* setup boxes in each dimension: number of boxes and size */
     for (i = 0; i < 3; i++)
     {
         /* store some parameters */
@@ -64,11 +61,13 @@ struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
         /* length of box side */
         boxes->boxWidth[i] = cellLength / boxes->NBoxes[i];
     }
+    /* total number of boxes */
     boxes->totNBoxes = boxes->NBoxes[0] * boxes->NBoxes[1] * boxes->NBoxes[2];
     
+    /* amount of memory to allocate at a time */
     boxes->allocChunk = 50;
     
-    /* allocate arrays */
+    /* allocate arrays for storing counters and atoms */
     boxes->boxNAtoms = calloc(boxes->totNBoxes, sizeof(int));
     if (boxes->boxNAtoms == NULL)
     {
@@ -76,7 +75,6 @@ struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
         free(boxes);
         return NULL;
     }
-    
     boxes->boxAtoms = malloc(boxes->totNBoxes * sizeof(int *));
     if (boxes->boxAtoms == NULL)
     {
@@ -89,7 +87,6 @@ struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
     return boxes;
 }
 
-
 /*******************************************************************************
  ** put atoms into boxes
  *******************************************************************************/
@@ -99,11 +96,13 @@ int putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
     int status = 0;
     
     
+    /* loop over all atoms */
     for (i=0; i<NAtoms; i++)
     {
+        /* find which box this atom belongs to */
         boxIndex = boxIndexOfAtom(pos[3*i], pos[3*i+1], pos[3*i+2], boxes);
         
-        /* check if this box is empty or full */
+        /* check if this box is empty or full and alloc/realloc as required */
         if (boxes->boxNAtoms[boxIndex] == 0)
         {
             /* allocate this box */
@@ -140,14 +139,12 @@ int putAtomsInBoxes(int NAtoms, double *pos, struct Boxes *boxes)
     return status;
 }
 
-
 /*******************************************************************************
- ** returns box index of given atom
+ ** returns box index of the given atom
  *******************************************************************************/
 int boxIndexOfAtom(double xpos, double ypos, double zpos, struct Boxes *boxes)
 {
-    int posintx, posinty, posintz;
-    int boxIndex;
+    int posintx, posinty, posintz, boxIndex;
     
     
     /* if atom is outside boxes min/max pos we wrap or translate it back depending on PBCs */
@@ -218,27 +215,28 @@ int boxIndexOfAtom(double xpos, double ypos, double zpos, struct Boxes *boxes)
     }
     
     /* find box for atom */
-    posintx = (int) ( (xpos - boxes->minPos[0]) / boxes->boxWidth[0] );
-    if ( posintx >= boxes->NBoxes[0])
+    posintx = (int) ((xpos - boxes->minPos[0]) / boxes->boxWidth[0]);
+    if (posintx >= boxes->NBoxes[0])
     {
         posintx = boxes->NBoxes[0] - 1;
     }
     
-    posinty = (int) ( (ypos - boxes->minPos[1]) / boxes->boxWidth[1] );
-    if ( posinty >= boxes->NBoxes[1])
+    posinty = (int) ((ypos - boxes->minPos[1]) / boxes->boxWidth[1]);
+    if (posinty >= boxes->NBoxes[1])
     {
         posinty = boxes->NBoxes[1] - 1;
     }
     
-    posintz = (int) ( (zpos - boxes->minPos[2]) / boxes->boxWidth[2] );
-    if ( posintz >= boxes->NBoxes[2])
+    posintz = (int) ((zpos - boxes->minPos[2]) / boxes->boxWidth[2]);
+    if (posintz >= boxes->NBoxes[2])
     {
         posintz = boxes->NBoxes[2] - 1;
     }
     
-    /* this numbers by x then z then y (can't remember why I wanted it like this) */
+    /* this numbers by x then z then y (surface is normally in y) */
     boxIndex = (int) (posintx + posintz * boxes->NBoxes[0] + posinty * boxes->NBoxes[0] * boxes->NBoxes[2]);
     
+    /* check for an error */
     if (boxIndex < 0)
     {
         fprintf(stderr, "Error: boxIndexOfAtom (CLIB): boxIndex < 0: %d, %d %d %d\n", boxIndex, posintx, posinty, posintz);
@@ -254,7 +252,6 @@ int boxIndexOfAtom(double xpos, double ypos, double zpos, struct Boxes *boxes)
     return boxIndex;
 }
 
-
 /*******************************************************************************
  ** return i, j, k indices of box
  *******************************************************************************/
@@ -263,15 +260,15 @@ void boxIJKIndices(int dim1, int* ijkIndices, int boxIndex, struct Boxes *boxes)
     int xint, yint, zint, tmp;
     
     
-    // maybe should check here that dim1 == 3
-    
-    yint = (int) ( boxIndex / (boxes->NBoxes[0] * boxes->NBoxes[2]) );
+    /* calculate the indices */
+    yint = (int) (boxIndex / (boxes->NBoxes[0] * boxes->NBoxes[2]));
     
     tmp = boxIndex - yint * boxes->NBoxes[0] * boxes->NBoxes[2];
-    zint = (int) ( tmp / boxes->NBoxes[0] );
+    zint = (int) (tmp / boxes->NBoxes[0]);
     
     xint = (int) (tmp - zint * boxes->NBoxes[0]);
     
+    /* store the result */
     ijkIndices[0] = xint;
     ijkIndices[1] = yint;
     ijkIndices[2] = zint;
@@ -297,8 +294,8 @@ int boxIndexFromIJK(int xindex, int yindex, int zindex, struct Boxes *boxes)
 
 
 /*******************************************************************************
- ** returns neighbourhood of given box
- ** boxNeighbourList must be of size >= 27
+ ** Returns the neighbourhood of given box, i.e. all boxes that are next to the
+ ** given box (27 boxes in 3-d)
  *******************************************************************************/
 int getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes)
 {
@@ -332,16 +329,14 @@ int getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes)
         }
     }
     
-    //TODO: only wrap if using PBC, don't bother otherwise!
-    
-    /* loop over each direction */
+    /* loop in x direction */
     count = 0;
     for (i = lstart[0]; i < lfinish[0]; i++)
     {
         int j;
         int posintx = mainBoxIJK[0] + i;
         
-        /* wrap */
+        /* wrap as required */
         if (posintx < 0)
         {
             posintx += boxes->NBoxes[0];
@@ -351,12 +346,13 @@ int getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes)
             posintx -= boxes->NBoxes[0];
         }
         
+        /* loop in y direction */
         for (j = lstart[1]; j < lfinish[1]; j++)
         {
             int k;
             int posinty = mainBoxIJK[1] + j;
             
-            /* wrap */
+            /* wrap as required */
             if ( posinty < 0 )
             {
                 posinty += boxes->NBoxes[1];
@@ -366,12 +362,13 @@ int getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes)
                 posinty -= boxes->NBoxes[1];
             }
             
+            /* loop in z direction */
             for (k = lstart[2]; k < lfinish[2]; k++)
             {
                 int index;
                 int posintz = mainBoxIJK[2] + k;
                 
-                /* wrap */
+                /* wrap as required */
                 if (posintz < 0)
                 {
                     posintz += boxes->NBoxes[2];
@@ -390,7 +387,6 @@ int getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes)
     
     return count;
 }
-
 
 /*******************************************************************************
  ** free boxes memory

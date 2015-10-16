@@ -1,6 +1,5 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2012
  ** Functions associated with spatially decomposing a system of atoms into boxes
  *******************************************************************************/
 
@@ -27,17 +26,11 @@ struct Boxes
 
 /* available functions */
 struct Boxes * setupBoxes(double, int *, double *);
-
 int boxIndexOfAtom( double, double, double, struct Boxes *);
-
 int putAtomsInBoxes(int, double *, struct Boxes *);
-
 void freeBoxes(struct Boxes *);
-
 void boxIJKIndices(int, int *, int, struct Boxes *);
-
 int boxIndexFromIJK(int, int, int, struct Boxes *);
-
 int getBoxNeighbourhood(int, int *, struct Boxes *);
 
 #endif

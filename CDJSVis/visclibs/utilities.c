@@ -82,19 +82,10 @@ double atomicSeparation2(double ax, double ay, double az, double bx, double by, 
     ry = ay - by;
     rz = az - bz;
     
-    /* handle PBCs here if required */
-    if (pbcx == 1)
-    {
-        rx = rx - round(rx / xdim) * xdim;
-    }
-    if (pbcy == 1)
-    {
-        ry = ry - round(ry / ydim) * ydim;
-    }
-    if (pbcz == 1)
-    {
-        rz = rz - round(rz / zdim) * zdim;
-    }
+    /* handle PBCs here, if required */
+    if (pbcx == 1) rx = rx - round(rx / xdim) * xdim;
+    if (pbcy == 1) ry = ry - round(ry / ydim) * ydim;
+    if (pbcz == 1) rz = rz - round(rz / zdim) * zdim;
     
     /* separation squared */
     r2 = rx * rx + ry * ry + rz * rz;

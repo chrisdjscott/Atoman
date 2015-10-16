@@ -83,11 +83,9 @@ class FilterResult(object):
 ################################################################################
 
 class FilterInput(object):
-    """
-    Input object for filters.
-    
-    """
+    """Input object for filters."""
     def __init__(self):
+        # default values
         self.visibleAtoms = None
         self.inputState = None
         self.refState = None
