@@ -62,7 +62,7 @@ and verify the tests run with no errors:
 python setup.py test
 ```
 
-Then you can add the `/path/to/CDJSVis` directory to you PYTHONPATH and PATH and run cdjsvis.py from anywhere.
+Then you can add the `/path/to/CDJSVis` directory to you PYTHONPATH and run `python -m CDJSVis` from anywhere.
 
 ### Installing to Python site-packages
 

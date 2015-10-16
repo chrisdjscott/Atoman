@@ -31,6 +31,12 @@ class SpeciesFilter(base.BaseFilter):
     """
     def apply(self, filterInput, settings):
         """Apply the filter."""
+        # check the inputs are correct
+        if not isinstance(filterInput, base.FilterInput):
+            raise TypeError("First argument of SpeciesFilter must be of type FilterInput")
+        if not isinstance(settings, SpeciesFilterSettings):
+            raise TypeError("Second argument of SpeciesFilter must be of type SpeciesFilterSettings")
+        
         # unpack inputs
         inputState = filterInput.inputState
         NScalars = filterInput.NScalars
@@ -50,7 +56,7 @@ class SpeciesFilter(base.BaseFilter):
                 visSpecArray.append(i)
         visSpecArray = np.asarray(visSpecArray, dtype=np.int32)
         
-        # call C library
+        # call C library to filter by species
         NVisible = _filtering.specieFilter(visibleAtoms, visSpecArray, inputState.specie, NScalars, fullScalars, 
                                            NVectors, fullVectors)
 
