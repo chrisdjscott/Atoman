@@ -78,7 +78,7 @@ static void convertToSphericalCoordinates(double xdiff, double ydiff, double zdi
 }
 
 /*******************************************************************************
- ** Compute complex q_lm (sum over eq. 3 from Stutowski paper), for each atom
+ ** Compute complex q_lm (sum over eq. 3 from Stukowski paper), for each atom
  *******************************************************************************/
 static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList *nebList, double *pos, double *cellDims, int *PBC, struct AtomStructureResults *results)
 {
