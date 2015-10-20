@@ -1054,7 +1054,27 @@ chargeFilter(PyObject *self, PyObject *args)
 
 
 /*******************************************************************************
- * Calculate coordination number
+ ** Calculate coordination number
+ **
+ ** Inputs:
+ **     - visibleAtoms: the list of atoms that are currently visible
+ **     - pos: positions of all the atoms
+ **     - specie: species of all the atoms
+ **     - bondMinArray: array containing the minimum bond distance squared for
+ **       different pairs of species
+ **     - bondMaxArray: array containing the maximum bond distance squared for
+ **     - different pairs of species
+ **     - cellDims: simulation cell dimensions
+ **     - PBC: periodic boundaries conditions
+ **     - coordArray: array for storing the coordination numbers of the atoms
+ **     - filteringEnabled: filter atoms by coordination number
+ **     - minCoordNum: the minimum coordination number for an atom to be visible
+ **     - maxCoordNum: the maximum coordination number for an atom to be visible
+ **     - NScalars: the number of previously calculated scalar values
+ **     - fullScalars: the full list of previously calculated scalars
+ **     - NVectors: the number of previously calculated vector values
+ **     - fullVectors: the full list of previously calculated vectors
+ **     - approxBoxWidth: the approximate size to use when decomposing the system
  *******************************************************************************/
 static PyObject* 
 coordNumFilter(PyObject *self, PyObject *args)
@@ -1071,11 +1091,8 @@ coordNumFilter(PyObject *self, PyObject *args)
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
-    
-    int i, j, k, index, index2, visIndex;
-    int speca, specb, count, NVisibleNew;
-    int boxIndex, boxNebList[27], boxstat;
-    double *visiblePos, sep2, sep;
+    int i, count, NVisibleNew, boxstat;
+    double *visiblePos;
     struct Boxes *boxes;
     
     /* parse and check arguments from Python */
@@ -1122,6 +1139,8 @@ coordNumFilter(PyObject *self, PyObject *args)
     
     for (i=0; i<NSpecies; i++)
     {
+        int j;
+
         for (j=i; j<NSpecies; j++)
         {
             printf("%d - %d: %lf -> %lf\n", i, j, bondMinArray[i*NSpecies+j], bondMaxArray[i*NSpecies+j]);
@@ -1129,19 +1148,19 @@ coordNumFilter(PyObject *self, PyObject *args)
     }
 #endif
     
-    /* construct visible pos array */
+    /* construct array of postions of visible atoms */
     visiblePos = malloc(3 * NVisible * sizeof(double));
     if (visiblePos == NULL)
     {
         printf("ERROR: could not allocate visiblePos\n");
         exit(50);
     }
-    
-    for (i=0; i<NVisible; i++)
+    for (i = 0; i < NVisible; i++)
     {
-        index = visibleAtoms[i];
+        int index = visibleAtoms[i];
         int i3 = i * 3;
         int ind3 = index * 3;
+
         visiblePos[i3    ] = pos[ind3    ];
         visiblePos[i3 + 1] = pos[ind3 + 1];
         visiblePos[i3 + 2] = pos[ind3 + 2];
@@ -1159,22 +1178,23 @@ coordNumFilter(PyObject *self, PyObject *args)
     /* free visible pos */
     free(visiblePos);
     
+    /* return if there was an error during boxing */
     if (boxstat) return NULL;
     
-    /* zero coord array */
-    for (i=0; i<NVisible; i++) coordArray[i] = 0;
+    /* initialise coord array */
+    for (i = 0; i < NVisible; i++) coordArray[i] = 0;
     
     /* loop over visible atoms */
     count = 0;
-    for (i=0; i<NVisible; i++)
+    for (i = 0; i < NVisible; i++)
     {
-        int boxNebListSize;
+        int j, index, speca, boxNebListSize, boxIndex, boxNebList[27];
         
+        /* index and species of the atom */
         index = visibleAtoms[i];
-        
         speca = specie[index];
         
-        /* get box index of this atom */
+        /* get the box index of this atom */
         boxIndex = boxIndexOfAtom(pos[3*index], pos[3*index+1], pos[3*index+2], boxes);
         if (boxIndex < 0)
         {
@@ -1188,24 +1208,27 @@ coordNumFilter(PyObject *self, PyObject *args)
         /* loop over box neighbourhood */
         for (j = 0; j < boxNebListSize; j++)
         {
-            boxIndex = boxNebList[j];
+            int checkBox = boxNebList[j];
+            int k;
             
-            for (k=0; k<boxes->boxNAtoms[boxIndex]; k++)
+            for (k = 0; k < boxes->boxNAtoms[checkBox]; k++)
             {
-                visIndex = boxes->boxAtoms[boxIndex][k];
+                int specb, visIndex, index2;
+                double sep2;
+
+                /* index of this atom */
+                visIndex = boxes->boxAtoms[checkBox][k];
                 index2 = visibleAtoms[visIndex];
                 
-                if (index >= index2)
-                {
-                    continue;
-                }
+                /* we only need to check each pair once */
+                if (index >= index2) continue;
                 
+                /* species of the second atom */
                 specb = specie[index2];
                 
+                /* if no bond was specified for this pair we skip it */
                 if (bondMinArray[speca*NSpecies+specb] == 0.0 && bondMaxArray[speca*NSpecies+specb] == 0.0)
-                {
                     continue;
-                }
                 
                 /* atomic separation */
                 sep2 = atomicSeparation2(pos[3*index], pos[3*index+1], pos[3*index+2], 
@@ -1213,55 +1236,55 @@ coordNumFilter(PyObject *self, PyObject *args)
                                          cellDims[0], cellDims[1], cellDims[2], 
                                          PBC[0], PBC[1], PBC[2]);
                 
-                sep = sqrt(sep2);
-                
                 /* check if these atoms are bonded */
-                if (sep >= bondMinArray[speca*NSpecies+specb] && sep <= bondMaxArray[speca*NSpecies+specb])
+                if (sep2 >= bondMinArray[speca*NSpecies+specb] && sep2 <= bondMaxArray[speca*NSpecies+specb])
                 {
                     coordArray[i]++;
                     coordArray[visIndex]++;
-                    
                     count++;
                 }
             }
         }
     }
     
-    /* filter */
+    /* free boxes memory */
+    freeBoxes(boxes);
+
+    /* filter by coordination number, if required */
     if (filteringEnabled)
     {
         NVisibleNew = 0;
-        for (i=0; i<NVisible; i++)
+        for (i = 0; i < NVisible; i++)
         {
+            /* check if this atom is visible */
             if (coordArray[i] >= minCoordNum && coordArray[i] <= maxCoordNum)
             {
+                int j;
+
+                /* updatre visible atoms and coordination number arrays */
                 visibleAtoms[NVisibleNew] = visibleAtoms[i];
                 coordArray[NVisibleNew] = coordArray[i];
                 
-                /* handle full scalars array */
+                /* update full scalars/vectors array */
                 for (j = 0; j < NScalars; j++)
                 {
-                    fullScalars[NVisible * j + NVisibleNew] = fullScalars[NVisible * j + i];
+                    int nj = NVisible * j;
+                    fullScalars[nj + NVisibleNew] = fullScalars[nj + i];
                 }
                 
                 for (j = 0; j < NVectors; j++)
                 {
-                    DIND2(fullVectors, NVisible * j + NVisibleNew, 0) = DIND2(fullVectors, NVisible * j + i, 0);
-                    DIND2(fullVectors, NVisible * j + NVisibleNew, 1) = DIND2(fullVectors, NVisible * j + i, 1);
-                    DIND2(fullVectors, NVisible * j + NVisibleNew, 2) = DIND2(fullVectors, NVisible * j + i, 2);
+                    int nj = NVisible * j;
+                    DIND2(fullVectors, nj + NVisibleNew, 0) = DIND2(fullVectors, nj + i, 0);
+                    DIND2(fullVectors, nj + NVisibleNew, 1) = DIND2(fullVectors, nj + i, 1);
+                    DIND2(fullVectors, nj + NVisibleNew, 2) = DIND2(fullVectors, nj + i, 2);
                 }
                 
                 NVisibleNew++;
             }
         }
     }
-    else
-    {
-        NVisibleNew = NVisible;
-    }
-    
-    /* free */
-    freeBoxes(boxes);
+    else NVisibleNew = NVisible;
     
     return Py_BuildValue("i", NVisibleNew);
 }

@@ -17,6 +17,7 @@
 #include "array_utils.h"
 
 
+/* structure for storing the result for an atom */
 struct AtomStructureResults
 {
     double Q6;
@@ -92,7 +93,7 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
         int index, m;
         double xpos1, ypos1, zpos1;
         
-        /* pos 1 */
+        /* atom 1 position */
         index = visibleAtoms[visIndex];
         xpos1 = pos[3*index];
         ypos1 = pos[3*index+1];
@@ -104,6 +105,7 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
             int i;
             double real_part, img_part;
             
+            /* loop over neighbours */
             real_part = 0.0;
             img_part = 0.0;
             for (i = 0; i < nebList[visIndex].neighbourCount; i++)
@@ -112,20 +114,20 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
                 double xpos2, ypos2, zpos2, sepVec[3];
                 double theta, phi, realYlm, complexYlm;
                 
-                /* pos 2 */
+                /* atom 2 position */
                 visIndex2 = nebList[visIndex].neighbour[i];
                 index2 = visibleAtoms[visIndex2];
                 xpos2 = pos[3*index2];
                 ypos2 = pos[3*index2+1];
                 zpos2 = pos[3*index2+2];
                 
-                /* separation vector */
+                /* calculate separation vector between atoms */
                 atomSeparationVector(sepVec, xpos1, ypos1, zpos1, xpos2, ypos2, zpos2, cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
                 
                 /* convert to spherical coordinates */
                 convertToSphericalCoordinates(sepVec[0], sepVec[1], sepVec[2], nebList[visIndex].neighbourSep[i], &phi, &theta);
                 
-                /* calc Ylm */
+                /* calculate Ylm */
                 if (m < 0)
                 {
                     Ylm(6, abs(m), theta, phi, &realYlm, &complexYlm);
@@ -142,7 +144,7 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
                 img_part += complexYlm;
             }
             
-            /* divide by num nebs */
+            /* divide by number of neighbours */
             results[visIndex].realQ6[m+6] = real_part / ((double) nebList[visIndex].neighbourCount);
             results[visIndex].imgQ6[m+6] = img_part / ((double) nebList[visIndex].neighbourCount);
         }
@@ -153,6 +155,7 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
             int i;
             double real_part, img_part;
             
+            /* loop over neighbours */
             real_part = 0.0;
             img_part = 0.0;
             for (i = 0; i < nebList[visIndex].neighbourCount; i++)
@@ -161,20 +164,20 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
                 double xpos2, ypos2, zpos2, sepVec[3];
                 double theta, phi, realYlm, complexYlm;
                 
-                /* pos 2 */
+                /* atom 2  position */
                 visIndex2 = nebList[visIndex].neighbour[i];
                 index2 = visibleAtoms[visIndex2];
                 xpos2 = pos[3*index2];
                 ypos2 = pos[3*index2+1];
                 zpos2 = pos[3*index2+2];
                 
-                /* separation vector */
+                /* calculate separation vector */
                 atomSeparationVector(sepVec, xpos1, ypos1, zpos1, xpos2, ypos2, zpos2, cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
                 
                 /* convert to spherical coordinates */
                 convertToSphericalCoordinates(sepVec[0], sepVec[1], sepVec[2], nebList[visIndex].neighbourSep[i], &phi, &theta);
                 
-                /* calc Ylm */
+                /* calculate Ylm */
                 if (m < 0)
                 {
                     Ylm(4, abs(m), theta, phi, &realYlm, &complexYlm);
@@ -191,7 +194,7 @@ static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList 
                 img_part += complexYlm;
             }
             
-            /* divide by num nebs */
+            /* divide by number of neighbours */
             results[visIndex].realQ4[m+4] = real_part / ((double) nebList[visIndex].neighbourCount);
             results[visIndex].imgQ4[m+4] = img_part / ((double) nebList[visIndex].neighbourCount);
         }
@@ -205,8 +208,11 @@ static void calculate_Q(int NVisibleIn, struct AtomStructureResults *results)
 {
     int i, m;
     double sumQ6, sumQ4;
+    const double pi13 = 4.0 * M_PI / 13.0;
+    const double pi9 = 4.0 * M_PI / 9.0;
     
-    
+
+    /* loop over atoms and compute the Q4 and Q6 values */
     for (i = 0; i < NVisibleIn; i++)
     {
         sumQ6 = 0.0;
@@ -214,30 +220,45 @@ static void calculate_Q(int NVisibleIn, struct AtomStructureResults *results)
         {
             sumQ6 += results[i].realQ6[m] * results[i].realQ6[m] + results[i].imgQ6[m] * results[i].imgQ6[m];
         }
-        results[i].Q6 = pow(((4.0 * M_PI / 13.0) * sumQ6), 0.5);
+        results[i].Q6 = pow(pi13 * sumQ6, 0.5);
         
         sumQ4 = 0.0;
         for (m = 0; m < 9; m++)
         {
             sumQ4 += results[i].realQ4[m] * results[i].realQ4[m] + results[i].imgQ4[m] * results[i].imgQ4[m];
         }
-        results[i].Q4 = pow(((4.0 * M_PI / 9.0) * sumQ4), 0.5);
+        results[i].Q4 = pow(pi9 * sumQ4, 0.5);
     }
 }
 
-
-
-
-
-
 /*******************************************************************************
- ** bond order filter
+ ** Calculate the bond order parameters and filter atoms (if required).
+ **
+ ** Inputs:
+ **     - visibleAtoms: the list of atoms that are currently visible
+ **     - pos: positions of all the atoms
+ **     - maxBondDistance: the maximum bond distance to consider
+ **     - scalarsQ4: array to store the Q4 parameter value
+ **     - scalarsQ6: array to store the Q6 parameter value
+ **     - cellDims: simulation cell dimensions
+ **     - PBC: periodic boundaries conditions
+ **     - NScalars: the number of previously calculated scalar values
+ **     - fullScalars: the full list of previously calculated scalars
+ **     - NVectors: the number of previously calculated vector values
+ **     - fullVectors: the full list of previously calculated vectors
+ **     - filterQ4: filter atoms by the Q4 parameter
+ **     - minQ4: the minimum Q4 for an atom to be visible
+ **     - maxQ4: the maximum Q4 for an atom to be visible
+ **     - filterQ6: filter atoms by the Q6 parameter
+ **     - minQ6: the minimum Q6 for an atom to be visible
+ **     - maxQ6: the maximum Q6 for an atom to be visible
+ **     - numThreads: the number of threads to use
  *******************************************************************************/
 static PyObject*
 bondOrderFilter(PyObject *self, PyObject *args)
 {
     int NVisibleIn, *visibleAtoms, *PBC, NScalars, filterQ4Enabled, filterQ6Enabled;
-    int OMP_NUM_THREADS, NVectors;
+    int numThreads, NVectors;
     double maxBondDistance, *scalarsQ4, *scalarsQ6, *cellDims;
     double *pos, *fullScalars, minQ4, maxQ4, minQ6, maxQ6;
     PyArrayObject *posIn=NULL;
@@ -249,10 +270,8 @@ bondOrderFilter(PyObject *self, PyObject *args)
     PyArrayObject *fullScalarsIn=NULL;
     PyArrayObject *fullVectors=NULL;
     
-    int i, j, NVisible;
-    int maxSep2, boxstat;
-    double approxBoxWidth, q4, q6;
-    double *visiblePos;
+    int i, NVisible, boxstat;
+    double *visiblePos, maxSep2;
     struct Boxes *boxes;
     struct NeighbourList *nebList;
     struct AtomStructureResults *results;
@@ -260,7 +279,7 @@ bondOrderFilter(PyObject *self, PyObject *args)
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "O!O!dO!O!O!O!iO!iddiddiiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &maxBondDistance,
             &PyArray_Type, &scalarsQ4In, &PyArray_Type, &scalarsQ6In, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars,
-            &PyArray_Type, &fullScalarsIn, &filterQ4Enabled, &minQ4, &maxQ4, &filterQ6Enabled, &minQ6, &maxQ6, &OMP_NUM_THREADS,
+            &PyArray_Type, &fullScalarsIn, &filterQ4Enabled, &minQ4, &maxQ4, &filterQ6Enabled, &minQ6, &maxQ6, &numThreads,
             &NVectors, &PyArray_Type, &fullVectors))
         return NULL;
     
@@ -289,16 +308,15 @@ bondOrderFilter(PyObject *self, PyObject *args)
     if (not_doubleVector(fullVectors)) return NULL;
     
     /* set number of openmp threads to use */
-    omp_set_num_threads(OMP_NUM_THREADS);
+    omp_set_num_threads(numThreads);
     
-    /* construct visible pos array */
+    /* construct array of positions of visible atoms */
     visiblePos = malloc(3 * NVisibleIn * sizeof(double));
     if (visiblePos == NULL)
     {
         PyErr_SetString(PyExc_MemoryError, "Could not allocate visiblePos");
         return NULL;
     }
-    
     for (i = 0; i < NVisibleIn; i++)
     {
         int index = visibleAtoms[i];
@@ -310,9 +328,7 @@ bondOrderFilter(PyObject *self, PyObject *args)
     }
     
     /* box visible atoms */
-    approxBoxWidth = maxBondDistance;
-    maxSep2 = maxBondDistance * maxBondDistance;
-    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
+    boxes = setupBoxes(maxBondDistance, PBC, cellDims);
     if (boxes == NULL)
     {
         free(visiblePos);
@@ -325,26 +341,32 @@ bondOrderFilter(PyObject *self, PyObject *args)
         return NULL;
     }
     
-    /* build neighbour list (this should be separate function) */
+    /* build neighbour list */
+    maxSep2 = maxBondDistance * maxBondDistance;
     nebList = constructNeighbourList(NVisibleIn, visiblePos, boxes, cellDims, PBC, maxSep2);
     
     /* only required for building neb list */
     free(visiblePos);
     freeBoxes(boxes);
     
+    /* return if failed to build the neighbour list */
     if (nebList == NULL) return NULL;
     
     /* allocate results structure */
     results = malloc(NVisibleIn * sizeof(struct AtomStructureResults));
     if (results == NULL)
     {
-        printf("ERROR: could not allocate results\n");
-        exit(50);
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate results");
+        freeNeighbourList(nebList, NVisibleIn);
+        return NULL;
     }
     
     /* first calc q_lm for each atom over all m values */
     complex_qlm(NVisibleIn, visibleAtoms, nebList, pos, cellDims, PBC, results);
     
+    /* free neighbour list */
+    freeNeighbourList(nebList, NVisibleIn);
+
     /* calculate Q4 and Q6 */
     calculate_Q(NVisibleIn, results);
     
@@ -352,40 +374,42 @@ bondOrderFilter(PyObject *self, PyObject *args)
     NVisible = 0;
     for (i = 0; i < NVisibleIn; i++)
     {
-        q4 = results[i].Q4;
-        q6 = results[i].Q6;
+        int j;
+        double q4 = results[i].Q4;
+        double q6 = results[i].Q6;
         
+        /* skip if not within the valid range */
         if (filterQ4Enabled && (q4 < minQ4 || q4 > maxQ4))
             continue;
-        
         if (filterQ6Enabled && (q6 < minQ6 || q6 > maxQ6))
             continue;
         
-        /* add */
+        /* store in visible atoms array */
         visibleAtoms[NVisible] = visibleAtoms[i];
         
-        /* store scalars */
+        /* store calculated values */
         scalarsQ4[NVisible] = q4;
         scalarsQ6[NVisible] = q6;
         
-        /* handle full scalars array */
+        /* update full scalars/vectors arrays */
         for (j = 0; j < NScalars; j++)
         {
-            fullScalars[NVisibleIn * j + NVisible] = fullScalars[NVisibleIn * j + i];
+            int nj = j * NVisibleIn;
+            fullScalars[nj + NVisible] = fullScalars[nj + i];
         }
         
         for (j = 0; j < NVectors; j++)
         {
-            DIND2(fullVectors, NVisibleIn * j + NVisible, 0) = DIND2(fullVectors, NVisibleIn * j + i, 0);
-            DIND2(fullVectors, NVisibleIn * j + NVisible, 1) = DIND2(fullVectors, NVisibleIn * j + i, 1);
-            DIND2(fullVectors, NVisibleIn * j + NVisible, 2) = DIND2(fullVectors, NVisibleIn * j + i, 2);
+            int nj = j * NVisibleIn;
+            DIND2(fullVectors, nj + NVisible, 0) = DIND2(fullVectors, nj + i, 0);
+            DIND2(fullVectors, nj + NVisible, 1) = DIND2(fullVectors, nj + i, 1);
+            DIND2(fullVectors, nj + NVisible, 2) = DIND2(fullVectors, nj + i, 2);
         }
         
         NVisible++;
     }
     
-    /* free */
-    freeNeighbourList(nebList, NVisibleIn);
+    /* free results memory */
     free(results);
     
     return Py_BuildValue("i", NVisible);

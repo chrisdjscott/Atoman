@@ -56,7 +56,7 @@ class CoordinationNumberFilter(base.BaseFilter):
         bondMinArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
         bondMaxArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
         
-        # construct bonds array
+        # construct bonds array (bond distances squared)
         calcBonds = False
         maxBond = -1
         for i in xrange(NSpecies):
@@ -71,11 +71,11 @@ class CoordinationNumberFilter(base.BaseFilter):
                     if symj in d:
                         bondMin, bondMax = d[symj]
                         
-                        bondMinArray[i][j] = bondMin
-                        bondMinArray[j][i] = bondMin
+                        bondMinArray[i][j] = bondMin * bondMin
+                        bondMinArray[j][i] = bondMinArray[i][j]
                         
-                        bondMaxArray[i][j] = bondMax
-                        bondMaxArray[j][i] = bondMax
+                        bondMaxArray[i][j] = bondMax * bondMax
+                        bondMaxArray[j][i] = bondMaxArray[i][j]
                         
                         if bondMax > maxBond:
                             maxBond = bondMax

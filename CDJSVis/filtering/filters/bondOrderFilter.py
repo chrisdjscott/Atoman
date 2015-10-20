@@ -79,6 +79,12 @@ class BondOrderFilter(base.BaseFilter):
     """
     def apply(self, filterInput, settings):
         """Run the bond order filter."""
+        # check the inputs are correct
+        if not isinstance(filterInput, base.FilterInput):
+            raise TypeError("First argument of BondOrderFilter.apply must be of type FilterInput")
+        if not isinstance(settings, BondOrderFilterSettings):
+            raise TypeError("Second argument of BondOrderFilter.apply must be of type BondOrderFilterSettings")
+        
         # unpack inputs
         inputState = filterInput.inputState
         NScalars = filterInput.NScalars
