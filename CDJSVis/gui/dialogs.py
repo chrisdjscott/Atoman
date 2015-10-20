@@ -38,7 +38,7 @@ class CameraSettingsDialog(QtGui.QDialog):
         self.setWindowTitle("Camera settings")
         self.setWindowIcon(QtGui.QIcon(iconPath("cam.png")))
         
-        self.contentLayout = QtGui.QVBoxLayout(self)
+        self.contentLayout = QtGui.QFormLayout(self)
 #         self.contentLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         # ini vals
@@ -50,39 +50,30 @@ class CameraSettingsDialog(QtGui.QDialog):
         self.camfocbkup = copy.deepcopy(self.camfoc)
         self.camvupbkup = copy.deepcopy(self.camvup)
         
-        # row
-        row = self.newRow()
-        
-        label = QtGui.QLabel("Position: ")
-        row.addWidget(label)
-        
         # cam pos
         self.camPosXSpin = QtGui.QDoubleSpinBox()
         self.camPosXSpin.setMinimum(-99999.0)
         self.camPosXSpin.setMaximum(99999.0)
         self.camPosXSpin.setValue(self.campos[0])
         self.camPosXSpin.valueChanged[float].connect(self.camxposChanged)
-        row.addWidget(self.camPosXSpin)
         
         self.camPosYSpin = QtGui.QDoubleSpinBox()
         self.camPosYSpin.setMinimum(-99999.0)
         self.camPosYSpin.setMaximum(99999.0)
         self.camPosYSpin.setValue(self.campos[1])
         self.camPosYSpin.valueChanged[float].connect(self.camyposChanged)
-        row.addWidget(self.camPosYSpin)
         
         self.camPosZSpin = QtGui.QDoubleSpinBox()
         self.camPosZSpin.setMinimum(-99999.0)
         self.camPosZSpin.setMaximum(99999.0)
         self.camPosZSpin.setValue(self.campos[2])
         self.camPosZSpin.valueChanged[float].connect(self.camzposChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(self.camPosXSpin)
+        row.addWidget(self.camPosYSpin)
         row.addWidget(self.camPosZSpin)
-        
-        # row
-        row = self.newRow()
-        
-        label = QtGui.QLabel("Focal point: ")
-        row.addWidget(label)
+        self.contentLayout.addRow("Position", row)
         
         # cam focal point
         self.camFocXSpin = QtGui.QDoubleSpinBox()
@@ -90,58 +81,61 @@ class CameraSettingsDialog(QtGui.QDialog):
         self.camFocXSpin.setMaximum(99999.0)
         self.camFocXSpin.setValue(self.camfoc[0])
         self.camFocXSpin.valueChanged[float].connect(self.camxfocChanged)
-        row.addWidget(self.camFocXSpin)
         
         self.camFocYSpin = QtGui.QDoubleSpinBox()
         self.camFocYSpin.setMinimum(-99999.0)
         self.camFocYSpin.setMaximum(99999.0)
         self.camFocYSpin.setValue(self.camfoc[1])
         self.camFocYSpin.valueChanged[float].connect(self.camyfocChanged)
-        row.addWidget(self.camFocYSpin)
         
         self.camFocZSpin = QtGui.QDoubleSpinBox()
         self.camFocZSpin.setMinimum(-99999.0)
         self.camFocZSpin.setMaximum(99999.0)
         self.camFocZSpin.setValue(self.camfoc[2])
         self.camFocZSpin.valueChanged[float].connect(self.camzfocChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(self.camFocXSpin)
+        row.addWidget(self.camFocYSpin)
         row.addWidget(self.camFocZSpin)
+        self.contentLayout.addRow("Focal point", row)
         
-        # row
-        row = self.newRow()
-        
-        label = QtGui.QLabel("View up: ")
-        row.addWidget(label)
-        
-        # cam focal point
+        # cam view up
         self.camVupXSpin = QtGui.QDoubleSpinBox()
         self.camVupXSpin.setMinimum(-99999.0)
         self.camVupXSpin.setMaximum(99999.0)
         self.camVupXSpin.setValue(self.camvup[0])
         self.camVupXSpin.valueChanged[float].connect(self.camxvupChanged)
-        row.addWidget(self.camVupXSpin)
         
         self.camVupYSpin = QtGui.QDoubleSpinBox()
         self.camVupYSpin.setMinimum(-99999.0)
         self.camVupYSpin.setMaximum(99999.0)
         self.camVupYSpin.setValue(self.camvup[1])
         self.camVupYSpin.valueChanged[float].connect(self.camyvupChanged)
-        row.addWidget(self.camVupYSpin)
         
         self.camVupZSpin = QtGui.QDoubleSpinBox()
         self.camVupZSpin.setMinimum(-99999.0)
         self.camVupZSpin.setMaximum(99999.0)
         self.camVupZSpin.setValue(self.camvup[2])
         self.camVupZSpin.valueChanged[float].connect(self.camzvupChanged)
+        
+        row = QtGui.QHBoxLayout()
+        row.addWidget(self.camVupXSpin)
+        row.addWidget(self.camVupYSpin)
         row.addWidget(self.camVupZSpin)
+        self.contentLayout.addRow("View up", row)
         
-        # reset button
-        resetButton = QtGui.QPushButton(QtGui.QIcon(iconPath("undo_64.png")), "Reset")
-        resetButton.setStatusTip("Reset changes")
-        resetButton.setToolTip("Reset changes")
-        resetButton.clicked.connect(self.resetChanges)
-        
-        row = self.newRow()
-        row.addWidget(resetButton)
+        # button box
+        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close | QtGui.QDialogButtonBox.Reset)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        self.buttonBox.clicked.connect(self.buttonBoxClicked)
+        self.contentLayout.addWidget(self.buttonBox)
+    
+    def buttonBoxClicked(self, button):
+        """A button was clicked."""
+        if self.buttonBox.button(QtGui.QDialogButtonBox.Reset) == button:
+            self.resetChanges()
     
     def resetChanges(self):
         """
@@ -238,16 +232,6 @@ class CameraSettingsDialog(QtGui.QDialog):
         self.camvup[2] = val
         self.renderer.camera.SetViewUp(self.camvup)
         self.renderer.reinit()
-    
-    def newRow(self, align="Right"):
-        """
-        New row
-        
-        """
-        row = genericForm.FormRow(align=align)
-        self.contentLayout.addWidget(row)
-        
-        return row
 
 ################################################################################
 
