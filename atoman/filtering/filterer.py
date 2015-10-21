@@ -444,7 +444,7 @@ class Filterer(object):
             self.logger.debug("Creating filter object: '%s'", filterObjectName)
             
             # load module
-            filterModule = importlib.import_module(".{0}".format(moduleName), package="CDJSVis.filtering.filters")
+            filterModule = importlib.import_module(".{0}".format(moduleName), package="atoman.filtering.filters")
             
             # load dialog
             filterObject = getattr(filterModule, filterObjectName, None)

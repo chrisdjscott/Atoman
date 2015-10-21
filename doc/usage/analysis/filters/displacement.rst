@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.displacementFilter
+.. automodule:: atoman.filtering.filters.displacementFilter

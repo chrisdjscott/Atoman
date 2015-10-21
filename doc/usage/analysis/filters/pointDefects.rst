@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.pointDefectsFilter
+.. automodule:: atoman.filtering.filters.pointDefectsFilter

@@ -505,7 +505,7 @@ class Renderer(object):
                 
                 lines = []
                 nl = lines.append
-                nl("; CDJSVis auto-generated POV-Ray INI file")
+                nl("; Atoman auto-generated POV-Ray INI file")
                 nl("Input_File_Name='%s'" % fullPovFile)
                 nl("Width=%d" % settings.HRes)
                 nl("Height=%d" % settings.VRes)

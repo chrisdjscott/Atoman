@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.gui.latticeGeneratorForms
+.. automodule:: atoman.gui.latticeGeneratorForms

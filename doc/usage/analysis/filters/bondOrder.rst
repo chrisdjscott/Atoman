@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.bondOrderFilter
+.. automodule:: atoman.filtering.filters.bondOrderFilter

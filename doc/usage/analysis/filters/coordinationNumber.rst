@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.coordinationNumberFilter
+.. automodule:: atoman.filtering.filters.coordinationNumberFilter

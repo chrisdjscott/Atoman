@@ -52,7 +52,7 @@ class TestLbomdDatReader(unittest.TestCase):
         
         """
         # tmp dir
-        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+        self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
         
         # create reader
         self.reader = latticeReaders.LbomdDatReader(self.tmpLocation, log_output, log_warning, log_error)
@@ -186,7 +186,7 @@ class TestLbomdRefReader(unittest.TestCase):
         
         """
         # tmp dir
-        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+        self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
         
         # create reader
         self.reader = latticeReaders.LbomdRefReader(self.tmpLocation, log_output, log_warning, log_error)
@@ -326,7 +326,7 @@ class TestLbomdXYZReader(unittest.TestCase):
         
         """
         # tmp dir
-        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+        self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
         
         # create reader
         refReader = latticeReaders.LbomdRefReader(self.tmpLocation, log_output, log_warning, log_error)

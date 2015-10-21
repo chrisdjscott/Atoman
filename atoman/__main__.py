@@ -39,7 +39,7 @@ def main():
     
     # set application info used by QSettings
     app.setOrganizationName("chrisdjscott")
-    app.setApplicationName("CDJSVis")
+    app.setApplicationName("atoman")
     
     # display splash screen
     #     splash_pix = QtGui.QPixmap(imagePath("splash_loading.png"))
@@ -56,7 +56,7 @@ def main():
     
     # create main window
     mw = mainWindow.MainWindow(desktop)
-    mw.setWindowIcon(QtGui.QIcon(iconPath("CDJSVis.ico")))
+    mw.setWindowIcon(QtGui.QIcon(iconPath("atoman.ico")))
     
     # show main window and give it focus
     mw.show()

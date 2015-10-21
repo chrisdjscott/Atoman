@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# CDJSVis documentation build configuration file, created by
+# Atoman documentation build configuration file, created by
 # sphinx-quickstart on Wed Feb 19 09:56:05 2014.
 #
 # This file is execfile()d with the current directory set to its
@@ -19,8 +19,7 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
-
-from CDJSVis.visutils import version as vis_version
+from atoman.visutils import version as vis_version
 
 # -- General configuration ------------------------------------------------
 
@@ -51,7 +50,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'CDJSVis'
+project = u'Atoman'
 copyright = u'2015, Chris Scott'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -184,7 +183,7 @@ html_show_sourcelink = False
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'CDJSVisdoc'
+htmlhelp_basename = 'Atomandoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -204,7 +203,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'CDJSVis.tex', u'CDJSVis Documentation',
+  ('index', 'Atoman.tex', u'Atoman Documentation',
    u'Chris Scott', 'manual'),
 ]
 
@@ -234,7 +233,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'cdjsvis', u'CDJSVis Documentation',
+    ('index', 'atoman', u'Atoman Documentation',
      [u'Chris Scott'], 1)
 ]
 
@@ -248,8 +247,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'CDJSVis', u'CDJSVis Documentation',
-   u'Chris Scott', 'CDJSVis', 'One line description of project.',
+  ('index', 'Atoman', u'Atoman Documentation',
+   u'Chris Scott', 'Atoman', 'One line description of project.',
    'Miscellaneous'),
 ]
 

@@ -85,7 +85,7 @@ class TestReadLatticeGeneric(unittest.TestCase):
         
         """
         # tmp dir
-        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+        self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
         
         # file formats input file
         fn = path_to_data("file_formats.IN")

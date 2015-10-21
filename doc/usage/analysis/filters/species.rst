@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.speciesFilter
+.. automodule:: atoman.filtering.filters.speciesFilter

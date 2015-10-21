@@ -43,7 +43,7 @@ class MainWindow(QtGui.QMainWindow):
     The main window.
     
     """
-    configDir = os.path.join(os.environ["HOME"], ".cdjsvis")
+    configDir = os.path.join(os.environ["HOME"], ".atoman")
     Instances = set()
     
     def __init__(self, desktop, parent=None, testing=False):
@@ -160,7 +160,7 @@ class MainWindow(QtGui.QMainWindow):
         # location
         self.centre()
                 
-        self.setWindowTitle("CDJSVis")
+        self.setWindowTitle("Atoman")
         
         # create temporary directory for working in
         self.tmpDirectory = tempfile.mkdtemp(prefix="VisTemp-", dir="/tmp")
@@ -185,7 +185,7 @@ class MainWindow(QtGui.QMainWindow):
         exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "oxygen/application-exit.png", 
                                        "Exit application")
         newWindowAction = self.createAction("&New app window", slot=self.openNewWindow, shortcut="Ctrl-N", 
-                                            icon="CDJSVis.ico", tip="Open new application window")
+                                            icon="atoman.ico", tip="Open new application window")
         newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow, shortcut="Ctrl-O",
                                             icon="oxygen/window-new.png", tip="Open new render sub window")
         openFileAction = self.createAction("Open file", slot=self.showOpenFileDialog, icon="oxygen/document-open.png",
@@ -262,10 +262,10 @@ class MainWindow(QtGui.QMainWindow):
         
         
         # add about action
-        aboutAction = self.createAction("About CDJSVis", slot=self.aboutMe, icon="oxygen/help-about.png", 
-                                           tip="About CDJSVis")
+        aboutAction = self.createAction("About Atoman", slot=self.aboutMe, icon="oxygen/help-about.png", 
+                                           tip="About Atoman")
         
-        helpAction = self.createAction("CDJSVis Help", slot=self.showHelp, icon="oxygen/help-browser.png", tip="Show help window")
+        helpAction = self.createAction("Atoman Help", slot=self.showHelp, icon="oxygen/help-browser.png", tip="Show help window")
         
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
@@ -429,7 +429,7 @@ class MainWindow(QtGui.QMainWindow):
         
         if reply == QtGui.QMessageBox.Yes:
             # open file dialog
-            fname = QtGui.QFileDialog.getOpenFileName(self, "CDJSVis - Import element properties", ".", "IN files (*.IN)")[0]
+            fname = QtGui.QFileDialog.getOpenFileName(self, "Atoman - Import element properties", ".", "IN files (*.IN)")[0]
             
             if fname:
                 # read in new file
@@ -451,7 +451,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         fname = os.path.join(".", "atoms-exported.IN")
         
-        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export element properties", fname, 
+        fname = QtGui.QFileDialog.getSaveFileName(self, "Atoman - Export element properties", fname, 
                                                   "IN files (*.IN)", options=QtGui.QFileDialog.DontUseNativeDialog)[0]
         
         print "FNAME", fname
@@ -475,7 +475,7 @@ class MainWindow(QtGui.QMainWindow):
         
         if reply == QtGui.QMessageBox.Yes:
             # open file dialog
-            fname = QtGui.QFileDialog.getOpenFileName(self, "CDJSVis - Import bonds file", ".", "IN files (*.IN)", 
+            fname = QtGui.QFileDialog.getOpenFileName(self, "Atoman - Import bonds file", ".", "IN files (*.IN)", 
                                                       options=QtGui.QFileDialog.DontUseNativeDialog)[0]
             
             if fname:
@@ -494,7 +494,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         fname = os.path.join(".", "bonds-exported.IN")
         
-        fname = QtGui.QFileDialog.getSaveFileName(self, "CDJSVis - Export bonds file", fname, "IN files (*.IN)", 
+        fname = QtGui.QFileDialog.getSaveFileName(self, "Atoman - Export bonds file", fname, "IN files (*.IN)", 
                                                   options=QtGui.QFileDialog.DontUseNativeDialog)[0]
         
         if fname:
@@ -527,7 +527,7 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         mw = MainWindow(self.desktop)
-        mw.setWindowIcon(QtGui.QIcon(iconPath("CDJSVis.ico")))
+        mw.setWindowIcon(QtGui.QIcon(iconPath("atoman.ico")))
         mw.show()
     
     def centre(self):
@@ -782,7 +782,7 @@ class MainWindow(QtGui.QMainWindow):
         
         softline += " on %s" % platform.system()
         
-        msgBox.setText("""<p><b>CDJSVis</b> %s</p>
+        msgBox.setText("""<p><b>Atoman</b> %s</p>
                           <p>Copyright &copy; %d Chris Scott</p>
                           <p>This application can be used to visualise atomistic simulations.</p>
                           <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 

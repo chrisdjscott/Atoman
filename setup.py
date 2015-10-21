@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Setup script for CDJSVis
+Setup script for atoman
 
 @author: Chris Scott
 
@@ -13,12 +13,12 @@ import subprocess
 import shutil
 import platform
 
-from CDJSVis.visutils import version
+from atoman.visutils import version
 
 VERSION = version.getVersion()
 
 # write version to freeze file
-open(os.path.join("CDJSVis", "visutils", "version_freeze.py"), "w").write("__version__ = '%s'\n" % VERSION)
+open(os.path.join("atoman", "visutils", "version_freeze.py"), "w").write("__version__ = '%s'\n" % VERSION)
 
 # if on Mac we have to force gcc (for openmp...)
 if platform.system() == "Darwin":
@@ -32,23 +32,23 @@ except:
     HAVE_SPHINX = False
 
 if HAVE_SPHINX:
-    class CDJSVisBuildDoc(BuildDoc):
+    class AtomanBuildDoc(BuildDoc):
         """Compile resources and run in-place build before Sphinx doc-build"""
         def run(self):
             # in place build
             ret = subprocess.call([sys.executable, sys.argv[0], 'build_ext', '-i'])
             if ret != 0:
-                raise RuntimeError("Building CDJSVis failed")
+                raise RuntimeError("Building atoman failed")
             
             # build doc
             BuildDoc.run(self)
             
-            # copy doc to CDJSVis
+            # copy doc to atoman
             sphinxHtmlDir = os.path.join("build", "sphinx", "html")
             if os.path.exists(os.path.join(sphinxHtmlDir, "index.html")):
-                if os.path.isdir(os.path.join("CDJSVis", "doc")):
-                    shutil.rmtree(os.path.join("CDJSVis", "doc"))
-                shutil.copytree(sphinxHtmlDir, os.path.join("CDJSVis", "doc"))
+                if os.path.isdir(os.path.join("atoman", "doc")):
+                    shutil.rmtree(os.path.join("atoman", "doc"))
+                shutil.copytree(sphinxHtmlDir, os.path.join("atoman", "doc"))
             
             else:
                 raise RuntimeError("Could not locate Sphinx documentation HTML files")
@@ -62,18 +62,17 @@ def configuration(parent_package='', top_path=None):
                        delegate_options_to_subpackages=True,
                        quiet=True)
     
-    config.add_subpackage("CDJSVis")
-    config.add_scripts(["cdjsvis.py"])
+    config.add_subpackage("atoman")
     
     return config
 
 def do_clean():
     cwd = os.getcwd()
-    os.chdir("CDJSVis")
+    os.chdir("atoman")
     for root, dirs, files in os.walk(os.getcwd()):
         so_files = glob.glob(os.path.join(root, "*.so"))
         for so_file in so_files:
-            print "rm CDJSVis/%s" % os.path.relpath(so_file)
+            print "rm atoman/%s" % os.path.relpath(so_file)
             os.unlink(so_file)
         
         if "resources.py" in files:
@@ -89,9 +88,13 @@ def do_clean():
         print "rm -rf doc/_build"
         shutil.rmtree(os.path.join("doc", "_build"))
     
-    if os.path.isdir("CDJSVis/doc"):
-        print "rm -rf CDJSVis/doc"
-        shutil.rmtree(os.path.join("CDJSVis", "doc"))
+    if os.path.isdir("atoman/doc"):
+        print "rm -rf atoman/doc"
+        shutil.rmtree(os.path.join("atoman", "doc"))
+    
+    if os.path.isdir("dist"):
+        print "rm -rf dist/"
+        shutil.rmtree("dist")
 
 def setup_package():
     # clean?
@@ -100,22 +103,22 @@ def setup_package():
      
     # documentation (see scipy...)
     if HAVE_SPHINX:
-        cmdclass = {'build_sphinx': CDJSVisBuildDoc}
+        cmdclass = {'build_sphinx': AtomanBuildDoc}
     else:
         cmdclass = {}
     
     # metadata
     metadata = dict(
-        name = "CDJSVis",
+        name = "atoman",
         maintainer = "Chris Scott",
         maintainer_email = "chris@chrisdjscott.co.uk",
-        description = "CDJSVis Atomistic Visualisation and Analysis Library",
-         long_description = "CDJSVis Atomistic Visualisation and Analysis Library",
+        description = "Atomistic simulation analysis and visualisation library",
+         long_description = "Atomistic simulation analysis and visualisation library",
         url = "http://vis.chrisdjscott.com.uk",
         author = "Chris Scott",
         author_email = "chris@chrisdjscott.co.uk",
 #         download_url = "",
-         license = "BSD",
+         license = "LGPL",
 #         classifiers = "",
         platforms = ["Linux", "Mac OS-X"],
 #         test_suite = "",
@@ -145,9 +148,9 @@ def setup_package():
         if os.path.isdir("build"):
             print "rm -rf build/"
             shutil.rmtree("build")
-        if os.path.isdir("CDJSVis.egg-info"):
-            print "rm -rf CDJSVis.egg-info/"
-            shutil.rmtree("CDJSVis.egg-info")
+        if os.path.isdir("atoman.egg-info"):
+            print "rm -rf atoman.egg-info/"
+            shutil.rmtree("atoman.egg-info")
 
 if __name__ == "__main__":
     setup_package()

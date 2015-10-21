@@ -2,39 +2,39 @@
 Preferences
 ===========
 
-.. autoclass:: CDJSVis.gui.preferences.PreferencesDialog
+.. autoclass:: atoman.gui.preferences.PreferencesDialog
 
 General
 -------
 
-.. autoclass:: CDJSVis.gui.preferences.GeneralSettingsForm
+.. autoclass:: atoman.gui.preferences.GeneralSettingsForm
 
 Log file
 --------
 
-.. autoclass:: CDJSVis.gui.preferences.LogFileSettingsForm
+.. autoclass:: atoman.gui.preferences.LogFileSettingsForm
 
 Rendering
 ---------
 
-.. autoclass:: CDJSVis.gui.preferences.RenderingSettingsForm
+.. autoclass:: atoman.gui.preferences.RenderingSettingsForm
 
 POV-Ray
 -------
 
-.. autoclass:: CDJSVis.gui.preferences.PovraySettingsForm
+.. autoclass:: atoman.gui.preferences.PovraySettingsForm
 
 FFmpeg
 ------
 
-.. autoclass:: CDJSVis.gui.preferences.FfmpegSettingsForm
+.. autoclass:: atoman.gui.preferences.FfmpegSettingsForm
 
 Matplotlib
 ----------
 
-.. autoclass:: CDJSVis.gui.preferences.MatplotlibSettingsForm
+.. autoclass:: atoman.gui.preferences.MatplotlibSettingsForm
 
 Forces
 ------
 
-.. autoclass:: CDJSVis.gui.preferences.ForcesSettingsForm
+.. autoclass:: atoman.gui.preferences.ForcesSettingsForm

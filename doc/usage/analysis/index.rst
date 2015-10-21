@@ -8,7 +8,7 @@ Analysis
    :figclass: align-right
    :alt: The analysis toolbar
 
-.. automodule:: CDJSVis.gui.pipelineForm
+.. automodule:: atoman.gui.pipelineForm
 
 .. toctree::
     :maxdepth: 2

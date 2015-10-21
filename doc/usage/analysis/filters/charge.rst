@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.chargeFilter
+.. automodule:: atoman.filtering.filters.chargeFilter

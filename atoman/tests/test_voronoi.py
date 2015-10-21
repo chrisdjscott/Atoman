@@ -29,7 +29,7 @@ class TestVoronoi(unittest.TestCase):
     """
     def setUp(self):
         # tmp dir
-        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+        self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
          
         # create reader
         reader = LbomdDatReader(self.tmpLocation, basic_log, basic_displayWarning, basic_displayError)
@@ -103,7 +103,7 @@ class TestVoronoi2(unittest.TestCase):
     """
     def setUp(self):
         # tmp dir
-        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+        self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
          
         # create reader
         reader = LbomdDatReader(self.tmpLocation, basic_log, basic_displayWarning, basic_displayError)

@@ -34,7 +34,7 @@ class TestLoadLattice(base.UsesQApplication):
         super(TestLoadLattice, self).setUp()
         
         # tmp dir
-        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+        self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
         
         # main window
         self.mw = mainWindow.MainWindow(None, testing=True)

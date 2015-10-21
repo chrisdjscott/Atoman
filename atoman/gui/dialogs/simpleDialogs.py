@@ -440,13 +440,14 @@ class AboutMeDialog(QtGui.QMessageBox):
         import scipy
         version = getVersion()
         
-        self.setWindowTitle("CDJSVis %s" % version)
+        self.setWindowTitle("Atoman %s" % version)
         
         # message box layout (grid layout)
         l = self.layout()
         
-        self.setText("""<p><b>CDJSVis</b> %s</p>
-                          <p>Copyright &copy; %d Chris Scott</p>
+        self.setText("""<p><b>Atoman</b> %s</p>
+                          <p>Copyright &copy; %d Loughborough University</p>
+                          <p>Written by Chris Scott</p>
                           <p>This application can be used to visualise atomistic simulations.</p>
                           <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
                              by Marc Robinson.</p>""" % (

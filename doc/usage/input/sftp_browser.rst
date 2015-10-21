@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.gui.sftpDialog
+.. automodule:: atoman.gui.sftpDialog

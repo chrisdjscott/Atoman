@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.cropBoxFilter
+.. automodule:: atoman.filtering.filters.cropBoxFilter

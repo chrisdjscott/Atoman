@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.acnaFilter
+.. automodule:: atoman.filtering.filters.acnaFilter

@@ -24,7 +24,7 @@ class TestLattice(unittest.TestCase):
     """
     def setUp(self):
         # tmp dir
-        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+        self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
          
         # create reader
         reader = LbomdDatReader(self.tmpLocation, basic_log, basic_displayWarning, basic_displayError)

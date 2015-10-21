@@ -34,7 +34,7 @@ class TestClusters(unittest.TestCase):
     """
     def setUp(self):
         # tmp dir
-        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+        self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
     
     def tearDown(self):
         # remove tmp dir

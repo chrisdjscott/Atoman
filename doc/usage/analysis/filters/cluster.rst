@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.clusterFilter
+.. automodule:: atoman.filtering.filters.clusterFilter

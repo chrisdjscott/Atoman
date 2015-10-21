@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.sliceFilter
+.. automodule:: atoman.filtering.filters.sliceFilter

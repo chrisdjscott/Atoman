@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.voronoiVolumeFilter
+.. automodule:: atoman.filtering.filters.voronoiVolumeFilter

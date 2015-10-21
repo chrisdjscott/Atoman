@@ -34,7 +34,7 @@ class TestReloadSystem(base.UsesQApplication):
         super(TestReloadSystem, self).setUp()
         
         # tmp dir
-        self.tmpLocation = tempfile.mkdtemp(prefix="CDJSVisTest")
+        self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
         
         # main window
         self.mw = mainWindow.MainWindow(None, testing=True)

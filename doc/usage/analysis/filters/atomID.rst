@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.atomIdFilter
+.. automodule:: atoman.filtering.filters.atomIdFilter

@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.slipFilter
+.. automodule:: atoman.filtering.filters.slipFilter

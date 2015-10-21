@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.filtering.filters.voronoiNeighboursFilter
+.. automodule:: atoman.filtering.filters.voronoiNeighboursFilter

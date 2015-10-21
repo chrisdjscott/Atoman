@@ -804,7 +804,7 @@ class FilterList(QtGui.QWidget):
             self.logger.debug("Creating settings dialog: '%s'", dialogName)
             
             # load module
-            formModule = importlib.import_module(".{0}".format(moduleName), package="CDJSVis.gui.filterSettings")
+            formModule = importlib.import_module(".{0}".format(moduleName), package="atoman.gui.filterSettings")
             
             # load dialog
             formObject = getattr(formModule, dialogName, None)

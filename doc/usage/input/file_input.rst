@@ -1,2 +1,2 @@
 
-.. automodule:: CDJSVis.gui.generalReaderForm
+.. automodule:: atoman.gui.generalReaderForm

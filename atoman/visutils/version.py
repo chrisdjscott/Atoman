@@ -12,7 +12,7 @@ import subprocess
 
 def getVersion():
     """
-    Attempt to determine LKMC version.
+    Attempt to determine atoman version.
     
     """
     # get current version
@@ -35,7 +35,7 @@ def getVersion():
         try:
             command = "git describe"
             proc = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdout, stderr = proc.communicate()
+            stdout, _ = proc.communicate()
             
             status = proc.poll()
             if status:
@@ -55,4 +55,4 @@ def getVersion():
 if __name__ == "__main__":
     version = getVersion()
     if version is not None:
-        print "CDJSVis %s" % (getVersion(),)
+        print "Atoman %s" % (getVersion(),)

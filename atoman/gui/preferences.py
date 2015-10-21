@@ -125,7 +125,7 @@ class LogFileSettingsForm(GenericPreferencesSettingsForm):
         
         # create handler... (should be on main window!)
         if self.createLogFile:
-            logfile = os.path.join(self.logDirectory, "CDJSVis-%s.log" % datetime.datetime.now().strftime("%y%m%d-%H%M%S"))
+            logfile = os.path.join(self.logDirectory, "atoman-%s.log" % datetime.datetime.now().strftime("%y%m%d-%H%M%S"))
             self.logger.info("Logging to file: '%s'", logfile)
             
             # handler

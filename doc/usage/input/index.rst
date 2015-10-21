@@ -7,7 +7,7 @@ Input
    :figclass: align-right
    :alt: The analysis toolbar
 
-.. automodule:: CDJSVis.gui.systemsDialog
+.. automodule:: atoman.gui.systemsDialog
 
 .. toctree::
     :maxdepth: 2

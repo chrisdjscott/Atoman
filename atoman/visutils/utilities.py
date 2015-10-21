@@ -177,7 +177,7 @@ def createTmpDirectory():
     else:
         dirname = None
     
-    tmpDir = tempfile.mkdtemp(prefix="CDJSVis-", dir=dirname)
+    tmpDir = tempfile.mkdtemp(prefix="atoman-", dir=dirname)
     
     return tmpDir
 
