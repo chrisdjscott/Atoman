@@ -18,6 +18,7 @@ Building from source
 
 The following python modules must be installed to build the code from source:
 
+    * setuptools
     * NumPy
     * SciPy
     * Matplotlib

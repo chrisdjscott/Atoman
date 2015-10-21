@@ -12,7 +12,7 @@
 *-exported.IN
 build/
 *.log
-CDJSVis.egg-info/
+atoman.egg-info/
 setup.cfg
 .coverage
 .komodotools/

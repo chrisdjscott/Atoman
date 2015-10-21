@@ -13,6 +13,8 @@ import subprocess
 import shutil
 import platform
 
+import setuptools
+
 from atoman.visutils import version
 
 VERSION = version.getVersion()
@@ -123,6 +125,11 @@ def setup_package():
         platforms = ["Linux", "Mac OS-X"],
 #         test_suite = "",
         cmdclass = cmdclass,
+        entry_points={
+            'gui_scripts': [
+                'Atoman = atoman.__main__:main',
+            ]
+        }
     )
     
     if len(sys.argv) >= 2 and ('--help' in sys.argv[1:] or sys.argv[1] in ('--help-commands', 'egg_info', 

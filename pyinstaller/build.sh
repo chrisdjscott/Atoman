@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-## This script builds CDJSVis.app using pyinstaller
+## This script builds Atoman.app using pyinstaller
 ## First we get the current version and save it so 
 ##   it can be used when app is frozen
 
@@ -10,8 +10,8 @@ PYINSTALLER_PATH="pyinstaller"
 # END CONFIG
 
 VERSION=$(git describe)
-echo "BUILDING: CDJSVis $VERSION"
-echo "__version__ = \"$VERSION\"" > ../CDJSVis/visutils/version_freeze.py
+echo "BUILDING: Atoman $VERSION"
+echo "__version__ = \"$VERSION\"" > ../atoman/visutils/version_freeze.py
 
 rm -rf build/ dist/ *.log
 
@@ -28,7 +28,7 @@ python setup.py test
 
 cd pyinstaller
 
-${PYINSTALLER_PATH} CDJSVis.spec
+${PYINSTALLER_PATH} atoman.spec
 
 cd dist
 
@@ -39,7 +39,7 @@ else
     ZIP_VER=${VERSION}
 fi
 
-echo zip -r CDJSVis-${ZIP_VER}.zip CDJSVis.app
-zip -r CDJSVis-${ZIP_VER}.zip CDJSVis.app
+echo zip -r Atoman-${ZIP_VER}.zip Atoman.app
+zip -r Atoman-${ZIP_VER}.zip Atoman.app
 
 exit 0

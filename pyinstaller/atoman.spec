@@ -5,12 +5,28 @@ import glob
 import platform
 import shutil
 import subprocess
+import tempfile
 
+import pkg_resources
+
+
+# read the version
 __version__ = subprocess.Popen(["git", "describe"], stdout=subprocess.PIPE).communicate()[0].strip()
 
-a = Analysis(['../cdjsvis.py'],
+# a = Analysis(['../cdjsvis.py'],
+#              pathex=[],
+#              hiddenimports=['scipy.linalg.cython_blas', 'scipy.linalg.cython_lapack'],
+#              hookspath=None)
+
+# write temporary script for use with PyInstaller
+with tempfile.NamedTemporaryFile(mode="w", dir="..", delete=False) as fh:
+    fh.write("import atoman.__main__\n")
+    fh.write("atoman.__main__.main()\n")
+entryPointScript = fh.name
+
+a = Analysis([entryPointScript],
              pathex=[],
-             hiddenimports=['scipy.linalg.cython_blas', 'scipy.linalg.cython_lapack'],
+             hiddenimports=[],
              hookspath=None)
 
 # data files
@@ -78,8 +94,8 @@ osname = platform.system()
 if osname == "Darwin":
     # check qtmenu.nib got copied
     if not os.path.isdir("dist/Atoman.app/Contents/Resources/qt_menu.nib"):
-        print "qt_menu.nib not found"
-        shutil.copytree("/opt/local/Library/Frameworks/QtGui.framework/Versions/Current/Resources/qt_menu.nib", "dist/Atoman.app/Contents/Resources/qt_menu.nib")
+        print "qt_menu.nib not found -> attempting to fix..."
+        shutil.copytree("/opt/local/libexec/qt4/Library/Frameworks/QtGui.framework/Versions/Current/Resources/qt_menu.nib", "dist/Atoman.app/Contents/Resources/qt_menu.nib")
 
 # copy icns file
 new_icns = os.path.join("dist", "Atoman.app", "Contents", "Resources", "atoman.icns")
@@ -96,3 +112,6 @@ with open(plist_file, "w") as f:
 	    if line.startswith("<string>icon-windowed.icns"):
 	        line = "<string>atoman.icns</string>\n"
 	    f.write(line)
+
+# delete script
+os.unlink(entryPointScript)

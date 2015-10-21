@@ -12,6 +12,7 @@ This is a list of third-party python modules that this code requires to run.  Th
 
 Required:
 
+* [setuptools](https://pypi.python.org/pypi/setuptools)
 * [NumPy](http://www.numpy.org/)
 * [SciPy](http://www.scipy.org/)
 * [Matplotlib](http://matplotlib.org/)
