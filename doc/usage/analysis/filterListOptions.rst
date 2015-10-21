@@ -1,37 +1,20 @@
-===================
 Filter list options
 ===================
 
-.. automodule:: CDJSVis.gui.filterListOptions
+Each filter list has options that influence the calculation of properties and/or displaying the
+result.
 
-Colouring options
------------------
+.. automodule:: CDJSVis.gui.filterListOptions.actorsOptions
 
-.. autoclass:: CDJSVis.gui.filterListOptions.ColouringOptionsWindow
+.. automodule:: CDJSVis.gui.filterListOptions.bondsOptions
 
-Bonds options
--------------
+.. automodule:: CDJSVis.gui.filterListOptions.colouringOptions
 
-.. autoclass:: CDJSVis.gui.filterListOptions.BondsOptionsWindow
+.. automodule:: CDJSVis.gui.filterListOptions.displayOptions
 
-Display options
----------------
+.. automodule:: CDJSVis.gui.filterListOptions.traceOptions
 
-.. autoclass:: CDJSVis.gui.filterListOptions.DisplayOptionsWindow
+.. automodule:: CDJSVis.gui.filterListOptions.vectorsOptions
 
 .. _voronoi_options_label:
-
-Voronoi options
----------------
-
-.. autoclass:: CDJSVis.gui.filterListOptions.VoronoiOptionsWindow
-
-Trace options
--------------
-
-.. autoclass:: CDJSVis.gui.filterListOptions.TraceOptionsWindow
-
-Vectors options
----------------
-
-.. autoclass:: CDJSVis.gui.filterListOptions.VectorsOptionsWindow
+.. automodule:: CDJSVis.gui.filterListOptions.voronoiOptions

@@ -15,7 +15,13 @@ from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
 from ..filtering import filterer
-from . import filterListOptions
+from .filterListOptions import actorsOptions
+from .filterListOptions import bondsOptions
+from .filterListOptions import colouringOptions
+from .filterListOptions import displayOptions
+from .filterListOptions import traceOptions
+from .filterListOptions import vectorsOptions
+from .filterListOptions import voronoiOptions
 from . import utils
 from . import infoDialogs
 
@@ -240,47 +246,47 @@ class FilterList(QtGui.QWidget):
         groupLayout.addWidget(self.optionsList)
         
         # colouring options
-        self.colouringOptions = filterListOptions.ColouringOptionsWindow(parent=self)
+        self.colouringOptions = colouringOptions.ColouringOptionsWindow(parent=self)
         item = OptionsListItem(self.colouringOptions)
         item.setText("Colouring: Species")
         self.colouringOptions.modified.connect(item.setText)
         self.optionsList.addItem(item)
         
         # bonding options
-        self.bondsOptions = filterListOptions.BondsOptionsWindow(self.mainWindow, parent=self)
+        self.bondsOptions = bondsOptions.BondsOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.bondsOptions)
         item.setText("Bonds options: Off")
         self.bondsOptions.modified.connect(item.setText)
         self.optionsList.addItem(item)
         
         # display options
-        self.displayOptions = filterListOptions.DisplayOptionsWindow(self.mainWindow, parent=self)
+        self.displayOptions = displayOptions.DisplayOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.displayOptions)
         item.setText("Display options")
         self.optionsList.addItem(item)
         
         # Voronoi options
-        self.voronoiOptions = filterListOptions.VoronoiOptionsWindow(self.mainWindow, parent=self)
+        self.voronoiOptions = voronoiOptions.VoronoiOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.voronoiOptions)
         item.setText("Voronoi options")
         self.optionsList.addItem(item)
         
         # trace options
-        self.traceOptions = filterListOptions.TraceOptionsWindow(self.mainWindow, parent=self)
+        self.traceOptions = traceOptions.TraceOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.traceOptions)
         item.setText("Trace options: Off")
         self.traceOptions.modified.connect(item.setText)
         self.optionsList.addItem(item)
         
         # vectors options
-        self.vectorsOptions = filterListOptions.VectorsOptionsWindow(self.mainWindow, parent=self)
+        self.vectorsOptions = vectorsOptions.VectorsOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.vectorsOptions)
         item.setText("Vectors options: None")
         self.vectorsOptions.modified.connect(item.setText)
         self.optionsList.addItem(item)
         
         # actor visibility
-        self.actorsOptions = filterListOptions.ActorsOptionsWindow(self.mainWindow, parent=self)
+        self.actorsOptions = actorsOptions.ActorsOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.actorsOptions)
         item.setText("Actors options")
         self.optionsList.addItem(item)
