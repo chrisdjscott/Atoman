@@ -13,7 +13,6 @@ import logging
 from PySide import QtGui, QtCore
 import numpy as np
 
-from . import genericForm
 from ..state.atoms import elements
 from ..visutils.utilities import resourcePath, iconPath
 from ..visutils import utilities
@@ -417,40 +416,40 @@ class ConsoleWindow(QtGui.QDialog):
 
 ################################################################################
 
-class BondEditorSettingsForm(genericForm.GenericForm):
+class BondEditorSettingsForm(QtGui.QGroupBox):
     """
     Settings for bond
     
     """
     def __init__(self, parent, syma, symb, bondMin, bondMax):
-        super(BondEditorSettingsForm, self).__init__(parent, None, "%s - %s" % (syma, symb))
+        super(BondEditorSettingsForm, self).__init__("%s - %s" % (syma, symb), parent=parent)
         
         self.syma = syma
         self.symb = symb
         self.bondMin = bondMin
         self.bondMax = bondMax
         
-        row = self.newRow()
-        row.addWidget(QtGui.QLabel("Bond min:"))
+        # form layout
+        layout = QtGui.QFormLayout(self)
+        self.setAlignment(QtCore.Qt.AlignHCenter)
         
+        # minimum value for the bond
         bondMinSpin = QtGui.QDoubleSpinBox()
         bondMinSpin.setSingleStep(0.1)
         bondMinSpin.setMinimum(0.0)
         bondMinSpin.setMaximum(99.99)
         bondMinSpin.setValue(self.bondMin)
         bondMinSpin.valueChanged.connect(self.bondMinChanged)
-        row.addWidget(bondMinSpin)
+        layout.addRow("Bond minimum", bondMinSpin)
         
-        row = self.newRow()
-        row.addWidget(QtGui.QLabel("Bond max:"))
-        
+        # maximum value for the bond
         bondMaxSpin = QtGui.QDoubleSpinBox()
         bondMaxSpin.setSingleStep(0.1)
         bondMaxSpin.setMinimum(0.0)
         bondMaxSpin.setMaximum(99.99)
         bondMaxSpin.setValue(self.bondMax)
         bondMaxSpin.valueChanged.connect(self.bondMaxChanged)
-        row.addWidget(bondMaxSpin)
+        layout.addRow("Bond maximum", bondMaxSpin)
     
     def updateBondData(self):
         """
@@ -706,7 +705,7 @@ class BondEditorDialog(QtGui.QDialog):
 
 ################################################################################
 
-class ElementSettingsForm(genericForm.GenericForm):
+class ElementSettingsForm(QtGui.QGroupBox):
     """
     Form for editing element settings
     
@@ -715,14 +714,11 @@ class ElementSettingsForm(genericForm.GenericForm):
         self.sym = sym
         self.name = elements.atomName(sym)
         self.titleText = "%s - %s" % (sym, self.name)
-        super(ElementSettingsForm, self).__init__(parent, None, self.titleText)
+        super(ElementSettingsForm, self).__init__(self.titleText, parent=parent)
         
-        # row
-        row = self.newRow()
-        
-        # colour label
-        label = QtGui.QLabel("Colour: ")
-        row.addWidget(label)
+        # form layout
+        layout = QtGui.QFormLayout(self)
+        self.setAlignment(QtCore.Qt.AlignHCenter)
         
         # colour
         rgb = copy.deepcopy(elements.RGB(sym))
@@ -735,14 +731,7 @@ class ElementSettingsForm(genericForm.GenericForm):
         self.colourButton.setFixedHeight(30)
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
         self.colourButton.clicked.connect(self.showColourDialog)
-        row.addWidget(self.colourButton)
-        
-        # row
-        row = self.newRow()
-        
-        # radius label
-        label = QtGui.QLabel("Radius: ")
-        row.addWidget(label)
+        layout.addRow("Colour", self.colourButton)
         
         # radius
         self.radius = elements.covalentRadius(sym)
@@ -754,7 +743,7 @@ class ElementSettingsForm(genericForm.GenericForm):
         self.spinBox.setMaximum(100.0)
         self.spinBox.setValue(elements.covalentRadius(sym))
         self.spinBox.valueChanged[float].connect(self.radiusChanged)
-        row.addWidget(self.spinBox)
+        layout.addRow("Radius", self.spinBox)
     
     def showColourDialog(self):
         """
