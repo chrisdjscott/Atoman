@@ -20,7 +20,6 @@ buttons on the toolbar at the top of the main window.
 
 """
 import os
-import sys
 import stat
 import getpass
 import logging
@@ -35,7 +34,6 @@ try:
 except ImportError:
     PARAMIKO_LOADED = False
 
-from . import genericForm
 from ..visutils.utilities import iconPath
 
 ################################################################################
@@ -282,7 +280,7 @@ class SFTPBrowserListWidgetItem(QtGui.QListWidgetItem):
 
 ################################################################################
 
-class SFTPBrowser(genericForm.GenericForm):
+class SFTPBrowser(QtGui.QGroupBox):
     """
     Basic SFTP file browser
     
@@ -294,7 +292,7 @@ class SFTPBrowser(genericForm.GenericForm):
         if self.username is None:
             self.username = getpass.getuser()
 
-        super(SFTPBrowser, self).__init__(parent, None, "%s@%s" % (self.username, self.hostname))
+        super(SFTPBrowser, self).__init__("%s@%s" % (self.username, self.hostname), parent=parent)
         
         self.logger = logging.getLogger(__name__)
         self.mainWindow = mainWindow
@@ -313,25 +311,27 @@ class SFTPBrowser(genericForm.GenericForm):
         # regular expression for finding Roulette index
         self.intRegex = re.compile(r'[0-9]+')
         
+        # layout
+        self.layout = QtGui.QFormLayout(self)
+        self.setAlignment(QtCore.Qt.AlignHCenter)
+        
         # current path label
         self.currentPathLabel = QtGui.QLabel("CWD: ''")
-        row = self.newRow()
-        row.addWidget(self.currentPathLabel)
+        self.layout.addRow(self.currentPathLabel)
         
         # list widget
         self.listWidget = QtGui.QListWidget(self)
+        self.listWidget.setFixedHeight(350)
         self.listWidget.itemDoubleClicked.connect(self.itemDoubleClicked)
         self.listWidget.itemSelectionChanged.connect(self.itemSelectionChanged)
-        row = self.newRow()
-        row.addWidget(self.listWidget)
+        self.layout.addRow(self.listWidget)
         
         # filters
         filtersCombo = QtGui.QComboBox()
         filtersCombo.currentIndexChanged[int].connect(self.filtersComboChanged)
         for tup in self.filters:
             filtersCombo.addItem("%s (%s)" % (tup[0], " ".join(tup[1])))
-        row = self.newRow()
-        row.addWidget(filtersCombo)
+        self.layout.addRow(filtersCombo)
         
         self.connect(password)
     

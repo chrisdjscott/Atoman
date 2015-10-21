@@ -10,7 +10,6 @@ of different types and sizes can be generated.
 from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
-from .genericForm import GenericForm
 from ..lattice_gen import lattice_gen_pu3ga
 from ..lattice_gen import lattice_gen_fcc
 from ..lattice_gen import lattice_gen_bcc
