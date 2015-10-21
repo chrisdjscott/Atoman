@@ -16,8 +16,8 @@ import numpy as np
 
 from ..visutils.utilities import iconPath
 from ..visutils import utilities
-from . import dialogs
-from . import onScreenInfoDialog
+from .dialogs import simpleDialogs
+from .dialogs import onScreenInfoDialog
 from ..rendering import renderer
 from .outputDialog import OutputDialog
 from ..rendering.text import vtkRenderWindowText
@@ -181,7 +181,7 @@ class RendererWindow(QtGui.QWidget):
         self.textSelector = onScreenInfoDialog.OnScreenInfoDialog(self.mainWindow, index, parent=self)
         
         # view point rotate dialog
-        self.rotateViewPointDialog = dialogs.RotateViewPointDialog(self, parent=self)
+        self.rotateViewPointDialog = simpleDialogs.RotateViewPointDialog(self, parent=self)
         
         # which filter list is it associated with
         label = QtGui.QLabel("Analysis pipeline:")
@@ -233,7 +233,7 @@ class RendererWindow(QtGui.QWidget):
         Show camera settings
         
         """
-        dlg = dialogs.CameraSettingsDialog(self, self.renderer)
+        dlg = simpleDialogs.CameraSettingsDialog(self, self.renderer)
         dlg.show()
     
     def increaseAA(self):

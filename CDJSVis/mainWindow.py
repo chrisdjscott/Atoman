@@ -26,10 +26,13 @@ from .visutils.utilities import iconPath, resourcePath
 from .state.atoms import elements
 from .gui import toolbar as toolbarModule
 from .gui import helpForm
-from .gui import dialogs
 from .gui import preferences
 from .gui import rendererSubWindow
 from .gui import systemsDialog
+from .gui.dialogs import simpleDialogs
+from .gui.dialogs import bondEditor
+from .gui.dialogs import elementEditor
+from .gui.dialogs import consoleWindow
 from .visutils import version
 __version__ = version.getVersion()
 
@@ -80,7 +83,7 @@ class MainWindow(QtGui.QMainWindow):
         
         settings = QtCore.QSettings()
         
-        dlg = dialogs.NotifyFeatureWindow(self)
+        dlg = simpleDialogs.NotifyFeatureWindow(self)
         
         # key for settings
         settingsKey = "notification/%s" % dlg.notificationID
@@ -163,20 +166,20 @@ class MainWindow(QtGui.QMainWindow):
         self.tmpDirectory = tempfile.mkdtemp(prefix="VisTemp-", dir="/tmp")
         
         # console window for logging output to
-        self.console = dialogs.ConsoleWindow(self)
+        self.console = consoleWindow.ConsoleWindow(self)
         
         # help window for displaying help
 #         self.helpWindow = helpForm.HelpForm("index.html", parent=self)
         self.helpWindow = helpForm.HelpFormSphinx(parent=self)
         
         # image viewer
-        self.imageViewer = dialogs.ImageViewer(self, parent=self)
+        self.imageViewer = simpleDialogs.ImageViewer(self, parent=self)
         
         # preferences dialog
         self.preferences = preferences.PreferencesDialog(self, parent=self)
         
         # bonds editor
-        self.bondsEditor = dialogs.BondEditorDialog(parent=self)
+        self.bondsEditor = bondEditor.BondEditorDialog(parent=self)
         
         # add file actions
         exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "oxygen/application-exit.png", 
@@ -289,7 +292,7 @@ class MainWindow(QtGui.QMainWindow):
         self.systemsDialog = systemsDialog.SystemsDialog(self, self)
         
         # element editor
-        self.elementEditor = dialogs.ElementEditor(parent=self)
+        self.elementEditor = elementEditor.ElementEditor(parent=self)
         
         # load input dialog
 #         self.loadInputDialog = inputDialog.InputDialog(self, self, None)
@@ -581,7 +584,7 @@ class MainWindow(QtGui.QMainWindow):
         Show a dialog to confirm closeEvent.
         
         """
-        dlg = dialogs.ConfirmCloseDialog(self)
+        dlg = simpleDialogs.ConfirmCloseDialog(self)
         
         close = False
         clearSettings = False

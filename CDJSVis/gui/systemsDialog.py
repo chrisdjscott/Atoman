@@ -22,7 +22,7 @@ from .genericForm import GenericForm
 from . import generalReaderForm
 from . import latticeGeneratorForms
 from . import sftpDialog
-from . import infoDialogs
+from .dialogs import infoDialogs
 from .filterList import FilterList
 
 

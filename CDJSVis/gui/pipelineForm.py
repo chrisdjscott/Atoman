@@ -24,10 +24,10 @@ import numpy as np
 from ..visutils.utilities import iconPath
 from . import filterList
 from . import picker
-from . import infoDialogs
+from .dialogs import infoDialogs
 from . import utils
 from ..rendering import highlight
-from . import dialogs
+from .dialogs import simpleDialogs
 
 
 ################################################################################
@@ -227,7 +227,7 @@ class PipelineForm(QtGui.QWidget):
         lattice = self.inputState
         
         # show dialog
-        dlg = dialogs.ShiftCellDialog(self.PBC, lattice.cellDims, parent=self)
+        dlg = simpleDialogs.ShiftCellDialog(self.PBC, lattice.cellDims, parent=self)
         status = dlg.exec_()
         
         if status == QtGui.QDialog.Accepted:
@@ -287,7 +287,7 @@ class PipelineForm(QtGui.QWidget):
         """
         self.logger.warning("'Replicate cell' is an experimental feature!")
         
-        dlg = dialogs.ReplicateCellDialog(self.PBC, parent=self)
+        dlg = simpleDialogs.ReplicateCellDialog(self.PBC, parent=self)
         status = dlg.exec_()
         
         if status == QtGui.QDialog.Accepted:

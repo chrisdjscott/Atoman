@@ -23,7 +23,7 @@ from .filterListOptions import traceOptions
 from .filterListOptions import vectorsOptions
 from .filterListOptions import voronoiOptions
 from . import utils
-from . import infoDialogs
+from .dialogs import infoDialogs
 
 
 ################################################################################

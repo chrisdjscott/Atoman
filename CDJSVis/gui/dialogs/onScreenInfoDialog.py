@@ -9,7 +9,7 @@ import logging
 
 from PySide import QtGui, QtCore
 
-from ..visutils.utilities import iconPath
+from ...visutils.utilities import iconPath
 
 
 ################################################################################

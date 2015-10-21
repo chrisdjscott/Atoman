@@ -11,9 +11,9 @@ import logging
 
 from PySide import QtGui, QtCore
 
-from ..algebra import vectors
-from ..rendering import highlight
-from . import utils
+from ...algebra import vectors
+from ...rendering import highlight
+from .. import utils
 
 
 ################################################################################
