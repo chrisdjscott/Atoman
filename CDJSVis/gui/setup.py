@@ -11,6 +11,11 @@ def configuration(parent_package='', top_path=None):
     # config
     config = Configuration("gui", parent_package, top_path)
     
+    # add subpackages
+    config.add_subpackage("dialogs")
+    config.add_subpackage("filterListOptions")
+    
+    # add extensions
     config.add_extension("picker", 
                          ["picker.c", "../visclibs/utilities.c",
                           "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
