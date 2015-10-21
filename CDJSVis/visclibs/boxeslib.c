@@ -295,7 +295,7 @@ int boxIndexFromIJK(int xindex, int yindex, int zindex, struct Boxes *boxes)
 
 /*******************************************************************************
  ** Returns the neighbourhood of given box, i.e. all boxes that are next to the
- ** given box (27 boxes in 3-d)
+ ** given box
  *******************************************************************************/
 int getBoxNeighbourhood(int mainBox, int* boxNeighbourList, struct Boxes *boxes)
 {

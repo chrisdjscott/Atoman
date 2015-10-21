@@ -1137,11 +1137,11 @@ coordNumFilter(PyObject *self, PyObject *args)
     printf("COORDNUM CLIB\n");
     printf("N VIS: %d\n", NVisible);
     
-    for (i=0; i<NSpecies; i++)
+    for (i = 0; i < NSpecies; i++)
     {
         int j;
 
-        for (j=i; j<NSpecies; j++)
+        for (j = i; j < NSpecies; j++)
         {
             printf("%d - %d: %lf -> %lf\n", i, j, bondMinArray[i*NSpecies+j], bondMaxArray[i*NSpecies+j]);
         }
@@ -1190,7 +1190,7 @@ coordNumFilter(PyObject *self, PyObject *args)
     {
         int j, index, speca, boxNebListSize, boxIndex, boxNebList[27];
         
-        /* index and species of the atom */
+        /* index and species of this atom */
         index = visibleAtoms[i];
         speca = specie[index];
         
@@ -1271,7 +1271,6 @@ coordNumFilter(PyObject *self, PyObject *args)
                     int nj = NVisible * j;
                     fullScalars[nj + NVisibleNew] = fullScalars[nj + i];
                 }
-                
                 for (j = 0; j < NVectors; j++)
                 {
                     int nj = NVisible * j;
