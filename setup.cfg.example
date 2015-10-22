@@ -1,7 +1,10 @@
 
 [build_ext]
-inplace = 1
-# on a Mac with MacPorts you might want to uncomment these lines
+## build in place
+#inplace = 1
+## compiler: unix or intelem
+compiler = unix
+## on a Mac with MacPorts you might want to uncomment these lines
 #include-dirs = /opt/local/include
 #library-dirs = /opt/local/lib
 
@@ -13,4 +16,4 @@ inplace = 1
 source-dir = doc
 
 [nosetests]
-where = CDJSVis/tests
+where = atoman

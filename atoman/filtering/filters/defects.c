@@ -6,7 +6,6 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include <omp.h>
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"

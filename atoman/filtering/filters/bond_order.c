@@ -10,7 +10,6 @@
 #include <math.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_sf_legendre.h>
-#include <omp.h>
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"
@@ -31,7 +30,7 @@ struct AtomStructureResults
 static PyObject* bondOrderFilter(PyObject*, PyObject*);
 static void Ylm(int, int, double, double, double*, double*);
 static void convertToSphericalCoordinates(double, double, double, double, double*, double*);
-static void complex_qlm(int, int*, struct NeighbourList*, double*, double*, int*, struct AtomStructureResults*);
+static void complex_qlm(int, int*, struct NeighbourList*, double*, double*, int*, struct AtomStructureResults*, int);
 static void calculate_Q(int, struct AtomStructureResults*);
 
 
@@ -81,13 +80,14 @@ static void convertToSphericalCoordinates(double xdiff, double ydiff, double zdi
 /*******************************************************************************
  ** Compute complex q_lm (sum over eq. 3 from Stukowski paper), for each atom
  *******************************************************************************/
-static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList *nebList, double *pos, double *cellDims, int *PBC, struct AtomStructureResults *results)
+static void complex_qlm(int NVisibleIn, int *visibleAtoms, struct NeighbourList *nebList, double *pos, double *cellDims,
+        int *PBC, struct AtomStructureResults *results, int numThreads)
 {
     int visIndex;
     
     
     /* loop over atoms */
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(numThreads)
     for (visIndex = 0; visIndex < NVisibleIn; visIndex++)
     {
         int index, m;
@@ -307,9 +307,6 @@ bondOrderFilter(PyObject *self, PyObject *args)
     
     if (not_doubleVector(fullVectors)) return NULL;
     
-    /* set number of openmp threads to use */
-    omp_set_num_threads(numThreads);
-    
     /* construct array of positions of visible atoms */
     visiblePos = malloc(3 * NVisibleIn * sizeof(double));
     if (visiblePos == NULL)
@@ -362,7 +359,7 @@ bondOrderFilter(PyObject *self, PyObject *args)
     }
     
     /* first calc q_lm for each atom over all m values */
-    complex_qlm(NVisibleIn, visibleAtoms, nebList, pos, cellDims, PBC, results);
+    complex_qlm(NVisibleIn, visibleAtoms, nebList, pos, cellDims, PBC, results, numThreads);
     
     /* free neighbour list */
     freeNeighbourList(nebList, NVisibleIn);

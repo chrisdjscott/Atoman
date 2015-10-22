@@ -10,7 +10,6 @@
 #include <numpy/arrayobject.h>
 #include <math.h>
 #include <gsl/gsl_math.h>
-#include <omp.h>
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"
@@ -32,7 +31,6 @@ static int findCommonNeighbours(unsigned int *, int, unsigned int *);
 static int findNeighbourBonds(unsigned int *, unsigned int, int, unsigned int *);
 static int calcMaxChainLength(unsigned int *, int);
 static int getAdjacentBonds(unsigned int, unsigned int *, int *, unsigned int *, unsigned int *);
-
 
 
 /*******************************************************************************
@@ -74,8 +72,8 @@ static int compare_two_nebs(const void * a, const void * b)
 static PyObject*
 adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
 {
-    int NVisibleIn, *visibleAtoms, *PBC, NScalars, *counters, filteringEnabled, *structureVisibility, NVectors;
-    int OMP_NUM_THREADS;
+    int NVisibleIn, *visibleAtoms, *PBC, NScalars, *counters, filteringEnabled;
+    int numThreads, *structureVisibility, NVectors;
     double *pos, *scalars, *cellDims, *fullScalars, maxBondDistance;
     PyArrayObject *posIn=NULL;
     PyArrayObject *visibleAtomsIn=NULL;
@@ -96,7 +94,7 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
     if (!PyArg_ParseTuple(args, "O!O!O!O!O!iO!dO!iO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn,
             &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, &PyArray_Type, &fullScalarsIn, &maxBondDistance, &PyArray_Type,
-            &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn, &OMP_NUM_THREADS, &NVectors, &PyArray_Type, &fullVectors))
+            &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn, &numThreads, &NVectors, &PyArray_Type, &fullVectors))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -125,9 +123,6 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     structureVisibility = pyvector_to_Cptr_int(structureVisibilityIn);
     
     if (not_doubleVector(fullVectors)) return NULL;
-    
-    /* set number of openmp threads to use */
-    omp_set_num_threads(OMP_NUM_THREADS);
     
 /* first we construct neighbour list for each atom, containing indexes and separations */
     
@@ -180,13 +175,13 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
     
     /* sort neighbours by distance */
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(numThreads)
     for (i = 0; i < NVisibleIn; i++)
         qsort(nebList[i].neighbour, nebList[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
     
 /* classify atoms */
     
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(numThreads)
     for (i = 0; i < NVisibleIn; i++)
     {
         int atomStructure;

@@ -25,8 +25,7 @@ def configuration(parent_package='', top_path=None):
     
     config.add_extension("_lattice", 
                          ["_lattice.c", "../visclibs/array_utils.c"],
-                         libraries=["gsl", "gslcblas", "gomp"],
-                         extra_compile_args=["-fopenmp"],
+                         libraries=["gsl", "gslcblas"],
                          include_dirs=[incdir])
     
     return config
