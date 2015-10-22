@@ -14,7 +14,6 @@ import shutil
 import platform
 
 import setuptools
-from numpy.distutils.command.build_ext import build_ext
 
 from atoman.visutils import version
 
@@ -66,20 +65,6 @@ if HAVE_SPHINX:
             
             else:
                 raise RuntimeError("Could not locate Sphinx documentation HTML files")
-
-# subclass build_ext to use additional compiler options (for OpenMP)
-class build_ext_subclass(build_ext):
-    def build_extensions(self, *args, **kwargs):
-        c = self.compiler.compiler_type
-#         print "*****COMPILER TYPE", c
-        if copt.has_key(c):
-            for e in self.extensions:
-                e.extra_compile_args.extend(copt[c])
-        if lopt.has_key(c):
-            for e in self.extensions:
-                e.extra_link_args.extend(lopt[c])
-        
-        return build_ext.build_extensions(self, *args, **kwargs)
 
 # package configuration method
 def configuration(parent_package='', top_path=None):
@@ -137,7 +122,6 @@ def setup_package():
         cmdclass = {'build_sphinx': AtomanBuildDoc}
     else:
         cmdclass = {}
-    cmdclass["build_ext"] = build_ext_subclass
     
     # metadata
     metadata = dict(
@@ -175,7 +159,23 @@ def setup_package():
     
     else:
         from numpy.distutils.core import setup
+        from numpy.distutils.command.build_ext import build_ext
     
+        # subclass build_ext to use additional compiler options (for OpenMP)
+        class build_ext_subclass(build_ext):
+            def build_extensions(self, *args, **kwargs):
+                c = self.compiler.compiler_type
+        #         print "*****COMPILER TYPE", c
+                if copt.has_key(c):
+                    for e in self.extensions:
+                        e.extra_compile_args.extend(copt[c])
+                if lopt.has_key(c):
+                    for e in self.extensions:
+                        e.extra_link_args.extend(lopt[c])
+                
+                return build_ext.build_extensions(self, *args, **kwargs)
+        
+        cmdclass["build_ext"] = build_ext_subclass
         metadata["configuration"] = configuration
     
     # run setup
