@@ -27,12 +27,6 @@ Optional:
 * [Paramiko](http://www.paramiko.org/) - for loading files via the SFTP file browser
 * [pyhull](http://pythonhosted.org/pyhull/) - for computing facet areas of convex hulls
 
-### Other libraries
-
-This code also requires the following libraries to be installed:
-
-* [GSL](http://www.gnu.org/software/gsl/) - GNU Scientific Library
-
 ### Other software
 
 In order to be able to use all features the following programmes should be installed:

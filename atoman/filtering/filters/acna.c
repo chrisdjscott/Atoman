@@ -9,12 +9,12 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include <gsl/gsl_math.h>
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"
 #include "array_utils.h"
 #include "atom_structure.h"
+#include "constants.h"
 
 
 #define MAX_REQUIRED_NEBS 14
@@ -263,7 +263,7 @@ static int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
         localScaling += nebList[mainIndex].neighbour[i].separation;
     }
     localScaling /= nn;
-    localCutoff = localScaling * (1.0 + M_SQRT2) / 2.0;
+    localCutoff = localScaling * (1.0 + CONST_SQRT2) / 2.0;
     
     /* at this point I feel like we should check that the 12 NN are within localCutoff ????? */
     ok = 1;
@@ -356,7 +356,7 @@ static int analyseAtom(int mainIndex, struct NeighbourList2 *nebList)
     }
     localScalingSum /= 6.0;
     
-    localCutoff = (1.0 + M_SQRT2) / 4.0 * (2.0 / M_SQRT3 * localScaling + localScalingSum); // divide by 4 not 2 as in the paper
+    localCutoff = (1.0 + CONST_SQRT2) / 4.0 * (2.0 / CONST_SQRT3 * localScaling + localScalingSum); // divide by 4 not 2 as in the paper
     
     /* at this point I feel like we should check that the 12 NN are within localCutoff ????? */
     ok = 1;

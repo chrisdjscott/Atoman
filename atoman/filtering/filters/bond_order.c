@@ -8,12 +8,11 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_sf_legendre.h>
 #include "boxeslib.h"
 #include "neb_list.h"
 #include "utilities.h"
 #include "array_utils.h"
+#include "constants.h"
 
 
 /* structure for storing the result for an atom */
@@ -32,6 +31,8 @@ static void Ylm(int, int, double, double, double*, double*);
 static void convertToSphericalCoordinates(double, double, double, double, double*, double*);
 static void complex_qlm(int, int*, struct NeighbourList*, double*, double*, int*, struct AtomStructureResults*, int);
 static void calculate_Q(int, struct AtomStructureResults*);
+
+const double factorials[] = {1.0, 1.0, 2.0, 6.0, 24.0, 120.0, 720.0, 5040.0, 40320.0, 362880.0, 3628800.0, 39916800.0, 479001600.0};
 
 
 /*******************************************************************************
@@ -53,19 +54,73 @@ init_bond_order(void)
 }
 
 /*******************************************************************************
+ ** Compute P_lm (numerical recipes Ch.8 p.254)
+ *******************************************************************************/
+double Plm(int l, int m, double x)
+{
+    double pmm;
+    
+    
+    if (m < 0 || m > l || fabs(x) > 1.0)
+    {
+        fprintf(stderr, "Bad arguments to in routine Plm\n");
+        exit(1);
+    }
+    pmm = 1.0;
+    if (m > 0)
+    {
+        int i;
+        double somx2, fact;
+        
+        somx2 = sqrt((1.0 - x) * (1.0 + x));
+        fact = 1.0;
+        for (i = 1; i <= m; i++)
+        {
+            pmm *= - fact * somx2;
+            fact += 2.0;
+        }
+    }
+    if (l == m)
+        return pmm;
+    else
+    {
+        double pmmp1;
+        
+        pmmp1 = x * (2.0 * m + 1.0) * pmm;
+        if (l == m + 1)
+            return pmmp1;
+        else
+        {
+            int ll;
+            double pll = 0.0;
+            
+            for (ll = m + 2; ll <= l; ll++)
+            {
+                pll = (x * (2.0 * ll - 1.0) * pmmp1 - (ll + m - 1) * pmm) / (ll - m);
+                pmm = pmmp1;
+                pmmp1 = pll;
+            }
+            return pll;
+        }
+    }
+}
+
+
+/*******************************************************************************
  ** Compute Y_lm (spherical harmonics)
  *******************************************************************************/
 static void Ylm(int l, int m, double theta, double phi, double *realYlm, double *imgYlm)
 {
-    double factor, arg;
+    double factor, arg, val;
     
     
-    /* call GSL spherical P_lm function */
-    factor = gsl_sf_legendre_sphPlm(l, m, cos(theta));
+    val = Plm(l, m, cos(theta));
+    factor = ((2.0 * (double)l + 1.0) * factorials[l - m]) / (4.0 * CONST_PI * factorials[l + m]);
+    factor = sqrt(factor);
     
     arg = (double) m * phi;
-    *realYlm = factor * cos(arg);
-    *imgYlm = factor * sin(arg);
+    *realYlm = factor * val * cos(arg);
+    *imgYlm = factor * val *  sin(arg);
 }
 
 /*******************************************************************************
@@ -208,8 +263,8 @@ static void calculate_Q(int NVisibleIn, struct AtomStructureResults *results)
 {
     int i, m;
     double sumQ6, sumQ4;
-    const double pi13 = 4.0 * M_PI / 13.0;
-    const double pi9 = 4.0 * M_PI / 9.0;
+    const double pi13 = 4.0 * CONST_PI / 13.0;
+    const double pi9 = 4.0 * CONST_PI / 9.0;
     
 
     /* loop over atoms and compute the Q4 and Q6 values */

@@ -5,10 +5,10 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include <gsl/gsl_math.h>
 #include "boxeslib.h"
 #include "utilities.h"
 #include "array_utils.h"
+#include "constants.h"
 
 
 static PyObject* calculateRDF(PyObject*, PyObject*);
@@ -301,7 +301,7 @@ normaliseRDF(int numBins, int sel1cnt, int sel2cnt, int duplicates, double start
 {
     int i;
     double pair_dens;
-    const double fourThirdsPi = 4.0 / 3.0 * M_PI;
+    const double fourThirdsPi = 4.0 / 3.0 * CONST_PI;
 
     /* compute inverse of pair density (volume / number of pairs) */
     pair_dens = cellDims[0] * cellDims[1] * cellDims[2];
