@@ -2,6 +2,14 @@
 Licenses
 ========
 
+Atoman license
+--------------
+
+Atoman is licensed under the :download:`MIT license <license_atoman.txt>`
+
+Dependencies
+------------
+
 .. toctree::
    :maxdepth: 1
 

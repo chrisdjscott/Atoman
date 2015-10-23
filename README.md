@@ -53,7 +53,9 @@ You can either build the code in-place or install it into the Python site-packag
 example within a [virtualenv](http://virtualenv.readthedocs.org/en/latest/).
 
 In both cases you should first copy the config file: `cp setup.cfg.example setup.cfg` and add/edit
-any relevant sections. There are some comments in the file although normally it can be left as is.
+any relevant sections. There are some comments in the file to help with selecting the options.
+
+You need to choose one of the following two methods for installing the software.
 
 ### In-place build
 

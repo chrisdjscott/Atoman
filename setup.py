@@ -57,7 +57,7 @@ if HAVE_SPHINX:
             BuildDoc.run(self)
             
             # copy doc to atoman
-            sphinxHtmlDir = os.path.join("build", "sphinx", "html")
+            sphinxHtmlDir = os.path.join("doc", "build", "html")
             if os.path.exists(os.path.join(sphinxHtmlDir, "index.html")):
                 if os.path.isdir(os.path.join("atoman", "doc")):
                     shutil.rmtree(os.path.join("atoman", "doc"))
@@ -99,9 +99,9 @@ def do_clean():
     
     os.chdir(cwd)
     
-    if os.path.isdir("doc/_build"):
-        print "rm -rf doc/_build"
-        shutil.rmtree(os.path.join("doc", "_build"))
+    if os.path.isdir("doc/build"):
+        print "rm -rf doc/build"
+        shutil.rmtree(os.path.join("doc", "build"))
     
     if os.path.isdir("atoman/doc"):
         print "rm -rf atoman/doc"
