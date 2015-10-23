@@ -2,7 +2,7 @@
 [build_ext]
 ## build in place
 #inplace = 1
-## compiler: unix or intelem
+## compiler: 'unix' or 'intelem' have been tested
 compiler = unix
 ## on a Mac with MacPorts you might want to uncomment these lines
 #include-dirs = /opt/local/include

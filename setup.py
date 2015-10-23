@@ -134,7 +134,7 @@ def setup_package():
         author = "Chris Scott",
         author_email = "chris@chrisdjscott.co.uk",
 #         download_url = "",
-         license = "LGPL",
+         license = "MIT",
 #         classifiers = "",
         platforms = ["Linux", "Mac OS-X"],
 #         test_suite = "",
