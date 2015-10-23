@@ -13,7 +13,8 @@ compiler = unix
 
 
 [build_sphinx]
-source-dir = doc
+source-dir = doc/src
+build-dir = doc/build
 
 [nosetests]
 where = atoman
