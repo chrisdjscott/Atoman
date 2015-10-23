@@ -8,12 +8,12 @@ import unittest
 import tempfile
 import shutil
 
-from ..state.latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
+from ..latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
 
 ################################################################################
    
 def path_to_file(path):
-    return os.path.join(os.path.dirname(__file__), "..", "..", "testing", path)
+    return os.path.join(os.path.dirname(__file__), "..", "..", "..", "testing", path)
    
 ################################################################################
    
@@ -39,7 +39,7 @@ class TestLattice(unittest.TestCase):
          
         self.lattice = None
      
-    def test_voronoiSumVolumes(self):
+    def test_latticeVolume(self):
         """
         Lattice volume
             

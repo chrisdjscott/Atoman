@@ -8,8 +8,8 @@ import unittest
 import tempfile
 import shutil
 
-from ..state import latticeReaders
-from ..state.lattice import Lattice
+from .. import latticeReaders
+from ..lattice import Lattice
 
 
 ################################################################################
@@ -26,7 +26,7 @@ def log_error(*args, **kwargs):
 ################################################################################
 
 def path_to_file(path):
-    return os.path.join(os.path.dirname(__file__), "..", "..", "testing", path)
+    return os.path.join(os.path.dirname(__file__), "..", "..", "..", "testing", path)
 
 ################################################################################
 

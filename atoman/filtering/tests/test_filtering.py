@@ -7,19 +7,19 @@ import unittest
 
 import numpy as np
 
-from ..filtering.filters import _filtering
+from ..filters import _filtering
 
 
 ################################################################################
 
 class TestSpecieFilter(unittest.TestCase):
     """
-    Test specie filter
+    Test specie filter C lib
     
     """
     def test_specieFilter(self):
         """
-        Specie filter
+        Specie filter C lib
         
         """
         N = 5
@@ -58,7 +58,7 @@ class TestSpecieFilter(unittest.TestCase):
     
     def test_specieFilterFullScalars(self):
         """
-        Specie filter full scalars
+        Specie filter C lib full scalars
         
         """
         N = 5

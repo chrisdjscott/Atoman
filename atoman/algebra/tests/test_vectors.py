@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from ..algebra import _vectors
+from .. import _vectors
 
 
 ################################################################################

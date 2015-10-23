@@ -12,13 +12,13 @@ import shutil
 
 import numpy as np
 
-from ..state.latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
-from ..filtering import _voronoi
+from ...state.latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
+from .. import _voronoi
 
 ################################################################################
    
 def path_to_file(path):
-    return os.path.join(os.path.dirname(__file__), "..", "..", "testing", path)
+    return os.path.join(os.path.dirname(__file__), "..", "..", "..", "testing", path)
    
 ################################################################################
    

@@ -10,17 +10,17 @@ import shutil
 
 import numpy as np
 
-from ..state import latticeReaderGeneric
-from ..state.lattice import Lattice
+from .. import latticeReaderGeneric
+from ..lattice import Lattice
 
 
 ################################################################################
 
 def path_to_file(path):
-    return os.path.join(os.path.dirname(__file__), "..", "..", "testing", path)
+    return os.path.join(os.path.dirname(__file__), "..", "..", "..",  "testing", path)
 
 def path_to_data(path):
-    return os.path.join(os.path.dirname(__file__), "..", "data", path)
+    return os.path.join(os.path.dirname(__file__), "..", "..", "data", path)
 
 def updateProgress(a, b, msg):
     pass

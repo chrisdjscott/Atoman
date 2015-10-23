@@ -7,8 +7,8 @@ import unittest
 
 import numpy as np
 
-from ..state.lattice import Lattice
-from ..lattice_gen import lattice_gen_bcc
+from ...state.lattice import Lattice
+from .. import lattice_gen_bcc
 
 
 ################################################################################
