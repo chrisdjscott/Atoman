@@ -2,6 +2,8 @@
  ** C extension to calculate the radial distribution function
  *******************************************************************************/
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
@@ -77,11 +79,11 @@ calculateRDF(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    numVisible = (int) visibleAtomsIn->dimensions[0];
+    numVisible = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
-    numAtoms = (int) specieIn->dimensions[0];
+    numAtoms = (int) PyArray_DIM(specieIn, 0);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);

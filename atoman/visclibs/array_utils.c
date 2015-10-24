@@ -1,4 +1,6 @@
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include "array_utils.h"
@@ -9,24 +11,22 @@ static double **ptrvector_double(long);
 
 double *pyvector_to_Cptr_double(PyArrayObject *vectin)
 {
-    return (double *) vectin->data;
+    return (double *) PyArray_DATA(vectin);
 }
-
 
 int *pyvector_to_Cptr_int(PyArrayObject *vectin)
 {
-    return (int *) vectin->data;
+    return (int *) PyArray_DATA(vectin);
 }
-
 
 char *pyvector_to_Cptr_char(PyArrayObject *vectin)
 {
-    return (char *) vectin->data;
+    return (char *) PyArray_DATA(vectin);
 }
 
 int not_doubleVector(PyArrayObject *vectin)
 {
-    if (vectin->descr->type_num != NPY_FLOAT64)// || vectin->nd != 1)
+    if (PyArray_TYPE(vectin) != NPY_FLOAT64)// || vectin->nd != 1)
     {
         PyErr_SetString(PyExc_ValueError, "In not_doubleVector: vector must be of type float and 1 dimensional");
         return 1;
@@ -35,10 +35,9 @@ int not_doubleVector(PyArrayObject *vectin)
     return 0;
 }
 
-
 int not_intVector(PyArrayObject *vectin)
 {
-    if (vectin->descr->type_num != NPY_INT32)// || vectin->nd != 1)
+    if (PyArray_TYPE(vectin) != NPY_INT32)// || vectin->nd != 1)
     {
         PyErr_SetString(PyExc_ValueError, "In not_intVector: vector must be of type int and 1 dimensional");
         return 1;
@@ -46,7 +45,6 @@ int not_intVector(PyArrayObject *vectin)
     
     return 0;
 }
-
 
 static double **ptrvector_double(long n)
 {
@@ -62,25 +60,22 @@ static double **ptrvector_double(long n)
     return v;
 }
 
-
 double **pymatrix_to_Cptrs_double(PyArrayObject *arrayin)
 {
     double **c, *a;
     int i, n, m;
     
-    n = arrayin->dimensions[0];
-    m = arrayin->dimensions[1];
+    n = PyArray_DIM(arrayin, 0);
+    m = PyArray_DIM(arrayin, 1);
     c = ptrvector_double(n);
-    a = (double *) arrayin->data;
+    a = (double *) PyArray_DATA(arrayin);
     for (i = 0; i < n; i++)
         c[i] = a + i * m;
     
     return c;
 }
 
-
 void free_Cptrs_double(double **v)
 {
     free((char *) v);
 }
-
