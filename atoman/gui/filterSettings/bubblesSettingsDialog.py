@@ -33,29 +33,33 @@ class BubblesSettingsDialog(base.GenericSettingsDialog):
         self.speciesList.setFixedHeight(80)
         self.speciesList.setFixedWidth(100)
         self.speciesList.itemChanged.connect(self.speciesListChanged)
+        self.speciesList.setToolTip("<p>The bubble atom species.<p>")
         self.contentLayout.addRow("Bubble species", self.speciesList)
         
         self.addHorizontalDivider()
         
         # vacancy radius
         self.addDoubleSpinBox("vacancyRadius", minVal=0.01, maxVal=10, step=0.1, label="Vacancy radius",
-                              toolTip="The vacancy radius is used when identifying vacancy clusters.")
+                              toolTip="<p>The vacancy radius is used when identifying vacancy clusters.</p>")
         
         self.addHorizontalDivider()
         
-        # vacancy radius
+        # vacancy neighbour radius
+        tip = "<p>If two vacancies are within this distance of one another they form part of the same vacancy cluster.</p>"
         self.addDoubleSpinBox("vacNebRad", minVal=0.01, maxVal=20, step=0.1, label="Vacancy neighbour radius",
-                              toolTip="The vacancy radius is used when identifying vacancy clusters.")
+                              toolTip=tip)
         
-        # vacancy radius
+        # vacancy bubble radius
+        tip = "<p>A bubble atom will be associated with a vacancy if they are separated by less than this value.<p>"
         self.addDoubleSpinBox("vacancyBubbleRadius", minVal=0.01, maxVal=20, step=0.1, label="Vacancy bubble radius",
-                              toolTip="The vacancy radius is used when identifying vacancy clusters.")
+                              toolTip=tip)
         
-        # vacancy radius
+        # vac int association radius
+        tip = "<p>A vacancy is ignored if it is not occupied by a bubble atom and there is an interstitial wihtin this distance of it.</p>"
         self.addDoubleSpinBox("vacIntRad", minVal=0.01, maxVal=20, step=0.1, label="Vac-int association radius",
-                              toolTip="The vacancy radius is used when identifying vacancy clusters.")
+                              toolTip=tip)
         
-        self.refresh()
+        self.refresh(firstRun=True)
     
     def speciesListChanged(self, *args):
         """Species selection has changed."""
@@ -69,7 +73,7 @@ class BubblesSettingsDialog(base.GenericSettingsDialog):
         
         self._settings.updateSetting("bubbleSpecies", bubbleSpeciesList)
     
-    def refresh(self):
+    def refresh(self, firstRun=False):
         """Refresh the species list."""
         self.logger.debug("Refreshing bubble species options")
         
@@ -106,5 +110,16 @@ class BubblesSettingsDialog(base.GenericSettingsDialog):
             else:
                 self.logger.debug("  Adding species option: %s", sym)
                 item = SpeciesListItem(sym)
-                item.setCheckState(QtCore.Qt.Unchecked)
+                if firstRun:
+                	if sym == "He":
+                		state = QtCore.Qt.Checked
+                	elif sym == "H_":
+                		state = QtCore.Qt.Checked
+                	elif sym == "Ar":
+                		state = QtCore.Qt.Checked
+                	else:
+                		state = QtCore.Qt.Unchecked
+                else:
+                	state = QtCore.Qt.Unchecked
+                item.setCheckState(state)
                 self.speciesList.addItem(item)
