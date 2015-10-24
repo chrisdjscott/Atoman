@@ -1,8 +1,9 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2015
  ** Generic Lattice reader
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -1044,7 +1045,7 @@ getMinMaxPos(PyObject *self, PyObject *args)
         return NULL;
     
     /* number of atoms */
-    numAtoms = pos->dimensions[0] / 3;
+    numAtoms = ((int) PyArray_DIM(pos, 0)) / 3;
     
     /* allocate min/max pos */
     minPos = (PyArrayObject *) PyArray_SimpleNew(1, np_dims, NPY_FLOAT64);
