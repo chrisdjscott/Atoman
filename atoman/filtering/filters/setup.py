@@ -12,35 +12,29 @@ def configuration(parent_package='', top_path=None):
     config = Configuration("filters", parent_package, top_path)
     
     config.add_extension("_acna", 
-                         ["acna.c", "../../visclibs/utilities.c",
-                          "../../visclibs/boxeslib.c", "../../visclibs/neb_list.c",
-                          "../../visclibs/array_utils.c"],
-                         include_dirs=[incdir, ".."])
+                         ["acna.c"],
+                         include_dirs=[incdir, ".."],
+                         libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
     
     config.add_extension("_bond_order", 
-                         ["bond_order.c", "../../visclibs/utilities.c",
-                          "../../visclibs/boxeslib.c", "../../visclibs/neb_list.c",
-                          "../../visclibs/array_utils.c"],
-                         include_dirs=[incdir])
+                         ["bond_order.c"],
+                         include_dirs=[incdir],
+                         libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
      
     config.add_extension("_defects", 
-                         ["defects.c", "../../visclibs/utilities.c",
-                          "../../visclibs/boxeslib.c", "../../visclibs/neb_list.c",
-                          "../../visclibs/array_utils.c"],
-                          include_dirs=[incdir, ".."])
+                         ["defects.c"],
+                          include_dirs=[incdir, ".."],
+                          libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
      
     config.add_extension("_filtering", 
-                         ["filtering.c", "../../visclibs/utilities.c",
-                          "../../visclibs/boxeslib.c", "../../visclibs/array_utils.c"],
-                          include_dirs=[incdir])
+                         ["filtering.c"],
+                          include_dirs=[incdir],
+                          libraries=["boxeslib", "utilities", "array_utils"])
     
     config.add_extension("_bubbles", 
-                         ["bubbles.c", "../../visclibs/neb_list.c",
-                          "../../visclibs/array_utils.c", "../../visclibs/boxeslib.c",
-                          "../../visclibs/utilities.c"],
-                          libraries=[],
-                          extra_compile_args=[],
-                          include_dirs=[incdir, ".."])
+                         ["bubbles.c"],
+                          include_dirs=[incdir, ".."],
+                          libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
     
     return config
 

@@ -17,9 +17,9 @@ def configuration(parent_package='', top_path=None):
     
     # add extensions
     config.add_extension("picker", 
-                         ["picker.c", "../visclibs/utilities.c",
-                          "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
-                         include_dirs=[incdir])
+                         ["picker.c"],
+                         include_dirs=[incdir],
+                         libraries=["boxeslib", "utilities", "array_utils"])
     
     return config
 

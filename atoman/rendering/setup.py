@@ -12,8 +12,9 @@ def configuration(parent_package='', top_path=None):
     config = Configuration("rendering", parent_package, top_path)
     
     config.add_extension("_rendering", 
-                         ["rendering.c", "../visclibs/array_utils.c"],
-                         include_dirs=[incdir])
+                         ["rendering.c"],
+                         include_dirs=[incdir],
+                         libraries=["array_utils"])
     
     return config
 

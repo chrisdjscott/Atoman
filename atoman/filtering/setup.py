@@ -14,20 +14,19 @@ def configuration(parent_package='', top_path=None):
     config.add_subpackage("filters")
     
     config.add_extension("bonds", 
-                         ["bonds.c", "../visclibs/utilities.c",
-                          "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
-                          include_dirs=[incdir])
+                         ["bonds.c"],
+                          include_dirs=[incdir],
+                          libraries=["boxeslib", "utilities", "array_utils"])
     
     config.add_extension("_clusters", 
-                         ["clusters.c", "../visclibs/utilities.c",
-                          "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
-                          include_dirs=[incdir])
+                         ["clusters.c"],
+                          include_dirs=[incdir],
+                          libraries=["boxeslib", "utilities", "array_utils"])
     
     config.add_extension("_voronoi", 
                          ["voronoi.c", "voro_iface.cpp", 
-                          "voro++/src/voro++.cc",
-                          "../visclibs/array_utils.c"],
-                          libraries=[],
+                          "voro++/src/voro++.cc"],
+                          libraries=["array_utils"],
                           include_dirs=[incdir, "voro++/src"])
     
     return config

@@ -12,9 +12,9 @@ def configuration(parent_package='', top_path=None):
     config = Configuration("algebra", parent_package, top_path)
     
     config.add_extension("_vectors", 
-                         ["vectors.c", "../visclibs/utilities.c",
-                          "../visclibs/array_utils.c"],
-                         include_dirs=[incdir])
+                         ["vectors.c"],
+                         include_dirs=[incdir],
+                         libraries=["utilities", "array_utils"])
     
     return config
 

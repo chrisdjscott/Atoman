@@ -12,9 +12,9 @@ def configuration(parent_package='', top_path=None):
     config = Configuration("plotting", parent_package, top_path)
     
     config.add_extension("_rdf", 
-                         ["_rdf.c", "../visclibs/utilities.c",
-                          "../visclibs/boxeslib.c", "../visclibs/array_utils.c"],
-                         include_dirs=[incdir])
+                         ["_rdf.c"],
+                         include_dirs=[incdir],
+                         libraries=["boxeslib", "array_utils", "utilities"])
     
     return config
 
