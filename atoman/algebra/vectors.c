@@ -1,8 +1,9 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2014
- ** Find defects and return the sub-system surrounding them
+ ** Vector operations written in C to improve performance
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -125,9 +126,7 @@ separationVector(PyObject *self, PyObject *args)
     PyArrayObject *pos1In=NULL;
     PyArrayObject *pos2In=NULL;
     PyArrayObject *cellDimsIn=NULL;
-    
     int i;
-    double atomSepVec[3];
     
     
     /* parse and check arguments from Python */
@@ -140,7 +139,7 @@ separationVector(PyObject *self, PyObject *args)
     
     if (not_doubleVector(pos1In)) return NULL;
     pos1 = pyvector_to_Cptr_double(pos1In);
-    length = ((int) pos1In->dimensions[0]) / 3;
+    length = ((int) PyArray_DIM(pos1In, 0)) / 3;
     
     if (not_doubleVector(pos2In)) return NULL;
     pos2 = pyvector_to_Cptr_double(pos2In);
@@ -152,8 +151,10 @@ separationVector(PyObject *self, PyObject *args)
     cellDims = pyvector_to_Cptr_double(cellDimsIn);
     
     /* loop */
-    for ( i=0; i<length; i++ )
+    for (i = 0; i < length; i++)
     {
+        double atomSepVec[3];
+        
         atomSeparationVector(atomSepVec, pos1[3*i], pos1[3*i+1], pos1[3*i+2], pos2[3*i], pos2[3*i+1], pos2[3*i+2], 
                              cellDims[0], cellDims[4], cellDims[8], PBC[0], PBC[1], PBC[2]);
         
@@ -180,7 +181,7 @@ separationMagnitude(PyObject *self, PyObject *args)
     PyArrayObject *cellDimsIn=NULL;
     
     int i;
-    double sum, r2;
+    double sum;
     
     
     /* parse and check arguments from Python */
@@ -193,7 +194,7 @@ separationMagnitude(PyObject *self, PyObject *args)
     
     if (not_doubleVector(pos1In)) return NULL;
     pos1 = pyvector_to_Cptr_double(pos1In);
-    length = ((int) pos1In->dimensions[0]) / 3;
+    length = ((int) PyArray_DIM(pos1In, 0)) / 3;
     
     if (not_doubleVector(pos2In)) return NULL;
     pos2 = pyvector_to_Cptr_double(pos2In);
@@ -203,8 +204,10 @@ separationMagnitude(PyObject *self, PyObject *args)
     
     /* loop */
     sum = 0;
-    for ( i=0; i<length; i++ )
+    for (i = 0; i < length; i++ )
     {
+        double r2;
+        
         r2 = atomicSeparation2( pos1[3*i], pos1[3*i+1], pos1[3*i+2], pos2[3*i], pos2[3*i+1], pos2[3*i+2], cellDims[0], cellDims[4], cellDims[8], PBC[0], PBC[1], PBC[2]);
         
         sum += r2;
@@ -234,7 +237,7 @@ magnitude(PyObject *self, PyObject *args)
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
-    length = (int) posIn->dimensions[0];
+    length = (int) PyArray_DIM(posIn, 0);
     
     /* compute */
     sum = 0.0;

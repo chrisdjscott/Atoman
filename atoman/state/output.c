@@ -1,8 +1,9 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2014
  ** IO routines written in C to improve performance
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -207,23 +208,23 @@ writePOVRAYDefects(PyObject *self, PyObject *args)
     
     if (not_intVector(vacsIn)) return NULL;
     vacs = pyvector_to_Cptr_int(vacsIn);
-    vacsDim = (int) vacsIn->dimensions[0];
+    vacsDim = (int) PyArray_DIM(vacsIn, 0);
     
     if (not_intVector(intsIn)) return NULL;
     ints = pyvector_to_Cptr_int(intsIn);
-    intsDim = (int) intsIn->dimensions[0];
+    intsDim = (int) PyArray_DIM(intsIn, 0);
     
     if (not_intVector(antsIn)) return NULL;
     ants = pyvector_to_Cptr_int(antsIn);
-    antsDim = (int) antsIn->dimensions[0];
+    antsDim = (int) PyArray_DIM(antsIn, 0);
     
     if (not_intVector(onAntsIn)) return NULL;
     onAnts = pyvector_to_Cptr_int(onAntsIn);
-    onAntsDim = (int) onAntsIn->dimensions[0];
+    onAntsDim = (int) PyArray_DIM(onAntsIn, 0);
     
     if (not_intVector(splitIntsIn)) return NULL;
     splitInts = pyvector_to_Cptr_int(splitIntsIn);
-    splitIntsDim = ((int) splitIntsIn->dimensions[0]) / 3;
+    splitIntsDim = ((int) PyArray_DIM(splitIntsIn, 0)) / 3;
     
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
@@ -366,11 +367,11 @@ writeLattice(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisible = (int) visibleAtomsIn->dimensions[0];
+    NVisible = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
-    NAtoms = (int) specieIn->dimensions[0];
+    NAtoms = (int) PyArray_DIM(specieIn, 0);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);

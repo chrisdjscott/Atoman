@@ -1,7 +1,8 @@
 /*******************************************************************************
- ** Copyright Chris Scott 2014
- ** Find clusters of atoms
+ ** Find clusters of atoms and associated functions
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -72,7 +73,7 @@ findClusters(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);

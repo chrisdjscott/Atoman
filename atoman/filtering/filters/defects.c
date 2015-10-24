@@ -1,7 +1,8 @@
 /*******************************************************************************
- ** Copyright Chris Scott 2014
- ** Find defects
+ ** Find defects functions
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -1140,11 +1141,11 @@ findDefects(PyObject *self, PyObject *args)
     
     if (not_intVector(exclSpecInputIn)) return NULL;
     exclSpecInput = pyvector_to_Cptr_int(exclSpecInputIn);
-    exclSpecInputDim = (int) exclSpecInputIn->dimensions[0];
+    exclSpecInputDim = (int) PyArray_DIM(exclSpecInputIn, 0);
     
     if (not_intVector(exclSpecRefIn)) return NULL;
     exclSpecRef = pyvector_to_Cptr_int(exclSpecRefIn);
-    exclSpecRefDim = (int) exclSpecRefIn->dimensions[0];
+    exclSpecRefDim = (int) PyArray_DIM(exclSpecRefIn, 0);
     
     specieList = pyvector_to_Cptr_char(specieListIn);
     
@@ -1173,7 +1174,7 @@ findDefects(PyObject *self, PyObject *args)
     
     if (not_intVector(vacSpecCountIn)) return NULL;
     vacSpecCount = pyvector_to_Cptr_int(vacSpecCountIn);
-    NSpecies = (int) vacSpecCountIn->dimensions[0];
+    NSpecies = (int) PyArray_DIM(vacSpecCountIn, 0);
     
     if (not_intVector(intSpecCountIn)) return NULL;
     intSpecCount = pyvector_to_Cptr_int(intSpecCountIn);
@@ -1195,7 +1196,7 @@ findDefects(PyObject *self, PyObject *args)
     
     if (not_doubleVector(acnaArrayIn)) return NULL;
     acnaArray = pyvector_to_Cptr_double(acnaArrayIn);
-    acnaArrayDim = (int) acnaArrayIn->dimensions[0];
+    acnaArrayDim = (int) PyArray_DIM(acnaArrayIn, 0);
     
     /* drift compensation - modify reference positions */
     if (driftCompensation)

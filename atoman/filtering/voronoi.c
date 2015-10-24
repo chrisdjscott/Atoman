@@ -1,8 +1,9 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2014
  ** Helper methods for computing Voronoi cells/volumes
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <structmember.h>
@@ -437,7 +438,7 @@ Voronoi_computeVoronoi(Voronoi *self, PyObject *args)
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
-    NAtoms = ((int) posIn->dimensions[0]) / 3;
+    NAtoms = ((int) PyArray_DIM(posIn, 0)) / 3;
     
     if (not_doubleVector(minPosIn)) return NULL;
     minPos = pyvector_to_Cptr_double(minPosIn);
@@ -639,7 +640,7 @@ makeVoronoiPoints(PyObject *self, PyObject *args)
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
-    NAtoms = ((int) posIn->dimensions[0]) / 3;
+    NAtoms = ((int) PyArray_DIM(posIn, 0)) / 3;
     
     if (not_doubleVector(cellDimsIn)) return NULL;
     cellDims = pyvector_to_Cptr_double(cellDimsIn);

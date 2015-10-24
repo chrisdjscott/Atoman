@@ -1,8 +1,9 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2014
  ** Generate BCC lattice
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>

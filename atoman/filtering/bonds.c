@@ -1,7 +1,8 @@
 /*******************************************************************************
- ** Copyright Chris Scott 2014
- ** Calculate bonds
+ ** Functions associated with bonds
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -70,7 +71,7 @@ calculateBonds(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisible = (int) visibleAtomsIn->dimensions[0];
+    NVisible = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
@@ -252,7 +253,7 @@ calculateDisplacementVectors(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisible = (int) visibleAtomsIn->dimensions[0];
+    NVisible = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);

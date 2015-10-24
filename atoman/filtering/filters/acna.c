@@ -1,10 +1,11 @@
 
 /*******************************************************************************
- ** Adaptive Common Neighbour Analysis (Stutowski...)
+ ** Adaptive Common Neighbour Analysis
  ** A. Stutowski. Modelling Simul. Mater. Sci. Eng. 20 (2012) 045021
  ** Adapted from http://asa.ovito.org/
- ** Copyright Chris Scott 2014
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -99,7 +100,7 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);

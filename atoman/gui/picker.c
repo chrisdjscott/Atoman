@@ -1,7 +1,8 @@
 /*******************************************************************************
- ** Copyright Chris Scott 2014
  ** Picker routines
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -69,23 +70,23 @@ pickObject(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    visibleAtomsDim = (int) visibleAtomsIn->dimensions[0];
+    visibleAtomsDim = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_intVector(vacsIn)) return NULL;
     vacs = pyvector_to_Cptr_int(vacsIn);
-    vacsDim = (int) vacsIn->dimensions[0];
+    vacsDim = (int) PyArray_DIM(vacsIn, 0);
     
     if (not_intVector(intsIn)) return NULL;
     ints = pyvector_to_Cptr_int(intsIn);
-    intsDim = (int) intsIn->dimensions[0];
+    intsDim = (int) PyArray_DIM(intsIn, 0);
     
     if (not_intVector(onAntsIn)) return NULL;
     onAnts = pyvector_to_Cptr_int(onAntsIn);
-    onAntsDim = (int) onAntsIn->dimensions[0];
+    onAntsDim = (int) PyArray_DIM(onAntsIn, 0);
     
     if (not_intVector(splitsIn)) return NULL;
     splits = pyvector_to_Cptr_int(splitsIn);
-    splitsDim = (int) splitsIn->dimensions[0];
+    splitsDim = (int) PyArray_DIM(splitsIn, 0);
     
     if (not_doubleVector(pickPosIn)) return NULL;
     pickPos = pyvector_to_Cptr_double(pickPosIn);

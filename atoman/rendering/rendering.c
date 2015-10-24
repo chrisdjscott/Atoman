@@ -1,8 +1,9 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2014
  ** Rendering routines written in C to improve performance
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -56,7 +57,7 @@ countVisibleBySpecie(PyObject *self, PyObject *args)
         return NULL;
     
     if (not_intVector(visibleAtoms)) return NULL;
-    NVisible = (int) visibleAtoms->dimensions[0];
+    NVisible = (int) PyArray_DIM(visibleAtoms, 0);
     if (not_intVector(specieArray)) return NULL;
     
     /* specie counter array */
@@ -109,7 +110,7 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisible = (int) visibleAtomsIn->dimensions[0];
+    NVisible = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_intVector(specieArrayIn)) return NULL;
     specieArray = pyvector_to_Cptr_int(specieArrayIn);
@@ -133,7 +134,7 @@ splitVisAtomsBySpecie(PyObject *self, PyObject *args)
     scalars = pyvector_to_Cptr_double(scalarsIn);
     
     if (not_doubleVector(vectors)) return NULL;
-    vectorsLen = (int) vectors->dimensions[0];
+    vectorsLen = (int) PyArray_DIM(vectors, 0);
     
     /* first pass to get counters, assume counter zeroed before */
     for (i = 0; i < NVisible; i++)
@@ -246,7 +247,7 @@ makeVisibleRadiusArray(PyObject *self, PyObject *args)
         return NULL;
 
     if (not_intVector(visibleAtoms)) return NULL;
-    NVisible = (int) visibleAtoms->dimensions[0];
+    NVisible = (int) PyArray_DIM(visibleAtoms, 0);
 
     if (not_intVector(specie)) return NULL;
 
@@ -289,7 +290,7 @@ makeVisibleScalarArray(PyObject *self, PyObject *args)
         return NULL;
 
     if (not_intVector(visibleAtoms)) return NULL;
-    NVisible = (int) visibleAtoms->dimensions[0];
+    NVisible = (int) PyArray_DIM(visibleAtoms, 0);
 
     if (not_doubleVector(scalarsFull)) return NULL;
 
@@ -328,7 +329,7 @@ makeVisiblePointsArray(PyObject *self, PyObject *args)
         return NULL;
 
     if (not_intVector(visibleAtoms)) return NULL;
-    NVisible = (int) visibleAtoms->dimensions[0];
+    NVisible = (int) PyArray_DIM(visibleAtoms, 0);
 
     if (not_doubleVector(pos)) return NULL;
 

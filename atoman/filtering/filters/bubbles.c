@@ -1,7 +1,8 @@
 /*******************************************************************************
- ** Copyright Chris Scott 2015
  ** Bubbles C functions
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 //#define DEBUG
 
@@ -114,7 +115,7 @@ identifyBubbles(PyObject *self, PyObject *args)
         
         if (not_doubleVector(acnaArrayIn)) return NULL;
         acnaArray = pyvector_to_Cptr_double(acnaArrayIn);
-        acnaArrayDim = (int) acnaArrayIn->dimensions[0];
+        acnaArrayDim = (int) PyArray_DIM(acnaArrayIn, 0);
         
         /* drift compensation - modify reference positions */
         if (driftCompensation)

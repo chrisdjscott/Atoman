@@ -1,8 +1,9 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2014
  ** Filtering routines written in C to improve performance
  *******************************************************************************/
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 //#define DEBUG
 
@@ -150,11 +151,11 @@ specieFilter(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_intVector(visSpecIn)) return NULL;
     visSpec = pyvector_to_Cptr_int(visSpecIn);
-    visSpecDim = (int) visSpecIn->dimensions[0];
+    visSpecDim = (int) PyArray_DIM(visSpecIn, 0);
     
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
@@ -228,7 +229,7 @@ sliceFilter(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
@@ -307,13 +308,13 @@ sliceDefectsFilter(PyObject *self, PyObject *args)
         
         /* check types */
         if (not_intVector(interstitials)) return NULL;
-        NIntsIn = (int) interstitials->dimensions[0];
+        NIntsIn = (int) PyArray_DIM(interstitials, 0);
         if (not_intVector(vacancies)) return NULL;
-        NVacsIn = (int) vacancies->dimensions[0];
+        NVacsIn = (int) PyArray_DIM(vacancies, 0);
         if (not_intVector(antisites)) return NULL;
-        NAntsIn = (int) antisites->dimensions[0];
+        NAntsIn = (int) PyArray_DIM(antisites, 0);
         if (not_intVector(splitInterstitials)) return NULL;
-        NSplitsIn = (int) (splitInterstitials->dimensions[0] / 3);
+        NSplitsIn = (int) (PyArray_DIM(splitInterstitials, 0) / 3);
         if (not_doubleVector(pos)) return NULL;
         if (not_doubleVector(refPos)) return NULL;
         
@@ -435,7 +436,7 @@ cropSphereFilter(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
@@ -536,13 +537,13 @@ cropDefectsFilter(PyObject *self, PyObject *args)
         
         /* check types */
         if (not_intVector(interstitials)) return NULL;
-        NIntsIn = (int) interstitials->dimensions[0];
+        NIntsIn = (int) PyArray_DIM(interstitials, 0);
         if (not_intVector(vacancies)) return NULL;
-        NVacsIn = (int) vacancies->dimensions[0];
+        NVacsIn = (int) PyArray_DIM(vacancies, 0);
         if (not_intVector(antisites)) return NULL;
-        NAntsIn = (int) antisites->dimensions[0];
+        NAntsIn = (int) PyArray_DIM(antisites, 0);
         if (not_intVector(splitInterstitials)) return NULL;
-        NSplitsIn = (int) (splitInterstitials->dimensions[0] / 3);
+        NSplitsIn = (int) (PyArray_DIM(splitInterstitials, 0) / 3);
         if (not_doubleVector(pos)) return NULL;
         if (not_doubleVector(refPos)) return NULL;
         
@@ -675,7 +676,7 @@ cropFilter(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
@@ -780,14 +781,14 @@ displacementFilter(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
     
     if (not_doubleVector(refPosIn_np)) return NULL;
     refPosIn = pyvector_to_Cptr_double(refPosIn_np);
-    refPosDim = (int) refPosIn_np->dimensions[0];
+    refPosDim = (int) PyArray_DIM(refPosIn_np, 0);
     
     if (not_doubleVector(scalarsIn)) return NULL;
     scalars = pyvector_to_Cptr_double(scalarsIn);
@@ -888,7 +889,7 @@ KEFilter(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(KEIn)) return NULL;
     KE = pyvector_to_Cptr_double(KEIn);
@@ -950,7 +951,7 @@ PEFilter(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(PEIn)) return NULL;
     PE = pyvector_to_Cptr_double(PEIn);
@@ -1013,7 +1014,7 @@ chargeFilter(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(chargeIn)) return NULL;
     charge = pyvector_to_Cptr_double(chargeIn);
@@ -1105,7 +1106,7 @@ coordNumFilter(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisible = (int) visibleAtomsIn->dimensions[0];
+    NVisible = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
@@ -1312,7 +1313,7 @@ voronoiVolumeFilter(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_doubleVector(volumeIn)) return NULL;
     volume = pyvector_to_Cptr_double(volumeIn);
@@ -1375,7 +1376,7 @@ voronoiNeighboursFilter(PyObject *self, PyObject *args)
     
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_intVector(num_nebs_arrayIn)) return NULL;
     num_nebs_array = pyvector_to_Cptr_int(num_nebs_arrayIn);
@@ -1439,7 +1440,7 @@ atomIndexFilter(PyObject *self, PyObject *args)
     /* check array types */
     if (not_intVector(visibleAtomsIn)) return NULL;
     visibleAtoms = pyvector_to_Cptr_int(visibleAtomsIn);
-    NVisibleIn = (int) visibleAtomsIn->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtomsIn, 0);
     
     if (not_intVector(atomIDIn)) return NULL;
     atomID = pyvector_to_Cptr_int(atomIDIn);
@@ -1450,7 +1451,7 @@ atomIndexFilter(PyObject *self, PyObject *args)
     if (not_doubleVector(fullVectors)) return NULL;
     
     if (not_intVector(rangeArray)) return NULL;
-    numr = (int) rangeArray->dimensions[0];
+    numr = (int) PyArray_DIM(rangeArray, 0);
     
     NVisible = 0;
     for (i = 0; i < NVisibleIn; i++)
@@ -1516,7 +1517,7 @@ genericScalarFilter(PyObject *self, PyObject *args)
         return NULL;
     
     if (not_intVector(visibleAtoms)) return NULL;
-    NVisibleIn = (int) visibleAtoms->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtoms, 0);
     if (not_doubleVector(scalars)) return NULL;
     if (not_doubleVector(fullScalars)) return NULL;
     if (not_doubleVector(fullVectors)) return NULL;
@@ -1602,12 +1603,12 @@ slipFilter(PyObject *self, PyObject *args)
         return NULL;
     
     if (not_intVector(visibleAtoms)) return NULL;
-    NVisibleIn = (int) visibleAtoms->dimensions[0];
+    NVisibleIn = (int) PyArray_DIM(visibleAtoms, 0);
     
     if (not_doubleVector(pos)) return NULL;
     
     if (not_doubleVector(refPosOrig)) return NULL;
-    refPosDim = (int) refPosOrig->dimensions[0];
+    refPosDim = (int) PyArray_DIM(refPosOrig, 0);
     
     if (not_doubleVector(scalars)) return NULL;
     
