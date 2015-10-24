@@ -3,7 +3,7 @@
  ** Copyright Chris Scott 2015
  ** Functions associated with spatially decomposing a system of atoms into boxes
  ** 
- ** 
+ **
  ** Include boxeslib.h to use this library
  ** 
  ** Call setupBoxes() to return the Boxes structure

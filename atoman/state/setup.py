@@ -12,21 +12,24 @@ def configuration(parent_package='', top_path=None):
     config = Configuration("state", parent_package, top_path)
     
     config.add_extension("_input", 
-                         ["input.c", "../visclibs/array_utils.c"],
-                         include_dirs=[incdir])
+                         ["input.c"],
+                         include_dirs=[incdir],
+                         libraries=["array_utils"])
     
     config.add_extension("_output", 
-                         ["output.c", "../visclibs/array_utils.c"],
-                         include_dirs=[incdir])
+                         ["output.c"],
+                         include_dirs=[incdir],
+                         libraries=["array_utils"])
     
     config.add_extension("_latticeReaderGeneric", 
-                         ["_latticeReaderGeneric.c", "../visclibs/array_utils.c"],
-                         include_dirs=[incdir])
+                         ["_latticeReaderGeneric.c"],
+                         include_dirs=[incdir],
+                         libraries=["array_utils"])
     
     config.add_extension("_lattice", 
-                         ["_lattice.c", "../visclibs/array_utils.c"],
-                         libraries=["gsl", "gslcblas"],
-                         include_dirs=[incdir])
+                         ["_lattice.c"],
+                         include_dirs=[incdir],
+                         libraries=["array_utils"])
     
     return config
 
