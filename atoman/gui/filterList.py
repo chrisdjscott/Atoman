@@ -76,6 +76,7 @@ class FilterList(QtGui.QWidget):
         "Atom ID",
         "ACNA",
         "Slip",
+        "Bubbles",
     ]
     defaultFilters.sort()
     
