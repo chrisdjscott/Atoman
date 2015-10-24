@@ -22,18 +22,18 @@ import numpy as np
 import matplotlib
 import scipy
 
-from .visutils.utilities import iconPath, resourcePath
-from .state.atoms import elements
-from .gui import toolbar as toolbarModule
-from .gui import helpForm
-from .gui import preferences
-from .gui import rendererSubWindow
-from .gui import systemsDialog
-from .gui.dialogs import simpleDialogs
-from .gui.dialogs import bondEditor
-from .gui.dialogs import elementEditor
-from .gui.dialogs import consoleWindow
-from .visutils import version
+from ..visutils.utilities import iconPath, resourcePath
+from ..state.atoms import elements
+from . import toolbar as toolbarModule
+from . import helpForm
+from . import preferences
+from . import rendererSubWindow
+from . import systemsDialog
+from .dialogs import simpleDialogs
+from .dialogs import bondEditor
+from .dialogs import elementEditor
+from .dialogs import consoleWindow
+from ..visutils import version
 __version__ = version.getVersion()
 
 

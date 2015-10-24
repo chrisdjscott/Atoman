@@ -25,7 +25,7 @@ import multiprocessing
 
 from PySide import QtGui
 
-from . import mainWindow
+from .gui import mainWindow
 from .visutils.utilities import iconPath, setupLogging
 
 
@@ -66,5 +66,4 @@ def main():
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
-    multiprocessing.freeze_support()
     main()

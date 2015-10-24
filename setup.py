@@ -15,12 +15,10 @@ import platform
 
 import setuptools
 
-from atoman.visutils import version
-
-VERSION = version.getVersion()
+import atoman
 
 # write version to freeze file
-open(os.path.join("atoman", "visutils", "version_freeze.py"), "w").write("__version__ = '%s'\n" % VERSION)
+open(os.path.join("atoman", "visutils", "version_freeze.py"), "w").write("__version__ = '%s'\n" % atoman.__version__)
 
 # if on Mac we have to force gcc (for openmp...)
 if platform.system() == "Darwin":
@@ -70,7 +68,7 @@ if HAVE_SPHINX:
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
     
-    config = Configuration(None, parent_package, top_path, version=VERSION)
+    config = Configuration(None, parent_package, top_path, version=atoman.__version__)
     config.set_options(ignore_setup_xxx_py=True,
                        assume_default_configuration=True,
                        delegate_options_to_subpackages=True,
@@ -154,7 +152,7 @@ def setup_package():
         except ImportError:
             from distutils.core import setup
         
-        metadata['version'] = VERSION
+        metadata['version'] = atoman.__version__
         metadata['test_suite'] = "nose.collector"
     
     else:
