@@ -15,19 +15,20 @@ def configuration(parent_package='', top_path=None):
     
     config.add_extension("bonds", 
                          ["bonds.c"],
-                          include_dirs=[incdir],
-                          libraries=["boxeslib", "utilities", "array_utils"])
+                         include_dirs=[incdir],
+                         libraries=["boxeslib", "utilities", "array_utils"])
     
     config.add_extension("_clusters", 
                          ["clusters.c"],
-                          include_dirs=[incdir],
-                          libraries=["boxeslib", "utilities", "array_utils"])
+                         include_dirs=[incdir],
+                         libraries=["boxeslib", "utilities", "array_utils"])
     
     config.add_extension("_voronoi", 
                          ["voronoi.c", "voro_iface.cpp", 
-                          "voro++/src/voro++.cc"],
-                          libraries=["array_utils"],
-                          include_dirs=[incdir, "voro++/src"])
+                         "voro++/src/voro++.cc"],
+                         depends=["voro_iface.h"],
+                         libraries=["array_utils"],
+                         include_dirs=[incdir, "voro++/src"])
     
     return config
 

@@ -13,6 +13,7 @@ def configuration(parent_package='', top_path=None):
     
     config.add_extension("_acna", 
                          ["acna.c"],
+                         depends=["atom_structure.h"],
                          include_dirs=[incdir, ".."],
                          libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
     
@@ -23,18 +24,19 @@ def configuration(parent_package='', top_path=None):
      
     config.add_extension("_defects", 
                          ["defects.c"],
-                          include_dirs=[incdir, ".."],
-                          libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
+                         depends=["atom_structure.h"],
+                         include_dirs=[incdir, ".."],
+                         libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
      
     config.add_extension("_filtering", 
                          ["filtering.c"],
-                          include_dirs=[incdir],
-                          libraries=["boxeslib", "utilities", "array_utils"])
+                         include_dirs=[incdir],
+                         libraries=["boxeslib", "utilities", "array_utils"])
     
     config.add_extension("_bubbles", 
                          ["bubbles.c"],
-                          include_dirs=[incdir, ".."],
-                          libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
+                         include_dirs=[incdir, ".."],
+                         libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
     
     return config
 
