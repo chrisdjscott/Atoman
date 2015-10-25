@@ -10,7 +10,7 @@ import shutil
 import numpy as np
 
 from . import base
-from .. import mainWindow
+from ..gui import mainWindow
 from ..state.lattice import Lattice
 
 
