@@ -134,12 +134,18 @@ class BaseSettings(object):
         if name not in self._settings:
             raise ValueError("Specified setting '{0}' does not exist!".format(name))
         
+        if hasattr(self._settings[name], "__len__") and not isinstance(self._settings[name], str):
+            raise TypeError("Try to update an array setting with a scalar ({0})".format(name))
+        
         self._settings[name] = value
     
     def updateSettingArray(self, name, index, value):
         """Update the given setting with the specified value."""
         if name not in self._settings:
             raise ValueError("Specified setting '{0}' does not exist!".format(name))
+        
+        if not hasattr(self._settings[name], "__len__") or isinstance(self._settings[name], str):
+            raise TypeError("Try to update a scalar setting as an array ({0})".format(name))
         
         if index >= len(self._settings[name]):
             raise IndexError("Specified index is out of range: {0} >= {1}".format(index, len(self._settings[name])))
