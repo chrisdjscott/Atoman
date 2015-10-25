@@ -123,3 +123,7 @@ class BubblesSettingsDialog(base.GenericSettingsDialog):
                 	state = QtCore.Qt.Unchecked
                 item.setCheckState(state)
                 self.speciesList.addItem(item)
+        
+        # update bubble species list on first run
+        if firstRun:
+        	self.speciesListChanged()

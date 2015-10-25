@@ -56,7 +56,6 @@ class Filterer(object):
         self.pipelineIndex = self.filterTab.pipelineIndex
         self.pipelinePage = self.filterTab
         
-        self.log = self.mainWindow.console.write
         self.logger = logging.getLogger(__name__)
         
         self.NVis = 0
@@ -78,7 +77,6 @@ class Filterer(object):
         self.driftVector = np.zeros(3, np.float64)
         
         self.actorsDict = {}
-        
         self.traceDict = {}
         self.previousPosForTrace = None
         
@@ -97,9 +95,12 @@ class Filterer(object):
         self.scalarBar_black_bg = None
         self.povrayAtomsWritten = False
         self.clusterList = []
+        self.bubbleList = []
         self.voronoi = None
         
         self.structureCounterDicts = {}
+        
+        self._persistentList = False
     
     def removeActors(self, sequencer=False):
         """
@@ -138,6 +139,7 @@ class Filterer(object):
         
         self.povrayAtomsWritten = False
         self.clusterList = []
+        self.bubbleList = []
         self.structureCounterDicts = {}
         self.voronoi = None
     
@@ -361,6 +363,10 @@ class Filterer(object):
         
         self.addScalarBar()
     
+    def setPersistentList(self, flag):
+        """Set whether this is a persistent list or not."""
+        self._persistentList = flag
+    
     def runFilters(self, sequencer=False):
         """
         Run the filters.
@@ -487,6 +493,10 @@ class Filterer(object):
                 # cluster list
                 if result.hasClusterList():
                     self.clusterList = result.getClusterList()
+                
+                # bubble list
+                if result.hasBubbleList():
+                    self.bubbleList = result.getBubbleList()
                 
                 # structure counters
                 if result.hasStructureCounterDict():

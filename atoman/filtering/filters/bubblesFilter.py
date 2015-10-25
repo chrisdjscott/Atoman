@@ -4,8 +4,15 @@
 Bubbles
 =======
 
-Locate bubbles in the system.
+Locate bubbles in the system by the following steps:
 
+* Remove bubble species from the lattice
+* Identify vacancy clusters within the lattice
+* Associate bubble species with vacancies using *Vacancy bubble radius*
+* If an unassociated vacancy is within the *Vacancy-interstitial association radius* of
+  an interstitial then it is not a vacancy
+* Identify vacancy clusters using modified list
+* Add bubble species and (as before) associate with a vacancy
 
 The following parameters apply to this filter:
 
