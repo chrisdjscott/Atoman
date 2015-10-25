@@ -42,7 +42,21 @@ class RDFCalculator(object):
         """
         # logger
         logger = logging.getLogger(__name__)
+        logger.debug("Calculating RDF")
         
+        # check system size / parameters
+        warnDims = []
+        if inputLattice.PBC[0] and binMax > inputLattice.cellDims[0] / 2.0:
+            warnDims.append("x")
+        if inputLattice.PBC[1] and binMax > inputLattice.cellDims[1] / 2.0:
+            warnDims.append("y")
+        if inputLattice.PBC[2] and binMax > inputLattice.cellDims[2] / 2.0:
+            warnDims.append("z")
+        if len(warnDims):
+            msg = "The maximum radius you have requested is greater than half the box length "
+            msg += "in the %s periodic direction(s)!" % ",".join(warnDims)
+            raise RuntimeError("RDFCalculator: %s" % msg)
+
         # the number of bins in the histogram
         numBins = int((binMax - binMin) / binWidth)
         logger.debug("Bin width is %f; number of bins is %d", binWidth, numBins)
