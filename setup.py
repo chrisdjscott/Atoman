@@ -12,10 +12,12 @@ import sys
 import subprocess
 import shutil
 import platform
+import distutils.sysconfig
 
 import setuptools
 
 import atoman
+
 
 # write version to freeze file
 open(os.path.join("atoman", "visutils", "version_freeze.py"), "w").write("__version__ = '%s'\n" % atoman.__version__)
@@ -126,14 +128,26 @@ def setup_package():
         name = "atoman",
         maintainer = "Chris Scott",
         maintainer_email = "chris@chrisdjscott.co.uk",
-        description = "Atomistic simulation analysis and visualisation library",
-         long_description = "Atomistic simulation analysis and visualisation library",
-        url = "http://vis.chrisdjscott.com.uk",
+        description = "Analysis and visualisation of atomistic simulations",
+        long_description = "Analysis and visualisation of atomistic simulations",
+#         url = "http://vis.chrisdjscott.com.uk",
         author = "Chris Scott",
         author_email = "chris@chrisdjscott.co.uk",
 #         download_url = "",
-         license = "MIT",
-#         classifiers = "",
+        license = "MIT",
+        classifiers = [
+            "Development Status :: 4 - Beta",
+            "Environment :: X11 Applications :: Qt",
+            "Intended Audience :: Science/Research",
+            "License :: OSI Approved :: MIT License",
+            "Natural Language :: English",
+            "Operating System :: MacOS :: MacOS X",
+            "Operating System :: POSIX :: Linux",
+            "Programming Language :: C",
+            "Programming Language :: C++",
+            "Programming Language :: Python :: 2.7",
+            "Topic :: Scientific/Engineering :: Visualization",
+        ],
         platforms = ["Linux", "Mac OS-X"],
 #         test_suite = "",
         cmdclass = cmdclass,
@@ -171,6 +185,8 @@ def setup_package():
                 if lopt.has_key(c):
                     for e in self.extensions:
                         e.extra_link_args.extend(lopt[c])
+                for e in self.extensions:
+                    e.include_dirs.append(distutils.sysconfig.get_python_inc())
                 
                 return build_ext.build_extensions(self, *args, **kwargs)
         
