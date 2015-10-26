@@ -805,7 +805,12 @@ class FilterList(QtGui.QWidget):
             self.logger.debug("Creating settings dialog: '%s'", dialogName)
             
             # load module
-            formModule = importlib.import_module(".{0}".format(moduleName), package="atoman.gui.filterSettings")
+            try:
+                formModule = importlib.import_module(".{0}".format(moduleName), package="atoman.gui.filterSettings")
+            except ImportError:
+                self.logger.critical("Failed to load filterSettings module: '{0}'".format(moduleName))
+                print "NAME", __name__
+                raise
             
             # load dialog
             formObject = getattr(formModule, dialogName, None)
