@@ -141,7 +141,8 @@ def setup_package():
             'gui_scripts': [
                 'Atoman = atoman.__main__:main',
             ]
-        }
+        },
+        zip_safe = False,
     )
     
     if len(sys.argv) >= 2 and ('--help' in sys.argv[1:] or sys.argv[1] in ('--help-commands', 'egg_info', 
