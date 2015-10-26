@@ -30,7 +30,7 @@ Parameters for this filter are:
 """
 import numpy as np
 
-from ..filterer import Filterer
+from .. import atomStructure
 from . import base
 from . import _acna
 
@@ -47,7 +47,7 @@ class AcnaFilterSettings(base.BaseSettings):
         
         self.registerSetting("filteringEnabled", default=False)
         self.registerSetting("maxBondDistance", default=5.0)
-        self.registerSetting("structureVisibility", default=np.ones(len(Filterer.knownStructures), dtype=np.int32))
+        self.registerSetting("structureVisibility", default=np.ones(len(atomStructure.knownStructures), dtype=np.int32))
 
 ################################################################################
 
@@ -77,7 +77,7 @@ class AcnaFilter(base.BaseFilter):
         scalars = np.zeros(len(visibleAtoms), dtype=np.float64)
         
         # counter array
-        counters = np.zeros(len(Filterer.knownStructures), np.int32)
+        counters = np.zeros(len(atomStructure.knownStructures), np.int32)
         
         # call C library
         NVisible = _acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.cellDims, pbc,
@@ -96,7 +96,7 @@ class AcnaFilter(base.BaseFilter):
         
         # structure counters dict
         result.setStructureCounterName("ACNA structure count")
-        for i, structure in enumerate(Filterer.knownStructures):
+        for i, structure in enumerate(atomStructure.knownStructures):
             if counters[i] > 0:
                 result.addStructureCount(structure, counters[i])
         

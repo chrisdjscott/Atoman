@@ -812,7 +812,7 @@ class FilterList(QtGui.QWidget):
 #                 self.logger.critical("Failed to load filterSettings module: '{0}'".format(moduleName))
 #                 raise
             
-            # get module (load wasn't working for some reason)
+            # get module
             formModule = getattr(filterSettings, moduleName)
             
             # load dialog

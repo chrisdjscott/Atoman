@@ -26,6 +26,8 @@ from ..state.atoms import elements
 from . import voronoi
 from ..rendering import renderVoronoi
 from .filters import base
+from . import filters
+from . import atomStructure
 
 
 ################################################################################
@@ -36,16 +38,7 @@ class Filterer(object):
     Contains list of subfilters to be performed in order.
     
     """
-    # this must correspond to "atom_structures.h"
-    knownStructures = [
-        "disordered",
-        "FCC",
-        "HCP",
-        "BCC",
-        "icosahedral",
-        "sigma11_tilt1",
-        "sigma11_tilt2",
-    ]
+    knownStructures = atomStructure.knownStructures
     
     def __init__(self, parent):
         self.parent = parent
@@ -450,7 +443,10 @@ class Filterer(object):
             self.logger.debug("Creating filter object: '%s'", filterObjectName)
             
             # load module
-            filterModule = importlib.import_module(".{0}".format(moduleName), package="atoman.filtering.filters")
+#             filterModule = importlib.import_module(".{0}".format(moduleName), package="atoman.filtering.filters")
+            
+            # get module
+            filterModule = getattr(filters, moduleName)
             
             # load dialog
             filterObject = getattr(filterModule, filterObjectName, None)
