@@ -35,6 +35,7 @@ class BubblesSettingsDialog(base.GenericSettingsDialog):
         self.speciesList.itemChanged.connect(self.speciesListChanged)
         self.speciesList.setToolTip("<p>The bubble atom species.<p>")
         self.contentLayout.addRow("Bubble species", self.speciesList)
+        self.refresh(firstRun=True)
         
         self.addHorizontalDivider()
         
@@ -59,7 +60,22 @@ class BubblesSettingsDialog(base.GenericSettingsDialog):
         self.addDoubleSpinBox("vacIntRad", minVal=0.01, maxVal=20, step=0.1, label="Vac-int association radius",
                               toolTip=tip)
         
-        self.refresh(firstRun=True)
+        # vac display settings
+        # scale size
+        self.addDoubleSpinBox("vacScaleSize", minVal=0.1, maxVal=2, step=0.1, label="Vacancy scale size", displayLayout=True,
+                              toolTip="<p>When rendering vacancies scale the atomic radius by this amount (usually < 1)</p>")
+        
+        # opacity
+        self.addDoubleSpinBox("vacOpacity", minVal=0.01, maxVal=1, step=0.1, label="Vacancy opacity", displayLayout=True,
+                              toolTip="The opacity value for vacancies.")
+        
+        # specular
+        self.addDoubleSpinBox("vacSpecular", minVal=0.01, maxVal=1, step=0.01, label="Vacancy specular", displayLayout=True,
+                              toolTip="The specular value for vacancies.")
+        
+        # specular power
+        self.addDoubleSpinBox("vacSpecularPower", minVal=0, maxVal=100, step=0.1, label="Vacancy specular power", displayLayout=True,
+                              toolTip="The specular power value for vacancies.")
     
     def speciesListChanged(self, *args):
         """Species selection has changed."""

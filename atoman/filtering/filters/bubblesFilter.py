@@ -39,12 +39,9 @@ The following parameters apply to this filter:
         of it and there is an interstitial within this distance.
 
 """
-import copy
-
 import numpy as np
 
 from . import base
-from . import pointDefectsFilter
 from . import _bubbles
 from .. import voronoi
 
@@ -64,6 +61,11 @@ class BubblesFilterSettings(base.BaseSettings):
         self.registerSetting("vacNebRad", 4.0)
         self.registerSetting("vacancyBubbleRadius", 3.0) # should be less than above!?
         self.registerSetting("vacIntRad", 2.6)
+        
+        self.registerSetting("vacScaleSize", default=0.75)
+        self.registerSetting("vacOpacity", default=0.8)
+        self.registerSetting("vacSpecular", default=0.4)
+        self.registerSetting("vacSpecularPower", default=10)
 
 ################################################################################
 
@@ -100,8 +102,7 @@ class BubblesFilter(base.BaseFilter):
             self.logger.debug("%d %s atoms in the lattice", inputState.specieCount[index], sym)
         self.logger.debug("Total number of bubble atoms in the lattice: %d", numBubbleAtoms)
         
-        # loop over and remove (write in C!)
-        # we count down since there is a good chance the bubbles were added to the lattice last
+        # get the indices of the bubble atoms
         bubbleAtomIndexes = []
         for i in xrange(inputState.NAtoms):
             if inputState.atomSym(i) in bubbleSpecies:
@@ -208,7 +209,11 @@ class Bubble(object):
     
     def getVacancy(self, index):
         """Return the given vacancy."""
-        
+        return self._vacancies[index]
+    
+    def getBubbleAtom(self, index):
+        """Return the given bubble atom."""
+        return self._bubbleAtoms[index]
     
     def setBubbleAtoms(self, bubbleAtoms):
         """Set the bubble atoms."""

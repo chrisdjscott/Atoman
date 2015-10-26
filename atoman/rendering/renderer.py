@@ -1335,6 +1335,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     NInt = len(interstitials)
     NVac = len(vacancies)
     NAnt = len(antisites)
+    NOnAnt = len(onAntisites)
     NSplit = len(splitInterstitials) / 3
     NDef = NInt + NVac + NAnt + len(splitInterstitials)
     
@@ -1552,7 +1553,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
     #----------------------------------------#
     # antisites occupying atom
     #----------------------------------------#
-    if NAnt:
+    if NOnAnt:
         NSpecies = len(inputLattice.specieList)
         intPointsList = []
         intScalarsList = []
@@ -1566,7 +1567,7 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
         # loop over interstitials, settings points
         pos = inputLattice.pos
         spec = inputLattice.specie
-        for i in xrange(NAnt):
+        for i in xrange(NOnAnt):
             index = onAntisites[i]
             specInd = spec[index]
             
@@ -1694,7 +1695,8 @@ def getActorsForFilteredDefects(interstitials, vacancies, antisites, onAntisites
             index = antisites[i]
             specInd = spec[index]
             
-            antSpecCount[specInd][inputLattice.specie[onAntisites[i]]] += 1
+            if NOnAnt == NAnt:
+                antSpecCount[specInd][inputLattice.specie[onAntisites[i]]] += 1
             
             scalar = getScalar(colouringOptions, refLattice, index)
             
