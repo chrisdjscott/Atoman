@@ -22,7 +22,7 @@ from PIL import Image
 from PySide import QtGui, QtCore
 
 from ..visutils import utilities
-from ..state import _output as output_c
+from ..system import _output as output_c
 from . import axes
 from . import cell
 from .utils import setRes, setupLUT, getScalar, setMapperScalarRange, makeScalarBar, getScalarsType

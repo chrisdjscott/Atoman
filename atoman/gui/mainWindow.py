@@ -23,7 +23,7 @@ import matplotlib
 import scipy
 
 from ..visutils.utilities import iconPath, resourcePath
-from ..state.atoms import elements
+from ..system.atoms import elements
 from . import toolbar as toolbarModule
 from . import helpForm
 from . import preferences

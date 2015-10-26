@@ -11,7 +11,7 @@ import numpy as np
 
 from . import base
 from ..gui import mainWindow
-from ..state.lattice import Lattice
+from ..system.lattice import Lattice
 
 
 ################################################################################

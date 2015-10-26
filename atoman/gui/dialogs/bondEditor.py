@@ -10,7 +10,7 @@ import logging
 
 from PySide import QtGui, QtCore
 
-from ...state.atoms import elements
+from ...system.atoms import elements
 from ...visutils.utilities import iconPath, resourcePath
 
 

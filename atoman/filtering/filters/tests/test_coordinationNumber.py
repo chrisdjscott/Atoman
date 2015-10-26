@@ -10,7 +10,7 @@ import numpy as np
 from ....lattice_gen import lattice_gen_fcc, lattice_gen_bcc
 from .. import coordinationNumberFilter
 from .. import base
-from ....state.atoms import elements
+from ....system.atoms import elements
 
 
 ################################################################################

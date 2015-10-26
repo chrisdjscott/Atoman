@@ -13,7 +13,7 @@ import numpy as np
 
 from . import base
 from . import _filtering
-from ...state.atoms import elements
+from ...system.atoms import elements
 
 
 class CoordinationNumberFilterSettings(base.BaseSettings):

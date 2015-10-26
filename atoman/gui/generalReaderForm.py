@@ -18,7 +18,7 @@ import glob
 from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath, resourcePath
-from ..state import latticeReaderGeneric
+from ..system import latticeReaderGeneric
 
 
 ################################################################################

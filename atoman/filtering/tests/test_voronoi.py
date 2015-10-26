@@ -12,7 +12,7 @@ import shutil
 
 import numpy as np
 
-from ...state.latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
+from ...system.latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
 from .. import _voronoi
 
 ################################################################################

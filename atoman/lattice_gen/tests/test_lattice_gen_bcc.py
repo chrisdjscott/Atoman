@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from ...state.lattice import Lattice
+from ...system.lattice import Lattice
 from .. import lattice_gen_bcc
 
 

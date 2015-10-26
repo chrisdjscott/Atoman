@@ -13,7 +13,7 @@ import logging
 from PySide import QtGui, QtCore
 import numpy as np
 
-from ...state.atoms import elements
+from ...system.atoms import elements
 from ...visutils.utilities import resourcePath, iconPath
 from ...visutils import utilities
 

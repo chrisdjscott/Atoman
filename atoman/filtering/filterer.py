@@ -22,7 +22,7 @@ from ..rendering import renderer
 from ..rendering import renderBonds
 from ..algebra import vectors
 from . import clusters
-from ..state.atoms import elements
+from ..system.atoms import elements
 from . import voronoi
 from ..rendering import renderVoronoi
 from .filters import base

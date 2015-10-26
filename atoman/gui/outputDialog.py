@@ -24,7 +24,7 @@ from ..visutils import utilities
 from ..visutils import threading_vis
 from ..visutils.utilities import iconPath
 from . import genericForm
-from ..state import _output as output_c
+from ..system import _output as output_c
 from ..plotting import rdf
 from ..algebra import _vectors as vectors_c
 from ..plotting import plotDialog

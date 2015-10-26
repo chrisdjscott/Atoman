@@ -7,7 +7,7 @@ import unittest
 
 import numpy as np
 
-from ....state import lattice
+from ....system import lattice
 from .. import atomIdFilter
 from .. import base
 

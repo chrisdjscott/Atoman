@@ -6,7 +6,7 @@ Contains GUI forms for the species filter.
 from PySide import QtGui, QtCore
 
 from . import base
-from ...state.atoms import elements
+from ...system.atoms import elements
 from ...filtering.filters import speciesFilter
 
 

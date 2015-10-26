@@ -9,7 +9,7 @@ import logging
 
 import numpy as np
 
-from ..state.lattice import Lattice
+from ..system.lattice import Lattice
 from . import _lattice_gen_bcc
 
 ################################################################################

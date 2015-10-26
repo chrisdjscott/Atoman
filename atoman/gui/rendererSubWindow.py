@@ -21,7 +21,7 @@ from .dialogs import onScreenInfoDialog
 from ..rendering import renderer
 from .outputDialog import OutputDialog
 from ..rendering.text import vtkRenderWindowText
-from ..state.lattice import Lattice
+from ..system.lattice import Lattice
 
 
 ################################################################################
