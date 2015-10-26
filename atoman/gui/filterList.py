@@ -24,6 +24,7 @@ from .filterListOptions import vectorsOptions
 from .filterListOptions import voronoiOptions
 from . import utils
 from .dialogs import infoDialogs
+from . import filterSettings
 
 
 ################################################################################
@@ -805,12 +806,14 @@ class FilterList(QtGui.QWidget):
             self.logger.debug("Creating settings dialog: '%s'", dialogName)
             
             # load module
-            try:
-                formModule = importlib.import_module(".{0}".format(moduleName), package="atoman.gui.filterSettings")
-            except ImportError:
-                self.logger.critical("Failed to load filterSettings module: '{0}'".format(moduleName))
-                print "NAME", __name__
-                raise
+#             try:
+#                 formModule = importlib.import_module(".{0}".format(moduleName), package="atoman.gui.filterSettings")
+#             except ImportError:
+#                 self.logger.critical("Failed to load filterSettings module: '{0}'".format(moduleName))
+#                 raise
+            
+            # get module (load wasn't working for some reason)
+            formModule = getattr(filterSettings, moduleName)
             
             # load dialog
             formObject = getattr(formModule, dialogName, None)
@@ -818,7 +821,6 @@ class FilterList(QtGui.QWidget):
                 title = "%s settings (List %d - %d)" % (filterName, self.tab, self.filterCounter)
                 form = formObject(self.mainWindow, title, parent=self)
                 self.filterCounter += 1
-            
             else:
                 self.logger.error("Could not locate form '%s' in module '%s'", dialogName, moduleName)
         
