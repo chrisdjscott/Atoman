@@ -292,10 +292,11 @@ class SFTPBrowser(QtGui.QGroupBox):
         if self.username is None:
             self.username = getpass.getuser()
 
-        super(SFTPBrowser, self).__init__("%s@%s" % (self.username, self.hostname), parent=parent)
+        super(SFTPBrowser, self).__init__("%s@%s" % (self.username, self.hostname))
         
         self.logger = logging.getLogger(__name__)
         self.mainWindow = mainWindow
+        self.myparent = parent
         
         # defaults
         self.connected = False
@@ -544,7 +545,7 @@ class SFTPBrowser(QtGui.QGroupBox):
             self.chdir(item.text())
         
         else:
-            self.parent.accept()
+            self.myparent.accept()
     
     def itemSelectionChanged(self):
         """
@@ -570,12 +571,12 @@ class SFTPBrowser(QtGui.QGroupBox):
                 
                 # enable extended selection and open button
                 self.listWidget.setSelectionMode(self.listWidget.ExtendedSelection)
-                self.parent.openButton.setEnabled(True)
+                self.myparent.openButton.setEnabled(True)
             
             # no files selected
             else:
                 # disable open button and set single selection only
-                self.parent.openButton.setEnabled(False)
+                self.myparent.openButton.setEnabled(False)
                 self.listWidget.setSelectionMode(self.listWidget.SingleSelection)
     
     def get_home(self):
