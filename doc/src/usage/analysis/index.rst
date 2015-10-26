@@ -16,6 +16,7 @@ Analysis
     filters/acna
     filters/atomID
     filters/bondOrder
+    filters/bubbles
     filters/charge
     filters/cluster
     filters/coordinationNumber

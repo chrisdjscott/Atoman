@@ -13,7 +13,7 @@ def configuration(parent_package='', top_path=None):
     
     config.add_extension("_acna", 
                          ["acna.c"],
-                         depends=["atom_structure.h"],
+                         depends=[os.path.join("..", "atom_structure.h")],
                          include_dirs=[incdir, ".."],
                          libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
     
@@ -24,7 +24,7 @@ def configuration(parent_package='', top_path=None):
      
     config.add_extension("_defects", 
                          ["defects.c"],
-                         depends=["atom_structure.h"],
+                         depends=[os.path.join("..", "atom_structure.h")],
                          include_dirs=[incdir, ".."],
                          libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
      

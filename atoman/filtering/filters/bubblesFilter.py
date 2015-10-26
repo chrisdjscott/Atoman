@@ -165,7 +165,8 @@ class BubblesFilter(base.BaseFilter):
             bubbleList.append(bubble)
         
         # optionally show H that do not belong to a bubble as atoms too!?
-        
+        # for now we just set visible atoms to zero
+        filterInput.visibleAtoms.resize(0, refcheck=False)
         
         
         # optionally show all defects!? (differentiate from bubbles somehow...)
