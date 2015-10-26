@@ -135,7 +135,8 @@ class BaseSettings(object):
             raise ValueError("Specified setting '{0}' does not exist!".format(name))
         
         if hasattr(self._settings[name], "__len__") and not isinstance(self._settings[name], str):
-            raise TypeError("Try to update an array setting with a scalar ({0})".format(name))
+            if not hasattr(value, "__len__") or isinstance(value, str):
+                raise TypeError("Try to update an array setting with a scalar ({0})".format(name))
         
         self._settings[name] = value
     

@@ -5,8 +5,6 @@ Unit tests for filters.base module
 """
 import unittest
 
-import numpy as np
-
 from .. import base
 
 class TestBaseSettings(unittest.TestCase):
@@ -70,6 +68,13 @@ class TestBaseSettings(unittest.TestCase):
         # update array using scalar method
         with self.assertRaises(TypeError):
             settings.updateSetting("arraySetting", 22)
+        
+        # update array with array using scalar method
+        settings.updateSetting("arraySetting", [33,44])
+        self.assertEqual(settings._settings["arraySetting"][0], 33)
+        self.assertEqual(settings._settings["arraySetting"][1], 44)
+        with self.assertRaises(IndexError):
+            settings._settings["arraySetting"][2]
     
     def test_getSetting(self):
         """
