@@ -833,6 +833,12 @@ class RendererWindow(QtGui.QWidget):
                 
                 if defectsSettings.getSetting("showAntisites"):
                     showAnts = True
+                
+            elif filterList.visible and len(filterList.filterer.bubbleList):
+                # bubbles (temporary)
+                showVacs = True
+                defectFilterActive = True
+                NVac += filterList.filterer.NVac
         
         if defectFilterActive:
             refState = self.getCurrentRefState()

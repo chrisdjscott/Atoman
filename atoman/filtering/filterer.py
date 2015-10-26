@@ -612,6 +612,7 @@ class Filterer(object):
                                                                                                                  self.vectorsOptions, NVisibleForRes=None,
                                                                                                                  sequencer=sequencer)
             self.visibleSpecieCount = visSpecCount
+            self.NVis = len(bubbleAtoms)
             
             # render defects
             counters = renderer.getActorsForFilteredDefects(self.interstitials, self.vacancies, bubbleVacancies, self.onAntisites,
@@ -624,6 +625,11 @@ class Filterer(object):
             self.splitIntSpecieCount = counters[3]
 #             self.scalarBar_white_bg = counters[4]
 #             self.scalarBar_black_bg = counters[5]
+            
+            for bubble in self.bubbleList:
+                for i in xrange(bubble.getNVacancies()):
+                    index = bubble.getVacancy(i)
+                    self.vacancySpecieCount[self.pipelinePage.refState.specie[index]] += 1
             
             # write pov-ray file too
             povfile = "pipeline%d_defects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
