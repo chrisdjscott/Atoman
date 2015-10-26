@@ -126,20 +126,19 @@ class BubblesSettingsDialog(base.GenericSettingsDialog):
             else:
                 self.logger.debug("  Adding species option: %s", sym)
                 item = SpeciesListItem(sym)
+                # default to unchecked
+                state = QtCore.Qt.Unchecked
                 if firstRun:
-                	if sym == "He":
-                		state = QtCore.Qt.Checked
-                	elif sym == "H_":
-                		state = QtCore.Qt.Checked
-                	elif sym == "Ar":
-                		state = QtCore.Qt.Checked
-                	else:
-                		state = QtCore.Qt.Unchecked
-                else:
-                	state = QtCore.Qt.Unchecked
+                    # automatically select likely bubble species on first run
+                    if sym == "He":
+                        state = QtCore.Qt.Checked
+                    if sym == "H_":
+                        state = QtCore.Qt.Checked
+                    if sym == "Ar":
+                        state = QtCore.Qt.Checked
                 item.setCheckState(state)
                 self.speciesList.addItem(item)
         
         # update bubble species list on first run
         if firstRun:
-        	self.speciesListChanged()
+            self.speciesListChanged()
