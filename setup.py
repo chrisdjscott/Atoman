@@ -118,10 +118,7 @@ def setup_package():
         do_clean()
      
     # documentation (see scipy...)
-    if HAVE_SPHINX:
-        cmdclass = {'build_sphinx': AtomanBuildDoc}
-    else:
-        cmdclass = {}
+    cmdclass = {'build_sphinx': AtomanBuildDoc} if HAVE_SPHINX else {}
     
     # metadata
     metadata = dict(
@@ -133,7 +130,6 @@ def setup_package():
 #         url = "http://vis.chrisdjscott.com.uk",
         author = "Chris Scott",
         author_email = "chris@chrisdjscott.co.uk",
-#         download_url = "",
         license = "MIT",
         classifiers = [
             "Development Status :: 4 - Beta",
@@ -149,7 +145,6 @@ def setup_package():
             "Topic :: Scientific/Engineering :: Visualization",
         ],
         platforms = ["Linux", "Mac OS-X"],
-#         test_suite = "",
         cmdclass = cmdclass,
         entry_points={
             'gui_scripts': [
@@ -173,24 +168,39 @@ def setup_package():
     else:
         from numpy.distutils.core import setup
         from numpy.distutils.command.build_ext import build_ext
+        from numpy.distutils.command.build_clib import build_clib
     
-        # subclass build_ext to use additional compiler options (for OpenMP)
+        # subclass build_ext to use additional compiler options (eg. for OpenMP)
         class build_ext_subclass(build_ext):
             def build_extensions(self, *args, **kwargs):
                 c = self.compiler.compiler_type
-        #         print "*****COMPILER TYPE", c
-                if copt.has_key(c):
-                    for e in self.extensions:
-                        e.extra_compile_args.extend(copt[c])
-                if lopt.has_key(c):
-                    for e in self.extensions:
-                        e.extra_link_args.extend(lopt[c])
                 for e in self.extensions:
+                    if copt.has_key(c):
+                        e.extra_compile_args.extend(copt[c])
+                    if lopt.has_key(c):
+                        e.extra_link_args.extend(lopt[c])
                     e.include_dirs.append(distutils.sysconfig.get_python_inc())
                 
                 return build_ext.build_extensions(self, *args, **kwargs)
         
+        # subclass build_clib to use additional compiler options (eg. for OpenMP)
+        class build_clib_subclass(build_clib):
+            def build_libraries(self, *args, **kwargs):
+                c = self.compiler.compiler_type
+                for libtup in self.libraries:
+                    opts = libtup[1]
+                    if copt.has_key(c):
+                        if "extra_compiler_args" not in opts:
+                            opts["extra_compiler_args"] = []
+                        opts["extra_compiler_args"].extend(copt[c])
+                    if "include_dirs" not in opts:
+                        opts["include_dirs"] = []
+                    opts["include_dirs"].append(distutils.sysconfig.get_python_inc())
+                
+                return build_clib.build_libraries(self, *args, **kwargs)
+        
         cmdclass["build_ext"] = build_ext_subclass
+        cmdclass["build_clib"] = build_clib_subclass
         metadata["configuration"] = configuration
     
     # run setup

@@ -8,6 +8,12 @@ compiler = unix
 #include-dirs = /opt/local/include
 #library-dirs = /opt/local/lib
 
+[build_clib]
+# compiler: unix or intelem
+compiler = unix
+# on a Mac with MacPorts you might want to uncomment this line
+#include-dirs = /opt/local/include
+
 
 # Nothing should need to be changed below here #
 
