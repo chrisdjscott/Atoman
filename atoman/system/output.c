@@ -7,6 +7,7 @@
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
+#include <locale.h>
 #include "array_utils.h"
 
 
@@ -199,6 +200,9 @@ writePOVRAYDefects(PyObject *self, PyObject *args)
     FILE *OUTFILE;
     
     
+    /* force locale to use dots for decimal separator */
+    setlocale(LC_NUMERIC, "C");
+    
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!O!O!O!O!O!", &filename, &PyArray_Type, &vacsIn, &PyArray_Type, &intsIn, &PyArray_Type, &antsIn,
             &PyArray_Type, &onAntsIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &PyArray_Type, &refSpecieIn, &PyArray_Type, &refPosIn,
@@ -358,6 +362,9 @@ writeLattice(PyObject *self, PyObject *args)
     FILE *OUTFILE;
     char symtemp[3];
     
+    
+    /* force locale to use dots for decimal separator */
+    setlocale(LC_NUMERIC, "C");
     
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!i", &filename, &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &cellDimsIn, 

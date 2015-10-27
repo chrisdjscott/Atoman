@@ -8,6 +8,7 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
+#include <locale.h>
 #include "array_utils.h"
 
 static PyObject* readLatticeLBOMD(PyObject*, PyObject*);
@@ -91,6 +92,10 @@ readRef(PyObject *self, PyObject *args)
     double xforce, yforce, zforce;
     int id, index, NSpecies;
     double ketemp, petemp, chargetemp;
+    
+    
+    /* force locale to use dots for decimal separator */
+    setlocale(LC_NUMERIC, "C");
     
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!O!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &specieIn, 
@@ -261,6 +266,10 @@ readLBOMDXYZ(PyObject *self, PyObject *args)
     FILE *INFILE;
     int i, NAtoms, stat;
     double simTime;
+    
+    
+    /* force locale to use dots for decimal separator */
+    setlocale(LC_NUMERIC, "C");
     
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!iO!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &posIn,
@@ -486,6 +495,9 @@ readLatticeLBOMD(PyObject *self, PyObject *args)
     double xpos, ypos, zpos, chargetemp;
     int NSpecies, stat;
     
+    
+    /* force locale to use dots for decimal separator */
+    setlocale(LC_NUMERIC, "C");
     
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &specieIn, 

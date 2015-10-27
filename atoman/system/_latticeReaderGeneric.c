@@ -8,6 +8,7 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
+#include <locale.h>
 #include "array_utils.h"
 
 //#define DEBUG
@@ -84,7 +85,11 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
     PyObject *bodyList=NULL;
     PyObject *resultDict=NULL;
     PyObject *updateProgressCallback=NULL;
-
+    
+    
+    /* force locale to use dots for decimal separator */
+    setlocale(LC_NUMERIC, "C");
+    
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "sO!O!sii|Os", &filename, &PyList_Type, &headerList, &PyList_Type, &bodyList, &delimiter,
             &atomIndexOffset, &linkedNAtoms, &updateProgressCallback, &basename))
