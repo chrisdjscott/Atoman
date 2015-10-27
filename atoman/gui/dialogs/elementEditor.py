@@ -24,6 +24,8 @@ class ElementSettingsForm(QtGui.QGroupBox):
     Form for editing element settings
     
     """
+    settingsModified = QtCore.Signal(str)
+    
     def __init__(self, sym, parent=None):
         self.sym = sym
         self.name = elements.atomName(sym)
@@ -72,7 +74,7 @@ class ElementSettingsForm(QtGui.QGroupBox):
         
         if col.isValid():
             self.colourChanged(qtcolour=col)
-            self.settingsModified()
+            self.settingsModified.emit(self.sym)
     
     def colourChanged(self, qtcolour=None, colour=None):
         """
@@ -100,14 +102,7 @@ class ElementSettingsForm(QtGui.QGroupBox):
         
         """
         self.radius = val
-        self.settingsModified()
-    
-    def settingsModified(self):
-        """
-        Settings have been modified
-        
-        """
-        self.parent.settingModified(self.sym)
+        self.settingsModified.emit(self.sym)
 
 ################################################################################
 
@@ -164,6 +159,7 @@ class ElementEditor(QtGui.QDialog):
         for sym in elementsList:
             # form for stacked widget
             form = ElementSettingsForm(sym, parent=self)
+            form.settingsModified.connect(self.settingModified)
             self.formsDict[sym] = form
             
             # add to stacked widget

@@ -95,6 +95,7 @@ class BondEditorDialog(QtGui.QDialog):
         """
         # settings form
         form = BondEditorSettingsForm(self, syma, symb, bondMin, bondMax)
+        form.settingModified.connect(self.settingModified)
         
         # add
         text = "%s - %s" % (syma, symb)
@@ -188,6 +189,8 @@ class BondEditorSettingsForm(QtGui.QGroupBox):
     Settings for bond
     
     """
+    settingModified = QtCore.Signal(str)
+    
     def __init__(self, parent, syma, symb, bondMin, bondMax):
         super(BondEditorSettingsForm, self).__init__("%s - %s" % (syma, symb), parent=parent)
         
@@ -229,7 +232,7 @@ class BondEditorSettingsForm(QtGui.QGroupBox):
         elements.bondDict[self.syma][self.symb] = (self.bondMin, self.bondMax)
         elements.bondDict[self.symb][self.syma] = (self.bondMin, self.bondMax)
         
-        self.parent.settingModified("%s - %s" % (self.syma, self.symb))
+        self.settingModified.emit("%s - %s" % (self.syma, self.symb))
     
     def bondMinChanged(self, val):
         """
