@@ -1070,7 +1070,7 @@ findDefects(PyObject *self, PyObject *args)
     int exclSpecInputDim, *exclSpecInput, exclSpecRefDim, *exclSpecRef, NAtoms, *specie, refNAtoms, *PBC, *specieRef;
     int findClustersFlag, *defectCluster, NSpecies, *vacSpecCount, *intSpecCount, *antSpecCount, *onAntSpecCount;
     int *splitIntSpecCount, minClusterSize, maxClusterSize, *splitInterstitials, identifySplits, driftCompensation;
-    int acnaArrayDim, acnaStructureType;
+    int acnaArrayDim, acnaStructureType, filterSpecies;
     double *pos, *refPosIn, *cellDims, vacancyRadius, clusterRadius, *driftVector, *acnaArray;
     PyArrayObject *specieListIn=NULL;
     PyArrayObject *specieListRefIn=NULL;
@@ -1109,11 +1109,11 @@ findDefects(PyObject *self, PyObject *args)
     
     
     printf("DEFECTSC: Find defects\n");
-    totalTime = omp_get_wtime();
+    totalTime = walltime();
 #endif
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "iiiO!O!O!O!O!O!O!iO!O!O!iO!O!O!O!O!didO!O!O!O!O!O!iiO!iiO!O!i", &includeVacs, &includeInts, &includeAnts,
+    if (!PyArg_ParseTuple(args, "iiiO!O!O!O!O!O!O!iO!O!O!iO!O!O!O!O!didO!O!O!O!O!O!iiO!iiO!O!ii", &includeVacs, &includeInts, &includeAnts,
             &PyArray_Type, &NDefectsTypeIn, &PyArray_Type, &vacanciesIn, &PyArray_Type, &interstitialsIn, &PyArray_Type, &antisitesIn,
             &PyArray_Type, &onAntisitesIn, &PyArray_Type, &exclSpecInputIn, &PyArray_Type, &exclSpecRefIn, &NAtoms, &PyArray_Type, 
             &specieListIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &refNAtoms, &PyArray_Type, &specieListRefIn, &PyArray_Type, 
@@ -1121,7 +1121,7 @@ findDefects(PyObject *self, PyObject *args)
             &clusterRadius, &PyArray_Type, &defectClusterIn, &PyArray_Type, &vacSpecCountIn, &PyArray_Type, &intSpecCountIn, &PyArray_Type,
             &antSpecCountIn, &PyArray_Type, &onAntSpecCountIn, &PyArray_Type, &splitIntSpecCountIn, &minClusterSize, &maxClusterSize,
             &PyArray_Type, &splitInterstitialsIn, &identifySplits, &driftCompensation, &PyArray_Type, &driftVectorIn, &PyArray_Type,
-            &acnaArrayIn, &acnaStructureType))
+            &acnaArrayIn, &acnaStructureType, &filterSpecies))
         return NULL;
     
     if (not_intVector(NDefectsTypeIn)) return NULL;
@@ -1223,7 +1223,7 @@ findDefects(PyObject *self, PyObject *args)
     else refPos = refPosIn;
     
 #ifdef DEBUG
-    basicTime = omp_get_wtime();
+    basicTime = walltime();
 #endif
     
     /* basic defect classification: interstitials, vacancies and antisites */
@@ -1241,7 +1241,7 @@ findDefects(PyObject *self, PyObject *args)
     NAntisites = defectCounters[2];
     
 #ifdef DEBUG
-    basicTime = omp_get_wtime() - basicTime;
+    basicTime = walltime() - basicTime;
     printf("DEFECTSC: Basic defect classification: %d vacancies; %d interstitials; %d antisites\n", NVacancies, NInterstitials, NAntisites);
 #endif
     
@@ -1249,7 +1249,7 @@ findDefects(PyObject *self, PyObject *args)
     if (acnaArrayDim)
     {
 #ifdef DEBUG
-        acnaTime = omp_get_wtime();
+        acnaTime = walltime();
 #endif
         
         status = refineDefectsUsingAcna(NVacancies, vacancies, NInterstitials, interstitials, vacancyRadius, PBC, cellDims, pos, refPos,
@@ -1265,7 +1265,7 @@ findDefects(PyObject *self, PyObject *args)
         NInterstitials = defectCounters[1];
         
 #ifdef DEBUG
-        acnaTime = omp_get_wtime() - acnaTime;
+        acnaTime = walltime() - acnaTime;
         printf("DEFECTSC: Defect count after ACNA refinement: %d vacancies; %d interstitials\n", NVacancies, NInterstitials);
 #endif
     }
@@ -1274,7 +1274,7 @@ findDefects(PyObject *self, PyObject *args)
     if (identifySplits && NVacancies > 0 && NInterstitials > 1)
     {
 #ifdef DEBUG
-        splitTime = omp_get_wtime();
+        splitTime = walltime();
 #endif
         
         status = identifySplitInterstitialsNew(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
@@ -1293,7 +1293,7 @@ findDefects(PyObject *self, PyObject *args)
         NSplitInterstitials = defectCounters[2];
         
 #ifdef DEBUG
-        splitTime = omp_get_wtime() - splitTime;
+        splitTime = walltime() - splitTime;
         printf("DEFECTSC: Defect count after split interstitial identification: %d vacancies; %d interstitials; %d split interstitials\n", 
                 NVacancies, NInterstitials, NSplitInterstitials);
 #endif
@@ -1301,8 +1301,12 @@ findDefects(PyObject *self, PyObject *args)
     else NSplitInterstitials = 0;
     
     /* exclude defect types and species here... */
-    if (!includeInts) NInterstitials = 0;
-    else
+    if (!includeInts)
+    {
+        NInterstitials = 0;
+        NSplitInterstitials = 0;
+    }
+    else if (filterSpecies)
     {
         NIntNew = 0;
         for (i = 0; i < NInterstitials; i++)
@@ -1320,12 +1324,7 @@ findDefects(PyObject *self, PyObject *args)
                     break;
                 }
             }
-            
-            if (!skip)
-            {
-                interstitials[NIntNew] = index;
-                NIntNew++;
-            }
+            if (!skip) interstitials[NIntNew++] = index;
         }
         NInterstitials = NIntNew;
         
@@ -1363,7 +1362,7 @@ findDefects(PyObject *self, PyObject *args)
     }
     
     if (!includeVacs) NVacancies = 0;
-    else
+    else if (filterSpecies)
     {
         NVacNew = 0;
         for (i = 0; i < NVacancies; i++)
@@ -1375,23 +1374,44 @@ findDefects(PyObject *self, PyObject *args)
             skip = 0;
             for (j = 0; j < exclSpecRefDim; j++)
             {
-                if (specie[index] == exclSpecRef[j])
+                if (specieRef[index] == exclSpecRef[j])
                 {
                     skip = 1;
                     break;
                 }
             }
-            
-            if (!skip)
-            {
-                vacancies[NVacNew] = index;
-                NVacNew++;
-            }
+            if (!skip) vacancies[NVacNew++] = index;
         }
         NVacancies = NVacNew;
     }
     
     if (!includeAnts) NAntisites = 0;
+    else if (filterSpecies)
+    {
+        NAntNew = 0;
+        for (i = 0; i < NAntisites; i++)
+        {
+            int index, j, skip;
+            
+            index = onAntisites[i];
+            
+            skip = 0;
+            for (j = 0; j < exclSpecInputDim; j++)
+            {
+                if (specie[index] == exclSpecInput[j])
+                {
+                    skip = 1;
+                    break;
+                }
+            }
+            if (!skip)
+            {
+                antisites[NAntNew] = antisites[i];
+                onAntisites[NAntNew++] = index;
+            }
+        }
+        NAntisites = NAntNew;
+    }
     
 #ifdef DEBUG
     printf("DEFECTSC: Defect count after filter by type: %d vacancies; %d interstitials; %d split interstitials; %d antisites\n", 
@@ -1715,7 +1735,7 @@ findDefects(PyObject *self, PyObject *args)
     else refPos = NULL;
     
 #ifdef DEBUG
-    totalTime = omp_get_wtime() - totalTime;
+    totalTime = walltime() - totalTime;
     printf("DEFECTSC: Timings\n");
     printf("DEFECTSC:   Total: %lf s\n", totalTime);
     printf("DEFECTSC:     Basic classification: %lf s\n", basicTime);

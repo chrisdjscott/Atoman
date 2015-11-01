@@ -150,6 +150,7 @@ class PointDefectsFilter(base.BaseFilter):
         maxClusterSize = settings.getSetting("maxClusterSize")
         identifySplitInts = settings.getSetting("identifySplitInts")
         acnaStructureType = settings.getSetting("acnaStructureType")
+        filterSpecies = settings.getSetting("filterSpecies")
         
         # call C library
         self.logger.debug("Calling C library")
@@ -159,7 +160,7 @@ class PointDefectsFilter(base.BaseFilter):
                              refLattice.pos, refLattice.cellDims, inputLattice.PBC, vacancyRadius, findClusters, neighbourRadius,
                              defectCluster, vacSpecCount, intSpecCount, antSpecCount, onAntSpecCount, splitIntSpecCount,
                              minClusterSize, maxClusterSize, splitInterstitials, identifySplitInts, driftCompensation,
-                             driftVector, acnaArray, acnaStructureType)
+                             driftVector, acnaArray, acnaStructureType, int(filterSpecies))
         
         # summarise
         NDef = NDefectsByType[0]
