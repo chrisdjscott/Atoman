@@ -181,7 +181,9 @@ class TestCropBoxDefectsFilter(unittest.TestCase):
         """
         # remove refs
         self.lattice = None
+        self.ref = None
         self.filter = None
+        self.vacancies = None
     
 #     def test_cropBoxFilter(self):
 #         """
