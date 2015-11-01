@@ -9,7 +9,7 @@ def configuration(parent_package='', top_path=None):
     incdir = os.path.abspath(os.path.join(cwd, "..", "visclibs"))
     
     # config
-    config = Configuration("state", parent_package, top_path)
+    config = Configuration("system", parent_package, top_path)
     
     config.add_extension("_input", 
                          ["input.c"],
