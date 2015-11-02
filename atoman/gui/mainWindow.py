@@ -185,7 +185,7 @@ class MainWindow(QtGui.QMainWindow):
         exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "oxygen/application-exit.png", 
                                        "Exit application")
         newWindowAction = self.createAction("&New app window", slot=self.openNewWindow, shortcut="Ctrl-N", 
-                                            icon="atoman.ico", tip="Open new application window")
+                                            icon="atoman.png", tip="Open new application window")
         newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow, shortcut="Ctrl-O",
                                             icon="oxygen/window-new.png", tip="Open new render sub window")
         openFileAction = self.createAction("Open file", slot=self.showOpenFileDialog, icon="oxygen/document-open.png",
@@ -527,7 +527,7 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         mw = MainWindow(self.desktop)
-        mw.setWindowIcon(QtGui.QIcon(iconPath("atoman.ico")))
+        mw.setWindowIcon(QtGui.QIcon(iconPath("atoman.png")))
         mw.show()
     
     def centre(self):

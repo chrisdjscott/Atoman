@@ -56,7 +56,7 @@ def main():
     
     # create main window
     mw = mainWindow.MainWindow(desktop)
-    mw.setWindowIcon(QtGui.QIcon(iconPath("atoman.ico")))
+    mw.setWindowIcon(QtGui.QIcon(iconPath("atoman.png")))
     
     # show main window and give it focus
     mw.show()
