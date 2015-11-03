@@ -17,6 +17,7 @@
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <math.h>
+#include <limits.h>
 #include "boxeslib.h"
 
 
@@ -26,6 +27,7 @@
 struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
 {
     int i;
+    int maxBoxDim = cbrt((double) INT_MAX); // avoid overflow
     double cellLength;
     struct Boxes *boxes;
     
@@ -55,8 +57,14 @@ struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
         cellLength = (cellLength < 1.0) ? 1.0 : cellLength;
         
         /* number of boxes in this direction */
-        boxes->NBoxes[i] = (int) (cellLength / approxBoxWidth);
-        boxes->NBoxes[i] = (boxes->NBoxes[i] == 0) ? 1 : boxes->NBoxes[i];
+        if (approxBoxWidth * maxBoxDim < cellLength)
+            /* set to max num boxes */
+            boxes->NBoxes[i] = maxBoxDim;
+        else
+        {
+            boxes->NBoxes[i] = (int) (cellLength / approxBoxWidth);
+            boxes->NBoxes[i] = (boxes->NBoxes[i] == 0) ? 1 : boxes->NBoxes[i];
+        }
         
         /* length of box side */
         boxes->boxWidth[i] = cellLength / boxes->NBoxes[i];

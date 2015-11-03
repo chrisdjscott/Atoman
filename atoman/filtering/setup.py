@@ -8,6 +8,13 @@ def configuration(parent_package='', top_path=None):
     cwd = os.path.dirname(os.path.abspath(__file__))
     incdir = os.path.abspath(os.path.join(cwd, "..", "visclibs"))
     
+    boxesdeps = [os.path.join("..", "visclibs", "boxeslib.c"), 
+                 os.path.join("..", "visclibs", "boxeslib.h")]
+    utildeps = [os.path.join("..", "visclibs", "utilities.c"),
+                os.path.join("..", "visclibs", "utilities.h")]
+    arraydeps = [os.path.join("..", "visclibs", "array_utils.c"),
+                 os.path.join("..", "visclibs", "array_utils.h")]
+    
     # config
     config = Configuration("filtering", parent_package, top_path)
     
@@ -16,17 +23,19 @@ def configuration(parent_package='', top_path=None):
     config.add_extension("bonds", 
                          ["bonds.c"],
                          include_dirs=[incdir],
+                         depends=boxesdeps+utildeps+arraydeps,
                          libraries=["boxeslib", "utilities", "array_utils"])
     
     config.add_extension("_clusters", 
                          ["clusters.c"],
                          include_dirs=[incdir],
+                         depends=boxesdeps+utildeps+arraydeps,
                          libraries=["boxeslib", "utilities", "array_utils"])
     
     config.add_extension("_voronoi", 
                          ["voronoi.c", "voro_iface.cpp", 
                          "voro++/src/voro++.cc"],
-                         depends=["voro_iface.h"],
+                         depends=["voro_iface.h"]+arraydeps,
                          libraries=["array_utils"],
                          include_dirs=[incdir, "voro++/src"])
     

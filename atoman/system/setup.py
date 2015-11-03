@@ -11,24 +11,31 @@ def configuration(parent_package='', top_path=None):
     # config
     config = Configuration("system", parent_package, top_path)
     
+    arraydeps = [os.path.join("..", "visclibs", "array_utils.c"),
+                 os.path.join("..", "visclibs", "array_utils.h")]
+    
     config.add_extension("_input", 
                          ["input.c"],
                          include_dirs=[incdir],
+                         depends=arraydeps,
                          libraries=["array_utils"])
     
     config.add_extension("_output", 
                          ["output.c"],
                          include_dirs=[incdir],
+                         depends=arraydeps,
                          libraries=["array_utils"])
     
     config.add_extension("_latticeReaderGeneric", 
                          ["_latticeReaderGeneric.c"],
                          include_dirs=[incdir],
+                         depends=arraydeps,
                          libraries=["array_utils"])
     
     config.add_extension("_lattice", 
                          ["_lattice.c"],
                          include_dirs=[incdir],
+                         depends=arraydeps,
                          libraries=["array_utils"])
     
     return config
