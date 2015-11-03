@@ -15,10 +15,11 @@ def configuration(parent_package='', top_path=None):
     config.add_library("array_utils", ["array_utils.c"], depends=["array_utils.h"])
 
     # add extensions (for testing)
+    incdirs = [os.getcwd()]
     config.add_extension("tests._test_boxeslib",
                          ["tests/test_boxeslib.c"],
-                         libraries=["boxeslib"],
-                         depends=[os.path.join("..", "boxeslib.h")])
+                         libraries=["boxeslib", "array_utils"],
+                         depends=["boxeslib.h", "boxeslib.c", "array_utils.h", "array_utils.c"])
     
     return config
 
