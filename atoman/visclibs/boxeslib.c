@@ -28,7 +28,6 @@ struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
 {
     int i;
     int maxBoxDim = cbrt((double) INT_MAX); // avoid overflow
-    double cellLength;
     struct Boxes *boxes;
     
     
@@ -43,6 +42,8 @@ struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
     /* setup boxes in each dimension: number of boxes and size */
     for (i = 0; i < 3; i++)
     {
+        double cellLength;
+        
         /* store some parameters */
         boxes->PBC[i] = PBC[i];
         boxes->cellDims[i] = cellDims[i];
@@ -57,7 +58,7 @@ struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
         cellLength = (cellLength < 1.0) ? 1.0 : cellLength;
         
         /* number of boxes in this direction */
-        if (approxBoxWidth * maxBoxDim < cellLength)
+        if (approxBoxWidth * maxBoxDim <= cellLength)
             /* set to max num boxes */
             boxes->NBoxes[i] = maxBoxDim;
         else
@@ -73,7 +74,7 @@ struct Boxes * setupBoxes(double approxBoxWidth, int *PBC, double *cellDims)
     boxes->totNBoxes = boxes->NBoxes[0] * boxes->NBoxes[1] * boxes->NBoxes[2];
     
     /* amount of memory to allocate at a time */
-    boxes->allocChunk = 50;
+    boxes->allocChunk = 16;
     
     /* allocate arrays for storing counters and atoms */
     boxes->boxNAtoms = calloc(boxes->totNBoxes, sizeof(int));
