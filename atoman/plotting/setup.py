@@ -19,7 +19,7 @@ def configuration(parent_package='', top_path=None):
                  os.path.join("..", "visclibs", "array_utils.h")]
     
     config.add_extension("_rdf", 
-                         ["_rdf.c"],
+                         ["rdf.c"],
                          include_dirs=[incdir],
                          depends=boxesdeps+utildeps+arraydeps,
                          libraries=["boxeslib", "array_utils", "utilities"])
