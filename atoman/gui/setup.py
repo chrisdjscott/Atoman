@@ -29,6 +29,10 @@ def configuration(parent_package='', top_path=None):
                          depends=boxesdeps+utildeps+arraydeps,
                          libraries=["boxeslib", "utilities", "array_utils"])
     
+    config.add_extension("_preferences", 
+                         ["preferences.c"],
+                         depends=["preferences.h"])
+    
     return config
 
 if __name__ == "__main__":

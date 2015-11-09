@@ -16,6 +16,7 @@ import numpy as np
 
 from ..visutils.utilities import iconPath, resourcePath
 from ..visutils import utilities
+from . import _preferences
 # from ..md import forces
 
 ################################################################################
@@ -803,17 +804,18 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         ompNumThreadsSpin.setMaximum(maxthread)
         ompNumThreadsSpin.setValue(ini)
         ompNumThreadsSpin.valueChanged.connect(self.ompNumThreadsChanged)
-        ompNumThreadsSpin.setToolTip('The number of threads that can be used by OpenMP. "0" means use all available processors.')
+        ompNumThreadsSpin.setToolTip('<p>The number of threads that can be used by OpenMP. "0" means use all available processors.</p>')
         self.layout.addRow("OpenMP threads", ompNumThreadsSpin)
         
         # disable mouse wheel
-        disableMouseWheel = int(self.settings.value("mouse/disableWheel", 1))
+        disableMouseWheel = int(self.settings.value("mouse/disableWheel", 0))
         self.disableMouseWheel = bool(disableMouseWheel)
         self.logger.debug("Disable mouse wheel (initial value): %s", self.disableMouseWheel)
         disableMouseWheelCheck = QtGui.QCheckBox()
-        disableMouseWheelCheck.setToolTip("Disables the mouse wheel in the VTK window. The "
-                                          "mouse wheel can be used to zoom in and out. This is "
-                                          "most useful with the wireless Apple Magic mouse.")
+        tip = "<p>Disables the mouse wheel in the VTK window. The "
+        tip += "mouse wheel can be used to zoom in and out. This is "
+        tip += "most useful with the wireless Apple Magic mouse.</p>"
+        disableMouseWheelCheck.setToolTip(tip)
         if self.disableMouseWheel:
             disableMouseWheelCheck.setCheckState(QtCore.Qt.Checked)
         else:
@@ -836,7 +838,7 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
             else:
                 check.setCheckState(QtCore.Qt.Unchecked)
             check.stateChanged.connect(functools.partial(self.defaultPBCChanged, i))
-            check.setToolTip('Set the default PBC value in the "%s" direction for subsequently loaded systems' % xyz[i])
+            check.setToolTip('<p>Set the default PBC value in the "%s" direction for subsequently loaded systems</p>' % xyz[i])
             row.addWidget(check)
         self.layout.addRow("Default PBCs", row)
         
@@ -892,6 +894,12 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
             self.openmpNumThreads = n
         
         self.settings.setValue("omp/numThreads", n)
+        
+        # set environment variable
+        os.environ["OMP_NUM_THREADS"] = "{0}".format(self.openmpNumThreads)
+        
+        # set C value
+        _preferences.setNumThreads(self.openmpNumThreads)
 
 ################################################################################
 

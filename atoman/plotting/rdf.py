@@ -16,7 +16,7 @@ class RDFCalculator(object):
     
     """
     def calculateRDF(self, visibleAtoms, inputLattice, binMin, binMax, binWidth,
-                     speciesIndex1, speciesIndex2, numThreads=0):
+                     speciesIndex1, speciesIndex2):
         """
         Calculate the radial distribution function for the given selection of atoms.
         
@@ -67,7 +67,7 @@ class RDFCalculator(object):
         # call the C extension to calculate the RDF
         _rdf.calculateRDF(visibleAtoms, inputLattice.specie, inputLattice.pos, speciesIndex1,
                           speciesIndex2, inputLattice.cellDims, inputLattice.PBC, binMin,
-                          binMax, binWidth, numBins, rdfArray, numThreads)
+                          binMax, binWidth, numBins, rdfArray)
         
         # x values for plotting the RDF
         xvals = np.arange(binMin + binWidth / 2.0, binMax, binWidth, dtype=np.float64)

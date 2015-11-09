@@ -7,15 +7,16 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include "boxeslib.h"
-#include "utilities.h"
-#include "array_utils.h"
-#include "constants.h"
+#include "visclibs/boxeslib.h"
+#include "visclibs/utilities.h"
+#include "visclibs/array_utils.h"
+#include "visclibs/constants.h"
+#include "gui/preferences.h"
 
 
 static PyObject* calculateRDF(PyObject*, PyObject*);
 static int computeHistogram(int, int, int*, double*, int*, double*, int*, int*, double,
-        double, double, int, double*);
+        double, double, double*);
 static void normaliseRDF(int, int, int, int, double, double, double*, double*);
 
 
@@ -59,7 +60,7 @@ static PyObject*
 calculateRDF(PyObject *self, PyObject *args)
 {
     int numVisible, *visibleAtoms, *specie, specieID1, specieID2, *pbc, numBins;
-    int numThreads, numAtoms;
+    int numAtoms;
     double *pos, *cellDims, start, finish, *rdf;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *specieIn=NULL;
@@ -72,9 +73,9 @@ calculateRDF(PyObject *self, PyObject *args)
     
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "O!O!O!iiO!O!dddiO!i", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &specieIn,
+    if (!PyArg_ParseTuple(args, "O!O!O!iiO!O!dddiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &specieIn,
             &PyArray_Type, &posIn, &specieID1, &specieID2, &PyArray_Type, &cellDimsIn, &PyArray_Type, &pbcIn, &start,
-            &finish, &interval, &numBins, &PyArray_Type, &rdfIn, &numThreads))
+            &finish, &interval, &numBins, &PyArray_Type, &rdfIn))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -143,7 +144,7 @@ calculateRDF(PyObject *self, PyObject *args)
     
     /* compute the histogram for the RDF */
     status = computeHistogram(numAtoms, numVisible, visibleAtoms, pos, pbc, cellDims, 
-            sel1, sel2, start, finish, interval, numThreads, rdf);
+            sel1, sel2, start, finish, interval, rdf);
     
     /* free memory used for selections */
     free(sel1);
@@ -165,7 +166,7 @@ calculateRDF(PyObject *self, PyObject *args)
  *******************************************************************************/
 static int
 computeHistogram(int NAtoms, int NVisible, int *visibleAtoms, double *pos, int *PBC, double *cellDims,
-        int *sel1, int *sel2, double start, double finish, double interval, int numThreads, double *hist)
+        int *sel1, int *sel2, double start, double finish, double interval, double *hist)
 {
     int i, errorCount, boxstat;
     double *visiblePos, approxBoxWidth;
@@ -209,7 +210,7 @@ computeHistogram(int NAtoms, int NVisible, int *visibleAtoms, double *pos, int *
     
     /* loop over visible atoms */
     errorCount = 0;
-    #pragma omp parallel for reduction(+: errorCount) num_threads(numThreads)
+    #pragma omp parallel for reduction(+: errorCount) num_threads(prefs_numThreads)
     for (i = 0; i < NVisible; i++)
     {
         int j, index, ind3, boxIndex, boxNebList[27], boxNebListSize;

@@ -692,9 +692,6 @@ class RDFForm(genericForm.GenericForm):
         else:
             spec2Index = int(np.where(specieList == self.spec2)[0][0])
         
-        # num threads
-        ompNumThreads = self.mainWindow.preferences.generalForm.openmpNumThreads
-        
         # rdf calulator
         rdfCalculator = rdf.RDFCalculator()
         
@@ -703,7 +700,7 @@ class RDFForm(genericForm.GenericForm):
         try:
             # then calculate
             xn, rdfArray = rdfCalculator.calculateRDF(visibleAtoms, inputLattice, self.binMin, self.binMax,
-                                                      self.binWidth, spec1Index, spec2Index, ompNumThreads)
+                                                      self.binWidth, spec1Index, spec2Index)
         
         finally:
             utils.cancelProgressDialog(progDiag)

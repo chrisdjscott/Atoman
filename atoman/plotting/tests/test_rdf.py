@@ -9,6 +9,7 @@ import unittest
 import numpy as np
 
 from .. import rdf
+from ...gui import _preferences
 from ...lattice_gen import lattice_gen_pu3ga
 
 
@@ -48,14 +49,17 @@ class TestRDF(unittest.TestCase):
         calc = rdf.RDFCalculator()
         
         # test all (1 and 4 threads)
-        xvals, yvals = calc.calculateRDF(self.visAtoms, self.lattice, 2.0, 15.0, 0.1, -1, -1, numThreads=1)
+        _preferences.setNumThreads(1)
+        xvals, yvals = calc.calculateRDF(self.visAtoms, self.lattice, 2.0, 15.0, 0.1, -1, -1)
         self.assertTrue(np.allclose(xvals, self.allres[0]), msg="RDF xvals differ for ALL-ALL 1 proc")
         self.assertTrue(np.allclose(yvals, self.allres[1]), msg="RDF yvals differ for ALL-ALL 1 proc")
         
-        xvals, yvals = calc.calculateRDF(self.visAtoms, self.lattice, 2.0, 15.0, 0.1, -1, -1, numThreads=4)
+        _preferences.setNumThreads(4)
+        xvals, yvals = calc.calculateRDF(self.visAtoms, self.lattice, 2.0, 15.0, 0.1, -1, -1)
         self.assertTrue(np.allclose(xvals, self.allres[0]), msg="RDF xvals differ for ALL-ALL 4 proc")
         self.assertTrue(np.allclose(yvals, self.allres[1]), msg="RDF yvals differ for ALL-ALL 4 proc")
         
         # test out of range
+        _preferences.setNumThreads(1)
         with self.assertRaises(RuntimeError):
-            calc.calculateRDF(self.visAtoms, self.lattice, 2.0, 50.0, 0.1, -1, -1, numThreads=1)
+            calc.calculateRDF(self.visAtoms, self.lattice, 2.0, 50.0, 0.1, -1, -1)
