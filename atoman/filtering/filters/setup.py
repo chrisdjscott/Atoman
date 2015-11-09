@@ -9,12 +9,12 @@ def configuration(parent_package='', top_path=None):
     incdir = os.path.abspath(os.path.join(cwd, "..", "..", "visclibs"))
     boxesdeps = [os.path.join("..", "..", "visclibs", "boxeslib.c"), 
                  os.path.join("..", "..", "visclibs", "boxeslib.h")]
-    utildeps = [os.path.join("..", "visclibs", "utilities.c"),
-                os.path.join("..", "visclibs", "utilities.h")]
-    arraydeps = [os.path.join("..", "visclibs", "array_utils.c"),
-                 os.path.join("..", "visclibs", "array_utils.h")]
-    nebdeps = [os.path.join("..", "visclibs", "neb_list.c"),
-               os.path.join("..", "visclibs", "neb_list.h")]
+    utildeps = [os.path.join("..", "..", "visclibs", "utilities.c"),
+                os.path.join("..", "..", "visclibs", "utilities.h")]
+    arraydeps = [os.path.join("..", "..", "visclibs", "array_utils.c"),
+                 os.path.join("..", "..", "visclibs", "array_utils.h")]
+    nebdeps = [os.path.join("..", "..", "visclibs", "neb_list.c"),
+               os.path.join("..", "..", "visclibs", "neb_list.h")]
     
     # config
     config = Configuration("filters", parent_package, top_path)
