@@ -632,6 +632,10 @@ class Filterer(object):
             renderer.writePovrayDefects(povfile, bubbleVacancies, self.interstitials, self.antisites, self.onAntisites,
                                         filterSettings, self.mainWindow, self.displayOptions, self.splitInterstitials, self.pipelinePage)
             self.povrayAtomsWritten = True
+            
+            # store for picker
+            self.vacancies = bubbleVacancies
+            self.visibleAtoms = bubbleAtoms
         
         else:
             if filterName == "Cluster" and filterSettings.getSetting("drawConvexHulls") and filterSettings.getSetting("hideAtoms"):

@@ -57,7 +57,8 @@ pickObject(PyObject *self, PyObject *args)
     PyArrayObject *refSpecieCovRadIn=NULL;
     PyArrayObject *resultIn=NULL;
     
-    double approxBoxWidth;
+    int minSepIndex, minSepType;
+    double approxBoxWidth, minSepRad, minSep2, minSep;
     
     
     /* parse and check arguments from Python */
@@ -122,16 +123,22 @@ pickObject(PyObject *self, PyObject *args)
     // this should be detected automatically depending on cell size...
     approxBoxWidth = 4.0;
     
+    /* initialise */
+    minSep2 = 9999999.0;
+    minSepIndex = -1;
+    minSepRad = 0.0;
+    minSepType = 0;
+    
+    /* pick atoms (if there are any) */
     if (visibleAtomsDim > 0)
     {
         int i, boxIndex, boxNebList[27], boxstat;
-        int minSepIndex, boxNebListSize;
-        double minSep, minSep2, minSepRad;
+        int boxNebListSize;
         double *visPos;
         struct Boxes *boxes;
         
 #ifdef DEBUG
-        printf("PICKC: Picking atom\n");
+        printf("PICKC: Picking atoms\n");
 #endif
         
         /* vis atoms pos */
@@ -179,21 +186,17 @@ pickObject(PyObject *self, PyObject *args)
         boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over neighbouring boxes, looking for nearest atom */
-        minSep2 = 9999999.0;
-        minSepIndex = -1;
-        minSepRad = 0.0;
         for (i = 0; i < boxNebListSize; i++)
         {
             int k;
+            int checkBox = boxNebList[i];
             
-            boxIndex = boxNebList[i];
-            
-            for (k = 0; k < boxes->boxNAtoms[boxIndex]; k++)
+            for (k = 0; k < boxes->boxNAtoms[checkBox]; k++)
             {
                 int index, realIndex;
                 double sep2, rad;
                 
-                index = boxes->boxAtoms[boxIndex][k];
+                index = boxes->boxAtoms[checkBox][k];
                 
                 /* atomic separation */
                 sep2 = atomicSeparation2(pickPos[0], pickPos[1], pickPos[2], 
@@ -214,29 +217,17 @@ pickObject(PyObject *self, PyObject *args)
             }
         }
         
-        /* min separation */
-        minSep = sqrt(minSep2);
-        /* if separation is greater than radius, subtract radius, 
-         * otherwise set to zero (within radius is good enough for me)
-         */
-        minSep = (minSep > minSepRad) ? minSep - minSepRad : 0.0;
-        
-        /* store result */
-        result[0] = 0;
-        result[1] = minSepIndex;
-        result[2] = minSep;
-        
-        /* tidy up */
+        /* free memory */
         free(visPos);
         freeBoxes(boxes);
     }
-    else
+    
+    /* now check defects (if there are any) */
+    if (vacsDim + intsDim + onAntsDim + splitsDim > 0)
     {
-        int i, NVis, count, minSepIndex;
+        int i, NVis, count, boxNebListSize, minSepIsDefect;
         int boxIndex, boxNebList[27], boxstat;
-        int minSepType, boxNebListSize;
-        double *visPos, *visCovRad, minSep, minSep2;
-        double minSepRad;
+        double *visPos, *visCovRad;
         struct Boxes *boxes;
         
 #ifdef DEBUG
@@ -361,21 +352,18 @@ pickObject(PyObject *self, PyObject *args)
         boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
         
         /* loop over neighbouring boxes, looking for nearest atom */
-        minSep2 = 9999999.0;
-        minSepIndex = -1;
-        minSepRad = 0.0;
+        minSepIsDefect = 0;
         for (i = 0; i < boxNebListSize; i++)
         {
             int k;
+            int checkBox = boxNebList[i];
             
-            boxIndex = boxNebList[i];
-            
-            for (k = 0; k < boxes->boxNAtoms[boxIndex]; k++)
+            for (k = 0; k < boxes->boxNAtoms[checkBox]; k++)
             {
                 int index;
                 double sep2, rad;
                 
-                index = boxes->boxAtoms[boxIndex][k];
+                index = boxes->boxAtoms[checkBox][k];
                 
                 /* atomic separation */
                 sep2 = atomicSeparation2(pickPos[0], pickPos[1], pickPos[2], 
@@ -391,49 +379,53 @@ pickObject(PyObject *self, PyObject *args)
                     minSep2 = sep2;
                     minSepIndex = index;
                     minSepRad = rad;
+                    minSepIsDefect = 1;
                 }
             }
         }
         
-        /* min separation */
-        minSep = sqrt(minSep2);
-        /* if separation is greater than radius, subtract radius, 
-         * otherwise set to zero (within radius is good enough for me)
-         */
-        minSep = (minSep > minSepRad) ? minSep - minSepRad : 0.0;
-        
-        /* picked type */
-        if (minSepIndex < vacsDim)
+        if (minSepIsDefect)
         {
-            minSepType = 1;
-        }
-        else if (minSepIndex < vacsDim + intsDim)
-        {
-            minSepIndex -= vacsDim;
-            minSepType = 2;
-        }
-        else if (minSepIndex < vacsDim + intsDim + onAntsDim)
-        {
-            minSepIndex -= vacsDim + intsDim;
-            minSepType = 3;
-        }
-        else
-        {
-            minSepIndex -= vacsDim + intsDim + onAntsDim;
-            minSepIndex = (int) (minSepIndex / 3);
-            minSepType = 4;
+            /* picked type */
+            if (minSepIndex < vacsDim)
+            {
+                minSepType = 1;
+            }
+            else if (minSepIndex < vacsDim + intsDim)
+            {
+                minSepIndex -= vacsDim;
+                minSepType = 2;
+            }
+            else if (minSepIndex < vacsDim + intsDim + onAntsDim)
+            {
+                minSepIndex -= vacsDim + intsDim;
+                minSepType = 3;
+            }
+            else
+            {
+                minSepIndex -= vacsDim + intsDim + onAntsDim;
+                minSepIndex = (int) (minSepIndex / 3);
+                minSepType = 4;
+            }
         }
         
-        /* store result */
-        result[0] = minSepType;
-        result[1] = minSepIndex;
-        result[2] = minSep;
-        
-        /* tidy up */
+        /* free memory */
         freeBoxes(boxes);
         free(visPos);
         free(visCovRad);
     }
+    
+    /* min separation */
+    minSep = sqrt(minSep2);
+    /* if separation is greater than radius, subtract radius, 
+     * otherwise set to zero (within radius is good enough for me)
+     */
+    minSep = (minSep > minSepRad) ? minSep - minSepRad : 0.0;
+    
+    /* store result */
+    result[0] = minSepType;
+    result[1] = minSepIndex;
+    result[2] = minSep;
     
 #ifdef DEBUG
     printf("PICKC: End\n");
