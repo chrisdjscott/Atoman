@@ -928,17 +928,14 @@ class Filterer(object):
         for name, scalars in self.scalarsDict.iteritems():
             self.logger.debug("  Adding '%s' scalars", name)
             scalarsList.append(scalars)
-            assert len(scalars) == len(self.visibleAtoms), "Wrong length for scalars: '%s'" % name
-            
-#             f = open("%s_before.dat" % name.replace(" ", "_"), "w")
-#             for tup in itertools.izip(self.visibleAtoms, scalars):
-#                 f.write("%d %f\n" % tup)
-#             f.close()
+            if len(scalars) != len(self.visibleAtoms):
+                raise RuntimeError("Wrong length for scalars: '{0}'".format(name))
         
         for name, scalars in self.latticeScalarsDict.iteritems():
             self.logger.debug("  Adding '%s' scalars (Lattice)", name)
             scalarsList.append(scalars)
-            assert len(scalars) == len(self.visibleAtoms), "Wrong length for scalars: '%s' (Lattice)" % name
+            if len(scalars) != len(self.visibleAtoms):
+                raise RuntimeError("Wrong length for scalars: '{0}' (Lattice)".format(name))
         
         if len(scalarsList):
             scalarsFull = np.concatenate(scalarsList)
@@ -958,7 +955,8 @@ class Filterer(object):
         for name, vectors in self.vectorsDict.iteritems():
             self.logger.debug("  Adding '%s' vectors", name)
             vectorsList.append(vectors)
-            assert vectors.shape == (len(self.visibleAtoms), 3), "Shape wrong for vectors array '%s': %r != %r" % (name, vectors.shape, (len(self.visibleAtoms), 3))
+            if vectors.shape != (len(self.visibleAtoms), 3):
+                raise RuntimeError("Shape wrong for vectors array '%s': %r != %r" % (name, vectors.shape, (len(self.visibleAtoms), 3)))
         
         if len(vectorsList):
             vectorsFull = np.concatenate(vectorsList)
