@@ -70,32 +70,6 @@ class MainWindow(QtGui.QMainWindow):
         
         # set focus
         self.setFocus()
-        
-        # display feature notification window?
-        self.displayFeatureNotificationWindow()
-    
-    def displayFeatureNotificationWindow(self):
-        """
-        Show the feature notification window
-        
-        """
-        return
-        
-        settings = QtCore.QSettings()
-        
-        dlg = simpleDialogs.NotifyFeatureWindow(self)
-        
-        # key for settings
-        settingsKey = "notification/%s" % dlg.notificationID
-        
-        # see if they don't want us to show the window
-        showDialog = int(settings.value(settingsKey, 1))
-        
-        if showDialog:
-            dlg.exec_()
-            
-            if dlg.dontShowAgainCheck.isChecked():
-                settings.setValue(settingsKey, 0)
     
     def initUI(self):
         """
