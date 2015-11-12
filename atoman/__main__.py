@@ -19,14 +19,29 @@ try:
 except ImportError:
     # configure logging (we have to set logging.NOTSET here as global for root logger)
     logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s", level=logging.NOTSET)
-# set default for stream handler (we don't want it to be NOTSET by default)
-logging.getLogger().handlers[0].setLevel(logging.WARNING)
-import multiprocessing
 
-from PySide import QtGui
+from PySide import QtGui, QtCore
+
+# set default for stream handler (we don't want it to be NOTSET by default)
+_argLevel = None
+if len(sys.argv) > 1:
+    if "DEBUG" in sys.argv:
+        _argLevel = logging.DEBUG
+    elif "INFO" in sys.argv:
+        _argLevel = logging.INFO
+    elif "WARNING" in sys.argv:
+        _argLevel = logging.WARNING
+    elif "ERROR" in sys.argv:
+        _argLevel = logging.ERROR
+    elif "CRITICAL" in sys.argv:
+        _argLevel = logging.CRITICAL
+if _argLevel is None:
+    logging.getLogger().handlers[0].setLevel(logging.WARNING)
+else:
+    logging.getLogger().handlers[0].setLevel(_argLevel)
 
 from .gui import mainWindow
-from .visutils.utilities import iconPath, setupLogging
+from .visutils.utilities import iconPath
 
 
 def main():
@@ -39,17 +54,13 @@ def main():
     
     # set application info used by QSettings
     app.setOrganizationName("chrisdjscott")
-    app.setApplicationName("atoman")
-    
-    # display splash screen
-    #     splash_pix = QtGui.QPixmap(imagePath("splash_loading.png"))
-    #     splash = QtGui.QSplashScreen(splash_pix, QtCore.Qt.WindowStaysOnTopHint)
-    #     splash.setMask(splash_pix.mask())
-    #     splash.show()
-    #     app.processEvents()
+    app.setApplicationName("Atoman")
     
     # set default logging
-    setupLogging(sys.argv)
+    if _argLevel is None:
+        settings = QtCore.QSettings()
+        level = settings.value("logging/standard", logging.WARNING)
+        logging.getLogger().handlers[0].setLevel(level)
     
     # pass QDesktopWidget to app so it can access screen info
     desktop = app.desktop()
