@@ -432,6 +432,7 @@ def initialise():
         # create the default version
         logger.debug("Atoms file does not exist in data dir; creating: '{0}'".format(atomfile))
         createDataFile("atoms.IN", _defaultAtomsFile)
+    logger.debug("Reading atoms file: '{0}'".format(atomfile))
     elements.read(atomfile)
     
     # bonds data
@@ -440,6 +441,7 @@ def initialise():
         # create the default version
         logger.debug("Bonds file does not exist in data dir; creating: '{0}'".format(bondfile))
         createDataFile("bonds.IN", _defaultBondsFile)
+    logger.debug("Reading bonds file: '{0}'".format(bondfile))
     elements.readBonds(bondfile)
 
 ################################################################################

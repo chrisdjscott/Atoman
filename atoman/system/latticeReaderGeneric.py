@@ -82,6 +82,7 @@ class FileFormats(object):
                 utilities.createDataFile("file_formats.IN", _defaultFileFormatsFile)
         
         # read file
+        self.logger.debug("Reading file formats file: '{0}'".format(filename))
         with open(filename) as f:
             numFormats = int(f.readline())
             
