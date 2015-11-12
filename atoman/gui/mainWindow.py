@@ -22,7 +22,7 @@ import numpy as np
 import matplotlib
 import scipy
 
-from ..visutils.utilities import iconPath, resourcePath
+from ..visutils.utilities import iconPath, resourcePath, dataPath
 from ..system.atoms import elements
 from . import toolbar as toolbarModule
 from . import helpForm
@@ -49,6 +49,9 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self, desktop, parent=None, testing=False):
         super(MainWindow, self).__init__(parent)
         
+        # logger
+        self.logger = logging.getLogger(__name__)
+        
         # multiple instances
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         MainWindow.Instances.add(self)
@@ -72,26 +75,14 @@ class MainWindow(QtGui.QMainWindow):
         self.setFocus()
     
     def initUI(self):
-        """
-        Initialise the interface.
-        
-        """
-#         logging.getLogger().setLevel(logging.DEBUG)
-        
-        logger = logging.getLogger(__name__)
+        """Initialise the interface."""
+        logger = self.logger
         logger.debug("Initialising user interface")
         
-        # defaults
-        self.refFile = ""
-        self.inputFile = ""
-        self.fileType = ""
-        self.fileExtension = ""
-        self.refLoaded = 0
-        self.inputLoaded = 0
-        self.consoleOpen = 0
-        self.verboseLevel = 3
-        self.mouseMotion = 0
+        # defaults (TODO: remove this)
+        self.refLoaded = False
         
+        # MD code resource (not currently used!?)
         logger.debug("MD resource path: %s (exists %s)", resourcePath("lbomd.IN", dirname="md_input"), os.path.exists(resourcePath("lbomd.IN", dirname="md_input")))
         
         # get settings object
@@ -106,7 +97,6 @@ class MainWindow(QtGui.QMainWindow):
                 # change to home directory if running from pyinstaller bundle
                 currentDir = os.environ.get("HOME")
                 logger.debug("Change dir $HOME: '%s'", currentDir)
-        
         else:
             currentDir = os.getcwd()
             logger.debug("Use CWD: '%s'", currentDir)
@@ -136,14 +126,13 @@ class MainWindow(QtGui.QMainWindow):
                 
         self.setWindowTitle("Atoman")
         
-        # create temporary directory for working in
-        self.tmpDirectory = tempfile.mkdtemp(prefix="VisTemp-", dir="/tmp")
+        # create temporary directory for working in (needs to force tmp on mac so POV-Ray can run in it)
+        self.tmpDirectory = tempfile.mkdtemp(prefix="atoman-", dir="/tmp")
         
         # console window for logging output to
         self.console = consoleWindow.ConsoleWindow(self)
         
         # help window for displaying help
-#         self.helpWindow = helpForm.HelpForm("index.html", parent=self)
         self.helpWindow = helpForm.HelpFormSphinx(parent=self)
         
         # image viewer
@@ -410,7 +399,7 @@ class MainWindow(QtGui.QMainWindow):
                 elements.read(fname)
                 
                 # overwrite current file
-                elements.write(resourcePath("atoms.IN"))
+                elements.write(dataPath("atoms.IN"))
                 
                 # set on Lattice objects too
                 self.inputState.refreshElementProperties()
@@ -427,8 +416,6 @@ class MainWindow(QtGui.QMainWindow):
         
         fname = QtGui.QFileDialog.getSaveFileName(self, "Atoman - Export element properties", fname, 
                                                   "IN files (*.IN)", options=QtGui.QFileDialog.DontUseNativeDialog)[0]
-        
-        print "FNAME", fname
         
         if fname:
             if not "." in fname or fname[-3:] != ".IN":
@@ -457,7 +444,7 @@ class MainWindow(QtGui.QMainWindow):
                 elements.readBonds(fname)
                 
                 # overwrite current file
-                elements.writeBonds(resourcePath("bonds.IN"))
+                elements.writeBonds(dataPath("bonds.IN"))
                 
                 self.setStatus("Imported bonds file")
     
@@ -519,13 +506,7 @@ class MainWindow(QtGui.QMainWindow):
         Open the console window
         
         """
-        if self.consoleOpen:
-            self.console.closeEvent(1)
-            self.console.show()
-        
-        else:
-            self.console.show()
-            self.consoleOpen = 1
+        self.console.show()
     
     def showHelp(self):
         """

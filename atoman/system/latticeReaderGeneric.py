@@ -71,9 +71,15 @@ class FileFormats(object):
         Read from file
         
         """
-        # if no file specified, assume in resourcePath
+        # if no file specified, assume in the data directory
         if filename is None:
-            filename = utilities.resourcePath("file_formats.IN")
+            # the file name
+            filename = utilities.dataPath("file_formats.IN")
+            
+            # if it doesn't exist we create the default one first
+            if not os.path.exists(filename):
+                self.logger.debug("File formats file does not exist in data dir; creating: '{0}'".format(filename))
+                utilities.createDataFile("file_formats.IN", _defaultFileFormatsFile)
         
         # read file
         with open(filename) as f:
@@ -775,3 +781,230 @@ class LatticeReaderGeneric(object):
         self.logger.debug("Lattice vectors: %r", lattice.vectorsDict.keys())
         
         return 0, lattice
+
+################################################################################
+# the default file formats file
+_defaultFileFormatsFile = """7
+LBOMD Lattice
+ 
+0
+
+2
+1
+NAtoms
+i
+3
+xdim
+d
+ydim
+d
+zdim
+d
+1
+3
+Symbol
+i
+1
+Position
+d
+3
+Charge
+d
+1
+LBOMD REF
+ 
+1
+
+2
+1
+NAtoms
+i
+3
+xdim
+d
+ydim
+d
+zdim
+d
+1
+7
+atomID
+i
+1
+Symbol
+i
+1
+Position
+d
+3
+Kinetic energy
+d
+1
+Potential energy
+d
+1
+Force
+d
+3
+Charge
+d
+1
+LBOMD XYZ
+ 
+1
+LBOMD REF
+2
+1
+NAtoms
+i
+1
+Time
+d
+1
+4
+atomID
+i
+1
+Position
+d
+3
+Kinetic energy
+d
+1
+Potential energy
+d
+1
+LBOMD XYZ (Velocity)
+ 
+1
+LBOMD REF
+2
+1
+NAtoms
+i
+1
+Time
+d
+1
+5
+atomID
+i
+1
+Position
+d
+3
+Kinetic energy
+d
+1
+Potential energy
+d
+1
+Velocity
+d
+3
+LBOMD XYZ (Charge)
+ 
+1
+LBOMD REF
+2
+1
+NAtoms
+i
+1
+Time
+d
+1
+5
+atomID
+i
+1
+Position
+d
+3
+Kinetic energy
+d
+1
+Potential energy
+d
+1
+Charge
+d
+1
+Indenter
+ 
+0
+
+2
+1
+NAtoms
+i
+0
+1
+3
+Symbol
+i
+1
+Position
+d
+3
+SKIP
+i
+1
+FAILSAFE
+ 
+1
+
+5
+1
+Time
+d
+1
+SKIP
+s
+3
+Thermostat
+s
+SKIP
+s
+Target temperature
+d
+1
+NAtoms
+i
+6
+SKIP
+s
+SKIP
+s
+SKIP
+s
+SKIP
+s
+SKIP
+s
+SKIP
+s
+4
+3
+atomID
+i
+1
+Atom type
+i
+1
+Symbol
+i
+1
+1
+Position
+d
+3
+1
+Charge
+d
+1
+1
+Velocity
+d
+3
+"""

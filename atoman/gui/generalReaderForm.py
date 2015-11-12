@@ -70,13 +70,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         self.fileFormats = latticeReaderGeneric.FileFormats()
         
         # default file formats
-        self.fileFormats.read(filename=resourcePath("file_formats.IN"))
-        
-        # check if user dir exists, load additional formats if it does
-#         userdir = os.path.join(os.path.expanduser("~"), ".cdjsvis")
-#         fn = os.path.join(userdir, "file_formats.IN")
-#         if os.path.isfile(fn):
-#             self.fileFormats.read(filename=fn)
+        self.fileFormats.read()
     
     def openSFTPBrowser(self):
         """
@@ -138,7 +132,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
                 
                 # change to new working directory
                 if nwd != os.getcwd():
-                    self.mainWindow.console.write("Changing to dir "+nwd)
+                    self.logger.info("Changing to directory: '{0}'".format(nwd))
                     os.chdir(nwd)
                     self.mainWindow.updateCWD()
                 

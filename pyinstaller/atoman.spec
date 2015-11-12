@@ -25,11 +25,6 @@ try:
 				 hiddenimports=['scipy.linalg.cython_blas', 'scipy.linalg.cython_lapack'],
 				 hookspath=None)
 
-	# data files
-	a.datas += [('data/atoms.IN', '../atoman/data/atoms.IN', 'DATA'),
-				('data/bonds.IN', '../atoman/data/bonds.IN', 'DATA'),
-				('data/file_formats.IN', '../atoman/data/file_formats.IN', 'DATA')]
-
 	# add icons as data
 	OWD = os.getcwd()
 	os.chdir("../atoman")

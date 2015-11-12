@@ -458,12 +458,17 @@ class FilterList(QtGui.QWidget):
         Run filters in this list.
         
         """
+        # add a progress dialog
         progDiag = utils.showProgressDialog("Applying list", "Applying list...", self)
         
         try:
             # apply filters
             self.filterer.runFilters()
             
+            # this is where the rendering should be done
+            
+            
+            # update on screen text
             self.filterTab.refreshOnScreenInfo()
             
             # refresh plot options
@@ -472,11 +477,13 @@ class FilterList(QtGui.QWidget):
                     rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
         
         except:
+            # show error
             exctype, value = sys.exc_info()[:2]
             self.logger.error("Apply list failed! %s: %s", exctype, value)
             self.mainWindow.displayError("Apply list failed!\n\n%s: %s" % (exctype, value))
         
         finally:
+            # always remove the progress dialog
             utils.cancelProgressDialog(progDiag)
     
     def getCurrentFilterSettings(self):

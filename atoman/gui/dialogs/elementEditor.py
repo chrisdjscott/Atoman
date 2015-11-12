@@ -13,8 +13,7 @@ from PySide import QtGui, QtCore
 import numpy as np
 
 from ...system.atoms import elements
-from ...visutils.utilities import resourcePath, iconPath
-from ...visutils import utilities
+from ...visutils.utilities import dataPath, iconPath
 
 
 ################################################################################
@@ -267,7 +266,7 @@ class ElementEditor(QtGui.QDialog):
             self.applyChanges()
             
             # save to file
-            elements.write(resourcePath("atoms.IN"))
+            elements.write(dataPath("atoms.IN"))
             
             # disable save button
             self.saveButton.setEnabled(False)

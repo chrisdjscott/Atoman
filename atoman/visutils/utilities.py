@@ -16,6 +16,8 @@ import logging
 
 from PySide import QtGui, QtCore
 
+from .appdirs import appdirs
+
 # set where to look for executables when os.getenv("PATH")
 # returns something less than expected (eg when running
 # pyinstaller executable)
@@ -23,40 +25,6 @@ EXTENDED_PATH = [
     "/opt/local/bin",
     "/usr/local/bin",
 ]
-
-################################################################################
-
-def setupLogging(argv):
-    """
-    Setup logger from command line args or QSettings
-    
-    """
-    # set default logging
-    #   first check command line args
-    #   next check QSettings
-    #   finally use default of WARNING
-    level = None
-    if len(argv) > 1:
-        if "DEBUG" in argv:
-            level = logging.DEBUG
-        
-        elif "INFO" in argv:
-            level = logging.INFO
-        
-        elif "WARNING" in argv:
-            level = logging.WARNING
-        
-        elif "ERROR" in argv:
-            level = logging.ERROR
-        
-        elif "CRITICAL" in argv:
-            level = logging.CRITICAL
-        
-    if level is None:
-        settings = QtCore.QSettings()
-        level = settings.value("logging/standard", logging.WARNING)
-    
-    logging.getLogger().handlers[0].setLevel(level)
 
 ################################################################################
 
@@ -132,6 +100,34 @@ def resourcePath(relative, dirname="data"):
     path = os.path.join(path, relative)
     
     return path
+
+################################################################################
+# data storage directory
+_dataDir = appdirs.user_data_dir(appname="Atoman", appauthor="chrisdjscott")
+
+################################################################################
+def dataPath(relative):
+    """Path within data directory."""
+    return os.path.join(_dataDir, relative)
+
+################################################################################
+def createDataFile(relative, text=""):
+    """Create the given path within the data directory with the given text."""
+    # create the directory if it doesn't exist
+    if not os.path.exists(_dataDir):
+        os.makedirs(_dataDir, 0755)
+    
+    # check if there are subdirectories within relative
+    head, tail = os.path.split(relative)
+    
+    # directory file is going in
+    dirname = os.path.join(_dataDir, head)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname, 0755)
+    
+    # write file
+    with open(os.path.join(dirname, tail), "w") as fh:
+        fh.write(text)
 
 ################################################################################
 def imagePath(image):

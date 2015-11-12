@@ -13,7 +13,6 @@ def configuration(parent_package='', top_path=None):
     config.add_subpackage("system")
     config.add_subpackage("visutils")
     config.add_subpackage("visclibs")
-    config.add_data_dir("data")
     config.add_data_dir("icons")
     config.add_data_dir("doc")
     

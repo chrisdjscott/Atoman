@@ -42,7 +42,6 @@ class Renderer(object):
         self.renWinInteract = self.parent.vtkRenWinInteract
         self.renWin = self.parent.vtkRenWin
         
-        self.log = self.parent.mainWindow.console.write
         self.logger = logging.getLogger(__name__+".Renderer")
         
         # is the interactor initialised

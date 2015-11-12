@@ -11,7 +11,7 @@ import logging
 from PySide import QtGui, QtCore
 
 from ...system.atoms import elements
-from ...visutils.utilities import iconPath, resourcePath
+from ...visutils.utilities import iconPath, dataPath
 
 
 ################################################################################
@@ -168,7 +168,7 @@ class BondEditorDialog(QtGui.QDialog):
                                              QtGui.QMessageBox.Cancel)
             
             if ret == QtGui.QMessageBox.Ok:
-                fn = resourcePath("bonds.IN")
+                fn = dataPath("bonds.IN")
                 logger.debug("Overwriting bonds file: '%s'", fn)
                 elements.writeBonds(fn)
                 self.dirty = False
