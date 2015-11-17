@@ -27,13 +27,13 @@ def configuration(parent_package='', top_path=None):
                          libraries=["array_utils"])
     
     config.add_extension("_latticeReaderGeneric", 
-                         ["_latticeReaderGeneric.c"],
+                         ["latticeReaderGeneric.c"],
                          include_dirs=[incdir],
                          depends=arraydeps,
                          libraries=["array_utils"])
     
     config.add_extension("_lattice", 
-                         ["_lattice.c"],
+                         ["lattice.c"],
                          include_dirs=[incdir],
                          depends=arraydeps,
                          libraries=["array_utils"])
