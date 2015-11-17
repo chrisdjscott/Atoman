@@ -19,9 +19,6 @@ from ..lattice import Lattice
 def path_to_file(path):
     return os.path.join(os.path.dirname(__file__), "..", "..", "..",  "testing", path)
 
-def path_to_data(path):
-    return os.path.join(os.path.dirname(__file__), "..", "..", "data", path)
-
 def updateProgress(a, b, msg):
     pass
 
@@ -40,8 +37,13 @@ class TestFileFormats(unittest.TestCase):
         Called before each test
         
         """
-        # file formats input file
-        self.fffn = path_to_data("file_formats.IN")
+        # tmp dir
+        self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
+        
+        # write default file formats file
+        self.fffn = os.path.join(self.tmpLocation, "file_formats.IN")
+        with open(self.fffn, "w") as fh:
+            fh.write(latticeReaderGeneric._defaultFileFormatsFile)
         
         # file formats object
         self.ffs = latticeReaderGeneric.FileFormats()
@@ -51,6 +53,9 @@ class TestFileFormats(unittest.TestCase):
         Called after each test
         
         """
+        # remove tmp dir
+        shutil.rmtree(self.tmpLocation)
+        
         # remove refs
         self.ffs = None
         self.fffn = None
@@ -87,8 +92,10 @@ class TestReadLatticeGeneric(unittest.TestCase):
         # tmp dir
         self.tmpLocation = tempfile.mkdtemp(prefix="atomanTest")
         
-        # file formats input file
-        fn = path_to_data("file_formats.IN")
+        # write default file formats file
+        fn = os.path.join(self.tmpLocation, "file_formats.IN")
+        with open(fn, "w") as fh:
+            fh.write(latticeReaderGeneric._defaultFileFormatsFile)
         
         # file formats object
         self.ffs = latticeReaderGeneric.FileFormats()
