@@ -416,6 +416,20 @@ Ga  Pu  0.000000  3.700000
 """
 
 ################################################################################
+def resetBonds(fname="bonds.IN"):
+    """Write the default bonds file to the data location."""
+    logger = logging.getLogger(__name__)
+    logger.debug("Resetting the bonds settings")
+    createDataFile(fname, _defaultBondsFile)
+
+################################################################################
+def resetAtoms(fname="atoms.IN"):
+    """Write the default atoms file to the data location."""
+    logger = logging.getLogger(__name__)
+    logger.debug("Resetting the atoms settings")
+    createDataFile(fname, _defaultAtomsFile)
+
+################################################################################
 def initialise():
     """
     Initialise the module.

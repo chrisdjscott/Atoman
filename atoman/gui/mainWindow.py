@@ -23,6 +23,7 @@ import matplotlib
 import scipy
 
 from ..visutils.utilities import iconPath, resourcePath, dataPath
+from ..system import atoms
 from ..system.atoms import elements
 from . import toolbar as toolbarModule
 from . import helpForm
@@ -161,10 +162,14 @@ class MainWindow(QtGui.QMainWindow):
                                                  icon="oxygen/document-export", tip="Export element properties")
         importElementsAction = self.createAction("Import elements", slot=self.importElements,
                                                  icon="oxygen/document-import.png", tip="Import element properties")
+        resetElementsAction = self.createAction("Reset elements", slot=self.resetElements, icon="oxygen/edit-undo.png",
+                                                tip="Reset elements settings to default values")
         exportBondsAction = self.createAction("Export bonds", slot=self.exportBonds,
                                                  icon="oxygen/document-export.png", tip="Export bonds file")
         importBondsAction = self.createAction("Import bonds", slot=self.importBonds,
                                                  icon="oxygen/document-import.png", tip="Import bonds file")
+        resetBondsAction = self.createAction("Reset bonds", slot=self.resetBonds, icon="oxygen/edit-undo.png",
+                                                tip="Reset bonds settings to default values")
         showImageViewerAction = self.createAction("Image viewer", slot=self.showImageViewer, 
                                                   icon="oxygen/applications-graphics.png", tip="Show image viewer")
         showPreferencesAction = self.createAction("Preferences", slot=self.showPreferences, 
@@ -175,8 +180,12 @@ class MainWindow(QtGui.QMainWindow):
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
         self.addActions(fileMenu, (newWindowAction, newRenWindowAction, openFileAction, openRemoteFileAction, openCWDAction, 
-                                   changeCWDAction, importElementsAction, exportElementsAction, importBondsAction, 
-                                   exportBondsAction, None, exitAction))
+                                   changeCWDAction, None, exitAction))
+        
+        # settings menu
+        settingsMenu = self.menuBar().addMenu("&Settings")
+        self.addActions(settingsMenu, (importElementsAction, exportElementsAction, resetElementsAction, importBondsAction,
+                                       exportBondsAction, resetBondsAction))
         
         # button to show console window
         openConsoleAction = self.createAction("Console", self.showConsole, None, "oxygen/utilities-log-viewer.png", "Show console window")
@@ -395,6 +404,8 @@ class MainWindow(QtGui.QMainWindow):
             fname = QtGui.QFileDialog.getOpenFileName(self, "Atoman - Import element properties", ".", "IN files (*.IN)")[0]
             
             if fname:
+                self.logger.info("Importing elements settings from '%s'", fname)
+                
                 # read in new file
                 elements.read(fname)
                 
@@ -404,8 +415,6 @@ class MainWindow(QtGui.QMainWindow):
                 # set on Lattice objects too
                 self.inputState.refreshElementProperties()
                 self.refState.refreshElementProperties()
-                
-                self.setStatus("Imported element properties")
     
     def exportElements(self):
         """
@@ -421,9 +430,26 @@ class MainWindow(QtGui.QMainWindow):
             if not "." in fname or fname[-3:] != ".IN":
                 fname += ".IN"
             
+            self.logger.info("Exporting elements settings to '%s'", fname)
             elements.write(fname)
-            
-            self.setStatus("Element properties exported")
+    
+    def resetElements(self):
+        """Reset elements settings."""
+        reply = QtGui.QMessageBox.question(self, "Message", 
+                                           "This will overwrite the current element properties file. You should create a backup first!\n\nDo you wish to continue?",
+                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        
+        if reply == QtGui.QMessageBox.Yes:
+            atoms.resetAtoms()
+    
+    def resetBonds(self):
+        """Reset bonds settings."""
+        reply = QtGui.QMessageBox.question(self, "Message", 
+                                           "This will overwrite the current bonds file. You should create a backup first!\n\nDo you wish to continue?",
+                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        
+        if reply == QtGui.QMessageBox.Yes:
+            atoms.resetBonds()
     
     def importBonds(self):
         """
@@ -440,6 +466,8 @@ class MainWindow(QtGui.QMainWindow):
                                                       options=QtGui.QFileDialog.DontUseNativeDialog)[0]
             
             if fname:
+                self.logger.info("Import bonds settings from '%s'", fname)
+                
                 # read in new file
                 elements.readBonds(fname)
                 
@@ -462,6 +490,7 @@ class MainWindow(QtGui.QMainWindow):
             if not "." in fname or fname[-3:] != ".IN":
                 fname += ".IN"
             
+            self.logger.info("Exporting bonds settings to '%s'", fname)
             elements.writeBonds(fname)
             
             self.setStatus("Bonds file exported")
