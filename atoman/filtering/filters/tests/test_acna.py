@@ -10,6 +10,7 @@ import numpy as np
 from ....lattice_gen import lattice_gen_fcc, lattice_gen_bcc
 from .. import acnaFilter
 from .. import base
+from ....gui import _preferences
 
 
 ################################################################################
@@ -63,7 +64,9 @@ class TestACNABCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 1
+        
+        # set number of threads
+        _preferences.setNumThreads(1)
         
         # call filter
         result = self.filter.apply(filterInput, settings)
@@ -97,7 +100,9 @@ class TestACNABCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 4
+        
+        # set number of threads
+        _preferences.setNumThreads(4)
         
         # call filter
         result = self.filter.apply(filterInput, settings)
@@ -162,7 +167,9 @@ class TestACNAFCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 1
+        
+        # set number of threads
+        _preferences.setNumThreads(1)
         
         # call filter
         result = self.filter.apply(filterInput, settings)
@@ -196,7 +203,9 @@ class TestACNAFCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 4
+        
+        # set number of threads
+        _preferences.setNumThreads(4)
         
         # call filter
         result = self.filter.apply(filterInput, settings)

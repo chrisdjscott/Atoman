@@ -1,9 +1,9 @@
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <math.h>
-#include "boxeslib.h"
-#include "utilities.h"
-#include "neb_list.h"
+#include "visclibs/boxeslib.h"
+#include "visclibs/utilities.h"
+#include "visclibs/neb_list.h"
 
 
 static int addAtomToNebList(int, int, double, struct NeighbourList2 *);

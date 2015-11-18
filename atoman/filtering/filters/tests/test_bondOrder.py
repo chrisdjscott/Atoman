@@ -10,6 +10,7 @@ import numpy as np
 from .. import base
 from .. import bondOrderFilter
 from ....lattice_gen import lattice_gen_fcc, lattice_gen_bcc
+from ....gui import _preferences
 
 
 ################################################################################
@@ -63,7 +64,9 @@ class TestBondOrderBCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 1
+        
+        # set number of threads
+        _preferences.setNumThreads(1)
         
         # call bond order filter
         result = self.filter.apply(filterInput, settings)
@@ -98,7 +101,9 @@ class TestBondOrderBCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 1
+        
+        # set number of threads
+        _preferences.setNumThreads(1)
         
         # call bond order filter
         result = self.filter.apply(filterInput, settings)
@@ -133,7 +138,9 @@ class TestBondOrderBCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 4
+        
+        # set number of threads
+        _preferences.setNumThreads(4)
         
         # call bond order filter
         result = self.filter.apply(filterInput, settings)
@@ -168,7 +175,9 @@ class TestBondOrderBCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 4
+        
+        # set number of threads
+        _preferences.setNumThreads(4)
         
         # call bond order filter
         result = self.filter.apply(filterInput, settings)
@@ -234,7 +243,9 @@ class TestBondOrderFCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 1
+        
+        # set number of threads
+        _preferences.setNumThreads(1)
         
         # call bond order filter
         result = self.filter.apply(filterInput, settings)
@@ -269,7 +280,9 @@ class TestBondOrderFCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 1
+        
+        # set number of threads
+        _preferences.setNumThreads(1)
         
         # call bond order filter
         result = self.filter.apply(filterInput, settings)
@@ -304,7 +317,9 @@ class TestBondOrderFCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 4
+        
+        # set number of threads
+        _preferences.setNumThreads(4)
         
         # call bond order filter
         result = self.filter.apply(filterInput, settings)
@@ -339,7 +354,9 @@ class TestBondOrderFCC(unittest.TestCase):
         filterInput.fullScalars = np.empty(0, np.float64)
         filterInput.NVectors = 0
         filterInput.fullVectors = np.empty(0, np.float64)
-        filterInput.ompNumThreads = 4
+        
+        # set number of threads
+        _preferences.setNumThreads(4)
         
         # call bond order filter
         result = self.filter.apply(filterInput, settings)

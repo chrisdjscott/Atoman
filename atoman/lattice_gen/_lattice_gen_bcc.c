@@ -8,7 +8,7 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include "array_utils.h"
+#include "visclibs/array_utils.h"
 
 
 static PyObject* generateBCCLattice(PyObject*, PyObject*);

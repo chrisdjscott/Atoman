@@ -91,7 +91,6 @@ class BondOrderFilter(base.BaseFilter):
         fullScalars = filterInput.fullScalars
         NVectors = filterInput.NVectors
         fullVectors = filterInput.fullVectors
-        ompNumThreads = filterInput.ompNumThreads
         visibleAtoms = filterInput.visibleAtoms
         
         # settings
@@ -110,7 +109,7 @@ class BondOrderFilter(base.BaseFilter):
         # call C lib
         NVisible = _bond_order.bondOrderFilter(visibleAtoms, inputState.pos, maxBondDistance, scalarsQ4, scalarsQ6,
                                                inputState.cellDims, inputState.PBC, NScalars, fullScalars, filterQ4Enabled,
-                                               minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, ompNumThreads, NVectors, fullVectors)
+                                               minQ4, maxQ4, filterQ6Enabled, minQ6, maxQ6, NVectors, fullVectors)
         
         # resize visible atoms and scalars
         visibleAtoms.resize(NVisible, refcheck=False)

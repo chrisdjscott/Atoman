@@ -6,7 +6,7 @@ def configuration(parent_package='', top_path=None):
     
     # path to header files
     cwd = os.path.dirname(os.path.abspath(__file__))
-    incdir = os.path.abspath(os.path.join(cwd, "..", "visclibs"))
+    incdir = os.path.abspath(os.path.join(cwd, os.pardir))
     
     # config
     config = Configuration("system", parent_package, top_path)

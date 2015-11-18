@@ -9,7 +9,7 @@
 #include <numpy/arrayobject.h>
 #include <math.h>
 #include <locale.h>
-#include "array_utils.h"
+#include "visclibs/array_utils.h"
 
 //#define DEBUG
 #define MAX_LINE_LENGTH 512

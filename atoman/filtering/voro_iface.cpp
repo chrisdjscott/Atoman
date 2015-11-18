@@ -6,8 +6,8 @@
 
 #include "stdlib.h"
 #include "math.h"
-#include "voro_iface.h"
-#include "voro++.hh"
+#include "filtering/voro_iface.h"
+#include "filtering/voro++/src/voro++.hh"
 #include <vector>
 
 using namespace voro;

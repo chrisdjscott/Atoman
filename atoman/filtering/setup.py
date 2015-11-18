@@ -6,7 +6,7 @@ def configuration(parent_package='', top_path=None):
     
     # path to header files
     cwd = os.path.dirname(os.path.abspath(__file__))
-    incdir = os.path.abspath(os.path.join(cwd, "..", "visclibs"))
+    incdir = os.path.abspath(os.path.join(cwd, os.pardir))
     
     boxesdeps = [os.path.join("..", "visclibs", "boxeslib.c"), 
                  os.path.join("..", "visclibs", "boxeslib.h")]
@@ -37,7 +37,7 @@ def configuration(parent_package='', top_path=None):
                          "voro++/src/voro++.cc"],
                          depends=["voro_iface.h"]+arraydeps,
                          libraries=["array_utils"],
-                         include_dirs=[incdir, "voro++/src"])
+                         include_dirs=[incdir])
     
     return config
 

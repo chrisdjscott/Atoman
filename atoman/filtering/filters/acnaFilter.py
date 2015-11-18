@@ -64,7 +64,6 @@ class AcnaFilter(base.BaseFilter):
         fullScalars = filterInput.fullScalars
         NVectors = filterInput.NVectors
         fullVectors = filterInput.fullVectors
-        ompNumThreads = filterInput.ompNumThreads
         visibleAtoms = filterInput.visibleAtoms
         pbc = inputState.PBC
         
@@ -82,7 +81,7 @@ class AcnaFilter(base.BaseFilter):
         # call C library
         NVisible = _acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.cellDims, pbc,
                                                         NScalars, fullScalars, maxBondDistance, counters, filteringEnabled,
-                                                        structureVisibility, ompNumThreads, NVectors, fullVectors)
+                                                        structureVisibility, NVectors, fullVectors)
         
         # result
         result = base.FilterResult()

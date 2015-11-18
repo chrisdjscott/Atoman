@@ -9,7 +9,7 @@
 #include <numpy/arrayobject.h>
 #include <math.h>
 #include <unistd.h>
-#include "array_utils.h"
+#include "visclibs/array_utils.h"
 
 
 static PyObject* generatePu3GaLattice(PyObject*, PyObject*);

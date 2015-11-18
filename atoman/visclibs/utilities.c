@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
-#include "utilities.h"
+#include "visclibs/utilities.h"
 
 
 /*******************************************************************************

@@ -7,11 +7,11 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include "boxeslib.h"
-#include "neb_list.h"
-#include "utilities.h"
-#include "array_utils.h"
-#include "atom_structure.h"
+#include "visclibs/boxeslib.h"
+#include "visclibs/neb_list.h"
+#include "visclibs/utilities.h"
+#include "visclibs/array_utils.h"
+#include "filtering/atom_structure.h"
 
 //#define DEBUG
 //#define DEBUGACNA

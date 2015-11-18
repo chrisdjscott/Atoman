@@ -10,12 +10,13 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include "boxeslib.h"
-#include "neb_list.h"
-#include "utilities.h"
-#include "array_utils.h"
-#include "atom_structure.h"
-#include "constants.h"
+#include "visclibs/boxeslib.h"
+#include "visclibs/neb_list.h"
+#include "visclibs/utilities.h"
+#include "visclibs/array_utils.h"
+#include "filtering/atom_structure.h"
+#include "visclibs/constants.h"
+#include "gui/preferences.h"
 
 
 #define MAX_REQUIRED_NEBS 14
@@ -74,7 +75,7 @@ static PyObject*
 adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
 {
     int NVisibleIn, *visibleAtoms, *PBC, NScalars, *counters, filteringEnabled;
-    int numThreads, *structureVisibility, NVectors;
+    int *structureVisibility, NVectors;
     double *pos, *scalars, *cellDims, *fullScalars, maxBondDistance;
     PyArrayObject *posIn=NULL;
     PyArrayObject *visibleAtomsIn=NULL;
@@ -93,9 +94,9 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
 /* parse and check arguments from Python */
     
-    if (!PyArg_ParseTuple(args, "O!O!O!O!O!iO!dO!iO!iiO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn,
+    if (!PyArg_ParseTuple(args, "O!O!O!O!O!iO!dO!iO!iO!", &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &posIn, &PyArray_Type, &scalarsIn,
             &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &NScalars, &PyArray_Type, &fullScalarsIn, &maxBondDistance, &PyArray_Type,
-            &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn, &numThreads, &NVectors, &PyArray_Type, &fullVectors))
+            &countersIn, &filteringEnabled, &PyArray_Type, &structureVisibilityIn, &NVectors, &PyArray_Type, &fullVectors))
         return NULL;
     
     if (not_intVector(visibleAtomsIn)) return NULL;
@@ -176,13 +177,13 @@ adaptiveCommonNeighbourAnalysis(PyObject *self, PyObject *args)
     
     
     /* sort neighbours by distance */
-    #pragma omp parallel for num_threads(numThreads)
+    #pragma omp parallel for num_threads(prefs_numThreads)
     for (i = 0; i < NVisibleIn; i++)
         qsort(nebList[i].neighbour, nebList[i].neighbourCount, sizeof(struct Neighbour), compare_two_nebs);
     
 /* classify atoms */
     
-    #pragma omp parallel for num_threads(numThreads)
+    #pragma omp parallel for num_threads(prefs_numThreads)
     for (i = 0; i < NVisibleIn; i++)
     {
         int atomStructure;

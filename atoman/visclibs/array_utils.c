@@ -3,7 +3,7 @@
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
-#include "array_utils.h"
+#include "visclibs/array_utils.h"
 
 
 static double **ptrvector_double(long);

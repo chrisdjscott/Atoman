@@ -9,7 +9,7 @@
 #include <numpy/arrayobject.h>
 #include <math.h>
 #include <locale.h>
-#include "array_utils.h"
+#include "visclibs/array_utils.h"
 
 static PyObject* readLatticeLBOMD(PyObject*, PyObject*);
 static PyObject* readRef(PyObject*, PyObject*);

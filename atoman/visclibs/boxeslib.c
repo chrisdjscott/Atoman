@@ -18,7 +18,7 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <math.h>
 #include <limits.h>
-#include "boxeslib.h"
+#include "visclibs/boxeslib.h"
 
 
 /*******************************************************************************

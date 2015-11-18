@@ -9,8 +9,8 @@
 #include <structmember.h>
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include "array_utils.h"
-#include "voro_iface.h"
+#include "visclibs/array_utils.h"
+#include "filtering/voro_iface.h"
 
 /*******************************************************************************
  ** Define Voronoi object structure

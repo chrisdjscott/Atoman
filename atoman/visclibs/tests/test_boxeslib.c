@@ -8,8 +8,8 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include "../boxeslib.h"
-#include "../array_utils.h"
+#include "visclibs/boxeslib.h"
+#include "visclibs/array_utils.h"
 
 
 static PyObject* test_boxes(PyObject*, PyObject*);
