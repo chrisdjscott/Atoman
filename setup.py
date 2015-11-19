@@ -34,7 +34,7 @@ copt = {
 }
 lopt = {
     'unix': ["-lgomp"],
-    "intelem": ["-openmp", "-lpython2.7"] # for some reason we have to link to python2.7
+    "intelem": ["-openmp", "-L%s" % distutils.sysconfig.get_python_inc(), "-lpython2.7"] # for some reason we have to link to python2.7
 }
 
 # sphinx build
