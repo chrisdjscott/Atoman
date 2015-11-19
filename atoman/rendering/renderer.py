@@ -54,28 +54,20 @@ class Renderer(object):
         self.latticeFrame = cell.CellOutline(self.ren)
         
         # axes
-        self.useNewAxes = True
-        
-        # old axes
-        self.axes = axes.AxesBasic(self.ren, self.reinit)
-        self.axes.remove()
-        
-        # new axes
-        self.axesNew = vtk.vtkAxesActor()
-        self.axesNew.SetShaftTypeToCylinder()
-        self.axesNew.GetXAxisCaptionActor2D().GetCaptionTextProperty().SetColor(1,0,0)
-        self.axesNew.GetXAxisCaptionActor2D().GetCaptionTextProperty().SetFontFamilyToArial()
-        self.axesNew.GetXAxisCaptionActor2D().GetCaptionTextProperty().ShadowOff()
-        self.axesNew.GetYAxisCaptionActor2D().GetCaptionTextProperty().SetColor(0,1,0)
-        self.axesNew.GetYAxisCaptionActor2D().GetCaptionTextProperty().SetFontFamilyToArial()
-        self.axesNew.GetYAxisCaptionActor2D().GetCaptionTextProperty().ShadowOff()
-        self.axesNew.GetZAxisCaptionActor2D().GetCaptionTextProperty().SetColor(0,0,1)
-        self.axesNew.GetZAxisCaptionActor2D().GetCaptionTextProperty().SetFontFamilyToArial()
-        self.axesNew.GetZAxisCaptionActor2D().GetCaptionTextProperty().ShadowOff()
-        
+        self.axes = vtk.vtkAxesActor()
+        self.axes.SetShaftTypeToCylinder()
+        self.axes.GetXAxisCaptionActor2D().GetCaptionTextProperty().SetColor(1,0,0)
+        self.axes.GetXAxisCaptionActor2D().GetCaptionTextProperty().SetFontFamilyToArial()
+        self.axes.GetXAxisCaptionActor2D().GetCaptionTextProperty().ShadowOff()
+        self.axes.GetYAxisCaptionActor2D().GetCaptionTextProperty().SetColor(0,1,0)
+        self.axes.GetYAxisCaptionActor2D().GetCaptionTextProperty().SetFontFamilyToArial()
+        self.axes.GetYAxisCaptionActor2D().GetCaptionTextProperty().ShadowOff()
+        self.axes.GetZAxisCaptionActor2D().GetCaptionTextProperty().SetColor(0,0,1)
+        self.axes.GetZAxisCaptionActor2D().GetCaptionTextProperty().SetFontFamilyToArial()
+        self.axes.GetZAxisCaptionActor2D().GetCaptionTextProperty().ShadowOff()
         self.axesMarker = vtk.vtkOrientationMarkerWidget()
         self.axesMarker.SetInteractor(self.renWinInteract)
-        self.axesMarker.SetOrientationMarker(self.axesNew)
+        self.axesMarker.SetOrientationMarker(self.axes)
         self.axesMarker.SetViewport(0, 0, 0.25, 0.25)
         self.axesMarker.SetEnabled(0)
         self.axesEnabled = False
@@ -225,17 +217,10 @@ class Renderer(object):
         if self.parent.getCurrentPipelinePage().refState is None:
             return
         
-        if self.useNewAxes:
-            if self.axesEnabled:
-                self.removeAxes()
-            else:
-                self.addAxes()
-        
+        if self.axesEnabled:
+            self.removeAxes()
         else:
-            if self.axes.visible:
-                self.removeAxes()
-            else:
-                self.addAxes()
+            self.addAxes()
         
         self.reinit()
     
@@ -244,29 +229,18 @@ class Renderer(object):
         Add the axis label
         
         """
-        if self.useNewAxes:
-            if not self.axesEnabled:
-                self.axesMarker.SetEnabled(1)
-                self.axesEnabled = True
-        
-        else:
-            ref = self.getRefState()
-            dims = ref.cellDims
-        
-            self.axes.refresh(-8, -8, -8, 0.2 * dims[0], 0.2 * dims[1], 0.2 * dims[2], "x", "y", "z")
+        if not self.axesEnabled:
+            self.axesMarker.SetEnabled(1)
+            self.axesEnabled = True
     
     def removeAxes(self):
         """
         Remove the axis label
         
         """
-        if self.useNewAxes:
-            if self.axesEnabled:
-                self.axesMarker.SetEnabled(0)
-                self.axesEnabled = False
-        
-        else:
-            self.axes.remove()
+        if self.axesEnabled:
+            self.axesMarker.SetEnabled(0)
+            self.axesEnabled = False
     
     def removeAllActors(self):
         """
