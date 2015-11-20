@@ -14,6 +14,7 @@ import subprocess
 import tempfile
 import logging
 
+import pkg_resources
 from PySide import QtGui, QtCore
 
 from .appdirs import appdirs
@@ -151,7 +152,22 @@ def helpPath(page):
     Return full path to given help page.
     
     """
-    return resourcePath(page, dirname="doc")
+    dirname = "doc"
+    
+    if hasattr(sys, "_MEIPASS"):
+        # look in pyinstaller bundle
+        path = os.path.join(sys._MEIPASS, dirname)
+    
+    else:
+        # look in source code directory
+        path = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")), dirname, "build", "html")
+        if not os.path.isdir(path):
+            # use pkg_resources to look in installed directory
+            path = pkg_resources.resource_filename("atoman", "doc")
+    
+    path = os.path.join(path, page)
+    
+    return path
 
 ################################################################################
 def idGenerator(size=16, chars=string.digits + string.ascii_letters + string.digits):
@@ -423,5 +439,3 @@ def getBarrierFromRoulette(rouletteIndex, testpath=None):
                 break
     
     return barrier
-
-

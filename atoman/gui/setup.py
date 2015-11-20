@@ -13,6 +13,7 @@ def configuration(parent_package='', top_path=None):
     
     # add subpackages
     config.add_subpackage("dialogs")
+    config.add_subpackage("filterSettings")
     config.add_subpackage("filterListOptions")
     
     boxesdeps = [os.path.join("..", "visclibs", "boxeslib.c"), 

@@ -51,20 +51,10 @@ if HAVE_SPHINX:
             # in place build
             ret = subprocess.call([sys.executable, sys.argv[0], 'build_ext', '-i'])
             if ret != 0:
-                raise RuntimeError("Building atoman failed")
+                raise RuntimeError("Building atoman failed (%d)" % ret)
             
             # build doc
             BuildDoc.run(self)
-            
-            # copy doc to atoman
-            sphinxHtmlDir = os.path.join("doc", "build", "html")
-            if os.path.exists(os.path.join(sphinxHtmlDir, "index.html")):
-                if os.path.isdir(os.path.join("atoman", "doc")):
-                    shutil.rmtree(os.path.join("atoman", "doc"))
-                shutil.copytree(sphinxHtmlDir, os.path.join("atoman", "doc"))
-            
-            else:
-                raise RuntimeError("Could not locate Sphinx documentation HTML files")
 
 # package configuration method
 def configuration(parent_package='', top_path=None):
@@ -77,6 +67,7 @@ def configuration(parent_package='', top_path=None):
                        quiet=True)
     
     config.add_subpackage("atoman")
+    config.add_data_dir(("atoman/doc", os.path.join("doc", "build", "html")))
     
     return config
 
@@ -106,7 +97,7 @@ def do_clean():
     
     if os.path.isdir(os.path.join("doc", "build")):
         print "rm -rf doc/build/*"
-        subprocess.call(["rm", "-rf", "doc/build/*"])
+        os.system("rm -rf doc/build/*")
     
     if os.path.isdir("dist"):
         print "rm -rf dist/"
