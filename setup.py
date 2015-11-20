@@ -104,11 +104,9 @@ def do_clean():
         print "rm -rf atoman/doc"
         shutil.rmtree(os.path.join("atoman", "doc"))
     
-    os.chdir("doc")
-    try:
-        subprocess.call(["make", "clean"])
-    finally:
-        os.chdir(cwd)
+    if os.path.isdir(os.path.join("doc", "build")):
+        print "rm -rf doc/build/*"
+        subprocess.call(["rm", "-rf", "doc/build/*"])
     
     if os.path.isdir("dist"):
         print "rm -rf dist/"
