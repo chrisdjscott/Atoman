@@ -5,6 +5,4 @@
 .pydevproject
 .project
 .DS_Store
-*_wrap.c
-_build/
 modules/

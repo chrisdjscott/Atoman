@@ -19,7 +19,7 @@ compiler = unix
 
 
 [build_sphinx]
-source-dir = doc/src
+source-dir = doc/source
 build-dir = doc/build
 
 [nosetests]

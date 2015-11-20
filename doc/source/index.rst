@@ -14,8 +14,6 @@ Welcome to Atoman's documentation!
    changelog
    license/index
 
-You can read this documentation online at http://vis.chrisdjscott.co.uk/.
-
 Indices and tables
 ==================
 

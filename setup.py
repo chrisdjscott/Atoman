@@ -84,32 +84,42 @@ def configuration(parent_package='', top_path=None):
 def do_clean():
     cwd = os.getcwd()
     os.chdir("atoman")
-    for root, dirs, files in os.walk(os.getcwd()):
-        so_files = glob.glob(os.path.join(root, "*.so"))
-        for so_file in so_files:
-            print "rm atoman/%s" % os.path.relpath(so_file)
-            os.unlink(so_file)
-        
-        if "resources.py" in files:
-            os.unlink(os.path.join(root, "resources.py"))
-       
-        pyc_files = glob.glob(os.path.join(root, "*.pyc"))
-        for pyc_file in pyc_files:
-            os.unlink(pyc_file)
-    
-    os.chdir(cwd)
-    
-    if os.path.isdir("doc/build"):
-        print "rm -rf doc/build"
-        shutil.rmtree(os.path.join("doc", "build"))
+    try:
+        for root, dirs, files in os.walk(os.getcwd()):
+            so_files = glob.glob(os.path.join(root, "*.so"))
+            for so_file in so_files:
+                print "rm atoman/%s" % os.path.relpath(so_file)
+                os.unlink(so_file)
+            
+            if "resources.py" in files:
+                os.unlink(os.path.join(root, "resources.py"))
+           
+            pyc_files = glob.glob(os.path.join(root, "*.pyc"))
+            for pyc_file in pyc_files:
+                os.unlink(pyc_file)
+    finally:
+        os.chdir(cwd)
     
     if os.path.isdir("atoman/doc"):
         print "rm -rf atoman/doc"
         shutil.rmtree(os.path.join("atoman", "doc"))
     
+    os.chdir("doc")
+    try:
+        subprocess.call(["make", "clean"])
+    finally:
+        os.chdir(cwd)
+    
     if os.path.isdir("dist"):
         print "rm -rf dist/"
         shutil.rmtree("dist")
+    
+    if os.path.isdir("build"):
+        print "rm -rf build/"
+        shutil.rmtree("build")
+    if os.path.isdir("atoman.egg-info"):
+        print "rm -rf atoman.egg-info/"
+        shutil.rmtree("atoman.egg-info")
 
 # setup the package
 def setup_package():
@@ -122,7 +132,7 @@ def setup_package():
     
     # metadata
     metadata = dict(
-        name = "atoman",
+        name = "Atoman",
         maintainer = "Chris Scott",
         maintainer_email = "chris@chrisdjscott.co.uk",
         description = "Analysis and visualisation of atomistic simulations",
@@ -143,6 +153,8 @@ def setup_package():
             "Operating System :: POSIX :: Linux",
             "Programming Language :: C",
             "Programming Language :: C++",
+            "Programming Language :: Python",
+            "Programming Language :: Python :: 2",
             "Programming Language :: Python :: 2.7",
             "Topic :: Scientific/Engineering",
             "Topic :: Scientific/Engineering :: Visualization",
@@ -208,14 +220,6 @@ def setup_package():
     
     # run setup
     setup(**metadata)
-    
-    if "clean" in sys.argv:
-        if os.path.isdir("build"):
-            print "rm -rf build/"
-            shutil.rmtree("build")
-        if os.path.isdir("atoman.egg-info"):
-            print "rm -rf atoman.egg-info/"
-            shutil.rmtree("atoman.egg-info")
 
 if __name__ == "__main__":
     setup_package()
