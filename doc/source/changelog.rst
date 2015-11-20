@@ -2,6 +2,16 @@
 Changelog
 =========
 
+**151120**
+
+* Add entry point to replace cdjsvis.py script
+* Rearrange structure of subpackages
+* Remove dependency on GSL
+* Add lots more tests
+* Set numpy deprecated api version
+* Fix bug in defects filter regarding filtering by species
+* Many other changes
+
 **151002**
 
 * Rewrite filters to be objects, with settings objects
