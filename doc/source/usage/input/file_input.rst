@@ -1,0 +1,2 @@
+
+.. automodule:: atoman.gui.generalReaderForm

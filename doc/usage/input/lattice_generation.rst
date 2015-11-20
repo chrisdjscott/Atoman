@@ -1,2 +1,0 @@
-
-.. automodule:: CDJSVis.gui.latticeGeneratorForms
