@@ -2,16 +2,15 @@
 
 ## License and copying
 
-```
-Developed by Chris Scott
-Copyright 2015 Loughborough University
-Released under the MIT license, see "LICENSE.md" for details.
-```
+Developed by Chris Scott  
+Copyright 2015 Loughborough University  
+Released under the MIT license, see "LICENSE.md" for details.  
 
 ## Requirements
 
 This code requires [Python 2.7](http://www.python.org/download/releases/2.7/) to run.  It depends
-on a number of Python modules/libraries and also some other programmes.
+on a number of Python libraries, a C and C++ compiler (tested with gcc and g++) and also some other
+software.
 
 ### Python modules
 
