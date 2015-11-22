@@ -24,5 +24,5 @@ build-dir = doc/build
 
 [nosetests]
 where = atoman
-# comment this line to exclude tests which create a QApplication
-exclude = slowtests
+## uncomment this line to exclude tests which create a QApplication
+#exclude = slowtests
