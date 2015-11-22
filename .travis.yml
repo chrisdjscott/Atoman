@@ -17,9 +17,9 @@ before_install:
     - brew install vtk
 
 install:
-    cp setup.cfg.example setup.cfg
-    CC=gcc-5 CXX=g++-5 python setup.py build_clib --compiler=unix
-    CC=gcc-5 CXX=g++-5 python setup.py build_ext --inplace --compiler=unix
+    - cp setup.cfg.example setup.cfg
+    - CC=gcc-5 CXX=g++-5 python setup.py build_clib --compiler=unix
+    - CC=gcc-5 CXX=g++-5 python setup.py build_ext --inplace --compiler=unix
 
 script:
     - python setup.py test
