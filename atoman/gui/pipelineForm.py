@@ -166,31 +166,17 @@ class PipelineForm(QtGui.QWidget):
         # add pbc options
         group = QtGui.QGroupBox("Periodic boundaries")
         group.setAlignment(QtCore.Qt.AlignHCenter)
-        
         groupLayout = QtGui.QVBoxLayout(group)
         groupLayout.setSpacing(0)
         groupLayout.setContentsMargins(0,0,0,0)
         
-        self.replicateCellButton = QtGui.QPushButton("Replicate cell")
-        self.replicateCellButton.clicked.connect(self.replicateCell)
-        self.replicateCellButton.setToolTip("Replicate in periodic directions")
-        self.shiftCellButton = QtGui.QPushButton("Shift cell")
-        self.shiftCellButton.clicked.connect(self.shiftCell)
-        self.shiftCellButton.setToolTip("Shift cell in periodic directions")
-        hbox = QtGui.QHBoxLayout()
-        hbox.setContentsMargins(0,0,0,0)
-        hbox.addStretch(1)
-        hbox.addWidget(self.shiftCellButton)
-        hbox.addWidget(self.replicateCellButton)
-        hbox.addStretch(1)
-        groupLayout.addLayout(hbox)
-        
+        # add PBC check boxes
         self.PBCXCheckBox = QtGui.QCheckBox("x")
-        self.PBCXCheckBox.setChecked(1)
+        self.PBCXCheckBox.setChecked(QtCore.Qt.Checked)
         self.PBCYCheckBox = QtGui.QCheckBox("y")
-        self.PBCYCheckBox.setChecked(1)
+        self.PBCYCheckBox.setChecked(QtCore.Qt.Checked)
         self.PBCZCheckBox = QtGui.QCheckBox("z")
-        self.PBCZCheckBox.setChecked(1)
+        self.PBCZCheckBox.setChecked(QtCore.Qt.Checked)
         
         self.PBCXCheckBox.stateChanged[int].connect(self.PBCXChanged)
         self.PBCYCheckBox.stateChanged[int].connect(self.PBCYChanged)
@@ -204,6 +190,21 @@ class PipelineForm(QtGui.QWidget):
         rowLayout.addWidget(self.PBCZCheckBox)
         
         groupLayout.addWidget(row)
+        
+        # add shift cell and replicate cell buttons
+        self.replicateCellButton = QtGui.QPushButton("Replicate cell")
+        self.replicateCellButton.clicked.connect(self.replicateCell)
+        self.replicateCellButton.setToolTip("Replicate in periodic directions")
+        self.shiftCellButton = QtGui.QPushButton("Shift cell")
+        self.shiftCellButton.clicked.connect(self.shiftCell)
+        self.shiftCellButton.setToolTip("Shift cell in periodic directions")
+        hbox = QtGui.QHBoxLayout()
+        hbox.setContentsMargins(0,0,0,0)
+        hbox.addStretch(1)
+        hbox.addWidget(self.shiftCellButton)
+        hbox.addWidget(self.replicateCellButton)
+        hbox.addStretch(1)
+        groupLayout.addLayout(hbox)
         
         filterTabLayout.addWidget(group)
         
