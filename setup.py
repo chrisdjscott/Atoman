@@ -24,8 +24,14 @@ open(os.path.join("atoman", "visutils", "version_freeze.py"), "w").write("__vers
 
 # if on Mac we have to force gcc (for openmp...)
 if platform.system() == "Darwin":
-    os.environ["CC"] = "gcc"
-    os.environ["CXX"] = "g++"
+    try:
+        os.environ["CC"]
+    except KeyError:
+        os.environ["CC"] = "gcc"
+    try:
+        os.environ["CXX"]
+    except KeyError:
+        os.environ["CXX"] = "g++"
 
 # flags for different compilers (specify openmp...)
 copt = {
