@@ -1,0 +1,25 @@
+language: c
+compiler: gcc
+os: 
+    - osx
+
+before_install:
+    - brew update
+    - brew tap homebrew/science
+    - brew tap homebrew/python
+    - brew outdated gcc || brew upgrade gcc
+    - brew install python
+    - brew install pillow
+    - brew install numpy
+    - brew install scipy
+    - brew install matplotlib
+    - brew install pyside
+    - brew install vtk
+
+install:
+    cp setup.cfg.example setup.cfg
+    CC=gcc-5 CXX=g++-5 python setup.py build_clib --compiler=unix
+    CC=gcc-5 CXX=g++-5 python setup.py build_ext --inplace --compiler=unix
+
+script:
+    - python setup.py test
