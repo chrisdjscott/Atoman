@@ -1,14 +1,6 @@
 sudo: false
 language: c
 
-addons:
-    apt:
-        sources:
-            - ubuntu-toolchain-r-test
-        packages:
-            - gcc-5
-            - g++-5
-
 matrix:
     include:
         - os: linux
@@ -16,8 +8,8 @@ matrix:
           env:
               - VTK=5.10.1
               - PYTHON=2.7
-              - CC=gcc-5
-              - CXX=gcc-5
+              - CCA=gcc-5
+              - CXXA=g++-5
           before_install:
               - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
               - chmod +x miniconda.sh
@@ -32,8 +24,8 @@ matrix:
           env:
               - VTK=6.3.0
               - PYTHON=2.7
-              - CC=gcc-5
-              - CXX=gcc-5
+              - CCA=gcc-5
+              - CXXA=g++-5
           before_install:
               - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
               - chmod +x miniconda.sh
@@ -48,6 +40,8 @@ matrix:
           env:
               - VTK=5.10.1
               - PYTHON=2.7
+              - CCA=gcc
+              - CXXA=g++
           before_install:
               - wget http://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh -O miniconda.sh
               - chmod +x miniconda.sh
@@ -69,6 +63,8 @@ matrix:
           env:
               - VTK=6.3.0
               - PYTHON=2.7
+              - CCA=gcc
+              - CXXA=g++
           before_install:
               - wget http://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh -O miniconda.sh
               - chmod +x miniconda.sh
@@ -89,8 +85,8 @@ matrix:
           compiler: gcc
           env:
               - BREW
-              - CC=gcc-5
-              - CXX=gcc-5
+              - CCA=gcc-5
+              - CXXA=g++-5
           before_install:
               - brew update
               - brew tap homebrew/science
@@ -109,8 +105,8 @@ install:
     - gcc --version
     - python --version
     - cp setup.cfg.example setup.cfg
-    - python setup.py build_clib --compiler=unix
-    - python setup.py build_ext --inplace --compiler=unix
+    - CC=$CCA CXX=$CXXA python setup.py build_clib --compiler=unix
+    - CC=$CCA CXX=$CXXA python setup.py build_ext --inplace --compiler=unix
 
 script:
     - if [ ${TRAVIS_OS_NAME} == "osx" ]; then python setup.py test; else xvfb-run python setup.py test; fi
