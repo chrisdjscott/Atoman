@@ -1,9 +1,9 @@
 sudo: false
+language: c
 
 matrix:
     include:
         - os: linux
-          language: c
           compiler: gcc
           env:
               - VTK=5.10.1
@@ -16,9 +16,12 @@ matrix:
               - conda update --yes conda
               - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
               - source activate testenv
+          before_script:
+              - export DISPLAY=:99.0
+              - sh -e /etc/init.d/xvfb start
+              - sleep 3
         
         - os: linux
-          language: c
           compiler: gcc
           env:
               - VTK=6.3.0
@@ -31,9 +34,12 @@ matrix:
               - conda update --yes conda
               - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
               - source activate testenv
+          before_script:
+              - export DISPLAY=:99.0
+              - sh -e /etc/init.d/xvfb start
+              - sleep 3
         
         - os: osx
-          language: c
           compiler: gcc
           env:
               - VTK=5.10.1
@@ -51,7 +57,6 @@ matrix:
               - source activate testenv
         
         - os: osx
-          language: c
           compiler: gcc
           env:
               - VTK=6.3.0
@@ -72,11 +77,6 @@ install:
     - cp setup.cfg.example setup.cfg
     - python setup.py build_clib --compiler=unix
     - python setup.py build_ext --inplace --compiler=unix
-
-before_script:
-    - [ "${TRAVIS_OS_NAME}" -eq "linux" ] && export DISPLAY=:99.0 || true
-    - [ "${TRAVIS_OS_NAME}" -eq "linux" ] && sh -e /etc/init.d/xvfb start || true
-    - [ "${TRAVIS_OS_NAME}" -eq "linux" ] && sleep 3 || true
 
 script:
     - python setup.py test
