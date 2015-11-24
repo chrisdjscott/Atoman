@@ -1,6 +1,14 @@
 sudo: false
 language: c
 
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+        packages:
+            - gcc-5
+            - g++-5
+
 matrix:
     include:
         - os: linux
@@ -8,6 +16,8 @@ matrix:
           env:
               - VTK=5.10.1
               - PYTHON=2.7
+              - CC=gcc-5
+              - CXX=gcc-5
           before_install:
               - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
               - chmod +x miniconda.sh
@@ -16,16 +26,14 @@ matrix:
               - conda update --yes conda
               - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
               - source activate testenv
-          before_script:
-              - export DISPLAY=:99.0
-              - sh -e /etc/init.d/xvfb start
-              - sleep 3
         
         - os: linux
           compiler: gcc
           env:
               - VTK=6.3.0
               - PYTHON=2.7
+              - CC=gcc-5
+              - CXX=gcc-5
           before_install:
               - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
               - chmod +x miniconda.sh
@@ -34,10 +42,6 @@ matrix:
               - conda update --yes conda
               - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
               - source activate testenv
-          before_script:
-              - export DISPLAY=:99.0
-              - sh -e /etc/init.d/xvfb start
-              - sleep 3
         
         - os: osx
           compiler: gcc
@@ -52,6 +56,10 @@ matrix:
               - export DYLD_LIBRARY_PATH=$HOME/miniconda/lib:$DYLD_LIBRARY_PATH
               - ls $HOME/miniconda
               - ls $HOME/miniconda/lib
+              - ls $HOME/miniconda/bin
+              - unset CC
+              - echo $PATH
+              - echo $DYLD_LIBRARY_PATH
               - conda update --yes conda
               - conda create -n testenv --yes numpy scipy matplotlib pillow pyside gcc vtk=$VTK pip nose setuptools python=$PYTHON
               - source activate testenv
@@ -67,11 +75,37 @@ matrix:
               - ./miniconda.sh -b -p $HOME/miniconda
               - export PATH=$HOME/miniconda/bin:$PATH
               - export DYLD_LIBRARY_PATH=$HOME/miniconda/lib:$DYLD_LIBRARY_PATH
+              - ls $HOME/miniconda
+              - ls $HOME/miniconda/lib
+              - ls $HOME/miniconda/bin
+              - unset CC
+              - echo $PATH
+              - echo $DYLD_LIBRARY_PATH
               - conda update --yes conda
               - conda create -n testenv --yes numpy scipy matplotlib pillow pyside gcc vtk=$VTK pip nose setuptools python=$PYTHON
               - source activate testenv
+        
+        - os: osx
+          compiler: gcc
+          env:
+              - BREW
+              - CC=gcc-5
+              - CXX=gcc-5
+          before_install:
+              - brew update
+              - brew tap homebrew/science
+              - brew tap homebrew/python
+              - brew outdated gcc || brew upgrade gcc
+              - brew install python
+              - brew install pillow
+              - brew install numpy
+              - brew install scipy
+              - brew install matplotlib
+              - brew install pyside
+              - brew install vtk
 
 install:
+    - echo $CC
     - gcc --version
     - python --version
     - cp setup.cfg.example setup.cfg
@@ -79,4 +113,4 @@ install:
     - python setup.py build_ext --inplace --compiler=unix
 
 script:
-    - python setup.py test
+    - if [ ${TRAVIS_OS_NAME} == "osx" ]; then python setup.py test; else xvfb-run python setup.py test; fi
