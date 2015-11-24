@@ -1,25 +1,73 @@
-language: c
-compiler: gcc
-os: 
-    - osx
+sudo: false
 
-before_install:
-    - brew update
-    - brew tap homebrew/science
-    - brew tap homebrew/python
-    - brew outdated gcc || brew upgrade gcc
-    - brew install python
-    - brew install pillow
-    - brew install numpy
-    - brew install scipy
-    - brew install matplotlib
-    - brew install pyside
-    - brew install vtk
+matrix:
+    include:
+        - os: linux
+          language: c
+          compiler: gcc
+          env:
+              - VTK=5.10.1
+              - PYTHON=2.7
+          before_install:
+              - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+              - chmod +x miniconda.sh
+              - ./miniconda.sh -b -p $HOME/miniconda
+              - export PATH=$HOME/miniconda/bin:$PATH
+              - conda update --yes conda
+              - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
+              - source activate testenv
+        
+        - os: linux
+          language: c
+          compiler: gcc
+          env:
+              - VTK=6.3.0
+              - PYTHON=2.7
+          before_install:
+              - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+              - chmod +x miniconda.sh
+              - ./miniconda.sh -b -p $HOME/miniconda
+              - export PATH=$HOME/miniconda/bin:$PATH
+              - conda update --yes conda
+              - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
+              - source activate testenv
+        
+        - os: osx
+          language: c
+          compiler: gcc
+          env:
+              - VTK=5.10.1
+              - PYTHON=2.7
+          before_install:
+              - wget http://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh -O miniconda.sh
+              - chmod +x miniconda.sh
+              - ./miniconda.sh -b -p $HOME/miniconda
+              - export PATH=$HOME/miniconda/bin:$PATH
+              - conda update --yes conda
+              - conda create -n testenv --yes numpy scipy matplotlib pillow pyside gcc vtk=$VTK pip nose setuptools python=$PYTHON
+              - source activate testenv
+        
+        - os: osx
+          language: c
+          compiler: gcc
+          env:
+              - VTK=6.3.0
+              - PYTHON=2.7
+          before_install:
+              - wget http://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh -O miniconda.sh
+              - chmod +x miniconda.sh
+              - ./miniconda.sh -b -p $HOME/miniconda
+              - export PATH=$HOME/miniconda/bin:$PATH
+              - conda update --yes conda
+              - conda create -n testenv --yes numpy scipy matplotlib pillow pyside gcc vtk=$VTK pip nose setuptools python=$PYTHON
+              - source activate testenv
 
 install:
+    - gcc --version
+    - python --version
     - cp setup.cfg.example setup.cfg
-    - CC=gcc-5 CXX=g++-5 python setup.py build_clib --compiler=unix
-    - CC=gcc-5 CXX=g++-5 python setup.py build_ext --inplace --compiler=unix
+    - python setup.py build_clib --compiler=unix
+    - python setup.py build_ext --inplace --compiler=unix
 
 script:
     - python setup.py test
