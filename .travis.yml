@@ -8,8 +8,8 @@ matrix:
           env:
               - VTK=5.10.1
               - PYTHON=2.7
-              - CCA=gcc-5
-              - CXXA=g++-5
+              - CCA=gcc
+              - CXXA=g++
           before_install:
               - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
               - chmod +x miniconda.sh
@@ -24,8 +24,8 @@ matrix:
           env:
               - VTK=6.3.0
               - PYTHON=2.7
-              - CCA=gcc-5
-              - CXXA=g++-5
+              - CCA=gcc
+              - CXXA=g++
           before_install:
               - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
               - chmod +x miniconda.sh
@@ -40,8 +40,8 @@ matrix:
           env:
               - VTK=5.10.1
               - PYTHON=2.7
-              - CCA=gcc
-              - CXXA=g++
+              - CCA=gcc-5
+              - CXXA=g++-5
           before_install:
               - wget http://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh -O miniconda.sh
               - chmod +x miniconda.sh
@@ -55,16 +55,18 @@ matrix:
               - echo $PATH
               - echo $DYLD_LIBRARY_PATH
               - conda update --yes conda
-              - conda create -n testenv --yes numpy scipy matplotlib pillow pyside gcc vtk=$VTK pip nose setuptools python=$PYTHON
+              - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
               - source activate testenv
+              - brew update
+              - brew outdated gcc || brew upgrade gcc
         
         - os: osx
           compiler: gcc
           env:
               - VTK=6.3.0
               - PYTHON=2.7
-              - CCA=gcc
-              - CXXA=g++
+              - CCA=gcc-5
+              - CXXA=g++-5
           before_install:
               - wget http://repo.continuum.io/miniconda/Miniconda-latest-MacOSX-x86_64.sh -O miniconda.sh
               - chmod +x miniconda.sh
@@ -78,8 +80,10 @@ matrix:
               - echo $PATH
               - echo $DYLD_LIBRARY_PATH
               - conda update --yes conda
-              - conda create -n testenv --yes numpy scipy matplotlib pillow pyside gcc vtk=$VTK pip nose setuptools python=$PYTHON
+              - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
               - source activate testenv
+              - brew update
+              - brew outdated gcc || brew upgrade gcc
         
         - os: osx
           compiler: gcc
