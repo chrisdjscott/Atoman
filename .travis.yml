@@ -64,4 +64,4 @@ install:
     - CC=$CCA CXX=$CXXA python setup.py build_ext --inplace --compiler=unix
 
 script:
-    - if [ ${TRAVIS_OS_NAME} == "osx" ]; then python setup.py test; else xvfb-run python setup.py test; fi
+    - python setup.py test
