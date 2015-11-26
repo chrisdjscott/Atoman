@@ -628,7 +628,7 @@ class PipelineForm(QtGui.QWidget):
         self.logger.debug("Clearing all actors")
         
         for filterList in self.filterLists:
-            filterList.filterer.removeActors()
+            filterList.clearActors()
     
     def runAllFilterLists(self, sequencer=False):
         """
@@ -666,16 +666,16 @@ class PipelineForm(QtGui.QWidget):
                     self.logger.info("    Static filter list: skipping")
                 
                 else:
-                    filterList.filterer.runFilters(sequencer=sequencer)
+                    filterList.applyList(sequencer=sequencer)
                 
                 count += 1
             
-            self.refreshOnScreenInfo()
+            # self.refreshOnScreenInfo()
             
             # refresh plot options
-            for rw in self.rendererWindows:
-                if rw.currentPipelineIndex == self.pipelineIndex:
-                    rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
+            # for rw in self.rendererWindows:
+            #     if rw.currentPipelineIndex == self.pipelineIndex:
+            #         rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
         
         except:
             exctype, value = sys.exc_info()[:2]

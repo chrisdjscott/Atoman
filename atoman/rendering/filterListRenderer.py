@@ -10,7 +10,7 @@ Renderer for the FilterList object.
 
 
 
-
+################################################################################
 
 class FilterListRenderer(object):
     """
@@ -31,6 +31,9 @@ class FilterListRenderer(object):
         Render the data provided by the Filterer
         
         """
+        
+        
+        
     
     def removeActors(self, sequencer=False):
         """

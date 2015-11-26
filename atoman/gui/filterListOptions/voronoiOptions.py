@@ -37,7 +37,6 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
-        self.parent = parent
         self.mainWindow = mainWindow
         
         self.logger = logging.getLogger(__name__)

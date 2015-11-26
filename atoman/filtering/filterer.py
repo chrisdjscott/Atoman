@@ -13,18 +13,14 @@ import itertools
 import importlib
 
 import numpy as np
-from PySide import QtGui, QtCore
 
 from .filters import _filtering as filtering_c
 from . import _clusters as clusters_c
 from . import bonds as bonds_c
-from ..rendering import renderer
-from ..rendering import renderBonds
 from ..algebra import vectors
 from . import clusters
 from ..system.atoms import elements
 from . import voronoi
-from ..rendering import renderVoronoi
 from .filters import base
 from . import filters
 from . import atomStructure
@@ -38,20 +34,44 @@ class Filterer(object):
     Contains list of subfilters to be performed in order.
     
     """
+    # known atom structure types
     knownStructures = atomStructure.knownStructures
     
-    def __init__(self, parent, tmpDirectory=None):
-        #TODO: get rid of these if possible
-        self.parent = parent
-        
+    # all available filters
+    defaultFilters = [
+        "Species", 
+        "Point defects", 
+        "Crop box", 
+        "Cluster", 
+        "Displacement",
+        "Charge",
+        "Crop sphere",
+        "Slice",
+        "Coordination number",
+        "Voronoi neighbours",
+        "Voronoi volume",
+        "Bond order",
+        "Atom ID",
+        "ACNA",
+        "Slip",
+        "Bubbles",
+    ]
+    defaultFilters.sort()
+    
+    # filters that are compatible with the 'Point defects' filter
+    defectCompatibleFilters = [
+        "Crop box",
+        "Slice",
+    ]
+    
+    def __init__(self, voronoiOptions):
         self.logger = logging.getLogger(__name__)
+        self.voronoiOptions = voronoiOptions
         
         # self.colouringOptions = self.parent.colouringOptions
         # self.bondsOptions = self.parent.bondsOptions
         # self.displayOptions = self.parent.displayOptions
-        self.voronoiOptions = self.parent.voronoiOptions
         # self.traceOptions = self.parent.traceOptions
-        self.vectorsOptions = self.parent.vectorsOptions
         # self.actorsOptions = self.parent.actorsOptions
         # self.scalarBarAdded = False
         # self.scalarBar_white_bg = None
@@ -63,10 +83,6 @@ class Filterer(object):
         self._driftCompensation = False
         
         self.reset()
-    
-    # def setPersistentList(self, flag):
-    #     """Set whether this is a persistent list or not."""
-    #     self._persistentList = flag
     
     def toggleDriftCompensation(self, driftCompensation):
         """Toggle the drift setting."""
@@ -97,6 +113,9 @@ class Filterer(object):
         self.bubbleList = []
         self.structureCounterDicts = {}
         self.voronoi = None
+        self.scalarsDict = {}
+        self.latticeScalarsDict = {}
+        self.vectorsDict = {}
     
     def runFilters(self, currentFilters, currentSettings, inputState, refState, sequencer=False):
         """
@@ -109,12 +128,15 @@ class Filterer(object):
         # reset the filterer
         self.reset()
         
-        # is the defect filter selected
+        # validate the list of filters
         defectFilterSelected = False
-        for filterNameString in currentFilters:
-            if filterNameString.startswith("Point defects"):
+        for filterName in currentFilters:
+            if filterName not in self.defaultFilters and not filterName.startswith("Scalar:"): #TODO: check the scalar exists too
+                raise ValueError("Unrecognised filter passed to Filterer: '%s'" % filterName)
+            
+            # check if the defect filter in the list
+            if filterName == "Point defects":
                 defectFilterSelected = True
-                break
         self.logger.debug("Defect filter selected: %s", defectFilterSelected)
         
         # set up visible atoms or defect arrays
@@ -157,17 +179,7 @@ class Filterer(object):
         applyFiltersTime = time.time()
         drawDisplacementVectors = False
         displacementSettings = None
-        # currentFilters = self.parent.getCurrentFilterNames()
-        # currentSettings = self.parent.getCurrentFilterSettings()
-        for filterNameString, filterSettingsGui in zip(currentFilters, currentSettings):
-            # filter name
-            filterName = filterNameString.split("[")[0].strip()
-            
-            # filter settings object
-            filterSettings = filterSettingsGui.getSettings()
-            if filterSettings is None:
-                filterSettings = filterSettingsGui
-            
+        for filterName, filterSettings in zip(currentFilters, currentSettings):
             # determine the name of filter module to be loaded
             if filterName.startswith("Scalar: "):
                 moduleName = "genericScalarFilter"
@@ -253,7 +265,7 @@ class Filterer(object):
                     # if filterSettings.getSetting("calculateVolumes"):
                     #     self.clusterFilterCalculateVolumes(filterSettings)
             
-            # write to log
+            # calculate numbers of atoms/defects
             if defectFilterSelected:
                 self.NVis = len(self.interstitials) + len(self.vacancies) + len(self.antisites) + len(self.splitInterstitials)
                 self.NVac = len(self.vacancies)
@@ -263,6 +275,8 @@ class Filterer(object):
                 self.NVis = len(self.visibleAtoms)
             
             self.logger.info("  %d visible atoms", self.NVis)
+        
+        # do species counts here
         
         #TODO: dictionary of calculated properties...
         

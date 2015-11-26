@@ -60,33 +60,6 @@ class FilterList(QtGui.QWidget):
     Filter list widget
     
     """
-    # all available filters
-    defaultFilters = [
-        "Species", 
-        "Point defects", 
-        "Crop box", 
-        "Cluster", 
-        "Displacement",
-        "Charge",
-        "Crop sphere",
-        "Slice",
-        "Coordination number",
-        "Voronoi neighbours",
-        "Voronoi volume",
-        "Bond order",
-        "Atom ID",
-        "ACNA",
-        "Slip",
-        "Bubbles",
-    ]
-    defaultFilters.sort()
-    
-    # filters that are compatible with the 'Point defects' filter
-    defectCompatibleFilters = [
-        "Crop box",
-        "Slice",
-    ]
-    
     def __init__(self, parent, mainToolbar, mainWindow, tab, width):
         super(FilterList, self).__init__(parent)
         
@@ -208,8 +181,8 @@ class FilterList(QtGui.QWidget):
         # quick add combo
         self.quickAddCombo = QtGui.QComboBox()
         self.quickAddCombo.addItem("Add property/filter ...")
-        self.quickAddCombo.addItems(self.defaultFilters)
-        self.allFilters = copy.deepcopy(self.defaultFilters)
+        self.quickAddCombo.addItems(filterer.Filterer.defaultFilters)
+        self.allFilters = copy.deepcopy(filterer.Filterer.defaultFilters)
         self.quickAddCombo.currentIndexChanged[str].connect(self.quickAddComboAction)
         
         # clear list button
@@ -296,7 +269,7 @@ class FilterList(QtGui.QWidget):
         self.filterListLayout.addWidget(extraOptionsGroupBox)
         
         # the filterer (does the filtering)
-        self.filterer = filterer.Filterer(self)
+        self.filterer = filterer.Filterer(self.voronoiOptions)
     
     def optionsListItemClicked(self, item):
         """
@@ -453,7 +426,13 @@ class FilterList(QtGui.QWidget):
 #         utils.positionWindow(item.filterSettings, item.filterSettings.size(), self.mainWindow.desktop, self)
         item.filterSettings.show()
     
-    def applyList(self):
+    def clearActors(self):
+        """Remove all current actors."""
+        print ">>>>>>> CLEAR ACTORS NOT IMPLEMENTED..."
+        
+        
+    
+    def applyList(self, sequencer=False):
         """
         Run filters in this list.
         
@@ -462,8 +441,20 @@ class FilterList(QtGui.QWidget):
         progDiag = utils.showProgressDialog("Applying list", "Applying list...", self)
         
         try:
+            # list of filters
+            currentFilters = self.getCurrentFilterNames()
+            currentSettingsGuis = self.getCurrentFilterSettings()
+            currentSettings = [settingsGui.getSettings() for settingsGui in currentSettingsGuis]
+            
+            # current states
+            inputState = self.pipelinePage.inputState
+            refState = self.pipelinePage.refState
+            
+            # remove actors first
+            self.clearActors()
+            
             # apply filters
-            self.filterer.runFilters()
+            self.filterer.runFilters(currentFilters, currentSettings, inputState, refState)
             
             # this is where the rendering should be done
             
@@ -506,7 +497,7 @@ class FilterList(QtGui.QWidget):
         currentNames = []
         for i in xrange(self.listItems.count()):
             item = self.listItems.item(i)
-            currentNames.append(item.filterName)
+            currentNames.append(item.filterName.split("[")[0].strip())
         
         return currentNames
     
@@ -663,7 +654,7 @@ class FilterList(QtGui.QWidget):
         inp = self.pipelinePage.inputState
         scalarsDict = inp.scalarsDict
         
-        numDefault = len(self.defaultFilters)
+        numDefault = len(filterer.Filterer.defaultFilters)
         scalarNames = scalarsDict.keys()
         additionalFilters = ["Scalar: {0}".format(s) for s in scalarNames]
         previousAdditionalFilters = self.allFilters[numDefault:]
@@ -718,7 +709,7 @@ class FilterList(QtGui.QWidget):
         
         # first determine what filter is to be added
         if filterName is not None and filterName in self.allFilters:
-            if self.defectFilterSelected and filterName not in self.defectCompatibleFilters:
+            if self.defectFilterSelected and filterName not in self.filterer.defectCompatibleFilters:
                 self.warnDefectFilter(name=filterName)
             
             elif self.listItems.count() > 0 and str(filterName) == "Point defects":
