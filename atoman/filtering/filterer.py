@@ -24,6 +24,7 @@ from . import voronoi
 from .filters import base
 from . import filters
 from . import atomStructure
+from ..rendering import _rendering
 
 
 ################################################################################
@@ -289,7 +290,10 @@ class Filterer(object):
             else:
                 self.logger.info("  %d visible atoms", len(self.visibleAtoms))
         
-        # do species counts here
+        #TODO: do species counts here
+        if not self.defectFilterSelected:
+            self.visibleSpecieCount = _rendering.countVisibleBySpecie(self.visibleAtoms, len(inputState.specieList), inputState.specie)
+        
         
         #TODO: dictionary of calculated properties...
         

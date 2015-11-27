@@ -110,10 +110,19 @@ class FilterListRenderer(object):
         # render vectors
         self._renderVectors()
             
+        # displacement vectors
+        
+        
+        # trace
+        
+        
+        # voronoi
+        
+        
+        # bonds
         
         
         # render clusters
-        
         
         
         # render bubbles (or already done?)

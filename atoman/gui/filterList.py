@@ -469,6 +469,9 @@ class FilterList(QtGui.QWidget):
             # update on screen text
             self.filterTab.refreshOnScreenInfo()
             
+            # refresh available scalars in extra options dialog
+            self.colouringOptions.refreshScalarColourOption()
+            
             # add actors
             if self.visible:
                 self.renderer.addActors()
