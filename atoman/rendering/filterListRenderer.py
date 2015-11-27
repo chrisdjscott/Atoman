@@ -5,9 +5,15 @@ Renderer for the FilterList object.
 @author: Chris Scott
 
 """
+import logging
 
+import numpy as np
+import vtk
+import vtk.util
 
-
+from . import _rendering
+from . import utils
+from .renderers import atomRenderer
 
 
 ################################################################################
@@ -17,23 +23,132 @@ class FilterListRenderer(object):
     Renderer for a filter list.
     
     """
-    def __init__(self):
+    def __init__(self, filterList):
+        # logger
+        self._logger = logging.getLogger(__name__)
+        
+        # the filterer that we are rendering
+        self._filterer = filterList.filterer
+        
+        # temporary directory
+        self._tmpDirectory = filterList.mainWindow.tmpDirectory
+        
         # dictionaries for storing current actors
         self.actorsDict = {}
         self.traceDict = {}
         self.previousPosForTrace = None
+        self.scalarBar_white_bg = None
+        self.scalarBar_black_bg = None
+        self.povrayAtomsWritten = False
+        
+        # get required refs from filter list
+        self.pipelinePage = filterList.pipelinePage
+        self.rendererWindows = filterList.pipelinePage.rendererWindows
+        self.colouringOptions = filterList.colouringOptions
+        self.displayOptions = filterList.displayOptions
+        
+        
+    
+    def render(self, sequencer=False):
+        """
+        Render the data provided by the Filterer.
+        
+        Workflow:
+            - Render atoms
+            - Write povray atoms...
+            - Render interstitials
+            - Render vacancies
+            - Render antisites/onAntisites
+            - Render clusters
+            - Render bubbles
+            - Render bonds (calculate?)
+            - Render Voronoi?
+            - Make scalar bar etc...
+        
+        Just go through everything and render what is available.
+        
+        Onscreen info is probably going to come from here too
+        
+        ** Do we need to store lots of refs, eg lattices, scalarsDicts, etc
+        ** Should filterer be passed to __init__
+        
+        """
+        self._logger.debug("Rendering filter list")
+        
+        # local refs
+        inputState = self._filterer.inputState
+        refState = self._filterer.refState
+        visibleAtoms = self._filterer.visibleAtoms
+        
+        # set resolution
+        numForRes = len(visibleAtoms) #TODO: plus interstitials etc...
+        resolution = utils.setRes(numForRes, self.displayOptions)
+        
+        # make points array
+        atomPointsNp = _rendering.makeVisiblePointsArray(visibleAtoms, inputState.pos)
+        atomPoints = vtk.vtkPoints()
+        atomPoints.SetData(vtk.util.numpy_support.numpy_to_vtk(atomPointsNp, deep=1))
+        
+        # make radius array
+        radiusArrayNp = _rendering.makeVisibleRadiusArray(visibleAtoms, inputState.specie, inputState.specieCovalentRadius)
+        radiusArray = vtk.util.numpy_support.numpy_to_vtk(radiusArrayNp, deep=1)
+        radiusArray.SetName("radius")
+        
+        # get the scalars array
+        scalarsArrayNp, scalarsArray = self._getScalarsArray()
+        
+        # make the look up table
+        lut = utils.setupLUT(inputState.specieList, inputState.specieRGB, self.colouringOptions)
+        
+        # render atoms
+        #TODO: should we store the renderer!?
+        atomRend = atomRenderer.AtomRenderer()
+        actor = atomRend.render(atomPoints, scalarsArray, radiusArray, len(inputState.specieList), self.colouringOptions, 
+                                self.displayOptions.atomScaleFactor, lut, resolution)
+        self.actorsDict["Atoms"] = actor
+        
+        
+        
+        
         
         
         
     
-    def render(self, filterer):
+    def _getScalarsArray(self):
         """
-        Render the data provided by the Filterer
+        Returns the scalars array (np and vtk versions)
         
         """
+        # local refs
+        inputState = self._filterer.inputState
+        colouringOptions = self.colouringOptions
         
+        # scalar type
+        scalarType = utils.getScalarsType(colouringOptions)
         
+        # scalars array
+        if scalarType == 5:
+            if colouringOptions.colourBy.startswith("Lattice: "):
+                scalarsArray = self._filterer.latticeScalarsDict[colouringOptions.colourBy[9:]]
+            else:
+                scalarsArray = self._filterer.scalarsDict[colouringOptions.colourBy]
         
+        else:
+            if scalarType == 0:
+                scalarsFull = np.asarray(inputState.specie, dtype=np.float64)
+            elif scalarType == 1:
+                scalarsFull = inputState.pos[colouringOptions.heightAxis::3]
+            elif scalarType == 4:
+                scalarsFull = inputState.charge
+            else:
+                logger.error("Unrecognised scalar type (%d): defaulting to specie", scalarType)
+                scalarsFull = inputState.specie
+            scalarsArray = _rendering.makeVisibleScalarArray(self._filterer.visibleAtoms, scalarsFull)
+        
+        scalarsArrayVTK = vtk.util.numpy_support.numpy_to_vtk(scalarsArray, deep=1)
+        scalarsArrayVTK.SetName("colours")
+        
+        return scalarsArray, scalarsArrayVTK
     
     def removeActors(self, sequencer=False):
         """
@@ -47,34 +162,9 @@ class FilterListRenderer(object):
             self.traceDict = {}
             self.previousPosForTrace = None
         
-        self.scalarsDict = {}
-        self.latticeScalarsDict = {}
-        self.vectorsDict = {}
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
-        
-        self.NVis = 0
-        self.NVac = 0
-        self.NInt = 0
-        self.NAnt = 0
-        self.visibleAtoms = np.asarray([], dtype=np.int32)
-        self.interstitials = np.asarray([], dtype=np.int32)
-        self.vacancies = np.asarray([], dtype=np.int32)
-        self.antisites = np.asarray([], dtype=np.int32)
-        self.onAntisites = np.asarray([], dtype=np.int32)
-        self.splitInterstitials = np.asarray([], dtype=np.int32)
-        self.visibleSpecieCount = np.asarray([], dtype=np.int32)
-        self.vacancySpecieCount = np.asarray([], dtype=np.int32)
-        self.interstitialSpecieCount = np.asarray([], dtype=np.int32)
-        self.antisiteSpecieCount = np.asarray([], dtype=np.int32)
-        self.splitIntSpecieCount = np.asarray([], dtype=np.int32)
-        self.driftVector = np.zeros(3, np.float64)
-        
         self.povrayAtomsWritten = False
-        self.clusterList = []
-        self.bubbleList = []
-        self.structureCounterDicts = {}
-        self.voronoi = None
     
     def hideActors(self):
         """
@@ -83,12 +173,12 @@ class FilterListRenderer(object):
         """
         for actorName, val in self.actorsDict.iteritems():
             if isinstance(val, dict):
-                self.logger.debug("Removing actors for: '%s'", actorName)
+                self._logger.debug("Removing actors for: '%s'", actorName)
                 for actorName2, actorObj in val.iteritems():
                     if actorObj.visible:
-                        self.logger.debug("  Removing actor: '%s'", actorName2)
+                        self._logger.debug("  Removing actor: '%s'", actorName2)
                         for rw in self.rendererWindows:
-                            if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                            if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                                 rw.vtkRen.RemoveActor(actorObj.actor)
                         
                         actorObj.visible = False
@@ -96,15 +186,15 @@ class FilterListRenderer(object):
             else:
                 actorObj = val
                 if actorObj.visible:
-                    self.logger.debug("Removing actor: '%s'", actorName)
+                    self._logger.debug("Removing actor: '%s'", actorName)
                     for rw in self.rendererWindows:
-                        if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                        if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                             rw.vtkRen.RemoveActor(actorObj.actor)
                     
                     actorObj.visible = False
         
         for rw in self.rendererWindows:
-            if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+            if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                 rw.vtkRenWinInteract.ReInitialize()
         
         self.hideScalarBar()
@@ -215,9 +305,9 @@ class FilterListRenderer(object):
         actorObj = d[actorName]
         changes = False
         if not actorObj.visible:
-            self.logger.debug("Adding actor: '%s'", actorName)
+            self._logger.debug("Adding actor: '%s'", actorName)
             for rw in self.rendererWindows:
-                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                     rw.vtkRen.AddActor(actorObj.actor)
                     changes = True
             
@@ -241,9 +331,9 @@ class FilterListRenderer(object):
         actorObj = d[actorName]
         changes = False
         if actorObj.visible:
-            self.logger.debug("Removing actor: '%s'", actorName)
+            self._logger.debug("Removing actor: '%s'", actorName)
             for rw in self.rendererWindows:
-                if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                     rw.vtkRen.RemoveActor(actorObj.actor)
                     changes = True
             
@@ -260,7 +350,7 @@ class FilterListRenderer(object):
         
         """
         for rw in self.rendererWindows:
-            if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+            if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                 rw.vtkRenWinInteract.ReInitialize()
     
     def addActors(self):
@@ -270,12 +360,12 @@ class FilterListRenderer(object):
         """
         for actorName, val in self.actorsDict.iteritems():
             if isinstance(val, dict):
-                self.logger.debug("Adding actors for: '%s'", actorName)
+                self._logger.debug("Adding actors for: '%s'", actorName)
                 for actorName2, actorObj in val.iteritems():
                     if not actorObj.visible:
-                        self.logger.debug("  Adding actor: '%s'", actorName2)
+                        self._logger.debug("  Adding actor: '%s'", actorName2)
                         for rw in self.rendererWindows:
-                            if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                            if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                                 rw.vtkRen.AddActor(actorObj.actor)
                         
                         actorObj.visible = True
@@ -283,15 +373,11 @@ class FilterListRenderer(object):
             else:
                 actorObj = val
                 if not actorObj.visible:
-                    self.logger.debug("Adding actor: '%s'", actorName)
+                    self._logger.debug("Adding actor: '%s'", actorName)
                     for rw in self.rendererWindows:
-                        if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
+                        if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                             rw.vtkRen.AddActor(actorObj.actor)
                     
                     actorObj.visible = True
         
-        for rw in self.rendererWindows:
-            if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-                rw.vtkRenWinInteract.ReInitialize()
-        
-        self.addScalarBar()
+        # self.addScalarBar()

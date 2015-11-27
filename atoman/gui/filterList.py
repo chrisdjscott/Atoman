@@ -10,6 +10,7 @@ import logging
 import functools
 import copy
 import importlib
+import traceback
 
 from PySide import QtGui, QtCore
 
@@ -25,6 +26,7 @@ from .filterListOptions import voronoiOptions
 from . import utils
 from .dialogs import infoDialogs
 from . import filterSettings
+from ..rendering import filterListRenderer
 
 
 ################################################################################
@@ -270,6 +272,9 @@ class FilterList(QtGui.QWidget):
         
         # the filterer (does the filtering)
         self.filterer = filterer.Filterer(self.voronoiOptions)
+        
+        # the renderer (does the rendering)
+        self.renderer = filterListRenderer.FilterListRenderer(self)
     
     def optionsListItemClicked(self, item):
         """
@@ -437,8 +442,9 @@ class FilterList(QtGui.QWidget):
         Run filters in this list.
         
         """
-        # add a progress dialog
-        progDiag = utils.showProgressDialog("Applying list", "Applying list...", self)
+        if not sequencer:
+            # add a progress dialog
+            progDiag = utils.showProgressDialog("Applying list", "Applying list...", self)
         
         try:
             # list of filters
@@ -457,25 +463,35 @@ class FilterList(QtGui.QWidget):
             self.filterer.runFilters(currentFilters, currentSettings, inputState, refState)
             
             # this is where the rendering should be done
-            
+            self.renderer.render(sequencer=sequencer)
             
             # update on screen text
             self.filterTab.refreshOnScreenInfo()
             
-            # refresh plot options
+            # add actors
+            if self.visible:
+                self.renderer.addActors()
+            
+            # refresh plot options and reinit
             for rw in self.pipelinePage.rendererWindows:
                 if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                     rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
+                    if self.visible:
+                        rw.vtkRenWinInteract.ReInitialize()
         
         except:
+            # print traceback
+            errstring = traceback.format_exc()
+            
             # show error
-            exctype, value = sys.exc_info()[:2]
-            self.logger.error("Apply list failed! %s: %s", exctype, value)
-            self.mainWindow.displayError("Apply list failed!\n\n%s: %s" % (exctype, value))
+            # exctype, value = sys.exc_info()[:2]
+            self.logger.error("Apply list failed!\n\n%s", errstring)
+            self.mainWindow.displayError("Apply list failed!\n\n%s" % errstring)
         
         finally:
-            # always remove the progress dialog
-            utils.cancelProgressDialog(progDiag)
+            if not sequencer:
+                # always remove the progress dialog
+                utils.cancelProgressDialog(progDiag)
     
     def getCurrentFilterSettings(self):
         """

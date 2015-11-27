@@ -775,7 +775,7 @@ class RendererWindow(QtGui.QWidget):
             if filterList.visible:
                 if not filterList.defectFilterSelected:
                     visCountActive = True
-                    visCount += filterList.filterer.NVis
+                    visCount += len(filterList.filterer.visibleAtoms)
                 
                 numClusters += len(filterList.filterer.clusterList)
         
@@ -787,7 +787,7 @@ class RendererWindow(QtGui.QWidget):
         
             visSpecCount = np.zeros(len(inputState.specieList), np.int32)
             for filterList in filterLists:
-                if filterList.visible and not filterList.defectFilterSelected and filterList.filterer.NVis:
+                if filterList.visible and not filterList.defectFilterSelected and len(filterList.filterer.visibleAtoms):
                     if len(visSpecCount) == len(filterList.filterer.visibleSpecieCount):
                         visSpecCount = np.add(visSpecCount, filterList.filterer.visibleSpecieCount)
         

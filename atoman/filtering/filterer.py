@@ -93,10 +93,10 @@ class Filterer(object):
         Reset to initial state.
         
         """
-        self.NVis = 0
-        self.NInt = 0
-        self.NAnt = 0
-        self.NVac = 0
+        self.inputState = None
+        self.refState = None
+        self.currentFilters = []
+        self.currentSettings = []
         self.visibleAtoms = np.asarray([], dtype=np.int32)
         self.interstitials = np.asarray([], dtype=np.int32)
         self.vacancies = np.asarray([], dtype=np.int32)
@@ -116,6 +116,7 @@ class Filterer(object):
         self.scalarsDict = {}
         self.latticeScalarsDict = {}
         self.vectorsDict = {}
+        self.defectFilterSelected = False
     
     def runFilters(self, currentFilters, currentSettings, inputState, refState, sequencer=False):
         """
@@ -130,6 +131,7 @@ class Filterer(object):
         
         # validate the list of filters
         defectFilterSelected = False
+        self.defectFilterSelected = defectFilterSelected
         for filterName in currentFilters:
             if filterName not in self.defaultFilters and not filterName.startswith("Scalar:"): #TODO: check the scalar exists too
                 raise ValueError("Unrecognised filter passed to Filterer: '%s'" % filterName)
@@ -139,11 +141,16 @@ class Filterer(object):
                 defectFilterSelected = True
         self.logger.debug("Defect filter selected: %s", defectFilterSelected)
         
+        # store refs to inputs
+        self.inputState = inputState
+        self.refState = refState
+        self.currentFilters = currentFilters
+        self.currentSettings = currentSettings
+        
         # set up visible atoms or defect arrays
         if not defectFilterSelected:
             self.logger.debug("Setting all atoms visible initially")
             self.visibleAtoms = np.arange(inputState.NAtoms, dtype=np.int32)
-            self.NVis = inputState.NAtoms
             self.logger.info("%d visible atoms", len(self.visibleAtoms))
             
             # set Lattice scalars
@@ -266,15 +273,21 @@ class Filterer(object):
                     #     self.clusterFilterCalculateVolumes(filterSettings)
             
             # calculate numbers of atoms/defects
-            if defectFilterSelected:
-                self.NVis = len(self.interstitials) + len(self.vacancies) + len(self.antisites) + len(self.splitInterstitials)
-                self.NVac = len(self.vacancies)
-                self.NInt = len(self.interstitials) + len(self.splitInterstitials) / 3
-                self.NAnt = len(self.antisites)
-            else:
-                self.NVis = len(self.visibleAtoms)
+            # if defectFilterSelected:
+            #     self.NVis = len(self.interstitials) + len(self.vacancies) + len(self.antisites) + len(self.splitInterstitials)
+            #     self.NVac = len(self.vacancies)
+            #     self.NInt = len(self.interstitials) + len(self.splitInterstitials) / 3
+            #     self.NAnt = len(self.antisites)
+            # else:
+            #     self.NVis = len(self.visibleAtoms)
+            # 
+            # self.logger.info("  %d visible atoms", self.NVis)
             
-            self.logger.info("  %d visible atoms", self.NVis)
+            if defectFilterSelected:
+                ndef = len(self.interstitials) + len(self.vacancies) + len(self.antisites) + len(self.splitInterstitials)
+                self.logger.info("  %d visible defects", ndef)
+            else:
+                self.logger.info("  %d visible atoms", len(self.visibleAtoms))
         
         # do species counts here
         

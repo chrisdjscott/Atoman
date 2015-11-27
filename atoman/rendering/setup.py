@@ -20,6 +20,8 @@ def configuration(parent_package='', top_path=None):
                          depends=arraydeps,
                          libraries=["array_utils"])
     
+    config.add_subpackage("renderers")
+    
     return config
 
 if __name__ == "__main__":
