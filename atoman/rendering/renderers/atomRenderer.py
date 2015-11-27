@@ -5,7 +5,6 @@ Module for rendering atoms
 """
 import logging
 
-import numpy as np
 import vtk
 
 from .. import utils

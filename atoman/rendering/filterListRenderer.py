@@ -9,11 +9,12 @@ import logging
 
 import numpy as np
 import vtk
-import vtk.util
+from vtk.util import numpy_support
 
 from . import _rendering
 from . import utils
 from .renderers import atomRenderer
+from .renderers import vectorRenderer
 
 
 ################################################################################
@@ -46,6 +47,7 @@ class FilterListRenderer(object):
         self.rendererWindows = filterList.pipelinePage.rendererWindows
         self.colouringOptions = filterList.colouringOptions
         self.displayOptions = filterList.displayOptions
+        self.vectorsOptions = filterList.vectorsOptions
         
         
     
@@ -87,11 +89,11 @@ class FilterListRenderer(object):
         # make points array
         atomPointsNp = _rendering.makeVisiblePointsArray(visibleAtoms, inputState.pos)
         atomPoints = vtk.vtkPoints()
-        atomPoints.SetData(vtk.util.numpy_support.numpy_to_vtk(atomPointsNp, deep=1))
+        atomPoints.SetData(numpy_support.numpy_to_vtk(atomPointsNp, deep=1))
         
         # make radius array
         radiusArrayNp = _rendering.makeVisibleRadiusArray(visibleAtoms, inputState.specie, inputState.specieCovalentRadius)
-        radiusArray = vtk.util.numpy_support.numpy_to_vtk(radiusArrayNp, deep=1)
+        radiusArray = numpy_support.numpy_to_vtk(radiusArrayNp, deep=1)
         radiusArray.SetName("radius")
         
         # get the scalars array
@@ -101,18 +103,63 @@ class FilterListRenderer(object):
         lut = utils.setupLUT(inputState.specieList, inputState.specieRGB, self.colouringOptions)
         
         # render atoms
+        self._renderAtoms(atomPoints, scalarsArray, radiusArray, lut, resolution)
+        
+        
+        
+        # render vectors
+        self._renderVectors()
+            
+        
+        
+        # render clusters
+        
+        
+        
+        # render bubbles (or already done?)
+        
+        
+        
+        
+        
+    
+    def _renderClusters(self):
+        """Render clusters."""
+        
+        
+        
+    
+    def _renderAtoms(self, atomPoints, scalarsArray, radiusArray, lut, resolution):
+        """Render atoms."""
+        inputState = self._filterer.inputState
         #TODO: should we store the renderer!?
         atomRend = atomRenderer.AtomRenderer()
         actor = atomRend.render(atomPoints, scalarsArray, radiusArray, len(inputState.specieList), self.colouringOptions, 
                                 self.displayOptions.atomScaleFactor, lut, resolution)
         self.actorsDict["Atoms"] = actor
+    
+    def _renderVectors(self):
+        """Render vectors."""
+        vectorsName = self.vectorsOptions.selectedVectorsName
+        vectorsDict = self._filterer.vectorsDict
+        if vectorsName is not None and vectorsName not in vectorsDict:
+            self._logger.warning("Skipping adding vectors because could not find array: '%s'", vectorsName)
         
-        
-        
-        
-        
-        
-        
+        elif vectorsName is not None:
+            self._logger.debug("Rendering arrows for vector data: '%s'", vectorsName)
+            
+            # make the VTK vectors array
+            vectorsNp = vectorsDict[vectorsName]
+            if self.vectorsOptions.vectorNormalise:
+                vectorsNp = vectorslib.normalise(vectorsNp)
+            vectors = numpy_support.numpy_to_vtk(vectorsNp, deep=1)
+            vectors.SetName("vectors")
+            
+            # render vectors
+            vectorRend = vectorRenderer.VectorRenderer()
+            actor = vectorRend.render(atomPoints, scalarsArray, vectors, len(inputState.specieList), self.colouringOptions,
+                                      self.vectorsOptions, lut)
+            self.actorsDict["Vectors"] = actor
     
     def _getScalarsArray(self):
         """
@@ -145,7 +192,7 @@ class FilterListRenderer(object):
                 scalarsFull = inputState.specie
             scalarsArray = _rendering.makeVisibleScalarArray(self._filterer.visibleAtoms, scalarsFull)
         
-        scalarsArrayVTK = vtk.util.numpy_support.numpy_to_vtk(scalarsArray, deep=1)
+        scalarsArrayVTK = numpy_support.numpy_to_vtk(scalarsArray, deep=1)
         scalarsArrayVTK.SetName("colours")
         
         return scalarsArray, scalarsArrayVTK
@@ -197,7 +244,7 @@ class FilterListRenderer(object):
             if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                 rw.vtkRenWinInteract.ReInitialize()
         
-        self.hideScalarBar()
+        # self.hideScalarBar()
     
     def setActorAmbient(self, actorName, parentName, ambient, reinit=True):
         """

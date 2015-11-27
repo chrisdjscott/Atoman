@@ -431,10 +431,11 @@ class FilterList(QtGui.QWidget):
 #         utils.positionWindow(item.filterSettings, item.filterSettings.size(), self.mainWindow.desktop, self)
         item.filterSettings.show()
     
-    def clearActors(self):
+    def clearActors(self, sequencer=False):
         """Remove all current actors."""
-        print ">>>>>>> CLEAR ACTORS NOT IMPLEMENTED..."
+        self.renderer.removeActors(sequencer=sequencer)
         
+        #TODO: remove scalar bar too
         
     
     def applyList(self, sequencer=False):
@@ -457,7 +458,7 @@ class FilterList(QtGui.QWidget):
             refState = self.pipelinePage.refState
             
             # remove actors first
-            self.clearActors()
+            self.clearActors(sequencer=sequencer)
             
             # apply filters
             self.filterer.runFilters(currentFilters, currentSettings, inputState, refState)
