@@ -5,11 +5,9 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
-import sys
 import logging
 import functools
 import copy
-import importlib
 import traceback
 
 from PySide import QtGui, QtCore

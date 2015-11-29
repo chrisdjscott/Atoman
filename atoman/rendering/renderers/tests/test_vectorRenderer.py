@@ -3,13 +3,11 @@
 Unit tests for the vector renderer
 
 """
-import copy
 import unittest
 
 import numpy as np
 import vtk
 from vtk.util import numpy_support
-from PySide import QtGui
 
 from .. import vectorRenderer
 from ... import utils

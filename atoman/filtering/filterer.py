@@ -5,19 +5,15 @@ The filterer object.
 @author: Chris Scott
 
 """
-import os
 import copy
 import time
 import logging
 import itertools
-import importlib
 
 import numpy as np
 
 from .filters import _filtering as filtering_c
 from . import _clusters as clusters_c
-from . import bonds as bonds_c
-from ..algebra import vectors
 from . import clusters
 from ..system.atoms import elements
 from . import voronoi

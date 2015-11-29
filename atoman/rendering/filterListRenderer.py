@@ -10,11 +10,15 @@ import logging
 import numpy as np
 import vtk
 from vtk.util import numpy_support
+from PySide import QtCore
 
 from . import _rendering
 from . import utils
+from ..algebra import vectors as vectorslib
 from .renderers import atomRenderer
 from .renderers import vectorRenderer
+from .renderers import bondRenderer
+from ..system.atoms import elements
 
 
 ################################################################################
@@ -48,8 +52,7 @@ class FilterListRenderer(object):
         self.colouringOptions = filterList.colouringOptions
         self.displayOptions = filterList.displayOptions
         self.vectorsOptions = filterList.vectorsOptions
-        
-        
+        self.bondsOptions = filterList.bondsOptions
     
     def render(self, sequencer=False):
         """
@@ -105,6 +108,7 @@ class FilterListRenderer(object):
         # render atoms
         self._renderAtoms(atomPoints, scalarsArray, radiusArray, lut, resolution)
         
+        # render defects
         
         
         # render vectors
@@ -120,7 +124,7 @@ class FilterListRenderer(object):
         
         
         # bonds
-        
+        self._renderBonds(scalarsArrayNp, lut)
         
         # render clusters
         
@@ -131,6 +135,95 @@ class FilterListRenderer(object):
         
         
         
+    
+    def _renderBonds(self, scalarsArray, lut):
+        """Calculate and render bonds between atoms."""
+        # check if we need to calculate
+        if not self.bondsOptions.drawBonds:
+            return
+        
+        self._logger.info("Calculating bonds")
+        
+        # visible atoms array
+        visibleAtoms = self._filterer.visibleAtoms
+        
+        if not len(visibleAtoms):
+            self._logger.info("No visible atoms so no bonds to render")
+            return
+        
+        # local refs
+        inputState = self.pipelinePage.inputState
+        specieList = inputState.specieList
+        NSpecies = len(specieList)
+        bondDict = elements.bondDict
+        
+        # bonds arrays
+        bondMinArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
+        bondMaxArray = np.zeros((NSpecies, NSpecies), dtype=np.float64)
+        
+        # construct bonds array
+        calcBonds = False
+        maxBond = -1
+        drawList = []
+        for i in xrange(self.bondsOptions.bondsList.count()):
+            item = self.bondsOptions.bondsList.item(i)
+            
+            if item.checkState() == QtCore.Qt.Checked:
+                syma = item.syma
+                symb = item.symb
+                
+                # check if in current specie list and if so what indexes
+                if syma in specieList:
+                    indexa = inputState.getSpecieIndex(syma)
+                else:
+                    continue
+                
+                if symb in specieList:
+                    indexb = inputState.getSpecieIndex(symb)
+                else:
+                    continue
+                
+                if syma in bondDict:
+                    d = bondDict[syma]
+                    
+                    if symb in d:
+                        bondMin, bondMax = d[symb]
+                        
+                        bondMinArray[indexa][indexb] = bondMin
+                        bondMinArray[indexb][indexa] = bondMin
+                        
+                        bondMaxArray[indexa][indexb] = bondMax
+                        bondMaxArray[indexb][indexa] = bondMax
+                        
+                        if bondMax > maxBond:
+                            maxBond = bondMax
+                        
+                        if bondMax > 0:
+                            calcBonds = True
+                        
+                        drawList.append("%s-%s" % (syma, symb))
+                        
+                        self.logger.info("    Pair: %s - %s; bond range: %f -> %f", syma, symb, bondMin, bondMax)
+        
+        assert bondMaxArray.max() == bondMax
+        
+        if not calcBonds:
+            self.logger.info("No bonds to calculate")
+            return
+        
+        # calculate bonds
+        bonds = bondRenderer.BondCalculator()
+        result = bonds.calculateBonds(inputState, visibleAtoms, bondMinArray, bondMaxArray, drawList)
+        NBondsTotal, bondArray, NBondsArray, bondVectorArray, bondSpecieCounter = result
+        if NBondsTotal == 0:
+            self.logger.info("No bonds to render")
+            return
+        
+        # draw bonds
+        bondRend = bondRenderer.BondRenderer()
+        actor = bondRend.render(inputState, visibleAtoms, NBondsArray, bondArray, bondVectorArray, scalarsArray,
+                                self.colouringOptions, self.bondsOptions, lut)
+        self.actorsDict["Bonds"] = actor
     
     def _renderClusters(self):
         """Render clusters."""
@@ -206,6 +299,15 @@ class FilterListRenderer(object):
         
         return scalarsArray, scalarsArrayVTK
     
+    def _getCurrentRendererWindows(self):
+        """Returns a list of the current renderer windows."""
+        rws = []
+        for rw in self.rendererWindows:
+            if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
+                rws.append(rw)
+        
+        return rws
+    
     def removeActors(self, sequencer=False):
         """
         Remove actors.
@@ -227,15 +329,16 @@ class FilterListRenderer(object):
         Hide all actors
         
         """
+        rendererWindows = self._getCurrentRendererWindows()
+        
         for actorName, val in self.actorsDict.iteritems():
             if isinstance(val, dict):
                 self._logger.debug("Removing actors for: '%s'", actorName)
                 for actorName2, actorObj in val.iteritems():
                     if actorObj.visible:
                         self._logger.debug("  Removing actor: '%s'", actorName2)
-                        for rw in self.rendererWindows:
-                            if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
-                                rw.vtkRen.RemoveActor(actorObj.actor)
+                        for rw in rendererWindows:
+                            rw.vtkRen.RemoveActor(actorObj.actor)
                         
                         actorObj.visible = False
             
@@ -243,15 +346,13 @@ class FilterListRenderer(object):
                 actorObj = val
                 if actorObj.visible:
                     self._logger.debug("Removing actor: '%s'", actorName)
-                    for rw in self.rendererWindows:
-                        if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
-                            rw.vtkRen.RemoveActor(actorObj.actor)
+                    for rw in rendererWindows:
+                        rw.vtkRen.RemoveActor(actorObj.actor)
                     
                     actorObj.visible = False
         
-        for rw in self.rendererWindows:
-            if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
-                rw.vtkRenWinInteract.ReInitialize()
+        for rw in rendererWindows:
+            rw.vtkRenWinInteract.ReInitialize()
         
         # self.hideScalarBar()
     
@@ -414,15 +515,16 @@ class FilterListRenderer(object):
         Add all actors
         
         """
+        rendererWindows = self._getCurrentRendererWindows()
+        
         for actorName, val in self.actorsDict.iteritems():
             if isinstance(val, dict):
                 self._logger.debug("Adding actors for: '%s'", actorName)
                 for actorName2, actorObj in val.iteritems():
                     if not actorObj.visible:
                         self._logger.debug("  Adding actor: '%s'", actorName2)
-                        for rw in self.rendererWindows:
-                            if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
-                                rw.vtkRen.AddActor(actorObj.actor)
+                        for rw in rendererWindows:
+                            rw.vtkRen.AddActor(actorObj.actor)
                         
                         actorObj.visible = True
             
@@ -430,9 +532,8 @@ class FilterListRenderer(object):
                 actorObj = val
                 if not actorObj.visible:
                     self._logger.debug("Adding actor: '%s'", actorName)
-                    for rw in self.rendererWindows:
-                        if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
-                            rw.vtkRen.AddActor(actorObj.actor)
+                    for rw in rendererWindows:
+                        rw.vtkRen.AddActor(actorObj.actor)
                     
                     actorObj.visible = True
         

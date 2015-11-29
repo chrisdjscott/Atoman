@@ -3,13 +3,11 @@
 Unit tests for the atom renderer
 
 """
-import copy
 import unittest
 
 import numpy as np
 import vtk
 from vtk.util import numpy_support
-from PySide import QtGui
 
 from .. import atomRenderer
 from ... import utils
