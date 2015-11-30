@@ -188,27 +188,21 @@ class FilterListRenderer(object):
                     
                     if symb in d:
                         bondMin, bondMax = d[symb]
-                        
                         bondMinArray[indexa][indexb] = bondMin
                         bondMinArray[indexb][indexa] = bondMin
-                        
                         bondMaxArray[indexa][indexb] = bondMax
                         bondMaxArray[indexb][indexa] = bondMax
-                        
                         if bondMax > maxBond:
                             maxBond = bondMax
-                        
                         if bondMax > 0:
                             calcBonds = True
-                        
                         drawList.append("%s-%s" % (syma, symb))
-                        
-                        self.logger.info("    Pair: %s - %s; bond range: %f -> %f", syma, symb, bondMin, bondMax)
+                        self._logger.info("    Pair: %s - %s; bond range: %f -> %f", syma, symb, bondMin, bondMax)
         
         assert bondMaxArray.max() == bondMax
         
         if not calcBonds:
-            self.logger.info("No bonds to calculate")
+            self._logger.info("No bonds to calculate")
             return
         
         # calculate bonds
@@ -216,7 +210,7 @@ class FilterListRenderer(object):
         result = bonds.calculateBonds(inputState, visibleAtoms, bondMinArray, bondMaxArray, drawList)
         NBondsTotal, bondArray, NBondsArray, bondVectorArray, bondSpecieCounter = result
         if NBondsTotal == 0:
-            self.logger.info("No bonds to render")
+            self._logger.info("No bonds to render")
             return
         
         # draw bonds

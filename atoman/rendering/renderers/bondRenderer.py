@@ -156,7 +156,7 @@ class BondRenderer(object):
         renderBondsTime = time.time() - renderBondsTime
         self._logger.debug("Render bonds time: %f s", renderBondsTime)
         
-        return actor
+        return utils.ActorObject(actor)
 
 ################################################################################
 
