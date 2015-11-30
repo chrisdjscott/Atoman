@@ -112,7 +112,7 @@ class FilterListRenderer(object):
         
         
         # render vectors
-        self._renderVectors()
+        self._renderVectors(lut)
             
         # displacement vectors
         
@@ -234,7 +234,7 @@ class FilterListRenderer(object):
                                 self.displayOptions.atomScaleFactor, lut, resolution)
         self.actorsDict["Atoms"] = actor
     
-    def _renderVectors(self):
+    def _renderVectors(self, lut):
         """Render vectors."""
         vectorsName = self.vectorsOptions.selectedVectorsName
         vectorsDict = self._filterer.vectorsDict
