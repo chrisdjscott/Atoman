@@ -219,6 +219,8 @@ class BondCalculator(object):
                     NBondsPair = bondSpecieCounter[i][j]
                     if i != j:
                         NBondsPair += bondSpecieCounter[j][i]
+                        bondSpecieCounter[i][j] = NBondsPair
+                        bondSpecieCounter[j][i] = NBondsPair
                     
                     self._logger.info("%d %s - %s bonds", NBondsPair, syma, symb)
         
