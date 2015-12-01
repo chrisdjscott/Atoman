@@ -18,6 +18,7 @@ from ..algebra import vectors as vectorslib
 from .renderers import atomRenderer
 from .renderers import vectorRenderer
 from .renderers import bondRenderer
+from .renderers import vacancyRenderer
 from ..system.atoms import elements
 
 
@@ -53,6 +54,7 @@ class FilterListRenderer(object):
         self.displayOptions = filterList.displayOptions
         self.vectorsOptions = filterList.vectorsOptions
         self.bondsOptions = filterList.bondsOptions
+        self.actorsOptions = filterList.actorsOptions
     
     def render(self, sequencer=False):
         """
@@ -86,8 +88,9 @@ class FilterListRenderer(object):
         visibleAtoms = self._filterer.visibleAtoms
         
         # set resolution
-        numForRes = len(visibleAtoms) #TODO: plus interstitials etc...
+        numForRes = len(visibleAtoms) + len(self._filterer.interstitials) + len(self._filterer.onAntisites)
         resolution = utils.setRes(numForRes, self.displayOptions)
+        self._logger.debug("Setting resolution to %d (num %d)", resolution, numForRes)
         
         # make points array
         atomPointsNp = _rendering.makeVisiblePointsArray(visibleAtoms, inputState.pos)
@@ -100,7 +103,7 @@ class FilterListRenderer(object):
         radiusArray.SetName("radius")
         
         # get the scalars array
-        scalarsArrayNp, scalarsArray = self._getScalarsArray()
+        scalarsArrayNp, scalarsArray = self._getScalarsArray(inputState, visibleAtoms)
         
         # make the look up table
         lut = utils.setupLUT(inputState.specieList, inputState.specieRGB, self.colouringOptions)
@@ -109,7 +112,7 @@ class FilterListRenderer(object):
         self._renderAtoms(atomPoints, scalarsArray, radiusArray, lut, resolution)
         
         # render defects
-        
+        self._renderDefects(lut, resolution)
         
         # render vectors
         self._renderVectors(lut)
@@ -133,8 +136,109 @@ class FilterListRenderer(object):
         
         
         
+        # refresh actors options
+        self.actorsOptions.refresh(self.actorsDict)
+    
+    def _renderDefects(self, lut, resolution):
+        """Render defects."""
+        self._logger.debug("Rendering defects")
         
+        # local refs
+        interstitials = self._filterer.interstitials
+        vacancies = self._filterer.vacancies
+        antisites = self._filterer.antisites
+        onAntisites = self._filterer.onAntisites
+        splitInterstitials = self._filterer.splitInterstitials
+        refState = self._filterer.refState
         
+        # render interstitials
+        self._renderDefectAtoms(lut, resolution, interstitials, "Interstitials")
+        
+        # render on antisite atoms
+        self._renderDefectAtoms(lut, resolution, onAntisites, "Antisites occupying")
+        
+        # split interstitials arrays of ints and vacs
+        splitInts = np.concatenate((splitInterstitials[1::3], splitInterstitials[2::3]))
+        splitVacs = splitInterstitials[::3]
+        
+        # render split interstitial atoms
+        self._renderDefectAtoms(lut, resolution, splitInts, "Split interstitial atoms")
+        
+        # render split vacancies
+        print "SPLIT VACS", len(splitVacs), splitVacs
+        self._renderVacancies(lut, splitVacs, actorName="Split interestitial vacancies")
+        
+        # render vacancies
+        print "VACS", len(vacancies), vacancies
+        self._renderVacancies(lut, vacancies)
+        
+        # render antisite frames
+        
+    
+    def _renderVacancies(self, lut, vacancies, actorName="Vacancies"):
+        """Render vacancies."""
+        # local refs
+        refState = self._filterer.refState
+        
+        if not len(vacancies):
+            return
+        self._logger.debug("Rendering %s", actorName)
+        
+        # points
+        pointsNp = _rendering.makeVisiblePointsArray(vacancies, refState.pos)
+        points = vtk.vtkPoints()
+        points.SetData(numpy_support.numpy_to_vtk(pointsNp, deep=1))
+        
+        # radii
+        radiusNp = _rendering.makeVisibleRadiusArray(vacancies, refState.specie, refState.specieCovalentRadius)
+        radius = numpy_support.numpy_to_vtk(radiusNp, deep=1)
+        radius.SetName("radius")
+        
+        # scalars
+        scalarsNp, scalars = self._getScalarsArray(refState, vacancies)
+        
+        # get vacancy scale setting
+        found = False
+        for name, settings in zip(self._filterer.currentFilters, self._filterer.currentSettings):
+            if name == "Point defects":
+                found = True
+                break
+        if not found:
+            raise RuntimeError("Could not find point defects filter settings")
+        
+        # render
+        rend = vacancyRenderer.VacancyRenderer()
+        actor = rend.render(points, scalars, radius, len(refState.specieList), self.colouringOptions,
+                            self.displayOptions.atomScaleFactor, lut, settings)
+        self.actorsDict[actorName] = actor
+    
+    def _renderDefectAtoms(self, lut, resolution, atomList, actorName):
+        """Render defect atoms, eg interstitials."""
+        if not len(atomList):
+            return
+        self._logger.debug("Rendering %s", actorName)
+        
+        # local refs
+        inputState = self._filterer.inputState
+        
+        # points
+        pointsNp = _rendering.makeVisiblePointsArray(atomList, inputState.pos)
+        points = vtk.vtkPoints()
+        points.SetData(numpy_support.numpy_to_vtk(pointsNp, deep=1))
+        
+        # radii
+        radiusNp = _rendering.makeVisibleRadiusArray(atomList, inputState.specie, inputState.specieCovalentRadius)
+        radius = numpy_support.numpy_to_vtk(radiusNp, deep=1)
+        radius.SetName("radius")
+        
+        # scalars
+        scalarsNp, scalars = self._getScalarsArray(inputState, atomList)
+        
+        # render
+        rend = atomRenderer.AtomRenderer()
+        actor = rend.render(points, scalars, radius, len(inputState.specieList), self.colouringOptions, 
+                            self.displayOptions.atomScaleFactor, lut, resolution)
+        self.actorsDict[actorName] = actor
     
     def _renderBonds(self, scalarsArray, lut):
         """Calculate and render bonds between atoms."""
@@ -227,6 +331,10 @@ class FilterListRenderer(object):
     
     def _renderAtoms(self, atomPoints, scalarsArray, radiusArray, lut, resolution):
         """Render atoms."""
+        if not len(self._filterer.visibleAtoms):
+            return
+        self._logger.debug("Rendering atoms")
+        
         inputState = self._filterer.inputState
         #TODO: should we store the renderer!?
         atomRend = atomRenderer.AtomRenderer()
@@ -257,13 +365,12 @@ class FilterListRenderer(object):
                                       self.vectorsOptions, lut)
             self.actorsDict["Vectors"] = actor
     
-    def _getScalarsArray(self):
+    def _getScalarsArray(self, lattice, atomList):
         """
         Returns the scalars array (np and vtk versions)
         
         """
         # local refs
-        inputState = self._filterer.inputState
         colouringOptions = self.colouringOptions
         
         # scalar type
@@ -278,15 +385,15 @@ class FilterListRenderer(object):
         
         else:
             if scalarType == 0:
-                scalarsFull = np.asarray(inputState.specie, dtype=np.float64)
+                scalarsFull = np.asarray(lattice.specie, dtype=np.float64)
             elif scalarType == 1:
-                scalarsFull = inputState.pos[colouringOptions.heightAxis::3]
+                scalarsFull = lattice.pos[colouringOptions.heightAxis::3]
             elif scalarType == 4:
-                scalarsFull = inputState.charge
+                scalarsFull = lattice.charge
             else:
                 logger.error("Unrecognised scalar type (%d): defaulting to specie", scalarType)
-                scalarsFull = inputState.specie
-            scalarsArray = _rendering.makeVisibleScalarArray(self._filterer.visibleAtoms, scalarsFull)
+                scalarsFull = lattice.specie
+            scalarsArray = _rendering.makeVisibleScalarArray(atomList, scalarsFull)
         
         scalarsArrayVTK = numpy_support.numpy_to_vtk(scalarsArray, deep=1)
         scalarsArrayVTK.SetName("colours")

@@ -91,7 +91,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
                 parent = item.parent()
                 if parent is not None:
                     parentName = parent.text(0)
-                self.parent.filterer.hideActor(item.text(0), parentName=parentName)
+                self.parent.renderer.hideActor(item.text(0), parentName=parentName)
                 
                 # also uncheck parent
                 if parent is not None and parent.checkState(0) == QtCore.Qt.Checked:
@@ -113,7 +113,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
                 parent = item.parent()
                 if parent is not None:
                     parentName = parent.text(0)
-                self.parent.filterer.addActor(item.text(0), parentName=parentName)
+                self.parent.renderer.addActor(item.text(0), parentName=parentName)
                 
                 # if all parents children are checked, make sure parent is too
                 if parent is not None and parent.checkState(0) == QtCore.Qt.Unchecked:
@@ -206,7 +206,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
         Add item with parent and name
         
         """
-        flt = self.parent.filterer
+        flt = self.parent.renderer
         
         item = QtGui.QTreeWidgetItem(parent)
         item.setText(0, name)
@@ -259,18 +259,18 @@ class ActorsOptionsWindow(QtGui.QDialog):
         Ambient spin changed
         
         """
-        self.parent.filterer.setActorAmbient(name, parentName, val)
+        self.parent.renderer.setActorAmbient(name, parentName, val)
     
     def specularSpinChanged(self, name, parentName, val):
         """
         Specular spin changed
         
         """
-        self.parent.filterer.setActorSpecular(name, parentName, val)
+        self.parent.renderer.setActorSpecular(name, parentName, val)
     
     def specularPowerSpinChanged(self, name, parentName, val):
         """
         Specular power spin changed
         
         """
-        self.parent.filterer.setActorSpecularPower(name, parentName, val)
+        self.parent.renderer.setActorSpecularPower(name, parentName, val)

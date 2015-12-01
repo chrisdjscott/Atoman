@@ -818,9 +818,9 @@ class RendererWindow(QtGui.QWidget):
             if filterList.visible and filterList.defectFilterSelected:
                 defectFilterActive = True
                 
-                NVac += filterList.filterer.NVac
-                NInt += filterList.filterer.NInt
-                NAnt += filterList.filterer.NAnt
+                NVac += len(filterList.filterer.vacancies)
+                NInt += len(filterList.filterer.interstitials)
+                NAnt += len(filterList.filterer.antisites)
                 
                 # defects settings
                 defectsSettings = filterList.getCurrentFilterSettings()[0].getSettings()
@@ -838,7 +838,7 @@ class RendererWindow(QtGui.QWidget):
                 # bubbles (temporary)
                 showVacs = True
                 defectFilterActive = True
-                NVac += filterList.filterer.NVac
+                NVac += len(filterList.filterer.vacancies)
         
         if defectFilterActive:
             refState = self.getCurrentRefState()
@@ -849,7 +849,7 @@ class RendererWindow(QtGui.QWidget):
             antSpecCount = np.zeros((len(refState.specieList), len(inputState.specieList)), np.int32)
             splitSpecCount = np.zeros((len(inputState.specieList), len(inputState.specieList)), np.int32)
             for filterList in filterLists:
-                if filterList.visible and filterList.defectFilterSelected and filterList.filterer.NVis:
+                if filterList.visible and filterList.defectFilterSelected and len(filterList.filterer.visibleAtoms):
                     if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
                         vacSpecCount = np.add(vacSpecCount, filterList.filterer.vacancySpecieCount)
                         intSpecCount = np.add(intSpecCount, filterList.filterer.interstitialSpecieCount)
