@@ -19,6 +19,7 @@ from .renderers import atomRenderer
 from .renderers import vectorRenderer
 from .renderers import bondRenderer
 from .renderers import vacancyRenderer
+from .renderers import antisiteRenderer
 from ..system.atoms import elements
 
 
@@ -165,15 +166,42 @@ class FilterListRenderer(object):
         self._renderDefectAtoms(lut, resolution, splitInts, "Split interstitial atoms")
         
         # render split vacancies
-        print "SPLIT VACS", len(splitVacs), splitVacs
         self._renderVacancies(lut, splitVacs, actorName="Split interestitial vacancies")
         
         # render vacancies
-        print "VACS", len(vacancies), vacancies
         self._renderVacancies(lut, vacancies)
         
-        # render antisite frames
+        # render antisites
+        self._renderAntisites(lut)
+    
+    def _renderAntisites(self, lut):
+        """Render antisites."""
+        # local refs
+        refState = self._filterer.refState
+        antisites = self._filterer.antisites
         
+        if not len(antisites):
+            return
+        self._logger.debug("Rendering antisites")
+        
+        # points
+        pointsNp = _rendering.makeVisiblePointsArray(antisites, refState.pos)
+        points = vtk.vtkPoints()
+        points.SetData(numpy_support.numpy_to_vtk(pointsNp, deep=1))
+        
+        # radii
+        radiusNp = _rendering.makeVisibleRadiusArray(antisites, refState.specie, refState.specieCovalentRadius)
+        radius = numpy_support.numpy_to_vtk(radiusNp, deep=1)
+        radius.SetName("radius")
+        
+        # scalars
+        scalarsNp, scalars = self._getScalarsArray(refState, antisites)
+        
+        # renderer
+        rend = antisiteRenderer.AntisiteRenderer()
+        actor = rend.render(points, scalars, radius, len(refState.specieList), self.colouringOptions,
+                            self.displayOptions.atomScaleFactor, lut)
+        self.actorsDict["Antisites"] = actor
     
     def _renderVacancies(self, lut, vacancies, actorName="Vacancies"):
         """Render vacancies."""
