@@ -48,7 +48,7 @@ class AntisiteRenderer(object):
         glyph = vtk.vtkGlyph3D()
         if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
             glyph.SetSource(glyphSource.GetOutput())
-            glyph.SetInput(antsPolyData)
+            glyph.SetInput(polydata)
         else:
             glyph.SetSourceConnection(glyphSource.GetOutputPort())
             glyph.SetInputData(polydata)
