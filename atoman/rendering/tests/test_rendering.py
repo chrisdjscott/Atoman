@@ -94,3 +94,64 @@ class TestRendering(unittest.TestCase):
             self.assertEqual(vispoints[i][0], pos[3 * index    ])
             self.assertEqual(vispoints[i][1], pos[3 * index + 1])
             self.assertEqual(vispoints[i][2], pos[3 * index + 2])
+    
+    def test_countAntisitesBySpecie(self):
+        """
+        Rendering countAntisitesBySpecie
+        
+        """
+        # set up inputs
+        antisites = np.asarray([1,2,7,4], dtype=np.int32)
+        onAntisites = np.asarray([5,0,4,2], dtype=np.int32)
+        NSpeciesRef = 3
+        NSpeciesInput = 2
+        specieRef = np.asarray([0,0,1,1,2,0,1,1], dtype=np.int32)
+        specieInput = np.asarray([0,1,1,0,0,1,0,1], dtype=np.int32)
+        
+        print "HELLO"
+        print _rendering
+        print _rendering.countAntisitesBySpecie
+        
+        # call function
+        speciesCount = _rendering.countAntisitesBySpecie(antisites, NSpeciesRef, specieRef, onAntisites, NSpeciesInput,
+                                                         specieInput)
+        
+        # check result
+        self.assertEqual(len(speciesCount.shape), 2)
+        self.assertEqual(speciesCount.shape[0], NSpeciesRef)
+        self.assertEqual(speciesCount.shape[1], NSpeciesInput)
+        self.assertEqual(speciesCount[0][0], 0)
+        self.assertEqual(speciesCount[0][1], 1)
+        self.assertEqual(speciesCount[1][0], 2)
+        self.assertEqual(speciesCount[1][1], 0)
+        self.assertEqual(speciesCount[2][0], 0)
+        self.assertEqual(speciesCount[2][1], 1)
+    
+    def test_countSplitIntsBySpecie(self):
+        """
+        Rendering countSplitIntsBySpecie
+        
+        """
+        # splitints, nspecies, specie
+        
+        # set up inputs
+        splitInts = np.asarray([0, 1, 3, 0, 7, 4, 0, 9, 2], dtype=np.int32)
+        specie = np.asarray([2, 1, 0, 1, 1, 1, 2, 0, 0, 1], dtype=np.int32)
+        nspecies = 3
+        
+        # call function
+        speciesCount = _rendering.countSplitIntsBySpecie(splitInts, nspecies, specie)
+        
+        # check result
+        self.assertEqual(len(speciesCount.shape), 2)
+        self.assertEqual(speciesCount.shape[0], nspecies)
+        self.assertEqual(speciesCount.shape[1], nspecies)
+        self.assertEqual(speciesCount[0][0], 0)
+        self.assertEqual(speciesCount[0][1], 2)
+        self.assertEqual(speciesCount[0][2], 0)
+        self.assertEqual(speciesCount[1][0], 2)
+        self.assertEqual(speciesCount[1][1], 1)
+        self.assertEqual(speciesCount[1][2], 0)
+        self.assertEqual(speciesCount[2][0], 0)
+        self.assertEqual(speciesCount[2][1], 0)
+        self.assertEqual(speciesCount[2][2], 0)

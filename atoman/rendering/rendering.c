@@ -15,6 +15,8 @@ static PyObject* makeVisibleRadiusArray(PyObject*, PyObject*);
 static PyObject* makeVisibleScalarArray(PyObject*, PyObject*);
 static PyObject* makeVisiblePointsArray(PyObject*, PyObject*);
 static PyObject* countVisibleBySpecie(PyObject *, PyObject *);
+static PyObject* countAntisitesBySpecie(PyObject *, PyObject *);
+static PyObject* countSplitIntsBySpecie(PyObject *, PyObject *);
 
 
 /*******************************************************************************
@@ -26,6 +28,8 @@ static struct PyMethodDef methods[] = {
     {"makeVisibleScalarArray", makeVisibleScalarArray, METH_VARARGS, "Create scalars array for visible atoms"},
     {"makeVisiblePointsArray", makeVisiblePointsArray, METH_VARARGS, "Create points array for visible atoms"},
     {"countVisibleBySpecie", countVisibleBySpecie, METH_VARARGS, "Count the number of visible atoms of each specie"},
+    {"countAntisitesBySpecie", countAntisitesBySpecie, METH_VARARGS, "Count the number of antisites of each specie"},
+    {"countSplitIntsBySpecie", countSplitIntsBySpecie, METH_VARARGS, "Count the number of split interstitials by specie"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -37,6 +41,123 @@ init_rendering(void)
 {
     (void)Py_InitModule("_rendering", methods);
     import_array();
+}
+
+/*******************************************************************************
+ ** Count split interstitials by species
+ *******************************************************************************/
+static PyObject*
+countSplitIntsBySpecie(PyObject *self, PyObject *args)
+{
+    int NSpecies;
+    PyArrayObject *splitInts=NULL;
+    PyArrayObject *specie=NULL;
+    PyObject *result=NULL;
+    
+    /* parse and check arguments from Python */
+    if (PyArg_ParseTuple(args, "O!iO!", &PyArray_Type, &splitInts, &NSpecies, &PyArray_Type, &specie))
+    {
+        int i, nsplit;
+        npy_intp dims[2];
+        PyArrayObject *specieCount=NULL;
+        
+        
+        if (not_intVector(splitInts)) return NULL;
+        nsplit = (int) (PyArray_DIM(splitInts, 0) / 3);
+        if (not_intVector(specie)) return NULL;
+        
+        /* specie counter array */
+        dims[0] = (npy_intp) NSpecies;
+        dims[1] = (npy_intp) NSpecies;
+        specieCount = (PyArrayObject *) PyArray_SimpleNew(2, dims, NPY_INT32);
+        for (i = 0; i < NSpecies; i++) 
+        {
+            int j;
+            for (j = 0; j < NSpecies; j++)
+                IIND2(specieCount, i, j) = 0;
+        }
+        
+        /* loop over antistes, incrementing specie counter */
+        for (i = 0; i < nsplit; i++)
+        {
+            int i3 = 3 * i;
+            int index, index2, specieIndex, specieIndex2;
+            
+            index = IIND1(splitInts, i3 + 1);
+            specieIndex = IIND1(specie, index);
+            
+            index2 = IIND1(splitInts, i3 + 2);
+            specieIndex2 = IIND1(specie, index2);
+            
+            IIND2(specieCount, specieIndex, specieIndex2) = IIND2(specieCount, specieIndex, specieIndex2) + 1;
+            if (specieIndex != specieIndex2)
+                IIND2(specieCount, specieIndex2, specieIndex) = IIND2(specieCount, specieIndex2, specieIndex) + 1;
+        }
+        
+        /* store result */
+        result = PyArray_Return(specieCount);
+    }
+    
+    return result;
+}
+
+/*******************************************************************************
+ ** Count antisites by species
+ *******************************************************************************/
+static PyObject*
+countAntisitesBySpecie(PyObject *self, PyObject *args)
+{
+    int NSpeciesInput, NSpeciesRef;
+    PyArrayObject *antisites=NULL;
+    PyArrayObject *onAntisites=NULL;
+    PyArrayObject *specieRef=NULL;
+    PyArrayObject *specieInput=NULL;
+    PyObject *result=NULL;
+    
+    /* parse and check arguments from Python */
+    if (PyArg_ParseTuple(args, "O!iO!O!iO!", &PyArray_Type, &antisites, &NSpeciesRef, &PyArray_Type, &specieRef,
+            &PyArray_Type, &onAntisites, &NSpeciesInput, &PyArray_Type, &specieInput))
+    {
+        int i, nants;
+        npy_intp dims[2];
+        PyArrayObject *specieCount=NULL;
+        
+        
+        if (not_intVector(antisites)) return NULL;
+        nants = (int) PyArray_DIM(antisites, 0);
+        if (not_intVector(specieRef)) return NULL;
+        if (not_intVector(specieInput)) return NULL;
+        
+        /* specie counter array */
+        dims[0] = (npy_intp) NSpeciesRef;
+        dims[1] = (npy_intp) NSpeciesInput;
+        specieCount = (PyArrayObject *) PyArray_SimpleNew(2, dims, NPY_INT32);
+        for (i = 0; i < NSpeciesRef; i++) 
+        {
+            int j;
+            for (j = 0; j < NSpeciesInput; j++)
+                IIND2(specieCount, i, j) = 0;
+        }
+        
+        /* loop over antistes, incrementing specie counter */
+        for (i = 0; i < nants; i++)
+        {
+            int index, index2, specieIndex, specieIndex2;
+            
+            index = IIND1(antisites, i);
+            specieIndex = IIND1(specieRef, index);
+            
+            index2 = IIND1(onAntisites, i);
+            specieIndex2 = IIND1(specieInput, index2);
+            
+            IIND2(specieCount, specieIndex, specieIndex2) = IIND2(specieCount, specieIndex, specieIndex2) + 1;
+        }
+        
+        /* store result */
+        result = PyArray_Return(specieCount);
+    }
+    
+    return result;
 }
 
 /*******************************************************************************

@@ -137,6 +137,9 @@ class FilterListRenderer(object):
         
         
         
+        # scalar bar
+        
+        
         # refresh actors options
         self.actorsOptions.refresh(self.actorsDict)
     

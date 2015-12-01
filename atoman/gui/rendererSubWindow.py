@@ -849,11 +849,14 @@ class RendererWindow(QtGui.QWidget):
             antSpecCount = np.zeros((len(refState.specieList), len(inputState.specieList)), np.int32)
             splitSpecCount = np.zeros((len(inputState.specieList), len(inputState.specieList)), np.int32)
             for filterList in filterLists:
-                if filterList.visible and filterList.defectFilterSelected and len(filterList.filterer.visibleAtoms):
+                if filterList.visible and filterList.defectFilterSelected:
                     if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
                         vacSpecCount = np.add(vacSpecCount, filterList.filterer.vacancySpecieCount)
+                    if len(intSpecCount) == len(filterList.filterer.interstitialSpecieCount):
                         intSpecCount = np.add(intSpecCount, filterList.filterer.interstitialSpecieCount)
+                    if len(antSpecCount) == len(filterList.filterer.antisiteSpecieCount):
                         antSpecCount = np.add(antSpecCount, filterList.filterer.antisiteSpecieCount)
+                    if len(splitSpecCount) == len(filterList.filterer.splitIntSpecieCount):
                         splitSpecCount = np.add(splitSpecCount, filterList.filterer.splitIntSpecieCount)
             
             # now add to dict
@@ -886,11 +889,10 @@ class RendererWindow(QtGui.QWidget):
                 if defectsSettings.getSetting("identifySplitInts"):
                     for i in xrange(len(specListInput)):
                         for j in xrange(i, len(specListInput)):
+                            N = splitSpecCount[i][j]
                             if j == i:
-                                N = splitSpecCount[i][j]
                                 rgb = specRGBInput[i]
                             else:
-                                N = splitSpecCount[i][j] + splitSpecCount[j][i]
                                 rgb = (specRGBInput[i] + specRGBInput[j]) / 2.0
                             
                             self.onScreenInfo["Defect species count"].append([(N, "%s-%s" % (specListInput[i], specListInput[j]), "split ints"), rgb])

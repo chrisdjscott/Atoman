@@ -286,12 +286,23 @@ class Filterer(object):
             else:
                 self.logger.info("  %d visible atoms", len(self.visibleAtoms))
         
-        #TODO: do species counts here
-        if not self.defectFilterSelected:
-            self.visibleSpecieCount = _rendering.countVisibleBySpecie(self.visibleAtoms, len(inputState.specieList), inputState.specie)
+        # species counts here
+        if len(self.visibleAtoms):
+            self.visibleSpecieCount = _rendering.countVisibleBySpecie(self.visibleAtoms, len(inputState.specieList),
+                                                                      inputState.specie)
+        if len(self.interstitials) + len(self.vacancies) + len(self.antisites) + len(self.splitInterstitials) > 0:
+            self.vacancySpecieCount = _rendering.countVisibleBySpecie(self.vacancies, len(refState.specieList),
+                                                                      refState.specie)
+            self.interstitialSpecieCount = _rendering.countVisibleBySpecie(self.interstitials,
+                                                                           len(inputState.specieList),
+                                                                           inputState.specie)
+            self.antisiteSpecieCount = _rendering.countAntisitesBySpecie(self.antisites, len(refState.specieList),
+                                                                         refState.specie, self.onAntisites,
+                                                                         len(inputState.specieList), inputState.specie)
+            self.splitIntSpecieCount = _rendering.countSplitIntsBySpecie(self.splitInterstitials,
+                                                                         len(inputState.specieList), inputState.specie)
         
-        
-        #TODO: dictionary of calculated properties...
+        # TODO: dictionary of calculated properties... ??
         
         
         # report total Voro volume if filter selected
