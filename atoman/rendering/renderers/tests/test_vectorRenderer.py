@@ -55,10 +55,9 @@ class TestVectorRenderer(unittest.TestCase):
         vectors = np.asarray([[5,1.2,4.6],  [4,0,0], [2,2,-1], [-5.4,1,2], [0,11,0]], dtype=np.float64)
         
         # convert to vtk arrays
-        self.atomPoints = vtk.vtkPoints()
-        self.atomPoints.SetData(numpy_support.numpy_to_vtk(points, deep=1))
-        self.vectorsArray = numpy_support.numpy_to_vtk(vectors, deep=1)
-        self.scalarsArray = numpy_support.numpy_to_vtk(scalars, deep=1)
+        self.atomPoints = utils.NumpyVTKData(points)
+        self.scalarsArray = utils.NumpyVTKData(scalars, name="colours")
+        self.vectorsArray = utils.NumpyVTKData(vectors, name="vectors")
         
         # lut
         self.nspecies = 2
@@ -94,8 +93,8 @@ class TestVectorRenderer(unittest.TestCase):
         vectorsOptions = DummyVectorsOptions()
         
         # render atoms
-        actorObj = renderer.render(self.atomPoints, self.scalarsArray, self.vectorsArray, self.nspecies, colouringOptions,
-                                   vectorsOptions, self.lut)
+        renderer.render(self.atomPoints, self.scalarsArray, self.vectorsArray, self.nspecies, colouringOptions,
+                        vectorsOptions, self.lut)
         
         # check result is correct type
-        self.assertIsInstance(actorObj, utils.ActorObject)
+        self.assertIsInstance(renderer.getActor(), utils.ActorObject)

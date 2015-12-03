@@ -43,10 +43,9 @@ class TestAtomRenderer(unittest.TestCase):
         radii = np.asarray([1.2, 1.2, 0.8, 1.5, 1.1], dtype=np.float64)
         
         # convert to vtk arrays
-        self.atomPoints = vtk.vtkPoints()
-        self.atomPoints.SetData(numpy_support.numpy_to_vtk(points, deep=1))
-        self.radiusArray = numpy_support.numpy_to_vtk(radii, deep=1)
-        self.scalarsArray = numpy_support.numpy_to_vtk(scalars, deep=1)
+        self.atomPoints = utils.NumpyVTKData(points)
+        self.radiusArray = utils.NumpyVTKData(radii, name="radius")
+        self.scalarsArray = utils.NumpyVTKData(scalars, name="colours")
         
         # lut
         self.nspecies = 2
@@ -83,8 +82,8 @@ class TestAtomRenderer(unittest.TestCase):
         resolution = 10
         
         # render atoms
-        actorObj = renderer.render(self.atomPoints, self.scalarsArray, self.radiusArray, self.nspecies, colouringOptions,
-                                   atomScaleFactor, self.lut, resolution)
+        renderer.render(self.atomPoints, self.scalarsArray, self.radiusArray, self.nspecies, colouringOptions,
+                        atomScaleFactor, self.lut, resolution)
         
         # check result is correct type
-        self.assertIsInstance(actorObj, utils.ActorObject)
+        self.assertIsInstance(renderer.getActor(), utils.ActorObject)

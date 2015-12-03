@@ -7,30 +7,36 @@ import logging
 
 import vtk
 
+from . import baseRenderer
 from .. import utils
 
 ################################################################################
 
-class VectorRenderer(object):
+class VectorRenderer(baseRenderer.BaseRenderer):
     """
     Render vectors as arrows
     
     """
     def __init__(self):
+        super(VectorRenderer, self).__init__()
         self._logger = logging.getLogger(__name__)
     
-    def render(self, atomPoints, scalarsArray, vectorsArray, nspecies, colouringOptions, vectorsOptions, lut):
+    def render(self, pointsData, scalarsArray, vectorsArray, nspecies, colouringOptions, vectorsOptions, lut):
         """
         Render vectors.
         
         """
         self._logger.debug("Rendering vectors")
         
+        # points
+        points = vtk.vtkPoints()
+        points.SetData(pointsData.getVTK())
+        
         # polydata
         arrowPolyData = vtk.vtkPolyData()
-        arrowPolyData.SetPoints(atomPoints)
-        arrowPolyData.GetPointData().SetScalars(scalarsArray)
-        arrowPolyData.GetPointData().SetVectors(vectorsArray)
+        arrowPolyData.SetPoints(points)
+        arrowPolyData.GetPointData().SetScalars(scalarsArray.getVTK())
+        arrowPolyData.GetPointData().SetVectors(vectorsArray.getVTK())
     
         # arrow source
         arrowSource = vtk.vtkArrowSource()
@@ -59,4 +65,8 @@ class VectorRenderer(object):
         arrowActor = vtk.vtkActor()
         arrowActor.SetMapper(arrowMapper)
         
-        return utils.ActorObject(arrowActor)
+        # store attributes
+        self._actor = utils.ActorObject(arrowActor)
+        self._data["Points"] = pointsData
+        self._data["Scalars"] = scalarsArray
+        self._data["Vectors"] = vectorsArray

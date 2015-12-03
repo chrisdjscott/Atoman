@@ -7,20 +7,22 @@ import logging
 
 import vtk
 
+from . import baseRenderer
 from .. import utils
 
 ################################################################################
 
-class AtomRenderer(object):
+class AtomRenderer(baseRenderer.BaseRenderer):
     """
     Render a set of atoms.
     
     """
     def __init__(self, shape="sphere"):
+        super(AtomRenderer, self).__init__()
         self._logger = logging.getLogger(__name__)
         self._shape = shape
     
-    def render(self, atomPoints, scalarsArray, radiusArray, nspecies, colouringOptions, atomScaleFactor, lut, resolution):
+    def render(self, pointsData, scalarsArray, radiusArray, nspecies, colouringOptions, atomScaleFactor, lut, resolution):
         """
         Render the given atoms.
         
@@ -29,11 +31,15 @@ class AtomRenderer(object):
         """
         self._logger.debug("Rendering atoms: shape is '%s', colour by: '%s'", self._shape, colouringOptions.colourBy)
         
+        # points
+        atomPoints = vtk.vtkPoints()
+        atomPoints.SetData(pointsData.getVTK())
+        
         # poly data
         atomsPolyData = vtk.vtkPolyData()
         atomsPolyData.SetPoints(atomPoints)
-        atomsPolyData.GetPointData().AddArray(scalarsArray)
-        atomsPolyData.GetPointData().SetScalars(radiusArray)
+        atomsPolyData.GetPointData().AddArray(scalarsArray.getVTK())
+        atomsPolyData.GetPointData().SetScalars(radiusArray.getVTK())
         
         # glyph source
         atomsGlyphSource = vtk.vtkSphereSource() #TODO: depends on self._shape
@@ -83,4 +89,8 @@ class AtomRenderer(object):
         atomsActor.GetProperty().SetSpecular(0.4)
         atomsActor.GetProperty().SetSpecularPower(50)
         
-        return utils.ActorObject(atomsActor)
+        # store attributes
+        self._actor = utils.ActorObject(atomsActor)
+        self._data["Points"] = pointsData
+        self._data["Scalars"] = scalarsArray
+        self._data["Radius"] = radiusArray

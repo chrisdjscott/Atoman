@@ -183,10 +183,13 @@ class TestBondRenderer(unittest.TestCase):
         colouringOptions = DummyColouringOpts()
         bondsOptions = DummyBondsOpts()
         
+        # scalars
+        scalarsData = utils.NumpyVTKData(self.lattice.specie, name="colours")
+        
         # render
         bondRend = bondRenderer.BondRenderer()
-        actorObj = bondRend.render(self.lattice, visibleAtoms, self.nbonds, self.bonds, self.bondvectors,
-                                   self.lattice.specie, colouringOptions, bondsOptions, self.lut)
+        bondRend.render(self.lattice, visibleAtoms, self.nbonds, self.bonds, self.bondvectors,
+                        scalarsData, colouringOptions, bondsOptions, self.lut)
         
         # check result is correct type
-        self.assertIsInstance(actorObj, utils.ActorObject)
+        self.assertIsInstance(bondRend.getActor(), utils.ActorObject)

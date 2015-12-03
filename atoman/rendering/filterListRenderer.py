@@ -9,7 +9,6 @@ import logging
 
 import numpy as np
 import vtk
-from vtk.util import numpy_support
 from PySide import QtCore
 
 from . import _rendering
@@ -41,7 +40,8 @@ class FilterListRenderer(object):
         self._tmpDirectory = filterList.mainWindow.tmpDirectory
         
         # dictionaries for storing current actors
-        self.actorsDict = {}
+        self._renderersDict = {}
+        # self.actorsDict = {}
         self.traceDict = {}
         self.previousPosForTrace = None
         self.scalarBar_white_bg = None
@@ -77,9 +77,6 @@ class FilterListRenderer(object):
         
         Onscreen info is probably going to come from here too
         
-        ** Do we need to store lots of refs, eg lattices, scalarsDicts, etc
-        ** Should filterer be passed to __init__
-        
         """
         self._logger.debug("Rendering filter list")
         
@@ -93,18 +90,16 @@ class FilterListRenderer(object):
         resolution = utils.setRes(numForRes, self.displayOptions)
         self._logger.debug("Setting resolution to %d (num %d)", resolution, numForRes)
         
-        # make points array
-        atomPointsNp = _rendering.makeVisiblePointsArray(visibleAtoms, inputState.pos)
-        atomPoints = vtk.vtkPoints()
-        atomPoints.SetData(numpy_support.numpy_to_vtk(atomPointsNp, deep=1))
+        # make points data
+        atomPoints = _rendering.makeVisiblePointsArray(visibleAtoms, inputState.pos)
+        atomPoints = utils.NumpyVTKData(atomPoints)
         
         # make radius array
-        radiusArrayNp = _rendering.makeVisibleRadiusArray(visibleAtoms, inputState.specie, inputState.specieCovalentRadius)
-        radiusArray = numpy_support.numpy_to_vtk(radiusArrayNp, deep=1)
-        radiusArray.SetName("radius")
+        radiusArray = _rendering.makeVisibleRadiusArray(visibleAtoms, inputState.specie, inputState.specieCovalentRadius)
+        radiusArray = utils.NumpyVTKData(radiusArray, name="radius")
         
         # get the scalars array
-        scalarsArrayNp, scalarsArray = self._getScalarsArray(inputState, visibleAtoms)
+        scalarsArray = self._getScalarsArray(inputState, visibleAtoms)
         
         # make the look up table
         lut = utils.setupLUT(inputState.specieList, inputState.specieRGB, self.colouringOptions)
@@ -128,7 +123,7 @@ class FilterListRenderer(object):
         
         
         # bonds
-        self._renderBonds(scalarsArrayNp, lut)
+        self._renderBonds(scalarsArray, lut)
         
         # render clusters
         
@@ -141,7 +136,7 @@ class FilterListRenderer(object):
         
         
         # refresh actors options
-        self.actorsOptions.refresh(self.actorsDict)
+        self.actorsOptions.refresh(self.getActorsDict())
     
     def _renderDefects(self, lut, resolution):
         """Render defects."""
@@ -188,23 +183,21 @@ class FilterListRenderer(object):
         self._logger.debug("Rendering antisites")
         
         # points
-        pointsNp = _rendering.makeVisiblePointsArray(antisites, refState.pos)
-        points = vtk.vtkPoints()
-        points.SetData(numpy_support.numpy_to_vtk(pointsNp, deep=1))
+        points = _rendering.makeVisiblePointsArray(antisites, refState.pos)
+        points = utils.NumpyVTKData(points)
         
         # radii
-        radiusNp = _rendering.makeVisibleRadiusArray(antisites, refState.specie, refState.specieCovalentRadius)
-        radius = numpy_support.numpy_to_vtk(radiusNp, deep=1)
-        radius.SetName("radius")
+        radius = _rendering.makeVisibleRadiusArray(antisites, refState.specie, refState.specieCovalentRadius)
+        radius = utils.NumpyVTKData(radius, name="radius")
         
         # scalars
-        scalarsNp, scalars = self._getScalarsArray(refState, antisites)
+        scalars = self._getScalarsArray(refState, antisites)
         
         # renderer
         rend = antisiteRenderer.AntisiteRenderer()
-        actor = rend.render(points, scalars, radius, len(refState.specieList), self.colouringOptions,
-                            self.displayOptions.atomScaleFactor, lut)
-        self.actorsDict["Antisites"] = actor
+        rend.render(points, scalars, radius, len(refState.specieList), self.colouringOptions,
+                    self.displayOptions.atomScaleFactor, lut)
+        self._renderersDict["Antisites"] = rend
     
     def _renderVacancies(self, lut, vacancies, actorName="Vacancies"):
         """Render vacancies."""
@@ -216,17 +209,15 @@ class FilterListRenderer(object):
         self._logger.debug("Rendering %s", actorName)
         
         # points
-        pointsNp = _rendering.makeVisiblePointsArray(vacancies, refState.pos)
-        points = vtk.vtkPoints()
-        points.SetData(numpy_support.numpy_to_vtk(pointsNp, deep=1))
+        points = _rendering.makeVisiblePointsArray(vacancies, refState.pos)
+        points = utils.NumpyVTKData(points)
         
         # radii
-        radiusNp = _rendering.makeVisibleRadiusArray(vacancies, refState.specie, refState.specieCovalentRadius)
-        radius = numpy_support.numpy_to_vtk(radiusNp, deep=1)
-        radius.SetName("radius")
+        radius = _rendering.makeVisibleRadiusArray(vacancies, refState.specie, refState.specieCovalentRadius)
+        radius = utils.NumpyVTKData(radius, name="radius")
         
         # scalars
-        scalarsNp, scalars = self._getScalarsArray(refState, vacancies)
+        scalars = self._getScalarsArray(refState, vacancies)
         
         # get vacancy scale setting
         found = False
@@ -239,9 +230,9 @@ class FilterListRenderer(object):
         
         # render
         rend = vacancyRenderer.VacancyRenderer()
-        actor = rend.render(points, scalars, radius, len(refState.specieList), self.colouringOptions,
-                            self.displayOptions.atomScaleFactor, lut, settings)
-        self.actorsDict[actorName] = actor
+        rend.render(points, scalars, radius, len(refState.specieList), self.colouringOptions,
+                    self.displayOptions.atomScaleFactor, lut, settings)
+        self._renderersDict[actorName] = rend
     
     def _renderDefectAtoms(self, lut, resolution, atomList, actorName):
         """Render defect atoms, eg interstitials."""
@@ -253,23 +244,21 @@ class FilterListRenderer(object):
         inputState = self._filterer.inputState
         
         # points
-        pointsNp = _rendering.makeVisiblePointsArray(atomList, inputState.pos)
-        points = vtk.vtkPoints()
-        points.SetData(numpy_support.numpy_to_vtk(pointsNp, deep=1))
+        points = _rendering.makeVisiblePointsArray(atomList, inputState.pos)
+        points = utils.NumpyVTKData(points)
         
         # radii
-        radiusNp = _rendering.makeVisibleRadiusArray(atomList, inputState.specie, inputState.specieCovalentRadius)
-        radius = numpy_support.numpy_to_vtk(radiusNp, deep=1)
-        radius.SetName("radius")
+        radius = _rendering.makeVisibleRadiusArray(atomList, inputState.specie, inputState.specieCovalentRadius)
+        radius = utils.NumpyVTKData(radius, name="radius")
         
         # scalars
-        scalarsNp, scalars = self._getScalarsArray(inputState, atomList)
+        scalars = self._getScalarsArray(inputState, atomList)
         
         # render
         rend = atomRenderer.AtomRenderer()
-        actor = rend.render(points, scalars, radius, len(inputState.specieList), self.colouringOptions, 
-                            self.displayOptions.atomScaleFactor, lut, resolution)
-        self.actorsDict[actorName] = actor
+        rend.render(points, scalars, radius, len(inputState.specieList), self.colouringOptions, 
+                    self.displayOptions.atomScaleFactor, lut, resolution)
+        self._renderersDict[actorName] = rend
     
     def _renderBonds(self, scalarsArray, lut):
         """Calculate and render bonds between atoms."""
@@ -350,9 +339,9 @@ class FilterListRenderer(object):
         
         # draw bonds
         bondRend = bondRenderer.BondRenderer()
-        actor = bondRend.render(inputState, visibleAtoms, NBondsArray, bondArray, bondVectorArray, scalarsArray,
-                                self.colouringOptions, self.bondsOptions, lut)
-        self.actorsDict["Bonds"] = actor
+        bondRend.render(inputState, visibleAtoms, NBondsArray, bondArray, bondVectorArray, scalarsArray,
+                        self.colouringOptions, self.bondsOptions, lut)
+        self._renderersDict["Bonds"] = bondRend
     
     def _renderClusters(self):
         """Render clusters."""
@@ -367,11 +356,10 @@ class FilterListRenderer(object):
         self._logger.debug("Rendering atoms")
         
         inputState = self._filterer.inputState
-        #TODO: should we store the renderer!?
         atomRend = atomRenderer.AtomRenderer()
-        actor = atomRend.render(atomPoints, scalarsArray, radiusArray, len(inputState.specieList), self.colouringOptions, 
-                                self.displayOptions.atomScaleFactor, lut, resolution)
-        self.actorsDict["Atoms"] = actor
+        atomRend.render(atomPoints, scalarsArray, radiusArray, len(inputState.specieList), self.colouringOptions, 
+                        self.displayOptions.atomScaleFactor, lut, resolution)
+        self._renderersDict["Atoms"] = atomRend
     
     def _renderVectors(self, lut):
         """Render vectors."""
@@ -384,17 +372,16 @@ class FilterListRenderer(object):
             self._logger.debug("Rendering arrows for vector data: '%s'", vectorsName)
             
             # make the VTK vectors array
-            vectorsNp = vectorsDict[vectorsName]
+            vectors = vectorsDict[vectorsName]
             if self.vectorsOptions.vectorNormalise:
-                vectorsNp = vectorslib.normalise(vectorsNp)
-            vectors = numpy_support.numpy_to_vtk(vectorsNp, deep=1)
-            vectors.SetName("vectors")
+                vectors = vectorslib.normalise(vectors)
+            vectors = utils.NumpyVTKData(vector, name="vectors")
             
             # render vectors
             vectorRend = vectorRenderer.VectorRenderer()
-            actor = vectorRend.render(atomPoints, scalarsArray, vectors, len(inputState.specieList), self.colouringOptions,
-                                      self.vectorsOptions, lut)
-            self.actorsDict["Vectors"] = actor
+            vectorRend.render(atomPoints, scalarsArray, vectors, len(inputState.specieList), self.colouringOptions,
+                              self.vectorsOptions, lut)
+            self._renderersDict["Vectors"] = vectorRend
     
     def _getScalarsArray(self, lattice, atomList):
         """
@@ -426,10 +413,9 @@ class FilterListRenderer(object):
                 scalarsFull = lattice.specie
             scalarsArray = _rendering.makeVisibleScalarArray(atomList, scalarsFull)
         
-        scalarsArrayVTK = numpy_support.numpy_to_vtk(scalarsArray, deep=1)
-        scalarsArrayVTK.SetName("colours")
+        scalarsArray = utils.NumpyVTKData(scalarsArray, name="colours")
         
-        return scalarsArray, scalarsArrayVTK
+        return scalarsArray
     
     def _getCurrentRendererWindows(self):
         """Returns a list of the current renderer windows."""
@@ -447,7 +433,8 @@ class FilterListRenderer(object):
         """
         self.hideActors()
         
-        self.actorsDict = {}
+        self._renderersDict = {}
+        # self.actorsDict = {}
         if not sequencer:
             self.traceDict = {}
             self.previousPosForTrace = None
@@ -456,142 +443,88 @@ class FilterListRenderer(object):
         self.scalarBar_black_bg = None
         self.povrayAtomsWritten = False
     
+    def getActorsDict(self):
+        """Return dict containing current actors."""
+        actorsDict = {}
+        for name, renderer in self._renderersDict.iteritems():
+            actorsDict[name] = renderer.getActor()
+        
+        return actorsDict
+    
     def hideActors(self):
         """
         Hide all actors
         
         """
+        # renderer windows associated with this filter list
         rendererWindows = self._getCurrentRendererWindows()
         
-        for actorName, val in self.actorsDict.iteritems():
-            if isinstance(val, dict):
-                self._logger.debug("Removing actors for: '%s'", actorName)
-                for actorName2, actorObj in val.iteritems():
-                    if actorObj.visible:
-                        self._logger.debug("  Removing actor: '%s'", actorName2)
-                        for rw in rendererWindows:
-                            rw.vtkRen.RemoveActor(actorObj.actor)
-                        
-                        actorObj.visible = False
-            
-            else:
-                actorObj = val
-                if actorObj.visible:
-                    self._logger.debug("Removing actor: '%s'", actorName)
-                    for rw in rendererWindows:
-                        rw.vtkRen.RemoveActor(actorObj.actor)
-                    
-                    actorObj.visible = False
+        # actors dict
+        actorsDict = self.getActorsDict()
         
+        # loop over actors
+        for actorName, actorObj in actorsDict.iteritems():
+            if actorObj.visible:
+                self._logger.debug("Removing actor: '%s'", actorName)
+                for rw in rendererWindows:
+                    rw.vtkRen.RemoveActor(actorObj.actor)
+                
+                actorObj.visible = False
+        
+        # reinitialise renderer windows
         for rw in rendererWindows:
             rw.vtkRenWinInteract.ReInitialize()
         
         # self.hideScalarBar()
     
-    def setActorAmbient(self, actorName, parentName, ambient, reinit=True):
-        """
-        Set ambient property on actor
-        
-        """
-        if parentName is not None:
-            d = self.actorsDict[parentName]
-        else:
-            d = self.actorsDict
-        
-        actorObj = d[actorName]
+    def setActorAmbient(self, actorName, ambient, reinit=True):
+        """Set ambient property on actor."""
+        actorObj = self._renderersDict[actorName].getActor()
         actorObj.actor.GetProperty().SetAmbient(ambient)
         
         if reinit:
             self.reinitialiseRendererWindows()
     
-    def setActorSpecular(self, actorName, parentName, specular, reinit=True):
-        """
-        Set specular property on actor
-        
-        """
-        if parentName is not None:
-            d = self.actorsDict[parentName]
-        else:
-            d = self.actorsDict
-        
-        actorObj = d[actorName]
+    def setActorSpecular(self, actorName, specular, reinit=True):
+        """Set specular property on actor."""
+        actorObj = self._renderersDict[actorName].getActor()
         actorObj.actor.GetProperty().SetSpecular(specular)
         
         if reinit:
             self.reinitialiseRendererWindows()
     
-    def setActorSpecularPower(self, actorName, parentName, specularPower, reinit=True):
-        """
-        Set specular power property on actor
-        
-        """
-        if parentName is not None:
-            d = self.actorsDict[parentName]
-        else:
-            d = self.actorsDict
-        
-        actorObj = d[actorName]
+    def setActorSpecularPower(self, actorName, specularPower, reinit=True):
+        """Set specular power property on actor."""
+        actorObj = self._renderersDict[actorName].getActor()
         actorObj.actor.GetProperty().SetSpecularPower(specularPower)
         
         if reinit:
             self.reinitialiseRendererWindows()
     
-    def getActorAmbient(self, actorName, parentName):
-        """
-        Get ambient property on actor
-        
-        """
-        if parentName is not None:
-            d = self.actorsDict[parentName]
-        else:
-            d = self.actorsDict
-        
-        actorObj = d[actorName]
+    def getActorAmbient(self, actorName):
+        """Get ambient property on actor."""
+        actorObj = self._renderersDict[actorName].getActor()
         ambient = actorObj.actor.GetProperty().GetAmbient()
         
         return ambient
     
-    def getActorSpecular(self, actorName, parentName):
-        """
-        Get specular property on actor
-        
-        """
-        if parentName is not None:
-            d = self.actorsDict[parentName]
-        else:
-            d = self.actorsDict
-        
-        actorObj = d[actorName]
+    def getActorSpecular(self, actorName):
+        """Get specular property on actor."""
+        actorObj = self._renderersDict[actorName].getActor()
         specular = actorObj.actor.GetProperty().GetSpecular()
         
         return specular
     
-    def getActorSpecularPower(self, actorName, parentName):
-        """
-        Get specular power property on actor
-        
-        """
-        if parentName is not None:
-            d = self.actorsDict[parentName]
-        else:
-            d = self.actorsDict
-        
-        actorObj = d[actorName]
+    def getActorSpecularPower(self, actorName):
+        """Get specular power property on actor."""
+        actorObj = self._renderersDict[actorName].getActor()
         specularPower = actorObj.actor.GetProperty().GetSpecularPower()
         
         return specularPower
     
-    def addActor(self, actorName, parentName=None, reinit=True):
-        """
-        Add individual actor
-        
-        """
-        if parentName is not None:
-            d = self.actorsDict[parentName]
-        else:
-            d = self.actorsDict
-        
-        actorObj = d[actorName]
+    def addActor(self, actorName, reinit=True):
+        """Add individual actor."""
+        actorObj = self._renderersDict[actorName].getActor()
         changes = False
         if not actorObj.visible:
             self._logger.debug("Adding actor: '%s'", actorName)
@@ -607,17 +540,9 @@ class FilterListRenderer(object):
         
         return changes
     
-    def hideActor(self, actorName, parentName=None, reinit=True):
-        """
-        Remove individual actor
-        
-        """
-        if parentName is not None:
-            d = self.actorsDict[parentName]
-        else:
-            d = self.actorsDict
-        
-        actorObj = d[actorName]
+    def hideActor(self, actorName, reinit=True):
+        """Remove individual actor."""
+        actorObj = self._renderersDict[actorName].getActor()
         changes = False
         if actorObj.visible:
             self._logger.debug("Removing actor: '%s'", actorName)
@@ -634,39 +559,26 @@ class FilterListRenderer(object):
         return changes
     
     def reinitialiseRendererWindows(self):
-        """
-        Reinit renderer windows
-        
-        """
+        """Reinit renderer windows."""
         for rw in self.rendererWindows:
             if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                 rw.vtkRenWinInteract.ReInitialize()
     
     def addActors(self):
-        """
-        Add all actors
-        
-        """
+        """Add all actors."""
+        # current renderer windows
         rendererWindows = self._getCurrentRendererWindows()
         
-        for actorName, val in self.actorsDict.iteritems():
-            if isinstance(val, dict):
-                self._logger.debug("Adding actors for: '%s'", actorName)
-                for actorName2, actorObj in val.iteritems():
-                    if not actorObj.visible:
-                        self._logger.debug("  Adding actor: '%s'", actorName2)
-                        for rw in rendererWindows:
-                            rw.vtkRen.AddActor(actorObj.actor)
-                        
-                        actorObj.visible = True
-            
-            else:
-                actorObj = val
-                if not actorObj.visible:
-                    self._logger.debug("Adding actor: '%s'", actorName)
-                    for rw in rendererWindows:
-                        rw.vtkRen.AddActor(actorObj.actor)
-                    
-                    actorObj.visible = True
+        # actors dict
+        actorsDict = self.getActorsDict()
+        
+        # loop over actors
+        for actorName, actorObj in actorsDict.iteritems():
+            if not actorObj.visible:
+                self._logger.debug("Adding actor: '%s'", actorName)
+                for rw in rendererWindows:
+                    rw.vtkRen.AddActor(actorObj.actor)
+                
+                actorObj.visible = True
         
         # self.addScalarBar()

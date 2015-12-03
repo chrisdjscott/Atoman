@@ -69,88 +69,32 @@ class ActorsOptionsWindow(QtGui.QDialog):
         if self.refreshing:
             return
         
-        #TODO: if child is unchecked, parent should be too
-        #TODO: when all children are checked, parent should be checked too
-        
-        print "ITEM CHANGED", item, column
+        self.logger.debug("Item changed: %r, %r", item, column)
         if column != 0:
-            print "  IGNORING"
+            self.logger.debug("Ignoring changed item")
             return
         
         if item.checkState(0) == QtCore.Qt.Unchecked:
-            if item.childCount():
-                # uncheck all children that are checked
-                for i in xrange(item.childCount()):
-                    child = item.child(i)
-                    if child.checkState(0) == QtCore.Qt.Checked:
-                        child.setCheckState(0, QtCore.Qt.Unchecked)
-            
-            else:
-                # hide actor
-                parentName = None
-                parent = item.parent()
-                if parent is not None:
-                    parentName = parent.text(0)
-                self.parent.renderer.hideActor(item.text(0), parentName=parentName)
-                
-                # also uncheck parent
-                if parent is not None and parent.checkState(0) == QtCore.Qt.Checked:
-                    self.refreshing = True
-                    parent.setCheckState(0, QtCore.Qt.Unchecked)
-                    self.refreshing = False
+            # hide actor
+            self.parent.renderer.hideActor(item.text(0))
         
         else:
-            if item.childCount():
-                # check all children that aren't checked
-                for i in xrange(item.childCount()):
-                    child = item.child(i)
-                    if child.checkState(0) == QtCore.Qt.Unchecked:
-                        child.setCheckState(0, QtCore.Qt.Checked)
-            
-            else:
-                # show actor
-                parentName = None
-                parent = item.parent()
-                if parent is not None:
-                    parentName = parent.text(0)
-                self.parent.renderer.addActor(item.text(0), parentName=parentName)
-                
-                # if all parents children are checked, make sure parent is too
-                if parent is not None and parent.checkState(0) == QtCore.Qt.Unchecked:
-                    # count children
-                    allChecked = True
-                    for i in xrange(parent.childCount()):
-                        child = parent.child(i)
-                        if child.checkState(0) == QtCore.Qt.Unchecked:
-                            allChecked = False
-                            break
-                    
-                    if allChecked:
-                        self.refreshing = True
-                        parent.setCheckState(0, QtCore.Qt.Checked)
-                        self.refreshing = False
+            # show actor
+            self.parent.renderer.addActor(item.text(0))
     
     def addCheckedActors(self):
         """
         Add all actors that are checked (but not already added)
         
         """
-        it = QtGui.QTreeWidgetItemIterator(self.tree)
-        
         globalChanges = False
+        it = QtGui.QTreeWidgetItemIterator(self.tree)
         while it.value():
             item = it.value()
             
             if item.childCount() == 0:
                 if item.checkState(0) == QtCore.Qt.Checked:
-                    
-                    parent = item.parent()
-                    parentName = None
-                    if parent is not None:
-                        parentName = parent.text(0)
-                    
-                    changes = self.parent.filterer.addActor(item.text(0), parentName=parentName, reinit=False)
-                    
+                    changes = self.parent.filterer.addActor(item.text(0), reinit=False)
                     if changes:
                         globalChanges = True
             
@@ -183,25 +127,12 @@ class ActorsOptionsWindow(QtGui.QDialog):
             
             # populate
             for key in sorted(actorsDict.keys()):
-                val = actorsDict[key]
-                
-                if isinstance(val, dict):
-                    parent = QtGui.QTreeWidgetItem(self.tree)
-                    parent.setText(0, key)
-                    parent.setFlags(parent.flags() | QtCore.Qt.ItemIsUserCheckable)
-                    parent.setFlags(parent.flags() & ~QtCore.Qt.ItemIsSelectable)
-                    parent.setCheckState(0, QtCore.Qt.Checked)
-                    
-                    for actorName in sorted(val.keys()):
-                        self.addItem(parent, key, actorName)
-                
-                else:
-                    self.addItem(self.tree, None, key)
+                self.addItem(self.tree, key)
         
         finally:
             self.refreshing = False
     
-    def addItem(self, parent, parentName, name):
+    def addItem(self, parent, name):
         """
         Add item with parent and name
         
@@ -219,11 +150,11 @@ class ActorsOptionsWindow(QtGui.QDialog):
         maxval = 1
         spin.setMinimum(minval)
         spin.setMaximum(maxval)
-        current = flt.getActorAmbient(name, parentName)
+        current = flt.getActorAmbient(name)
         assert current <= maxval and current >= minval
         spin.setValue(current)
         spin.setSingleStep(0.1)
-        spin.valueChanged.connect(functools.partial(self.ambientSpinChanged, name, parentName))
+        spin.valueChanged.connect(functools.partial(self.ambientSpinChanged, name))
         self.ambientSpins.append(spin)
         self.tree.setItemWidget(item, 1, spin)
         
@@ -232,11 +163,11 @@ class ActorsOptionsWindow(QtGui.QDialog):
         maxval = 1
         spin.setMinimum(minval)
         spin.setMaximum(maxval)
-        current = flt.getActorSpecular(name, parentName)
+        current = flt.getActorSpecular(name)
         assert current <= maxval and current >= minval
         spin.setValue(current)
         spin.setSingleStep(0.1)
-        spin.valueChanged.connect(functools.partial(self.specularSpinChanged, name, parentName))
+        spin.valueChanged.connect(functools.partial(self.specularSpinChanged, name))
         self.specularSpins.append(spin)
         self.tree.setItemWidget(item, 2, spin)
         
@@ -245,32 +176,31 @@ class ActorsOptionsWindow(QtGui.QDialog):
         maxval = 1000
         spin.setMinimum(minval)
         spin.setMaximum(maxval)
-        current = flt.getActorSpecularPower(name, parentName)
+        current = flt.getActorSpecularPower(name)
         assert current <= maxval and current >= minval
         spin.setValue(current)
         spin.setSingleStep(1)
-        spin.valueChanged.connect(functools.partial(self.specularPowerSpinChanged, name, parentName))
+        spin.valueChanged.connect(functools.partial(self.specularPowerSpinChanged, name))
         self.specularPowerSpins.append(spin)
         self.tree.setItemWidget(item, 3, spin)
-        
     
-    def ambientSpinChanged(self, name, parentName, val):
+    def ambientSpinChanged(self, name, val):
         """
         Ambient spin changed
         
         """
-        self.parent.renderer.setActorAmbient(name, parentName, val)
+        self.parent.renderer.setActorAmbient(name, val)
     
-    def specularSpinChanged(self, name, parentName, val):
+    def specularSpinChanged(self, name, val):
         """
         Specular spin changed
         
         """
-        self.parent.renderer.setActorSpecular(name, parentName, val)
+        self.parent.renderer.setActorSpecular(name, val)
     
-    def specularPowerSpinChanged(self, name, parentName, val):
+    def specularPowerSpinChanged(self, name, val):
         """
         Specular power spin changed
         
         """
-        self.parent.renderer.setActorSpecularPower(name, parentName, val)
+        self.parent.renderer.setActorSpecularPower(name, val)

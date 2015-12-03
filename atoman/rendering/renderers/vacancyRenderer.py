@@ -7,30 +7,36 @@ import logging
 
 import vtk
 
+from . import baseRenderer
 from .. import utils
 
 ################################################################################
 
-class VacancyRenderer(object):
+class VacancyRenderer(baseRenderer.BaseRenderer):
     """
     Render a set of vacancies.
     
     """
     def __init__(self):
+        super(VacancyRenderer, self).__init__()
         self._logger = logging.getLogger(__name__)
     
-    def render(self, points, scalarsArray, radiusArray, nspecies, colouringOptions, atomScaleFactor, lut, settings):
+    def render(self, pointsData, scalarsArray, radiusArray, nspecies, colouringOptions, atomScaleFactor, lut, settings):
         """
         Render the given antisites (wire frame).
         
         """
         self._logger.debug("Rendering vacancies: colour by '%s'", colouringOptions.colourBy)
         
+        # points
+        points = vtk.vtkPoints()
+        points.SetData(pointsData.getVTK())
+        
         # poly data
         polydata = vtk.vtkPolyData()
         polydata.SetPoints(points)
-        polydata.GetPointData().AddArray(scalarsArray)
-        polydata.GetPointData().SetScalars(radiusArray)
+        polydata.GetPointData().AddArray(scalarsArray.getVTK())
+        polydata.GetPointData().SetScalars(radiusArray.getVTK())
         
         # source
         glyphSource = vtk.vtkCubeSource()
@@ -63,4 +69,8 @@ class VacancyRenderer(object):
         actor.GetProperty().SetSpecularPower(settings.getSetting("vacSpecularPower"))
         actor.GetProperty().SetOpacity(settings.getSetting("vacOpacity"))
         
-        return utils.ActorObject(actor)
+        # store attributes
+        self._actor = utils.ActorObject(actor)
+        self._data["Points"] = pointsData
+        self._data["Scalars"] = scalarsArray
+        self._data["Radius"] = radiusArray

@@ -10,6 +10,7 @@ import functools
 import vtk
 import numpy as np
 
+from . import baseRenderer
 from .. import utils
 from ...filtering import bonds
 
@@ -27,15 +28,16 @@ def _bondGlyphMethod(bondGlyph, bondGlyphSource, *args, **kwargs):
 
 ################################################################################
 
-class BondRenderer(object):
+class BondRenderer(baseRenderer.BaseRenderer):
     """
     Render a set of bonds.
     
     """
     def __init__(self):
+        super(BondRenderer, self).__init__()
         self._logger = logging.getLogger(__name__)
     
-    def render(self, lattice, visibleAtoms, NBondsArray, bondArray, bondVectorArray, scalarsArray, colouringOptions,
+    def render(self, lattice, visibleAtoms, NBondsArray, bondArray, bondVectorArray, scalarsData, colouringOptions,
                bondsOptions, lut):
         """
         Render the given atoms.
@@ -74,6 +76,9 @@ class BondRenderer(object):
         bondVectors = vtk.vtkFloatArray()
         bondVectors.SetNumberOfComponents(3)
         bondVectors.SetNumberOfTuples(NBonds)
+        
+        # numpy scalars
+        scalarsArray = scalarsData.getNumpy()
         
         # construct vtk bond arrays
         count = 0
@@ -156,7 +161,11 @@ class BondRenderer(object):
         renderBondsTime = time.time() - renderBondsTime
         self._logger.debug("Render bonds time: %f s", renderBondsTime)
         
-        return utils.ActorObject(actor)
+        # store attributes
+        self._actor = utils.ActorObject(actor)
+        # self._data["Points"] = bondCoords
+        # self._data["Scalars"] = scalarsArray
+        # self._data["Radius"] = radiusArray
 
 ################################################################################
 
