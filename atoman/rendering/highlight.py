@@ -82,8 +82,10 @@ class AntisiteHighlighter(vtk.vtkActor):
         # tube filter
         tubes = vtk.vtkTubeFilter()
         tubes.SetInputConnection(edges.GetOutputPort())
-        tubes.SetRadius(0.11)
+        tubes.SetRadius(0.15)
         tubes.SetNumberOfSides(5)
+        tubes.UseDefaultNormalOn()
+        tubes.SetDefaultNormal(.577, .577, .577)
         
         # mapper
         self.mapper.SetInputConnection(tubes.GetOutputPort())
