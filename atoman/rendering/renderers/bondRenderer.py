@@ -12,21 +12,21 @@ import numpy as np
 
 from . import baseRenderer
 from .. import utils
+from .. import _rendering
 from ...filtering import bonds
 
-################################################################################
 
 def _bondGlyphMethod(bondGlyph, bondGlyphSource, *args, **kwargs):
     """Bond glyph method for programmable glyph filter."""
+    # get vector and position
     pointID = bondGlyph.GetPointId()
-    
     vector = bondGlyph.GetPointData().GetVectors().GetTuple3(pointID)
     pos = bondGlyph.GetPoint()
     
+    # set ends for line
     bondGlyphSource.SetPoint1(pos)
     bondGlyphSource.SetPoint2(pos[0] + vector[0], pos[1] + vector[1], pos[2] + vector[2])
 
-################################################################################
 
 class BondRenderer(baseRenderer.BaseRenderer):
     """
@@ -55,75 +55,30 @@ class BondRenderer(baseRenderer.BaseRenderer):
         # END SETTINGS
         
         # values
-        NVisible = len(visibleAtoms)
         NBondsHalf = np.sum(NBondsArray)
         NBonds = NBondsHalf * 2
-        
-        # number of species
-        NSpecies = len(lattice.specieList)
-        
-        # vtk array storing coords of bonds
-        bondCoords = vtk.vtkFloatArray()
-        bondCoords.SetNumberOfComponents(3)
-        bondCoords.SetNumberOfTuples(NBonds)
-        
-        # vtk array storing scalars (for lut)
-        bondScalars = vtk.vtkFloatArray()
-        bondScalars.SetNumberOfComponents(1)
-        bondScalars.SetNumberOfTuples(NBonds)
-        
-        # vtk array storing vectors (for tube)
-        bondVectors = vtk.vtkFloatArray()
-        bondVectors.SetNumberOfComponents(3)
-        bondVectors.SetNumberOfTuples(NBonds)
+        self._logger.debug("Number of bonds: %d (%d actors)", NBondsHalf, NBonds)
         
         # numpy scalars
         scalarsArray = scalarsData.getNumpy()
         
-        # construct vtk bond arrays
-        count = 0
-        bcount = 0
-        for i in xrange(NVisible):
-            index = visibleAtoms[i]
-            
-            # scalar
-            scalar = scalarsArray[i]
-            
-            # pos
-            xpos = lattice.pos[3 * index]
-            ypos = lattice.pos[3 * index + 1]
-            zpos = lattice.pos[3 * index + 2]
-            
-            for _ in xrange(NBondsArray[i]):
-                bondCoords.SetTuple3(bcount, xpos, ypos, zpos)
-                bondVectors.SetTuple3(bcount, bondVectorArray[3 * count], bondVectorArray[3 * count + 1],
-                                      bondVectorArray[3 * count + 2])
-                bondScalars.SetTuple1(bcount, scalar)
-                bcount += 1
-                
-                # second half
-                visIndex = bondArray[count]
-                index2 = visibleAtoms[visIndex]
-                scalar2 = scalarsArray[visIndex]
-                
-                bondCoords.SetTuple3(bcount, lattice.pos[3 * index2], lattice.pos[3 * index2 + 1],
-                                     lattice.pos[3 * index2 + 2])
-                bondVectors.SetTuple3(bcount, -1 * bondVectorArray[3 * count], -1 * bondVectorArray[3 * count + 1],
-                                      -1 * bondVectorArray[3 * count + 2])
-                bondScalars.SetTuple1(bcount, scalar2)
-                
-                bcount += 1
-                count += 1
+        # construct bonds arrays for rendering
+        res = _rendering.makeBondsArrays(visibleAtoms, scalarsArray, lattice.pos, NBondsArray, bondArray,
+                                         bondVectorArray)
+        bondCoords, bondVectors, bondScalars = res
+        bondCoords = utils.NumpyVTKData(bondCoords)
+        bondVectors = utils.NumpyVTKData(bondVectors, name="vectors")
+        bondScalars = utils.NumpyVTKData(bondScalars, name="colours")
         
         # points
         bondPoints = vtk.vtkPoints()
-        bondPoints.SetData(bondCoords)
+        bondPoints.SetData(bondCoords.getVTK())
         
         # poly data
         bondPolyData = vtk.vtkPolyData()
         bondPolyData.SetPoints(bondPoints)
-        bondPolyData.GetPointData().SetScalars(bondScalars)
-        bondPolyData.GetPointData().SetVectors(bondVectors)
+        bondPolyData.GetPointData().SetScalars(bondScalars.getVTK())
+        bondPolyData.GetPointData().SetVectors(bondVectors.getVTK())
         
         # line source
         lineSource = vtk.vtkLineSource()
@@ -149,7 +104,7 @@ class BondRenderer(baseRenderer.BaseRenderer):
         mapper = vtk.vtkPolyDataMapper()
         mapper.SetInputConnection(bondGlyphFilter.GetOutputPort())
         mapper.SetLookupTable(lut)
-        utils.setMapperScalarRange(mapper, colouringOptions, NSpecies)
+        utils.setMapperScalarRange(mapper, colouringOptions, len(lattice.specieList))
         
         # actor
         actor = vtk.vtkActor()
@@ -163,11 +118,10 @@ class BondRenderer(baseRenderer.BaseRenderer):
         
         # store attributes
         self._actor = utils.ActorObject(actor)
-        # self._data["Points"] = bondCoords
-        # self._data["Scalars"] = scalarsArray
-        # self._data["Radius"] = radiusArray
+        self._data["Points"] = bondCoords
+        self._data["Scalars"] = bondScalars
+        self._data["Vectors"] = bondVectors
 
-################################################################################
 
 class BondCalculator(object):
     """
