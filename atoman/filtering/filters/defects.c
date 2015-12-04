@@ -3,6 +3,10 @@
  *******************************************************************************/
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+//#define DEBUG
+//#define DEBUGACNA
+//#define ACNA_OLD
+//#define SPLIT_OLD
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -13,20 +17,19 @@
 #include "visclibs/array_utils.h"
 #include "filtering/atom_structure.h"
 
-//#define DEBUG
-//#define DEBUGACNA
-
 static PyObject* findDefects(PyObject*, PyObject*);
 static int findDefectClusters(int, double *, int *, int *, struct Boxes *, double, double *, int *);
 static int findDefectNeighbours(int, int, int, int *, double *, struct Boxes *, double, double *, int *);
 static int basicDefectClassification(double, int, char *,int *, double *, int, char *, int *, double *, int *,
         double *, int *, int *, int *, int *, int *);
-//static int identifySplitInterstitials(int, int *, int, int *, int *, double *, double *, int *, double *, int *, double);
-static int identifySplitInterstitialsNew(int, int *, int, int *, int *, double *, double *, int *, double *, int *, double);
+static int identifySplitInterstitials(int, int *, int, int *, int *, double *, double *, int *, double *, int *, double);
 static int refineDefectsUsingAcna(int, int *, int, int *, double, int *, double *, double *, double *, double *, int, int *);
+#ifndef SPLIT_OLD
 static int compare_two_nebs(const void *, const void *);
+#endif
+#ifndef ACNA_OLD
 static int checkVacancyACNARecursive(int, int, int *, int *, int *, struct NeighbourList2 *, struct NeighbourList2 *, int *, int *);
-
+#endif
 
 /*******************************************************************************
  ** List of python methods available in this module
@@ -285,6 +288,7 @@ basicDefectClassification(double vacancyRadius, int NAtoms, char *specieList, in
     return 0;
 }
 
+#ifndef SPLIT_OLD
 /*******************************************************************************
  ** Function that compares two elements in a neighbour list
  *******************************************************************************/
@@ -302,7 +306,7 @@ static int compare_two_nebs(const void * a, const void * b)
  * identify split interstitials (new)
  *******************************************************************************/
 static int
-identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, int *splitInterstitials,
+identifySplitInterstitials(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, int *splitInterstitials,
         double *pos, double *refPos, int *PBC, double *cellDims, int *counters, double vacancyRadius)
 {
     int i, NSplit;
@@ -534,221 +538,224 @@ identifySplitInterstitialsNew(int NVacancies, int *vacancies, int NInterstitials
     return 0;
 }
 
+#else
 /*******************************************************************************
  * identify split interstitials
  *******************************************************************************/
-//static int
-//identifySplitInterstitials(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, int *splitInterstitials,
-//        double *pos, double *refPos, int *PBC, double *cellDims, int *counters, double vacancyRadius)
-//{
-//    int i, count, NDefects, boxstat;
-//    int *NDefectsCluster, *defectClusterSplit, NClusters;
-//    int NVacNew, NIntNew, NSplitInterstitials;
-//    double *defectPos, splitIntRad;
-//    double approxBoxWidth;
-//    struct Boxes *boxes;
-//    
-//
-//#ifdef DEBUG
-//    printf("DEFECTSC: Identifying split interstitials\n");
-//#endif
-//    
-//    /* build positions array of all defects */
-//    NDefects = NVacancies + NInterstitials;
-//    defectPos = malloc(3 * NDefects * sizeof(double));
-//    if (defectPos == NULL)
-//    {
-//        PyErr_SetString(PyExc_MemoryError, "Could not allocate defectPos");
-//        return 1;
-//    }
-//    
-//    /* add defects positions: vac then int */
-//    count = 0;
-//    for (i = 0; i < NVacancies; i++)
-//    {
-//        int index = vacancies[i];
-//        int index3 = 3 * index;
-//        int c3 = count * 3;
-//        defectPos[c3    ] = refPos[index3    ];
-//        defectPos[c3 + 1] = refPos[index3 + 1];
-//        defectPos[c3 + 2] = refPos[index3 + 2];
-//        
-//        count++;
-//    }
-//    
-//    for (i = 0; i < NInterstitials; i++)
-//    {
-//        int index = interstitials[i];
-//        int index3 = 3 * index;
-//        int c3 = count * 3;
-//        defectPos[c3    ] = pos[index3    ];
-//        defectPos[c3 + 1] = pos[index3 + 1];
-//        defectPos[c3 + 2] = pos[index3 + 2];
-//        
-//        count++;
-//    }
-//    
-//    splitIntRad = 2.0 * vacancyRadius;
-//    
-//    /* box defects */
-//    approxBoxWidth = (splitIntRad < 3.0) ? 3.0 : splitIntRad;
-//    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
-//    if (boxes == NULL)
-//    {
-//        free(defectPos);
-//        return 2;
-//    }
-//    boxstat = putAtomsInBoxes(NDefects, defectPos, boxes);
-//    if (boxstat)
-//    {
-//        free(defectPos);
-//        return 3;
-//    }
-//    
-//    /* number of defects per cluster */
-//    NDefectsCluster = malloc(NDefects * sizeof(int));
-//    if (NDefectsCluster == NULL)
-//    {
-//        PyErr_SetString(PyExc_MemoryError, "Could not allocate NDefectsCluster");
-//        free(defectPos);
-//        freeBoxes(boxes);
-//        return 4;
-//    }
-//    
-//    /* cluster number */
-//    defectClusterSplit = malloc(NDefects * sizeof(int));
-//    if (defectClusterSplit == NULL)
-//    {
-//        PyErr_SetString(PyExc_MemoryError, "Could not allocate defectClusterSplit");
-//        free(defectPos);
-//        free(NDefectsCluster);
-//        freeBoxes(boxes);
-//        return 5;
-//    }
-//    
-//    /* find clusters */
-//    NClusters = findDefectClusters(NDefects, defectPos, defectClusterSplit, NDefectsCluster, boxes, splitIntRad, cellDims, PBC);
-//    
-//    /* free */
-//    freeBoxes(boxes);
-//    free(defectPos);
-//    
-//    if (NClusters < 0)
-//    {
-//        free(NDefectsCluster);
-//        free(defectClusterSplit);
-//        return 6;
-//    }
-//    
-//    NDefectsCluster = realloc(NDefectsCluster, NClusters * sizeof(int));
-//    if (NDefectsCluster == NULL)
-//    {
-//        PyErr_SetString(PyExc_MemoryError, "Could not reallocate NDefectsCluster");
-//        free(NDefectsCluster);
-//        free(defectClusterSplit);
-//        return 7;
-//    }
-//    
-//    NVacNew = NVacancies;
-//    NIntNew = NInterstitials;
-//    NSplitInterstitials = 0;
-//    
-//    /* find split ints */
-//    for (i = 0; i < NClusters; i++)
-//    {
-//        if (NDefectsCluster[i] == 3)
-//        {
-//            int j, vacCount, splitIndexes[3];
-//
-//            /* check if 2 interstitials and 1 vacancy */
-////                printf("  POSSIBLE SPLIT INTERSTITIAL\n");
-//            
-//            count = 0;
-//            vacCount = 0;
-//            for (j = 0; j < NDefects; j++)
-//            {
-//                if (defectClusterSplit[j] == i)
-//                {
-//                    if (j < NVacancies) vacCount++;
-//                    
-//                    splitIndexes[count] = j;
-//                    count++;
-//                }
-//            }
-//            
-//            if (vacCount == 1)
-//            {
-////                    printf("    FOUND SPLIT INTERSTITIAL\n");
-//                
-//                /* indexes */
-//                count = 1;
-//                for (j = 0; j < 3; j++)
-//                {
-//                    int index;
-//
-//                    index = splitIndexes[j];
-//                    
-//                    if (index < NVacancies)
-//                    {
-//                        int index2;
-//
-//                        index2 = vacancies[index];
-//                        vacancies[index] = -1;
-//                        splitInterstitials[3*NSplitInterstitials] = index2;
-//                        NVacNew--;
-//                    }
-//                    else
-//                    {
-//                        int index2;
-//
-//                        index2 = interstitials[index - NVacancies];
-//                        interstitials[index - NVacancies] = -1;
-//                        splitInterstitials[3*NSplitInterstitials+count] = index2;
-//                        NIntNew--;
-//                        count++;
-//                    }
-//                }
-//                NSplitInterstitials++;
-//            }
-//        }
-//    }
-//    
-//    /* free memory */
-//    free(defectClusterSplit);
-//    free(NDefectsCluster);
-//    
-//    /* recreate interstitials array */
-//    count = 0;
-//    for (i = 0; i < NInterstitials; i++)
-//    {
-//        if (interstitials[i] != -1)
-//        {
-//            interstitials[count] = interstitials[i];
-//            count++;
-//        }
-//    }
-//    NInterstitials = count;
-//    
-//    /* recreate vacancies array */
-//    count = 0;
-//    for (i = 0; i < NVacancies; i++)
-//    {
-//        if (vacancies[i] != -1)
-//        {
-//            vacancies[count] = vacancies[i];
-//            count++;
-//        }
-//    }
-//    NVacancies = count;
-//
-//    /* store counters */
-//    counters[0] = NVacancies;
-//    counters[1] = NInterstitials;
-//    counters[2] = NSplitInterstitials;
-//    
-//    return 0;
-//}
+static int
+identifySplitInterstitials(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, int *splitInterstitials,
+       double *pos, double *refPos, int *PBC, double *cellDims, int *counters, double vacancyRadius)
+{
+   int i, count, NDefects, boxstat;
+   int *NDefectsCluster, *defectClusterSplit, NClusters;
+   int NVacNew, NIntNew, NSplitInterstitials;
+   double *defectPos, splitIntRad;
+   double approxBoxWidth;
+   struct Boxes *boxes;
+   
 
+#ifdef DEBUG
+   printf("DEFECTSC: Identifying split interstitials\n");
+#endif
+   
+   /* build positions array of all defects */
+   NDefects = NVacancies + NInterstitials;
+   defectPos = malloc(3 * NDefects * sizeof(double));
+   if (defectPos == NULL)
+   {
+       PyErr_SetString(PyExc_MemoryError, "Could not allocate defectPos");
+       return 1;
+   }
+   
+   /* add defects positions: vac then int */
+   count = 0;
+   for (i = 0; i < NVacancies; i++)
+   {
+       int index = vacancies[i];
+       int index3 = 3 * index;
+       int c3 = count * 3;
+       defectPos[c3    ] = refPos[index3    ];
+       defectPos[c3 + 1] = refPos[index3 + 1];
+       defectPos[c3 + 2] = refPos[index3 + 2];
+       
+       count++;
+   }
+   
+   for (i = 0; i < NInterstitials; i++)
+   {
+       int index = interstitials[i];
+       int index3 = 3 * index;
+       int c3 = count * 3;
+       defectPos[c3    ] = pos[index3    ];
+       defectPos[c3 + 1] = pos[index3 + 1];
+       defectPos[c3 + 2] = pos[index3 + 2];
+       
+       count++;
+   }
+   
+   splitIntRad = 2.0 * vacancyRadius;
+   
+   /* box defects */
+   approxBoxWidth = (splitIntRad < 3.0) ? 3.0 : splitIntRad;
+   boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
+   if (boxes == NULL)
+   {
+       free(defectPos);
+       return 2;
+   }
+   boxstat = putAtomsInBoxes(NDefects, defectPos, boxes);
+   if (boxstat)
+   {
+       free(defectPos);
+       return 3;
+   }
+   
+   /* number of defects per cluster */
+   NDefectsCluster = malloc(NDefects * sizeof(int));
+   if (NDefectsCluster == NULL)
+   {
+       PyErr_SetString(PyExc_MemoryError, "Could not allocate NDefectsCluster");
+       free(defectPos);
+       freeBoxes(boxes);
+       return 4;
+   }
+   
+   /* cluster number */
+   defectClusterSplit = malloc(NDefects * sizeof(int));
+   if (defectClusterSplit == NULL)
+   {
+       PyErr_SetString(PyExc_MemoryError, "Could not allocate defectClusterSplit");
+       free(defectPos);
+       free(NDefectsCluster);
+       freeBoxes(boxes);
+       return 5;
+   }
+   
+   /* find clusters */
+   NClusters = findDefectClusters(NDefects, defectPos, defectClusterSplit, NDefectsCluster, boxes, splitIntRad, cellDims, PBC);
+   
+   /* free */
+   freeBoxes(boxes);
+   free(defectPos);
+   
+   if (NClusters < 0)
+   {
+       free(NDefectsCluster);
+       free(defectClusterSplit);
+       return 6;
+   }
+   
+   NDefectsCluster = realloc(NDefectsCluster, NClusters * sizeof(int));
+   if (NDefectsCluster == NULL)
+   {
+       PyErr_SetString(PyExc_MemoryError, "Could not reallocate NDefectsCluster");
+       free(NDefectsCluster);
+       free(defectClusterSplit);
+       return 7;
+   }
+   
+   NVacNew = NVacancies;
+   NIntNew = NInterstitials;
+   NSplitInterstitials = 0;
+   
+   /* find split ints */
+   for (i = 0; i < NClusters; i++)
+   {
+       if (NDefectsCluster[i] == 3)
+       {
+           int j, vacCount, splitIndexes[3];
+
+           /* check if 2 interstitials and 1 vacancy */
+//                printf("  POSSIBLE SPLIT INTERSTITIAL\n");
+           
+           count = 0;
+           vacCount = 0;
+           for (j = 0; j < NDefects; j++)
+           {
+               if (defectClusterSplit[j] == i)
+               {
+                   if (j < NVacancies) vacCount++;
+                   
+                   splitIndexes[count] = j;
+                   count++;
+               }
+           }
+           
+           if (vacCount == 1)
+           {
+//                    printf("    FOUND SPLIT INTERSTITIAL\n");
+               
+               /* indexes */
+               count = 1;
+               for (j = 0; j < 3; j++)
+               {
+                   int index;
+
+                   index = splitIndexes[j];
+                   
+                   if (index < NVacancies)
+                   {
+                       int index2;
+
+                       index2 = vacancies[index];
+                       vacancies[index] = -1;
+                       splitInterstitials[3*NSplitInterstitials] = index2;
+                       NVacNew--;
+                   }
+                   else
+                   {
+                       int index2;
+
+                       index2 = interstitials[index - NVacancies];
+                       interstitials[index - NVacancies] = -1;
+                       splitInterstitials[3*NSplitInterstitials+count] = index2;
+                       NIntNew--;
+                       count++;
+                   }
+               }
+               NSplitInterstitials++;
+           }
+       }
+   }
+   
+   /* free memory */
+   free(defectClusterSplit);
+   free(NDefectsCluster);
+   
+   /* recreate interstitials array */
+   count = 0;
+   for (i = 0; i < NInterstitials; i++)
+   {
+       if (interstitials[i] != -1)
+       {
+           interstitials[count] = interstitials[i];
+           count++;
+       }
+   }
+   NInterstitials = count;
+   
+   /* recreate vacancies array */
+   count = 0;
+   for (i = 0; i < NVacancies; i++)
+   {
+       if (vacancies[i] != -1)
+       {
+           vacancies[count] = vacancies[i];
+           count++;
+       }
+   }
+   NVacancies = count;
+
+   /* store counters */
+   counters[0] = NVacancies;
+   counters[1] = NInterstitials;
+   counters[2] = NSplitInterstitials;
+   
+   return 0;
+}
+#endif
+
+#ifndef ACNA_OLD
 /*******************************************************************************
  * check if vacancy is linked to an ACNA interstitial
  *******************************************************************************/
@@ -1057,7 +1064,193 @@ refineDefectsUsingAcna(int NVacancies, int *vacancies, int NInterstitials, int *
     return 0;
 }
 
+#else
+/*******************************************************************************
+ * Use ACNA to refine the defects
+ *******************************************************************************/
+static int
+refineDefectsUsingAcna(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, double vacancyRadius,
+        int *PBC, double *cellDims, double *pos, double *refPos, double *acnaArray, int acnaStructureType, int *counters)
+{
+    int i, boxstat;
+    int numChanges = 0;
+    double maxSep, maxSep2, *defectPos;
+    double approxBoxWidth;
+    struct Boxes *boxes;
+    
+    
+#ifdef DEBUG
+    printf("DEFECTSC: Refining defects using ACNA...\n");
+#endif
+    
+    /* first make defect pos and box */
+    /* build positions array of all defects */
+    defectPos = malloc(3 * NInterstitials * sizeof(double));
+    if (defectPos == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate defectPos");
+        return 1;
+    }
+    
+    /* add defects positions: int then split */
+    for (i = 0; i < NInterstitials; i++)
+    {
+        int index  = interstitials[i];
+        int i3 = i * 3;
+        int ind3 = index * 3;
+        defectPos[i3    ] = pos[ind3    ];
+        defectPos[i3 + 1] = pos[ind3 + 1];
+        defectPos[i3 + 2] = pos[ind3 + 2];
+    }
+    
+    /* max separation */
+    maxSep = 2.0 * vacancyRadius;
+    maxSep2 = maxSep * maxSep;
+    
+    /* box defects */
+    approxBoxWidth = (maxSep < 3.0) ? 3.0 : maxSep;
+    boxes = setupBoxes(approxBoxWidth, PBC, cellDims);
+    if (boxes == NULL)
+    {
+        free(defectPos);
+        return 2;
+    }
+    boxstat = putAtomsInBoxes(NInterstitials, defectPos, boxes);
+    free(defectPos);
+    if (boxstat) return 3;
+    
+    /* loop over vacancies and see if there is a single neighbouring intersitial */
+    for (i = 0; i < NVacancies; i++)
+    {
+        int vacIndex, j, exitLoop, boxNebListSize;
+        int boxNebList[27] , boxIndex;
+        int nebIntCount = 0;
+        int foundIndex = -1;
+        int foundIntIndex = -1;
+        double refxpos, refypos, refzpos;
+//            double foundSep2;
+        
+        vacIndex = vacancies[i];
+        
+        refxpos = refPos[3*vacIndex];
+        refypos = refPos[3*vacIndex+1];
+        refzpos = refPos[3*vacIndex+2];
+        
+        /* get box index of this atom */
+        boxIndex = boxIndexOfAtom(refxpos, refypos, refzpos, boxes);
+        if (boxIndex < 0)
+        {
+            freeBoxes(boxes);
+            return 4;
+        }
+        
+        /* find neighbouring boxes */
+        boxNebListSize = getBoxNeighbourhood(boxIndex, boxNebList, boxes);
+        
+        /* loop over neighbouring boxes */
+        exitLoop = 0;
+        for (j = 0; j < boxNebListSize; j++)
+        {
+            int k, checkBox;
 
+            if (exitLoop) break;
+            
+            checkBox = boxNebList[j];
+            
+            /* now loop over all reference atoms in the box */
+            for (k = 0; k < boxes->boxNAtoms[checkBox]; k++)
+            {
+                int index, intIndex;
+                double xpos, ypos, zpos, sep2;
+
+                intIndex = boxes->boxAtoms[checkBox][k];
+                index = interstitials[intIndex];
+                
+                /* skip if this interstitial has already been detected as lattice atom */
+                if (index < 0) continue;
+                
+                /* pos of interstitial */
+                xpos = pos[3*index];
+                ypos = pos[3*index+1];
+                zpos = pos[3*index+2];
+                
+                /* separation */
+                sep2 = atomicSeparation2(refxpos, refypos, refzpos, xpos, ypos, zpos, 
+                                         cellDims[0], cellDims[1], cellDims[2], PBC[0], PBC[1], PBC[2]);
+                
+                if (sep2 < maxSep2)
+                {
+                    if (++nebIntCount > 1)
+                    {
+                        exitLoop = 1;
+                        break;
+                    }
+                    
+                    foundIndex = index;
+                    foundIntIndex = intIndex;
+//                        foundSep2 = sep2;
+                }
+            }
+        }
+        
+        if (nebIntCount == 1)
+        {
+            int acnaVal;
+            
+//                printf("DEBUG: found 1 neb for vac; checking acna val\n");
+            
+            /* check ACNA for FCC (hardcoded for now, not good...) */
+            acnaVal = (int) acnaArray[foundIndex];
+//                printf("DEBUG:   acna val is %d (%d)\n", acnaVal, ATOM_STRUCTURE_FCC);
+            if (acnaVal == acnaStructureType)
+            {
+//                    printf("DEBUG:   this should not be a Frenkel pair... (sep = %lf)\n", sqrt(foundSep2));
+                
+                vacancies[i] = -1;
+                interstitials[foundIntIndex] = -1;
+                
+                numChanges++;
+            }
+            
+            /* could also check extending local vac rad and see if that helps... */
+            
+            
+        }
+        
+        
+    }
+    
+    /* free */
+    freeBoxes(boxes);
+    
+    /* recreate vacancies/interstitials arrays */
+#ifdef DEBUG
+    printf("DEFECTSC: number of changes during ACNA refinement = %d\n", numChanges);
+#endif
+    if (numChanges)
+    {
+        int count;
+
+        /* recreate interstitials array */
+        count = 0;
+        for (i = 0; i < NInterstitials; i++)
+            if (interstitials[i] != -1) interstitials[count++] = interstitials[i];
+        NInterstitials = count;
+        
+        /* recreate vacancies array */
+        count = 0;
+        for (i = 0; i < NVacancies; i++)
+            if (vacancies[i] != -1) vacancies[count++] = vacancies[i];
+        NVacancies = count;
+    }
+    
+    /* store counters */
+    counters[0] = NVacancies;
+    counters[1] = NInterstitials;
+    
+    return 0;
+}
+#endif
 
 /*******************************************************************************
  * Search for defects and return the sub-system surrounding them
@@ -1277,10 +1470,8 @@ findDefects(PyObject *self, PyObject *args)
         splitTime = walltime();
 #endif
         
-        status = identifySplitInterstitialsNew(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
+        status = identifySplitInterstitials(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
                 cellDims, defectCounters, vacancyRadius);
-//        status = identifySplitInterstitials(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
-//                        cellDims, defectCounters, vacancyRadius);
         if (status)
         {
             if (driftCompensation) free(refPos);
