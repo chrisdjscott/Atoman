@@ -70,7 +70,7 @@ class ClusterFilterSettings(base.BaseSettings):
         self.registerSetting("calculateVolumesHull", default=False)
         self.registerSetting("hideAtoms", default=False)
         self.registerSetting("neighbourRadius", default=5.0)
-        self.registerSetting("hullCol", default=[0,0,1])
+        self.registerSetting("hullCol", default=[0, 0, 1])
         self.registerSetting("hullOpacity", default=0.5)
         self.registerSetting("minClusterSize", default=8)
         self.registerSetting("maxClusterSize", default=-1)
@@ -131,6 +131,10 @@ class ClusterFilter(base.BaseFilter):
             
             clusterListIndex = clusterIndexMapper[clusterIndex]
             clusterList[clusterListIndex].indexes.append(atomIndex)
+        
+        # hide atoms if required
+        if settings.getSetting("hideAtoms"):
+            visibleAtoms.resize(0, refcheck=False)
         
         # result
         result = base.FilterResult()

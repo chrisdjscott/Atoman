@@ -8,7 +8,6 @@ Renderer for the FilterList object.
 import logging
 
 import numpy as np
-import vtk
 from PySide import QtCore
 
 from . import _rendering
@@ -82,7 +81,6 @@ class FilterListRenderer(object):
         
         # local refs
         inputState = self._filterer.inputState
-        refState = self._filterer.refState
         visibleAtoms = self._filterer.visibleAtoms
         
         # set resolution
@@ -95,7 +93,8 @@ class FilterListRenderer(object):
         atomPoints = utils.NumpyVTKData(atomPoints)
         
         # make radius array
-        radiusArray = _rendering.makeVisibleRadiusArray(visibleAtoms, inputState.specie, inputState.specieCovalentRadius)
+        radiusArray = _rendering.makeVisibleRadiusArray(visibleAtoms, inputState.specie,
+                                                        inputState.specieCovalentRadius)
         radiusArray = utils.NumpyVTKData(radiusArray, name="radius")
         
         # get the scalars array
@@ -111,7 +110,7 @@ class FilterListRenderer(object):
         self._renderDefects(lut, resolution)
         
         # render vectors
-        self._renderVectors(lut)
+        self._renderVectors(atomPoints, scalarsArray, lut)
             
         # displacement vectors
         
@@ -145,10 +144,8 @@ class FilterListRenderer(object):
         # local refs
         interstitials = self._filterer.interstitials
         vacancies = self._filterer.vacancies
-        antisites = self._filterer.antisites
         onAntisites = self._filterer.onAntisites
         splitInterstitials = self._filterer.splitInterstitials
-        refState = self._filterer.refState
         
         # render interstitials
         self._renderDefectAtoms(lut, resolution, interstitials, "Interstitials")
@@ -256,7 +253,7 @@ class FilterListRenderer(object):
         
         # render
         rend = atomRenderer.AtomRenderer()
-        rend.render(points, scalars, radius, len(inputState.specieList), self.colouringOptions, 
+        rend.render(points, scalars, radius, len(inputState.specieList), self.colouringOptions,
                     self.displayOptions.atomScaleFactor, lut, resolution)
         self._renderersDict[actorName] = rend
     
@@ -299,29 +296,25 @@ class FilterListRenderer(object):
                 # check if in current specie list and if so what indexes
                 if syma in specieList:
                     indexa = inputState.getSpecieIndex(syma)
-                else:
-                    continue
+
+                    if symb in specieList:
+                        indexb = inputState.getSpecieIndex(symb)
                 
-                if symb in specieList:
-                    indexb = inputState.getSpecieIndex(symb)
-                else:
-                    continue
-                
-                if syma in bondDict:
-                    d = bondDict[syma]
-                    
-                    if symb in d:
-                        bondMin, bondMax = d[symb]
-                        bondMinArray[indexa][indexb] = bondMin
-                        bondMinArray[indexb][indexa] = bondMin
-                        bondMaxArray[indexa][indexb] = bondMax
-                        bondMaxArray[indexb][indexa] = bondMax
-                        if bondMax > maxBond:
-                            maxBond = bondMax
-                        if bondMax > 0:
-                            calcBonds = True
-                        drawList.append("%s-%s" % (syma, symb))
-                        self._logger.info("    Pair: %s - %s; bond range: %f -> %f", syma, symb, bondMin, bondMax)
+                        if syma in bondDict:
+                            d = bondDict[syma]
+                            
+                            if symb in d:
+                                bondMin, bondMax = d[symb]
+                                bondMinArray[indexa][indexb] = bondMin
+                                bondMinArray[indexb][indexa] = bondMin
+                                bondMaxArray[indexa][indexb] = bondMax
+                                bondMaxArray[indexb][indexa] = bondMax
+                                if bondMax > maxBond:
+                                    maxBond = bondMax
+                                if bondMax > 0:
+                                    calcBonds = True
+                                drawList.append("%s-%s" % (syma, symb))
+                                self._logger.info("Pair: %s - %s; bond range: %f -> %f", syma, symb, bondMin, bondMax)
         
         assert bondMaxArray.max() == bondMax
         
@@ -357,11 +350,11 @@ class FilterListRenderer(object):
         
         inputState = self._filterer.inputState
         atomRend = atomRenderer.AtomRenderer()
-        atomRend.render(atomPoints, scalarsArray, radiusArray, len(inputState.specieList), self.colouringOptions, 
+        atomRend.render(atomPoints, scalarsArray, radiusArray, len(inputState.specieList), self.colouringOptions,
                         self.displayOptions.atomScaleFactor, lut, resolution)
         self._renderersDict["Atoms"] = atomRend
     
-    def _renderVectors(self, lut):
+    def _renderVectors(self, atomPoints, scalarsArray, lut):
         """Render vectors."""
         vectorsName = self.vectorsOptions.selectedVectorsName
         vectorsDict = self._filterer.vectorsDict
@@ -371,11 +364,14 @@ class FilterListRenderer(object):
         elif vectorsName is not None:
             self._logger.debug("Rendering arrows for vector data: '%s'", vectorsName)
             
+            # input lattice
+            inputState = self._filterer.inputState
+            
             # make the VTK vectors array
             vectors = vectorsDict[vectorsName]
             if self.vectorsOptions.vectorNormalise:
                 vectors = vectorslib.normalise(vectors)
-            vectors = utils.NumpyVTKData(vector, name="vectors")
+            vectors = utils.NumpyVTKData(vectors, name="vectors")
             
             # render vectors
             vectorRend = vectorRenderer.VectorRenderer()
@@ -409,7 +405,7 @@ class FilterListRenderer(object):
             elif scalarType == 4:
                 scalarsFull = lattice.charge
             else:
-                logger.error("Unrecognised scalar type (%d): defaulting to specie", scalarType)
+                self._logger.error("Unrecognised scalar type (%d): defaulting to specie", scalarType)
                 scalarsFull = lattice.specie
             scalarsArray = _rendering.makeVisibleScalarArray(atomList, scalarsFull)
         

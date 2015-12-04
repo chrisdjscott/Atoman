@@ -536,7 +536,7 @@ class FilterList(QtGui.QWidget):
         Clear filters and actors from list.
         
         """
-        self.filterer.removeActors()
+        self.renderer.removeActors()
         
         # close info windows
         self.removeInfoWindows()
@@ -555,8 +555,8 @@ class FilterList(QtGui.QWidget):
         
         self.defectFilterSelected = False
         
-        if self.filterer.scalarBarAdded:
-            self.scalarBarButton.setChecked(0)
+        # if self.filterer.scalarBarAdded:
+        #     self.scalarBarButton.setChecked(0)
         
         # refresh available scalars
         self.colouringOptions.refreshScalarColourOption()
