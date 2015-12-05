@@ -111,7 +111,7 @@ class FilterListRenderer(object):
         self._renderVectors(atomPoints, scalarsArray, lut)
             
         # displacement vectors
-        
+        self._renderDisplacementVectors(lut)
         
         # trace
         
@@ -134,6 +134,56 @@ class FilterListRenderer(object):
         
         # refresh actors options
         self.actorsOptions.refresh(self.getActorsDict())
+    
+    def _renderDisplacmentVectorsList(self, atomList, lut, name):
+        """Render displacement for the given list of atoms."""
+        if not len(atomList):
+            self._logger.debug("No %s displacement vectors to draw", name)
+        
+        else:
+            self._logger.debug("Rendering %s displacement vectors", name)
+            
+            # local refs
+            inputState = self._filterer.inputState
+            refState = self._filterer.refState
+            
+            # scalars array
+            scalars = self._getScalarsArray(inputState, atomList)
+            
+            # calculate displacement vectors
+            calc = bondRenderer.DisplacmentVectorCalculator()
+            result = calc.calculateDisplacementVectors(inputState, refState, atomList, scalars.getNumpy())
+            bondCoords, bondVectors, bondScalars = result
+            
+            # draw displacement vectors
+            vecRend = bondRenderer.BondRenderer()
+            vecRend.render(bondCoords, bondVectors, bondScalars, len(inputState.specieList), self.colouringOptions,
+                           self.bondsOptions, lut)
+            self._renderersDict["{0} displacement vectors".format(name)] = vecRend
+    
+    def _renderDisplacementVectors(self, lut):
+        """Render displacement vectors for atoms/interstitials."""
+        # input/ref lattices
+        inputState = self._filterer.inputState
+        refState = self._filterer.refState
+        
+        # check if the number of atoms match
+        numAtomsMatch = inputState.NAtoms == refState.NAtoms
+        
+        # loop over settings, drawing displacement vectors as required
+        for name, settings in zip(self._filterer.currentFilters, self._filterer.currentSettings):
+            if name == "Displacement" and settings.getSetting("drawDisplacementVectors"):
+                if not numAtomsMatch:
+                    self._logger.warning("Cannot render atom displacement vectors when num atoms differ")
+                else:
+                    self._renderDisplacmentVectorsList(self._filterer.visibleAtoms, lut, "Atom")
+            
+            elif name == "Point defects" and settings.getSetting("drawDisplacementVectors"):
+                if not numAtomsMatch:
+                    self._logger.warning("Cannot render interstitial displacement vectors when num atoms differ")
+                else:
+                    # TODO: split ints should be done too
+                    self._renderDisplacmentVectorsList(self._filterer.interstitials, lut, "Interstitial")
     
     def _renderDefects(self, lut, resolution):
         """Render defects."""
@@ -307,8 +357,7 @@ class FilterListRenderer(object):
                                 bondMinArray[indexb][indexa] = bondMin
                                 bondMaxArray[indexa][indexb] = bondMax
                                 bondMaxArray[indexb][indexa] = bondMax
-                                if bondMax > maxBond:
-                                    maxBond = bondMax
+                                maxBond = max(bondMax, maxBond)
                                 if bondMax > 0:
                                     calcBonds = True
                                 drawList.append("%s-%s" % (syma, symb))
@@ -327,13 +376,10 @@ class FilterListRenderer(object):
         if NBondsTotal == 0:
             self._logger.info("No bonds to render")
             return
-        
-        numHalf = np.sum(NBondsArray)
-        num = numHalf * 2
-        self._logger.debug("Number of bonds: %d (%d actors)", numHalf, num)
+        self._logger.debug("Number of bonds: %d (%d actors)", NBondsTotal, NBondsTotal * 2)
         
         # construct bonds arrays for rendering
-        res = _rendering.makeBondsArrays(visibleAtoms, scalarsArray, inputState.pos, NBondsArray, bondArray,
+        res = _rendering.makeBondsArrays(visibleAtoms, scalarsArray.getNumpy(), inputState.pos, NBondsArray, bondArray,
                                          bondVectorArray)
         bondCoords, bondVectors, bondScalars = res
         bondCoords = utils.NumpyVTKData(bondCoords)
@@ -342,8 +388,7 @@ class FilterListRenderer(object):
         
         # draw bonds
         bondRend = bondRenderer.BondRenderer()
-        bondRend.render(visibleAtoms, NSpecies, bondCoords, bondVectors, bondScalars, self.colouringOptions,
-                        self.bondsOptions, lut)
+        bondRend.render(bondCoords, bondVectors, bondScalars, NSpecies, self.colouringOptions, self.bondsOptions, lut)
         self._renderersDict["Bonds"] = bondRend
     
     def _renderClusters(self):

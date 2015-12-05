@@ -18,6 +18,7 @@ static PyObject* countVisibleBySpecie(PyObject *, PyObject *);
 static PyObject* countAntisitesBySpecie(PyObject *, PyObject *);
 static PyObject* countSplitIntsBySpecie(PyObject *, PyObject *);
 static PyObject* makeBondsArrays(PyObject *, PyObject *);
+static PyObject* makeDisplacementVectorBondsArrays(PyObject *, PyObject *);
 
 
 /*******************************************************************************
@@ -32,6 +33,7 @@ static struct PyMethodDef methods[] = {
     {"countAntisitesBySpecie", countAntisitesBySpecie, METH_VARARGS, "Count the number of antisites of each specie"},
     {"countSplitIntsBySpecie", countSplitIntsBySpecie, METH_VARARGS, "Count the number of split interstitials by specie"},
     {"makeBondsArrays", makeBondsArrays, METH_VARARGS, "Create bonds arrays for rendering"},
+    {"makeDisplacementVectorBondsArrays", makeDisplacementVectorBondsArrays, METH_VARARGS, "Create bonds arrays for rendering displacement vectors"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -43,6 +45,101 @@ init_rendering(void)
 {
     (void)Py_InitModule("_rendering", methods);
     import_array();
+}
+
+/*******************************************************************************
+ ** Make arrays for rendering bonds for displacment vectors
+ *******************************************************************************/
+static PyObject*
+makeDisplacementVectorBondsArrays(PyObject *self, PyObject *args)
+{
+    int numBonds;
+    PyArrayObject *visibleAtoms=NULL;
+    PyArrayObject *scalarsArray=NULL;
+    PyArrayObject *pos=NULL;
+    PyArrayObject *drawBondArray=NULL;
+    PyArrayObject *bondVectorsArray=NULL;
+    PyObject *result=NULL;
+    
+    /* parse arguments from Python */
+    if (PyArg_ParseTuple(args, "iO!O!O!O!O!", &numBonds, &PyArray_Type, &visibleAtoms, &PyArray_Type, &scalarsArray,
+            &PyArray_Type, &pos, &PyArray_Type, &drawBondArray, &PyArray_Type, &bondVectorsArray))
+    {
+        int i, count, numVisible;
+        npy_intp numpydims[2];
+        PyArrayObject *bondCoords = NULL;
+        PyArrayObject *bondScalars = NULL;
+        PyArrayObject *bondVectors = NULL;
+        
+        /* check arguments */
+        if (not_intVector(visibleAtoms)) return NULL;
+        numVisible = (int) PyArray_DIM(visibleAtoms, 0);
+        if (not_doubleVector(scalarsArray)) return NULL;
+        if (not_doubleVector(pos)) return NULL;
+        if (not_intVector(drawBondArray)) return NULL;
+        if (not_doubleVector(bondVectorsArray)) return NULL;
+        
+        /* create array for bond coordinates */
+        numpydims[0] = (npy_intp) numBonds;
+        numpydims[1] = 3;
+        bondCoords = (PyArrayObject *) PyArray_SimpleNew(2, numpydims, NPY_FLOAT64);
+        if (bondCoords == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate bondCoords");
+            return NULL;
+        }
+        
+        /* create array for bond vectors */
+        numpydims[0] = (npy_intp) numBonds;
+        numpydims[1] = 3;
+        bondVectors = (PyArrayObject *) PyArray_SimpleNew(2, numpydims, NPY_FLOAT64);
+        if (bondVectors == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate bondVectors");
+            Py_DECREF(bondCoords);
+            return NULL;
+        }
+        
+        /* create array for bond scalars */
+        numpydims[0] = (npy_intp) numBonds;
+        bondScalars = (PyArrayObject *) PyArray_SimpleNew(1, numpydims, NPY_FLOAT64);
+        if (bondScalars == NULL)
+        {
+            PyErr_SetString(PyExc_MemoryError, "Could not allocate bondScalars");
+            Py_DECREF(bondCoords);
+            Py_DECREF(bondVectors);
+            return NULL;
+        }
+        
+        /* loop over visible atoms */
+        count = 0;
+        for (i = 0; i < numVisible; i++)
+        {
+            /* check if we should be drawing this bond */
+            if (IIND1(drawBondArray, i))
+            {
+                int j, i3 = 3 * i;
+                int index3 = 3 * IIND1(visibleAtoms, i);
+                
+                /* store bond values */
+                for (j = 0; j < 3; j++)
+                {
+                    DIND2(bondCoords, count, j) = DIND1(pos, index3 + j);
+                    DIND2(bondVectors, count, j) = DIND1(bondVectorsArray, i3 + j);
+                }
+                DIND1(bondScalars, count) = DIND1(scalarsArray, i);
+                count++;
+            }
+        }
+        
+        /* tuple for result */
+        result = PyTuple_New(3);
+        PyTuple_SetItem(result, 0, PyArray_Return(bondCoords));
+        PyTuple_SetItem(result, 1, PyArray_Return(bondVectors));
+        PyTuple_SetItem(result, 2, PyArray_Return(bondScalars));
+    }
+    
+    return result;
 }
 
 /*******************************************************************************

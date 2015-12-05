@@ -14,6 +14,7 @@ import vtk
 from .. import bondRenderer
 from ... import utils
 from ... import _rendering
+from ....system import lattice
 from ....system.latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
 
 
@@ -190,3 +191,74 @@ class TestBondRenderer(unittest.TestCase):
         
         # check result is correct type
         self.assertIsInstance(bondRend.getActor(), utils.ActorObject)
+
+
+class TestDisplacementVectorCalculator(unittest.TestCase):
+    """
+    Test the displacement vector calculator
+
+    """
+    def setUp(self):
+        """
+        Called before each test
+
+        """
+        self.inputState = lattice.Lattice()
+        self.inputState.addAtom("Fe", (2, 1, 3), 0.0)
+        self.inputState.addAtom("Cr", (8, 4, 4), 0.0)
+        self.inputState.addAtom("Cr", (4, 2, 4), 0.0)
+        self.inputState.addAtom("Fe", (2, 1.9, 2), 0.0)
+        self.inputState.addAtom("Fe", (3, 6, 9), 0.0)
+        
+        self.refState = lattice.Lattice()
+        self.refState.addAtom("Fe", (0, 0, 0), 0.0)
+        self.refState.addAtom("Cr", (11, 2, 6), 0.0)
+        self.refState.addAtom("Cr", (1, 4, 5), 0.0)
+        self.refState.addAtom("Fe", (2, 2, 2), 0.0)
+        self.refState.addAtom("Fe", (8, 4, 1), 0.0)
+        
+        self.visibleAtoms = np.asarray([0, 2, 3], dtype=np.int32)
+        self.scalars = np.asarray([0, 1, 0], dtype=np.float64)
+
+    def tearDown(self):
+        """
+        Called after each test
+
+        """
+        self.inputState = None
+        self.refState = None
+        self.visibleAtoms = None
+        self.scalars = None
+    
+    def test_calculateDisplacementVectors(self):
+        """
+        Displacement vector calculator
+        
+        """
+        # calculate
+        calc = bondRenderer.DisplacmentVectorCalculator()
+        result = calc.calculateDisplacementVectors(self.inputState, self.refState, self.visibleAtoms, self.scalars)
+        bondCoords, bondVectors, bondScalars = result
+        
+        # check result
+        self.assertIsInstance(bondCoords, utils.NumpyVTKData)
+        self.assertIsInstance(bondVectors, utils.NumpyVTKData)
+        self.assertIsInstance(bondScalars, utils.NumpyVTKData)
+        
+        coords = bondCoords.getNumpy()
+        vectors = bondVectors.getNumpy()
+        scalars = bondScalars.getNumpy()
+        self.assertEqual(len(coords.shape), 2)
+        self.assertEqual(coords.shape[0], 2)
+        self.assertEqual(coords.shape[1], 3)
+        self.assertEqual(len(vectors.shape), 2)
+        self.assertEqual(vectors.shape[0], 2)
+        self.assertEqual(vectors.shape[1], 3)
+        self.assertEqual(len(scalars.shape), 1)
+        self.assertEqual(scalars.shape[0], 2)
+        self.assertTrue(np.array_equal(coords[0], [2, 1, 3]))
+        self.assertTrue(np.array_equal(coords[1], [4, 2, 4]))
+        self.assertTrue(np.array_equal(vectors[0], [-2, -1, -3]))
+        self.assertTrue(np.array_equal(vectors[1], [-3, 2, 1]))
+        self.assertEqual(scalars[0], 0)
+        self.assertEqual(scalars[1], 1)

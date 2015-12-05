@@ -12,6 +12,7 @@ import numpy as np
 
 from . import baseRenderer
 from .. import utils
+from .. import _rendering
 from ...filtering import bonds
 
 
@@ -34,7 +35,7 @@ class BondRenderer(baseRenderer.BaseRenderer):
     """
     def __init__(self):
         super(BondRenderer, self).__init__()
-        self._logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger(__name__ + ".BondRenderer")
     
     def render(self, bondCoords, bondVectors, bondScalars, numSpecies, colouringOptions, bondsOptions, lut):
         """
@@ -109,7 +110,7 @@ class BondCalculator(object):
     
     """
     def __init__(self):
-        self._logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger(__name__ + ".BondCalculator")
     
     def calculateBonds(self, inputState, visibleAtoms, bondMinArray, bondMaxArray, drawList, maxBondsPerAtom=50):
         """Find bonds."""
@@ -168,3 +169,35 @@ class BondCalculator(object):
                     self._logger.info("%d %s - %s bonds", NBondsPair, syma, symb)
         
         return NBondsTotal, bondArray, NBondsArray, bondVectorArray, bondSpecieCounter
+
+
+class DisplacmentVectorCalculator(object):
+    """
+    Calculate displacement vectors.
+    
+    """
+    def __init__(self):
+        self._logger = logging.getLogger(__name__ + ".DisplacmentVectorCalculator")
+    
+    def calculateDisplacementVectors(self, inputState, refState, atomList, scalarsArray):
+        """Calculate displacement vectors for the set of atoms."""
+        self._logger.debug("Calculating displacement vectors")
+        
+        # calculate vectors
+        numAtoms = len(atomList)
+        bondVectors = np.empty(3 * numAtoms, np.float64)
+        drawBondVector = np.empty(numAtoms, np.int32)
+        numBonds = bonds.calculateDisplacementVectors(atomList, inputState.pos, refState.pos, refState.cellDims,
+                                                      inputState.PBC, bondVectors, drawBondVector)
+        
+        self._logger.debug("Number of displacement vectors to draw = %d (/ %d)", numBonds, numAtoms)
+        
+        # calculate arrays for rendering
+        res = _rendering.makeDisplacementVectorBondsArrays(numBonds, atomList, scalarsArray, inputState.pos,
+                                                           drawBondVector, bondVectors)
+        bondCoords, bondVectors, bondScalars = res
+        bondCoords = utils.NumpyVTKData(bondCoords)
+        bondVectors = utils.NumpyVTKData(bondVectors, name="vectors")
+        bondScalars = utils.NumpyVTKData(bondScalars, name="colours")
+        
+        return bondCoords, bondVectors, bondScalars

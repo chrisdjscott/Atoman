@@ -276,26 +276,23 @@ calculateDisplacementVectors(PyObject *self, PyObject *args)
     numBonds = 0;
     for (i = 0; i < NVisible; i++)
     {
-        int index;
+        int i3 = 3 * i;
+        int index3 = visibleAtoms[i] * 3;
         double sepVec[3], sep2;
         
-        index = visibleAtoms[i];
-        
         /* separation vector */
-        atomSeparationVector(sepVec, pos[3*index], pos[3*index+1], pos[3*index+2], 
-                             refPos[3*index], refPos[3*index+1], refPos[3*index+2], 
+        atomSeparationVector(sepVec, pos[index3    ], pos[index3 + 1], pos[index3 + 2], 
+                             refPos[index3    ], refPos[index3 + 1], refPos[index3 + 2], 
                              cellDims[0], cellDims[1], cellDims[2], 
                              PBC[0], PBC[1], PBC[2]);
         
-        bondVectorArray[3*i] = sepVec[0];
-        bondVectorArray[3*i+1] = sepVec[1];
-        bondVectorArray[3*i+2] = sepVec[2];
+        bondVectorArray[i3    ] = sepVec[0];
+        bondVectorArray[i3 + 1] = sepVec[1];
+        bondVectorArray[i3 + 2] = sepVec[2];
         
         sep2 = sepVec[0] * sepVec[0] + sepVec[1] * sepVec[1] + sepVec[2] * sepVec[2];
         if (sep2 < 0.04) // don't show displacements smaller than 0.2
-        {
             IIND1(drawBondVector, i) = 0;
-        }
         else 
         {
             IIND1(drawBondVector, i) = 1;
