@@ -44,116 +44,97 @@ class TraceOptionsWindow(QtGui.QDialog):
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
-        self.setWindowTitle("Trace options") # filter list id should be in here
+        self.setWindowTitle("Trace options")  # filter list id should be in here
 #        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
         
         # defaults
-        self.bondThicknessVTK = 0.4
-        self.bondThicknessPOV = 0.4
-        self.bondNumSides = 5
+        self.bondThicknessVTK = 0.2
+        self.bondThicknessPOV = 0.2
+        self.bondNumSides = 6
         self.drawTraceVectors = False
+        self.drawAsArrows = True
+        
+        # for compatibility with vectors
+        self.vectorScaleFactor = 1
+        self.vectorResolution = self.bondNumSides
         
         # layout
-        windowLayout = QtGui.QVBoxLayout(self)
+        layout = QtGui.QFormLayout(self)
         
-        # draw trace vector settings
-        self.drawVectorsGroup = QtGui.QGroupBox("Draw trace vectors")
-        self.drawVectorsGroup.setCheckable(True)
-        self.drawVectorsGroup.setChecked(False)
-        self.drawVectorsGroup.toggled.connect(self.drawTraceVectorsChanged)
+        # draw trace settings
+        self.drawTraceCheck = QtGui.QCheckBox()
+        if self.drawTraceVectors:
+            self.drawTraceCheck.setCheckState(QtCore.Qt.Checked)
+        else:
+            self.drawTraceCheck.setCheckState(QtCore.Qt.Unchecked)
+        self.drawTraceCheck.stateChanged.connect(self.drawTraceVectorsChanged)
+        layout.addRow("Draw trace vectors", self.drawTraceCheck)
         
-        grpLayout = QtGui.QVBoxLayout(self.drawVectorsGroup)
-        grpLayout.setAlignment(QtCore.Qt.AlignTop)
+        # draw as arrows
+        self.arrowsCheck = QtGui.QCheckBox()
+        if self.drawAsArrows:
+            self.arrowsCheck.setCheckState(QtCore.Qt.Checked)
+        else:
+            self.arrowsCheck.setCheckState(QtCore.Qt.Unchecked)
+        self.arrowsCheck.setEnabled(self.drawTraceVectors)
+        self.arrowsCheck.stateChanged.connect(self.drawAsArrowsChanged)
+        layout.addRow("Draw as arrows", self.arrowsCheck)
         
-        # thickness
-        bondThicknessGroup = QtGui.QGroupBox("Bond thickness")
-        bondThicknessGroup.setAlignment(QtCore.Qt.AlignCenter)
-        bondThicknessLayout = QtGui.QVBoxLayout()
-        bondThicknessGroup.setLayout(bondThicknessLayout)
-        grpLayout.addWidget(bondThicknessGroup)
-        
-        # vtk
-        vtkThickSpin = QtGui.QDoubleSpinBox()
-        vtkThickSpin.setMinimum(0.01)
-        vtkThickSpin.setMaximum(10)
-        vtkThickSpin.setSingleStep(0.01)
-        vtkThickSpin.setValue(self.bondThicknessVTK)
-        vtkThickSpin.valueChanged.connect(self.vtkThickChanged)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("VTK:"))
-        row.addWidget(vtkThickSpin)
-        bondThicknessLayout.addLayout(row)
-        
-        # pov
-        povThickSpin = QtGui.QDoubleSpinBox()
-        povThickSpin.setMinimum(0.01)
-        povThickSpin.setMaximum(10)
-        povThickSpin.setSingleStep(0.01)
-        povThickSpin.setValue(self.bondThicknessPOV)
-        povThickSpin.valueChanged.connect(self.povThickChanged)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("POV:"))
-        row.addWidget(povThickSpin)
-        bondThicknessLayout.addLayout(row)
-        
-        # num sides group
-        numSidesGroup = QtGui.QGroupBox("Number of sides")
-        numSidesGroup.setAlignment(QtCore.Qt.AlignCenter)
-        numSidesLayout = QtGui.QVBoxLayout()
-        numSidesGroup.setLayout(numSidesLayout)
-        grpLayout.addWidget(numSidesGroup)
+        # bond thickness
+        self.vtkThickSpin = QtGui.QDoubleSpinBox()
+        self.vtkThickSpin.setMinimum(0.01)
+        self.vtkThickSpin.setMaximum(10)
+        self.vtkThickSpin.setSingleStep(0.01)
+        self.vtkThickSpin.setValue(self.bondThicknessVTK)
+        self.vtkThickSpin.valueChanged.connect(self.vtkThickChanged)
+        self.vtkThickSpin.setEnabled(self.drawTraceVectors)
+        layout.addRow("Bond thickness (VTK)", self.vtkThickSpin)
+        self.povThickSpin = QtGui.QDoubleSpinBox()
+        self.povThickSpin.setMinimum(0.01)
+        self.povThickSpin.setMaximum(10)
+        self.povThickSpin.setSingleStep(0.01)
+        self.povThickSpin.setValue(self.bondThicknessPOV)
+        self.povThickSpin.valueChanged.connect(self.povThickChanged)
+        self.povThickSpin.setEnabled(self.drawTraceVectors)
+        layout.addRow("Bond thickness (POV)", self.povThickSpin)
         
         # num sides
-        numSidesSpin = QtGui.QSpinBox()
-        numSidesSpin.setMinimum(3)
-        numSidesSpin.setMaximum(999)
-        numSidesSpin.setSingleStep(1)
-        numSidesSpin.setValue(self.bondNumSides)
-        numSidesSpin.valueChanged.connect(self.numSidesChanged)
-        
-        row = QtGui.QHBoxLayout()
-        row.addWidget(numSidesSpin)
-        numSidesLayout.addLayout(row)
-        
-        windowLayout.addWidget(self.drawVectorsGroup)
+        self.numSidesSpin = QtGui.QSpinBox()
+        self.numSidesSpin.setMinimum(3)
+        self.numSidesSpin.setMaximum(999)
+        self.numSidesSpin.setSingleStep(1)
+        self.numSidesSpin.setValue(self.bondNumSides)
+        self.numSidesSpin.setEnabled(self.drawTraceVectors)
+        self.numSidesSpin.valueChanged.connect(self.numSidesChanged)
+        layout.addRow("Bond number of sides", self.numSidesSpin)
         
         buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
         buttonBox.rejected.connect(self.reject)
-        windowLayout.addWidget(buttonBox)
-    
-    def numSidesChanged(self, val):
-        """
-        Number of sides changed.
+        layout.addRow(buttonBox)
         
-        """
+    def numSidesChanged(self, val):
+        """Number of sides changed."""
         self.bondNumSides = val
+        self.vectorResolution = val
     
     def vtkThickChanged(self, val):
-        """
-        VTK thickness changed.
-        
-        """
+        """VTK thickness changed."""
         self.bondThicknessVTK = val
     
     def povThickChanged(self, val):
-        """
-        POV thickness changed.
-        
-        """
+        """POV thickness changed."""
         self.bondThicknessPOV = val
     
-    def drawTraceVectorsChanged(self, drawVectors):
-        """
-        Draw trace vectors toggled
-        
-        """
-        self.drawTraceVectors = drawVectors
-        
-        if self.drawTraceVectors:
-            text = "Trace options: On"
-        else:
-            text = "Trace options: Off"
-        
+    def drawAsArrowsChanged(self, state):
+        """Draw as arrows changed."""
+        self.drawAsArrows = False if state == QtCore.Qt.Unchecked else True
+    
+    def drawTraceVectorsChanged(self, state):
+        """Draw trace vectors toggled."""
+        self.drawTraceVectors = False if state == QtCore.Qt.Unchecked else True
+        self.vtkThickSpin.setEnabled(self.drawTraceVectors)
+        self.povThickSpin.setEnabled(self.drawTraceVectors)
+        self.numSidesSpin.setEnabled(self.drawTraceVectors)
+        self.arrowsCheck.setEnabled(self.drawTraceVectors)
+        text = "Trace options: On" if self.drawTraceVectors else "Trace options: Off"
         self.modified.emit(text)

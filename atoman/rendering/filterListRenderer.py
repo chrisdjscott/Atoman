@@ -168,17 +168,24 @@ class FilterListRenderer(object):
                 self._traceVectors = np.concatenate((self._traceVectors, traceVectors))
                 traceVectors = utils.NumpyVTKData(self._traceVectors, name="vectors")
                 self._traceScalars = np.concatenate((self._traceScalars, traceScalars))
-                traceScalars = utils.NumpyVTKData(self._traceScalars, name="scalars")
+                traceScalars = utils.NumpyVTKData(self._traceScalars, name="colours")
                 
                 if not len(self._traceCoords):
                     self._logger.debug("No trace vectors to render")
                 
                 else:
                     # draw trace vectors
-                    self._logger.debug("Size of trace: %d", len(self._traceCoords))
-                    vecRend = bondRenderer.BondRenderer()
-                    vecRend.render(traceCoords, traceVectors, traceScalars, len(inputState.specieList),
-                                   self.colouringOptions, self.bondsOptions, lut)
+                    if self.traceOptions.drawAsArrows:
+                        vecRend = vectorRenderer.VectorRenderer()
+                        vecRend.render(traceCoords, traceScalars, traceVectors, len(inputState.specieList),
+                                       self.colouringOptions, self.traceOptions, lut, invert=True)
+                    
+                    else:
+                        self._logger.debug("Size of trace: %d", len(self._traceCoords))
+                        vecRend = bondRenderer.BondRenderer()
+                        vecRend.render(traceCoords, traceVectors, traceScalars, len(inputState.specieList),
+                                       self.colouringOptions, self.traceOptions, lut)
+                    
                     self._renderersDict["Trace vectors"] = vecRend
             
             else:

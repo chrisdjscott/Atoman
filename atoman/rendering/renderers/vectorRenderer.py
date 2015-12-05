@@ -10,7 +10,6 @@ import vtk
 from . import baseRenderer
 from .. import utils
 
-################################################################################
 
 class VectorRenderer(baseRenderer.BaseRenderer):
     """
@@ -21,7 +20,8 @@ class VectorRenderer(baseRenderer.BaseRenderer):
         super(VectorRenderer, self).__init__()
         self._logger = logging.getLogger(__name__)
     
-    def render(self, pointsData, scalarsArray, vectorsArray, nspecies, colouringOptions, vectorsOptions, lut):
+    def render(self, pointsData, scalarsArray, vectorsArray, nspecies, colouringOptions, vectorsOptions, lut,
+               invert=False):
         """
         Render vectors.
         
@@ -42,6 +42,8 @@ class VectorRenderer(baseRenderer.BaseRenderer):
         arrowSource = vtk.vtkArrowSource()
         arrowSource.SetShaftResolution(vectorsOptions.vectorResolution)
         arrowSource.SetTipResolution(vectorsOptions.vectorResolution)
+        if invert:
+            arrowSource.InvertOn()
         arrowSource.Update()
         
         # glyph mapper
