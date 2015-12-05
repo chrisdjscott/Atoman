@@ -10,21 +10,17 @@ import tempfile
 
 import numpy as np
 import vtk
-from vtk.util import numpy_support
 
 from .. import bondRenderer
 from ... import utils
 from ....system.latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
 
 
-################################################################################
-
 def path_to_file(path):
     return os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "testing", path)
 
-################################################################################
 
-# required unless ColouringOptions is rewritten to have a non GUI dependent settings object
+# required unless ColouringOptionsWindow is rewritten to have a non GUI dependent settings object
 class DummyColouringOpts(object):
     def __init__(self):
         self.colourBy = "Species"
@@ -34,7 +30,6 @@ class DummyColouringOpts(object):
         self.solidColourRGB = (1.0, 0.0, 0.0)
         self.scalarBarText = "Height in Y (A)"
 
-################################################################################
 
 # required unless BondsOptionsWindow is rewritten to have a non GUI dependent settings object
 class DummyBondsOpts(object):
@@ -44,7 +39,6 @@ class DummyBondsOpts(object):
         self.bondThicknessVTK = 0.2
         self.bondNumSides = 5
 
-################################################################################
 
 class TestBondCalculator(unittest.TestCase):
     """
@@ -121,7 +115,6 @@ class TestBondCalculator(unittest.TestCase):
         self.assertTrue(np.array_equal(bondArray, self.bonds), msg="Bonds arrays differ")
         self.assertTrue(np.allclose(bondVectorArray, self.bondvectors), msg="Bond vector arrays differ")
 
-################################################################################
 
 class TestBondRenderer(unittest.TestCase):
     """
@@ -184,7 +177,7 @@ class TestBondRenderer(unittest.TestCase):
         bondsOptions = DummyBondsOpts()
         
         # scalars
-        scalarsData = utils.NumpyVTKData(self.lattice.specie, name="colours")
+        scalarsData = utils.NumpyVTKData(self.lattice.specie.astype(np.float64), name="colours")
         
         # render
         bondRend = bondRenderer.BondRenderer()
