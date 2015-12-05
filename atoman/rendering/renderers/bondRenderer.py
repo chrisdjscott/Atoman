@@ -188,7 +188,7 @@ class DisplacmentVectorCalculator(object):
     def __init__(self):
         self._logger = logging.getLogger(__name__ + ".DisplacmentVectorCalculator")
     
-    def calculateDisplacementVectors(self, inputState, refState, atomList, scalarsArray):
+    def calculateDisplacementVectors(self, pos, refPos, pbc, cellDims, atomList, scalarsArray):
         """Calculate displacement vectors for the set of atoms."""
         self._logger.debug("Calculating displacement vectors")
         
@@ -196,14 +196,13 @@ class DisplacmentVectorCalculator(object):
         numAtoms = len(atomList)
         bondVectors = np.empty(3 * numAtoms, np.float64)
         drawBondVector = np.empty(numAtoms, np.int32)
-        numBonds = bonds.calculateDisplacementVectors(atomList, inputState.pos, refState.pos, refState.cellDims,
-                                                      inputState.PBC, bondVectors, drawBondVector)
+        numBonds = bonds.calculateDisplacementVectors(atomList, pos, refPos, cellDims, pbc, bondVectors, drawBondVector)
         
         self._logger.debug("Number of displacement vectors to draw = %d (/ %d)", numBonds, numAtoms)
         
         # calculate arrays for rendering
-        res = _rendering.makeDisplacementVectorBondsArrays(numBonds, atomList, scalarsArray, inputState.pos,
-                                                           drawBondVector, bondVectors)
+        res = _rendering.makeDisplacementVectorBondsArrays(numBonds, atomList, scalarsArray, pos, drawBondVector,
+                                                           bondVectors)
         bondCoords, bondVectors, bondScalars = res
         bondCoords = utils.NumpyVTKData(bondCoords)
         bondVectors = utils.NumpyVTKData(bondVectors, name="vectors")

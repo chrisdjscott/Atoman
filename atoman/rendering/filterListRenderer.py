@@ -5,6 +5,7 @@ Renderer for the FilterList object.
 @author: Chris Scott
 
 """
+import copy
 import logging
 
 import numpy as np
@@ -38,9 +39,10 @@ class FilterListRenderer(object):
         
         # dictionaries for storing current actors
         self._renderersDict = {}
-        # self.actorsDict = {}
-        self.traceDict = {}
-        self.previousPosForTrace = None
+        self._traceCoords = np.empty((0, 3), dtype=np.float64)
+        self._traceVectors = np.empty((0, 3), dtype=np.float64)
+        self._traceScalars = np.empty(0, dtype=np.float64)
+        self._tracePreviousPos = None
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
         self.povrayAtomsWritten = False
@@ -53,6 +55,7 @@ class FilterListRenderer(object):
         self.vectorsOptions = filterList.vectorsOptions
         self.bondsOptions = filterList.bondsOptions
         self.actorsOptions = filterList.actorsOptions
+        self.traceOptions = filterList.traceOptions
     
     def render(self, sequencer=False):
         """
@@ -107,6 +110,9 @@ class FilterListRenderer(object):
         # render defects
         self._renderDefects(lut, resolution)
         
+        # bonds
+        self._renderBonds(scalarsArray, lut)
+        
         # render vectors
         self._renderVectors(atomPoints, scalarsArray, lut)
             
@@ -114,13 +120,10 @@ class FilterListRenderer(object):
         self._renderDisplacementVectors(lut)
         
         # trace
-        
+        self._renderTrace(scalarsArray, lut)
         
         # voronoi
         
-        
-        # bonds
-        self._renderBonds(scalarsArray, lut)
         
         # render clusters
         
@@ -128,12 +131,61 @@ class FilterListRenderer(object):
         # render bubbles (or already done?)
         
         
-        
         # scalar bar
         
         
         # refresh actors options
         self.actorsOptions.refresh(self.getActorsDict())
+    
+    def _renderTrace(self, scalars, lut):
+        """Render trace vectors."""
+        visibleAtoms = self._filterer.visibleAtoms
+        if self.traceOptions.drawTraceVectors and len(visibleAtoms):
+            self._logger.debug("Rendering trace")
+            
+            # refs
+            inputState = self._filterer.inputState
+            refState = self._filterer.refState
+            
+            # previous positions to draw trace vector from
+            if self._tracePreviousPos is None:
+                self._tracePreviousPos = refState.pos
+            
+            # check lengths are the same
+            if len(self._tracePreviousPos) == len(inputState.pos):
+                # calculate displacements from previous positions
+                calc = bondRenderer.DisplacmentVectorCalculator()
+                result = calc.calculateDisplacementVectors(inputState.pos, self._tracePreviousPos, inputState.PBC,
+                                                           inputState.cellDims, visibleAtoms, scalars.getNumpy())
+                traceCoords, traceVectors, traceScalars = result
+                
+                # append to previously stored data
+                traceCoords = traceCoords.getNumpy()
+                traceVectors = traceVectors.getNumpy()
+                traceScalars = traceScalars.getNumpy()
+                self._traceCoords = np.concatenate((self._traceCoords, traceCoords))
+                traceCoords = utils.NumpyVTKData(self._traceCoords)
+                self._traceVectors = np.concatenate((self._traceVectors, traceVectors))
+                traceVectors = utils.NumpyVTKData(self._traceVectors, name="vectors")
+                self._traceScalars = np.concatenate((self._traceScalars, traceScalars))
+                traceScalars = utils.NumpyVTKData(self._traceScalars, name="scalars")
+                
+                if not len(self._traceCoords):
+                    self._logger.debug("No trace vectors to render")
+                
+                else:
+                    # draw trace vectors
+                    self._logger.debug("Size of trace: %d", len(self._traceCoords))
+                    vecRend = bondRenderer.BondRenderer()
+                    vecRend.render(traceCoords, traceVectors, traceScalars, len(inputState.specieList),
+                                   self.colouringOptions, self.bondsOptions, lut)
+                    self._renderersDict["Trace vectors"] = vecRend
+            
+            else:
+                self._logger.warning("Cannot compute trace with differing number of atoms between steps")
+            
+            # store positions for next time
+            self._tracePreviousPos = copy.deepcopy(inputState.pos)
     
     def _renderDisplacmentVectorsList(self, atomList, lut, name):
         """Render displacement for the given list of atoms."""
@@ -152,7 +204,8 @@ class FilterListRenderer(object):
             
             # calculate displacement vectors
             calc = bondRenderer.DisplacmentVectorCalculator()
-            result = calc.calculateDisplacementVectors(inputState, refState, atomList, scalars.getNumpy())
+            result = calc.calculateDisplacementVectors(inputState.pos, refState.pos, inputState.PBC,
+                                                       inputState.cellDims, atomList, scalars.getNumpy())
             bondCoords, bondVectors, bondScalars = result
             if not len(bondCoords.getNumpy()):
                 self._logger.debug("No displacement vectors were calculated")
@@ -479,10 +532,11 @@ class FilterListRenderer(object):
         self.hideActors()
         
         self._renderersDict = {}
-        # self.actorsDict = {}
         if not sequencer:
-            self.traceDict = {}
-            self.previousPosForTrace = None
+            self._traceCoords = np.empty((0, 3), dtype=np.float64)
+            self._traceVectors = np.empty((0, 3), dtype=np.float64)
+            self._traceScalars = np.empty(0, dtype=np.float64)
+            self._tracePreviousPos = None
         
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None

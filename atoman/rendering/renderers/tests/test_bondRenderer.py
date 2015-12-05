@@ -248,7 +248,8 @@ class TestDisplacementVectorCalculator(unittest.TestCase):
         """
         # calculate
         calc = bondRenderer.DisplacmentVectorCalculator()
-        result = calc.calculateDisplacementVectors(self.inputState, self.refState, self.visibleAtoms, self.scalars)
+        result = calc.calculateDisplacementVectors(self.inputState.pos, self.refState.pos, self.inputState.PBC,
+                                                   self.inputState.cellDims, self.visibleAtoms, self.scalars)
         bondCoords, bondVectors, bondScalars = result
         
         # check result
