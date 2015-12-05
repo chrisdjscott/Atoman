@@ -112,7 +112,8 @@ class BondCalculator(object):
     def __init__(self):
         self._logger = logging.getLogger(__name__ + ".BondCalculator")
     
-    def calculateBonds(self, inputState, visibleAtoms, bondMinArray, bondMaxArray, drawList, maxBondsPerAtom=50):
+    def calculateBonds(self, inputState, visibleAtoms, scalarsArray, bondMinArray, bondMaxArray, drawList,
+                       maxBondsPerAtom=50):
         """Find bonds."""
         self._logger.info("Calculating bonds")
         
@@ -147,6 +148,14 @@ class BondCalculator(object):
         bondArray.resize(NBondsTotal)
         bondVectorArray.resize(NBondsTotal * 3)
         
+        # construct bonds arrays for rendering
+        res = _rendering.makeBondsArrays(visibleAtoms, scalarsArray.getNumpy(), inputState.pos, NBondsArray, bondArray,
+                                         bondVectorArray)
+        bondCoords, bondVectors, bondScalars = res
+        bondCoords = utils.NumpyVTKData(bondCoords)
+        bondVectors = utils.NumpyVTKData(bondVectors, name="vectors")
+        bondScalars = utils.NumpyVTKData(bondScalars, name="colours")
+        
         # specie counters
         specieList = inputState.specieList
         for i in xrange(nspecs):
@@ -168,7 +177,7 @@ class BondCalculator(object):
                     
                     self._logger.info("%d %s - %s bonds", NBondsPair, syma, symb)
         
-        return NBondsTotal, bondArray, NBondsArray, bondVectorArray, bondSpecieCounter
+        return bondCoords, bondVectors, bondScalars, bondSpecieCounter
 
 
 class DisplacmentVectorCalculator(object):

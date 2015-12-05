@@ -87,6 +87,7 @@ class TestBondCalculator(unittest.TestCase):
         """
         # visible atoms array
         visibleAtoms = np.arange(self.lattice.NAtoms, dtype=np.int32)
+        scalars = utils.NumpyVTKData(self.lattice.specie.astype(np.float64), name="colours")
         
         # bond arrays (species list is [Si, B_, O_])
         bondMinArray = np.zeros((3, 3), dtype=np.float64)
@@ -99,11 +100,21 @@ class TestBondCalculator(unittest.TestCase):
         
         # bond calculator
         bondCalc = bondRenderer.BondCalculator()
-        result = bondCalc.calculateBonds(self.lattice, visibleAtoms, bondMinArray, bondMaxArray, drawList)
-        NBondsTotal, bondArray, NBondsArray, bondVectorArray, bondSpecieCounter = result
+        result = bondCalc.calculateBonds(self.lattice, visibleAtoms, scalars, bondMinArray, bondMaxArray, drawList)
+        bondCoords, bondVectors, bondScalars, bondSpecieCounter = result
         
         # check result
-        self.assertEqual(NBondsTotal, 1482)
+        self.assertIsInstance(bondCoords, utils.NumpyVTKData)
+        self.assertIsInstance(bondVectors, utils.NumpyVTKData)
+        self.assertIsInstance(bondScalars, utils.NumpyVTKData)
+        coords = bondCoords.getNumpy()
+        vectors = bondCoords.getNumpy()
+        scalars = bondCoords.getNumpy()
+        self.assertEqual(coords.shape[0], 2964)
+        self.assertEqual(coords.shape[1], 3)
+        self.assertEqual(vectors.shape[0], 2964)
+        self.assertEqual(vectors.shape[1], 3)
+        self.assertEqual(scalars.shape[0], 2964)
         self.assertEqual(bondSpecieCounter[0][0], 0)
         self.assertEqual(bondSpecieCounter[1][1], 0)
         self.assertEqual(bondSpecieCounter[2][2], 0)
@@ -113,9 +124,9 @@ class TestBondCalculator(unittest.TestCase):
         self.assertEqual(bondSpecieCounter[2][0], 1118)
         self.assertEqual(bondSpecieCounter[1][2], 364)
         self.assertEqual(bondSpecieCounter[2][1], 364)
-        self.assertTrue(np.array_equal(NBondsArray, self.nbonds), msg="NBonds arrays differ")
-        self.assertTrue(np.array_equal(bondArray, self.bonds), msg="Bonds arrays differ")
-        self.assertTrue(np.allclose(bondVectorArray, self.bondvectors), msg="Bond vector arrays differ")
+        # self.assertTrue(np.array_equal(NBondsArray, self.nbonds), msg="NBonds arrays differ")
+        # self.assertTrue(np.array_equal(bondArray, self.bonds), msg="Bonds arrays differ")
+        # self.assertTrue(np.allclose(bondVectorArray, self.bondvectors), msg="Bond vector arrays differ")
 
 
 class TestBondRenderer(unittest.TestCase):

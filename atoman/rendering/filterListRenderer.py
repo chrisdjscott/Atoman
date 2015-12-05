@@ -154,6 +154,9 @@ class FilterListRenderer(object):
             calc = bondRenderer.DisplacmentVectorCalculator()
             result = calc.calculateDisplacementVectors(inputState, refState, atomList, scalars.getNumpy())
             bondCoords, bondVectors, bondScalars = result
+            if not len(bondCoords.getNumpy()):
+                self._logger.debug("No displacement vectors were calculated")
+                return
             
             # draw displacement vectors
             vecRend = bondRenderer.BondRenderer()
@@ -371,20 +374,11 @@ class FilterListRenderer(object):
         
         # calculate bonds
         bonds = bondRenderer.BondCalculator()
-        result = bonds.calculateBonds(inputState, visibleAtoms, bondMinArray, bondMaxArray, drawList)
-        NBondsTotal, bondArray, NBondsArray, bondVectorArray, bondSpecieCounter = result
-        if NBondsTotal == 0:
+        result = bonds.calculateBonds(inputState, visibleAtoms, scalarsArray, bondMinArray, bondMaxArray, drawList)
+        bondCoords, bondVectors, bondScalars, bondSpecieCounter = result
+        if len(bondCoords.getNumpy()) == 0:
             self._logger.info("No bonds to render")
             return
-        self._logger.debug("Number of bonds: %d (%d actors)", NBondsTotal, NBondsTotal * 2)
-        
-        # construct bonds arrays for rendering
-        res = _rendering.makeBondsArrays(visibleAtoms, scalarsArray.getNumpy(), inputState.pos, NBondsArray, bondArray,
-                                         bondVectorArray)
-        bondCoords, bondVectors, bondScalars = res
-        bondCoords = utils.NumpyVTKData(bondCoords)
-        bondVectors = utils.NumpyVTKData(bondVectors, name="vectors")
-        bondScalars = utils.NumpyVTKData(bondScalars, name="colours")
         
         # draw bonds
         bondRend = bondRenderer.BondRenderer()
