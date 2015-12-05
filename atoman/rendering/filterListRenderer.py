@@ -21,8 +21,6 @@ from .renderers import antisiteRenderer
 from ..system.atoms import elements
 
 
-################################################################################
-
 class FilterListRenderer(object):
     """
     Renderer for a filter list.
@@ -330,10 +328,22 @@ class FilterListRenderer(object):
             self._logger.info("No bonds to render")
             return
         
+        numHalf = np.sum(NBondsArray)
+        num = numHalf * 2
+        self._logger.debug("Number of bonds: %d (%d actors)", numHalf, num)
+        
+        # construct bonds arrays for rendering
+        res = _rendering.makeBondsArrays(visibleAtoms, scalarsArray, inputState.pos, NBondsArray, bondArray,
+                                         bondVectorArray)
+        bondCoords, bondVectors, bondScalars = res
+        bondCoords = utils.NumpyVTKData(bondCoords)
+        bondVectors = utils.NumpyVTKData(bondVectors, name="vectors")
+        bondScalars = utils.NumpyVTKData(bondScalars, name="colours")
+        
         # draw bonds
         bondRend = bondRenderer.BondRenderer()
-        bondRend.render(inputState, visibleAtoms, NBondsArray, bondArray, bondVectorArray, scalarsArray,
-                        self.colouringOptions, self.bondsOptions, lut)
+        bondRend.render(visibleAtoms, NSpecies, bondCoords, bondVectors, bondScalars, self.colouringOptions,
+                        self.bondsOptions, lut)
         self._renderersDict["Bonds"] = bondRend
     
     def _renderClusters(self):

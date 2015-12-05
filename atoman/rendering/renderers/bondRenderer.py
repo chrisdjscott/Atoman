@@ -12,7 +12,6 @@ import numpy as np
 
 from . import baseRenderer
 from .. import utils
-from .. import _rendering
 from ...filtering import bonds
 
 
@@ -37,12 +36,9 @@ class BondRenderer(baseRenderer.BaseRenderer):
         super(BondRenderer, self).__init__()
         self._logger = logging.getLogger(__name__)
     
-    def render(self, lattice, visibleAtoms, NBondsArray, bondArray, bondVectorArray, scalarsData, colouringOptions,
-               bondsOptions, lut):
+    def render(self, bondCoords, bondVectors, bondScalars, numSpecies, colouringOptions, bondsOptions, lut):
         """
-        Render the given atoms.
-        
-        Explain...
+        Render the given bonds.
         
         """
         self._logger.debug("Rendering bonds")
@@ -53,22 +49,6 @@ class BondRenderer(baseRenderer.BaseRenderer):
         bondThicknessVTK = bondsOptions.bondThicknessVTK
         bondNumSides = bondsOptions.bondNumSides
         # END SETTINGS
-        
-        # values
-        NBondsHalf = np.sum(NBondsArray)
-        NBonds = NBondsHalf * 2
-        self._logger.debug("Number of bonds: %d (%d actors)", NBondsHalf, NBonds)
-        
-        # numpy scalars
-        scalarsArray = scalarsData.getNumpy()
-        
-        # construct bonds arrays for rendering
-        res = _rendering.makeBondsArrays(visibleAtoms, scalarsArray, lattice.pos, NBondsArray, bondArray,
-                                         bondVectorArray)
-        bondCoords, bondVectors, bondScalars = res
-        bondCoords = utils.NumpyVTKData(bondCoords)
-        bondVectors = utils.NumpyVTKData(bondVectors, name="vectors")
-        bondScalars = utils.NumpyVTKData(bondScalars, name="colours")
         
         # points
         bondPoints = vtk.vtkPoints()
@@ -104,7 +84,7 @@ class BondRenderer(baseRenderer.BaseRenderer):
         mapper = vtk.vtkPolyDataMapper()
         mapper.SetInputConnection(bondGlyphFilter.GetOutputPort())
         mapper.SetLookupTable(lut)
-        utils.setMapperScalarRange(mapper, colouringOptions, len(lattice.specieList))
+        utils.setMapperScalarRange(mapper, colouringOptions, numSpecies)
         
         # actor
         actor = vtk.vtkActor()

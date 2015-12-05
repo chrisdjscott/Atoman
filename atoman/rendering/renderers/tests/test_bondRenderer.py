@@ -13,6 +13,7 @@ import vtk
 
 from .. import bondRenderer
 from ... import utils
+from ... import _rendering
 from ....system.latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
 
 
@@ -138,9 +139,18 @@ class TestBondRenderer(unittest.TestCase):
         
         # load result
         datadir = os.path.join(os.path.dirname(__file__), "data")
-        self.nbonds = np.loadtxt(os.path.join(datadir, "nbonds.csv"), dtype=np.int32)
-        self.bonds = np.loadtxt(os.path.join(datadir, "bonds.csv"), dtype=np.int32)
-        self.bondvectors = np.loadtxt(os.path.join(datadir, "bondvectors.csv"), dtype=np.float64)
+        nbonds = np.loadtxt(os.path.join(datadir, "nbonds.csv"), dtype=np.int32)
+        bonds = np.loadtxt(os.path.join(datadir, "bonds.csv"), dtype=np.int32)
+        bondvectors = np.loadtxt(os.path.join(datadir, "bondvectors.csv"), dtype=np.float64)
+        
+        scalarsData = utils.NumpyVTKData(self.lattice.specie.astype(np.float64), name="colours")
+        visibleAtoms = np.arange(self.lattice.NAtoms, dtype=np.int32)
+        res = _rendering.makeBondsArrays(visibleAtoms, scalarsData.getNumpy(), self.lattice.pos, nbonds, bonds,
+                                         bondvectors)
+        bondCoords, bondVectors, bondScalars = res
+        self.bondCoords = utils.NumpyVTKData(bondCoords)
+        self.bondVectors = utils.NumpyVTKData(bondVectors, name="vectors")
+        self.bondScalars = utils.NumpyVTKData(bondScalars, name="colours")
         
         # lut
         self.nspecies = 3
@@ -160,29 +170,23 @@ class TestBondRenderer(unittest.TestCase):
         shutil.rmtree(self.tmpLocation)
         self.tmpLocation = None
         self.lattice = None
-        self.nbonds = None
-        self.bonds = None
+        self.bondCoords = None
         self.bondVectors = None
+        self.bondScalars = None
     
     def test_bondRenderer(self):
         """
         Bond renderer
         
         """
-        # visible atoms array
-        visibleAtoms = np.arange(self.lattice.NAtoms, dtype=np.int32)
-        
         # options forms
         colouringOptions = DummyColouringOpts()
         bondsOptions = DummyBondsOpts()
         
-        # scalars
-        scalarsData = utils.NumpyVTKData(self.lattice.specie.astype(np.float64), name="colours")
-        
         # render
         bondRend = bondRenderer.BondRenderer()
-        bondRend.render(self.lattice, visibleAtoms, self.nbonds, self.bonds, self.bondvectors,
-                        scalarsData, colouringOptions, bondsOptions, self.lut)
+        bondRend.render(self.bondCoords, self.bondVectors, self.bondScalars, self.nspecies, colouringOptions,
+                        bondsOptions, self.lut)
         
         # check result is correct type
         self.assertIsInstance(bondRend.getActor(), utils.ActorObject)
