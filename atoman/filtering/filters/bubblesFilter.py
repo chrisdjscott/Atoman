@@ -46,8 +46,6 @@ from . import _bubbles
 from .. import voronoi
 
 
-################################################################################
-
 class BubblesFilterSettings(base.BaseSettings):
     """
     Setting for the bubbles filter.
@@ -59,15 +57,15 @@ class BubblesFilterSettings(base.BaseSettings):
         self.registerSetting("bubbleSpecies", [])
         self.registerSetting("vacancyRadius", 1.3)
         self.registerSetting("vacNebRad", 4.0)
-        self.registerSetting("vacancyBubbleRadius", 3.0) # should be less than above!?
+        self.registerSetting("vacancyBubbleRadius", 3.0)
         self.registerSetting("vacIntRad", 2.6)
         
+        # these settings are for compatibility with defects rendering
         self.registerSetting("vacScaleSize", default=0.75)
         self.registerSetting("vacOpacity", default=0.8)
         self.registerSetting("vacSpecular", default=0.4)
         self.registerSetting("vacSpecularPower", default=10)
 
-################################################################################
 
 class BubblesFilter(base.BaseFilter):
     """
@@ -121,9 +119,10 @@ class BubblesFilter(base.BaseFilter):
         vacNebRad = settings.getSetting("vacNebRad")
         vacIntRad = settings.getSetting("vacIntRad")
         acnaArray = np.empty(0, np.float64)
-        result = _bubbles.identifyBubbles(inputState.NAtoms, inputState.pos, refState.NAtoms, refState.pos, filterInput.driftCompensation,
-                                          filterInput.driftVector, inputState.cellDims, inputState.PBC, numBubbleAtoms, bubbleAtomIndexes,
-                                          vacBubbleRad, acnaArray, vacancyRadius, vacNebRad, vacIntRad)
+        result = _bubbles.identifyBubbles(inputState.NAtoms, inputState.pos, refState.NAtoms, refState.pos,
+                                          filterInput.driftCompensation, filterInput.driftVector, inputState.cellDims,
+                                          inputState.PBC, numBubbleAtoms, bubbleAtomIndexes, vacBubbleRad, acnaArray,
+                                          vacancyRadius, vacNebRad, vacIntRad)
         
         # unpack
         bubbleVacList = result[0]
@@ -161,14 +160,13 @@ class BubblesFilter(base.BaseFilter):
             bubble.setVacancies(bubbleVacList[bubbleIndex])
             bubble.setBubbleAtoms(bubbleAtomList[bubbleIndex])
             bubble.setVolume(volume)
-            self.logger.debug("Adding bubble %d: %d vacancies, %d atoms (ratio: %.2f); volume is %f", bubbleIndex, bubble.getNVacancies(),
-                              bubble.getNAtoms(), bubble.getRatio(), bubble.getVolume())
+            self.logger.debug("Adding bubble %d: %d vacancies, %d atoms (ratio: %.2f); volume is %f", bubbleIndex,
+                              bubble.getNVacancies(), bubble.getNAtoms(), bubble.getRatio(), bubble.getVolume())
             bubbleList.append(bubble)
         
         # optionally show H that do not belong to a bubble as atoms too!?
         # for now we just set visible atoms to zero
         filterInput.visibleAtoms.resize(0, refcheck=False)
-        
         
         # optionally show all defects!? (differentiate from bubbles somehow...)
         
@@ -180,7 +178,6 @@ class BubblesFilter(base.BaseFilter):
         
         return result
 
-################################################################################
 
 class Bubble(object):
     """
@@ -252,9 +249,6 @@ class Bubble(object):
         """
         
     
-
-################################################################################
-
 class VoroOptsSimple(object):
     def __init__(self):
         self.dispersion = 10.0

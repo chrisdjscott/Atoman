@@ -23,7 +23,6 @@ from . import atomStructure
 from ..rendering import _rendering
 
 
-################################################################################
 class Filterer(object):
     """
     Filter class.

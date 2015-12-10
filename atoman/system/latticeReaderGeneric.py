@@ -18,8 +18,6 @@ from ..visutils import utilities
 from .lattice import Lattice
 
 
-################################################################################
-
 class FileFormats(object):
     """
     Object containing file formats
@@ -28,7 +26,7 @@ class FileFormats(object):
     def __init__(self):
         self._fileFormats = {}
         self._maxIdentifierLength = 0
-        self.logger = logging.getLogger(__name__+".FileFormats")
+        self.logger = logging.getLogger(__name__ + ".FileFormats")
     
     def getFormat(self, name):
         """
@@ -109,7 +107,8 @@ class FileFormats(object):
         for fmt in self._fileFormats.values():
             if fmt.linkedName is not None:
                 if fmt.name not in names:
-                    self.logger.error("Linked name '%s' for format type '%s' does not exist! Removing format '%s'", fmt.linkedName, fmt.name, fmt.name)
+                    self.logger.error("Linked name '%s' for format type '%s' does not exist! Removing format '%s'",
+                                      fmt.linkedName, fmt.name, fmt.name)
                     poplist.append(fmt.name)
         
         for key in poplist:
@@ -136,7 +135,6 @@ class FileFormats(object):
     def __contains__(self, item):
         return item in self._fileFormats
 
-################################################################################
 
 class FileFormat(object):
     """
@@ -151,7 +149,7 @@ class FileFormat(object):
         self.atomIndexOffset = 1
         self.linkedName = None
         
-        self.logger = logging.getLogger(__name__+".FileFormat")
+        self.logger = logging.getLogger(__name__ + ".FileFormat")
     
     def inHeader(self, key):
         """
@@ -187,7 +185,7 @@ class FileFormat(object):
         if not len(self.header):
             raise RuntimeError("You must add a header line before adding a header value")
         
-        if typecode != 'i' and typecode != 's' and typecode !='d':
+        if typecode != 'i' and typecode != 's' and typecode != 'd':
             raise ValueError("Invalid value for header typecode ('i', 'd', 's'): '%s'", typecode)
         
         self.header[-1].append((key, typecode, 1))
@@ -207,7 +205,7 @@ class FileFormat(object):
         if not len(self.body):
             raise RuntimeError("You must add a body line before adding a body value")
         
-        if typecode != 'i' and typecode !='d':
+        if typecode != 'i' and typecode != 'd':
             raise ValueError("Invalid value for body typecode ('i', 'd'): '%s'", typecode)
         
         if dim != 1 and dim != 3:
@@ -442,7 +440,6 @@ class FileFormat(object):
         
         return identifier
 
-################################################################################
 
 class LatticeReaderGeneric(object):
     """
@@ -450,7 +447,7 @@ class LatticeReaderGeneric(object):
     
     """
     def __init__(self, tmpLocation=None, updateProgress=None, hideProgress=None):
-        self.logger = logging.getLogger(__name__+".LatticeReaderGeneric")
+        self.logger = logging.getLogger(__name__ + ".LatticeReaderGeneric")
         
         # create tmp dir if one isn't passed
         if tmpLocation is None:
@@ -460,7 +457,6 @@ class LatticeReaderGeneric(object):
         else:
             self.rmTmpDir = False
             self.tmpLocation = tmpLocation
-        
         
         self.updateProgress = updateProgress
         self.hideProgress = hideProgress
@@ -696,7 +692,8 @@ class LatticeReaderGeneric(object):
             lattice.specieRGB[i][0] = rgbtemp[0]
             lattice.specieRGB[i][1] = rgbtemp[1]
             lattice.specieRGB[i][2] = rgbtemp[2]
-            self.logger.info("%d %s (%s) atoms", lattice.specieCount[i], lattice.specieList[i], elements.atomName(lattice.specieList[i]))
+            self.logger.info("%d %s (%s) atoms", lattice.specieCount[i], lattice.specieList[i],
+                             elements.atomName(lattice.specieList[i]))
         
         # read what's left in resultDict: scalars and vectors and lattice attributes
         for key, data in resultDict.iteritems():
