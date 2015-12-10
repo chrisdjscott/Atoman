@@ -43,8 +43,8 @@ class FilterListRenderer(object):
         self._traceVectors = np.empty((0, 3), dtype=np.float64)
         self._traceScalars = np.empty(0, dtype=np.float64)
         self._tracePreviousPos = None
-        self.scalarBar_white_bg = None
-        self.scalarBar_black_bg = None
+        self._scalarBarWhite = None
+        self._scalarBarBlack = None
         self.povrayAtomsWritten = False
         
         # get required refs from filter list
@@ -132,10 +132,15 @@ class FilterListRenderer(object):
         
         
         # scalar bar
-        
+        self._createScalarBar(lut)
         
         # refresh actors options
         self.actorsOptions.refresh(self.getActorsDict())
+    
+    def _createScalarBar(self, lut):
+        """Create the scalar bars."""
+        self._scalarBarWhite = utils.makeScalarBar(lut, self.colouringOptions, (0, 0, 0))
+        self._scalarBarBlack = utils.makeScalarBar(lut, self.colouringOptions, (1, 1, 1))
     
     def _renderTrace(self, scalars, lut):
         """Render trace vectors."""
