@@ -9,12 +9,12 @@ By default the following colouring options are available:
   * **Height**: colour by the x, y or z coordinate
   * **Solid colour**: colour all atoms in the filter list by the selected
     colour
-  * **Atom property**: colour by on of the available atom properties: 
+  * **Atom property**: colour by on of the available atom properties:
     "Kinetic energy", "Potential energy" or "Charge"
 
-If you add filters/calculators that calculate scalar properties of the 
+If you add filters/calculators that calculate scalar properties of the
 system, for example "Displacement" or "Bond order", then there will also
-be an option to colour by these scalar values (you must "Apply lists" 
+be an option to colour by these scalar values (you must "Apply lists"
 after adding these calculators before they appear in the combo box).
 
 There are options to set the min/max values for colouring; and option to
@@ -60,7 +60,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.minVal = 0.0
         self.maxVal = 1.0
         self.solidColour = QtGui.QColor(255, 0, 0)
-        self.solidColourRGB = (float(self.solidColour.red()) / 255.0, 
+        self.solidColourRGB = (float(self.solidColour.red()) / 255.0,
                                float(self.solidColour.green()) / 255.0,
                                float(self.solidColour.blue()) / 255.0)
         self.scalarBarText = "Height in Y (A)"
@@ -115,8 +115,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.maxValSpinBox.setValue(1)
         self.maxValSpinBox.valueChanged.connect(self.maxValChanged)
         
-        label = QtGui.QLabel( " Min " )
-        label2 = QtGui.QLabel( " Max " )
+        label = QtGui.QLabel(" Min ")
+        label2 = QtGui.QLabel(" Max ")
         
         row = heightOptions.newRow()
         row.addWidget(label)
@@ -177,8 +177,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.chargeMaxSpin.setMaximum(9999.0)
         self.chargeMaxSpin.setValue(1)
         
-        label = QtGui.QLabel( " Min " )
-        label2 = QtGui.QLabel( " Max " )
+        label = QtGui.QLabel(" Min ")
+        label2 = QtGui.QLabel(" Max ")
         
         row = chargeOptions.newRow()
         row.addWidget(label)
@@ -298,8 +298,8 @@ class ColouringOptionsWindow(QtGui.QDialog):
         scalarMaxSpin.setValue(1)
         self.scalarMaxSpins[name] = scalarMaxSpin
          
-        label = QtGui.QLabel( " Min " )
-        label2 = QtGui.QLabel( " Max " )
+        label = QtGui.QLabel(" Min ")
+        label2 = QtGui.QLabel(" Max ")
          
         row = scalarOptions.newRow()
         row.addWidget(label)
@@ -418,7 +418,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
             self.solidColour = col
             self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.solidColour.name())
             
-            self.solidColourRGB = (float(self.solidColour.red()) / 255.0, 
+            self.solidColourRGB = (float(self.solidColour.red()) / 255.0,
                                    float(self.solidColour.green()) / 255.0,
                                    float(self.solidColour.blue()) / 255.0)
     

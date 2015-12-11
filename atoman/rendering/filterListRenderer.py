@@ -19,6 +19,7 @@ from .renderers import vectorRenderer
 from .renderers import bondRenderer
 from .renderers import vacancyRenderer
 from .renderers import antisiteRenderer
+from .renderers import clusterRenderer
 from ..system.atoms import elements
 
 
@@ -126,7 +127,7 @@ class FilterListRenderer(object):
         
         
         # render clusters
-        
+        self._renderClusters()
         
         # render bubbles (or already done?)
         
@@ -139,8 +140,8 @@ class FilterListRenderer(object):
     
     def _createScalarBar(self, lut):
         """Create the scalar bars."""
-        self._scalarBarWhite = utils.makeScalarBar(lut, self.colouringOptions, (0, 0, 0))
-        self._scalarBarBlack = utils.makeScalarBar(lut, self.colouringOptions, (1, 1, 1))
+        # self._scalarBarWhite = utils.makeScalarBar(lut, self.colouringOptions, (0, 0, 0))
+        # self._scalarBarBlack = utils.makeScalarBar(lut, self.colouringOptions, (1, 1, 1))
     
     def _renderTrace(self, scalars, lut):
         """Render trace vectors."""
@@ -452,9 +453,26 @@ class FilterListRenderer(object):
     
     def _renderClusters(self):
         """Render clusters."""
+        clusterList = self._filterer.clusterList
+        if not len(clusterList):
+            return
+        self._logger.debug("Rendering clusters")
         
+        # get filter settings
+        found = False
+        for name, settings in zip(self._filterer.currentFilters, self._filterer.currentSettings):
+            if name == "Point defects" or name == "Cluster":
+                found = True
+                break
+        if not found:
+            raise RuntimeError("Could not find clusters or point defects filter settings")
         
-        
+        # check if we are supposed to be rendering clusters
+        if settings.getSetting("drawConvexHulls"):
+            # render
+            rend = clusterRenderer.ClusterRenderer()
+            rend.render(self._filterer.inputState, clusterList, settings)
+            self._renderersDict["Clusters"] = rend
     
     def _renderAtoms(self, atomPoints, scalarsArray, radiusArray, lut, resolution):
         """Render atoms."""
