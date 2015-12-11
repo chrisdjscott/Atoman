@@ -31,7 +31,7 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
         """
         self._logger.debug("Rendering %d clusters", len(clusterList))
         
-        # append poly data
+        # object for combining poly datas
         appendPolyData = vtk.vtkAppendPolyData()
         
         # loop over clusters making poly data

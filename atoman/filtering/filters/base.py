@@ -8,8 +8,6 @@ import logging
 import numpy as np
 
 
-################################################################################
-
 class FilterResult(object):
     """
     Result object returned by a filter.
@@ -80,7 +78,6 @@ class FilterResult(object):
         """Returns True if the bubble list is not empty."""
         return True if len(self._bubbleList) else False
 
-################################################################################
 
 class FilterInput(object):
     """Input object for filters."""
@@ -96,7 +93,8 @@ class FilterInput(object):
         self.ompNumThreads = 1
         self.voronoiOptions = None
         self.bondDict = None
-        self.voronoi = None
+        self.voronoiAtoms = None
+        self.voronoiDefects = None
         self.driftCompensation = False
         self.driftVector = np.zeros(3, np.float64)
         self.vacancies = np.empty(0, np.float64)
@@ -106,7 +104,6 @@ class FilterInput(object):
         self.onAntisites = np.empty(0, np.float64)
         self.defectFilterSelected = False
 
-################################################################################
 
 class BaseSettings(object):
     """Filter settings object should inherit from this class."""
@@ -162,7 +159,6 @@ class BaseSettings(object):
         
         return value
 
-################################################################################
 
 class BaseFilter(object):
     """Filters should inherit from this object."""
@@ -179,9 +175,6 @@ class BaseFilter(object):
         array[-1] = moduleName
         loggerName = ".".join(array)
         self.logger = logging.getLogger(loggerName)
-        
-        # attributes
-        self.requiresVoronoi = False
     
     def apply(self, *args, **kwargs):
         raise NotImplementedError("apply method not implemented")

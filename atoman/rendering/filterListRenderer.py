@@ -20,6 +20,7 @@ from .renderers import bondRenderer
 from .renderers import vacancyRenderer
 from .renderers import antisiteRenderer
 from .renderers import clusterRenderer
+from .renderers import voronoiRenderer
 from ..system.atoms import elements
 
 
@@ -31,6 +32,9 @@ class FilterListRenderer(object):
     def __init__(self, filterList):
         # logger
         self._logger = logging.getLogger(__name__)
+        
+        # the filter list we belong to
+        self._filterList = filterList
         
         # the filterer that we are rendering
         self._filterer = filterList.filterer
@@ -57,6 +61,7 @@ class FilterListRenderer(object):
         self.bondsOptions = filterList.bondsOptions
         self.actorsOptions = filterList.actorsOptions
         self.traceOptions = filterList.traceOptions
+        self.voronoiOptions = filterList.voronoiOptions
     
     def render(self, sequencer=False):
         """
@@ -124,7 +129,7 @@ class FilterListRenderer(object):
         self._renderTrace(scalarsArray, lut)
         
         # voronoi
-        
+        self._renderVoronoi(scalarsArray, lut)
         
         # render clusters
         self._renderClusters()
@@ -136,6 +141,28 @@ class FilterListRenderer(object):
         
         # refresh actors options
         self.actorsOptions.refresh(self.getActorsDict())
+    
+    def _renderVoronoi(self, scalars, lut):
+        """Render Voronoi cells."""
+        visibleAtoms = self._filterer.visibleAtoms
+        if self.voronoiOptions.displayVoronoi and len(visibleAtoms):
+            self._logger.debug("Rendering Voronoi cells")
+            
+            # warn the user if they are rendering a large number of cells
+            if len(visibleAtoms) > 2000:
+                # warn that this will be slow
+                msg = "Rendering a large number of Voronoi cells (%d); this will be slow" % len(visibleAtoms)
+                self._logger.warning(msg)
+            
+            # get the Voronoi object
+            lattice = self._filterer.inputState
+            voro = self._filterer.voronoiAtoms.getVoronoi(lattice, self.voronoiOptions)
+            
+            # render
+            rend = voronoiRenderer.VoronoiRenderer()
+            rend.render(lattice, visibleAtoms, scalars.getNumpy(), lut, voro, self.voronoiOptions,
+                        self.colouringOptions)
+            self._renderersDict["Voronoi"] = rend
     
     def _createScalarBar(self, lut):
         """Create the scalar bars."""

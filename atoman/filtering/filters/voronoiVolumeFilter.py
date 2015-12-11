@@ -42,7 +42,7 @@ class VoronoiVolumeFilter(base.BaseFilter):
         NVectors = filterInput.NVectors
         fullVectors = filterInput.fullVectors
         visibleAtoms = filterInput.visibleAtoms
-        vor = filterInput.voronoi
+        vor = filterInput.voronoiAtoms.getVoronoi()
         
         # settings
         minVoroVol = settings.getSetting("minVoroVol")

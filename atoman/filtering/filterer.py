@@ -25,9 +25,9 @@ from ..rendering import _rendering
 
 class Filterer(object):
     """
-    Filter class.
+    Filterer class.
     
-    Contains list of subfilters to be performed in order.
+    Applies the selected filters in order.
     
     """
     # known atom structure types
@@ -35,10 +35,10 @@ class Filterer(object):
     
     # all available filters
     defaultFilters = [
-        "Species", 
-        "Point defects", 
-        "Crop box", 
-        "Cluster", 
+        "Species",
+        "Point defects",
+        "Crop box",
+        "Cluster",
         "Displacement",
         "Charge",
         "Crop sphere",
@@ -63,21 +63,7 @@ class Filterer(object):
     def __init__(self, voronoiOptions):
         self.logger = logging.getLogger(__name__)
         self.voronoiOptions = voronoiOptions
-        
-        # self.colouringOptions = self.parent.colouringOptions
-        # self.bondsOptions = self.parent.bondsOptions
-        # self.displayOptions = self.parent.displayOptions
-        # self.traceOptions = self.parent.traceOptions
-        # self.actorsOptions = self.parent.actorsOptions
-        # self.scalarBarAdded = False
-        # self.scalarBar_white_bg = None
-        # self.scalarBar_black_bg = None
-        # self.povrayAtomsWritten = False
-        
-        # self._persistentList = False
-        
         self._driftCompensation = False
-        
         self.reset()
     
     def toggleDriftCompensation(self, driftCompensation):
@@ -108,7 +94,8 @@ class Filterer(object):
         self.clusterList = []
         self.bubbleList = []
         self.structureCounterDicts = {}
-        self.voronoi = None
+        self.voronoiAtoms = voronoi.VoronoiAtomsCalculator()
+        self.voronoiDefects = voronoi.VoronoiDefectsCalculator()
         self.scalarsDict = {}
         self.latticeScalarsDict = {}
         self.vectorsDict = {}
@@ -129,7 +116,8 @@ class Filterer(object):
         defectFilterSelected = False
         self.defectFilterSelected = defectFilterSelected
         for filterName in currentFilters:
-            if filterName not in self.defaultFilters and not filterName.startswith("Scalar:"): #TODO: check the scalar exists too
+            if filterName not in self.defaultFilters and not filterName.startswith("Scalar:"):
+                # TODO: check the scalar exists too
                 raise ValueError("Unrecognised filter passed to Filterer: '%s'" % filterName)
             
             # check if the defect filter in the list
@@ -169,9 +157,6 @@ class Filterer(object):
             self.onAntisites = np.empty(refState.NAtoms, dtype=np.int32)
             self.splitInterstitials = np.empty(3 * refState.NAtoms, dtype=np.int32)
         
-        # pov-ray hull file
-        # hullFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_hulls%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID)))
-        
         # drift compensation
         if self._driftCompensation:
             filtering_c.calculate_drift_vector(inputState.NAtoms, inputState.pos, refState.pos,
@@ -180,8 +165,6 @@ class Filterer(object):
         
         # run filters
         applyFiltersTime = time.time()
-        drawDisplacementVectors = False
-        displacementSettings = None
         for filterName, filterSettings in zip(currentFilters, currentSettings):
             # determine the name of filter module to be loaded
             if filterName.startswith("Scalar: "):
@@ -200,17 +183,13 @@ class Filterer(object):
             # load dialog
             filterObject = getattr(filterModule, filterObjectName, None)
             if filterObject is None:
-                self.logger.error("Could not locate filter object for: '%s'", filterNameString)
+                self.logger.error("Could not locate filter object for: '%s'", filterName)
             
             else:
                 self.logger.info("Running filter: '%s'", filterName)
                 
                 # filter
                 filterObject = filterObject(filterName)
-                
-                # check if we need to compute the Voronoi tessellation
-                if filterObject.requiresVoronoi:
-                    self.calculateVoronoi(inputState)
                 
                 # construct filter input object
                 filterInput = base.FilterInput()
@@ -221,7 +200,8 @@ class Filterer(object):
                 filterInput.bondDict = elements.bondDict
                 filterInput.NScalars, filterInput.fullScalars = self.makeFullScalarsArray()
                 filterInput.NVectors, filterInput.fullVectors = self.makeFullVectorsArray()
-                filterInput.voronoi = self.voronoi
+                filterInput.voronoiAtoms = self.voronoiAtoms
+                filterInput.voronoiDefects = self.voronoiDefects
                 filterInput.driftCompensation = self._driftCompensation
                 filterInput.driftVector = self.driftVector
                 filterInput.vacancies = self.vacancies
@@ -237,7 +217,7 @@ class Filterer(object):
                 # cluster list
                 if result.hasClusterList():
                     self.clusterList = result.getClusterList()
-                    #TODO: calculate volumes should be here
+                    # TODO: calculate volumes should be here
                     if filterSettings.getSetting("calculateVolumes"):
                         pass
                 
@@ -255,35 +235,12 @@ class Filterer(object):
                 
                 # new scalars
                 self.scalarsDict.update(result.getScalars())
-                
-                # custom (ideally generalise this too...)
-                # if (filterName == "Displacement" or filterName == "Point defects") and inputState.NAtoms == refState.NAtoms:
-                #     drawDisplacementVectors = filterSettings.getSetting("drawDisplacementVectors")
-                #     displacementSettings = filterSettings
-                
-                # elif filterName == "Cluster":
-                    # if filterSettings.getSetting("drawConvexHulls"):
-                    #     self.clusterFilterDrawHulls(filterSettings, hullFile)
-                     
-                    # if filterSettings.getSetting("calculateVolumes"):
-                    #     self.clusterFilterCalculateVolumes(filterSettings)
-            
-            # calculate numbers of atoms/defects
-            # if defectFilterSelected:
-            #     self.NVis = len(self.interstitials) + len(self.vacancies) + len(self.antisites) + len(self.splitInterstitials)
-            #     self.NVac = len(self.vacancies)
-            #     self.NInt = len(self.interstitials) + len(self.splitInterstitials) / 3
-            #     self.NAnt = len(self.antisites)
-            # else:
-            #     self.NVis = len(self.visibleAtoms)
-            # 
-            # self.logger.info("  %d visible atoms", self.NVis)
             
             if defectFilterSelected:
-                ndef = len(self.interstitials) + len(self.vacancies) + len(self.antisites) + len(self.splitInterstitials)
-                self.logger.info("  %d visible defects", ndef)
+                num = len(self.interstitials) + len(self.vacancies) + len(self.antisites) + len(self.splitInterstitials)
+                self.logger.info("%d visible defects", num)
             else:
-                self.logger.info("  %d visible atoms", len(self.visibleAtoms))
+                self.logger.info("%d visible atoms", len(self.visibleAtoms))
         
         # species counts here
         if len(self.visibleAtoms):
@@ -317,48 +274,6 @@ class Filterer(object):
         # self.parent.colouringOptions.refreshScalarColourOption()
         
         # render
-#         renderTime = time.time()
-#         povfile = "pipeline%d_atoms%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
-#         if self.parent.defectFilterSelected:
-#             # defects filter always first (for now...)
-#             filterSettingsGui = currentSettings[0]
-#             filterSettings = filterSettingsGui.getSettings()
-#             if filterSettings is None:
-#                 filterSettings = filterSettingsGui
-#             
-#             # render convex hulls
-#             if filterSettings.getSetting("findClusters") and filterSettings.getSetting("drawConvexHulls"):
-#                 self.pointDefectFilterDrawHulls(filterSettings, hullFile)
-#             
-#             # cluster volume
-#             if filterSettings.getSetting("findClusters") and filterSettings.getSetting("calculateVolumes"):
-#                 self.pointDefectFilterCalculateClusterVolumes(filterSettings)
-#             
-#             # render defects
-#             if filterSettings.getSetting("findClusters") and filterSettings.getSetting("drawConvexHulls") and filterSettings.getSetting("hideDefects"):
-#                 pass
-#             
-#             else:
-#                 counters = renderer.getActorsForFilteredDefects(self.interstitials, self.vacancies, self.antisites, self.onAntisites,
-#                                                                 self.splitInterstitials, self.actorsDict, self.colouringOptions,
-#                                                                 filterSettings, self.displayOptions, self.pipelinePage)
-#                 
-#                 self.vacancySpecieCount = counters[0]
-#                 self.interstitialSpecieCount = counters[1]
-#                 self.antisiteSpecieCount = counters[2]
-#                 self.splitIntSpecieCount = counters[3]
-#                 self.scalarBar_white_bg = counters[4]
-#                 self.scalarBar_black_bg = counters[5]
-#                 
-#                 # write pov-ray file too
-#                 povfile = "pipeline%d_defects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
-#                 renderer.writePovrayDefects(povfile, self.vacancies, self.interstitials, self.antisites, self.onAntisites,
-#                                             filterSettings, self.mainWindow, self.displayOptions, self.splitInterstitials, self.pipelinePage)
-#                 self.povrayAtomsWritten = True
-#             
-#             # draw displacement vectors on interstitials atoms
-#             if drawDisplacementVectors:
-#                 self.renderInterstitialDisplacementVectors(displacementSettings)
 #         
 #         elif filterName == "Bubbles":
 #             self.logger.debug("Rendering bubbles...")
@@ -413,63 +328,6 @@ class Filterer(object):
 #             self.vacancies = bubbleVacancies
 #             self.visibleAtoms = bubbleAtoms
 #         
-#         else:
-#             if filterName == "Cluster" and filterSettings.getSetting("drawConvexHulls") and filterSettings.getSetting("hideAtoms"):
-#                 pass
-#             
-#             else:
-#                 # this is a hack!! not ideal
-#                 if self.parent.isPersistentList():
-#                     NVisibleForRes = 800
-#                 else:
-#                     NVisibleForRes = None
-#                 
-#                 self.scalarBar_white_bg, self.scalarBar_black_bg, visSpecCount = renderer.getActorsForFilteredSystem(self.visibleAtoms, self.mainWindow, 
-#                                                                                                                      self.actorsDict, self.colouringOptions, 
-#                                                                                                                      povfile, self.scalarsDict, self.latticeScalarsDict,
-#                                                                                                                      self.displayOptions, self.pipelinePage,
-#                                                                                                                      self.povrayAtomsWrittenSlot, self.vectorsDict,
-#                                                                                                                      self.vectorsOptions, NVisibleForRes=NVisibleForRes,
-#                                                                                                                      sequencer=sequencer)
-#                 
-#                 self.visibleSpecieCount = visSpecCount
-#             
-#             # do displacement vectors on visible atoms
-#             if drawDisplacementVectors:
-#                 self.renderDisplacementVectors(displacementSettings)
-#             
-#             # render trace
-#             if self.traceOptions.drawTraceVectors:
-#                 self.renderTrace()
-#             
-#             if self.bondsOptions.drawBonds:
-#                 # find bonds
-#                 self.calculateBonds()
-#             
-#             # voronoi
-#             if self.voronoiOptions.displayVoronoi:
-#                 self.renderVoronoi()
-#         
-#         # time to render
-#         renderTime = time.time() - renderTime
-#         self.logger.debug("Create actors time: %f s", renderTime)
-#         
-#         if self.parent.visible:
-#             addActorsTime = time.time()
-#             
-#             self.addActors()
-#             
-#             addActorsTime = time.time() - addActorsTime
-#             self.logger.debug("Add actors time: %f s" % addActorsTime)
-#         
-# #         for name, scalars in self.scalarsDict.iteritems():
-# #             assert len(scalars) == len(self.visibleAtoms)
-# #             f = open("%s_after.dat" % name.replace(" ", "_"), "w")
-# #             for tup in itertools.izip(self.visibleAtoms, scalars):
-# #                 f.write("%d %f\n" % tup)
-# #             f.close()
-#         
-#         self.actorsOptions.refresh(self.actorsDict)
         
         # time
         runFiltersTime = time.time() - runFiltersTime
@@ -485,47 +343,6 @@ class Filterer(object):
         
         self.logger.debug("Povray atoms written in %f s (%s)", povtime, uniqueID)
     
-    def calculateVoronoi(self, inputState):
-        """
-        Calc voronoi tesselation
-        
-        """
-        if self.voronoi is None:
-            self.voronoi = voronoi.computeVoronoi(inputState, self.voronoiOptions, inputState.PBC)
-    
-    # def renderVoronoi(self):
-    #     """
-    #     Render Voronoi cells
-    #     
-    #     """
-    #     inputState = self.pipelinePage.inputState
-    #     
-    #     status = self.calculateVoronoi()
-    #     if status:
-    #         return status
-    #     
-    #     if not len(self.visibleAtoms):
-    #         return 2
-    #     
-    #     if len(self.visibleAtoms) > 2000:
-    #         # warn that this will be slow
-    #         msg = """<p>You are about to render a large number of Voronoi cells (%d).</p>
-    #                  <p>This will probably be very slow!</p>
-    #                  <p>Do you wish to continue?</p>""" % len(self.visibleAtoms)
-    #         
-    #         reply = QtGui.QMessageBox.question(self.mainWindow, "Message", msg, QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.Yes)
-    #         
-    #         if reply == QtGui.QMessageBox.No:
-    #             return
-    #     
-    #     # POV-RAY file
-    #     voroFile = os.path.join(self.mainWindow.tmpDirectory, "pipeline%d_voro%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID)))
-    #     
-    #     # get actors for vis atoms only!
-    #     renderVoronoi.getActorsForVoronoiCells(self.visibleAtoms, inputState, self.voronoi, 
-    #                                            self.colouringOptions, self.voronoiOptions, self.actorsDict, 
-    #                                            voroFile, self.scalarsDict, log=self.log)
-        
     # def addScalarBar(self):
     #     """
     #     Add scalar bar.
