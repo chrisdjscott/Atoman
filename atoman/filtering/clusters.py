@@ -16,30 +16,34 @@ try:
 except ImportError:
     PYHULL_LOADED = False
 
-################################################################################
 
-def findConvexHullFacets(N, pos):
+def findConvexHullFacets(num, pos):
     """
     Find convex hull of given points
     
     """
-    # construct pts list
-    pts = []
-    for i in xrange(N):
-        pts.append([pos[3*i], pos[3*i+1], pos[3*i+2]])
+    if num > 3:
+        # construct pts list
+        pts = []
+        for i in xrange(num):
+            pts.append([pos[3 * i], pos[3 * i + 1], pos[3 * i + 2]])
+        
+        # call scipy
+        hull = spatial.ConvexHull(pts)
+        facets = hull.simplices
     
-    # call scipy
-    hull = spatial.ConvexHull(pts)
-    facets = hull.simplices
+    elif num == 3:
+        facets = [[0, 1, 2]]
+    
+    else:
+        facets = None
     
     return facets
 
-################################################################################
 
 def tetrahedron_volume(a, b, c, d):
-    return np.abs(np.einsum('ij,ij->i', a-d, np.cross(b-d, c-d))) / 6
+    return np.abs(np.einsum('ij,ij->i', a - d, np.cross(b - d, c - d))) / 6
 
-################################################################################
 
 def convex_hull_volume(pts):
     ch = spatial.ConvexHull(pts)
@@ -48,7 +52,6 @@ def convex_hull_volume(pts):
     return np.sum(tetrahedron_volume(tets[:, 0], tets[:, 1],
                                      tets[:, 2], tets[:, 3]))
 
-################################################################################
 
 def convex_hull_volume_bis(pts):
     """
@@ -63,7 +66,6 @@ def convex_hull_volume_bis(pts):
     return np.sum(tetrahedron_volume(tets[:, 0], tets[:, 1],
                                      tets[:, 2], tets[:, 3]))
 
-################################################################################
 
 def convex_hull_volume_pyhull(pts):
     # call pyhull library
@@ -92,7 +94,6 @@ def convex_hull_volume_pyhull(pts):
     
     return volume, facetArea
 
-################################################################################
 
 def findConvexHullVolume(N, pos, posIsPts=False):
     """
@@ -104,13 +105,13 @@ def findConvexHullVolume(N, pos, posIsPts=False):
         pts = pos
     
     else:
-        #TODO: this should be written in C!
+        # TODO: this should be written in C!
         pts = np.empty((N, 3), dtype=np.float64)
         for i in xrange(N):
             i3 = 3 * i
             pts[i][0] = pos[i3]
-            pts[i][1] = pos[i3+1]
-            pts[i][2] = pos[i3+2]
+            pts[i][1] = pos[i3 + 1]
+            pts[i][2] = pos[i3 + 2]
     
     if PYHULL_LOADED:
         volume, facetArea = convex_hull_volume_pyhull(pts)
@@ -121,7 +122,6 @@ def findConvexHullVolume(N, pos, posIsPts=False):
     
     return volume, facetArea
 
-################################################################################
 
 def applyPBCsToCluster(clusterPos, cellDims, appliedPBCs):
     """
@@ -215,7 +215,6 @@ def applyPBCsToCluster(clusterPos, cellDims, appliedPBCs):
             break
 
 
-################################################################################
 def checkFacetsPBCs(facetsIn, clusterPos, excludeRadius, PBC, cellDims):
     """
     Remove facets that are far from cell
@@ -229,7 +228,9 @@ def checkFacetsPBCs(facetsIn, clusterPos, excludeRadius, PBC, cellDims):
             
             for j in xrange(3):
                 if PBC[j]:
-                    if clusterPos[3*index+j] > cellDims[j] + excludeRadius or clusterPos[3*index+j] < 0.0 - excludeRadius:
+                    tooBig = clusterPos[3 * index + j] > cellDims[j] + excludeRadius
+                    tooSmall = clusterPos[3 * index + j] < 0.0 - excludeRadius
+                    if tooBig or tooSmall:
                         includeFlag = False
                         break
             
@@ -241,7 +242,6 @@ def checkFacetsPBCs(facetsIn, clusterPos, excludeRadius, PBC, cellDims):
     
     return facets
 
-################################################################################
 
 class AtomCluster(object):
     """
@@ -261,8 +261,20 @@ class AtomCluster(object):
     
     def __contains__(self, item):
         return item in self.indexes
+    
+    def makeClusterPos(self, lattice):
+        """Returns an array of positions of atoms in the cluster."""
+        num = len(self.indexes)
+        clusterPos = np.empty(3 * num, np.float64)
+        for i in xrange(num):
+            index = self.indexes[i]
+            clusterPos[3 * i] = lattice.pos[3 * index]
+            clusterPos[3 * i + 1] = lattice.pos[3 * index + 1]
+            clusterPos[3 * i + 2] = lattice.pos[3 * index + 2]
+        
+        return clusterPos
 
-################################################################################
+
 class DefectCluster(object):
     """
     Defect cluster info.
@@ -367,9 +379,9 @@ class DefectCluster(object):
         for i in xrange(self.getNVacancies()):
             index = self.vacancies[i]
             
-            clusterPos[3*count] = refLattice.pos[3*index]
-            clusterPos[3*count+1] = refLattice.pos[3*index+1]
-            clusterPos[3*count+2] = refLattice.pos[3*index+2]
+            clusterPos[3 * count] = refLattice.pos[3 * index]
+            clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
+            clusterPos[3 * count + 2] = refLattice.pos[3 * index + 2]
             
             count += 1
         
@@ -377,9 +389,9 @@ class DefectCluster(object):
         for i in xrange(self.getNAntisites()):
             index = self.antisites[i]
             
-            clusterPos[3*count] = refLattice.pos[3*index]
-            clusterPos[3*count+1] = refLattice.pos[3*index+1]
-            clusterPos[3*count+2] = refLattice.pos[3*index+2]
+            clusterPos[3 * count] = refLattice.pos[3 * index]
+            clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
+            clusterPos[3 * count + 2] = refLattice.pos[3 * index + 2]
             
             count += 1
         
@@ -387,30 +399,30 @@ class DefectCluster(object):
         for i in xrange(self.getNInterstitials()):
             index = self.interstitials[i]
             
-            clusterPos[3*count] = inputLattice.pos[3*index]
-            clusterPos[3*count+1] = inputLattice.pos[3*index+1]
-            clusterPos[3*count+2] = inputLattice.pos[3*index+2]
+            clusterPos[3 * count] = inputLattice.pos[3 * index]
+            clusterPos[3 * count + 1] = inputLattice.pos[3 * index + 1]
+            clusterPos[3 * count + 2] = inputLattice.pos[3 * index + 2]
             
             count += 1
         
         # split interstitial positions
         for i in xrange(self.getNSplitInterstitials()):
-            index = self.splitInterstitials[3*i]
-            clusterPos[3*count] = refLattice.pos[3*index]
-            clusterPos[3*count+1] = refLattice.pos[3*index+1]
-            clusterPos[3*count+2] = refLattice.pos[3*index+2]
+            index = self.splitInterstitials[3 * i]
+            clusterPos[3 * count] = refLattice.pos[3 * index]
+            clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
+            clusterPos[3 * count + 2] = refLattice.pos[3 * index + 2]
             count += 1
             
-            index = self.splitInterstitials[3*i+1]
-            clusterPos[3*count] = refLattice.pos[3*index]
-            clusterPos[3*count+1] = refLattice.pos[3*index+1]
-            clusterPos[3*count+2] = refLattice.pos[3*index+2]
+            index = self.splitInterstitials[3 * i + 1]
+            clusterPos[3 * count] = refLattice.pos[3 * index]
+            clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
+            clusterPos[3 * count + 2] = refLattice.pos[3 * index + 2]
             count += 1
             
-            index = self.splitInterstitials[3*i+2]
-            clusterPos[3*count] = refLattice.pos[3*index]
-            clusterPos[3*count+1] = refLattice.pos[3*index+1]
-            clusterPos[3*count+2] = refLattice.pos[3*index+2]
+            index = self.splitInterstitials[3 * i + 2]
+            clusterPos[3 * count] = refLattice.pos[3 * index]
+            clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
+            clusterPos[3 * count + 2] = refLattice.pos[3 * index + 2]
             count += 1
         
         return clusterPos

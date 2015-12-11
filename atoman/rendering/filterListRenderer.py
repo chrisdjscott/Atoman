@@ -129,8 +129,7 @@ class FilterListRenderer(object):
         # render clusters
         self._renderClusters()
         
-        # render bubbles (or already done?)
-        
+        # TODO: show we render bubbles separately?
         
         # scalar bar
         self._createScalarBar(lut)
@@ -140,8 +139,9 @@ class FilterListRenderer(object):
     
     def _createScalarBar(self, lut):
         """Create the scalar bars."""
-        # self._scalarBarWhite = utils.makeScalarBar(lut, self.colouringOptions, (0, 0, 0))
-        # self._scalarBarBlack = utils.makeScalarBar(lut, self.colouringOptions, (1, 1, 1))
+        if self.colouringOptions.colourBy != "Species" and self.colouringOptions.colourBy != "Solid colour":
+            self._scalarBarWhite = utils.makeScalarBar(lut, self.colouringOptions, (0, 0, 0))
+            self._scalarBarBlack = utils.makeScalarBar(lut, self.colouringOptions, (1, 1, 1))
     
     def _renderTrace(self, scalars, lut):
         """Render trace vectors."""
@@ -466,12 +466,13 @@ class FilterListRenderer(object):
                 break
         if not found:
             raise RuntimeError("Could not find clusters or point defects filter settings")
+        refState = self._filterer.refState if name == "Point defects" else None
         
         # check if we are supposed to be rendering clusters
         if settings.getSetting("drawConvexHulls"):
             # render
             rend = clusterRenderer.ClusterRenderer()
-            rend.render(self._filterer.inputState, clusterList, settings)
+            rend.render(self._filterer.inputState, clusterList, settings, refState=refState)
             self._renderersDict["Clusters"] = rend
     
     def _renderAtoms(self, atomPoints, scalarsArray, radiusArray, lut, resolution):

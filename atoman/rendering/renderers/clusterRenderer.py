@@ -24,7 +24,7 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
         super(ClusterRenderer, self).__init__()
         self._logger = logging.getLogger(__name__)
     
-    def render(self, lattice, clusterList, settings):
+    def render(self, lattice, clusterList, settings, refState=None):
         """
         Render the given clusters.
         
@@ -36,60 +36,31 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
         
         # loop over clusters making poly data
         for clusterIndex, cluster in enumerate(clusterList):
-            appliedPBCs = np.zeros(7, np.int32)
-            clusterPos = np.empty(3 * len(cluster), np.float64)
-            for i in xrange(len(cluster)):
-                index = cluster[i]
-                clusterPos[3 * i] = lattice.pos[3 * index]
-                clusterPos[3 * i + 1] = lattice.pos[3 * index + 1]
-                clusterPos[3 * i + 2] = lattice.pos[3 * index + 2]
+            # get the positions for this cluster
+            if refState is not None:
+                clusterPos = cluster.makeClusterPos(lattice, refState)
+            else:
+                clusterPos = cluster.makeClusterPos(lattice)
             
+            # get settings and prepare to render (unapply PBCs)
+            appliedPBCs = np.zeros(7, np.int32)
             neighbourRadius = settings.getSetting("neighbourRadius")
             _clusters.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, lattice.PBC, appliedPBCs,
                                                 neighbourRadius)
             
-            # get facets
-            facets = None
-            if len(cluster) > 3:
-                facets = clusters.findConvexHullFacets(len(cluster), clusterPos)
-            elif len(cluster) == 3:
-                facets = []
-                facets.append([0, 1, 2])
-            
-            # now render
-            if facets is not None:
-                # TODO: make sure not facets more than neighbour rad from cell
-                facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * neighbourRadius, lattice.PBC,
-                                                  lattice.cellDims)
-                
-                # make the poly data for this facet
-                self.makeClusterPolyData(clusterPos, facets, appendPolyData)
+            # render this clusters facets
+            self.renderClusterFacets(len(cluster), clusterPos, lattice, neighbourRadius, appendPolyData)
             
             # handle PBCs
             if len(cluster) > 1:
-                count = 0
+                # move the cluster across each PBC that it overlaps
                 while max(appliedPBCs) > 0:
+                    # send the cluster across PBCs
                     tmpClusterPos = copy.deepcopy(clusterPos)
                     clusters.applyPBCsToCluster(tmpClusterPos, lattice.cellDims, appliedPBCs)
                     
-                    # get facets
-                    facets = None
-                    if len(cluster) > 3:
-                        facets = clusters.findConvexHullFacets(len(cluster), tmpClusterPos)
-                    elif len(cluster) == 3:
-                        facets = []
-                        facets.append([0, 1, 2])
-                    
-                    # render
-                    if facets is not None:
-                        # TODO: make sure not facets more than neighbour rad from cell
-                        facets = clusters.checkFacetsPBCs(facets, tmpClusterPos, 2.0 * neighbourRadius, lattice.PBC,
-                                                          lattice.cellDims)
-                        
-                        # make the poly data for this facet
-                        self.makeClusterPolyData(tmpClusterPos, facets, appendPolyData)
-                        
-                        count += 1
+                    # render the modified clusters facets
+                    self.renderClusterFacets(len(cluster), tmpClusterPos, lattice, neighbourRadius, appendPolyData)
         appendPolyData.Update()
         
         # remove any duplicate points
@@ -111,31 +82,39 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
         # store attributes
         self._actor = utils.ActorObject(actor)
     
-    def makeClusterPolyData(self, pos, facets, appendPolyData):
+    def renderClusterFacets(self, clusterSize, clusterPos, lattice, neighbourRadius, appendPolyData):
         """
-        Create polydata for a cluster.
+        Render facets of a cluster.
         
         """
-        points = vtk.vtkPoints()
-        for i in xrange(len(pos) / 3):
-            points.InsertNextPoint(pos[3 * i], pos[3 * i + 1], pos[3 * i + 2])
+        # get facets
+        facets = clusters.findConvexHullFacets(clusterSize, clusterPos)
         
-        # create triangles
-        triangles = vtk.vtkCellArray()
-        for i in xrange(len(facets)):
-            facet = facets[i]
-            triangle = vtk.vtkTriangle()
-            for j in xrange(3):
-                triangle.GetPointIds().SetId(j, facet[j])
-            triangles.InsertNextCell(triangle)
-        
-        # polydata object
-        trianglePolyData = vtk.vtkPolyData()
-        trianglePolyData.SetPoints(points)
-        trianglePolyData.SetPolys(triangles)
-        
-        # add polydata
-        if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
-            appendPolyData.addInputConnection(trianglePolyData.GetProducerPort())
-        else:
-            appendPolyData.AddInputData(trianglePolyData)
+        # now render
+        if facets is not None:
+            # TODO: make sure not facets more than neighbour rad from cell
+            facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * neighbourRadius, lattice.PBC, lattice.cellDims)
+            
+            # create vtk points from cluster positions
+            points = vtk.vtkPoints()
+            for i in xrange(clusterSize):
+                points.InsertNextPoint(clusterPos[3 * i], clusterPos[3 * i + 1], clusterPos[3 * i + 2])
+            
+            # create triangles
+            triangles = vtk.vtkCellArray()
+            for facet in facets:
+                triangle = vtk.vtkTriangle()
+                for j in xrange(3):
+                    triangle.GetPointIds().SetId(j, facet[j])
+                triangles.InsertNextCell(triangle)
+            
+            # polydata object
+            trianglePolyData = vtk.vtkPolyData()
+            trianglePolyData.SetPoints(points)
+            trianglePolyData.SetPolys(triangles)
+            
+            # add polydata
+            if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
+                appendPolyData.addInputConnection(trianglePolyData.GetProducerPort())
+            else:
+                appendPolyData.AddInputData(trianglePolyData)

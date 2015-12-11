@@ -3,7 +3,7 @@
 Cluster
 =======
 
-This filter will identify clusters of atoms in the system. It uses a recursive 
+This filter will identify clusters of atoms in the system. It uses a recursive
 algorithm to build the clusters using a fixed cut-off. There are options to
 calculate the volumes of the clusters and also to draw convex hulls around the
 clusters to highlight them.
@@ -103,7 +103,7 @@ class ClusterFilter(base.BaseFilter):
         result = np.empty(2, np.int32)
         
         # call C lib
-        _clusters.findClusters(visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
+        _clusters.findClusters(visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC,
                                minSize, maxSize, result, NScalars, fullScalars, NVectors, fullVectors)
         
         NVisible = result[0]
