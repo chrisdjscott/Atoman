@@ -220,11 +220,10 @@ class FilterList(QtGui.QWidget):
         self.optionsList.setFixedHeight(120)
         groupLayout.addWidget(self.optionsList)
         
-        # colouring options
-        self.colouringOptions = colouringOptions.ColouringOptionsWindow(parent=self)
-        item = OptionsListItem(self.colouringOptions)
-        item.setText("Colouring: Species")
-        self.colouringOptions.modified.connect(item.setText)
+        # actor visibility
+        self.actorsOptions = actorsOptions.ActorsOptionsWindow(self.mainWindow, parent=self)
+        item = OptionsListItem(self.actorsOptions)
+        item.setText("Actors options")
         self.optionsList.addItem(item)
         
         # bonding options
@@ -234,16 +233,17 @@ class FilterList(QtGui.QWidget):
         self.bondsOptions.modified.connect(item.setText)
         self.optionsList.addItem(item)
         
+        # colouring options
+        self.colouringOptions = colouringOptions.ColouringOptionsWindow(parent=self)
+        item = OptionsListItem(self.colouringOptions)
+        item.setText("Colouring: Species")
+        self.colouringOptions.modified.connect(item.setText)
+        self.optionsList.addItem(item)
+        
         # display options
         self.displayOptions = displayOptions.DisplayOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.displayOptions)
         item.setText("Display options")
-        self.optionsList.addItem(item)
-        
-        # Voronoi options
-        self.voronoiOptions = voronoiOptions.VoronoiOptionsWindow(self.mainWindow, parent=self)
-        item = OptionsListItem(self.voronoiOptions)
-        item.setText("Voronoi options")
         self.optionsList.addItem(item)
         
         # trace options
@@ -260,10 +260,10 @@ class FilterList(QtGui.QWidget):
         self.vectorsOptions.modified.connect(item.setText)
         self.optionsList.addItem(item)
         
-        # actor visibility
-        self.actorsOptions = actorsOptions.ActorsOptionsWindow(self.mainWindow, parent=self)
-        item = OptionsListItem(self.actorsOptions)
-        item.setText("Actors options")
+        # Voronoi options
+        self.voronoiOptions = voronoiOptions.VoronoiOptionsWindow(self.mainWindow, parent=self)
+        item = OptionsListItem(self.voronoiOptions)
+        item.setText("Voronoi options")
         self.optionsList.addItem(item)
         
         self.filterListLayout.addWidget(extraOptionsGroupBox)
