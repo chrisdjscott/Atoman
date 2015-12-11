@@ -170,6 +170,12 @@ class FilterListRenderer(object):
             self._scalarBarWhite = utils.makeScalarBar(lut, self.colouringOptions, (0, 0, 0))
             self._scalarBarBlack = utils.makeScalarBar(lut, self.colouringOptions, (1, 1, 1))
     
+    def addScalarBar(self):
+        """Show the scalar bar."""
+    
+    def hideScalar(self):
+        """Hide the scalar bar."""
+    
     def _renderTrace(self, scalars, lut):
         """Render trace vectors."""
         visibleAtoms = self._filterer.visibleAtoms

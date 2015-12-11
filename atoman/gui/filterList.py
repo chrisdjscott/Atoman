@@ -27,8 +27,6 @@ from . import filterSettings
 from ..rendering import filterListRenderer
 
 
-################################################################################
-
 class FilterListWidgetItem(QtGui.QListWidgetItem):
     """
     Item that goes in the filter list
@@ -41,7 +39,6 @@ class FilterListWidgetItem(QtGui.QListWidgetItem):
         self.filterSettings = filterSettings
         self.setText(filterName)
 
-################################################################################
 
 class OptionsListItem(QtGui.QListWidgetItem):
     """
@@ -53,7 +50,6 @@ class OptionsListItem(QtGui.QListWidgetItem):
         
         self.dialog = dialog
 
-################################################################################
 
 class FilterList(QtGui.QWidget):
     """
@@ -115,7 +111,8 @@ class FilterList(QtGui.QWidget):
         self.driftCompensation = False
         
         # persistent list button
-        self.persistButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/applications-education-miscellaneous.png")), "")
+        icon = QtGui.QIcon(iconPath("oxygen/applications-education-miscellaneous.png"))
+        self.persistButton = QtGui.QPushButton(icon, "")
         self.persistButton.setFixedWidth(35)
         self.persistButton.setStatusTip("Persistent property/filter list")
         self.persistButton.setToolTip("Persistent property/filter list")
@@ -291,7 +288,8 @@ class FilterList(QtGui.QWidget):
             # check ok to have drift comp
             pp = self.pipelinePage
             if pp.inputState.NAtoms != pp.refState.NAtoms:
-                self.mainWindow.displayWarning("Drift compensation can only be used if the input and reference atoms match each other")
+                message = "Drift compensation can only be used if the input and reference atoms match each other"
+                self.mainWindow.displayWarning(message)
                 self.driftCompButton.setChecked(QtCore.Qt.Unchecked)
             
             else:
@@ -407,13 +405,11 @@ class FilterList(QtGui.QWidget):
         
         """
         if self.scalarBarButton.isChecked():
-            added = self.filterer.addScalarBar()
-            
+            added = self.renderer.addScalarBar()
             if not added:
                 self.scalarBarButton.setChecked(0)
-        
         else:
-            self.filterer.hideScalarBar()
+            self.renderer.hideScalarBar()
     
     def openFilterSettings(self, item=None):
         """
@@ -433,8 +429,7 @@ class FilterList(QtGui.QWidget):
         """Remove all current actors."""
         self.renderer.removeActors(sequencer=sequencer)
         
-        #TODO: remove scalar bar too
-        
+        # TODO: remove scalar bar too
     
     def applyList(self, sequencer=False):
         """
@@ -632,7 +627,7 @@ class FilterList(QtGui.QWidget):
     
     def warnDefectFilter(self, name=None):
         """
-        Warn user that defect filter cannot 
+        Warn user that defect filter cannot
         be used with any other filter
         
         """
@@ -726,6 +721,7 @@ class FilterList(QtGui.QWidget):
             return
         
         # first determine what filter is to be added
+        pp = self.pipelinePage
         if filterName is not None and filterName in self.allFilters:
             if self.defectFilterSelected and filterName not in self.filterer.defectCompatibleFilters:
                 self.warnDefectFilter(name=filterName)
@@ -733,7 +729,7 @@ class FilterList(QtGui.QWidget):
             elif self.listItems.count() > 0 and str(filterName) == "Point defects":
                 self.warnDefectFilter()
             
-            elif str(filterName) == "Displacement" and self.pipelinePage.inputState.NAtoms != self.pipelinePage.refState.NAtoms:
+            elif str(filterName) == "Displacement" and pp.inputState.NAtoms != pp.refState.NAtoms:
                 self.warnDisplacementFilter()
             
             else:
@@ -810,7 +806,8 @@ class FilterList(QtGui.QWidget):
             from .filterSettings import genericScalarSettingsDialog
             
             # load form
-            form = genericScalarSettingsDialog.GenericScalarSettingsDialog(self.mainWindow, filterName, title, parent=self)
+            form = genericScalarSettingsDialog.GenericScalarSettingsDialog(self.mainWindow, filterName, title,
+                                                                           parent=self)
             self.filterCounter += 1
         
         else:
@@ -820,13 +817,6 @@ class FilterList(QtGui.QWidget):
             moduleName = dialogName[:1].lower() + dialogName[1:]
             self.logger.debug("Loading settings dialog module: '%s'", moduleName)
             self.logger.debug("Creating settings dialog: '%s'", dialogName)
-            
-            # load module
-#             try:
-#                 formModule = importlib.import_module(".{0}".format(moduleName), package="atoman.gui.filterSettings")
-#             except ImportError:
-#                 self.logger.critical("Failed to load filterSettings module: '{0}'".format(moduleName))
-#                 raise
             
             # get module
             formModule = getattr(filterSettings, moduleName)

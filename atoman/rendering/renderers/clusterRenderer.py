@@ -115,6 +115,6 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
             
             # add polydata
             if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
-                appendPolyData.addInputConnection(trianglePolyData.GetProducerPort())
+                appendPolyData.AddInputConnection(trianglePolyData.GetProducerPort())
             else:
                 appendPolyData.AddInputData(trianglePolyData)

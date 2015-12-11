@@ -79,7 +79,7 @@ class VoronoiRenderer(baseRenderer.BaseRenderer):
             
             # append the poly data
             if vtk.vtkVersion.GetVTKMajorVersion() <= 5:
-                appendPolyData.addInputConnection(regionPolyData.GetProducerPort())
+                appendPolyData.AddInputConnection(regionPolyData.GetProducerPort())
             else:
                 appendPolyData.AddInputData(regionPolyData)
         appendPolyData.Update()
