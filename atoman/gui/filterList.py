@@ -143,7 +143,6 @@ class FilterList(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignLeft)
         rowLayout.addWidget(self.visibleButton)
         rowLayout.addWidget(trashButton)
-#        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
         row2 = QtGui.QWidget()
@@ -153,14 +152,12 @@ class FilterList(QtGui.QWidget):
         rowLayout.addWidget(self.persistButton)
         rowLayout.addWidget(self.staticListButton)
         rowLayout.addWidget(self.scalarBarButton)
-#        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
         row3 = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row3)
         rowLayout.addWidget(row1)
         rowLayout.addWidget(row2)
-#        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
         self.filterListLayout.addWidget(row3)
@@ -422,7 +419,6 @@ class FilterList(QtGui.QWidget):
             item = self.listItems.currentItem()
         
         item.filterSettings.hide()
-#         utils.positionWindow(item.filterSettings, item.filterSettings.size(), self.mainWindow.desktop, self)
         item.filterSettings.show()
     
     def clearActors(self, sequencer=False):
@@ -436,6 +432,12 @@ class FilterList(QtGui.QWidget):
         Run filters in this list.
         
         """
+        # skip if static list
+        if self.isStaticList():
+            self.logger.info("Static filter list: skipping")
+            return
+        
+        # otherwise process
         if not sequencer:
             # add a progress dialog
             progDiag = utils.showProgressDialog("Applying list", "Applying list...", self)

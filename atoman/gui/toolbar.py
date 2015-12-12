@@ -39,7 +39,7 @@ class MainToolbar(QtGui.QDockWidget):
         self.container = QtGui.QWidget(self)
         containerLayout = QtGui.QVBoxLayout(self.container)
         containerLayout.setSpacing(0)
-        containerLayout.setContentsMargins(0,0,0,0)
+        containerLayout.setContentsMargins(0, 0, 0, 0)
         containerLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # tab widget
@@ -216,7 +216,6 @@ class MainToolbar(QtGui.QDockWidget):
         # update current pipeline indexes and strings
         self.currentPipelineString = str(self.pipelineCombo.currentText())
         self.currentPipelineIndex = self.pipelineCombo.currentIndex()
-        
     
     def currentPipelineChanged(self, index):
         """
@@ -229,8 +228,3 @@ class MainToolbar(QtGui.QDockWidget):
         # update variable
         self.currentPipelineString = str(self.pipelineCombo.currentText())
         self.currentPipelineIndex = index
-        
-        
-
-
-

@@ -50,6 +50,7 @@ class FilterListRenderer(object):
         self._tracePreviousPos = None
         self._scalarBarWhite = None
         self._scalarBarBlack = None
+        self.scalarBarAdded = False
         self.povrayAtomsWritten = False
         
         # get required refs from filter list
@@ -172,9 +173,44 @@ class FilterListRenderer(object):
     
     def addScalarBar(self):
         """Show the scalar bar."""
+        haveScalarBar = self._scalarBarWhite is not None
+        scalarBarChecked = self._filterList.scalarBarButton.isChecked()
+        alreadyAdded = self._filterList.filterTab.scalarBarAdded
+        if haveScalarBar and scalarBarChecked and not alreadyAdded:
+            toolbar = self._filterList.pipelinePage.mainToolbar
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == toolbar.currentPipelineString:
+                    # which scalar bar to add
+                    if rw.blackBackground:
+                        scalarBar = self._scalarBarBlack
+                    else:
+                        scalarBar = self._scalarBarWhite
+                    
+                    rw.vtkRen.AddActor2D(scalarBar)
+                    rw.vtkRenWinInteract.ReInitialize()
+            
+            self._filterList.filterTab.scalarBarAdded = True
+            self.scalarBarAdded = True
+        
+        return self.scalarBarAdded
     
-    def hideScalar(self):
+    def hideScalarBar(self):
         """Hide the scalar bar."""
+        toolbar = self._filterList.pipelinePage.mainToolbar
+        if self.scalarBarAdded:
+            for rw in self.rendererWindows:
+                if rw.currentPipelineString == toolbar.currentPipelineString:
+                    # which scalar bar was added
+                    if rw.blackBackground:
+                        scalarBar = self._scalarBarBlack
+                    else:
+                        scalarBar = self._scalarBarWhite
+                    
+                    rw.vtkRen.RemoveActor2D(scalarBar)
+                    rw.vtkRenWinInteract.ReInitialize()
+            
+            self._filterList.pipelinePage.scalarBarAdded = False
+            self.scalarBarAdded = False
     
     def _renderTrace(self, scalars, lut):
         """Render trace vectors."""
@@ -638,7 +674,7 @@ class FilterListRenderer(object):
         for rw in rendererWindows:
             rw.vtkRenWinInteract.ReInitialize()
         
-        # self.hideScalarBar()
+        self.hideScalarBar()
     
     def setActorAmbient(self, actorName, ambient, reinit=True):
         """Set ambient property on actor."""
@@ -744,4 +780,4 @@ class FilterListRenderer(object):
                 
                 actorObj.visible = True
         
-        # self.addScalarBar()
+        self.addScalarBar()

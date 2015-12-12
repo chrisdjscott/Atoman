@@ -343,48 +343,6 @@ class Filterer(object):
         
         self.logger.debug("Povray atoms written in %f s (%s)", povtime, uniqueID)
     
-    # def addScalarBar(self):
-    #     """
-    #     Add scalar bar.
-    #     
-    #     """
-    #     if self.scalarBar_white_bg is not None and self.parent.scalarBarButton.isChecked() and not self.parent.filterTab.scalarBarAdded:
-    #         for rw in self.rendererWindows:
-    #             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-    #                 # which scalar bar to add
-    #                 if rw.blackBackground:
-    #                     scalarBar = self.scalarBar_black_bg
-    #                 else:
-    #                     scalarBar = self.scalarBar_white_bg
-    #                 
-    #                 rw.vtkRen.AddActor2D(scalarBar)
-    #                 rw.vtkRenWinInteract.ReInitialize()
-    #         
-    #         self.parent.filterTab.scalarBarAdded = True
-    #         self.scalarBarAdded = True
-    #     
-    #     return self.scalarBarAdded
-    
-    # def hideScalarBar(self):
-    #     """
-    #     Remove scalar bar.
-    #     
-    #     """
-    #     if self.scalarBarAdded:
-    #         for rw in self.rendererWindows:
-    #             if rw.currentPipelineString == self.mainToolbar.currentPipelineString:
-    #                 # which scalar bar was added
-    #                 if rw.blackBackground:
-    #                     scalarBar = self.scalarBar_black_bg
-    #                 else:
-    #                     scalarBar = self.scalarBar_white_bg
-    #                 
-    #                 rw.vtkRen.RemoveActor2D(scalarBar)
-    #                 rw.vtkRenWinInteract.ReInitialize()
-    #         
-    #         self.parent.filterTab.scalarBarAdded = False
-    #         self.scalarBarAdded = False
-    
     def makeFullScalarsArray(self):
         """
         Combine scalars array into one big array for passing to C
