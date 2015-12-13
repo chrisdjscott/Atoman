@@ -324,12 +324,12 @@ class DefectCluster(object):
     """
     def __init__(self, inputLattice, refLattice):
         self._logger = logging.getLogger(__name__ + ".DefectCluster")
-        self.vacancies = []
-        self.vacAsIndex = []
-        self.interstitials = []
-        self.antisites = []
-        self.onAntisites = []
-        self.splitInterstitials = []
+        self._vacancies = []
+        self._vacAsIndex = []
+        self._interstitials = []
+        self._antisites = []
+        self._onAntisites = []
+        self._splitInterstitials = []
         self._volume = None
         self._facetArea = None
         self._inputLattice = inputLattice
@@ -357,19 +357,19 @@ class DefectCluster(object):
         logger = logging.getLogger(__name__)
         logger.debug("Checking if defect belongs in cluster (%d, %d)", defectType, defectIndex)
         
-        if defectType == 1 and defectIndex in self.vacancies:
+        if defectType == 1 and defectIndex in self._vacancies:
             logger.debug("Defect is in cluster (vacancy)")
             return True
         
-        elif defectType == 2 and defectIndex in self.interstitials:
+        elif defectType == 2 and defectIndex in self._interstitials:
             logger.debug("Defect is in cluster (interstitial)")
             return True
         
-        elif defectType == 3 and defectIndex in self.antisites:
+        elif defectType == 3 and defectIndex in self._antisites:
             logger.debug("Defect is in cluster (antisite)")
             return True
         
-        elif defectType == 4 and defectIndex in self.splitInterstitials[::3]:
+        elif defectType == 4 and defectIndex in self._splitInterstitials[::3]:
             logger.debug("Defect is in cluster (split interstitial)")
             return True
         
@@ -383,42 +383,91 @@ class DefectCluster(object):
         Return total number of defects.
         
         """
-        return len(self.vacancies) + len(self.interstitials) + len(self.antisites) + len(self.splitInterstitials) / 3
+        nvacs = self.getNVacancies()
+        nints = self.getNInterstitials()
+        nants = self.getNAntisites()
+        nsplits = self.getNSplitInterstitials()
+        
+        return nvacs + nints + nants + nsplits
     
     def getNDefectsFull(self):
         """
         Return total number of defects, where a split interstitial counts as 3 defects.
         
         """
-        return len(self.vacancies) + len(self.interstitials) + len(self.antisites) + len(self.splitInterstitials)
+        nvacs = self.getNVacancies()
+        nints = self.getNInterstitials()
+        nants = self.getNAntisites()
+        nsplits3 = self.getNSplitInterstitials() * 3
+        
+        return nvacs + nints + nants + nsplits3
     
     def getNVacancies(self):
         """
         Return number of vacancies
         
         """
-        return len(self.vacancies)
+        return len(self._vacancies)
+    
+    def addVacancy(self, index):
+        """Add a vacancy to the cluster."""
+        self._vacAsIndex.append(self.getNVacancies())
+        self._vacancies.append(index)
+    
+    def getVacancy(self, index):
+        """Return the specified vacancy."""
+        return self._vacancies[index]
     
     def getNInterstitials(self):
         """
         Return number of interstitials
         
         """
-        return len(self.interstitials)
+        return len(self._interstitials)
+    
+    def addInterstitial(self, index):
+        """Add an interstitial to the cluster."""
+        self._interstitials.append(index)
+    
+    def getInterstitial(self, index):
+        """Return the specified interstitial."""
+        return self._interstitials[index]
     
     def getNAntisites(self):
         """
         Return number of antisites
         
         """
-        return len(self.antisites)
+        return len(self._antisites)
+    
+    def addAntisite(self, refIndex, index):
+        """Add an antisite to the cluster."""
+        self._antisites.append(refIndex)
+        self._onAntisites.append(index)
+    
+    def getAntisite(self, index):
+        """Return the specified antisite."""
+        return self._antisites[index], self._onAntisites[index]
     
     def getNSplitInterstitials(self):
         """
         Return number of split interstitials
         
         """
-        return len(self.splitInterstitials) / 3
+        return len(self._splitInterstitials) / 3
+    
+    def addSplitInterstitial(self, vacIndex, index1, index2):
+        """Add a split interstitial to the cluster."""
+        self._splitInterstitials.append(vacIndex)
+        self._splitInterstitials.append(index1)
+        self._splitInterstitials.append(index2)
+    
+    def getSplitInterstitial(self, index):
+        """Return the specified split interstitial."""
+        index0 = self._splitInterstitials[3 * index]
+        index1 = self._splitInterstitials[3 * index + 1]
+        index2 = self._splitInterstitials[3 * index + 2]
+        return index0, index1, index2
     
     def makeClusterPos(self):
         """
@@ -432,49 +481,45 @@ class DefectCluster(object):
         # vacancy positions
         count = 0
         for i in xrange(self.getNVacancies()):
-            index = self.vacancies[i]
-            
+            index = self.getVacancy(i)
             clusterPos[3 * count] = refLattice.pos[3 * index]
             clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
             clusterPos[3 * count + 2] = refLattice.pos[3 * index + 2]
-            
             count += 1
         
         # antisite positions
         for i in xrange(self.getNAntisites()):
-            index = self.antisites[i]
-            
+            index = self.getAntisite(i)[0]
             clusterPos[3 * count] = refLattice.pos[3 * index]
             clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
             clusterPos[3 * count + 2] = refLattice.pos[3 * index + 2]
-            
             count += 1
         
         # interstitial positions
         for i in xrange(self.getNInterstitials()):
-            index = self.interstitials[i]
-            
+            index = self.getInterstitial(i)
             clusterPos[3 * count] = inputLattice.pos[3 * index]
             clusterPos[3 * count + 1] = inputLattice.pos[3 * index + 1]
             clusterPos[3 * count + 2] = inputLattice.pos[3 * index + 2]
-            
             count += 1
         
         # split interstitial positions
         for i in xrange(self.getNSplitInterstitials()):
-            index = self.splitInterstitials[3 * i]
+            split = self.getSplitInterstitial(i)
+            
+            index = split[0]
             clusterPos[3 * count] = refLattice.pos[3 * index]
             clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
             clusterPos[3 * count + 2] = refLattice.pos[3 * index + 2]
             count += 1
             
-            index = self.splitInterstitials[3 * i + 1]
+            index = split[1]
             clusterPos[3 * count] = refLattice.pos[3 * index]
             clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
             clusterPos[3 * count + 2] = refLattice.pos[3 * index + 2]
             count += 1
             
-            index = self.splitInterstitials[3 * i + 2]
+            index = split[2]
             clusterPos[3 * count] = refLattice.pos[3 * index]
             clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
             clusterPos[3 * count + 2] = refLattice.pos[3 * index + 2]
@@ -495,7 +540,7 @@ class DefectCluster(object):
         """Calculate the volume by summing Voronoi cells."""
         self._logger.debug("Calculating cluster volume: Voronoi")
         
-        vor = voronoiCalculator.getVoronoi(self._inputLattice, self._refLattice, self.vacancies)
+        vor = voronoiCalculator.getVoronoi(self._inputLattice, self._refLattice, self._vacancies)
         inputLattice = self._inputLattice
         
         volume = 0.0

@@ -55,12 +55,10 @@ class TestClusterRenderer(unittest.TestCase):
         self.atomClusters = [cluster]
         
         cluster = clusters.DefectCluster(self.lattice, self.ref)
-        cluster.interstitials.append(2)
-        cluster.interstitials.append(5)
-        cluster.vacancies.append(0)
-        cluster.vacAsIndex.append(0)
-        cluster.vacancies.append(7)
-        cluster.vacAsIndex.append(1)
+        cluster.addInterstitial(2)
+        cluster.addInterstitial(5)
+        cluster.addVacancy(0)
+        cluster.addVacancy(7)
         self.defectClusters = [cluster]
         
         # settings

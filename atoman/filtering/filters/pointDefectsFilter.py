@@ -250,9 +250,7 @@ class PointDefectsFilter(base.BaseFilter):
                     count += 1
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                clusterList[clusterListIndex].vacancies.append(atomIndex)
-                clusterList[clusterListIndex].vacAsIndex.append(i)
+                clusterList[clusterListIndex].addVacancy(atomIndex)
             
             for i in xrange(NInt):
                 atomIndex = interstitials[i]
@@ -263,8 +261,7 @@ class PointDefectsFilter(base.BaseFilter):
                     count += 1
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                clusterList[clusterListIndex].interstitials.append(atomIndex)
+                clusterList[clusterListIndex].addInterstitial(atomIndex)
             
             for i in xrange(NAnt):
                 atomIndex = antisites[i]
@@ -276,9 +273,7 @@ class PointDefectsFilter(base.BaseFilter):
                     count += 1
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                clusterList[clusterListIndex].antisites.append(atomIndex)
-                clusterList[clusterListIndex].onAntisites.append(atomIndex2)
+                clusterList[clusterListIndex].addAntisite(atomIndex, atomIndex2)
             
             for i in xrange(NSplit):
                 clusterIndex = defectCluster[NVac + NInt + NAnt + i]
@@ -288,15 +283,10 @@ class PointDefectsFilter(base.BaseFilter):
                     count += 1
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                atomIndex = splitInterstitials[3 * i]
-                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
-                
-                atomIndex = splitInterstitials[3 * i + 1]
-                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
-                
-                atomIndex = splitInterstitials[3 * i + 2]
-                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
+                index0 = splitInterstitials[3 * i]
+                index1 = splitInterstitials[3 * i + 1]
+                index2 = splitInterstitials[3 * i + 2]
+                clusterList[clusterListIndex].addSplitInterstitial(index0, index1, index2)
             
             # calculate volumes
             calcVols = settings.getSetting("calculateVolumes")
