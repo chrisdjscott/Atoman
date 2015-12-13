@@ -31,7 +31,7 @@ class PointDefectsFilterSettings(base.BaseSettings):
         self.registerSetting("neighbourRadius", default=3.5)
         self.registerSetting("minClusterSize", default=3)
         self.registerSetting("maxClusterSize", default=-1)
-        self.registerSetting("hullCol", default=[0,0,1])
+        self.registerSetting("hullCol", default=[0, 0, 1])
         self.registerSetting("hullOpacity", default=0.5)
         self.registerSetting("calculateVolumes", default=False)
         self.registerSetting("calculateVolumesVoro", default=True)
@@ -155,10 +155,11 @@ class PointDefectsFilter(base.BaseFilter):
         # call C library
         self.logger.debug("Calling C library")
         _defects.findDefects(showVacancies, showInterstitials, showAntisites, NDefectsByType, vacancies, interstitials,
-                             antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
-                             inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
-                             refLattice.pos, refLattice.cellDims, inputLattice.PBC, vacancyRadius, findClusters, neighbourRadius,
-                             defectCluster, vacSpecCount, intSpecCount, antSpecCount, onAntSpecCount, splitIntSpecCount,
+                             antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms,
+                             inputLattice.specieList, inputLattice.specie, inputLattice.pos, refLattice.NAtoms,
+                             refLattice.specieList, refLattice.specie, refLattice.pos, refLattice.cellDims,
+                             inputLattice.PBC, vacancyRadius, findClusters, neighbourRadius, defectCluster,
+                             vacSpecCount, intSpecCount, antSpecCount, onAntSpecCount, splitIntSpecCount,
                              minClusterSize, maxClusterSize, splitInterstitials, identifySplitInts, driftCompensation,
                              driftVector, acnaArray, acnaStructureType, int(filterSpecies))
         
@@ -195,7 +196,8 @@ class PointDefectsFilter(base.BaseFilter):
                             N = splitIntSpecCount[i][j]
                         else:
                             N = splitIntSpecCount[i][j] + splitIntSpecCount[j][i]
-                        self.logger.info("      %d %s - %s split interstitials", N, inputLattice.specieList[i], inputLattice.specieList[j])
+                        self.logger.info("      %d %s - %s split interstitials", N, inputLattice.specieList[i],
+                                         inputLattice.specieList[j])
         
         if settings.getSetting("showAntisites"):
             self.logger.info("  %d antisites", NAnt)
@@ -204,7 +206,8 @@ class PointDefectsFilter(base.BaseFilter):
                     if inputLattice.specieList[j] == refLattice.specieList[i]:
                         continue
                     
-                    self.logger.info("    %d %s on %s antisites", onAntSpecCount[i][j], inputLattice.specieList[j], refLattice.specieList[i])
+                    self.logger.info("    %d %s on %s antisites", onAntSpecCount[i][j], inputLattice.specieList[j],
+                                     refLattice.specieList[i])
         
         if settings.getSetting("showInterstitials") and settings.getSetting("identifySplitInts"):
             self.logger.info("Split interstitial analysis")
@@ -213,11 +216,11 @@ class PointDefectsFilter(base.BaseFilter):
             cellDims = inputLattice.cellDims
             
             for i in xrange(NSplit):
-                ind1 = splitInterstitials[3*i+1]
-                ind2 = splitInterstitials[3*i+2]
+                ind1 = splitInterstitials[3 * i + 1]
+                ind2 = splitInterstitials[3 * i + 2]
                 
-                pos1 = inputLattice.pos[3*ind1:3*ind1+3]
-                pos2 = inputLattice.pos[3*ind2:3*ind2+3]
+                pos1 = inputLattice.pos[3 * ind1:3 * ind1 + 3]
+                pos2 = inputLattice.pos[3 * ind2:3 * ind2 + 3]
                 
                 sepVec = vectors.separationVector(pos1, pos2, cellDims, PBC)
                 norm = vectors.normalise(sepVec)
@@ -233,7 +236,7 @@ class PointDefectsFilter(base.BaseFilter):
             
             # build cluster lists
             for i in xrange(NClusters):
-                clusterList.append(clusters.DefectCluster())
+                clusterList.append(clusters.DefectCluster(inputLattice, refLattice))
             
             # add atoms to cluster lists
             clusterIndexMapper = {}
@@ -286,14 +289,27 @@ class PointDefectsFilter(base.BaseFilter):
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
                 
-                atomIndex = splitInterstitials[3*i]
+                atomIndex = splitInterstitials[3 * i]
                 clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
                 
-                atomIndex = splitInterstitials[3*i+1]
+                atomIndex = splitInterstitials[3 * i + 1]
                 clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
                 
-                atomIndex = splitInterstitials[3*i+2]
+                atomIndex = splitInterstitials[3 * i + 2]
                 clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
+            
+            # calculate volumes
+            calcVols = settings.getSetting("calculateVolumes")
+            if calcVols:
+                self.logger.debug("Calculating defect cluster volumes")
+                for i, cluster in enumerate(clusterList):
+                    cluster.calculateVolume(filterInput.voronoiDefects, settings)
+                    volume = cluster.getVolume()
+                    if volume is not None:
+                        self.logger.debug("Cluster %d: volume is %f", i, volume)
+                    area = cluster.getFacetArea()
+                    if area is not None:
+                        self.logger.debug("Cluster %d: facet area is %f", i, area)
         
         # make result
         result = base.FilterResult()

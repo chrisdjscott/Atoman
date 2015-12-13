@@ -54,7 +54,7 @@ class TestClusterRenderer(unittest.TestCase):
         cluster.addAtom(7)
         self.atomClusters = [cluster]
         
-        cluster = clusters.DefectCluster()
+        cluster = clusters.DefectCluster(self.lattice, self.ref)
         cluster.interstitials.append(2)
         cluster.interstitials.append(5)
         cluster.vacancies.append(0)

@@ -322,15 +322,26 @@ class DefectCluster(object):
     Defect cluster info.
     
     """
-    def __init__(self):
+    def __init__(self, inputLattice, refLattice):
+        self._logger = logging.getLogger(__name__ + ".DefectCluster")
         self.vacancies = []
         self.vacAsIndex = []
         self.interstitials = []
         self.antisites = []
         self.onAntisites = []
         self.splitInterstitials = []
-        self.volume = None
-        self.facetArea = None
+        self._volume = None
+        self._facetArea = None
+        self._inputLattice = inputLattice
+        self._refLattice = refLattice
+    
+    def getVolume(self):
+        """Returns the volume or None if not calculated."""
+        return self._volume
+    
+    def getFacetArea(self):
+        """Returns the facet area of None if not calculated."""
+        return self._facetArea
     
     def belongsInCluster(self, defectType, defectIndex):
         """
@@ -409,11 +420,13 @@ class DefectCluster(object):
         """
         return len(self.splitInterstitials) / 3
     
-    def makeClusterPos(self, inputLattice, refLattice):
+    def makeClusterPos(self):
         """
         Make cluster pos array
         
         """
+        inputLattice = self._inputLattice
+        refLattice = self._refLattice
         clusterPos = np.empty(3 * self.getNDefectsFull(), np.float64)
         
         # vacancy positions
@@ -468,3 +481,61 @@ class DefectCluster(object):
             count += 1
         
         return clusterPos
+    
+    def calculateVolume(self, voronoiCalculator, settings):
+        """Calculate the volume of the cluster."""
+        if settings.getSetting("calculateVolumesVoro"):
+            self._calculateVolumeVoronoi(voronoiCalculator)
+        elif settings.getSetting("calculateVolumesHull"):
+            self._calculateVolumeConvexHull(settings)
+        else:
+            self.logger.error("Method to calculate defect cluster volumes not specified")
+    
+    def _calculateVolumeVoronoi(self, voronoiCalculator):
+        """Calculate the volume by summing Voronoi cells."""
+        self._logger.debug("Calculating cluster volume: Voronoi")
+        
+        vor = voronoiCalculator.getVoronoi(self._inputLattice, self._refLattice, self.vacancies)
+        inputLattice = self._inputLattice
+        
+        volume = 0.0
+        
+        # add volumes of interstitials
+        for i in xrange(self.getNInterstitials()):
+            index = self.interstitials[i]
+            volume += vor.atomVolume(index)
+        
+        # add volumes of split interstitial atoms
+        for i in xrange(self.getNSplitInterstitials()):
+            index = self.splitInterstitials[3 * i + 1]
+            volume += vor.atomVolume(index)
+            index = self.splitInterstitials[3 * i + 2]
+            volume += vor.atomVolume(index)
+        
+        # add volumes of on antisite atoms
+        for i in xrange(self.getNAntisites()):
+            index = self.onAntisites[i]
+            volume += vor.atomVolume(index)
+        
+        # add volumes of vacancies
+        for i in xrange(self.getNVacancies()):
+            vacind = self.vacAsIndex[i]
+            index = inputLattice.NAtoms + vacind
+            volume += vor.atomVolume(index)
+        
+        self._volume = volume
+    
+    def _calculateVolumeConvexHull(self, settings):
+        """Calculate volume of convex hull."""
+        self._logger.debug("Calculating cluster volume: hull")
+        if len(self) > 3:
+            pos = self.makeClusterPos()
+            num = self.getNDefectsFull()
+            inputLattice = self._inputLattice
+            pbc = inputLattice.PBC
+            cellDims = inputLattice.cellDims
+            if pbc[0] or pbc[1] or pbc[2]:
+                appliedPBCs = np.zeros(7, np.int32)
+                neighbourRadius = settings.getSetting("neighbourRadius")
+                _clusters.prepareClusterToDrawHulls(num, pos, cellDims, pbc, appliedPBCs, neighbourRadius)
+            self._volume, self._facetArea = findConvexHullVolume(num, pos)

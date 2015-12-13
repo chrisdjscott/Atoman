@@ -38,7 +38,7 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
         for clusterIndex, cluster in enumerate(clusterList):
             # get the positions for this cluster
             if refState is not None:
-                clusterPos = cluster.makeClusterPos(lattice, refState)
+                clusterPos = cluster.makeClusterPos()
             else:
                 clusterPos = cluster.makeClusterPos()
             

@@ -324,14 +324,11 @@ prepareClusterToDrawHulls(PyObject *self, PyObject *args)
         printf("ERROR: could not allocate cluster array\n");
         exit(50);
     }
-    for (i=0; i<N; i++)
-    {
-        clusterArray[i] = -1;
-    }
+    for (i = 0; i < N; i++) clusterArray[i] = -1;
     
     NClusters = 0;
     numInCluster = 0;
-    for (i=0; i<N; i++)
+    for (i = 0; i < N; i++)
     {
         /* skip atom if already allocated */
         if (clusterArray[i] == -1)
@@ -350,7 +347,7 @@ prepareClusterToDrawHulls(PyObject *self, PyObject *args)
     
     if (numInCluster != N)
     {
-        printf("ERROR: SOME CLUSTER ATOMS ARE MISSING: %d %d\n", N, numInCluster);
+        printf("ERROR: SOME CLUSTER ATOMS ARE MISSING: %d %d (%d)\n", N, numInCluster, NClusters);
     }
     
     free(clusterArray);

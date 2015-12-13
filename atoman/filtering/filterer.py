@@ -13,8 +13,6 @@ import itertools
 import numpy as np
 
 from .filters import _filtering as filtering_c
-from . import _clusters as clusters_c
-from . import clusters
 from ..system.atoms import elements
 from . import voronoi
 from .filters import base
@@ -258,13 +256,7 @@ class Filterer(object):
             self.splitIntSpecieCount = _rendering.countSplitIntsBySpecie(self.splitInterstitials,
                                                                          len(inputState.specieList), inputState.specie)
         
-        # TODO: dictionary of calculated properties... ??
-        
-        
-        # report total Voro volume if filter selected
-        # if "Voronoi volume" in self.scalarsDict:
-        #     sumVoroVol = np.sum(self.scalarsDict["Voronoi volume"])
-        #     self.logger.info("Sum of visible Voronoi volumes = %f units^3", sumVoroVol)
+        # TODO: dictionary of calculated properties... ?? sum of voro vols etc...
         
         # time to apply filters
         applyFiltersTime = time.time() - applyFiltersTime
@@ -379,10 +371,11 @@ class Filterer(object):
         
         vectorsList = []
         for name, vectors in self.vectorsDict.iteritems():
-            self.logger.debug("  Adding '%s' vectors", name)
+            self.logger.debug("Adding '%s' vectors", name)
             vectorsList.append(vectors)
             if vectors.shape != (len(self.visibleAtoms), 3):
-                raise RuntimeError("Shape wrong for vectors array '%s': %r != %r" % (name, vectors.shape, (len(self.visibleAtoms), 3)))
+                raise RuntimeError("Shape wrong for vectors array '%s': %r != %r" % (name, vectors.shape,
+                                                                                     (len(self.visibleAtoms), 3)))
         
         if len(vectorsList):
             vectorsFull = np.concatenate(vectorsList)
@@ -406,9 +399,11 @@ class Filterer(object):
             # Filterer.scalarsDict
             keys = self.scalarsDict.keys()
             for i, key in enumerate(keys):
-                self.logger.debug("  Storing '%s' scalars", key)
+                self.logger.debug("Storing '%s' scalars", key)
                 scalars = scalarsList[i]
-                assert len(scalars) >= NVisible, "ERROR: scalars (%s) smaller than expected (%d < %d)" % (key, len(scalars), NVisible)
+                assert len(scalars) >= NVisible, "ERROR: scalars (%s) smaller than expected (%d < %d)" % (key,
+                                                                                                          len(scalars),
+                                                                                                          NVisible)
                 scalars_cp = copy.copy(scalars)
                 scalars_cp.resize(NVisible, refcheck=False)
                 self.scalarsDict[key] = scalars_cp
@@ -420,7 +415,9 @@ class Filterer(object):
                 self.logger.debug("  Storing '%s' scalars (Lattice)", key)
                 i = j + offset
                 scalars = scalarsList[i]
-                assert len(scalars) >= NVisible, "ERROR: scalars (%s) smaller than expected (%d < %d)" % (key, len(scalars), NVisible)
+                assert len(scalars) >= NVisible, "ERROR: scalars (%s) smaller than expected (%d < %d)" % (key,
+                                                                                                          len(scalars),
+                                                                                                          NVisible)
                 scalars_cp = copy.copy(scalars)
                 scalars_cp.resize(NVisible, refcheck=False)
                 self.latticeScalarsDict[key] = scalars_cp
@@ -440,151 +437,9 @@ class Filterer(object):
             
             for key, vectors in itertools.izip(keys, vectorsList):
                 self.logger.debug("  Storing '%s' vectors", key)
-                assert len(vectors) >= NVisible, "ERROR: vectors (%s) smaller than expected (%d < %d)" % (key, len(vectors), NVisible)
+                assert len(vectors) >= NVisible, "ERROR: vectors (%s) smaller than expected (%d < %d)" % (key,
+                                                                                                          len(vectors),
+                                                                                                          NVisible)
                 vectors_cp = copy.copy(vectors)
                 vectors_cp.resize((NVisible, 3), refcheck=False)
                 self.vectorsDict[key] = vectors_cp
-    
-    def pointDefectFilterCalculateClusterVolumes(self, settings):
-        """
-        Calculate volumes of clusters
-        
-        """
-        self.logger.debug("Calculating volumes of defect clusters")
-        self.logger.warning("If your clusters cross PBCs this may or may not give correct volumes; please test and let me know")
-        
-        inputLattice = self.pipelinePage.inputState
-        refLattice = self.pipelinePage.refState
-        clusterList = self.clusterList
-        
-        if settings.getSetting("calculateVolumesHull"):
-            count = 0
-            for cluster in clusterList:
-                # first make pos array for this cluster
-                clusterPos = cluster.makeClusterPos(inputLattice, refLattice)
-                NDefects = len(clusterPos) / 3
-                
-                # now get convex hull
-                if NDefects < 4:
-                    pass
-                
-                else:
-                    appliedPBCs = np.zeros(7, np.int32)
-                    clusters_c.prepareClusterToDrawHulls(NDefects, clusterPos, inputLattice.cellDims, 
-                                                         self.pipelinePage.PBC, appliedPBCs, settings.getSetting("neighbourRadius"))
-                    
-                    cluster.volume, cluster.facetArea = clusters.findConvexHullVolume(NDefects, clusterPos)
-                
-                self.logger.info("  Cluster %d (%d defects)", count, cluster.getNDefects())
-                if cluster.facetArea is not None:
-                    self.logger.info("    volume is %f; facet area is %f", cluster.volume, cluster.facetArea)
-                
-                count += 1
-        
-        elif settings.getSetting("calculateVolumesVoro"):
-            # compute Voronoi
-            vor = voronoi.computeVoronoiDefects(inputLattice, refLattice, self.vacancies, self.voronoiOptions, self.pipelinePage.PBC)
-            
-            count = 0
-            for cluster in clusterList:
-                volume = 0.0
-                
-                # add volumes of interstitials
-                for i in xrange(cluster.getNInterstitials()):
-                    index = cluster.interstitials[i]
-                    volume += vor.atomVolume(index)
-                
-                # add volumes of split interstitial atoms
-                for i in xrange(cluster.getNSplitInterstitials()):
-                    index = cluster.splitInterstitials[3*i+1]
-                    volume += vor.atomVolume(index)
-                    index = cluster.splitInterstitials[3*i+2]
-                    volume += vor.atomVolume(index)
-                
-                # add volumes of on antisite atoms
-                for i in xrange(cluster.getNAntisites()):
-                    index = cluster.onAntisites[i]
-                    volume += vor.atomVolume(index)
-                
-                # add volumes of vacancies
-                for i in xrange(cluster.getNVacancies()):
-                    vacind = cluster.vacAsIndex[i]
-                    index = inputLattice.NAtoms + vacind
-                    volume += vor.atomVolume(index)
-                
-                cluster.volume = volume
-                
-                self.logger.info("  Cluster %d (%d defects)", count, cluster.getNDefects())
-                self.logger.info("    volume is %f", volume)
-                
-                count += 1
-        
-        else:
-            self.logger.error("Method to calculate defect cluster volumes not specified")
-    
-    def clusterFilterCalculateVolumes(self, filterSettings):
-        """
-        Calculate volumes of clusters.
-        
-        """
-        # this will not work properly over PBCs at the moment
-        lattice = self.pipelinePage.inputState
-        
-        # calculate volumes
-        if filterSettings.getSetting("calculateVolumesHull"):
-            count = 0
-            for cluster in self.clusterList:
-                # first make pos array for this cluster
-                clusterPos = np.empty(3 * len(cluster), np.float64)
-                for i in xrange(len(cluster)):
-                    index = cluster[i]
-                    
-                    clusterPos[3*i] = lattice.pos[3*index]
-                    clusterPos[3*i+1] = lattice.pos[3*index+1]
-                    clusterPos[3*i+2] = lattice.pos[3*index+2]
-                
-                # now get convex hull
-                if len(cluster) < 4:
-                    pass
-                
-                else:
-                    PBC = self.pipelinePage.PBC
-                    if PBC[0] or PBC[1] or PBC[2]:
-                        appliedPBCs = np.zeros(7, np.int32)
-                        neighbourRadius = filterSettings.getSetting("neighbourRadius")
-                        clusters_c.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, 
-                                                             PBC, appliedPBCs, neighbourRadius)
-                    
-                    volume, area = clusters.findConvexHullVolume(len(cluster), clusterPos)
-                
-                self.logger.info("  Cluster %d (%d atoms)", count, len(cluster))
-                if area is not None:
-                    self.logger.info("    volume is %f; facet area is %f", volume, area)
-                
-                # store volume/facet area
-                cluster.volume = volume
-                cluster.facetArea = area
-                
-                count += 1
-        
-        elif filterSettings.getSetting("calculateVolumesVoro"):
-            # compute Voronoi
-            self.calculateVoronoi()
-            vor = self.voronoi
-            
-            count = 0
-            for cluster in self.clusterList:
-                volume = 0.0
-                for index in cluster:
-                    volume += vor.atomVolume(index)
-                
-                self.logger.info("  Cluster %d (%d atoms)", count, len(cluster))
-                self.logger.info("    volume is %f", volume)
-                
-                # store volume
-                cluster.volume = volume
-                
-                count += 1
-        
-        else:
-            self.logger.error("Method to calculate cluster volumes not specified")

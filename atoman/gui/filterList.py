@@ -540,7 +540,7 @@ class FilterList(QtGui.QWidget):
         self.staticListButton.setChecked(0)
         self.defectFilterSelected = False
         
-        if self.filterer.scalarBarAdded:
+        if self.renderer.scalarBarAdded:
             self.scalarBarButton.setChecked(0)
         
         # refresh available scalars
