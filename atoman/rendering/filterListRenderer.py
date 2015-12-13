@@ -157,7 +157,7 @@ class FilterListRenderer(object):
             
             # get the Voronoi object
             lattice = self._filterer.inputState
-            voro = self._filterer.voronoiAtoms.getVoronoi(lattice, self.voronoiOptions)
+            voro = self._filterer.voronoiAtoms.getVoronoi(lattice)
             
             # render
             rend = voronoiRenderer.VoronoiRenderer()

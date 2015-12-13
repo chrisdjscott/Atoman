@@ -40,7 +40,7 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
             if refState is not None:
                 clusterPos = cluster.makeClusterPos(lattice, refState)
             else:
-                clusterPos = cluster.makeClusterPos(lattice)
+                clusterPos = cluster.makeClusterPos()
             
             # get settings and prepare to render (unapply PBCs)
             appliedPBCs = np.zeros(7, np.int32)

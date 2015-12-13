@@ -260,8 +260,9 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
                     clusterSizes.append(len(c))
                     
                     # cluster volumes
-                    if c.volume is not None:
-                        clusterVolumes.append(c.volume)
+                    vol = c.getVolume()
+                    if vol is not None:
+                        clusterVolumes.append(vol)
                     
                     else:
                         haveVolumes = False

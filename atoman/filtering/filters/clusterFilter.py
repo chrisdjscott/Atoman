@@ -92,11 +92,13 @@ class ClusterFilter(base.BaseFilter):
         fullVectors = filterInput.fullVectors
         visibleAtoms = filterInput.visibleAtoms
         PBC = lattice.PBC
+        voronoiCalculator = filterInput.voronoiAtoms
         
         # settings
         minSize = settings.getSetting("minClusterSize")
         maxSize = settings.getSetting("maxClusterSize")
         nebRad = settings.getSetting("neighbourRadius")
+        calcVols = settings.getSetting("calculateVolumes")
         
         # arrays for the cluster calculation
         atomCluster = np.empty(len(visibleAtoms), np.int32)
@@ -116,7 +118,7 @@ class ClusterFilter(base.BaseFilter):
         # build cluster lists
         clusterList = []
         for i in xrange(NClusters):
-            clusterList.append(clusters.AtomCluster())
+            clusterList.append(clusters.AtomCluster(lattice))
         
         # add atoms to cluster lists
         clusterIndexMapper = {}
@@ -130,7 +132,19 @@ class ClusterFilter(base.BaseFilter):
                 count += 1
             
             clusterListIndex = clusterIndexMapper[clusterIndex]
-            clusterList[clusterListIndex].indexes.append(atomIndex)
+            clusterList[clusterListIndex].addAtom(atomIndex)
+        
+        # calculate volumes
+        if calcVols:
+            self.logger.debug("Calculating cluster volumes")
+            for i, cluster in enumerate(clusterList):
+                cluster.calculateVolume(voronoiCalculator, settings)
+                volume = cluster.getVolume()
+                if volume is not None:
+                    self.logger.debug("Cluster %d: volume is %f", i, volume)
+                area = cluster.getFacetArea()
+                if area is not None:
+                    self.logger.debug("Cluster %d: facet area is %f", i, area)
         
         # hide atoms if required
         if settings.getSetting("hideAtoms"):

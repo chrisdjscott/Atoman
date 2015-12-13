@@ -80,8 +80,8 @@ class TestVoronoiRenderer(unittest.TestCase):
         self.colOpts = DummyColouringOpts()
         
         # calc voronoi
-        calc = voronoi.VoronoiAtomsCalculator()
-        self.voro = calc.getVoronoi(self.lattice, self.voroOpts)
+        calc = voronoi.VoronoiAtomsCalculator(self.voroOpts)
+        self.voro = calc.getVoronoi(self.lattice)
 
     def tearDown(self):
         """

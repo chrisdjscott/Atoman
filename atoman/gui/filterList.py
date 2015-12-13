@@ -110,15 +110,6 @@ class FilterList(QtGui.QWidget):
         self.driftCompButton.clicked.connect(self.driftCompClicked)
         self.driftCompensation = False
         
-        # persistent list button
-        icon = QtGui.QIcon(iconPath("oxygen/applications-education-miscellaneous.png"))
-        self.persistButton = QtGui.QPushButton(icon, "")
-        self.persistButton.setFixedWidth(35)
-        self.persistButton.setStatusTip("Persistent property/filter list")
-        self.persistButton.setToolTip("Persistent property/filter list")
-        self.persistButton.setCheckable(1)
-        self.persistButton.setChecked(0)
-        
         # static list button
         self.staticListButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/object-unlocked.png")), "")
         self.staticListButton.setFixedWidth(35)
@@ -149,7 +140,6 @@ class FilterList(QtGui.QWidget):
         rowLayout = QtGui.QHBoxLayout(row2)
         rowLayout.setAlignment(QtCore.Qt.AlignRight)
         rowLayout.addWidget(self.driftCompButton)
-        rowLayout.addWidget(self.persistButton)
         rowLayout.addWidget(self.staticListButton)
         rowLayout.addWidget(self.scalarBarButton)
         rowLayout.setContentsMargins(0, 0, 0, 0)
@@ -548,12 +538,10 @@ class FilterList(QtGui.QWidget):
         self.listItems.clear()
         
         self.staticListButton.setChecked(0)
-        self.persistButton.setChecked(0)
-        
         self.defectFilterSelected = False
         
-        # if self.filterer.scalarBarAdded:
-        #     self.scalarBarButton.setChecked(0)
+        if self.filterer.scalarBarAdded:
+            self.scalarBarButton.setChecked(0)
         
         # refresh available scalars
         self.colouringOptions.refreshScalarColourOption()
@@ -577,13 +565,6 @@ class FilterList(QtGui.QWidget):
         
         """
         return self.staticListButton.isChecked()
-    
-    def isPersistentList(self):
-        """
-        Check if the list is a persistent list.
-        
-        """
-        return self.persistButton.isChecked()
     
     def moveFilterDownInList(self):
         """
@@ -747,9 +728,6 @@ class FilterList(QtGui.QWidget):
                 
                 # add
                 self.listItems.addItem(item)
-                
-                # position form
-#                 utils.positionWindow(form, form.sizeHint(), self.mainWindow.desktop, self)
                 
                 # show options form
                 form.show()

@@ -47,11 +47,11 @@ class TestClusterRenderer(unittest.TestCase):
         self.ref.addAtom("He", [99, 99, 99], 0)
         
         # cluster list
-        cluster = clusters.AtomCluster()
-        cluster.indexes.append(0)
-        cluster.indexes.append(2)
-        cluster.indexes.append(5)
-        cluster.indexes.append(7)
+        cluster = clusters.AtomCluster(self.lattice)
+        cluster.addAtom(0)
+        cluster.addAtom(2)
+        cluster.addAtom(5)
+        cluster.addAtom(7)
         self.atomClusters = [cluster]
         
         cluster = clusters.DefectCluster()

@@ -15,8 +15,9 @@ from . import _voronoi
 
 class VoronoiCalculator(object):
     """Base object for Voronoi calculators."""
-    def __init__(self):
+    def __init__(self, options):
         self._voronoi = None
+        self._options = options
     
     def isCalculated(self):
         """Have we already calculated the Voronoi tessellation."""
@@ -39,14 +40,14 @@ class VoronoiAtomsCalculator(VoronoiCalculator):
     Object for calculating Voronoi cells for atoms.
     
     """
-    def __init__(self):
-        super(VoronoiAtomsCalculator, self).__init__()
+    def __init__(self, options):
+        super(VoronoiAtomsCalculator, self).__init__(options)
         self._logger = logging.getLogger(__name__ + ".VoronoiAtomsCalculator")
     
-    def _calculate(self, lattice, voronoiOptions):
+    def _calculate(self, lattice):
         """Calculate Voronoi."""
         self._logger.info("Calculating Voronoi (Atoms)")
-        self._voronoi = computeVoronoi(lattice, voronoiOptions)
+        self._voronoi = computeVoronoi(lattice, self._options)
 
 
 class VoronoiDefectsCalculator(VoronoiCalculator):
@@ -54,14 +55,14 @@ class VoronoiDefectsCalculator(VoronoiCalculator):
     Object for calculating Voronoi cells for defects.
     
     """
-    def __init__(self):
-        super(VoronoiDefectsCalculator, self).__init__()
+    def __init__(self, options):
+        super(VoronoiDefectsCalculator, self).__init__(options)
         self._logger = logging.getLogger(__name__ + ".VoronoiDefectsCalculator")
     
-    def _calculate(self, lattice, refLattice, vacancies, voronoiOptions):
+    def _calculate(self, lattice, refLattice, vacancies):
         """Calculate Voronoi."""
         self._logger.info("Calculating Voronoi (Defects)")
-        self._voronoi = computeVoronoiDefects(lattice, refLattice, vacancies, voronoiOptions)
+        self._voronoi = computeVoronoiDefects(lattice, refLattice, vacancies, self._options)
 
 
 def computeVoronoi(lattice, voronoiOptions):

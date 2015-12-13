@@ -94,8 +94,8 @@ class Filterer(object):
         self.clusterList = []
         self.bubbleList = []
         self.structureCounterDicts = {}
-        self.voronoiAtoms = voronoi.VoronoiAtomsCalculator()
-        self.voronoiDefects = voronoi.VoronoiDefectsCalculator()
+        self.voronoiAtoms = voronoi.VoronoiAtomsCalculator(self.voronoiOptions)
+        self.voronoiDefects = voronoi.VoronoiDefectsCalculator(self.voronoiOptions)
         self.scalarsDict = {}
         self.latticeScalarsDict = {}
         self.vectorsDict = {}

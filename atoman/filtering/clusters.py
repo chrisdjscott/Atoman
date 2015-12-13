@@ -16,6 +16,8 @@ try:
 except ImportError:
     PYHULL_LOADED = False
 
+from . import _clusters
+
 
 def findConvexHullFacets(num, pos):
     """
@@ -248,31 +250,71 @@ class AtomCluster(object):
     Cluster of atoms
     
     """
-    def __init__(self):
-        self.indexes = []
-        self.volume = None
-        self.facetArea = None
+    def __init__(self, lattice):
+        self._indexes = []
+        self._volume = None
+        self._facetArea = None
+        self._lattice = lattice
     
     def __len__(self):
-        return len(self.indexes)
+        return len(self._indexes)
     
     def __getitem__(self, i):
-        return self.indexes[i]
+        return self._indexes[i]
     
     def __contains__(self, item):
-        return item in self.indexes
+        return item in self._indexes
     
-    def makeClusterPos(self, lattice):
+    def addAtom(self, index):
+        self._indexes.append(index)
+    
+    def makeClusterPos(self):
         """Returns an array of positions of atoms in the cluster."""
-        num = len(self.indexes)
+        num = len(self._indexes)
+        lattice = self._lattice
         clusterPos = np.empty(3 * num, np.float64)
         for i in xrange(num):
-            index = self.indexes[i]
+            index = self._indexes[i]
             clusterPos[3 * i] = lattice.pos[3 * index]
             clusterPos[3 * i + 1] = lattice.pos[3 * index + 1]
             clusterPos[3 * i + 2] = lattice.pos[3 * index + 2]
         
         return clusterPos
+    
+    def getVolume(self):
+        """Returns the volume or None if not calculated."""
+        return self._volume
+    
+    def getFacetArea(self):
+        """Returns the facet area of None if not calculated."""
+        return self._facetArea
+    
+    def calculateVolume(self, voronoiCalculator, settings):
+        """Calculate the volume of the cluster."""
+        if settings.getSetting("calculateVolumesVoro"):
+            self._calculateVolumeVoronoi(voronoiCalculator)
+        else:
+            self._calculateVolumeConvexHull(settings)
+    
+    def _calculateVolumeVoronoi(self, voronoiCalculator):
+        """Calculate the volume by summing Voronoi cells."""
+        voro = voronoiCalculator.getVoronoi(self._lattice)
+        volume = 0.0
+        for index in self._indexes:
+            volume += voro.atomVolume(index)
+        self._volume = volume
+    
+    def _calculateVolumeConvexHull(self, settings):
+        """Calculate volume of convex hull."""
+        if len(self) > 3:
+            pos = self.makeClusterPos()
+            pbc = self._lattice.PBC
+            if pbc[0] or pbc[1] or pbc[2]:
+                appliedPBCs = np.zeros(7, np.int32)
+                neighbourRadius = settings.getSetting("neighbourRadius")
+                _clusters.prepareClusterToDrawHulls(len(self), pos, self._lattice.cellDims, pbc, appliedPBCs,
+                                                    neighbourRadius)
+            self._volume, self._facetArea = findConvexHullVolume(len(self), pos)
 
 
 class DefectCluster(object):
