@@ -5,8 +5,6 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 //#define DEBUG
 //#define DEBUGACNA
-//#define ACNA_OLD
-//#define SPLIT_OLD
 
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
@@ -23,13 +21,11 @@ static int findDefectNeighbours(int, int, int, int *, double *, struct Boxes *, 
 static int basicDefectClassification(double, int, char *,int *, double *, int, char *, int *, double *, int *,
         double *, int *, int *, int *, int *, int *);
 static int identifySplitInterstitials(int, int *, int, int *, int *, double *, double *, int *, double *, int *, double);
+static int identifySplitInterstitialsOld(int, int *, int, int *, int *, double *, double *, int *, double *, int *, double);
 static int refineDefectsUsingAcna(int, int *, int, int *, double, int *, double *, double *, double *, double *, int, int *);
-#ifndef SPLIT_OLD
+static int refineDefectsUsingAcnaOld(int, int *, int, int *, double, int *, double *, double *, double *, double *, int, int *);
 static int compare_two_nebs(const void *, const void *);
-#endif
-#ifndef ACNA_OLD
 static int checkVacancyACNARecursive(int, int, int *, int *, int *, struct NeighbourList2 *, struct NeighbourList2 *, int *, int *);
-#endif
 
 /*******************************************************************************
  ** List of python methods available in this module
@@ -288,7 +284,6 @@ basicDefectClassification(double vacancyRadius, int NAtoms, char *specieList, in
     return 0;
 }
 
-#ifndef SPLIT_OLD
 /*******************************************************************************
  ** Function that compares two elements in a neighbour list
  *******************************************************************************/
@@ -538,12 +533,11 @@ identifySplitInterstitials(int NVacancies, int *vacancies, int NInterstitials, i
     return 0;
 }
 
-#else
 /*******************************************************************************
  * identify split interstitials
  *******************************************************************************/
 static int
-identifySplitInterstitials(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, int *splitInterstitials,
+identifySplitInterstitialsOld(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, int *splitInterstitials,
        double *pos, double *refPos, int *PBC, double *cellDims, int *counters, double vacancyRadius)
 {
    int i, count, NDefects, boxstat;
@@ -555,7 +549,7 @@ identifySplitInterstitials(int NVacancies, int *vacancies, int NInterstitials, i
    
 
 #ifdef DEBUG
-   printf("DEFECTSC: Identifying split interstitials\n");
+   printf("DEFECTSC: Identifying split interstitials (old)\n");
 #endif
    
    /* build positions array of all defects */
@@ -753,9 +747,7 @@ identifySplitInterstitials(int NVacancies, int *vacancies, int NInterstitials, i
    
    return 0;
 }
-#endif
 
-#ifndef ACNA_OLD
 /*******************************************************************************
  * check if vacancy is linked to an ACNA interstitial
  *******************************************************************************/
@@ -1064,12 +1056,11 @@ refineDefectsUsingAcna(int NVacancies, int *vacancies, int NInterstitials, int *
     return 0;
 }
 
-#else
 /*******************************************************************************
  * Use ACNA to refine the defects
  *******************************************************************************/
 static int
-refineDefectsUsingAcna(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, double vacancyRadius,
+refineDefectsUsingAcnaOld(int NVacancies, int *vacancies, int NInterstitials, int *interstitials, double vacancyRadius,
         int *PBC, double *cellDims, double *pos, double *refPos, double *acnaArray, int acnaStructureType, int *counters)
 {
     int i, boxstat;
@@ -1250,7 +1241,6 @@ refineDefectsUsingAcna(int NVacancies, int *vacancies, int NInterstitials, int *
     
     return 0;
 }
-#endif
 
 /*******************************************************************************
  * Search for defects and return the sub-system surrounding them
@@ -1263,7 +1253,7 @@ findDefects(PyObject *self, PyObject *args)
     int exclSpecInputDim, *exclSpecInput, exclSpecRefDim, *exclSpecRef, NAtoms, *specie, refNAtoms, *PBC, *specieRef;
     int findClustersFlag, *defectCluster, NSpecies, *vacSpecCount, *intSpecCount, *antSpecCount, *onAntSpecCount;
     int *splitIntSpecCount, minClusterSize, maxClusterSize, *splitInterstitials, identifySplits, driftCompensation;
-    int acnaArrayDim, acnaStructureType, filterSpecies;
+    int acnaArrayDim, acnaStructureType, filterSpecies, identifySplitsOld, refineAcnaOld;
     double *pos, *refPosIn, *cellDims, vacancyRadius, clusterRadius, *driftVector, *acnaArray;
     PyArrayObject *specieListIn=NULL;
     PyArrayObject *specieListRefIn=NULL;
@@ -1306,7 +1296,7 @@ findDefects(PyObject *self, PyObject *args)
 #endif
     
     /* parse and check arguments from Python */
-    if (!PyArg_ParseTuple(args, "iiiO!O!O!O!O!O!O!iO!O!O!iO!O!O!O!O!didO!O!O!O!O!O!iiO!iiO!O!ii", &includeVacs, &includeInts, &includeAnts,
+    if (!PyArg_ParseTuple(args, "iiiO!O!O!O!O!O!O!iO!O!O!iO!O!O!O!O!didO!O!O!O!O!O!iiO!iiO!O!iiii", &includeVacs, &includeInts, &includeAnts,
             &PyArray_Type, &NDefectsTypeIn, &PyArray_Type, &vacanciesIn, &PyArray_Type, &interstitialsIn, &PyArray_Type, &antisitesIn,
             &PyArray_Type, &onAntisitesIn, &PyArray_Type, &exclSpecInputIn, &PyArray_Type, &exclSpecRefIn, &NAtoms, &PyArray_Type, 
             &specieListIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &refNAtoms, &PyArray_Type, &specieListRefIn, &PyArray_Type, 
@@ -1314,7 +1304,7 @@ findDefects(PyObject *self, PyObject *args)
             &clusterRadius, &PyArray_Type, &defectClusterIn, &PyArray_Type, &vacSpecCountIn, &PyArray_Type, &intSpecCountIn, &PyArray_Type,
             &antSpecCountIn, &PyArray_Type, &onAntSpecCountIn, &PyArray_Type, &splitIntSpecCountIn, &minClusterSize, &maxClusterSize,
             &PyArray_Type, &splitInterstitialsIn, &identifySplits, &driftCompensation, &PyArray_Type, &driftVectorIn, &PyArray_Type,
-            &acnaArrayIn, &acnaStructureType, &filterSpecies))
+            &acnaArrayIn, &acnaStructureType, &filterSpecies, &identifySplitsOld, &refineAcnaOld))
         return NULL;
     
     if (not_intVector(NDefectsTypeIn)) return NULL;
@@ -1444,9 +1434,16 @@ findDefects(PyObject *self, PyObject *args)
 #ifdef DEBUG
         acnaTime = walltime();
 #endif
-        
-        status = refineDefectsUsingAcna(NVacancies, vacancies, NInterstitials, interstitials, vacancyRadius, PBC, cellDims, pos, refPos,
-                acnaArray, acnaStructureType, defectCounters);
+        if (refineAcnaOld)
+        {
+            status = refineDefectsUsingAcnaOld(NVacancies, vacancies, NInterstitials, interstitials, vacancyRadius, PBC, cellDims, pos, refPos,
+                    acnaArray, acnaStructureType, defectCounters);
+        }
+        else
+        {
+            status = refineDefectsUsingAcna(NVacancies, vacancies, NInterstitials, interstitials, vacancyRadius, PBC, cellDims, pos, refPos,
+                    acnaArray, acnaStructureType, defectCounters);
+        }
         if (status)
         {
             if (driftCompensation) free(refPos);
@@ -1470,8 +1467,16 @@ findDefects(PyObject *self, PyObject *args)
         splitTime = walltime();
 #endif
         
-        status = identifySplitInterstitials(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
-                cellDims, defectCounters, vacancyRadius);
+        if (identifySplitsOld)
+        {
+            status = identifySplitInterstitialsOld(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
+                    cellDims, defectCounters, vacancyRadius);
+        }
+        else
+        {
+            status = identifySplitInterstitials(NVacancies, vacancies, NInterstitials, interstitials, splitInterstitials, pos, refPos, PBC,
+                    cellDims, defectCounters, vacancyRadius);
+        }
         if (status)
         {
             if (driftCompensation) free(refPos);

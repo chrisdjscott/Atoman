@@ -52,6 +52,10 @@ class PointDefectsFilterSettings(base.BaseSettings):
         self.registerSetting("bondThicknessVTK", default=0.4)
         self.registerSetting("bondThicknessPOV", default=0.4)
         self.registerSetting("bondNumSides", default=5)
+        
+        # old methods for calculating certain things
+        self.registerSetting("splitIntsOld", default=False)
+        self.registerSetting("acnaOld", default=False)
 
 
 class PointDefectsFilter(base.BaseFilter):
@@ -151,6 +155,8 @@ class PointDefectsFilter(base.BaseFilter):
         identifySplitInts = settings.getSetting("identifySplitInts")
         acnaStructureType = settings.getSetting("acnaStructureType")
         filterSpecies = settings.getSetting("filterSpecies")
+        splitOld = settings.getSetting("splitIntsOld")
+        acnaOld = settings.getSetting("acnaOld")
         
         # call C library
         self.logger.debug("Calling C library")
@@ -161,7 +167,7 @@ class PointDefectsFilter(base.BaseFilter):
                              inputLattice.PBC, vacancyRadius, findClusters, neighbourRadius, defectCluster,
                              vacSpecCount, intSpecCount, antSpecCount, onAntSpecCount, splitIntSpecCount,
                              minClusterSize, maxClusterSize, splitInterstitials, identifySplitInts, driftCompensation,
-                             driftVector, acnaArray, acnaStructureType, int(filterSpecies))
+                             driftVector, acnaArray, acnaStructureType, int(filterSpecies), int(splitOld), int(acnaOld))
         
         # summarise
         NDef = NDefectsByType[0]
