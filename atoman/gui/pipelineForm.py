@@ -854,7 +854,7 @@ class PipelineForm(QtGui.QWidget):
         minSepType = None
         minSepFilterList = None
         for filterList_ in filterLists:
-            if not filterList.visible:
+            if not filterList_.visible:
                 continue
             
             filterer = filterList_.filterer

@@ -16,8 +16,6 @@ from ...rendering import highlight
 from .. import utils
 
 
-################################################################################
-
 class ClusterListWidgetItem(QtGui.QListWidgetItem):
     """
     Item for cluster info window list widget
@@ -28,7 +26,6 @@ class ClusterListWidgetItem(QtGui.QListWidgetItem):
         self.atomIndex = atomIndex
         self.defectType = defectType
 
-################################################################################
 
 class ClusterInfoWindow(QtGui.QDialog):
     """
@@ -51,7 +48,7 @@ class ClusterInfoWindow(QtGui.QDialog):
         
         # highlighter colour
         self.highlightColour = QtGui.QColor(255, 20, 147)
-        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0,
                                    float(self.highlightColour.green()) / 255.0,
                                    float(self.highlightColour.blue()) / 255.0]
         
@@ -61,12 +58,14 @@ class ClusterInfoWindow(QtGui.QDialog):
         self.cluster = filterList.filterer.clusterList[clusterIndex]
         
         # volume
-        if self.cluster.volume is not None:
-            layout.addWidget(QtGui.QLabel("Volume: %f units^3" % self.cluster.volume))
+        vol = self.cluster.getVolume()
+        if vol is not None:
+            layout.addWidget(QtGui.QLabel("Volume: %f units^3" % vol))
         
         # facet area
-        if self.cluster.facetArea is not None:
-            layout.addWidget(QtGui.QLabel("Facet area: %f units^2" % self.cluster.facetArea))
+        facetArea = self.cluster.getFacetArea()
+        if facetArea is not None:
+            layout.addWidget(QtGui.QLabel("Facet area: %f units^2" % facetArea))
         
         # label
         layout.addWidget(QtGui.QLabel("Cluster atoms (%d):" % len(self.cluster)))
@@ -77,14 +76,14 @@ class ClusterInfoWindow(QtGui.QDialog):
         self.listWidget.setMinimumHeight(175)
         layout.addWidget(self.listWidget)
         
-        #TODO: open atom info window on right click select from context menu
-        
+        # TODO: open atom info window on right click select from context menu
         
         # populate list widget
         for index in self.cluster:
             item = ClusterListWidgetItem(index)
-            item.setText("Atom %d: %s (%.3f, %.3f, %.3f)" % (lattice.atomID[index], lattice.atomSym(index), lattice.pos[3*index], 
-                                                             lattice.pos[3*index+1], lattice.pos[3*index+2]))
+            item.setText("Atom %d: %s (%.3f, %.3f, %.3f)" % (lattice.atomID[index], lattice.atomSym(index),
+                                                             lattice.pos[3 * index], lattice.pos[3 * index + 1],
+                                                             lattice.pos[3 * index + 2]))
             self.listWidget.addItem(item)
         
         # colour button
@@ -132,7 +131,7 @@ class ClusterInfoWindow(QtGui.QDialog):
             self.highlightColour = col
             self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
             
-            self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+            self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0,
                                        float(self.highlightColour.green()) / 255.0,
                                        float(self.highlightColour.blue()) / 255.0]
             
@@ -151,10 +150,13 @@ class ClusterInfoWindow(QtGui.QDialog):
         highlighters = []
         for atomIndex in self.cluster:
             # radius
-            radius = lattice.specieCovalentRadius[lattice.specie[atomIndex]] * self.filterList.displayOptions.atomScaleFactor
+            covRad = lattice.specieCovalentRadius[lattice.specie[atomIndex]]
+            scale = self.filterList.displayOptions.atomScaleFactor
+            radius = covRad * scale
             
             # highlighter
-            highlighters.append(highlight.AtomHighlighter(lattice.atomPos(atomIndex), radius * 1.1, rgb=self.highlightColourRGB))
+            highlighters.append(highlight.AtomHighlighter(lattice.atomPos(atomIndex), radius * 1.1,
+                                                          rgb=self.highlightColourRGB))
         
         self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, highlighters))
     
@@ -184,7 +186,6 @@ class ClusterInfoWindow(QtGui.QDialog):
         
         event.accept()
 
-################################################################################
 
 class NeighbourListWidgetItem(QtGui.QListWidgetItem):
     """
@@ -196,7 +197,6 @@ class NeighbourListWidgetItem(QtGui.QListWidgetItem):
         self.atomIndex = atomIndex
         self.separation = separation
 
-################################################################################
 
 class AtomNeighboursInfoWindow(QtGui.QDialog):
     """
@@ -221,7 +221,7 @@ class AtomNeighboursInfoWindow(QtGui.QDialog):
         
         # highlighter colour
         self.highlightColour = QtGui.QColor(255, 20, 147)
-        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0,
                                    float(self.highlightColour.green()) / 255.0,
                                    float(self.highlightColour.blue()) / 255.0]
         
@@ -236,8 +236,7 @@ class AtomNeighboursInfoWindow(QtGui.QDialog):
         self.listWidget.setMinimumHeight(175)
         layout.addWidget(self.listWidget)
         
-        #TODO: open atom info window on right click select from context menu
-        
+        # TODO: open atom info window on right click select from context menu
         
         # populate list widget
         for index in self.nebList:
@@ -291,7 +290,7 @@ class AtomNeighboursInfoWindow(QtGui.QDialog):
             self.highlightColour = col
             self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
             
-            self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+            self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0,
                                        float(self.highlightColour.green()) / 255.0,
                                        float(self.highlightColour.blue()) / 255.0]
             
@@ -310,10 +309,13 @@ class AtomNeighboursInfoWindow(QtGui.QDialog):
         highlighters = []
         for i, atomIndex in enumerate(self.nebList):
             # radius
-            radius = lattice.specieCovalentRadius[lattice.specie[atomIndex]] * self.nebFilterList[i].displayOptions.atomScaleFactor
+            covRad = lattice.specieCovalentRadius[lattice.specie[atomIndex]]
+            scale = self.nebFilterList[i].displayOptions.atomScaleFactor
+            radius = covRad * scale
             
             # highlighter
-            highlighters.append(highlight.AtomHighlighter(lattice.atomPos(atomIndex), radius * 1.1, rgb=self.highlightColourRGB))
+            highlighters.append(highlight.AtomHighlighter(lattice.atomPos(atomIndex), radius * 1.1,
+                                                          rgb=self.highlightColourRGB))
         
         self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, highlighters))
     
@@ -343,7 +345,6 @@ class AtomNeighboursInfoWindow(QtGui.QDialog):
         
         event.accept()
 
-################################################################################
 
 class DefectClusterInfoWindow(QtGui.QDialog):
     """
@@ -367,7 +368,7 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         
         # highlighter colour
         self.highlightColour = QtGui.QColor(255, 20, 147)
-        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0,
                                    float(self.highlightColour.green()) / 255.0,
                                    float(self.highlightColour.blue()) / 255.0]
         
@@ -377,12 +378,14 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         self.cluster = filterList.filterer.clusterList[clusterIndex]
         
         # volume
-        if self.cluster.volume is not None:
-            layout.addWidget(QtGui.QLabel("Volume: %f units^3" % self.cluster.volume))
+        vol = self.cluster.getVolume()
+        if vol is not None:
+            layout.addWidget(QtGui.QLabel("Volume: %f units^3" % vol))
         
         # facet area
-        if self.cluster.facetArea is not None:
-            layout.addWidget(QtGui.QLabel("Facet area: %f units^2" % self.cluster.facetArea))
+        facetArea = self.cluster.getFacetArea()
+        if facetArea is not None:
+            layout.addWidget(QtGui.QLabel("Facet area: %f units^2" % facetArea))
         
         # label
         layout.addWidget(QtGui.QLabel("Cluster defects (%d):" % self.cluster.getNDefects()))
@@ -393,38 +396,41 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         self.listWidget.setMinimumHeight(200)
         layout.addWidget(self.listWidget)
         
-        #TODO: open atom info window on right click select from context menu
-        
+        # TODO: open atom info window on right click select from context menu
         
         # populate list widget
-        for index in self.cluster.vacancies:
+        for index in self.cluster.vacancies():
             item = ClusterListWidgetItem(index, defectType=1)
-            item.setText("Vacancy %d: %s (%.3f, %.3f, %.3f)" % (refState.atomID[index], refState.atomSym(index), refState.pos[3*index], 
-                                                                refState.pos[3*index+1], refState.pos[3*index+2]))
+            item.setText("Vacancy %d: %s (%.3f, %.3f, %.3f)" % (refState.atomID[index], refState.atomSym(index),
+                                                                refState.pos[3 * index], refState.pos[3 * index + 1],
+                                                                refState.pos[3 * index + 2]))
             self.listWidget.addItem(item)
         
-        for index in self.cluster.interstitials:
+        for index in self.cluster.interstitials():
             item = ClusterListWidgetItem(index, defectType=2)
-            item.setText("Interstitial %d: %s (%.3f, %.3f, %.3f)" % (inputState.atomID[index], inputState.atomSym(index), inputState.pos[3*index], 
-                                                                     inputState.pos[3*index+1], inputState.pos[3*index+2]))
+            item.setText("Interstitial %d: %s (%.3f, %.3f, %.3f)" % (inputState.atomID[index],
+                                                                     inputState.atomSym(index),
+                                                                     inputState.pos[3 * index],
+                                                                     inputState.pos[3 * index + 1],
+                                                                     inputState.pos[3 * index + 2]))
             self.listWidget.addItem(item)
         
-        for i in xrange(self.cluster.getNAntisites()):
-            index = self.cluster.antisites[i]
-            index1 = self.cluster.onAntisites[i]
-            
+        for index, index1 in self.cluster.antisites():
             item = ClusterListWidgetItem(index, defectType=3)
-            item.setText("Antisite %d: %s on %s (%.3f, %.3f, %.3f)" % (refState.atomID[index], refState.atomSym(index1), refState.atomSym(index), 
-                                                                       refState.pos[3*index], refState.pos[3*index+1], refState.pos[3*index+2]))
+            item.setText("Antisite %d: %s on %s (%.3f, %.3f, %.3f)" % (refState.atomID[index], refState.atomSym(index1),
+                                                                       refState.atomSym(index), refState.pos[3 * index],
+                                                                       refState.pos[3 * index + 1],
+                                                                       refState.pos[3 * index + 2]))
             self.listWidget.addItem(item)
         
-        for i in xrange(self.cluster.getNSplitInterstitials()):
-            index = self.cluster.splitInterstitials[3*i]
-            index1 = self.cluster.splitInterstitials[3*i+1]
-            index2 = self.cluster.splitInterstitials[3*i+2]
+        for index, index1, index2 in self.cluster.splitInterstitials():
             item = ClusterListWidgetItem(index, defectType=4)
-            item.setText("Split interstitial %d: %s-%s (%.3f, %.3f, %.3f)" % (refState.atomID[index], refState.atomSym(index1), refState.atomSym(index2),
-                                                                              refState.pos[3*index], refState.pos[3*index+1], refState.pos[3*index+2]))
+            item.setText("Split interstitial %d: %s-%s (%.3f, %.3f, %.3f)" % (refState.atomID[index],
+                                                                              refState.atomSym(index1),
+                                                                              refState.atomSym(index2),
+                                                                              refState.pos[3 * index],
+                                                                              refState.pos[3 * index + 1],
+                                                                              refState.pos[3 * index + 2]))
             self.listWidget.addItem(item)
         
         # colour button
@@ -459,7 +465,7 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             self.highlightColour = col
             self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
             
-            self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+            self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0,
                                        float(self.highlightColour.green()) / 255.0,
                                        float(self.highlightColour.blue()) / 255.0]
             
@@ -490,9 +496,11 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         inputState = self.pipelinePage.inputState
         refState = self.pipelinePage.refState
         
-        for index in self.cluster.vacancies:
+        for index in self.cluster.vacancies():
             # radius
-            radius = refState.specieCovalentRadius[refState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
+            covRad = refState.specieCovalentRadius[refState.specie[index]]
+            scale = self.filterList.displayOptions.atomScaleFactor
+            radius = covRad * scale
             
             # can do this because defect filter is always by itself
             defectSettings = self.filterList.getCurrentFilterSettings()[0].getSettings()
@@ -500,44 +508,45 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             radius *= vacScaleSize * 2.0
             
             # highlighter
-            highlighters.append(highlight.VacancyHighlighter(refState.atomPos(index), radius * 1.1, rgb=self.highlightColourRGB))
+            highlighters.append(highlight.VacancyHighlighter(refState.atomPos(index), radius * 1.1,
+                                                             rgb=self.highlightColourRGB))
         
-        for index in self.cluster.interstitials:
+        for index in self.cluster.interstitials():
             # radius
-            radius = inputState.specieCovalentRadius[inputState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
+            covRad = inputState.specieCovalentRadius[inputState.specie[index]]
+            scale = self.filterList.displayOptions.atomScaleFactor
+            radius = covRad * scale
             
             # highlighter
-            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(index), radius * 1.1, rgb=self.highlightColourRGB))
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(index), radius * 1.1,
+                                                          rgb=self.highlightColourRGB))
         
-        for i in xrange(self.cluster.getNAntisites()):
-            index = self.cluster.antisites[i]
-            index2 = self.cluster.onAntisites[i]
-            
-            #### highlight antisite ####
-            
+        for index, index2 in self.cluster.antisites():
+            # highlight antisite
             # radius
-            radius = 2.0 * refState.specieCovalentRadius[refState.specie[index]] * self.filterList.displayOptions.atomScaleFactor
-            
+            covRad = refState.specieCovalentRadius[refState.specie[index]]
+            scale = self.filterList.displayOptions.atomScaleFactor
+            radius = covRad * scale
             # highlight
-            highlighters.append(highlight.AntisiteHighlighter(refState.atomPos(index), radius, rgb=self.highlightColourRGB))
+            highlighters.append(highlight.AntisiteHighlighter(refState.atomPos(index), radius,
+                                                              rgb=self.highlightColourRGB))
             
-            #### highlight occupying atom ####
-            
+            # highlight occupying atom
             # radius
-            radius = inputState.specieCovalentRadius[inputState.specie[index2]] * self.filterList.displayOptions.atomScaleFactor
-            
+            covRad = inputState.specieCovalentRadius[inputState.specie[index2]]
+            scale = self.filterList.displayOptions.atomScaleFactor
+            radius = covRad * scale
             # highlight
-            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(index2), radius * 1.1, rgb=self.highlightColourRGB))
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(index2), radius * 1.1,
+                                                          rgb=self.highlightColourRGB))
         
-        for i in xrange(self.cluster.getNSplitInterstitials()):
-            vacIndex = self.cluster.splitInterstitials[3*i]
-            int1Index = self.cluster.splitInterstitials[3*i+1]
-            int2Index = self.cluster.splitInterstitials[3*i+2]
-            
-            #### highlight vacancy ####
+        for vacIndex, int1Index, int2Index in self.cluster.splitInterstitials():
+            # highlight vacancy
             
             # radius
-            radius = refState.specieCovalentRadius[refState.specie[vacIndex]] * self.filterList.displayOptions.atomScaleFactor
+            covRad = refState.specieCovalentRadius[refState.specie[vacIndex]]
+            scale = self.filterList.displayOptions.atomScaleFactor
+            radius = covRad * scale
             
             # can do this because defect filter is always by itself
             defectSettings = self.filterList.getCurrentFilterSettings()[0].getSettings()
@@ -545,23 +554,30 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             radius *= vacScaleSize * 2.0
             
             # highlight
-            highlighters.append(highlight.VacancyHighlighter(refState.atomPos(vacIndex), radius * 1.1, rgb=self.highlightColourRGB))
+            highlighters.append(highlight.VacancyHighlighter(refState.atomPos(vacIndex), radius * 1.1,
+                                                             rgb=self.highlightColourRGB))
             
-            #### highlight int 1 ####
-            
-            # radius
-            radius = inputState.specieCovalentRadius[inputState.specie[int1Index]] * self.filterList.displayOptions.atomScaleFactor
-            
-            # highlight
-            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(int1Index), radius * 1.1, rgb=self.highlightColourRGB))
-            
-            #### highlight int 2 ####
+            # highlight int 1
             
             # radius
-            radius = inputState.specieCovalentRadius[inputState.specie[int2Index]] * self.filterList.displayOptions.atomScaleFactor
+            covRad = inputState.specieCovalentRadius[inputState.specie[int1Index]]
+            scale = self.filterList.displayOptions.atomScaleFactor
+            radius = covRad * scale
             
             # highlight
-            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(int2Index), radius * 1.1, rgb=self.highlightColourRGB))
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(int1Index), radius * 1.1,
+                                                          rgb=self.highlightColourRGB))
+            
+            # highlight int 2
+            
+            # radius
+            covRad = inputState.specieCovalentRadius[inputState.specie[int2Index]]
+            scale = self.filterList.displayOptions.atomScaleFactor
+            radius = covRad * scale
+            
+            # highlight
+            highlighters.append(highlight.AtomHighlighter(inputState.atomPos(int2Index), radius * 1.1,
+                                                          rgb=self.highlightColourRGB))
         
         self.pipelinePage.broadcastToRenderers("addHighlighters", (self.windowID, highlighters))
     
@@ -591,7 +607,6 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         
         event.accept()
 
-################################################################################
 
 class SystemInfoWindow(QtGui.QDialog):
     """
@@ -617,7 +632,8 @@ class SystemInfoWindow(QtGui.QDialog):
         listWidget.addItem("Display name: '%s'" % item.displayName)
         listWidget.addItem("Abspath: '%s'" % item.abspath)
         listWidget.addItem("Number of atoms: %d" % lattice.NAtoms)
-        listWidget.addItem("Cell dimensions: [%f, %f, %f]" % (lattice.cellDims[0], lattice.cellDims[1], lattice.cellDims[2]))
+        listWidget.addItem("Cell dimensions: [%f, %f, %f]" % (lattice.cellDims[0], lattice.cellDims[1],
+                                                              lattice.cellDims[2]))
         listWidget.addItem("Species list: %r" % list(lattice.specieList))
         listWidget.addItem("Species count: %r" % list(lattice.specieCount))
         
@@ -636,7 +652,6 @@ class SystemInfoWindow(QtGui.QDialog):
         buttonBox.rejected.connect(self.reject)
         layout.addWidget(buttonBox)
 
-################################################################################
 
 class AtomInfoWindow(QtGui.QDialog):
     """
@@ -661,12 +676,12 @@ class AtomInfoWindow(QtGui.QDialog):
         self.setWindowTitle("Atom info")
         
         # logger
-        self.logger = logging.getLogger(__name__+".AtomInfoWindow")
+        self.logger = logging.getLogger(__name__ + ".AtomInfoWindow")
         self.logger.debug("Constructing info window for atom %d (%d)", lattice.atomID[atomIndex], atomIndex)
         
         # highlighter colour
         self.highlightColour = QtGui.QColor(158, 0, 196)
-        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0,
                                    float(self.highlightColour.green()) / 255.0,
                                    float(self.highlightColour.blue()) / 255.0]
         
@@ -679,7 +694,8 @@ class AtomInfoWindow(QtGui.QDialog):
         
         listWidget.addItem("Atom: %d" % lattice.atomID[atomIndex])
         listWidget.addItem("Species: %s" % lattice.specieList[lattice.specie[atomIndex]])
-        listWidget.addItem("Position: (%f, %f, %f)" % (lattice.pos[3*atomIndex], lattice.pos[3*atomIndex+1], lattice.pos[3*atomIndex+2]))
+        listWidget.addItem("Position: (%f, %f, %f)" % (lattice.pos[3 * atomIndex], lattice.pos[3 * atomIndex + 1],
+                                                       lattice.pos[3 * atomIndex + 2]))
         listWidget.addItem("Charge: %f" % lattice.charge[atomIndex])
         
         # add scalars
@@ -691,7 +707,8 @@ class AtomInfoWindow(QtGui.QDialog):
             listWidget.addItem("%s: (%f, %f, %f)" % (vectorType, vector[0], vector[1], vector[2]))
         
         # add Voronoi neighbour info (if available)
-        voro = filterList.filterer.voronoi
+        voroCalc = filterList.filterer.voronoiAtoms
+        voro = voroCalc.getVoronoi() if voroCalc.isCalculated() else None
         self.voroNebList = []
         self.voroNebFilterList = []
         if voro is not None:
@@ -882,11 +899,12 @@ class DefectInfoWindow(QtGui.QDialog):
         
         # highlighter colour
         self.highlightColour = QtGui.QColor(158, 0, 196)
-        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0, 
+        self.highlightColourRGB = [float(self.highlightColour.red()) / 255.0,
                                    float(self.highlightColour.green()) / 255.0,
                                    float(self.highlightColour.blue()) / 255.0]
         
-        vor = filterList.filterer.voronoi
+        voroCalc = filterList.filterer.voronoiAtoms
+        vor = voroCalc.getVoronoi() if voroCalc.isCalculated() else None
         
         self.setWindowTitle("Defect info")
         
@@ -912,7 +930,8 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (refState.pos[3*index], refState.pos[3*index+1], refState.pos[3*index+2])))
+            row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (refState.pos[3 * index], refState.pos[3 * index + 1],
+                                                                   refState.pos[3 * index + 2])))
             layout.addLayout(row)
         
         elif defectType == 2:
@@ -932,7 +951,8 @@ class DefectInfoWindow(QtGui.QDialog):
             
             listWidget.addItem("Atom: %d" % inputState.atomID[index])
             listWidget.addItem("Species: %s" % inputState.specieList[inputState.specie[index]])
-            listWidget.addItem("Position: (%f, %f, %f)" % (inputState.pos[3*index], inputState.pos[3*index+1], inputState.pos[3*index+2]))
+            listWidget.addItem("Position: (%f, %f, %f)" % (inputState.pos[3 * index], inputState.pos[3 * index + 1],
+                                                           inputState.pos[3 * index + 2]))
             listWidget.addItem("Charge: %f" % inputState.charge[index])
             
             # voro vol (why separate?)
@@ -964,7 +984,8 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (refState.pos[3*index], refState.pos[3*index+1], refState.pos[3*index+2])))
+            row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (refState.pos[3 * index], refState.pos[3 * index + 1],
+                                                                   refState.pos[3 * index + 2])))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
@@ -980,7 +1001,9 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Position: (%f, %f, %f)" % (inputState.pos[3*index2], inputState.pos[3*index2+1], inputState.pos[3*index2+2])))
+            row.addWidget(QtGui.QLabel("    Position: (%f, %f, %f)" % (inputState.pos[3 * index2],
+                                                                       inputState.pos[3 * index2 + 1],
+                                                                       inputState.pos[3 * index2 + 2])))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
@@ -1011,7 +1034,9 @@ class DefectInfoWindow(QtGui.QDialog):
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Vacancy position: (%f, %f, %f)" % (refState.pos[3*vacIndex], refState.pos[3*vacIndex+1], refState.pos[3*vacIndex+2])))
+            row.addWidget(QtGui.QLabel("Vacancy position: (%f, %f, %f)" % (refState.pos[3 * vacIndex],
+                                                                           refState.pos[3 * vacIndex + 1],
+                                                                           refState.pos[3 * vacIndex + 2])))
             layout.addLayout(row)
             
             row = QtGui.QHBoxLayout()
