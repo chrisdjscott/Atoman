@@ -418,6 +418,11 @@ class DefectCluster(object):
         """Return the specified vacancy."""
         return self._vacancies[index]
     
+    def getVacancyAsIndex(self, index):
+        """Return the vacancy index."""
+        # TODO: check if vacAsIndex is actually required
+        return self._vacAsIndex[index]
+    
     def getNInterstitials(self):
         """
         Return number of interstitials
@@ -468,6 +473,28 @@ class DefectCluster(object):
         index1 = self._splitInterstitials[3 * index + 1]
         index2 = self._splitInterstitials[3 * index + 2]
         return index0, index1, index2
+    
+    def vacancies(self):
+        """Iterator over vacancies."""
+        for index in self._vacancies:
+            yield index
+    
+    def antisites(self):
+        """Iterator over antisites, onAntisite pairs."""
+        for i in xrange(self.getNAntisites()):
+            indexa, indexb = self.getAntisite(i)
+            yield indexa, indexb
+    
+    def interstitials(self):
+        """Iterator over interstitials."""
+        for index in self._interstitials:
+            yield index
+    
+    def splitInterstitials(self):
+        """Iterator over vacancies."""
+        for i in xrange(self.getNSplitInterstitials()):
+            indexa, indexb, indexc = self.getSplitInterstitial(i)
+            yield indexa, indexb, indexc
     
     def makeClusterPos(self):
         """
@@ -547,24 +574,25 @@ class DefectCluster(object):
         
         # add volumes of interstitials
         for i in xrange(self.getNInterstitials()):
-            index = self.interstitials[i]
+            index = self.getInterstitial(i)
             volume += vor.atomVolume(index)
         
         # add volumes of split interstitial atoms
         for i in xrange(self.getNSplitInterstitials()):
-            index = self.splitInterstitials[3 * i + 1]
+            indexes = self.getSplitInterstitial(i)
+            index = indexes[1]
             volume += vor.atomVolume(index)
-            index = self.splitInterstitials[3 * i + 2]
+            index = indexes[2]
             volume += vor.atomVolume(index)
         
         # add volumes of on antisite atoms
         for i in xrange(self.getNAntisites()):
-            index = self.onAntisites[i]
+            _, index = self.getAntisite(i)
             volume += vor.atomVolume(index)
         
         # add volumes of vacancies
         for i in xrange(self.getNVacancies()):
-            vacind = self.vacAsIndex[i]
+            vacind = self.getVacancyAsIndex(i)
             index = inputLattice.NAtoms + vacind
             volume += vor.atomVolume(index)
         
