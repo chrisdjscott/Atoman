@@ -358,9 +358,8 @@ writeLattice(PyObject *self, PyObject *args)
     PyArrayObject *posIn=NULL;
     PyArrayObject *chargeIn=NULL;
 
-    int i, index, NAtomsWrite;
+    int NAtomsWrite;
     FILE *OUTFILE;
-    char symtemp[3];
     
     
     /* force locale to use dots for decimal separator */
@@ -391,6 +390,9 @@ writeLattice(PyObject *self, PyObject *args)
     
     specieList = pyvector_to_Cptr_char(specieListIn);
     
+    /* how many atoms we are writing */
+    NAtomsWrite = (writeFullLattice) ? NAtoms : NVisible;
+    
     /* open file */
     OUTFILE = fopen(filename, "w");
     if (OUTFILE == NULL)
@@ -400,37 +402,46 @@ writeLattice(PyObject *self, PyObject *args)
         exit(35);
     } 
     
-    NAtomsWrite = (writeFullLattice) ? NAtoms : NVisible;
-    
+    /* write header */
     fprintf(OUTFILE, "%d\n", NAtomsWrite);
     fprintf(OUTFILE, "%f %f %f\n", cellDims[0], cellDims[1], cellDims[2]);
     
+    /* write atoms */
     if (writeFullLattice)
     {
-        for (i=0; i<NAtoms; i++)
+        int i;
+        
+        for (i = 0; i < NAtoms; i++)
         {
-            symtemp[0] = specieList[2*specie[i]];
-            symtemp[1] = specieList[2*specie[i]+1];
-            symtemp[2] = '\0';
+            int i3 = 3 * i;
+            int spec2 = 2 * specie[i];
+            char symtemp[3];
             
-            fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*i], pos[3*i+1], pos[3*i+2], charge[i]);
+            symtemp[0] = specieList[spec2];
+            symtemp[1] = specieList[spec2 + 1];
+            symtemp[2] = '\0';
+            fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[i3], pos[i3 + 1], pos[i3 + 2], charge[i]);
         }
     }
     else
     {
-        for (i=0; i<NVisible; i++)
+        int i;
+        
+        for (i = 0; i < NVisible; i++)
         {
-            index = visibleAtoms[i];
+            int index = visibleAtoms[i];
+            int ind3 = index * 3;
+            int spec2 = 2 * specie[i];
+            char symtemp[3];
             
-            symtemp[0] = specieList[2*specie[index]];
-            symtemp[1] = specieList[2*specie[index]+1];
+            symtemp[0] = specieList[spec2];
+            symtemp[1] = specieList[spec2 + 1];
             symtemp[2] = '\0';
-            
-            fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*index], pos[3*index+1], pos[3*index+2], charge[index]);
+            fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[ind3], pos[ind3 + 1], pos[ind3 + 2], charge[index]);
         }
     }
         
     fclose(OUTFILE);
     
-    return Py_BuildValue("i", 0);
+    Py_RETURN_NONE;
 }

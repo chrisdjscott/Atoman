@@ -13,7 +13,7 @@ import numpy as np
 from .atoms import elements
 from ..algebra import vectors
 from . import _lattice
-# from ..md import forces
+from . import _output
 
 
 ################################################################################
@@ -396,6 +396,22 @@ class Lattice(object):
             for i, sym in enumerate(self.specieList):
                 lkmcLattice.specieMass[i] = Atoms.atomicMass(sym)
                 lkmcLattice.specieMassAMU[i] = Atoms.atomicMassAMU(sym)
+    
+    def writeLattice(self, filename, visibleAtoms=None):
+        """
+        Write the Lattice to the given file. If visibleAtoms is passed only write those atoms.
+        
+        """
+        # full lattice or just visible atoms
+        if visibleAtoms is None:
+            writeFullLattice = 1
+            visibleAtoms = np.empty(0, np.int32)
+        else:
+            writeFullLattice = 0
+        
+        # call C function to write Lattice
+        _output.writeLattice(filename, visibleAtoms, self.cellDims, self.specieList, self.specie, self.pos, self.charge,
+                             writeFullLattice)
     
     def clone(self, lattice):
         """
