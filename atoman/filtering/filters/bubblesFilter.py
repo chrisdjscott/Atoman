@@ -43,6 +43,7 @@ import numpy as np
 
 from . import base
 from . import _bubbles
+from . import acnaFilter
 from .. import voronoi
 
 
@@ -59,6 +60,9 @@ class BubblesFilterSettings(base.BaseSettings):
         self.registerSetting("vacNebRad", 4.0)
         self.registerSetting("vacancyBubbleRadius", 3.0)
         self.registerSetting("vacIntRad", 2.6)
+        self.registerSetting("useAcna", default=False)
+        self.registerSetting("acnaMaxBondDistance", default=5.0)
+        self.registerSetting("acnaStructureType", default=1)
         
         # these settings are for compatibility with defects rendering
         self.registerSetting("vacScaleSize", default=0.75)
@@ -108,18 +112,52 @@ class BubblesFilter(base.BaseFilter):
         bubbleAtomIndexes = np.asarray(bubbleAtomIndexes, dtype=np.int32)
         assert len(bubbleAtomIndexes) == numBubbleAtoms
         
-        # TODO: compute ACNA if required...
+        # compute ACNA if required
+        acnaArray = None
+        if settings.getSetting("useAcna"):
+            self._logger.debug("Computing ACNA from point defects filter...")
+            
+            # acna settings
+            acnaSettings = acnaFilter.AcnaFilterSettings()
+            acnaSettings.updateSetting("maxBondDistance", settings.getSetting("acnaMaxBondDistance"))
+            
+            # acna input
+            acnaInput = base.FilterInput()
+            acnaInput.inputState = inputState
+            acnaInput.NScalars = 0
+            acnaInput.fullScalars = np.empty(acnaInput.NScalars, np.float64)
+            acnaInput.NVectors = 0
+            acnaInput.fullVectors = np.empty(acnaInput.NVectors, np.float64)
+            acnaInput.ompNumThreads = ompNumThreads
+            acnaInput.visibleAtoms = np.arange(inputState.NAtoms, dtype=np.int32)
+            
+            # acna filter
+            acna = acnaFilter.AcnaFilter("ACNA - Defects")
+            
+            # run filter
+            acnaResult = acna.apply(acnaInput, acnaSettings)
+            
+            # get scalars array from result
+            acnaArray = acnaResult.getScalars()["ACNA"]
+            
+            # structure counters
+            sd = acnaResult.getStructureCounterDict()
+            self._logger.debug("  %r", sd)
+        
+        # check ACNA array is valid
+        if acnaArray is None or len(acnaArray) != inputLattice.NAtoms:
+            acnaArray = np.empty(0, np.float64)
         
         # call C library
         vacancyRadius = settings.getSetting("vacancyRadius")
         vacBubbleRad = settings.getSetting("vacancyBubbleRadius")
         vacNebRad = settings.getSetting("vacNebRad")
         vacIntRad = settings.getSetting("vacIntRad")
-        acnaArray = np.empty(0, np.float64)
+        acnaStructureType = settings.getSetting("acnaStructureType")
         result = _bubbles.identifyBubbles(inputState.NAtoms, inputState.pos, refState.NAtoms, refState.pos,
                                           filterInput.driftCompensation, filterInput.driftVector, inputState.cellDims,
                                           inputState.PBC, numBubbleAtoms, bubbleAtomIndexes, vacBubbleRad, acnaArray,
-                                          vacancyRadius, vacNebRad, vacIntRad)
+                                          acnaStructureType, vacancyRadius, vacNebRad, vacIntRad)
         
         # unpack
         bubbleVacList = result[0]

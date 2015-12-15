@@ -215,9 +215,6 @@ class Filterer(object):
                 # cluster list
                 if result.hasClusterList():
                     self.clusterList = result.getClusterList()
-                    # TODO: calculate volumes should be here
-                    if filterSettings.getSetting("calculateVolumes"):
-                        pass
                 
                 # bubble list
                 if result.hasBubbleList():
@@ -235,7 +232,11 @@ class Filterer(object):
                 self.scalarsDict.update(result.getScalars())
             
             if defectFilterSelected:
-                num = len(self.interstitials) + len(self.vacancies) + len(self.antisites) + len(self.splitInterstitials)
+                nint = len(self.interstitials)
+                nvac = len(self.vacancies)
+                nant = len(self.antisites)
+                nsplit = len(self.splitInterstitials) / 3
+                num = nint + nvac + nant + nsplit
                 self.logger.info("%d visible defects", num)
             else:
                 self.logger.info("%d visible atoms", len(self.visibleAtoms))
@@ -268,6 +269,20 @@ class Filterer(object):
         # time
         runFiltersTime = time.time() - runFiltersTime
         self.logger.debug("Apply list total time: %f s", runFiltersTime)
+    
+    def getBubblesIndices(self):
+        """Return arrays for bubble vacancy and atom indices."""
+        bubbleVacs = []
+        bubbleAtoms = []
+        for bubble in self.bubbleList:
+            for index in bubble.vacancies():
+                bubbleVacs.append(index)
+            for index in bubble.atoms():
+                bubbleAtoms.append(index)
+        bubbleVacs = np.asarray(bubbleVacs, dtype=np.int32)
+        bubbleAtoms = np.asarray(bubbleAtoms, dtype=np.int32)
+        
+        return bubbleVacs, bubbleAtoms
     
     def povrayAtomsWrittenSlot(self, status, povtime, uniqueID):
         """

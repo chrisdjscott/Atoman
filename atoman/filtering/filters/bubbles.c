@@ -59,7 +59,7 @@ init_bubbles(void)
 static PyObject*
 identifyBubbles(PyObject *self, PyObject *args)
 {
-    int NAtoms, NRefAtoms, driftCompensation, NBubbleAtoms;
+    int NAtoms, NRefAtoms, driftCompensation, NBubbleAtoms, acnaStructureType;
     double vacBubbleRad, vacancyRadius, vacNebRad, vacIntRad;
     PyArrayObject *posIn=NULL;
     PyArrayObject *refPosIn=NULL;
@@ -76,9 +76,10 @@ identifyBubbles(PyObject *self, PyObject *args)
 #endif
     
     /* parse arguments */
-    if (PyArg_ParseTuple(args, "iO!iO!iO!O!O!iO!dO!ddd", &NAtoms, &PyArray_Type, &posIn, &NRefAtoms, &PyArray_Type, &refPosIn,
+    if (PyArg_ParseTuple(args, "iO!iO!iO!O!O!iO!dO!iddd", &NAtoms, &PyArray_Type, &posIn, &NRefAtoms, &PyArray_Type, &refPosIn,
             &driftCompensation, &PyArray_Type, &driftVectorIn, &PyArray_Type, &cellDimsIn, &PyArray_Type, &pbcIn, &NBubbleAtoms,
-            &PyArray_Type, &bubbleAtomIndexesIn, &vacBubbleRad, &PyArray_Type, &acnaArrayIn, &vacancyRadius, &vacNebRad, &vacIntRad))
+            &PyArray_Type, &bubbleAtomIndexesIn, &vacBubbleRad, &PyArray_Type, &acnaArrayIn, &acnaStructureType, &vacancyRadius,
+            &vacNebRad, &vacIntRad))
     {
         int *pbc, *bubbleAtomIndexes, acnaArrayDim, status, counters[3];
         int *vacancies, *interstitials, *splitInterstitials=NULL;

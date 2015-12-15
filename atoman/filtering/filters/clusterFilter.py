@@ -147,7 +147,7 @@ class ClusterFilter(base.BaseFilter):
                     self.logger.debug("Cluster %d: facet area is %f", i, area)
         
         # hide atoms if required
-        if settings.getSetting("hideAtoms"):
+        if settings.getSetting("drawConvexHulls") and settings.getSetting("hideAtoms"):
             visibleAtoms.resize(0, refcheck=False)
         
         # result

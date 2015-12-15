@@ -160,15 +160,7 @@ class FilterListRenderer(object):
                 raise RuntimeError("Could not find bubbles filter settings")
             
             # get a list of all bubble vacancies and atoms
-            bubbleVacs = []
-            bubbleAtoms = []
-            for bubble in bubbleList:
-                for index in bubble.vacancies():
-                    bubbleVacs.append(index)
-                for index in bubble.atoms():
-                    bubbleAtoms.append(index)
-            bubbleVacs = np.asarray(bubbleVacs, dtype=np.int32)
-            bubbleAtoms = np.asarray(bubbleAtoms, dtype=np.int32)
+            bubbleVacs, bubbleAtoms = self._filterer.getBubblesIndices()
             
             # render the vacancies
             if len(bubbleVacs):

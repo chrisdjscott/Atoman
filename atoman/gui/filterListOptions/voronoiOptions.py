@@ -43,7 +43,7 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
-        self.setWindowTitle("Voronoi options") # filter list id should be in here
+        self.setWindowTitle("Voronoi options")  # filter list id should be in here
 #        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
         
         # options

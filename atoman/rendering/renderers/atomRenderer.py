@@ -10,7 +10,6 @@ import vtk
 from . import baseRenderer
 from .. import utils
 
-################################################################################
 
 class AtomRenderer(baseRenderer.BaseRenderer):
     """
@@ -22,11 +21,10 @@ class AtomRenderer(baseRenderer.BaseRenderer):
         self._logger = logging.getLogger(__name__)
         self._shape = shape
     
-    def render(self, pointsData, scalarsArray, radiusArray, nspecies, colouringOptions, atomScaleFactor, lut, resolution):
+    def render(self, pointsData, scalarsArray, radiusArray, nspecies, colouringOptions, atomScaleFactor, lut,
+               resolution):
         """
         Render the given atoms.
-        
-        Explain...
         
         """
         self._logger.debug("Rendering atoms: shape is '%s', colour by: '%s'", self._shape, colouringOptions.colourBy)
@@ -42,7 +40,7 @@ class AtomRenderer(baseRenderer.BaseRenderer):
         atomsPolyData.GetPointData().SetScalars(radiusArray.getVTK())
         
         # glyph source
-        atomsGlyphSource = vtk.vtkSphereSource() #TODO: depends on self._shape
+        atomsGlyphSource = vtk.vtkSphereSource()  # TODO: depends on self._shape
         atomsGlyphSource.SetPhiResolution(resolution)
         atomsGlyphSource.SetThetaResolution(resolution)
         atomsGlyphSource.SetRadius(1.0)
@@ -94,3 +92,8 @@ class AtomRenderer(baseRenderer.BaseRenderer):
         self._data["Points"] = pointsData
         self._data["Scalars"] = scalarsArray
         self._data["Radius"] = radiusArray
+    
+    def writePovray(self, filename):
+        """Write atoms to POV-Ray file."""
+        self._logger.debug("Writing POV-Ray file")
+        
