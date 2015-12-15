@@ -306,6 +306,14 @@ class PointDefectsFilter(base.BaseFilter):
                     area = cluster.getFacetArea()
                     if area is not None:
                         self.logger.debug("Cluster %d: facet area is %f", i, area)
+            
+            # hide defects if required
+            if settings.getSetting("hideDefects"):
+                vacancies.resize(0, refcheck=False)
+                antisites.resize(0, refcheck=False)
+                onAntisites.resize(0, refcheck=False)
+                interstitials.resize(0, refcheck=False)
+                splitInterstitials.resize(0, refcheck=False)
         
         # make result
         result = base.FilterResult()
