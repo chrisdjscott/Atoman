@@ -15,8 +15,6 @@ import logging
 from PySide import QtGui, QtCore
 
 
-################################################################################
-
 class ActorsOptionsWindow(QtGui.QDialog):
     """
     Actors options dialog.
@@ -27,7 +25,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
         
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
-        self.parent = parent
+        self._filterList = parent
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
@@ -37,7 +35,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
         self.mainWindow = mainWindow
         
         # logger
-        self.logger = logging.getLogger(__name__+".ActorsOptionsWindow")
+        self.logger = logging.getLogger(__name__ + ".ActorsOptionsWindow")
         
         # defaults
         self.refreshing = False
@@ -76,11 +74,11 @@ class ActorsOptionsWindow(QtGui.QDialog):
         
         if item.checkState(0) == QtCore.Qt.Unchecked:
             # hide actor
-            self.parent.renderer.hideActor(item.text(0))
+            self._filterList.renderer.hideActor(item.text(0))
         
         else:
             # show actor
-            self.parent.renderer.addActor(item.text(0))
+            self._filterList.renderer.addActor(item.text(0))
     
     def addCheckedActors(self):
         """
@@ -94,14 +92,14 @@ class ActorsOptionsWindow(QtGui.QDialog):
             
             if item.childCount() == 0:
                 if item.checkState(0) == QtCore.Qt.Checked:
-                    changes = self.parent.filterer.addActor(item.text(0), reinit=False)
+                    changes = self._filterList.renderer.addActor(item.text(0), reinit=False)
                     if changes:
                         globalChanges = True
             
             it += 1
         
         if globalChanges:
-            self.parent.filterer.reinitialiseRendererWindows()
+            self._filterList.renderer.reinitialiseRendererWindows()
     
     def refresh(self, actorsDict):
         """
@@ -113,7 +111,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
         self.refreshing = True
         
         try:
-            inputState = self.parent.filterTab.inputState
+            inputState = self._filterList.filterTab.inputState
             if inputState is None:
                 return
             
@@ -137,7 +135,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
         Add item with parent and name
         
         """
-        flt = self.parent.renderer
+        flt = self._filterList.renderer
         
         item = QtGui.QTreeWidgetItem(parent)
         item.setText(0, name)
@@ -189,18 +187,18 @@ class ActorsOptionsWindow(QtGui.QDialog):
         Ambient spin changed
         
         """
-        self.parent.renderer.setActorAmbient(name, val)
+        self._filterList.renderer.setActorAmbient(name, val)
     
     def specularSpinChanged(self, name, val):
         """
         Specular spin changed
         
         """
-        self.parent.renderer.setActorSpecular(name, val)
+        self._filterList.renderer.setActorSpecular(name, val)
     
     def specularPowerSpinChanged(self, name, val):
         """
         Specular power spin changed
         
         """
-        self.parent.renderer.setActorSpecularPower(name, val)
+        self._filterList.renderer.setActorSpecularPower(name, val)

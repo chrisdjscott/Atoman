@@ -820,7 +820,7 @@ class FilterList(QtGui.QWidget):
         if self.visibleButton.isChecked():
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.svg")))
             self.visible = False
-            self.filterer.hideActors()
+            self.renderer.hideActors()
         
         else:
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))
