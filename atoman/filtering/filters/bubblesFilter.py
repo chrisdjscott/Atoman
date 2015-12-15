@@ -108,10 +108,7 @@ class BubblesFilter(base.BaseFilter):
         bubbleAtomIndexes = np.asarray(bubbleAtomIndexes, dtype=np.int32)
         assert len(bubbleAtomIndexes) == numBubbleAtoms
         
-        # compute ACNA if required...
-        
-        
-        
+        # TODO: compute ACNA if required...
         
         # call C library
         vacancyRadius = settings.getSetting("vacancyRadius")
@@ -132,8 +129,9 @@ class BubblesFilter(base.BaseFilter):
         numBubbles = len(bubbleVacList)
         
         # compute voronoi volumes of atoms and vacancies
-        voronoiOptions = VoroOptsSimple()
-        vor = voronoi.computeVoronoiDefects(inputState, refState, vacancies, voronoiOptions, inputState.PBC)
+        voronoiOptions = filterInput.voronoiOptions
+        voroCalc = voronoi.VoronoiDefectsCalculator(voronoiOptions)
+        vor = voroCalc.getVoronoi(inputState, refState, vacancies)
         
         # create list of bubbles
         bubbleList = []
@@ -168,9 +166,7 @@ class BubblesFilter(base.BaseFilter):
         # for now we just set visible atoms to zero
         filterInput.visibleAtoms.resize(0, refcheck=False)
         
-        # optionally show all defects!? (differentiate from bubbles somehow...)
-        
-        
+        # TODO: optionally show all defects!? (differentiate from bubbles somehow...)
         
         # result
         result = base.FilterResult()
@@ -216,6 +212,16 @@ class Bubble(object):
         """Set the bubble atoms."""
         self._bubbleAtoms = np.asarray(bubbleAtoms, dtype=np.int32)
     
+    def vacancies(self):
+        """Iterator over bubble vacancies."""
+        for index in self._vacancies:
+            yield index
+    
+    def atoms(self):
+        """Iterator over bubble atoms."""
+        for index in self._bubbleAtoms:
+            yield index
+    
     def setRefState(self, refState):
         """Set the reference state."""
         self._refState = refState
@@ -247,14 +253,3 @@ class Bubble(object):
         Calculate the COM of the bubble.
         
         """
-        
-    
-class VoroOptsSimple(object):
-    def __init__(self):
-        self.dispersion = 10.0
-        self.displayVoronoi = False
-        self.useRadii = False
-        self.opacity = 0.8
-        self.outputToFile = False
-        self.outputFilename = "voronoi.csv"
-        self.faceAreaThreshold = 0.1

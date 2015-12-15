@@ -135,13 +135,48 @@ class FilterListRenderer(object):
         # render clusters
         self._renderClusters()
         
-        # TODO: show we render bubbles separately?
+        # render bubbles
+        self._renderBubbles(lut, resolution)
         
         # scalar bar
         self._createScalarBar(lut)
         
         # refresh actors options
         self.actorsOptions.refresh(self.getActorsDict())
+    
+    def _renderBubbles(self, lut, resolution):
+        """Render bubbles."""
+        bubbleList = self._filterer.bubbleList
+        if len(bubbleList):
+            self._logger.debug("Rendering bubbles")
+            
+            # get the bubble filter settings
+            found = False
+            for name, settings in zip(self._filterer.currentFilters, self._filterer.currentSettings):
+                if name == "Bubbles":
+                    found = True
+                    break
+            if not found:
+                raise RuntimeError("Could not find bubbles filter settings")
+            
+            # get a list of all bubble vacancies and atoms
+            bubbleVacs = []
+            bubbleAtoms = []
+            for bubble in bubbleList:
+                for index in bubble.vacancies():
+                    bubbleVacs.append(index)
+                for index in bubble.atoms():
+                    bubbleAtoms.append(index)
+            bubbleVacs = np.asarray(bubbleVacs, dtype=np.int32)
+            bubbleAtoms = np.asarray(bubbleAtoms, dtype=np.int32)
+            
+            # render the vacancies
+            if len(bubbleVacs):
+                self._renderAntisites(lut, antisites=bubbleVacs, name="Bubble vacancies")
+            
+            # render the atoms
+            if len(bubbleAtoms):
+                self._renderDefectAtoms(lut, resolution, bubbleAtoms, "Bubble atoms")
     
     def _renderVoronoi(self, scalars, lut):
         """Render Voronoi cells."""
@@ -355,15 +390,15 @@ class FilterListRenderer(object):
         # render antisites
         self._renderAntisites(lut)
     
-    def _renderAntisites(self, lut):
+    def _renderAntisites(self, lut, antisites=None, name="Antisites"):
         """Render antisites."""
         # local refs
         refState = self._filterer.refState
-        antisites = self._filterer.antisites
-        
+        if antisites is None:
+            antisites = self._filterer.antisites
         if not len(antisites):
             return
-        self._logger.debug("Rendering antisites")
+        self._logger.debug("Rendering %s", name)
         
         # points
         points = _rendering.makeVisiblePointsArray(antisites, refState.pos)
@@ -380,9 +415,9 @@ class FilterListRenderer(object):
         rend = antisiteRenderer.AntisiteRenderer()
         rend.render(points, scalars, radius, len(refState.specieList), self.colouringOptions,
                     self.displayOptions.atomScaleFactor, lut)
-        self._renderersDict["Antisites"] = rend
+        self._renderersDict[name] = rend
     
-    def _renderVacancies(self, lut, vacancies, actorName="Vacancies"):
+    def _renderVacancies(self, lut, vacancies, actorName="Vacancies", settings=None):
         """Render vacancies."""
         # local refs
         refState = self._filterer.refState
@@ -403,13 +438,14 @@ class FilterListRenderer(object):
         scalars = self._getScalarsArray(refState, vacancies)
         
         # get vacancy scale setting
-        found = False
-        for name, settings in zip(self._filterer.currentFilters, self._filterer.currentSettings):
-            if name == "Point defects":
-                found = True
-                break
-        if not found:
-            raise RuntimeError("Could not find point defects filter settings")
+        if settings is None:
+            found = False
+            for name, settings in zip(self._filterer.currentFilters, self._filterer.currentSettings):
+                if name == "Point defects":
+                    found = True
+                    break
+            if not found:
+                raise RuntimeError("Could not find point defects filter settings")
         
         # render
         rend = vacancyRenderer.VacancyRenderer()

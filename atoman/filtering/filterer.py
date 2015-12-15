@@ -265,62 +265,6 @@ class Filterer(object):
         # refresh available scalars in extra options dialog
         # self.parent.colouringOptions.refreshScalarColourOption()
         
-        # render
-#         
-#         elif filterName == "Bubbles":
-#             self.logger.debug("Rendering bubbles...")
-#             
-#             # full list of vacancies and bubble atoms
-#             bubbleAtoms = []
-#             bubbleVacancies = []
-#             for bubble in self.bubbleList:
-#                 for i in xrange(bubble.getNAtoms()):
-#                     bubbleAtoms.append(bubble.getBubbleAtom(i))
-#                 for i in xrange(bubble.getNVacancies()):
-#                     bubbleVacancies.append(bubble.getVacancy(i))
-#             bubbleAtoms = np.asarray(bubbleAtoms, dtype=np.int32)
-#             bubbleVacancies = np.asarray(bubbleVacancies, dtype=np.int32)
-#             self.NVac = len(bubbleVacancies)
-#             
-#             # render atoms
-#             self.scalarBar_white_bg, self.scalarBar_black_bg, visSpecCount = renderer.getActorsForFilteredSystem(bubbleAtoms, self.mainWindow, 
-#                                                                                                                  self.actorsDict, self.colouringOptions, 
-#                                                                                                                  povfile, self.scalarsDict, self.latticeScalarsDict,
-#                                                                                                                  self.displayOptions, self.pipelinePage,
-#                                                                                                                  self.povrayAtomsWrittenSlot, self.vectorsDict,
-#                                                                                                                  self.vectorsOptions, NVisibleForRes=None,
-#                                                                                                                  sequencer=sequencer)
-#             self.visibleSpecieCount = visSpecCount
-#             self.NVis = len(bubbleAtoms)
-#             
-#             # render defects
-#             counters = renderer.getActorsForFilteredDefects(self.interstitials, self.vacancies, bubbleVacancies, self.onAntisites,
-#                                                             self.splitInterstitials, self.actorsDict, self.colouringOptions,
-#                                                             filterSettings, self.displayOptions, self.pipelinePage)
-#             
-#             self.vacancySpecieCount = counters[0]
-#             self.interstitialSpecieCount = counters[1]
-#             self.antisiteSpecieCount = counters[2]
-#             self.splitIntSpecieCount = counters[3]
-# #             self.scalarBar_white_bg = counters[4]
-# #             self.scalarBar_black_bg = counters[5]
-#             
-#             for bubble in self.bubbleList:
-#                 for i in xrange(bubble.getNVacancies()):
-#                     index = bubble.getVacancy(i)
-#                     self.vacancySpecieCount[self.pipelinePage.refState.specie[index]] += 1
-#             
-#             # write pov-ray file too
-#             povfile = "pipeline%d_defects%d_%s.pov" % (self.pipelineIndex, self.parent.tab, str(self.filterTab.currentRunID))
-#             renderer.writePovrayDefects(povfile, bubbleVacancies, self.interstitials, self.antisites, self.onAntisites,
-#                                         filterSettings, self.mainWindow, self.displayOptions, self.splitInterstitials, self.pipelinePage)
-#             self.povrayAtomsWritten = True
-#             
-#             # store for picker
-#             self.vacancies = bubbleVacancies
-#             self.visibleAtoms = bubbleAtoms
-#         
-        
         # time
         runFiltersTime = time.time() - runFiltersTime
         self.logger.debug("Apply list total time: %f s", runFiltersTime)
