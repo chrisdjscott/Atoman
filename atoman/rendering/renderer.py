@@ -8,7 +8,6 @@ Module for rendering
 import os
 import sys
 import shutil
-import glob
 import logging
 import time
 import threading
@@ -24,6 +23,7 @@ from ..system import _output as output_c
 from . import cell
 from .utils import getScalarsType
 from . import utils
+from . import axes
 
 
 class Renderer(object):
@@ -35,7 +35,7 @@ class Renderer(object):
         self.renWinInteract = self.parent.vtkRenWinInteract
         self.renWin = self.parent.vtkRenWin
         
-        self.logger = logging.getLogger(__name__+".Renderer")
+        self.logger = logging.getLogger(__name__ + ".Renderer")
         
         # is the interactor initialised
         self.init = False
@@ -47,23 +47,7 @@ class Renderer(object):
         self.latticeFrame = cell.CellOutline(self.ren)
         
         # axes
-        self.axes = vtk.vtkAxesActor()
-        self.axes.SetShaftTypeToCylinder()
-        self.axes.GetXAxisCaptionActor2D().GetCaptionTextProperty().SetColor(1,0,0)
-        self.axes.GetXAxisCaptionActor2D().GetCaptionTextProperty().SetFontFamilyToArial()
-        self.axes.GetXAxisCaptionActor2D().GetCaptionTextProperty().ShadowOff()
-        self.axes.GetYAxisCaptionActor2D().GetCaptionTextProperty().SetColor(0,1,0)
-        self.axes.GetYAxisCaptionActor2D().GetCaptionTextProperty().SetFontFamilyToArial()
-        self.axes.GetYAxisCaptionActor2D().GetCaptionTextProperty().ShadowOff()
-        self.axes.GetZAxisCaptionActor2D().GetCaptionTextProperty().SetColor(0,0,1)
-        self.axes.GetZAxisCaptionActor2D().GetCaptionTextProperty().SetFontFamilyToArial()
-        self.axes.GetZAxisCaptionActor2D().GetCaptionTextProperty().ShadowOff()
-        self.axesMarker = vtk.vtkOrientationMarkerWidget()
-        self.axesMarker.SetInteractor(self.renWinInteract)
-        self.axesMarker.SetOrientationMarker(self.axes)
-        self.axesMarker.SetViewport(0, 0, 0.25, 0.25)
-        self.axesMarker.SetEnabled(0)
-        self.axesEnabled = False
+        self.axes = axes.Axes(self.renWinInteract)
         
 #         self.distanceWidget = vtk.vtkDistanceWidget()
 #         self.distanceWidget.SetInteractor(self.renWinInteract)
@@ -98,7 +82,7 @@ class Renderer(object):
         self.addLatticeFrame()
         
         # add the axes
-        self.addAxes()
+        self.axes.add()
         
         # set camera to cell
         self.setCameraToCell()
@@ -209,31 +193,8 @@ class Renderer(object):
         """
         if self.parent.getCurrentPipelinePage().refState is None:
             return
-        
-        if self.axesEnabled:
-            self.removeAxes()
-        else:
-            self.addAxes()
-        
+        self.axes.toggle()
         self.reinit()
-    
-    def addAxes(self):
-        """
-        Add the axis label
-        
-        """
-        if not self.axesEnabled:
-            self.axesMarker.SetEnabled(1)
-            self.axesEnabled = True
-    
-    def removeAxes(self):
-        """
-        Remove the axis label
-        
-        """
-        if self.axesEnabled:
-            self.axesMarker.SetEnabled(0)
-            self.axesEnabled = False
     
     def removeAllActors(self):
         """
@@ -272,23 +233,6 @@ class Renderer(object):
         
         """
         return self.parent.getCurrentPipelinePage()
-    
-    def render(self):
-        """
-        Render.
-        
-        """
-        pass
-#        print "RENDERING"
-#        self.removeAllActors()
-#        
-#        filterLists = self.getFilterLists()
-#        count = 0
-#        for filterList in filterLists:
-#            print "RENDERING LIST", count
-#            count += 1
-#            
-#            filterList.addActors()
     
     def rotateAndSaveImage(self, renderType, imageFormat, fileprefix, overwrite, degreesPerRotation, povray="povray"):
         """
@@ -404,94 +348,62 @@ class Renderer(object):
             writer.Write()
         
         elif renderType == "POV":
-#             pov = vtk.vtkPOVExporter()
-#             pov.SetRenderWindow(self.renWinInteract.GetRenderWindow())
-#             pov.SetFileName("fruitcake.pov")
-#             pov.Write()
-#             print "WRITTEN"
-#             return None
-            
-            # check pov files are ready
-            filterLists = self.getFilterLists()
-            for filterList in filterLists:
-                if filterList.visible and not filterList.filterer.povrayAtomsWritten:
-                    self.mainWindow.displayError("Error: POV-Ray atoms not written to file yet; please try again in a few seconds")
-                    return
-            
+            self.logger.debug("Rendering using POV-Ray")
+
+            # which renderer and pipeline
             renIndex = self.parent.rendererIndex
             pipelineIndex = self.parent.currentPipelineIndex
             
-            self.logger.debug("Ren %d; PIPE %d", renIndex, pipelineIndex)
+            self.logger.debug("Renderer %d; Pipeline %d", renIndex, pipelineIndex)
             
             # header file
-            povfile = os.path.join(self.mainWindow.tmpDirectory, "renderer%d_header.pov" % renIndex)
-            fh = open(povfile, "w")
+            povfile = os.path.join(self.mainWindow.tmpDirectory, "renderer%d.pov" % renIndex)
+            self.logger.debug("Povray file: '%s'", povfile)
+            with open(povfile, "w") as fh:
+                # first write the header (camera info etc.)
+                self.writePOVRAYHeader(fh)
+                
+                # write cell frame if visible
+                if self.latticeFrame.visible:
+                    self.writePOVRAYCellFrame(fh)
+                
+                # TODO: write axes if visible
             
-            # first write the header (camera info etc.)
-            self.writePOVRAYHeader(fh)
-            
-            # write cell frame if visible
-            if self.latticeFrame.visible:
-                self.writePOVRAYCellFrame(fh)
-            
-            # write axes if visible
-            
-            
-            fh.close()
+            # write povray files for active renderers
+            self.logger.debug("Writing renderer povray data")
+            filterLists = self.parent.getFilterLists()
+            for flist in filterLists:
+                if flist.visible:
+                    for rend in flist.renderer.renderers():
+                        rend.writePovray(povfile)
             
             # POV-Ray settings
             settings = self.mainWindow.preferences.povrayForm
             overlay = settings.overlayImage
             
             # then join filter list files
-            pp = self.getCurrentPipelinePage()
-            filterLists = self.parent.getFilterLists()
-            CWD = os.getcwd()
+            _cwd = os.getcwd()
+            os.chdir(self.mainWindow.tmpDirectory)
             try:
-                os.chdir(self.mainWindow.tmpDirectory)
-                command = "cat 'renderer%d_header.pov'" % renIndex
-                for filterList in filterLists:
-                    if filterList.visible:
-                        pipeline_pov_files = glob.glob("pipeline%d_*%d_%s.pov" % (pipelineIndex, filterList.tab, str(pp.currentRunID)))
-                        
-                        for fn in pipeline_pov_files:
-                            command += " '%s'" % fn
-                
-                fullPovFile = "renderer%d_image.pov" % renIndex
-                
-                command += " > '%s'" % fullPovFile
-                output, stderr, status = utilities.runSubProcess(command)
-                if status:
-                    return None
-                
                 # create povray ini file
                 povIniFile = "renderer%d_image.ini" % renIndex
-                
                 tmpPovOutputFile = "renderer%d_image.%s" % (renIndex, imageFormat)
-                
-                lines = []
-                nl = lines.append
-                nl("; Atoman auto-generated POV-Ray INI file")
-                nl("Input_File_Name='%s'" % fullPovFile)
-                nl("Width=%d" % settings.HRes)
-                nl("Height=%d" % settings.VRes)
-                nl("Display=off")
-                nl("Antialias=on")
-                nl("Output_File_Name='%s'" % tmpPovOutputFile)
-                
-                fh = open(povIniFile, "w")
-                fh.write("\n".join(lines))
-                fh.close()
+                with open(povIniFile, "w") as fh:
+                    fh.write("; Atoman auto-generated POV-Ray INI file\n")
+                    fh.write("Input_File_Name='%s'\n" % os.path.basename(povfile))
+                    fh.write("Width=%d\n" % settings.HRes)
+                    fh.write("Height=%d\n" % settings.VRes)
+                    fh.write("Display=off\n")
+                    fh.write("Antialias=on\n")
+                    fh.write("Output_File_Name='%s'\n" % tmpPovOutputFile)
                 
                 # run povray
                 command = "%s '%s'" % (povray, povIniFile)
                 resultQ = Queue.Queue()
                 
-                # thread
+                # run in thread
                 thread = threading.Thread(target=utilities.runSubprocessInThread, args=(command, resultQ))
                 thread.start()
-                
-                # check queue for result
                 while thread.isAlive():
                     thread.join(1)
                     QtGui.QApplication.processEvents()
@@ -509,7 +421,7 @@ class Renderer(object):
                     return None
                 
             finally:
-                os.chdir(CWD)
+                os.chdir(_cwd)
             
             # output filename
             filename = "%s.%s" % (fileprefix, imageFormat)
@@ -526,9 +438,8 @@ class Renderer(object):
                 print "ERROR COPYING POV FILE", sys.exc_info()
                         
             # remove image files
-            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.pov" % renIndex))
-            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_header.pov" % renIndex))
-            os.unlink(os.path.join(self.mainWindow.tmpDirectory, "renderer%d_image.ini" % renIndex))
+            # os.unlink(povfile)
+            # os.unlink(os.path.join(self.mainWindow.tmpDirectory, povIniFile))
         
         if not os.path.exists(filename):
             self.logger.error("Something went wrong with save image")
@@ -557,25 +468,28 @@ class Renderer(object):
         # so move the camera far away
         camera = ren.GetActiveCamera()
         origCamPos = camera.GetPosition()
+        newCamPos = [0] * 3
+        newCamPos[0] = origCamPos[0] * 100000
+        newCamPos[1] = origCamPos[1] * 100000
+        newCamPos[2] = origCamPos[2] * 100000
+        camera.SetPosition(newCamPos)
         
-        newCampPos = [0]*3
-        newCampPos[0] = origCamPos[0] * 100000
-        newCampPos[1] = origCamPos[1] * 100000
-        newCampPos[2] = origCamPos[2] * 100000
-        
-        camera.SetPosition(newCampPos)
+        # also hide axes if visible
+        if self.axes.isEnabled():
+            axesHidden = True
+            self.toggleAxes()
+        else:
+            axesHidden = False
         
         try:
             # save image
             overlayFilePrefix = os.path.join(self.mainWindow.tmpDirectory, "renderer%d_overlay" % renIndex)
-            
             overlayFile = self.saveImage("VTK", "jpg", overlayFilePrefix, False)
-            
             if not os.path.exists(overlayFile):
                 print "WARNING: overlay file does not exist: %s" % overlayFile
                 return
             
-            try:                
+            try:
                 # open POV-Ray image
                 povim = Image.open(filename)
                 modified = False
@@ -660,9 +574,13 @@ class Renderer(object):
             # return to original cam pos
             camera.SetPosition(origCamPos)
             renWinInteract.ReInitialize()
+            
+            # show axes again
+            if axesHidden:
+                self.toggleAxes()
         
         overlayTime = time.time() - overlayTime
-#        print "OVERLAY TIME: %f s" % overlayTime
+        self.logger.debug("Overlay time: %f s", overlayTime)
         
     def findOverlayExtremes(self, im, i0, i1, j0, j1):
         """
@@ -677,27 +595,24 @@ class Renderer(object):
         xmax = 0
         ymax = 0
         xmin = 1000
-        ymin = 1000    
+        ymin = 1000
         for i in xrange(i0, i1):
             for j in xrange(j0, j1):
-                r,g,b = im.getpixel((i, j))
+                r, g, b = im.getpixel((i, j))
                 
                 if r != R and g != G and b != B:
                     if i > xmax:
                         xmax = i
-                    
                     if j > ymax:
                         ymax = j
-                    
                     if i < xmin:
                         xmin = i
-                    
                     if j < ymin:
                         ymin = j
         
         return xmin, xmax, ymin, ymax
     
-    def writePOVRAYCellFrame(self, filehandle):
+    def writePOVRAYCellFrame(self, fh):
         """
         Write cell frame.
         
@@ -705,44 +620,44 @@ class Renderer(object):
         lattice = self.getInputState()
         settings = self.mainWindow.preferences.povrayForm
         
-        a = [0]*3
-        b = [0]*3 
+        a = [0] * 3
+        b = [0] * 3
         b[0] = - lattice.cellDims[0]
         b[1] = lattice.cellDims[1]
         b[2] = lattice.cellDims[2]
         
         if self.parent.blackBackground:
-            R = G = B = 1
+            rval = gval = bval = 1
         else:
-            R = G = B = 0
+            rval = gval = bval = 0
         
-        filehandle.write("#declare R = %f;\n" % settings.cellFrameRadius)
-        filehandle.write("#declare myObject = union {\n")
-        filehandle.write("    sphere { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
-        filehandle.write("    sphere { <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
-        filehandle.write("    sphere { <"+str(a[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    sphere { <"+str(b[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    sphere { <"+str(a[0])+","+str(b[1])+","+str(a[2])+">, R }\n")
-        filehandle.write("    sphere { <"+str(b[0])+","+str(b[1])+","+str(a[2])+">, R }\n")
-        filehandle.write("    sphere { <"+str(a[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    sphere { <"+str(b[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(a[0])+","+str(a[1])+","+str(b[2])+">, <"+str(b[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(a[0])+","+str(b[1])+","+str(a[2])+">, <"+str(b[0])+","+str(b[1])+","+str(a[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(a[0])+","+str(b[1])+","+str(b[2])+">, <"+str(b[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, <"+str(a[0])+","+str(b[1])+","+str(a[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(a[0])+","+str(a[1])+","+str(b[2])+">, <"+str(a[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, <"+str(b[0])+","+str(b[1])+","+str(a[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(b[0])+","+str(a[1])+","+str(b[2])+">, <"+str(b[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(a[0])+","+str(a[1])+","+str(a[2])+">, <"+str(a[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(a[0])+","+str(b[1])+","+str(a[2])+">, <"+str(a[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(b[0])+","+str(a[1])+","+str(a[2])+">, <"+str(b[0])+","+str(a[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    cylinder { <"+str(b[0])+","+str(b[1])+","+str(a[2])+">, <"+str(b[0])+","+str(b[1])+","+str(b[2])+">, R }\n")
-        filehandle.write("    texture { pigment { color rgb <%f,%f,%f> }\n" % (R, G, B))
-        filehandle.write("              finish { diffuse 0.9 phong 1 } } }\n")
-        filehandle.write("object{myObject}\n")
+        fh.write("#declare R = %f;\n" % settings.cellFrameRadius)
+        fh.write("#declare cellObject = union {\n")
+        fh.write("  sphere { <%f,%f,%f>, R }\n" % (a[0], a[1], a[2]))
+        fh.write("  sphere { <%f,%f,%f>, R }\n" % (b[0], a[1], a[2]))
+        fh.write("  sphere { <%f,%f,%f>, R }\n" % (a[0], a[1], b[2]))
+        fh.write("  sphere { <%f,%f,%f>, R }\n" % (b[0], a[1], b[2]))
+        fh.write("  sphere { <%f,%f,%f>, R }\n" % (a[0], b[1], a[2]))
+        fh.write("  sphere { <%f,%f,%f>, R }\n" % (b[0], b[1], a[2]))
+        fh.write("  sphere { <%f,%f,%f>, R }\n" % (a[0], b[1], b[2]))
+        fh.write("  sphere { <%f,%f,%f>, R }\n" % (b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{0},{1},{2}>, <{3},{1},{2}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{0},{1},{5}>, <{3},{1},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{0},{4},{2}>, <{3},{4},{2}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{0},{4},{5}>, <{3},{4},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{0},{1},{2}>, <{0},{4},{2}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{0},{1},{5}>, <{0},{4},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{3},{1},{2}>, <{3},{4},{2}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{3},{1},{5}>, <{3},{4},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{0},{1},{2}>, <{0},{1},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{0},{4},{2}>, <{0},{4},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{3},{1},{2}>, <{3},{1},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  cylinder {{ <{3},{4},{2}>, <{3},{4},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+        fh.write("  texture { pigment { color rgb <%f,%f,%f> }\n" % (rval, gval, bval))
+        fh.write("            finish { diffuse 0.9 phong 1 } } }\n")
+        fh.write("object{cellObject}\n")
     
-    def writePOVRAYHeader(self, filehandle):
+    def writePOVRAYHeader(self, fh):
         """
         Write POV-Ray header file.
         
@@ -759,18 +674,16 @@ class Renderer(object):
             shadowless = ""
         
         if self.parent.blackBackground:
-            R = G = B = 0
+            rval = gval = bval = 0
         else:
-            R = G = B = 1
+            rval = gval = bval = 1
         
-        string = "camera { perspective location <%f,%f,%f> look_at <%f,%f,%f> angle %f\n" % (- campos[0], campos[1], campos[2],
-                                                                                             - focalPoint[0], focalPoint[1], focalPoint[2],
-                                                                                             angle)
-        string += "sky <%f,%f,%f> }\n" % (- viewup[0], viewup[1], viewup[2])
-        string += "light_source { <%f,%f,%f> color rgb <1,1,1> %s}\n" % (- campos[0], campos[1], campos[2], shadowless)
-        string += "background { color rgb <%f,%f,%f> }\n" % (R, G, B)
-        
-        filehandle.write(string)
+        fh.write("camera { perspective location <%f,%f,%f>\n" % (- campos[0], campos[1], campos[2]))
+        fh.write("         look_at <%f,%f,%f>\n" % (- focalPoint[0], focalPoint[1], focalPoint[2]))
+        fh.write("         angle %f\n" % angle)
+        fh.write("         sky <%f,%f,%f> }\n" % (- viewup[0], viewup[1], viewup[2]))
+        fh.write("light_source { <%f,%f,%f> color rgb <1,1,1> %s }\n" % (- campos[0], campos[1], campos[2], shadowless))
+        fh.write("background { color rgb <%f,%f,%f> }\n" % (rval, gval, bval))
 
 
 def povrayAtom(pos, radius, rgb):

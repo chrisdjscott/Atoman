@@ -102,3 +102,4 @@ class VoronoiRenderer(baseRenderer.BaseRenderer):
         
         # store data
         self._actor = utils.ActorObject(actor)
+        self._data["LUT"] = lut

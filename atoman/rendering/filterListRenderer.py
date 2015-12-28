@@ -809,3 +809,8 @@ class FilterListRenderer(object):
                 actorObj.visible = True
         
         self.addScalarBar()
+    
+    def renderers(self):
+        """Iterate over renderers."""
+        for key in self._renderersDict:
+            yield self._renderersDict[key]

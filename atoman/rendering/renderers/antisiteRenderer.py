@@ -79,3 +79,5 @@ class AntisiteRenderer(baseRenderer.BaseRenderer):
         self._data["Points"] = pointsData
         self._data["Scalars"] = scalarsArray
         self._data["Radius"] = radiusArray
+        self._data["LUT"] = lut
+        self._data["Scale factor"] = atomScaleFactor

@@ -81,6 +81,7 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
         
         # store attributes
         self._actor = utils.ActorObject(actor)
+        self._data["Hull colour"] = hullCol
     
     def renderClusterFacets(self, clusterSize, clusterPos, lattice, neighbourRadius, appendPolyData):
         """

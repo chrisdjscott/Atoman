@@ -72,3 +72,5 @@ class VectorRenderer(baseRenderer.BaseRenderer):
         self._data["Points"] = pointsData
         self._data["Scalars"] = scalarsArray
         self._data["Vectors"] = vectorsArray
+        self._data["LUT"] = lut
+        self._data["Scale factor"] = vectorsOptions.vectorScaleFactor

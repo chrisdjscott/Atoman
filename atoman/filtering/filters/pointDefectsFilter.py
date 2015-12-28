@@ -3,7 +3,29 @@
 Point defects
 =============
 
-Identify point defects in the lattice by comparison to a reference lattice...
+Identify point defects in the lattice by comparison to a reference lattice.
+
+This filter will identify vacancies, interstitials (including split interstitials) and antisites. A vacancy radius is
+used to determine if an atom in the input lattice is associated with a site in the reference lattice. If an input atom
+is not associated with a reference site then it is an interstitial. If a reference site has no input atom associated
+with it then it is a vacancy. If an input atom is sitting on a reference site of a different species then it is an
+anitiste.
+
+Split interstitials are identified by looking for vacancies that have two neighbouring interstitials, forming the split
+interstitial.
+
+Defects can be refined using ACNA, which checks if interstitials have the ideal structure type for the system. If they
+do, and if the interstitial is very close to a vacancy, then we remove the pair from the list of defects. We have found
+this to be important in alloys where the crystal structure is distorted due to the alloying element. In these cases the
+use of a fixed vacancy radius does not always work well by itself.
+
+.. glossary::
+
+    Vacancy radius
+        This parameter is used to determine if an input atom is associated with a reference site.
+    
+    Show interstitials
+        If checked include interstitials in the list of defects.
 
 """
 import numpy as np

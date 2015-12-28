@@ -11,6 +11,7 @@ import vtk
 import numpy as np
 
 from . import baseRenderer
+from . import povrayWriters
 from .. import utils
 from .. import _rendering
 from ...filtering import bonds
@@ -102,6 +103,17 @@ class BondRenderer(baseRenderer.BaseRenderer):
         self._data["Points"] = bondCoords
         self._data["Scalars"] = bondScalars
         self._data["Vectors"] = bondVectors
+        self._data["LUT"] = lut
+        self._data["Bond thickness"] = bondsOptions.bondThicknessPOV
+    
+    def writePovray(self, filename):
+        """Write bonds to POV-Ray file."""
+        self._logger.debug("Writing bonds to POV-Ray file")
+        
+        # povray writer
+        writer = povrayWriters.PovrayBondsWriter()
+        writer.write(filename, self._data["Points"], self._data["Vectors"], self._data["Scalars"],
+                     self._data["LUT"], self._data["Bond thickness"])
 
 
 class BondCalculator(object):
