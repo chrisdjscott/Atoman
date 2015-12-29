@@ -8,9 +8,9 @@ import logging
 import vtk
 
 from . import baseRenderer
+from . import povrayWriters
 from .. import utils
 
-################################################################################
 
 class VacancyRenderer(baseRenderer.BaseRenderer):
     """
@@ -76,3 +76,13 @@ class VacancyRenderer(baseRenderer.BaseRenderer):
         self._data["Radius"] = radiusArray
         self._data["LUT"] = lut
         self._data["Scale factor"] = atomScaleFactor
+        self._data["Vacancy opacity"] = settings.getSetting("vacOpacity")
+    
+    def writePovray(self, filename):
+        """Write atoms to POV-Ray file."""
+        self._logger.debug("Writing vacancies POV-Ray file")
+        
+        # povray writer
+        writer = povrayWriters.PovrayVacanciesWriter()
+        writer.write(filename, self._data["Points"], self._data["Scalars"], self._data["Radius"],
+                     self._data["Scale factor"], self._data["LUT"], self._data["Vacancy opacity"])

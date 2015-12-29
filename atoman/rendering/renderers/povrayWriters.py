@@ -167,3 +167,103 @@ class PovrayClustersWriter(object):
             nl("")
             
             fh.write("\n".join(lines))
+
+
+class PovrayVacanciesWriter(object):
+    """
+    Write vacancies to povray file.
+    
+    """
+    def write(self, filename, pointsArray, scalarsArray, radiusArray, scaleFactor, lut, vacancyOpacity, mode="a"):
+        """Write vacancies to povray file."""
+        # numpy arrays of data
+        points = pointsArray.getNumpy()
+        scalars = scalarsArray.getNumpy()
+        radii = radiusArray.getNumpy()
+        
+        # array for holding rgb
+        rgb = np.empty(3, np.float64)
+        
+        # transparency
+        transparency = 1.0 - vacancyOpacity
+        
+        # open file to write
+        # TODO: write in C to improve performance
+        with open(filename, mode) as fh:
+            # loop over visible atoms
+            for i in xrange(len(points)):
+                # colour for povray vacancy
+                lut.GetColor(scalars[i], rgb)
+                
+                # position and radius
+                atompos = points[i]
+                rx = -1 * atompos[0]
+                ry = atompos[1]
+                rz = atompos[2]
+                rad = radii[i] * scaleFactor
+                
+                # atom line
+                line = "box { <%f,%f,%f>,<%f,%f,%f> " % (rx + rad, ry - rad, rz - rad, rx - rad, ry + rad, rz + rad)
+                line += "pigment { color rgbt <%lf,%lf,%lf,%lf> } " % (rgb[0], rgb[1], rgb[2], transparency)
+                line += "finish {diffuse %lf ambient %lf phong %lf } }\n" % (0.4, 0.25, 0.9)
+                
+                # write to file
+                fh.write(line)
+
+
+class PovrayAntisitesWriter(object):
+    """
+    Write antisites to povray file.
+    
+    """
+    def write(self, filename, pointsArray, scalarsArray, radiusArray, scaleFactor, lut, mode="a"):
+        """Write antisites to povray file."""
+        # numpy arrays of data
+        points = pointsArray.getNumpy()
+        scalars = scalarsArray.getNumpy()
+        radii = radiusArray.getNumpy()
+        
+        # array for holding rgb
+        rgb = np.empty(3, np.float64)
+        
+        # open file to write
+        # TODO: write in C to improve performance
+        with open(filename, mode) as fh:
+            # loop over visible atoms
+            for i in xrange(len(points)):
+                # colour for povray vacancy
+                lut.GetColor(scalars[i], rgb)
+                
+                # position and radius
+                atompos = points[i]
+                rad = radii[i] * scaleFactor
+                a = atompos - rad
+                b = atompos + rad
+                a[0] *= -1
+                b[0] *= -1
+                
+                fh.write("#declare R = 0.1;\n")
+                fh.write("#declare cellObject = union {\n")
+                fh.write("  sphere { <%f,%f,%f>, R }\n" % (a[0], a[1], a[2]))
+                fh.write("  sphere { <%f,%f,%f>, R }\n" % (b[0], a[1], a[2]))
+                fh.write("  sphere { <%f,%f,%f>, R }\n" % (a[0], a[1], b[2]))
+                fh.write("  sphere { <%f,%f,%f>, R }\n" % (b[0], a[1], b[2]))
+                fh.write("  sphere { <%f,%f,%f>, R }\n" % (a[0], b[1], a[2]))
+                fh.write("  sphere { <%f,%f,%f>, R }\n" % (b[0], b[1], a[2]))
+                fh.write("  sphere { <%f,%f,%f>, R }\n" % (a[0], b[1], b[2]))
+                fh.write("  sphere { <%f,%f,%f>, R }\n" % (b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{0},{1},{2}>,<{3},{1},{2}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{0},{1},{5}>,<{3},{1},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{0},{4},{2}>,<{3},{4},{2}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{0},{4},{5}>,<{3},{4},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{0},{1},{2}>,<{0},{4},{2}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{0},{1},{5}>,<{0},{4},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{3},{1},{2}>,<{3},{4},{2}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{3},{1},{5}>,<{3},{4},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{0},{1},{2}>,<{0},{1},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{0},{4},{2}>,<{0},{4},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{3},{1},{2}>,<{3},{1},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  cylinder {{ <{3},{4},{2}>,<{3},{4},{5}>, R }}\n".format(a[0], a[1], a[2], b[0], b[1], b[2]))
+                fh.write("  texture { pigment { color rgb <%f,%f,%f> }\n" % (rgb[0], rgb[1], rgb[2]))
+                fh.write("            finish { diffuse 0.9 phong 1 } } }\n")
+                fh.write("object{cellObject}\n")

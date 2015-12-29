@@ -8,9 +8,9 @@ import logging
 import vtk
 
 from . import baseRenderer
+from . import povrayWriters
 from .. import utils
 
-################################################################################
 
 class AntisiteRenderer(baseRenderer.BaseRenderer):
     """
@@ -81,3 +81,12 @@ class AntisiteRenderer(baseRenderer.BaseRenderer):
         self._data["Radius"] = radiusArray
         self._data["LUT"] = lut
         self._data["Scale factor"] = atomScaleFactor
+    
+    def writePovray(self, filename):
+        """Write antisites to POV-Ray file."""
+        self._logger.debug("Writing antisites POV-Ray file")
+        
+        # povray writer
+        writer = povrayWriters.PovrayAntisitesWriter()
+        writer.write(filename, self._data["Points"], self._data["Scalars"], self._data["Radius"],
+                     self._data["Scale factor"], self._data["LUT"])
