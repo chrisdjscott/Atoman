@@ -13,16 +13,12 @@ import time
 import threading
 import Queue
 
-import numpy as np
 import vtk
 from PIL import Image
 from PySide import QtGui, QtCore
 
 from ..visutils import utilities
-from ..system import _output as output_c
 from . import cell
-from .utils import getScalarsType
-from . import utils
 from . import axes
 
 
@@ -116,7 +112,7 @@ class Renderer(object):
         dims = ref.cellDims
         
         # set camera to lattice
-        campos = [0]*3
+        campos = [0] * 3
         if dims[1] > dims[2]:
             campos[0] = -3.0 * dims[1]
         else:
@@ -124,7 +120,7 @@ class Renderer(object):
         campos[1] = 0.5 * dims[1]
         campos[2] = 0.5 * dims[2]
         
-        focpnt = [0]*3
+        focpnt = [0] * 3
         focpnt[0] = 0.5 * dims[0]
         focpnt[1] = 0.5 * dims[1]
         focpnt[2] = 0.5 * dims[2]
@@ -531,7 +527,7 @@ class Renderer(object):
                 
                 # add?
                 if region.size[0] != 0:
-                    newregiondimx = int(povim.size[0]*0.8)
+                    newregiondimx = int(povim.size[0] * 0.8)
                     dx = (float(povim.size[0]) * 0.8 - float(region.size[0])) / float(region.size[0])
                     newregiondimy = region.size[1] + int(region.size[1] * dx)
                     region = region.resize((newregiondimx, newregiondimy), Image.ANTIALIAS)
@@ -684,241 +680,3 @@ class Renderer(object):
         fh.write("         sky <%f,%f,%f> }\n" % (- viewup[0], viewup[1], viewup[2]))
         fh.write("light_source { <%f,%f,%f> color rgb <1,1,1> %s }\n" % (- campos[0], campos[1], campos[2], shadowless))
         fh.write("background { color rgb <%f,%f,%f> }\n" % (rval, gval, bval))
-
-
-def povrayAtom(pos, radius, rgb):
-    """
-    Return string for rendering atom in POV-Ray.
-    
-    """
-    line = "sphere { <%f,%f,%f>, %f pigment { color rgb <%f,%f,%f> } finish { ambient %f phong %f } }\n" % (-pos[0], pos[1], pos[2], radius, rgb[0], rgb[1], rgb[2], 0.25, 0.9)
-    
-    return line
-
-
-def povrayBond(pos, vector):
-    """
-    Return string for rendering bond in povray.
-    
-    """
-    pass
-
-
-class PovrayColouringOptions(object):
-    """
-    Dummy class for passing to thread (contains only what is required)
-    
-    """
-    def __init__(self, colouringOptions):
-        self.colourBy = colouringOptions.colourBy
-        self.heightAxis = colouringOptions.heightAxis
-
-
-class PovrayDisplayOptions(object):
-    """
-    Dummy class for passing to thread (contains only what is required)
-    
-    """
-    def __init__(self, displayOptions):
-        self.atomScaleFactor = displayOptions.atomScaleFactor
-
-
-class PovRayAtomsWriter(QtCore.QObject):
-    """
-    Write POV-Ray atoms to file
-    
-    """
-    finished = QtCore.Signal(int, float, str)
-    allDone = QtCore.Signal()
-    
-    def __init__(self, filename, visibleAtoms, lattice, scalarsDict, latticeScalarsDict, colouringOptions, displayOptions, lut, uniqueId):
-        super(PovRayAtomsWriter, self).__init__()
-        
-        self.filename = filename
-        self.visibleAtoms = visibleAtoms
-        self.lattice = lattice
-        self.scalarsDict = scalarsDict
-        self.latticeScalarsDict = latticeScalarsDict
-        self.colouringOptions = PovrayColouringOptions(colouringOptions)
-        self.lut = lut
-        self.displayOptions = PovrayDisplayOptions(displayOptions)
-        self.uniqueId = uniqueId
-    
-    def run(self):
-        """
-        Write atoms to file
-        
-        """
-        povtime = time.time()
-        
-        # local refs
-        visibleAtoms = self.visibleAtoms
-        lattice = self.lattice
-        scalarsDict = self.scalarsDict
-        latticeScalarsDict = self.latticeScalarsDict
-        colouringOptions = self.colouringOptions
-        displayOptions = self.displayOptions
-        lut = self.lut
-        specie = lattice.specie
-        pos = lattice.pos
-        charge = lattice.charge
-        
-        # scalars type
-        scalarsType = getScalarsType(colouringOptions)
-        
-        # open pov file
-        fpov = open(self.filename, "w")
-        
-        # loop over atoms
-        for i, index in enumerate(visibleAtoms):
-            # specie index
-            specInd = specie[index]
-            
-            # scalar val
-            if scalarsType == 0:
-                scalar = specInd
-            elif scalarsType == 1:
-                scalar = pos[3*index+colouringOptions.heightAxis]
-            elif scalarsType == 4:
-                scalar = charge[index]
-            else:
-                if colouringOptions.colourBy.startswith("Lattice: "):
-                    scalar = latticeScalarsDict[colouringOptions.colourBy[9:]][i]
-                else:
-                    scalar = scalarsDict[colouringOptions.colourBy][i]
-            
-            # colour for povray file
-            rgb = np.empty(3, np.float64)
-            lut.GetColor(scalar, rgb)
-             
-            # povray atom
-            fpov.write(povrayAtom(pos[3*index:3*index+3], lattice.specieCovalentRadius[specInd] * displayOptions.atomScaleFactor, rgb))
-        
-        fpov.close()
-        povtime = time.time() - povtime
-        
-        # emit finished signal
-        self.finished.emit(0, povtime, str(self.uniqueId))
-        self.allDone.emit()
-
-
-class RGBCallBackClass2(object):
-    def __init__(self, lut):
-        self.lut = lut
-    
-    def getRGB(self, scalar):
-        rgb = np.empty(3, np.float64)
-        self.lut.GetColor(scalar, rgb)
-        return rgb
-
-def writePovrayAtoms(filename, visibleAtoms, lattice, scalarsDict, colouringOptions, lut):
-    """
-    Write pov-ray atoms to file.
-    
-    """
-    # scalars type
-    scalarsType = getScalarsType(colouringOptions)
-    if scalarsType == 5:
-        if colouringOptions.colourBy.startswith("Lattice: "):
-            scalarsArray = lattice.scalarsDict[colouringOptions.colourBy[9:]]
-        else:
-            scalarsArray = scalarsDict[colouringOptions.colourBy]
-    
-    else:
-        scalarsArray = np.array([], dtype=np.float64)
-    
-    # rgb callback
-    rgbcalc = utils.RGBCallBackClass(lut)
-    
-    # call C routine to write atoms to file
-    output_c.writePOVRAYAtoms(filename, visibleAtoms, lattice.specie, lattice.pos, lattice.specieCovalentRadius, 
-                              lattice.charge, scalarsArray, scalarsType, colouringOptions.heightAxis, rgbcalc.cfunc)
-
-
-def writePovrayDefects(filename, vacancies, interstitials, antisites, onAntisites, 
-                       settings, mainWindow, displayOptions, splitInterstitials, pipelinePage):
-    """
-    Write defects to povray file.
-    
-    """
-    povfile = os.path.join(mainWindow.tmpDirectory, filename)
-    
-    inputLattice = pipelinePage.inputState
-    refLattice = pipelinePage.refState
-    
-    output_c.writePOVRAYDefects(povfile, vacancies, interstitials, antisites, onAntisites, inputLattice.specie, inputLattice.pos,
-                                refLattice.specie, refLattice.pos, inputLattice.specieRGB, inputLattice.specieCovalentRadius * displayOptions.atomScaleFactor,
-                                refLattice.specieRGB, refLattice.specieCovalentRadius * displayOptions.atomScaleFactor, splitInterstitials)
-
-
-def writePovrayHull(facets, clusterPos, mainWindow, filename, settings):
-    """
-    Write hull to POV-Ray file.
-    
-    """
-    if len(clusterPos) / 3 < 3:
-        pass
-    
-    else:
-        if os.path.exists(filename):
-            fh = open(filename, "a")
-        
-        else:
-            fh = open(filename, "w")
-        
-        # how many vertices
-        vertices = set()
-        vertexMapper = {}
-        NVertices = 0
-        for facet in facets:
-            for j in xrange(3):
-                if facet[j] not in vertices:
-                    vertices.add(facet[j])
-                    vertexMapper[facet[j]] = NVertices
-                    NVertices += 1
-        
-        # construct mesh
-        lines = []
-        nl = lines.append
-        
-        nl("mesh2 {")
-        nl("  vertex_vectors {")
-        nl("    %d," % NVertices)
-        
-        count = 0
-        for key, value in sorted(vertexMapper.iteritems(), key=lambda (k, v): (v, k)):
-            if count == NVertices - 1:
-                string = ""
-            
-            else:
-                string = ","
-            
-            nl("    <%f,%f,%f>%s" % (- clusterPos[3*key], clusterPos[3*key+1], clusterPos[3*key+2], string))
-            
-            count += 1
-        
-        nl("  }")
-        nl("  face_indices {")
-        nl("    %d," % len(facets))
-        
-        count = 0
-        for facet in facets:
-            if count == len(facets) - 1:
-                string = ""
-            
-            else:
-                string = ","
-            
-            nl("    <%d,%d,%d>%s" % (vertexMapper[facet[0]], vertexMapper[facet[1]], vertexMapper[facet[2]], string))
-            
-            count += 1
-        
-        hullCol = settings.getSetting("hullCol")
-        hullOpacity = settings.getSetting("hullOpacity")
-        nl("  }")
-        nl("  pigment { color rgbt <%f,%f,%f,%f> }" % (hullCol[0], hullCol[1], hullCol[2], 1.0 - hullOpacity))
-        nl("  finish { diffuse 0.4 ambient 0.25 phong 0.9 }")
-        nl("}")
-        nl("")
-        
-        fh.write("\n".join(lines))

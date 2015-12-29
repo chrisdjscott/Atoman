@@ -268,6 +268,10 @@ class AtomCluster(object):
     def addAtom(self, index):
         self._indexes.append(index)
     
+    def getLattice(self):
+        """Return the lattice object that the cluster belongs in."""
+        return self._lattice
+    
     def makeClusterPos(self):
         """Returns an array of positions of atoms in the cluster."""
         num = len(self._indexes)
@@ -334,6 +338,10 @@ class DefectCluster(object):
         self._facetArea = None
         self._inputLattice = inputLattice
         self._refLattice = refLattice
+    
+    def getLattice(self):
+        """Returns the input lattice the cluster belongs in."""
+        return self._inputLattice
     
     def getVolume(self):
         """Returns the volume or None if not calculated."""

@@ -569,7 +569,7 @@ class FilterListRenderer(object):
         if settings.getSetting("drawConvexHulls"):
             # render
             rend = clusterRenderer.ClusterRenderer()
-            rend.render(self._filterer.inputState, clusterList, settings, refState=refState)
+            rend.render(clusterList, settings, refState=refState)
             self._renderersDict["Clusters"] = rend
     
     def _renderAtoms(self, atomPoints, scalarsArray, radiusArray, lut, resolution):

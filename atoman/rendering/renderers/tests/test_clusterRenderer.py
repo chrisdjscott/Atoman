@@ -83,7 +83,7 @@ class TestClusterRenderer(unittest.TestCase):
         """
         # run the renderer
         renderer = clusterRenderer.ClusterRenderer()
-        renderer.render(self.lattice, self.atomClusters, self.settings, refState=None)
+        renderer.render(self.atomClusters, self.settings, refState=None)
         
         # check result is correct type
         self.assertIsInstance(renderer.getActor(), utils.ActorObject)
@@ -95,7 +95,7 @@ class TestClusterRenderer(unittest.TestCase):
         """
         # run the renderer
         renderer = clusterRenderer.ClusterRenderer()
-        renderer.render(self.lattice, self.defectClusters, self.settings, refState=self.ref)
+        renderer.render(self.defectClusters, self.settings, refState=self.ref)
         
         # check result is correct type
         self.assertIsInstance(renderer.getActor(), utils.ActorObject)

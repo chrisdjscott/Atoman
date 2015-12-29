@@ -3,7 +3,12 @@
 Classes for writing POV-Ray files from renderers.
 
 """
+import copy
+
 import numpy as np
+
+from ...filtering import clusters
+from ...filtering import _clusters
 
 
 class PovrayAtomsWriter(object):
@@ -75,3 +80,90 @@ class PovrayBondsWriter(object):
                                                                      posb[2], bondThickness))
                 fh.write("           pigment { color rgbt <%f,%f,%f,%f> }\n" % (rgb[0], rgb[1], rgb[2], transparency))
                 fh.write("           finish { phong %f %s } }\n" % (phong, metallic))
+
+
+class PovrayClustersWriter(object):
+    """
+    Write clusters to POV-Ray file.
+    
+    """
+    def write(self, filename, clusterList, neighbourRadius, hullOpacity, hullColour, mode="a"):
+        """Write to POV-Ray file."""
+        # open file for writing
+        with open(filename, mode) as filehandle:
+            # loop over clusters making poly data
+            for clusterIndex, cluster in enumerate(clusterList):
+                # get the positions for this cluster
+                clusterPos = cluster.makeClusterPos()
+                
+                # lattice
+                lattice = cluster.getLattice()
+                
+                # get settings and prepare to render (unapply PBCs)
+                appliedPBCs = np.zeros(7, np.int32)
+                _clusters.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, lattice.PBC,
+                                                    appliedPBCs, neighbourRadius)
+                
+                # render this clusters facets
+                self.writeClusterFacets(len(cluster), clusterPos, lattice, neighbourRadius, hullColour, hullOpacity,
+                                        filehandle)
+                
+                # handle PBCs
+                if len(cluster) > 1:
+                    # move the cluster across each PBC that it overlaps
+                    while max(appliedPBCs) > 0:
+                        # send the cluster across PBCs
+                        tmpClusterPos = copy.deepcopy(clusterPos)
+                        clusters.applyPBCsToCluster(tmpClusterPos, lattice.cellDims, appliedPBCs)
+                        
+                        # render the modified clusters facets
+                        self.writeClusterFacets(len(cluster), tmpClusterPos, lattice, neighbourRadius, hullColour,
+                                                hullOpacity, filehandle)
+    
+    def writeClusterFacets(self, clusterSize, clusterPos, lattice, neighbourRadius, hullColour, hullOpacity, fh):
+        """Write clusters facets to povray file."""
+        # get facets
+        facets = clusters.findConvexHullFacets(clusterSize, clusterPos)
+        
+        if facets is not None:
+            # TODO: make sure not facets more than neighbour rad from cell
+            facets = clusters.checkFacetsPBCs(facets, clusterPos, 2.0 * neighbourRadius, lattice.PBC, lattice.cellDims)
+            
+            # how many vertices
+            vertices = set()
+            vertexMapper = {}
+            NVertices = 0
+            for facet in facets:
+                for j in xrange(3):
+                    if facet[j] not in vertices:
+                        vertices.add(facet[j])
+                        vertexMapper[facet[j]] = NVertices
+                        NVertices += 1
+            
+            # construct mesh
+            lines = []
+            nl = lines.append
+            nl("mesh2 {")
+            nl("  vertex_vectors {")
+            nl("    %d," % NVertices)
+            count = 0
+            for key, value in sorted(vertexMapper.iteritems(), key=lambda (k, v): (v, k)):
+                string = "" if count == NVertices - 1 else ","
+                nl("    <%f,%f,%f>%s" % (- clusterPos[3 * key], clusterPos[3 * key + 1], clusterPos[3 * key + 2],
+                                         string))
+                count += 1
+            nl("  }")
+            nl("  face_indices {")
+            nl("    %d," % len(facets))
+            for count, facet in enumerate(facets):
+                string = "" if count == len(facets) - 1 else ","
+                nl("    <%d,%d,%d>%s" % (vertexMapper[facet[0]], vertexMapper[facet[1]], vertexMapper[facet[2]],
+                                         string))
+            nl("  }")
+            nl("  pigment { color rgbt <%f,%f,%f,%f> }" % (hullColour[0], hullColour[1], hullColour[2],
+                                                           1.0 - hullOpacity))
+            nl("  finish { diffuse 0.4 ambient 0.25 phong 0.9 }")
+            nl("}")
+            nl("")
+            
+            fh.write("\n".join(lines))

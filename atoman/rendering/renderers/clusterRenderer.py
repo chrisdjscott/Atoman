@@ -10,6 +10,7 @@ import vtk
 import numpy as np
 
 from . import baseRenderer
+from . import povrayWriters
 from .. import utils
 from ...filtering import _clusters
 from ...filtering import clusters
@@ -24,7 +25,7 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
         super(ClusterRenderer, self).__init__()
         self._logger = logging.getLogger(__name__)
     
-    def render(self, lattice, clusterList, settings, refState=None):
+    def render(self, clusterList, settings, refState=None):
         """
         Render the given clusters.
         
@@ -34,17 +35,19 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
         # object for combining poly datas
         appendPolyData = vtk.vtkAppendPolyData()
         
+        # neighbour radius used for constructing clusters
+        neighbourRadius = settings.getSetting("neighbourRadius")
+        
         # loop over clusters making poly data
         for clusterIndex, cluster in enumerate(clusterList):
             # get the positions for this cluster
-            if refState is not None:
-                clusterPos = cluster.makeClusterPos()
-            else:
-                clusterPos = cluster.makeClusterPos()
+            clusterPos = cluster.makeClusterPos()
+            
+            # lattice
+            lattice = cluster.getLattice()
             
             # get settings and prepare to render (unapply PBCs)
             appliedPBCs = np.zeros(7, np.int32)
-            neighbourRadius = settings.getSetting("neighbourRadius")
             _clusters.prepareClusterToDrawHulls(len(cluster), clusterPos, lattice.cellDims, lattice.PBC, appliedPBCs,
                                                 neighbourRadius)
             
@@ -82,6 +85,9 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
         # store attributes
         self._actor = utils.ActorObject(actor)
         self._data["Hull colour"] = hullCol
+        self._data["Hull opacity"] = settings.getSetting("hullOpacity")
+        self._data["Neighbour radius"] = neighbourRadius
+        self._data["Cluster list"] = clusterList
     
     def renderClusterFacets(self, clusterSize, clusterPos, lattice, neighbourRadius, appendPolyData):
         """
@@ -119,3 +125,12 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
                 appendPolyData.AddInputConnection(trianglePolyData.GetProducerPort())
             else:
                 appendPolyData.AddInputData(trianglePolyData)
+    
+    def writePovray(self, filename):
+        """Write atoms to POV-Ray file."""
+        self._logger.debug("Writing atoms POV-Ray file")
+        
+        # povray writer
+        writer = povrayWriters.PovrayClustersWriter()
+        writer.write(filename, self._data["Cluster list"], self._data["Neighbour radius"], self._data["Hull opacity"],
+                     self._data["Hull colour"])
