@@ -267,3 +267,67 @@ class PovrayAntisitesWriter(object):
                 fh.write("  texture { pigment { color rgb <%f,%f,%f> }\n" % (rgb[0], rgb[1], rgb[2]))
                 fh.write("            finish { diffuse 0.9 phong 1 } } }\n")
                 fh.write("object{cellObject}\n")
+
+
+class PovrayVoronoiWriter(object):
+    """
+    Write Voronoi cells to POV-Ray file.
+    
+    """
+    def write(self, filename, visibleAtoms, inputState, scalars, lut, voro, opacity, mode="a"):
+        """Write to POV-Ray file."""
+        # array for storing rgb values
+        rgb = np.empty(3, np.float64)
+        
+        # transparency
+        transparency = 1.0 - opacity
+        
+        # open file for writing
+        with open(filename, mode) as fh:
+            # loop over visible atoms
+            for visIndex, index in enumerate(visibleAtoms):
+                # colour for povray file
+                lut.GetColor(scalars[visIndex], rgb)
+                
+                # positions of cell vertices
+                pos = np.asarray(voro.atomVertices(index))
+                pos = pos.flatten()
+                facets = clusters.findConvexHullFacets(len(pos) / 3, pos)
+                
+                if facets is not None:
+                    # how many vertices
+                    vertices = set()
+                    vertexMapper = {}
+                    NVertices = 0
+                    for facet in facets:
+                        for j in xrange(3):
+                            if facet[j] not in vertices:
+                                vertices.add(facet[j])
+                                vertexMapper[facet[j]] = NVertices
+                                NVertices += 1
+                    
+                    # construct mesh
+                    lines = []
+                    nl = lines.append
+                    nl("mesh2 {")
+                    nl("  vertex_vectors {")
+                    nl("    %d," % NVertices)
+                    count = 0
+                    for key, value in sorted(vertexMapper.iteritems(), key=lambda (k, v): (v, k)):
+                        string = "" if count == NVertices - 1 else ","
+                        nl("    <%f,%f,%f>%s" % (- pos[3 * key], pos[3 * key + 1], pos[3 * key + 2], string))
+                        count += 1
+                    nl("  }")
+                    nl("  face_indices {")
+                    nl("    %d," % len(facets))
+                    for count, facet in enumerate(facets):
+                        string = "" if count == len(facets) - 1 else ","
+                        nl("    <%d,%d,%d>%s" % (vertexMapper[facet[0]], vertexMapper[facet[1]], vertexMapper[facet[2]],
+                                                 string))
+                    nl("  }")
+                    nl("  pigment { color rgbt <%f,%f,%f,%f> }" % (rgb[0], rgb[1], rgb[2], transparency))
+                    nl("  finish { diffuse 0.4 ambient 0.25 phong 0.9 }")
+                    nl("}")
+                    nl("")
+                    
+                    fh.write("\n".join(lines))

@@ -9,6 +9,7 @@ import vtk
 import numpy as np
 
 from . import baseRenderer
+from . import povrayWriters
 from .. import utils
 from ...algebra import vectors
 
@@ -103,3 +104,17 @@ class VoronoiRenderer(baseRenderer.BaseRenderer):
         # store data
         self._actor = utils.ActorObject(actor)
         self._data["LUT"] = lut
+        self._data["Voronoi"] = voro
+        self._data["Scalars"] = scalarsArray
+        self._data["Visible atoms"] = visibleAtoms
+        self._data["Lattice"] = inputState
+        self._data["Opacity"] = voronoiOptions.opacity
+    
+    def writePovray(self, filename):
+        """Write voronoi cells to POV-Ray file."""
+        self._logger.debug("Writing Voronoi cells POV-Ray file")
+        
+        # povray writer
+        writer = povrayWriters.PovrayVoronoiWriter()
+        writer.write(filename, self._data["Visible atoms"], self._data["Lattice"], self._data["Scalars"],
+                     self._data["LUT"], self._data["Voronoi"], self._data["Opacity"])
