@@ -71,6 +71,7 @@ class FilterList(QtGui.QWidget):
         
         # have to treat defect filter differently
         self.defectFilterSelected = False
+        self.bubblesFilterSelected = False
         
         # info windows stored here
         self.infoWindows = {}
@@ -300,6 +301,8 @@ class FilterList(QtGui.QWidget):
         else:
             if self.defectFilterSelected:
                 window = infoDialogs.DefectClusterInfoWindow(self.pipelinePage, self, clusterIndex, parent=self)
+            elif self.bubblesFilterSelected:
+                pass
             else:
                 window = infoDialogs.ClusterInfoWindow(self.pipelinePage, self, clusterIndex, parent=self)
             
@@ -539,6 +542,7 @@ class FilterList(QtGui.QWidget):
         
         self.staticListButton.setChecked(0)
         self.defectFilterSelected = False
+        self.bubblesFilterSelected = False
         
         if self.renderer.scalarBarAdded:
             self.scalarBarButton.setChecked(0)
@@ -618,6 +622,23 @@ class FilterList(QtGui.QWidget):
             message = "The '%s' filter cannot be used in conjuction with the 'Point defects' filter" % name
         else:
             message = "The 'Point defects' filter must be added to the filter list first"
+        
+        msgBox = QtGui.QMessageBox(self)
+        msgBox.setText(message)
+        msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
+        msgBox.setIcon(QtGui.QMessageBox.Warning)
+        msgBox.exec_()
+    
+    def warnBubblesFilter(self, name=None):
+        """
+        Warn user that bubbles filter cannot be used with any other filter.
+        
+        """
+        if name is not None:
+            message = "The '%s' filter cannot be used in conjuction with the 'Bubbles' filter" % name
+        else:
+            message = "The 'Bubbles' filter must be added to the filter list first"
         
         msgBox = QtGui.QMessageBox(self)
         msgBox.setText(message)
@@ -712,6 +733,9 @@ class FilterList(QtGui.QWidget):
             elif self.listItems.count() > 0 and str(filterName) == "Point defects":
                 self.warnDefectFilter()
             
+            elif self.bubblesFilterSelected:
+                self.warnBubblesFilter(name=filterName)
+            
             elif str(filterName) == "Displacement" and pp.inputState.NAtoms != pp.refState.NAtoms:
                 self.warnDisplacementFilter()
             
@@ -734,6 +758,8 @@ class FilterList(QtGui.QWidget):
                 
                 if str(filterName) == "Point defects":
                     self.defectFilterSelected = True
+                elif str(filterName) == "Bubbles":
+                    self.bubblesFilterSelected = True
                 
                 # refresh available scalars
                 self.colouringOptions.refreshScalarColourOption()

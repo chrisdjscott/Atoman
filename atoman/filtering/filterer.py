@@ -98,6 +98,7 @@ class Filterer(object):
         self.latticeScalarsDict = {}
         self.vectorsDict = {}
         self.defectFilterSelected = False
+        self.bubblesFilterSelected = False
     
     def runFilters(self, currentFilters, currentSettings, inputState, refState, sequencer=False):
         """
@@ -112,7 +113,7 @@ class Filterer(object):
         
         # validate the list of filters
         defectFilterSelected = False
-        self.defectFilterSelected = defectFilterSelected
+        bubblesFilterSelected = False
         for filterName in currentFilters:
             if filterName not in self.defaultFilters and not filterName.startswith("Scalar:"):
                 # TODO: check the scalar exists too
@@ -121,7 +122,11 @@ class Filterer(object):
             # check if the defect filter in the list
             if filterName == "Point defects":
                 defectFilterSelected = True
+            elif filterName == "Bubbles":
+                bubblesFilterSelected = True
         self.logger.debug("Defect filter selected: %s", defectFilterSelected)
+        self.defectFilterSelected = defectFilterSelected
+        self.bubblesFilterSelected = bubblesFilterSelected
         
         # store refs to inputs
         self.inputState = inputState
