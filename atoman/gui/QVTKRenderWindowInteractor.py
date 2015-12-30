@@ -167,13 +167,13 @@ class QVTKRenderWindowInteractor(MSWidget):
 
         stereo = 0
 
-        if kw.has_key('stereo'):
+        if 'stereo' in kw:
             if kw['stereo']:
                 stereo = 1
 
         rw = None
 
-        if kw.has_key('rw'):
+        if 'rw' in kw:
             rw = kw['rw']
 
         # create qt-level widget
@@ -214,7 +214,7 @@ class QVTKRenderWindowInteractor(MSWidget):
         self._Iren.GetRenderWindow().AddObserver('CursorChangedEvent',
                                                  self.CursorChangedEvent)
         
-        if kw.has_key("disable_mouse_wheel"):
+        if "disable_mouse_wheel" in kw:
             self.disableMouseWheel = kw["disable_mouse_wheel"]
         else:
             self.disableMouseWheel = False
@@ -231,8 +231,8 @@ class QVTKRenderWindowInteractor(MSWidget):
         elif hasattr(self._Iren, attr):
             return getattr(self._Iren, attr)
         else:
-            raise AttributeError, self.__class__.__name__ + \
-                  " has no attribute named " + attr
+            raise AttributeError(self.__class__.__name__ + \
+                  " has no attribute named " + attr)
 
     def CreateTimer(self, obj, evt):
         self.logger.log(1, "In QVTKRenderWindowInteractor::CreateTimer()")

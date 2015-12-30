@@ -5,6 +5,7 @@ Utility methods
 @author: Chris Scott
 
 """
+from __future__ import print_function
 import os
 import sys
 import random
@@ -116,7 +117,7 @@ def createDataFile(relative, text=""):
     """Create the given path within the data directory with the given text."""
     # create the directory if it doesn't exist
     if not os.path.exists(_dataDir):
-        os.makedirs(_dataDir, 0755)
+        os.makedirs(_dataDir, 0o755)
     
     # check if there are subdirectories within relative
     head, tail = os.path.split(relative)
@@ -124,7 +125,7 @@ def createDataFile(relative, text=""):
     # directory file is going in
     dirname = os.path.join(_dataDir, head)
     if not os.path.exists(dirname):
-        os.makedirs(dirname, 0755)
+        os.makedirs(dirname, 0o755)
     
     # write file
     with open(os.path.join(dirname, tail), "w") as fh:
@@ -319,7 +320,7 @@ def runSubProcess(command, verbose=0):
     
     """
     if verbose:
-        print command
+        print(command)
     
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, stderr = process.communicate()

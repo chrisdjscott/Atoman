@@ -5,6 +5,7 @@ Lattice reader objects.
 @author: Chris Scott
 
 """
+from __future__ import print_function
 import os
 import copy
 import re
@@ -21,13 +22,13 @@ from .lattice import Lattice
 ################################################################################
 
 def basic_displayWarning(message):
-    print "WARNING: %s" % message
+    print("WARNING: %s" % message)
 
 def basic_displayError(message):
-    print "ERROR: %s" % message
+    print("ERROR: %s" % message)
 
 def basic_log(message):
-    print message
+    print(message)
 
 ################################################################################
 

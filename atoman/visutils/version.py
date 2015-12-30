@@ -5,6 +5,7 @@ Module will return the current version of the code.
 @author: Chris Scott
 
 """
+from __future__ import print_function
 import os
 import sys
 import subprocess
@@ -55,4 +56,4 @@ def getVersion():
 if __name__ == "__main__":
     version = getVersion()
     if version is not None:
-        print "Atoman %s" % (getVersion(),)
+        print("Atoman %s" % (getVersion(),))

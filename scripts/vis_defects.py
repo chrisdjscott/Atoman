@@ -8,6 +8,7 @@ At some point I will rewrite the filters as objects so it will
 be easier to use them separately
 
 """
+from __future__ import print_function
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -48,7 +49,7 @@ class Settings(object):
         self.acnaMaxBondDistance = acnaMaxBondDistance
         self.acnaFilteringEnabled = acnaFilteringEnabled
         if acnaStructureType < 0 or acnaStructureType >= len(filterer.Filterer.knownStructures):
-            print "Error: invalid value for acnaStructureType => turning of ACNA filtering"
+            print("Error: invalid value for acnaStructureType => turning of ACNA filtering")
             self.acnaFilteringEnabled = 0
             self.acnaStructureType = 0
         else:
@@ -471,19 +472,19 @@ def main():
 #     status, early = xyz_reader.readFile(early_file, animref)
 #     assert not status
     
-    print "="*120
+    print("="*120)
     
     # compute normal defects
     settings = Settings(showAntisites=0, vacancyRadius=1.3, driftCompensation=1)
     res = findDefects(finrel, ref, settings)
-    print "NDEF", res[0]
+    print("NDEF", res[0])
     
-    print "="*120
+    print("="*120)
     
     # compute defects with ACNA
     settings = Settings(showAntisites=0, vacancyRadius=1.3, driftCompensation=1, useAcna=True)
     res = findDefects(finrel, ref, settings)
-    print "NDEF", res[0]
+    print("NDEF", res[0])
     
 
 

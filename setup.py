@@ -6,6 +6,7 @@ Setup script for atoman
 @author: Chris Scott
 
 """
+from __future__ import print_function
 import os
 import glob
 import sys
@@ -85,7 +86,7 @@ def do_clean():
         for root, dirs, files in os.walk(os.getcwd()):
             so_files = glob.glob(os.path.join(root, "*.so"))
             for so_file in so_files:
-                print "rm atoman/%s" % os.path.relpath(so_file)
+                print("rm atoman/%s" % os.path.relpath(so_file))
                 os.unlink(so_file)
             
             if "resources.py" in files:
@@ -98,22 +99,22 @@ def do_clean():
         os.chdir(cwd)
     
     if os.path.isdir("atoman/doc"):
-        print "rm -rf atoman/doc"
+        print("rm -rf atoman/doc")
         shutil.rmtree(os.path.join("atoman", "doc"))
     
     if os.path.isdir(os.path.join("doc", "build")):
-        print "rm -rf doc/build/*"
+        print("rm -rf doc/build/*")
         os.system("rm -rf doc/build/*")
     
     if os.path.isdir("dist"):
-        print "rm -rf dist/"
+        print("rm -rf dist/")
         shutil.rmtree("dist")
     
     if os.path.isdir("build"):
-        print "rm -rf build/"
+        print("rm -rf build/")
         shutil.rmtree("build")
     if os.path.isdir("atoman.egg-info"):
-        print "rm -rf atoman.egg-info/"
+        print("rm -rf atoman.egg-info/")
         shutil.rmtree("atoman.egg-info")
 
 # setup the package
@@ -185,9 +186,9 @@ def setup_package():
             def build_extensions(self, *args, **kwargs):
                 c = self.compiler.compiler_type
                 for e in self.extensions:
-                    if copt.has_key(c):
+                    if c in copt:
                         e.extra_compile_args.extend(copt[c])
-                    if lopt.has_key(c):
+                    if c in lopt:
                         e.extra_link_args.extend(lopt[c])
                     e.include_dirs.append(distutils.sysconfig.get_python_inc())
                 
@@ -199,7 +200,7 @@ def setup_package():
                 c = self.compiler.compiler_type
                 for libtup in self.libraries:
                     opts = libtup[1]
-                    if copt.has_key(c):
+                    if c in copt:
                         if "extra_compiler_args" not in opts:
                             opts["extra_compiler_args"] = []
                         opts["extra_compiler_args"].extend(copt[c])

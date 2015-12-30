@@ -5,6 +5,7 @@ Rendering utils
 @author: Chris Scott
 
 """
+from __future__ import print_function
 import ctypes as C
 import logging
 
@@ -88,7 +89,7 @@ class RGBCallBackClass(object):
         # colour
         self._lut.GetColor(scalar, self._rgb)
         
-        print "RGB CALLBACK; scalar %f; rgb %r" % (scalar, self._rgb)
+        print("RGB CALLBACK; scalar %f; rgb %r" % (scalar, self._rgb))
         
         return self._rgb.ctypes.data_as(C.c_void_p).value
 

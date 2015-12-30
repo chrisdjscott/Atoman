@@ -3,6 +3,7 @@
 Base module for filters.
 
 """
+from __future__ import print_function
 import logging
 
 import numpy as np
@@ -114,7 +115,7 @@ class BaseSettings(object):
         """Print the settings."""
         if not callable(func):
             def func(text):
-                print text
+                print(text)
         for key in sorted(self._settings.keys()):
             value = self._settings[key]
             func("%s => %r" % (key, value))

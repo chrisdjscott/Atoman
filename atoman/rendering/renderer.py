@@ -5,6 +5,7 @@ Module for rendering
 @author: Chris Scott
 
 """
+from __future__ import print_function
 import os
 import sys
 import shutil
@@ -431,7 +432,7 @@ class Renderer(object):
             try:
                 shutil.move(os.path.join(self.mainWindow.tmpDirectory, tmpPovOutputFile), filename)
             except:
-                print "ERROR COPYING POV FILE", sys.exc_info()
+                print("ERROR COPYING POV FILE", sys.exc_info())
                         
             # remove image files
             # os.unlink(povfile)
@@ -482,7 +483,7 @@ class Renderer(object):
             overlayFilePrefix = os.path.join(self.mainWindow.tmpDirectory, "renderer%d_overlay" % renIndex)
             overlayFile = self.saveImage("VTK", "jpg", overlayFilePrefix, False)
             if not os.path.exists(overlayFile):
-                print "WARNING: overlay file does not exist: %s" % overlayFile
+                print("WARNING: overlay file does not exist: %s" % overlayFile)
                 return
             
             try:

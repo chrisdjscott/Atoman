@@ -6,6 +6,7 @@ The output tab for the main toolbar
 @author: Chris Scott
 
 """
+from __future__ import print_function
 import os
 import shutil
 import subprocess
@@ -1290,7 +1291,7 @@ class SingleImageTab(QtGui.QWidget):
             progress.cancel()
         
         if filename is None:
-            print "SAVE IMAGE FAILED"
+            print("SAVE IMAGE FAILED")
             return
         
         # open image viewer
@@ -2433,7 +2434,7 @@ class ImageRotateTab(QtGui.QWidget):
         
         # movie?
         if status:
-            print "ERROR: rotate failed"
+            print("ERROR: rotate failed")
         
         else:
             # create movie

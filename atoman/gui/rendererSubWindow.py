@@ -6,6 +6,7 @@ Mdi sub window for displaying VTK render window.
 @author: Chris Scott
 
 """
+from __future__ import print_function
 import logging
 
 from PySide import QtGui, QtCore
@@ -243,7 +244,7 @@ class RendererWindow(QtGui.QWidget):
         """
         self.currentAAFrames += 1
         
-        print "SET AA FRAMES", self.currentAAFrames
+        print("SET AA FRAMES", self.currentAAFrames)
         
         self.vtkRenWin.SetAAFrames(self.currentAAFrames)
         
@@ -259,7 +260,7 @@ class RendererWindow(QtGui.QWidget):
         
         self.currentAAFrames -= 1
         
-        print "SET AA FRAMES", self.currentAAFrames
+        print("SET AA FRAMES", self.currentAAFrames)
         
         self.vtkRenWin.SetAAFrames(self.currentAAFrames)
         
@@ -1100,7 +1101,7 @@ class RendererWindow(QtGui.QWidget):
                 self.vtkRen.RemoveActor(self.slicePlaneActor)
                 self.vtkRenWinInteract.ReInitialize()
             except:
-                print "REM SLICE ACTOR FAILED"
+                print("REM SLICE ACTOR FAILED")
             
         self.slicePlaneActor = actor
         
@@ -1118,7 +1119,7 @@ class RendererWindow(QtGui.QWidget):
                 self.vtkRenWinInteract.ReInitialize()
                 self.slicePlaneActor = None
             except:
-                print "REM SLICE ACTOR FAILED"
+                print("REM SLICE ACTOR FAILED")
     
     def addHighlighters(self, highlightersID, highlighters):
         """

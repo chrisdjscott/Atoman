@@ -346,7 +346,7 @@ class SFTPBrowser(QtGui.QGroupBox):
         try:
             pathn = self.sftp.normalize(path)
         
-        except IOError, e:
+        except IOError as e:
             if e.errno == errno.ENOENT:
                 self.logger.debug("File does not exist")
                 return None

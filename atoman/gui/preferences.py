@@ -5,6 +5,7 @@ Preferences dialog.
 @author: Chris Scott
 
 """
+from __future__ import print_function
 import os
 import logging
 import datetime
@@ -317,7 +318,7 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         exe = utilities.checkForExe(self.pathToFFmpeg)
         
         if exe:
-            print "STORING FFMPEG PATH IN SETTINGS", exe, self.pathToFFmpeg
+            print("STORING FFMPEG PATH IN SETTINGS", exe, self.pathToFFmpeg)
             settings = QtCore.QSettings()
             settings.setValue("ffmpeg/pathToFFmpeg", exe)
     
@@ -725,7 +726,7 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
         
         """
         if len(self.pathToMDDir) == 0 or os.path.isdir(self.pathToMDDir):
-            print "STORING MD DIR PATH IN SETTINGS", self.pathToMDDir
+            print("STORING MD DIR PATH IN SETTINGS", self.pathToMDDir)
             settings = QtCore.QSettings()
             settings.setValue("forces/pathToMDDir", self.pathToMDDir)
             
@@ -735,7 +736,7 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
             else:
                 self.forcesConfig.md_dir = self.pathToMDDir
             
-            print "CONFIG PATH TO MD DIR", self.forcesConfig.md_dir
+            print("CONFIG PATH TO MD DIR", self.forcesConfig.md_dir)
     
     def pathToMDDirChanged(self, text):
         """

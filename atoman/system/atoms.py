@@ -7,6 +7,7 @@ Eg. atomic mass, radius, etc.
 @author: Chris Scott
 
 """
+from __future__ import print_function
 import os
 import sys
 import logging
@@ -46,7 +47,7 @@ class Elements:
             array = line.split()
             
             if not len(array) == 8:
-                print "ERROR LEN WRONG"
+                print("ERROR LEN WRONG")
                 continue
             
             key = array[3]
@@ -87,7 +88,7 @@ class Elements:
             array = line.split()
             
             if len(array) != 4:
-                print "BAD LEN"
+                print("BAD LEN")
                 continue
             
             keya = array[0]
@@ -132,7 +133,7 @@ class Elements:
         """
         f = open(filename, "w")
         
-        for key, value in sorted(self.atomicNumberDict.iteritems(), key=lambda (k, v): (v, k)):
+        for key, value in sorted(self.atomicNumberDict.iteritems(), key=lambda k_v: (k_v[1], k_v[0])):
             if key[1] == "_":
                 sym = key[0]
             

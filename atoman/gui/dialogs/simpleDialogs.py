@@ -6,6 +6,7 @@ Additional dialogs.
 @author: Chris Scott
 
 """
+from __future__ import print_function
 import os
 import copy
 import logging
@@ -320,7 +321,7 @@ class ImageViewer(QtGui.QDialog):
             self.setWindowTitle("Image Viewer: %s" % filename)
         
         except:
-            print "ERROR: could not display image in Image Viewer"
+            print("ERROR: could not display image in Image Viewer")
     
     def deleteImage(self):
         """

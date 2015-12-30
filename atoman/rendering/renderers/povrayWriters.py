@@ -147,7 +147,7 @@ class PovrayClustersWriter(object):
             nl("  vertex_vectors {")
             nl("    %d," % NVertices)
             count = 0
-            for key, value in sorted(vertexMapper.iteritems(), key=lambda (k, v): (v, k)):
+            for key, value in sorted(vertexMapper.iteritems(), key=lambda k_v1: (k_v1[1], k_v1[0])):
                 string = "" if count == NVertices - 1 else ","
                 nl("    <%f,%f,%f>%s" % (- clusterPos[3 * key], clusterPos[3 * key + 1], clusterPos[3 * key + 2],
                                          string))
@@ -313,7 +313,7 @@ class PovrayVoronoiWriter(object):
                     nl("  vertex_vectors {")
                     nl("    %d," % NVertices)
                     count = 0
-                    for key, value in sorted(vertexMapper.iteritems(), key=lambda (k, v): (v, k)):
+                    for key, value in sorted(vertexMapper.iteritems(), key=lambda k_v: (k_v[1], k_v[0])):
                         string = "" if count == NVertices - 1 else ","
                         nl("    <%f,%f,%f>%s" % (- pos[3 * key], pos[3 * key + 1], pos[3 * key + 2], string))
                         count += 1

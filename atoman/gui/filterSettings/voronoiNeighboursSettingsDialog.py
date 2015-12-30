@@ -3,6 +3,7 @@
 Contains GUI forms for the Voronoi neighbours filter.
 
 """
+from __future__ import print_function
 from . import base
 from ...filtering.filters import voronoiNeighboursFilter
 
@@ -33,6 +34,6 @@ class VoronoiNeighboursSettingsDialog(base.GenericSettingsDialog):
     
     def filteringToggled(self, enabled):
         """Filtering toggled."""
-        print "ENABLED", enabled
+        print("ENABLED", enabled)
         self.minVoroNebsSpin.setEnabled(enabled)
         self.maxVoroNebsSpin.setEnabled(enabled)

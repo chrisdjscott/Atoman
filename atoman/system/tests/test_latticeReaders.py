@@ -3,6 +3,7 @@
 Unit tests for latticeReaders module
 
 """
+from __future__ import print_function
 import os
 import unittest
 import tempfile
@@ -15,13 +16,13 @@ from ..lattice import Lattice
 ################################################################################
 
 def log_output(*args, **kwargs):
-    print args[0]
+    print(args[0])
 
 def log_warning(*args, **kwargs):
-    print "DISPLAY WARNING: %s" % args[0]
+    print("DISPLAY WARNING: %s" % args[0])
 
 def log_error(*args, **kwargs):
-    print "DISPLAY ERROR: %s" % args[0]
+    print("DISPLAY ERROR: %s" % args[0])
 
 ################################################################################
 
