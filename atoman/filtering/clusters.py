@@ -7,6 +7,7 @@ Additional routines to do with clusters (hulls, etc...)
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import division
 import logging
 
 import numpy as np
@@ -470,7 +471,7 @@ class DefectCluster(object):
         Return number of split interstitials
         
         """
-        return len(self._splitInterstitials) / 3
+        return len(self._splitInterstitials) // 3
     
     def addSplitInterstitial(self, vacIndex, index1, index2):
         """Add a split interstitial to the cluster."""

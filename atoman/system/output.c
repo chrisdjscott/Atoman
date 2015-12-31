@@ -11,6 +11,7 @@
 #include "visclibs/array_utils.h"
 
 #if PY_MAJOR_VERSION >= 3
+    #define PyString_AsString PyUnicode_AsUTF8
     #define MOD_ERROR_VAL NULL
     #define MOD_SUCCESS_VAL(val) val
     #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
@@ -291,26 +292,24 @@ writePOVRAYDefects(PyObject *self, PyObject *args)
 static PyObject*
 writeLattice(PyObject *self, PyObject *args)
 {
-    char *filename, *specieList;
+    char *filename, *specieListLocal;
     int NAtoms, NVisible, *visibleAtoms, *specie, writeFullLattice;
     double *cellDims, *pos, *charge;
-    PyArrayObject *specieListIn=NULL;
+    PyObject *specieList=NULL;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *specieIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *posIn=NULL;
     PyArrayObject *chargeIn=NULL;
 
+    Py_ssize_t nspec, j;
     int NAtomsWrite;
     FILE *OUTFILE;
     
     
-    /* force locale to use dots for decimal separator */
-    setlocale(LC_NUMERIC, "C");
-    
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!i", &filename, &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &cellDimsIn, 
-            &PyArray_Type, &specieListIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &PyArray_Type, &chargeIn,
+            &PyList_Type, &specieList, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &PyArray_Type, &chargeIn,
             &writeFullLattice))
         return NULL;
     
@@ -331,10 +330,24 @@ writeLattice(PyObject *self, PyObject *args)
     if (not_doubleVector(chargeIn)) return NULL;
     charge = pyvector_to_Cptr_double(chargeIn);
     
-    specieList = pyvector_to_Cptr_char(specieListIn);
-    
     /* how many atoms we are writing */
     NAtomsWrite = (writeFullLattice) ? NAtoms : NVisible;
+    
+    /* local specie list */
+    nspec = PyList_Size(specieList);
+    specieListLocal = malloc(3 * nspec * sizeof(char));
+    if (specieListLocal == NULL)
+    {
+        PyErr_SetString(PyExc_MemoryError, "Could not allocate specieListLocal");
+        return NULL;
+    }
+    for (j = 0; j < nspec; j++)
+    {
+        char *tmpsym = PyString_AsString(PyList_GetItem(specieList, j));
+        specieListLocal[3 * j    ] = tmpsym[0];
+        specieListLocal[3 * j + 1] = tmpsym[1];
+        specieListLocal[3 * j + 2] = '\0';
+    }
     
     /* open file */
     OUTFILE = fopen(filename, "w");
@@ -357,11 +370,11 @@ writeLattice(PyObject *self, PyObject *args)
         for (i = 0; i < NAtoms; i++)
         {
             int i3 = 3 * i;
-            int spec2 = 2 * specie[i];
+            int spec3 = 3 * specie[i];
             char symtemp[3];
             
-            symtemp[0] = specieList[spec2];
-            symtemp[1] = specieList[spec2 + 1];
+            symtemp[0] = specieListLocal[spec3];
+            symtemp[1] = specieListLocal[spec3 + 1];
             symtemp[2] = '\0';
             fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[i3], pos[i3 + 1], pos[i3 + 2], charge[i]);
         }
@@ -374,17 +387,18 @@ writeLattice(PyObject *self, PyObject *args)
         {
             int index = visibleAtoms[i];
             int ind3 = index * 3;
-            int spec2 = 2 * specie[i];
+            int spec3 = 3 * specie[i];
             char symtemp[3];
             
-            symtemp[0] = specieList[spec2];
-            symtemp[1] = specieList[spec2 + 1];
+            symtemp[0] = specieListLocal[spec3];
+            symtemp[1] = specieListLocal[spec3 + 1];
             symtemp[2] = '\0';
             fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[ind3], pos[ind3 + 1], pos[ind3 + 2], charge[index]);
         }
     }
         
     fclose(OUTFILE);
+    free(specieListLocal);
     
     Py_RETURN_NONE;
 }

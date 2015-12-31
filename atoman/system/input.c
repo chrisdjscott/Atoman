@@ -8,10 +8,10 @@
 #include <Python.h> // includes stdio.h, string.h, errno.h, stdlib.h
 #include <numpy/arrayobject.h>
 #include <math.h>
-#include <locale.h>
 #include "visclibs/array_utils.h"
 
 #if PY_MAJOR_VERSION >= 3
+    #define PyString_FromFormat PyUnicode_FromFormat
     #define MOD_ERROR_VAL NULL
     #define MOD_SUCCESS_VAL(val) val
     #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
@@ -90,14 +90,14 @@ static int specieIndex(char* sym, int NSpecies, char* specieList)
 static PyObject*
 readRef(PyObject *self, PyObject *args)
 {
-    char *file, *specieList_c;
+    char *file;
     int *atomID, *specie, *specieCount_c;
     double *pos, *charge, *maxPos, *minPos, *KE, *PE;
     PyArrayObject *atomIDIn=NULL;
     PyArrayObject *specieIn=NULL;
     PyArrayObject *posIn=NULL;
     PyArrayObject *chargeIn=NULL;
-    PyArrayObject *specieList_cIn=NULL;
+    PyObject *specieListPy=NULL;
     PyArrayObject *specieCount_cIn=NULL;
     PyArrayObject *maxPosIn=NULL;
     PyArrayObject *minPosIn=NULL;
@@ -116,13 +116,10 @@ readRef(PyObject *self, PyObject *args)
     double ketemp, petemp, chargetemp;
     
     
-    /* force locale to use dots for decimal separator */
-    setlocale(LC_NUMERIC, "C");
-    
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!O!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &specieIn, 
             &PyArray_Type, &posIn, &PyArray_Type, &chargeIn, &PyArray_Type, &KEIn, &PyArray_Type, &PEIn, 
-            &PyArray_Type, &force, &PyArray_Type, &specieList_cIn, &PyArray_Type, 
+            &PyArray_Type, &force, &PyList_Type, &specieListPy, &PyArray_Type, 
             &specieCount_cIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &minPosIn))
         return NULL;
     
@@ -154,9 +151,6 @@ readRef(PyObject *self, PyObject *args)
     
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
-    
-    // no test yet for nx2 char*
-    specieList_c = pyvector_to_Cptr_char(specieList_cIn);
     
     /* open file */
     INFILE = fopen( file, "r" );
@@ -190,7 +184,7 @@ readRef(PyObject *self, PyObject *args)
     maxPos[1] = -1000000;
     maxPos[2] = -1000000;
     NSpecies = 0;
-    for (i=0; i<NAtoms; i++)
+    for (i = 0; i < NAtoms; i++)
     {
         int ind3;
         
@@ -227,15 +221,18 @@ readRef(PyObject *self, PyObject *args)
         
         if (specInd == NSpecies)
         {
+            PyObject *sympy;
+            
             /* new specie */
-            specieList = realloc( specieList, 3 * (NSpecies+1) * sizeof(char) );
+            specieList = realloc(specieList, 3 * (NSpecies+1) * sizeof(char));
             
-            specieList[3*specInd] = symtemp[0];
-            specieList[3*specInd+1] = symtemp[1];
-            specieList[3*specInd+2] = symtemp[2];
+            specieList[3 * specInd] = symtemp[0];
+            specieList[3 * specInd + 1] = symtemp[1];
+            specieList[3 * specInd + 2] = symtemp[2];
             
-            specieList_c[2*specInd] = symtemp[0];
-            specieList_c[2*specInd+1] = symtemp[1];
+            sympy = PyString_FromFormat("%s", symtemp);
+            PyList_Append(specieListPy, sympy);
+            Py_DECREF(sympy);
             
             NSpecies++;
         }
@@ -253,11 +250,6 @@ readRef(PyObject *self, PyObject *args)
     }
     
     fclose(INFILE);
-    
-    /* terminate specie list */
-    specieList_c[2*NSpecies] = 'X';
-    specieList_c[2*NSpecies+1] = 'X';
-    
     free(specieList);
     
     return Py_BuildValue("i", 0);
@@ -289,9 +281,6 @@ readLBOMDXYZ(PyObject *self, PyObject *args)
     int i, NAtoms, stat;
     double simTime;
     
-    
-    /* force locale to use dots for decimal separator */
-    setlocale(LC_NUMERIC, "C");
     
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!iO!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &posIn,
@@ -497,14 +486,14 @@ readLBOMDXYZ(PyObject *self, PyObject *args)
 static PyObject*
 readLatticeLBOMD(PyObject *self, PyObject *args)
 {
-    char *file, *specieList_c;
+    char *file;
     int *atomID, *specie, *specieCount_c;
     double *pos, *charge, *maxPos, *minPos;
     PyArrayObject *atomIDIn=NULL;
     PyArrayObject *specieIn=NULL;
     PyArrayObject *posIn=NULL;
     PyArrayObject *chargeIn=NULL;
-    PyArrayObject *specieList_cIn=NULL;
+    PyObject *specieListPy=NULL;
     PyArrayObject *specieCount_cIn=NULL;
     PyArrayObject *maxPosIn=NULL;
     PyArrayObject *minPosIn=NULL;
@@ -518,12 +507,9 @@ readLatticeLBOMD(PyObject *self, PyObject *args)
     int NSpecies, stat;
     
     
-    /* force locale to use dots for decimal separator */
-    setlocale(LC_NUMERIC, "C");
-    
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!O!O!", &file, &PyArray_Type, &atomIDIn, &PyArray_Type, &specieIn, 
-            &PyArray_Type, &posIn, &PyArray_Type, &chargeIn, &PyArray_Type, &specieList_cIn, &PyArray_Type, 
+            &PyArray_Type, &posIn, &PyArray_Type, &chargeIn, &PyList_Type, &specieListPy, &PyArray_Type, 
             &specieCount_cIn, &PyArray_Type, &maxPosIn, &PyArray_Type, &minPosIn))
         return NULL;
     
@@ -548,11 +534,8 @@ readLatticeLBOMD(PyObject *self, PyObject *args)
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
     
-    // no test yet for nx2 char*
-    specieList_c = pyvector_to_Cptr_char(specieList_cIn);
-    
     /* open file */
-    INFILE = fopen( file, "r" );
+    INFILE = fopen(file, "r");
     if (INFILE == NULL)
     {
         printf("ERROR: could not open file: %s\n", file);
@@ -586,7 +569,7 @@ readLatticeLBOMD(PyObject *self, PyObject *args)
     maxPos[1] = -1000000;
     maxPos[2] = -1000000;
     NSpecies = 0;
-    for (i=0; i<NAtoms; i++)
+    for (i = 0; i < NAtoms; i++)
     {
         stat = fscanf(INFILE, "%s %lf %lf %lf %lf", symtemp, &xpos, &ypos, &zpos, &chargetemp);
         if (stat != 5)
@@ -600,28 +583,29 @@ readLatticeLBOMD(PyObject *self, PyObject *args)
         atomID[i] = i + 1;
         
         /* store position and charge */
-        pos[3*i] = xpos;
-        pos[3*i+1] = ypos;
-        pos[3*i+2] = zpos;
+        pos[3 * i] = xpos;
+        pos[3 * i + 1] = ypos;
+        pos[3 * i + 2] = zpos;
         
         charge[i] = chargetemp;
         
         /* find specie index */
         specInd = specieIndex(symtemp, NSpecies, specieList);
-        
         specie[i] = specInd;
-        
         if (specInd == NSpecies)
         {
+            PyObject *sympy;
+            
             /* new specie */
-            specieList = realloc( specieList, 3 * (NSpecies+1) * sizeof(char) );
+            specieList = realloc(specieList, 3 * (NSpecies+1) * sizeof(char));
             
             specieList[3*specInd] = symtemp[0];
             specieList[3*specInd+1] = symtemp[1];
             specieList[3*specInd+2] = symtemp[2];
             
-            specieList_c[2*specInd] = symtemp[0];
-            specieList_c[2*specInd+1] = symtemp[1];
+            sympy = PyString_FromFormat("%s", symtemp);
+            PyList_Append(specieListPy, sympy);
+            Py_DECREF(sympy);
             
             NSpecies++;
         }
@@ -639,11 +623,6 @@ readLatticeLBOMD(PyObject *self, PyObject *args)
     }
     
     fclose(INFILE);
-    
-    /* terminate specie list */
-    specieList_c[2*NSpecies] = 'X';
-    specieList_c[2*NSpecies+1] = 'X';
-        
     free(specieList);
     
     return Py_BuildValue("i", 0);

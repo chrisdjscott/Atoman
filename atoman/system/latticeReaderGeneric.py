@@ -660,7 +660,7 @@ class LatticeReaderGeneric(object):
         specieCount = resultDict.pop("specieCount")
         needSpecie = True
         if len(specieList) and "Symbol" in resultDict:
-            lattice.specieList = np.array(specieList)
+            lattice.specieList = specieList
             lattice.specieCount = np.array(specieCount, dtype=np.int32)
             lattice.specie = resultDict.pop("Symbol")
             needSpecie = False
