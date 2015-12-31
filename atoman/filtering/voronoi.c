@@ -12,6 +12,22 @@
 #include "visclibs/array_utils.h"
 #include "filtering/voro_iface.h"
 
+#if PY_MAJOR_VERSION >= 3
+    #define MOD_ERROR_VAL NULL
+    #define MOD_SUCCESS_VAL(val) val
+    #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
+        ob = PyModule_Create(&moduledef);
+#else
+    #define MOD_ERROR_VAL
+    #define MOD_SUCCESS_VAL(val)
+    #define MOD_INIT(name) void init##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        ob = Py_InitModule3(name, methods, doc);
+#endif
+
 /*******************************************************************************
  ** Define Voronoi object structure
  *******************************************************************************/
@@ -67,7 +83,7 @@ static void
 Voronoi_dealloc(Voronoi* self)
 {
     free_vorores(self);
-    self->ob_type->tp_free((PyObject*)self);
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 /*******************************************************************************
@@ -553,8 +569,7 @@ static PyMethodDef Voronoi_methods[] = {
  ** Voronoi object type
  *******************************************************************************/
 static PyTypeObject VoronoiType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                                  /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "_voronoi.Voronoi",                 /*tp_name*/
     sizeof(Voronoi),                    /*tp_basicsize*/
     0,                                  /*tp_itemsize*/
@@ -597,7 +612,7 @@ static PyTypeObject VoronoiType = {
 /*******************************************************************************
  ** List of python methods available in this module
  *******************************************************************************/
-static struct PyMethodDef methods[] = {
+static struct PyMethodDef module_methods[] = {
     {"makeVoronoiPoints", makeVoronoiPoints, METH_VARARGS, "Make points array for passing to Voronoi method"},
     {NULL, NULL, 0, NULL}
 };
@@ -605,20 +620,23 @@ static struct PyMethodDef methods[] = {
 /*******************************************************************************
  ** Module initialisation function
  *******************************************************************************/
-PyMODINIT_FUNC
-init_voronoi(void)
+MOD_INIT(_voronoi)
 {
-    PyObject *m;
+    PyObject *mod;
+
+    MOD_DEF(mod, "_voronoi", "Interface to Voro++", module_methods)
+    if (mod == NULL)
+        return MOD_ERROR_VAL;
     
     VoronoiType.tp_new = PyType_GenericNew;
     if (PyType_Ready(&VoronoiType) < 0)
-        return;
-    
-    m = Py_InitModule3("_voronoi", methods, "Module for computing Voronoi cells of atoms");
-    import_array();
-    
+        return MOD_ERROR_VAL;
     Py_INCREF(&VoronoiType);
-    PyModule_AddObject(m, "Voronoi", (PyObject *)&VoronoiType);
+    PyModule_AddObject(mod, "Voronoi", (PyObject *)&VoronoiType);
+    
+    import_array();
+
+    return MOD_SUCCESS_VAL(mod);
 }
 
 /*******************************************************************************

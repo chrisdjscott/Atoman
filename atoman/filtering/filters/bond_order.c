@@ -16,6 +16,21 @@
 #include "visclibs/constants.h"
 #include "gui/preferences.h"
 
+#if PY_MAJOR_VERSION >= 3
+    #define MOD_ERROR_VAL NULL
+    #define MOD_SUCCESS_VAL(val) val
+    #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
+        ob = PyModule_Create(&moduledef);
+#else
+    #define MOD_ERROR_VAL
+    #define MOD_SUCCESS_VAL(val)
+    #define MOD_INIT(name) void init##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        ob = Py_InitModule3(name, methods, doc);
+#endif
 
 /* structure for storing the result for an atom */
 struct AtomStructureResults
@@ -40,7 +55,7 @@ const double factorials[] = {1.0, 1.0, 2.0, 6.0, 24.0, 120.0, 720.0, 5040.0, 403
 /*******************************************************************************
  ** List of python methods available in this module
  *******************************************************************************/
-static struct PyMethodDef methods[] = {
+static struct PyMethodDef module_methods[] = {
     {"bondOrderFilter", bondOrderFilter, METH_VARARGS, "Run the bond order filter (calculates Steinhardt order parameters)"},
     {NULL, NULL, 0, NULL}
 };
@@ -48,11 +63,17 @@ static struct PyMethodDef methods[] = {
 /*******************************************************************************
  ** Module initialisation function
  *******************************************************************************/
-PyMODINIT_FUNC
-init_bond_order(void)
+MOD_INIT(_bond_order)
 {
-    (void)Py_InitModule("_bond_order", methods);
+    PyObject *mod;
+    
+    MOD_DEF(mod, "_bond_order", "Calculate Steinhardt order parameters", module_methods)
+    if (mod == NULL)
+        return MOD_ERROR_VAL;
+    
     import_array();
+    
+    return MOD_SUCCESS_VAL(mod);
 }
 
 /*******************************************************************************

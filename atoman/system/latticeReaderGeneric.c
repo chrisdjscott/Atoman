@@ -11,6 +11,25 @@
 #include <locale.h>
 #include "visclibs/array_utils.h"
 
+#if PY_MAJOR_VERSION >= 3
+    #define PyString_Size PyUnicode_GET_SIZE
+    #define PyString_FromFormat PyUnicode_FromFormat
+    #define PyString_AsString PyUnicode_AsUTF8
+    #define MOD_ERROR_VAL NULL
+    #define MOD_SUCCESS_VAL(val) val
+    #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
+        ob = PyModule_Create(&moduledef);
+#else
+    #define MOD_ERROR_VAL
+    #define MOD_SUCCESS_VAL(val)
+    #define MOD_INIT(name) void init##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        ob = Py_InitModule3(name, methods, doc);
+#endif
+
 //#define DEBUG
 #define MAX_LINE_LENGTH 512
 
@@ -41,7 +60,7 @@ static void freeBody(struct Body);
 /*******************************************************************************
  ** List of python methods available in this module
  *******************************************************************************/
-static struct PyMethodDef methods[] = {
+static struct PyMethodDef module_methods[] = {
     {"readGenericLatticeFile", readGenericLatticeFile, METH_VARARGS, "Read generic Lattice file"},
     {"getMinMaxPos", getMinMaxPos, METH_VARARGS, "Get the min/max pos"},
     {NULL, NULL, 0, NULL}
@@ -50,11 +69,17 @@ static struct PyMethodDef methods[] = {
 /*******************************************************************************
  ** Module initialisation function
  *******************************************************************************/
-PyMODINIT_FUNC
-init_latticeReaderGeneric(void)
+MOD_INIT(_latticeReaderGeneric)
 {
-    (void)Py_InitModule("_latticeReaderGeneric", methods);
+    PyObject *mod;
+    
+    MOD_DEF(mod, "_latticeReaderGeneric", "Generic lattice reader C extension", module_methods)
+    if (mod == NULL)
+        return MOD_ERROR_VAL;
+    
     import_array();
+    
+    return MOD_SUCCESS_VAL(mod);
 }
 
 /*******************************************************************************
@@ -812,7 +837,7 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                         return NULL;
                                     }
 
-                                    init = PyInt_FromLong(0);
+                                    init = PyLong_FromLong(0);
                                     stat = PyList_Append(specieCount, init);
                                     Py_XDECREF(init);
                                     if (stat == -1)
@@ -861,10 +886,10 @@ readGenericLatticeFile(PyObject *self, PyObject *args)
                                     return NULL;
                                 }
 
-                                value = PyInt_AsLong(valueObj);
+                                value = PyLong_AsLong(valueObj);
                                 value++;
 
-                                stat = PyList_SetItem(specieCount, index, PyInt_FromLong(value));
+                                stat = PyList_SetItem(specieCount, index, PyLong_FromLong(value));
                                 if (stat == -1)
                                 {
                                     long k;

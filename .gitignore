@@ -18,3 +18,5 @@ setup.cfg
 .komodotools/
 *.komodoproject
 dist/
+__pycache__
+*.bak

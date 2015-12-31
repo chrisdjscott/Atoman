@@ -11,6 +11,21 @@
 #include "visclibs/utilities.h"
 #include "visclibs/array_utils.h"
 
+#if PY_MAJOR_VERSION >= 3
+    #define MOD_ERROR_VAL NULL
+    #define MOD_SUCCESS_VAL(val) val
+    #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
+        ob = PyModule_Create(&moduledef);
+#else
+    #define MOD_ERROR_VAL
+    #define MOD_SUCCESS_VAL(val)
+    #define MOD_INIT(name) void init##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        ob = Py_InitModule3(name, methods, doc);
+#endif
 
 static PyObject* eliminatePBCFlicker(PyObject*, PyObject*);
 static PyObject* separationVector(PyObject*, PyObject*);
@@ -21,7 +36,7 @@ static PyObject* magnitude(PyObject*, PyObject*);
 /*******************************************************************************
  ** List of python methods available in this module
  *******************************************************************************/
-static struct PyMethodDef methods[] = {
+static struct PyMethodDef module_methods[] = {
     {"eliminatePBCFlicker", eliminatePBCFlicker, METH_VARARGS, "Eliminate flicker across PBCs between two configurations"},
     {"separationVector", separationVector, METH_VARARGS, "Calculate separation vector between two vectors"},
     {"separationMagnitude", separationMagnitude, METH_VARARGS, "Calculate magnitude of separation between two vectors"},
@@ -32,11 +47,17 @@ static struct PyMethodDef methods[] = {
 /*******************************************************************************
  ** Module initialisation function
  *******************************************************************************/
-PyMODINIT_FUNC
-init_vectors(void)
+MOD_INIT(_vectors)
 {
-    (void)Py_InitModule("_vectors", methods);
+    PyObject *mod;
+    
+    MOD_DEF(mod, "_vectors", "Vectors C extension", module_methods)
+    if (mod == NULL)
+        return MOD_ERROR_VAL;
+    
     import_array();
+    
+    return MOD_SUCCESS_VAL(mod);
 }
 
 /*******************************************************************************

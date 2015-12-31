@@ -11,6 +11,22 @@
 #include <locale.h>
 #include "visclibs/array_utils.h"
 
+#if PY_MAJOR_VERSION >= 3
+    #define MOD_ERROR_VAL NULL
+    #define MOD_SUCCESS_VAL(val) val
+    #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
+        ob = PyModule_Create(&moduledef);
+#else
+    #define MOD_ERROR_VAL
+    #define MOD_SUCCESS_VAL(val)
+    #define MOD_INIT(name) void init##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        ob = Py_InitModule3(name, methods, doc);
+#endif
+
 static PyObject* readLatticeLBOMD(PyObject*, PyObject*);
 static PyObject* readRef(PyObject*, PyObject*);
 static PyObject* readLBOMDXYZ(PyObject*, PyObject*);
@@ -21,7 +37,7 @@ static int specieIndex(char*, int, char*);
 /*******************************************************************************
  ** List of python methods available in this module
  *******************************************************************************/
-static struct PyMethodDef methods[] = {
+static struct PyMethodDef module_methods[] = {
     {"readLatticeLBOMD", readLatticeLBOMD, METH_VARARGS, "Read LBOMD lattice format file"},
     {"readRef", readRef, METH_VARARGS, "Read LBOMD animation reference format file"},
     {"readLBOMDXYZ", readLBOMDXYZ, METH_VARARGS, "Read LBOMD XYZ format file"},
@@ -31,11 +47,17 @@ static struct PyMethodDef methods[] = {
 /*******************************************************************************
  ** Module initialisation function
  *******************************************************************************/
-PyMODINIT_FUNC
-init_input(void)
+MOD_INIT(_input)
 {
-    (void)Py_InitModule("_input", methods);
+    PyObject *mod;
+    
+    MOD_DEF(mod, "_input", "Input C extension", module_methods)
+    if (mod == NULL)
+        return MOD_ERROR_VAL;
+    
     import_array();
+    
+    return MOD_SUCCESS_VAL(mod);
 }
 
 /*******************************************************************************
