@@ -30,6 +30,8 @@ Changes by Phil Thompson, Mar. 2008
 Changes by Stou Sandalski, July. 2009
  Fixed cursor typo, subclassed QGLWidget not GLWidget to allow for embedding
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import sys
 import logging
 from PySide import QtCore, QtGui, QtOpenGL

@@ -26,6 +26,8 @@ Parameters are:
         Instead of cropping atoms within the sphere, crop those outside it.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import base
 from . import _filtering
 

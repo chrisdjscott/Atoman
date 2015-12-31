@@ -3,6 +3,8 @@
 Unit tests for the Voronoi renderer
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 
 import numpy as np
@@ -12,6 +14,7 @@ from .. import voronoiRenderer
 from ... import utils
 from ....filtering import voronoi
 from ....system import lattice
+from six.moves import range
 
 
 # required unless ColouringOptionsWindow is rewritten to have a non GUI dependent settings object
@@ -70,7 +73,7 @@ class TestVoronoiRenderer(unittest.TestCase):
         self.lut.SetNumberOfTableValues(self.nspecies)
         self.lut.SetTableRange(0, self.nspecies - 1)
         self.lut.SetRange(0, self.nspecies - 1)
-        for i in xrange(self.nspecies):
+        for i in range(self.nspecies):
             self.lut.SetTableValue(i, 1, 0, 0, 1.0)
         
         # voronoi options

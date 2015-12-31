@@ -4,12 +4,16 @@ Window for displaying output from the program to the user. The level of the outp
 using the standard logging module levels (DEBUG, INFO, ...).
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 from PySide import QtGui, QtCore
 
 from ...visutils.utilities import iconPath
 from ...visutils import utilities
+import six
+from six.moves import range
 
 
 ################################################################################
@@ -117,7 +121,7 @@ class ConsoleWindow(QtGui.QDialog):
         
         """
         levelKey = None
-        for key, val in self.loggingLevels.iteritems():
+        for key, val in six.iteritems(self.loggingLevels):
             if val == level:
                 levelKey = key
                 break
@@ -186,7 +190,7 @@ class ConsoleWindow(QtGui.QDialog):
         #TODO: change colour depending on level
         if level < self.parent.verboseLevel:
             ind = ""
-            for _ in xrange(indent):
+            for _ in range(indent):
                 ind += "  "
             self.textWidget.append("%s %s%s" % (">", ind, string))
         

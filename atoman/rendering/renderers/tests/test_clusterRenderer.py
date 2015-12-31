@@ -3,6 +3,8 @@
 Unit tests for the cluster renderer
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 
 from .. import clusterRenderer

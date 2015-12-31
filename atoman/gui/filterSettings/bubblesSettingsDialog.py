@@ -3,6 +3,8 @@
 Contains GUI forms for the bubbles filter.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 from PySide import QtGui, QtCore
@@ -11,6 +13,7 @@ from . import base
 from .speciesSettingsDialog import SpeciesListItem
 from ...filtering.filters import bubblesFilter
 from ...filtering import filterer
+from six.moves import range
 
 
 ################################################################################
@@ -80,7 +83,7 @@ class BubblesSettingsDialog(base.GenericSettingsDialog):
     def speciesListChanged(self, *args):
         """Species selection has changed."""
         bubbleSpeciesList = []
-        for i in xrange(self.speciesList.count()):
+        for i in range(self.speciesList.count()):
             item = self.speciesList.item(i)
             if item.checkState() == QtCore.Qt.Checked:
                 bubbleSpeciesList.append(item.symbol)
@@ -103,7 +106,7 @@ class BubblesSettingsDialog(base.GenericSettingsDialog):
         
         # remove species that don't exist
         num = self.speciesList.count()
-        for i in xrange(num - 1, -1, -1):
+        for i in range(num - 1, -1, -1):
             item = self.speciesList.item(i)
             
             # remove if doesn't exist both ref and input

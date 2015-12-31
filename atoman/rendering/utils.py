@@ -6,12 +6,15 @@ Rendering utils
 
 """
 from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import ctypes as C
 import logging
 
 import numpy as np
 import vtk
 from vtk.util import numpy_support
+from six.moves import range
 
 
 ################################################################################
@@ -202,7 +205,7 @@ def setupLUT(specieList, specieRGB, colouringOptions):
         lut.SetTableRange(0, NSpecies - 1)
         lut.SetRange(0, NSpecies - 1)
         
-        for i in xrange(NSpecies):
+        for i in range(NSpecies):
             if colouringOptions.colourBy == "Species":
                 lut.SetTableValue(i, specieRGB[i][0], specieRGB[i][1], specieRGB[i][2], 1.0)
             

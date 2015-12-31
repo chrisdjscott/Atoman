@@ -5,12 +5,15 @@ Module for computing Voronoi tesselation
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import time
 import logging
 
 import numpy as np
 
 from . import _voronoi
+from six.moves import range
 
 
 class VoronoiCalculator(object):
@@ -102,7 +105,7 @@ def computeVoronoi(lattice, voronoiOptions):
         
         nl("Atom index,Voronoi volume,Voronoi neighbours (faces)")
         
-        for i in xrange(lattice.NAtoms):
+        for i in range(lattice.NAtoms):
             line = "%d,%f,%s" % (i, vor.atomVolume(i), vor.atomNumNebs(i))
             nl(line)
         
@@ -150,7 +153,7 @@ def computeVoronoiDefects(lattice, refLattice, vacancies, voronoiOptions):
     specie = np.empty(dim, np.int32)
     pos[:3 * lattice.NAtoms] = lattice.pos[:]
     specie[:lattice.NAtoms] = lattice.specie[:]
-    for i in xrange(len(vacancies)):
+    for i in range(len(vacancies)):
         ind = i + lattice.NAtoms
         ind3 = 3 * ind
         vacind = vacancies[i]

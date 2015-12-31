@@ -5,6 +5,8 @@ Info dialogs
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import uuid
 import functools
 import logging
@@ -14,6 +16,7 @@ from PySide import QtGui, QtCore
 from ...algebra import vectors
 from ...rendering import highlight
 from .. import utils
+import six
 
 
 class ClusterListWidgetItem(QtGui.QListWidgetItem):
@@ -643,7 +646,7 @@ class SystemInfoWindow(QtGui.QDialog):
             if temperature is not None:
                 listWidget.addItem("Temperature: %f" % temperature)
         
-        for key, value in lattice.attributes.iteritems():
+        for key, value in six.iteritems(lattice.attributes):
             listWidget.addItem("%s: %s" % (key, value))
         
         # button box
@@ -699,11 +702,11 @@ class AtomInfoWindow(QtGui.QDialog):
         listWidget.addItem("Charge: %f" % lattice.charge[atomIndex])
         
         # add scalars
-        for scalarType, scalar in scalarsDict.iteritems():
+        for scalarType, scalar in six.iteritems(scalarsDict):
             listWidget.addItem("%s: %f" % (scalarType, scalar))
         
         # add vectors
-        for vectorType, vector in vectorsDict.iteritems():
+        for vectorType, vector in six.iteritems(vectorsDict):
             listWidget.addItem("%s: (%f, %f, %f)" % (vectorType, vector[0], vector[1], vector[2]))
         
         # add Voronoi neighbour info (if available)
@@ -960,11 +963,11 @@ class DefectInfoWindow(QtGui.QDialog):
                 listWidget.addItem("Voronoi volume: %f" % vor.atomVolume(index))
             
             # add scalars
-            for scalarType, scalar in scalarsDict.iteritems():
+            for scalarType, scalar in six.iteritems(scalarsDict):
                 listWidget.addItem("%s: %f" % (scalarType, scalar))
             
             # add vectors
-            for vectorType, vector in vectorsDict.iteritems():
+            for vectorType, vector in six.iteritems(vectorsDict):
                 listWidget.addItem("%s: (%f, %f, %f)" % (vectorType, vector[0], vector[1], vector[2]))
         
         elif defectType == 3:

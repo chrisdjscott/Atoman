@@ -3,6 +3,8 @@
 Contains GUI forms for the ACNA filter.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import functools
 
 import numpy as np

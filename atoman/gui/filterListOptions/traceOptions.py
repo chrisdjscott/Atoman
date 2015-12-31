@@ -17,6 +17,8 @@ current positions.
   much slower to render and interact with.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import logging
 

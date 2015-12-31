@@ -7,6 +7,8 @@ This filter allows you to filter atoms by their species. Only atoms of the
 selected species will be visible.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import numpy as np
 
 from . import base

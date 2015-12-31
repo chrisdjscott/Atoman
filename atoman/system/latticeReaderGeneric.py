@@ -3,6 +3,8 @@
 Read user-specified format Lattice FILES_PER_THREAD
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import copy
 import re
@@ -16,6 +18,8 @@ from . import _latticeReaderGeneric
 from .atoms import elements
 from ..visutils import utilities
 from .lattice import Lattice
+import six
+from six.moves import range
 
 
 class FileFormats(object):
@@ -84,7 +88,7 @@ class FileFormats(object):
         with open(filename) as f:
             numFormats = int(f.readline())
             
-            for _ in xrange(numFormats):
+            for _ in range(numFormats):
                 fmt = FileFormat()
                 fmt.read(f)
                 
@@ -103,8 +107,8 @@ class FileFormats(object):
         
         """
         poplist = []
-        names = self._fileFormats.keys()
-        for fmt in self._fileFormats.values():
+        names = list(self._fileFormats.keys())
+        for fmt in list(self._fileFormats.values()):
             if fmt.linkedName is not None:
                 if fmt.name not in names:
                     self.logger.error("Linked name '%s' for format type '%s' does not exist! Removing format '%s'",
@@ -129,7 +133,7 @@ class FileFormats(object):
         return len(self._fileFormats)
     
     def __iter__(self):
-        for v in self._fileFormats.values():
+        for v in list(self._fileFormats.values()):
             yield v
     
     def __contains__(self, item):
@@ -366,14 +370,14 @@ class FileFormat(object):
         numHeaderLines = int(fh.readline())
         
         # header lines
-        for _ in xrange(numHeaderLines):
+        for _ in range(numHeaderLines):
             self.newHeaderLine()
             
             # number of values in the line
             numValues = int(fh.readline())
             
             # values
-            for _ in xrange(numValues):
+            for _ in range(numValues):
                 key = fh.readline().rstrip("\n")
                 typecode = fh.readline().rstrip("\n")
                 self.addHeaderValue(key, typecode)
@@ -382,14 +386,14 @@ class FileFormat(object):
         numBodyLines = int(fh.readline())
         
         # body lines
-        for _ in xrange(numBodyLines):
+        for _ in range(numBodyLines):
             self.newBodyLine()
             
             # number of values in the line
             numValues = int(fh.readline())
             
             # values
-            for _ in xrange(numValues):
+            for _ in range(numValues):
                 key = fh.readline().rstrip("\n")
                 typecode = fh.readline().rstrip("\n")
                 dim = int(fh.readline())
@@ -431,7 +435,7 @@ class FileFormat(object):
         identifier = []
         for line in self.header:
             identifier.append(len(line))
-        for _ in xrange(5):
+        for _ in range(5):
             for line in self.body:
                 count = 0
                 for value in line:
@@ -596,7 +600,7 @@ class LatticeReaderGeneric(object):
             finally:
                 self.hideProgress()
         
-        self.logger.debug("Keys: %r", resultDict.keys())
+        self.logger.debug("Keys: %r", list(resultDict.keys()))
         
         # create Lattice object
         lattice = Lattice()
@@ -684,7 +688,7 @@ class LatticeReaderGeneric(object):
         lattice.specieCovalentRadius = np.empty(numSpecies, np.float64)
         lattice.specieAtomicNumber = np.empty(numSpecies, np.int32)
         lattice.specieRGB = np.empty((numSpecies, 3), np.float64)
-        for i in xrange(numSpecies):
+        for i in range(numSpecies):
             lattice.specieMass[i] = elements.atomicMass(lattice.specieList[i])
             lattice.specieCovalentRadius[i] = elements.covalentRadius(lattice.specieList[i])
             lattice.specieAtomicNumber[i] = elements.atomicNumber(lattice.specieList[i])
@@ -696,7 +700,7 @@ class LatticeReaderGeneric(object):
                              elements.atomName(lattice.specieList[i]))
         
         # read what's left in resultDict: scalars and vectors and lattice attributes
-        for key, data in resultDict.iteritems():
+        for key, data in six.iteritems(resultDict):
             # take lattice attributes (Defined in header) first
             if fileFormat.inHeader(key):
                 self.logger.debug("Saving '%s' attribute to Lattice (%r)", key, data)
@@ -774,9 +778,9 @@ class LatticeReaderGeneric(object):
                 lattice.attributes["KMC step"] = stepNumber
                 self.logger.info("Detected KMC step as: %d", stepNumber)
         
-        self.logger.debug("Lattice attribs: %r", lattice.attributes.keys())
-        self.logger.debug("Lattice scalars: %r", lattice.scalarsDict.keys())
-        self.logger.debug("Lattice vectors: %r", lattice.vectorsDict.keys())
+        self.logger.debug("Lattice attribs: %r", list(lattice.attributes.keys()))
+        self.logger.debug("Lattice scalars: %r", list(lattice.scalarsDict.keys()))
+        self.logger.debug("Lattice vectors: %r", list(lattice.vectorsDict.keys()))
         
         return 0, lattice
 

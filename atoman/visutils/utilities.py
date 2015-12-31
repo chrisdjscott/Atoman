@@ -6,6 +6,9 @@ Utility methods
 
 """
 from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import division
 import os
 import sys
 import random
@@ -19,6 +22,7 @@ import pkg_resources
 from PySide import QtGui, QtCore
 
 from .appdirs import appdirs
+from six.moves import range
 
 # set where to look for executables when os.getenv("PATH")
 # returns something less than expected (eg when running
@@ -176,7 +180,7 @@ def idGenerator(size=16, chars=string.digits + string.ascii_letters + string.dig
     Generate random string of size "size" (defaults to 16)
     
     """
-    return ''.join(random.choice(chars) for _ in xrange(size))
+    return ''.join(random.choice(chars) for _ in range(size))
 
 ################################################################################
 def createTmpDirectory():

@@ -6,6 +6,8 @@ The main window class
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import sys
 import shutil

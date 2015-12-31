@@ -5,7 +5,10 @@ Utilities common to multiple lattice generators
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import math
+from six.moves import range
 
 ################################################################################
 
@@ -23,7 +26,7 @@ def fixChargesOnFixedBoundaries(lattice):
     tol = 0.1
     
     totalCharge = 0.0
-    for i in xrange(lattice.NAtoms):
+    for i in range(lattice.NAtoms):
         # position
         rx, ry, rz = lattice.atomPos(i)
         

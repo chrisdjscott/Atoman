@@ -16,6 +16,8 @@ The parameters are:
         The maximum charge for an atom to be visible.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import base
 from . import _filtering
 

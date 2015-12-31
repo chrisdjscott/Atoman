@@ -22,6 +22,8 @@ set these min/max values to the range of the chosen scalar and and option
 to set the text that appears on the scalar bar.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import functools
 import logging
@@ -31,6 +33,7 @@ from PySide import QtGui, QtCore
 
 from ...visutils.utilities import iconPath
 from .. import genericForm
+from six.moves import range
 
 
 ################################################################################
@@ -353,11 +356,11 @@ class ColouringOptionsWindow(QtGui.QDialog):
         # lattice scalars dict
         inputState = self.parent.pipelinePage.inputState
         latticeScalarsDict = inputState.scalarsDict
-        latticeScalarsNames = ["Lattice: {0}".format(key) for key in latticeScalarsDict.keys()]
+        latticeScalarsNames = ["Lattice: {0}".format(key) for key in list(latticeScalarsDict.keys())]
         
         # list of previous scalar types
         previousScalarTypes = []
-        for i in xrange(4, self.colouringCombo.count()):
+        for i in range(4, self.colouringCombo.count()):
             previousScalarTypes.append(str(self.colouringCombo.itemText(i)))
         
         logger.debug("New scalars (Lattice): %r", latticeScalarsNames)
@@ -374,7 +377,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
                     self.colouringCombo.setCurrentIndex(0)
                 
                 # remove (inefficient...)
-                for j in xrange(4, self.colouringCombo.count()):
+                for j in range(4, self.colouringCombo.count()):
                     if str(self.colouringCombo.itemText(j)) == name:
                         self.colouringCombo.removeItem(j)
                         self.removeScalarWidget(name)

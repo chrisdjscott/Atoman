@@ -10,6 +10,8 @@ File formats are defined in the *file_formats.IN* file (more on this and a link.
 Multiple files can be loaded at the same time by shift/cmd clicking them.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import sys
 import logging
@@ -19,6 +21,8 @@ from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath, resourcePath
 from ..system import latticeReaderGeneric
+from six.moves import range
+from six.moves import zip
 
 
 ################################################################################
@@ -296,7 +300,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             # check for match
             n = min(len(identifier), len(lines))
             match = True
-            for i in xrange(n):
+            for i in range(n):
                 lineLenFormat = identifier[i]
                 lineLenInput = len(lines[i].split(delim))
                 self.logger.debug("Line %d: %d <-> %d", i, lineLenInput, lineLenFormat)

@@ -3,6 +3,8 @@
 Unit tests for the coordination number filter
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 
 import numpy as np
@@ -11,6 +13,7 @@ from ....lattice_gen import lattice_gen_fcc, lattice_gen_bcc
 from .. import coordinationNumberFilter
 from .. import base
 from ....system.atoms import elements
+from six.moves import range
 
 
 ################################################################################
@@ -87,7 +90,7 @@ class TestCoordinationNumber(unittest.TestCase):
         
         # check coordination
         scalars = result.getScalars()["Coordination number"]
-        for i in xrange(len(filterInput.visibleAtoms)):
+        for i in range(len(filterInput.visibleAtoms)):
             self.assertEqual(8, scalars[i])
         
         # NOW FCC
@@ -116,7 +119,7 @@ class TestCoordinationNumber(unittest.TestCase):
         
         # check coordination
         scalars = result.getScalars()["Coordination number"]
-        for i in xrange(len(filterInput.visibleAtoms)):
+        for i in range(len(filterInput.visibleAtoms)):
             self.assertEqual(12, scalars[i])
     
     def test_coordinationNumberFiltering(self):

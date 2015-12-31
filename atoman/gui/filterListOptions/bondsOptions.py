@@ -16,11 +16,14 @@ used to render the bond.  A higher setting will look better but will be
 much slower to render and interact with.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 from PySide import QtGui, QtCore
 
 from ...visutils.utilities import iconPath
+from six.moves import range
 
 
 ################################################################################
@@ -223,7 +226,7 @@ class BondsOptionsWindow(QtGui.QDialog):
         
         # remove pairs that don't exist
         num = self.bondsList.count()
-        for i in xrange(num - 1, -1, -1):
+        for i in range(num - 1, -1, -1):
             item = self.bondsList.item(i)
             
             # make this 'and' so that if a lattice is missing one specie we still
@@ -237,8 +240,8 @@ class BondsOptionsWindow(QtGui.QDialog):
                 currentPairs.add("%s - %s" % (item.symb, item.syma))
         
         # add pairs that aren't already added
-        for i in xrange(len(inputState.specieList)):
-            for j in xrange(i, len(inputState.specieList)):
+        for i in range(len(inputState.specieList)):
+            for j in range(i, len(inputState.specieList)):
                 p1 = "%s - %s" % (specieList[i], specieList[j])
                 p2 = "%s - %s" % (specieList[j], specieList[i])
                 if p1 in currentPairs:

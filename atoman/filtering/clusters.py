@@ -5,10 +5,13 @@ Additional routines to do with clusters (hulls, etc...)
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 import numpy as np
 from scipy import spatial
+from six.moves import range
 # pyhull is optional
 try:
     import pyhull
@@ -27,7 +30,7 @@ def findConvexHullFacets(num, pos):
     if num > 3:
         # construct pts list
         pts = []
-        for i in xrange(num):
+        for i in range(num):
             pts.append([pos[3 * i], pos[3 * i + 1], pos[3 * i + 2]])
         
         # call scipy
@@ -109,7 +112,7 @@ def findConvexHullVolume(N, pos, posIsPts=False):
     else:
         # TODO: this should be written in C!
         pts = np.empty((N, 3), dtype=np.float64)
-        for i in xrange(N):
+        for i in range(N):
             i3 = 3 * i
             pts[i][0] = pos[i3]
             pts[i][1] = pos[i3 + 1]
@@ -130,7 +133,7 @@ def applyPBCsToCluster(clusterPos, cellDims, appliedPBCs):
     Apply PBCs to cluster.
     
     """
-    for i in xrange(7):
+    for i in range(7):
         if appliedPBCs[i]:
             # apply in x direction
             if i == 0:
@@ -225,10 +228,10 @@ def checkFacetsPBCs(facetsIn, clusterPos, excludeRadius, PBC, cellDims):
     facets = []
     for facet in facetsIn:
         includeFlag = True
-        for i in xrange(3):
+        for i in range(3):
             index = facet[i]
             
-            for j in xrange(3):
+            for j in range(3):
                 if PBC[j]:
                     tooBig = clusterPos[3 * index + j] > cellDims[j] + excludeRadius
                     tooSmall = clusterPos[3 * index + j] < 0.0 - excludeRadius
@@ -277,7 +280,7 @@ class AtomCluster(object):
         num = len(self._indexes)
         lattice = self._lattice
         clusterPos = np.empty(3 * num, np.float64)
-        for i in xrange(num):
+        for i in range(num):
             index = self._indexes[i]
             clusterPos[3 * i] = lattice.pos[3 * index]
             clusterPos[3 * i + 1] = lattice.pos[3 * index + 1]
@@ -489,7 +492,7 @@ class DefectCluster(object):
     
     def antisites(self):
         """Iterator over antisites, onAntisite pairs."""
-        for i in xrange(self.getNAntisites()):
+        for i in range(self.getNAntisites()):
             indexa, indexb = self.getAntisite(i)
             yield indexa, indexb
     
@@ -500,7 +503,7 @@ class DefectCluster(object):
     
     def splitInterstitials(self):
         """Iterator over vacancies."""
-        for i in xrange(self.getNSplitInterstitials()):
+        for i in range(self.getNSplitInterstitials()):
             indexa, indexb, indexc = self.getSplitInterstitial(i)
             yield indexa, indexb, indexc
     
@@ -515,7 +518,7 @@ class DefectCluster(object):
         
         # vacancy positions
         count = 0
-        for i in xrange(self.getNVacancies()):
+        for i in range(self.getNVacancies()):
             index = self.getVacancy(i)
             clusterPos[3 * count] = refLattice.pos[3 * index]
             clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
@@ -523,7 +526,7 @@ class DefectCluster(object):
             count += 1
         
         # antisite positions
-        for i in xrange(self.getNAntisites()):
+        for i in range(self.getNAntisites()):
             index = self.getAntisite(i)[0]
             clusterPos[3 * count] = refLattice.pos[3 * index]
             clusterPos[3 * count + 1] = refLattice.pos[3 * index + 1]
@@ -531,7 +534,7 @@ class DefectCluster(object):
             count += 1
         
         # interstitial positions
-        for i in xrange(self.getNInterstitials()):
+        for i in range(self.getNInterstitials()):
             index = self.getInterstitial(i)
             clusterPos[3 * count] = inputLattice.pos[3 * index]
             clusterPos[3 * count + 1] = inputLattice.pos[3 * index + 1]
@@ -539,7 +542,7 @@ class DefectCluster(object):
             count += 1
         
         # split interstitial positions
-        for i in xrange(self.getNSplitInterstitials()):
+        for i in range(self.getNSplitInterstitials()):
             split = self.getSplitInterstitial(i)
             
             index = split[0]
@@ -581,12 +584,12 @@ class DefectCluster(object):
         volume = 0.0
         
         # add volumes of interstitials
-        for i in xrange(self.getNInterstitials()):
+        for i in range(self.getNInterstitials()):
             index = self.getInterstitial(i)
             volume += vor.atomVolume(index)
         
         # add volumes of split interstitial atoms
-        for i in xrange(self.getNSplitInterstitials()):
+        for i in range(self.getNSplitInterstitials()):
             indexes = self.getSplitInterstitial(i)
             index = indexes[1]
             volume += vor.atomVolume(index)
@@ -594,12 +597,12 @@ class DefectCluster(object):
             volume += vor.atomVolume(index)
         
         # add volumes of on antisite atoms
-        for i in xrange(self.getNAntisites()):
+        for i in range(self.getNAntisites()):
             _, index = self.getAntisite(i)
             volume += vor.atomVolume(index)
         
         # add volumes of vacancies
-        for i in xrange(self.getNVacancies()):
+        for i in range(self.getNVacancies()):
             vacind = self.getVacancyAsIndex(i)
             index = inputLattice.NAtoms + vacind
             volume += vor.atomVolume(index)

@@ -3,6 +3,8 @@
 Module for rendering clusters
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import copy
 import logging
 
@@ -14,6 +16,7 @@ from . import povrayWriters
 from .. import utils
 from ...filtering import _clusters
 from ...filtering import clusters
+from six.moves import range
 
 
 class ClusterRenderer(baseRenderer.BaseRenderer):
@@ -104,14 +107,14 @@ class ClusterRenderer(baseRenderer.BaseRenderer):
             
             # create vtk points from cluster positions
             points = vtk.vtkPoints()
-            for i in xrange(clusterSize):
+            for i in range(clusterSize):
                 points.InsertNextPoint(clusterPos[3 * i], clusterPos[3 * i + 1], clusterPos[3 * i + 2])
             
             # create triangles
             triangles = vtk.vtkCellArray()
             for facet in facets:
                 triangle = vtk.vtkTriangle()
-                for j in xrange(3):
+                for j in range(3):
                     triangle.GetPointIds().SetId(j, facet[j])
                 triangles.InsertNextCell(triangle)
             

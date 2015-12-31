@@ -5,6 +5,8 @@ Lattice module, with Lattice object and utilities
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 import copy
 
@@ -14,6 +16,7 @@ from .atoms import elements
 from ..algebra import vectors
 from . import _lattice
 from . import _output
+from six.moves import range
 
 
 ################################################################################
@@ -221,7 +224,7 @@ class Lattice(object):
         # wrap positions
         
         # min/max pos!!??
-        for i in xrange(3):
+        for i in range(3):
             self.minPos[i] = min(self.minPos[i], pos[i])
             self.maxPos[i] = max(self.maxPos[i], pos[i])
         
@@ -229,7 +232,7 @@ class Lattice(object):
         
         logger = logging.getLogger(__name__)
         
-        for scalarName in self.scalarsDict.keys():
+        for scalarName in list(self.scalarsDict.keys()):
             if scalarName in scalarVals:
                 newval = scalarVals[scalarName]
                 self.scalarsDict[scalarName] = np.append(self.scalarsDict[scalarName], np.float64(newval))
@@ -238,7 +241,7 @@ class Lattice(object):
                 self.scalarsDict.pop(scalarName)
                 logger.warning("Removing '%s' scalars from Lattice (addAtom)", scalarName)
         
-        for vectorName in self.vectorsDict.keys():
+        for vectorName in list(self.vectorsDict.keys()):
             newval = []
             if vectorName in vectorVals:
                 newval = vectorVals[vectorName]
@@ -268,10 +271,10 @@ class Lattice(object):
         if self.specieCount[specInd] == 0:
             self.removeSpecie(specInd)
         
-        for scalarName in self.scalarsDict.keys():
+        for scalarName in list(self.scalarsDict.keys()):
             self.scalarsDict[scalarName] = np.delete(self.scalarsDict[scalarName], index)
         
-        for vectorName in self.vectorsDict.keys():
+        for vectorName in list(self.vectorsDict.keys()):
             self.vectorsDict[vectorName] = np.delete(self.vectorsDict[vectorName],
                                                      [3 * index, 3 * index + 1, 3 * index + 2])
     
@@ -287,7 +290,7 @@ class Lattice(object):
 #         self.specieMassAMU = np.delete(self.specieMassAMU, index)
         self.specieRGB = np.delete(self.specieRGB, index, axis=0)
         
-        for i in xrange(self.NAtoms):
+        for i in range(self.NAtoms):
             if self.specie[i] > index:
                 self.specie[i] -= 1
     
@@ -335,7 +338,7 @@ class Lattice(object):
             raise ValueError("Species '%s' is not in the species list" % sym)
         
         index = None
-        for i in xrange(len(self.specieList)):
+        for i in range(len(self.specieList)):
             if self.specieList[i] == sym:
                 index = i
                 break
@@ -437,13 +440,13 @@ class Lattice(object):
         self.specieCovalentRadius = np.empty(NSpecies, np.float64)
         self.specieAtomicNumber = np.zeros(NSpecies, np.int32)
         self.specieRGB = np.empty((NSpecies, 3), np.float64)
-        for i in xrange(NSpecies):
+        for i in range(NSpecies):
             self.specieList[i] = lattice.specieList[i]
             self.specieCount[i] = lattice.specieCount[i]
             self.specieMass[i] = lattice.specieMass[i]
             self.specieCovalentRadius[i] = lattice.specieCovalentRadius[i]
             self.specieAtomicNumber[i] = lattice.specieAtomicNumber[i]
-            for j in xrange(3):
+            for j in range(3):
                 self.specieRGB[i][j] = lattice.specieRGB[i][j]
         
         # atom data
@@ -451,11 +454,11 @@ class Lattice(object):
         self.specie = np.empty(NAtoms, np.int32)
         self.pos = np.empty(3 * NAtoms, np.float64)
         self.charge = np.empty(NAtoms, np.float64)
-        for i in xrange(NAtoms):
+        for i in range(NAtoms):
             self.atomID[i] = lattice.atomID[i]
             self.specie[i] = lattice.specie[i]
             self.charge[i] = lattice.charge[i]
-            for j in xrange(3):
+            for j in range(3):
                 self.pos[3 * i + j] = lattice.pos[3 * i + j]
         
         self.minPos[0] = lattice.minPos[0]

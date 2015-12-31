@@ -7,6 +7,8 @@ Mdi sub window for displaying VTK render window.
 
 """
 from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 from PySide import QtGui, QtCore
@@ -23,6 +25,8 @@ from ..rendering import renderer
 from .outputDialog import OutputDialog
 from ..rendering.text import vtkRenderWindowText
 from ..system.lattice import Lattice
+import six
+from six.moves import range
 
 
 ################################################################################
@@ -343,7 +347,7 @@ class RendererWindow(QtGui.QWidget):
         
         combo = self.mainWindow.mainToolbar.pipelineCombo
         
-        for i in xrange(combo.count()):
+        for i in range(combo.count()):
             self.newPipeline(str(combo.itemText(i)))
     
     def getCurrentPipelinePage(self):
@@ -391,10 +395,10 @@ class RendererWindow(QtGui.QWidget):
         # remove actors from filter lists
         for filterList in filterLists:
             filterer = filterList.filterer
-            for actorName, val in filterer.actorsDict.iteritems():
+            for actorName, val in six.iteritems(filterer.actorsDict):
                 if isinstance(val, dict):
 #                     self.logger.debug("Removing actors for: '%s'", actorName)
-                    for actorName2, actorObj in val.iteritems():
+                    for actorName2, actorObj in six.iteritems(val):
                         if actorObj.visible:
 #                             self.logger.debug("  Removing actor: '%s'", actorName2)
                             self.vtkRen.RemoveActor(actorObj.actor)
@@ -418,7 +422,7 @@ class RendererWindow(QtGui.QWidget):
         self.removeSlicePlane()
         
         # remove 
-        for key in self.highlighters.keys():
+        for key in list(self.highlighters.keys()):
             self.removeHighlighters(key)
         
         self.vtkRenWinInteract.ReInitialize()
@@ -432,10 +436,10 @@ class RendererWindow(QtGui.QWidget):
         
         for filterList in filterLists:
             filterer = filterList.filterer
-            for actorName, val in filterer.actorsDict.iteritems():
+            for actorName, val in six.iteritems(filterer.actorsDict):
                 if isinstance(val, dict):
 #                     self.logger.debug("Adding actors for: '%s'", actorName)
-                    for actorName2, actorObj in val.iteritems():
+                    for actorName2, actorObj in six.iteritems(val):
 #                             self.logger.debug("  Adding actor: '%s'", actorName2)
                         if actorObj.visible:
                             self.vtkRen.AddActor(actorObj.actor)
@@ -744,15 +748,15 @@ class RendererWindow(QtGui.QWidget):
             inputState = Lattice()
         
         # add lattice attributes
-        self.logger.debug("Adding Lattice attributes: %r", inputState.attributes.keys())
-        for key, value in inputState.attributes.iteritems():
+        self.logger.debug("Adding Lattice attributes: %r", list(inputState.attributes.keys()))
+        for key, value in six.iteritems(inputState.attributes):
             self.onScreenInfo[key] = value
         
         # atom count
         self.onScreenInfo["Atom count"] = (inputState.NAtoms,)
         
         # Lattice attributes
-        for key, value in inputState.attributes.iteritems():
+        for key, value in six.iteritems(inputState.attributes):
             if key == "Time":
                 self.onScreenInfo[key] = tuple(utilities.simulationTimeLine(value).split())
             
@@ -799,7 +803,7 @@ class RendererWindow(QtGui.QWidget):
         
         # structure counters
         for filterList in filterLists:
-            for key, structureCounterDict in filterList.filterer.structureCounterDicts.iteritems():
+            for key, structureCounterDict in six.iteritems(filterList.filterer.structureCounterDicts):
                 self.logger.debug("Adding on-screen info for structure counter: '%s'", key)
                 self.onScreenInfo[key] = []
                 
@@ -888,8 +892,8 @@ class RendererWindow(QtGui.QWidget):
                     self.onScreenInfo["Defect species count"].append([(cnt, specListInput[i], "interstitials"), specRGBInput[i]])
                 
                 if defectsSettings.getSetting("identifySplitInts"):
-                    for i in xrange(len(specListInput)):
-                        for j in xrange(i, len(specListInput)):
+                    for i in range(len(specListInput)):
+                        for j in range(i, len(specListInput)):
                             N = splitSpecCount[i][j]
                             if j == i:
                                 rgb = specRGBInput[i]
@@ -899,8 +903,8 @@ class RendererWindow(QtGui.QWidget):
                             self.onScreenInfo["Defect species count"].append([(N, "%s-%s" % (specListInput[i], specListInput[j]), "split ints"), rgb])
             
             if showAnts:
-                for i in xrange(len(specListRef)):
-                    for j in xrange(len(specListInput)):
+                for i in range(len(specListRef)):
+                    for j in range(len(specListInput)):
                         if i == j:
                             continue
                         self.onScreenInfo["Defect species count"].append([(antSpecCount[i][j], "%s on %s" % (specListInput[j], specListRef[i]), "antisites"), specRGBRef[i]])
@@ -912,7 +916,7 @@ class RendererWindow(QtGui.QWidget):
         topxRight = self.vtkRenWinInteract.width() - 220
         
         # loop over selected text
-        for i in xrange(len(selectedText)):
+        for i in range(len(selectedText)):
             settings = selectedText[i]
             item = settings.title
             

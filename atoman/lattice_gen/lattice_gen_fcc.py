@@ -5,12 +5,15 @@ Generate FCC lattice
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 import numpy as np
 
 from ..system.lattice import Lattice
 from . import _lattice_gen_fcc
+from six.moves import range
 
 ################################################################################
 
@@ -80,7 +83,7 @@ class FCCLatticeGenerator(object):
         lattice.NAtoms = NAtoms
         
         # min/max pos
-        for i in xrange(3):
+        for i in range(3):
             lattice.minPos[i] = np.min(lattice.pos[i::3])
             lattice.maxPos[i] = np.max(lattice.pos[i::3])
         

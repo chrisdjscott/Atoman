@@ -3,6 +3,8 @@
 Contains GUI forms for the slip filter.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import base
 from ...filtering.filters import slipFilter
 

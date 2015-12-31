@@ -5,6 +5,8 @@ Render bonds
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import functools
 import logging
@@ -18,6 +20,7 @@ from vtk.util import numpy_support
 from . import utils
 from .utils import setupLUT, getScalarsType, setMapperScalarRange
 from .povutils import povrayBond
+from six.moves import range
 
 
 ################################################################################
@@ -119,7 +122,7 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsDict, colouringOpt
     pov_rgb2 = np.empty(3, np.float64)
     count = 0
     bcount = 0
-    for i in xrange(NVisible):
+    for i in range(NVisible):
         index = visibleAtoms[i]
         
         # scalar
@@ -133,7 +136,7 @@ def renderBonds(visibleAtoms, mainWindow, pipelinePage, actorsDict, colouringOpt
         ypos = lattice.pos[3*index+1]
         zpos = lattice.pos[3*index+2]
         
-        for _ in xrange(NBondsArray[i]):
+        for _ in range(NBondsArray[i]):
             bondCoords.SetTuple3(bcount, xpos, ypos, zpos)
             bondVectors.SetTuple3(bcount, bondVectorArray[3*count], bondVectorArray[3*count+1], bondVectorArray[3*count+2])
             bondScalars.SetTuple1(bcount, scalar)
@@ -277,7 +280,7 @@ def renderDisplacementVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict
     # construct vtk bond arrays
     pov_rgb = np.empty(3, np.float64)
     count = 0
-    for i in xrange(NVisible):
+    for i in range(NVisible):
         if not drawBondVector[i]:
             continue
         
@@ -391,7 +394,7 @@ def renderTraceVectors2(visibleAtoms, mainWindow, pipelinePage, actorsDict, colo
     
     # reconstruct trace dict
     newd = {}
-    for i in xrange(NVisible):
+    for i in range(NVisible):
         # if atom is already in, we just append new pos (previous is already there)
         # otherwise we append previous and new
         index = visibleAtoms[i]
@@ -413,7 +416,7 @@ def renderTraceVectors2(visibleAtoms, mainWindow, pipelinePage, actorsDict, colo
     
     # get size
     size = 0
-    for key in newd.keys():
+    for key in list(newd.keys()):
         pointsList = newd[key]
         size += len(pointsList)
     logger.debug("Trace points size = %d", size)
@@ -433,7 +436,7 @@ def renderTraceVectors2(visibleAtoms, mainWindow, pipelinePage, actorsDict, colo
     # populate
     count = 0
     lines = vtk.vtkCellArray()
-    for key in newd.keys():
+    for key in list(newd.keys()):
         atomList = newd[key]
         lines.InsertNextCell(len(atomList))
         for mypos, myscalar in atomList:
@@ -543,7 +546,7 @@ def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict, colou
     
     # update trace dict with latest bond vectors
     newd = {}
-    for i in xrange(NVisible):
+    for i in range(NVisible):
         index = visibleAtoms[i]
         
         if index in traceDict:
@@ -563,7 +566,7 @@ def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict, colou
     
     # first pass to get size of arrays
     size = 0
-    for key in newd.keys():
+    for key in list(newd.keys()):
         size += len(newd[key])
     
     logger.debug("Size of trace arrays = %d", size)
@@ -578,7 +581,7 @@ def renderTraceVectors(visibleAtoms, mainWindow, pipelinePage, actorsDict, colou
     traceScalars = np.empty(size, np.float64)
     pov_rgb = np.empty(3, np.float64)
     count = 0
-    for key in newd.keys():
+    for key in list(newd.keys()):
         for mypos, mybvect, myscal in newd[key]:
             traceCoords[count][:] = mypos[:]
             traceVectors[count][:] = mybvect[:]

@@ -3,6 +3,8 @@
 Module for rendering bonds
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import time
 import logging
 import functools
@@ -15,6 +17,7 @@ from . import povrayWriters
 from .. import utils
 from .. import _rendering
 from ...filtering import bonds
+from six.moves import range
 
 
 def _bondGlyphMethod(bondGlyph, bondGlyphSource, *args, **kwargs):
@@ -170,10 +173,10 @@ class BondCalculator(object):
         
         # specie counters
         specieList = inputState.specieList
-        for i in xrange(nspecs):
+        for i in range(nspecs):
             syma = specieList[i]
             
-            for j in xrange(i, nspecs):
+            for j in range(i, nspecs):
                 symb = specieList[j]
                 
                 # check if selected

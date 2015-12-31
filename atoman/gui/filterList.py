@@ -5,6 +5,8 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 import functools
 import copy
@@ -25,6 +27,7 @@ from . import utils
 from .dialogs import infoDialogs
 from . import filterSettings
 from ..rendering import filterListRenderer
+from six.moves import range
 
 
 class FilterListWidgetItem(QtGui.QListWidgetItem):
@@ -378,13 +381,13 @@ class FilterList(QtGui.QWidget):
         self.logger.debug("Removing info windows")
         
         # atom info windows
-        keys = self.infoWindows.keys()
+        keys = list(self.infoWindows.keys())
         for key in keys:
             win = self.infoWindows.pop(key)
             win.close()
         
         # cluster info windows
-        keys = self.clusterInfoWindows.keys()
+        keys = list(self.clusterInfoWindows.keys())
         for key in keys:
             win = self.clusterInfoWindows.pop(key)
             win.close()
@@ -491,7 +494,7 @@ class FilterList(QtGui.QWidget):
         
         """
         currentSettings = []
-        for i in xrange(self.listItems.count()):
+        for i in range(self.listItems.count()):
             item = self.listItems.item(i)
             currentSettings.append(item.filterSettings)
         
@@ -503,7 +506,7 @@ class FilterList(QtGui.QWidget):
         
         """
         currentNames = []
-        for i in xrange(self.listItems.count()):
+        for i in range(self.listItems.count()):
             item = self.listItems.item(i)
             currentNames.append(item.filterName.split("[")[0].strip())
         
@@ -515,7 +518,7 @@ class FilterList(QtGui.QWidget):
         
         """
         currentScalars = []
-        for i in xrange(self.listItems.count()):
+        for i in range(self.listItems.count()):
             item = self.listItems.item(i)
             currentScalars.extend(item.filterSettings.getProvidedScalars())
         
@@ -672,7 +675,7 @@ class FilterList(QtGui.QWidget):
         scalarsDict = inp.scalarsDict
         
         numDefault = len(filterer.Filterer.defaultFilters)
-        scalarNames = scalarsDict.keys()
+        scalarNames = list(scalarsDict.keys())
         additionalFilters = ["Scalar: {0}".format(s) for s in scalarNames]
         previousAdditionalFilters = self.allFilters[numDefault:]
         currentLen = len(self.allFilters)
@@ -686,14 +689,14 @@ class FilterList(QtGui.QWidget):
             if key not in additionalFilters:
                 self.logger.debug("Removing filter: '%s'", key)
                 
-                for i in xrange(numDefault + 1, self.quickAddCombo.count()):
+                for i in range(numDefault + 1, self.quickAddCombo.count()):
                     if str(self.quickAddCombo.itemText(i)) == key:
                         self.quickAddCombo.removeItem(i)
                         self.allFilters.pop(i - 1)
                         
                         # also delete settings and remove from list widget...
                         delinds = []
-                        for j in xrange(self.listItems.count() - 1, -1, -1):
+                        for j in range(self.listItems.count() - 1, -1, -1):
                             item = self.listItems.item(j)
                             if item.filterName.startswith(key):
                                 delinds.append(j)

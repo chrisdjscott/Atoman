@@ -39,12 +39,15 @@ The following parameters apply to this filter:
         of it and there is an interstitial within this distance.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import numpy as np
 
 from . import base
 from . import _bubbles
 from . import acnaFilter
 from .. import voronoi
+from six.moves import range
 
 
 class BubblesFilterSettings(base.BaseSettings):
@@ -106,7 +109,7 @@ class BubblesFilter(base.BaseFilter):
         
         # get the indices of the bubble atoms
         bubbleAtomIndexes = []
-        for i in xrange(inputState.NAtoms):
+        for i in range(inputState.NAtoms):
             if inputState.atomSym(i) in bubbleSpecies:
                 bubbleAtomIndexes.append(i)
         bubbleAtomIndexes = np.asarray(bubbleAtomIndexes, dtype=np.int32)
@@ -173,7 +176,7 @@ class BubblesFilter(base.BaseFilter):
         
         # create list of bubbles
         bubbleList = []
-        for bubbleIndex in xrange(numBubbles):
+        for bubbleIndex in range(numBubbles):
             volume = 0.0
             
             # add volumes of bubble atoms
@@ -184,7 +187,7 @@ class BubblesFilter(base.BaseFilter):
             # add volumes of vacancies
             bubbleVacs = bubbleVacList[bubbleIndex]
             bubbleVacsAsIndexes = bubbleVacAsIndexList[bubbleIndex]
-            for i in xrange(len(bubbleVacs)):
+            for i in range(len(bubbleVacs)):
                 vacind = bubbleVacsAsIndexes[i]
                 index = inputState.NAtoms + vacind
                 volume += vor.atomVolume(index)

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 
 # import all settings modules here, so they get loaded at startup
 from . import acnaSettingsDialog

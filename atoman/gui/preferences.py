@@ -6,6 +6,8 @@ Preferences dialog.
 
 """
 from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import logging
 import datetime
@@ -18,6 +20,7 @@ import numpy as np
 from ..visutils.utilities import iconPath, resourcePath
 from ..visutils import utilities
 from . import _preferences
+from six.moves import range
 # from ..md import forces
 
 ################################################################################
@@ -832,7 +835,7 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         self.logger.debug("Default PBCs (initial value): %r", list(self.defaultPBC))
         row = QtGui.QHBoxLayout()
         xyz = ["x", "y", "z"]
-        for i in xrange(3):
+        for i in range(3):
             check = QtGui.QCheckBox(xyz[i])
             if self.defaultPBC[i]:
                 check.setCheckState(QtCore.Qt.Checked)

@@ -6,6 +6,8 @@ Lattice reader objects.
 
 """
 from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import copy
 import re
@@ -17,6 +19,7 @@ from . import _input as input_c
 from .atoms import elements
 from ..visutils import utilities
 from .lattice import Lattice
+from six.moves import range
 
 
 ################################################################################
@@ -293,7 +296,7 @@ class LbomdXYZReader(GenericLatticeReader):
         state.specieRGB = copy.deepcopy(refLattice.specieRGB)
         state.specieAtomicNumber = copy.deepcopy(refLattice.specieAtomicNumber)
         
-        for i in xrange(len(state.specieList)):
+        for i in range(len(state.specieList)):
             self.logger.info("    %d %s (%s) atoms", state.specieCount[i], state.specieList[i], elements.atomName(state.specieList[i]))
         
         return 0, state
@@ -381,7 +384,7 @@ class LbomdRefReader(GenericLatticeReader):
         state.specieCovalentRadius = np.empty(NSpecies, np.float64)
         state.specieAtomicNumber = np.empty(NSpecies, np.int32)
         state.specieRGB = np.empty((NSpecies, 3), np.float64)
-        for i in xrange(NSpecies):
+        for i in range(NSpecies):
             state.specieList[i] = specieListTemp[i]
             state.specieCount[i] = specieCountTemp[i]
             
@@ -470,7 +473,7 @@ class LbomdDatReader(GenericLatticeReader):
         state.specieCovalentRadius = np.empty(NSpecies, np.float64)
         state.specieAtomicNumber = np.empty(NSpecies, np.int32)
         state.specieRGB = np.empty((NSpecies, 3), np.float64)
-        for i in xrange(NSpecies):
+        for i in range(NSpecies):
             state.specieList[i] = specieListTemp[i]
             state.specieCount[i] = specieCountTemp[i]
             

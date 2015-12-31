@@ -3,11 +3,14 @@
 Contains GUI forms for the species filter.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from PySide import QtGui, QtCore
 
 from . import base
 from ...system.atoms import elements
 from ...filtering.filters import speciesFilter
+from six.moves import range
 
 
 ################################################################################
@@ -64,7 +67,7 @@ class SpeciesSettingsDialog(base.GenericSettingsDialog):
     def speciesListChanged(self, *args):
         """Species selection has changed."""
         visibleSpeciesList = []
-        for i in xrange(self.specieList.count()):
+        for i in range(self.specieList.count()):
             item = self.specieList.item(i)
             if item.checkState() == QtCore.Qt.Checked:
                 visibleSpeciesList.append(item.symbol)
@@ -87,7 +90,7 @@ class SpeciesSettingsDialog(base.GenericSettingsDialog):
         
         # remove species that don't exist
         num = self.specieList.count()
-        for i in xrange(num - 1, -1, -1):
+        for i in range(num - 1, -1, -1):
             item = self.specieList.item(i)
             
             # remove if doesn't exist in both ref and input

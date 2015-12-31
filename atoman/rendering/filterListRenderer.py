@@ -5,6 +5,8 @@ Renderer for the FilterList object.
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import copy
 import logging
 
@@ -22,6 +24,9 @@ from .renderers import antisiteRenderer
 from .renderers import clusterRenderer
 from .renderers import voronoiRenderer
 from ..system.atoms import elements
+import six
+from six.moves import range
+from six.moves import zip
 
 
 class FilterListRenderer(object):
@@ -500,7 +505,7 @@ class FilterListRenderer(object):
         calcBonds = False
         maxBond = -1
         drawList = []
-        for i in xrange(self.bondsOptions.bondsList.count()):
+        for i in range(self.bondsOptions.bondsList.count()):
             item = self.bondsOptions.bondsList.item(i)
             
             if item.checkState() == QtCore.Qt.Checked:
@@ -673,7 +678,7 @@ class FilterListRenderer(object):
     def getActorsDict(self):
         """Return dict containing current actors."""
         actorsDict = {}
-        for name, renderer in self._renderersDict.iteritems():
+        for name, renderer in six.iteritems(self._renderersDict):
             actorsDict[name] = renderer.getActor()
         
         return actorsDict
@@ -690,7 +695,7 @@ class FilterListRenderer(object):
         actorsDict = self.getActorsDict()
         
         # loop over actors
-        for actorName, actorObj in actorsDict.iteritems():
+        for actorName, actorObj in six.iteritems(actorsDict):
             if actorObj.visible:
                 self._logger.debug("Removing actor: '%s'", actorName)
                 for rw in rendererWindows:
@@ -800,7 +805,7 @@ class FilterListRenderer(object):
         actorsDict = self.getActorsDict()
         
         # loop over actors
-        for actorName, actorObj in actorsDict.iteritems():
+        for actorName, actorObj in six.iteritems(actorsDict):
             if not actorObj.visible:
                 self._logger.debug("Adding actor: '%s'", actorName)
                 for rw in rendererWindows:

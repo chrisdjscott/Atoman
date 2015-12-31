@@ -3,6 +3,7 @@
 Base class for renderers.
 
 """
+from __future__ import unicode_literals
 
 
 class BaseRenderer(object):
