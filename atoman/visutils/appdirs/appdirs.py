@@ -9,7 +9,6 @@ See <http://github.com/ActiveState/appdirs> for details and usage.
 """
 from __future__ import print_function
 from __future__ import absolute_import
-from __future__ import unicode_literals
 from six.moves import map
 # Dev Notes:
 # - MSDN on where to store app data files:
@@ -98,7 +97,7 @@ def user_data_dir(appname=None, appauthor=None, version=None, roaming=False):
             path = os.path.join(path, appname)
     if appname and version:
         path = os.path.join(path, version)
-    return path
+    return unicode(path)
 
 
 def site_data_dir(appname=None, appauthor=None, version=None, multipath=False):
@@ -164,7 +163,7 @@ def site_data_dir(appname=None, appauthor=None, version=None, multipath=False):
 
     if appname and version:
         path = os.path.join(path, version)
-    return path
+    return unicode(path)
 
 
 def user_config_dir(appname=None, appauthor=None, version=None, roaming=False):
@@ -204,7 +203,7 @@ def user_config_dir(appname=None, appauthor=None, version=None, roaming=False):
             path = os.path.join(path, appname)
     if appname and version:
         path = os.path.join(path, version)
-    return path
+    return unicode(path)
 
 
 def site_config_dir(appname=None, appauthor=None, version=None, multipath=False):
@@ -255,7 +254,7 @@ def site_config_dir(appname=None, appauthor=None, version=None, multipath=False)
             path = os.pathsep.join(pathlist)
         else:
             path = pathlist[0]
-    return path
+    return unicode(path)
 
 
 def user_cache_dir(appname=None, appauthor=None, version=None, opinion=True):
@@ -312,7 +311,7 @@ def user_cache_dir(appname=None, appauthor=None, version=None, opinion=True):
             path = os.path.join(path, appname)
     if appname and version:
         path = os.path.join(path, version)
-    return path
+    return unicode(path)
 
 
 def user_log_dir(appname=None, appauthor=None, version=None, opinion=True):
@@ -363,7 +362,7 @@ def user_log_dir(appname=None, appauthor=None, version=None, opinion=True):
             path = os.path.join(path, "log")
     if appname and version:
         path = os.path.join(path, version)
-    return path
+    return unicode(path)
 
 
 class AppDirs(object):

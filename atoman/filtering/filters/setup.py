@@ -1,14 +1,15 @@
+
 from __future__ import print_function
 from __future__ import absolute_import
-from __future__ import unicode_literals
 
 import os
+
 
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
     
     # dependencies
-    boxesdeps = [os.path.join("..", "..", "visclibs", "boxeslib.c"), 
+    boxesdeps = [os.path.join("..", "..", "visclibs", "boxeslib.c"),
                  os.path.join("..", "..", "visclibs", "boxeslib.h")]
     utildeps = [os.path.join("..", "..", "visclibs", "utilities.c"),
                 os.path.join("..", "..", "visclibs", "utilities.h")]
@@ -24,34 +25,34 @@ def configuration(parent_package='', top_path=None):
     # config
     config = Configuration("filters", parent_package, top_path)
     
-    config.add_extension("_acna", 
+    config.add_extension("_acna",
                          ["acna.c"],
-                         depends=[os.path.join("..", "atom_structure.h")]+boxesdeps+utildeps+nebdeps+arraydeps,
+                         depends=[os.path.join("..", "atom_structure.h")] + boxesdeps + utildeps + nebdeps + arraydeps,
                          include_dirs=[incdir],
                          libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
     
-    config.add_extension("_bond_order", 
+    config.add_extension("_bond_order",
                          ["bond_order.c"],
                          include_dirs=[incdir],
-                         depends=boxesdeps+utildeps+nebdeps+arraydeps,
+                         depends=boxesdeps + utildeps + nebdeps + arraydeps,
                          libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
      
-    config.add_extension("_defects", 
+    config.add_extension("_defects",
                          ["defects.c"],
-                         depends=[os.path.join("..", "atom_structure.h")]+boxesdeps+utildeps+nebdeps+arraydeps,
+                         depends=[os.path.join("..", "atom_structure.h")] + boxesdeps + utildeps + nebdeps + arraydeps,
                          include_dirs=[incdir],
                          libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
      
-    config.add_extension("_filtering", 
+    config.add_extension("_filtering",
                          ["filtering.c"],
                          include_dirs=[incdir],
-                         depends=boxesdeps+utildeps+arraydeps,
+                         depends=boxesdeps + utildeps + arraydeps,
                          libraries=["boxeslib", "utilities", "array_utils"])
     
-    config.add_extension("_bubbles", 
+    config.add_extension("_bubbles",
                          ["bubbles.c"],
                          include_dirs=[incdir],
-                         depends=boxesdeps+utildeps+nebdeps+arraydeps,
+                         depends=boxesdeps + utildeps + nebdeps + arraydeps,
                          libraries=["boxeslib", "utilities", "neb_list", "array_utils"])
     
     return config

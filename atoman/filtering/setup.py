@@ -1,8 +1,9 @@
+
 from __future__ import print_function
 from __future__ import absolute_import
-from __future__ import unicode_literals
 
 import os
+
 
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
@@ -11,7 +12,7 @@ def configuration(parent_package='', top_path=None):
     cwd = os.path.dirname(os.path.abspath(__file__))
     incdir = os.path.abspath(os.path.join(cwd, os.pardir))
     
-    boxesdeps = [os.path.join("..", "visclibs", "boxeslib.c"), 
+    boxesdeps = [os.path.join("..", "visclibs", "boxeslib.c"),
                  os.path.join("..", "visclibs", "boxeslib.h")]
     utildeps = [os.path.join("..", "visclibs", "utilities.c"),
                 os.path.join("..", "visclibs", "utilities.h")]
@@ -23,22 +24,22 @@ def configuration(parent_package='', top_path=None):
     
     config.add_subpackage("filters")
     
-    config.add_extension("bonds", 
+    config.add_extension("bonds",
                          ["bonds.c"],
                          include_dirs=[incdir],
-                         depends=boxesdeps+utildeps+arraydeps,
+                         depends=boxesdeps + utildeps + arraydeps,
                          libraries=["boxeslib", "utilities", "array_utils"])
     
-    config.add_extension("_clusters", 
+    config.add_extension("_clusters",
                          ["clusters.c"],
                          include_dirs=[incdir],
-                         depends=boxesdeps+utildeps+arraydeps,
+                         depends=boxesdeps + utildeps + arraydeps,
                          libraries=["boxeslib", "utilities", "array_utils"])
     
-    config.add_extension("_voronoi", 
-                         ["voronoi.c", "voro_iface.cpp", 
-                         "voro++/src/voro++.cc"],
-                         depends=["voro_iface.h"]+arraydeps,
+    config.add_extension("_voronoi",
+                         ["voronoi.c", "voro_iface.cpp",
+                          "voro++/src/voro++.cc"],
+                         depends=["voro_iface.h"] + arraydeps,
                          libraries=["array_utils"],
                          include_dirs=[incdir])
     

@@ -1,8 +1,9 @@
+
 from __future__ import print_function
 from __future__ import absolute_import
-from __future__ import unicode_literals
 
 import os
+
 
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
@@ -19,10 +20,10 @@ def configuration(parent_package='', top_path=None):
     # config
     config = Configuration("algebra", parent_package, top_path)
     
-    config.add_extension("_vectors", 
+    config.add_extension("_vectors",
                          ["vectors.c"],
                          include_dirs=[incdir],
-                         depends=utildeps+arraydeps,
+                         depends=utildeps + arraydeps,
                          libraries=["utilities", "array_utils"])
     
     return config

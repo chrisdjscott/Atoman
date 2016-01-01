@@ -45,7 +45,8 @@ try:
     import vtk.qt
     PyQtImpl = vtk.qt.PyQtImpl
 except ImportError:
-    pass
+    # we're using pyside
+    PyQtImpl = "PySide"
 
 if PyQtImpl is None:
     # Autodetect the PyQt implementation to use

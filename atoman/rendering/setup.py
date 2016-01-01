@@ -1,8 +1,9 @@
+
 from __future__ import print_function
 from __future__ import absolute_import
-from __future__ import unicode_literals
 
 import os
+
 
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
@@ -17,7 +18,7 @@ def configuration(parent_package='', top_path=None):
     arraydeps = [os.path.join("..", "visclibs", "array_utils.c"),
                  os.path.join("..", "visclibs", "array_utils.h")]
     
-    config.add_extension("_rendering", 
+    config.add_extension("_rendering",
                          ["rendering.c"],
                          include_dirs=[incdir],
                          depends=arraydeps,

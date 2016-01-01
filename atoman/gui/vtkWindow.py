@@ -11,8 +11,11 @@ from PySide import QtCore
 
 from .QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 # from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-import vtk.qt
-vtk.qt.PyQtImpl = "PySide"
+try:
+    import vtk.qt
+    vtk.qt.PyQtImpl = "PySide"
+except:
+    pass
 
 
 class VTKRenWinInteractOverride(vtk.vtkGenericRenderWindowInteractor):
