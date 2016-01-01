@@ -235,7 +235,7 @@ def warnExeNotFound(parent, exe):
 ################################################################################
 def checkForExe(exe):
     """
-    Check if executable can be located 
+    Check if executable can be located
     
     """
     exepath = None
@@ -283,7 +283,7 @@ def checkForExe(exe):
 ################################################################################
 def checkForExeGlob(exe):
     """
-    Check if executable can be located 
+    Check if executable can be located
     
     """
     # check if exe programme located
@@ -330,7 +330,7 @@ def runSubProcess(command, verbose=0):
     output, stderr = process.communicate()
     status = process.poll()
     
-    return output, stderr, status
+    return output.decode('utf-8'), stderr.decode('utf-8'), status
 
 ################################################################################
 def runSubprocessInThread(command, resultQ, verbose=False):

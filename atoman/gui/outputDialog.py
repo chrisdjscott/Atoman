@@ -1154,7 +1154,7 @@ class MovieGenerator(QtCore.QObject):
                 
                 self.log.emit("debug", 'Command: "%s"' % command)
                 
-                process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, 
+                process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                  
                 output, stderr = process.communicate()
@@ -1162,8 +1162,8 @@ class MovieGenerator(QtCore.QObject):
             
             if status:
                 self.log.emit("error", "FFmpeg failed (%d)" % status)
-                self.log.emit("error", output)
-                self.log.emit("error", stderr)
+                self.log.emit("error", output.decode('utf-8'))
+                self.log.emit("error", stderr.decode('utf-8'))
         
         finally:
             ffmpegTime = time.time() - ffmpegTime
