@@ -127,13 +127,19 @@ class Lattice(object):
         Calculate temperature in K
         
         """
+        logger = logging.getLogger(__name__)
+        logger.debug("Calculating temperature of Lattice")
+        
         if "Kinetic energy" in self.scalarsDict:
+            logger.debug("Got 'Kinetic energy' array from scalarsDict")
             ke = self.scalarsDict["Kinetic energy"]
         
         elif "KE" in self.scalarsDict:
+            logger.debug("Got 'KE' array from scalarsDict")
             ke = self.scalarsDict["KE"]
         
         else:
+            logger.debug("No kinetic energy information stored on Lattice")
             return None
         
         if NMoving is None:

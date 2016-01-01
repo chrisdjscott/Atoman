@@ -14,6 +14,7 @@ import numpy as np
 from six.moves import range
 
 from ..latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
+from ..lattice import Lattice
 
    
 def path_to_file(path):
@@ -35,12 +36,21 @@ class TestLattice(unittest.TestCase):
         status, self.lattice = reader.readFile(path_to_file("lattice.dat"))
         if status:
             self.fail("Error reading in lattice.dat")
+        
+        status, self.lattic2 = reader.readFile(path_to_file("kenny_lattice.dat"))
+        if status:
+            self.fail("Error reading in kenny_lattice.dat")
+        
+        self.lattic3 = Lattice()
+        self.lattic3.addAtom("Pu", (0, 0, 0), 0)
+        self.lattic3.addAtom("Pu", (0, 2, 0), 0)
+        self.lattic3.addAtom("Ga", (3, 1, 3), 0)
      
     def tearDown(self):
-        # remove tmp dir
         shutil.rmtree(self.tmpLocation)
-         
         self.lattice = None
+        self.lattic2 = None
+        self.lattic3 = None
     
     def test_wrapAtoms(self):
         """
@@ -73,6 +83,17 @@ class TestLattice(unittest.TestCase):
             self.lattice.atomSeparation(0, self.lattice.NAtoms, np.ones(3, np.int32))
         with self.assertRaises(IndexError):
             self.lattice.atomSeparation(self.lattice.NAtoms, 0, np.ones(3, np.int32))
+    
+    def test_calcTemperature(self):
+        """
+        Lattice calcTemperature
+        
+        """
+        self.assertIsNone(self.lattice.calcTemperature())
+        
+        ke = np.asarray([0.1, 0.3, 0.2], dtype=np.float64)
+        self.lattic3.scalarsDict["KE"] = ke
+        self.assertAlmostEqual(self.lattic3.calcTemperature(), 1547.2692376742177)
     
     def test_density(self):
         """
