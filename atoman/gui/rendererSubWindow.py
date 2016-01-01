@@ -621,8 +621,7 @@ class RendererWindow(QtGui.QWidget):
         """
         self.renderer.toggleAxes()
     
-    def createAction(self, text, slot=None, shortcut=None, icon=None,
-                     tip=None, checkable=False, signal="triggered()"):
+    def createAction(self, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False):
         """
         Create an action
         
@@ -639,8 +638,8 @@ class RendererWindow(QtGui.QWidget):
             action.setToolTip(tip)
             action.setStatusTip(tip)
         
-        if slot is not None:
-            self.connect(action, QtCore.SIGNAL(signal), slot)
+        if callable(slot):
+            action.triggered.connect(slot)
         
         if checkable:
             action.setCheckable(True)

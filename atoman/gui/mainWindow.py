@@ -777,8 +777,7 @@ class MainWindow(QtGui.QMainWindow):
 #         dlg = dialogs.AboutMeDialog(parent=self)
 #         dlg.exec_()
     
-    def createAction(self, text, slot=None, shortcut=None, icon=None,
-                     tip=None, checkable=False, signal="triggered()"):
+    def createAction(self, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False):
         """
         Create an action
         
@@ -795,8 +794,8 @@ class MainWindow(QtGui.QMainWindow):
             action.setToolTip(tip)
             action.setStatusTip(tip)
         
-        if slot is not None:
-            self.connect(action, QtCore.SIGNAL(signal), slot)
+        if callable(slot):
+            action.triggered.connect(slot)
         
         if checkable:
             action.setCheckable(True)
