@@ -218,14 +218,14 @@ class FilterList(QtGui.QWidget):
         self.bondsOptions = bondsOptions.BondsOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.bondsOptions)
         item.setText("Bonds options: Off")
-        self.bondsOptions.modified.connect(item.setText)
+        self.bondsOptions.modified.connect(lambda text, item=item: item.setText(text))
         self.optionsList.addItem(item)
         
         # colouring options
         self.colouringOptions = colouringOptions.ColouringOptionsWindow(parent=self)
         item = OptionsListItem(self.colouringOptions)
         item.setText("Colouring: Species")
-        self.colouringOptions.modified.connect(item.setText)
+        self.colouringOptions.modified.connect(lambda text, item=item: item.setText(text))
         self.optionsList.addItem(item)
         
         # display options
@@ -238,14 +238,14 @@ class FilterList(QtGui.QWidget):
         self.traceOptions = traceOptions.TraceOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.traceOptions)
         item.setText("Trace options: Off")
-        self.traceOptions.modified.connect(item.setText)
+        self.traceOptions.modified.connect(lambda text, item=item: item.setText(text))
         self.optionsList.addItem(item)
         
         # vectors options
         self.vectorsOptions = vectorsOptions.VectorsOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.vectorsOptions)
         item.setText("Vectors options: None")
-        self.vectorsOptions.modified.connect(item.setText)
+        self.vectorsOptions.modified.connect(lambda text, item=item: item.setText(text))
         self.optionsList.addItem(item)
         
         # Voronoi options

@@ -36,6 +36,9 @@ Changes by Greg Schussman, Aug. 2014
 Changes by Alex Tsui, Apr. 2015
  Port from PyQt4 to PyQt5.
 """
+from __future__ import print_function
+
+import vtk
 
 # Check whether a specific PyQt implementation was chosen
 try:
@@ -361,7 +364,6 @@ class QVTKRenderWindowInteractor(QWidget):
         ctrl, shift = self._GetCtrlShift(ev)
         self._Iren.SetEventInformationFlipY(ev.x(), ev.y(),
                                             ctrl, shift, chr(0), 0, None)
-
         if self._ActiveButton == Qt.LeftButton:
             self._Iren.LeftButtonReleaseEvent()
         elif self._ActiveButton == Qt.RightButton:
@@ -562,5 +564,5 @@ def _qt_key_to_key_sym(key):
 
 
 if __name__ == "__main__":
-    print PyQtImpl
+    print(PyQtImpl)
     QVTKRenderWidgetConeExample()

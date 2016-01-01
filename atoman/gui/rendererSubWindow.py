@@ -12,8 +12,7 @@ from __future__ import unicode_literals
 import logging
 
 from PySide import QtGui, QtCore
-#from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from .QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from . import vtkWindow
 import vtk
 import numpy as np
 
@@ -28,8 +27,6 @@ from ..system.lattice import Lattice
 import six
 from six.moves import range
 
-
-################################################################################
 
 class RendererWindow(QtGui.QWidget):
     """
@@ -78,32 +75,32 @@ class RendererWindow(QtGui.QWidget):
         layout.addWidget(toolbar)
         
         # button to displace lattice frame
-        showCellAction = self.createAction("Toggle cell", slot=self.toggleCellFrame, icon="cell_icon.svg", 
+        showCellAction = self.createAction("Toggle cell", slot=self.toggleCellFrame, icon="cell_icon.svg",
                                            tip="Toggle cell frame visibility")
         
         # button to display axes
-        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon.svg", 
+        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon.svg",
                                            tip="Toggle axes visiblity")
         
         # reset camera to cell
-        setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell, icon="oxygen/zoom-fit-best.png", 
-                                               tip="Reset camera to cell")
+        setCamToCellAction = self.createAction("Reset to cell", slot=self.setCameraToCell,
+                                               icon="oxygen/zoom-fit-best.png", tip="Reset camera to cell")
         
         # rotate image
-        rotateViewPoint = self.createAction("Rotate view point", slot=self.rotateViewPoint, icon="oxygen/transform-rotate.png",
-                                            tip="Rotate view point")
+        rotateViewPoint = self.createAction("Rotate view point", slot=self.rotateViewPoint,
+                                            icon="oxygen/transform-rotate.png", tip="Rotate view point")
         
         # text selector
-        openTextSelectorAction = self.createAction("On-screen info", self.showTextSelector, 
-                                                   icon="oxygen/preferences-desktop-font.png", 
+        openTextSelectorAction = self.createAction("On-screen info", self.showTextSelector,
+                                                   icon="oxygen/preferences-desktop-font.png",
                                                    tip="Show on-screen text selector")
         
         # output dialog
-        showOutputDialogAction = self.createAction("Output dialog", slot=self.showOutputDialog, icon="oxygen/document-save.png",
-                                                   tip="Show output dialog")
+        showOutputDialogAction = self.createAction("Output dialog", slot=self.showOutputDialog,
+                                                   icon="oxygen/document-save.png", tip="Show output dialog")
         
         # background colour
-        backgroundColourAction = self.createAction("Toggle background colour", slot=self.toggleBackgroundColour, 
+        backgroundColourAction = self.createAction("Toggle background colour", slot=self.toggleBackgroundColour,
                                                    icon="oxygen/preferences-desktop-display-color.png",
                                                    tip="Toggle background colour")
         
@@ -113,17 +110,19 @@ class RendererWindow(QtGui.QWidget):
         
         # aa up
         aaDownAction = self.createAction("Decrease anti-aliasing", slot=self.decreaseAA, icon="oxygen/go-down.png",
-                                       tip="Decrease anti-aliasing")
+                                         tip="Decrease anti-aliasing")
         
         # camera settings
-        cameraSettingsAction = self.createAction("Camera settings", slot=self.showCameraSettings, icon="oxygen/camera-photo.png", tip="Show camera settings")
+        cameraSettingsAction = self.createAction("Camera settings", slot=self.showCameraSettings,
+                                                 icon="oxygen/camera-photo.png", tip="Show camera settings")
         
         # parallel projection action
-        projectionAction = self.createAction("Parallel projection", slot=self.toggleProjection, icon="perspective-ava.svg", tip="Parallel projection", checkable=True)
+        projectionAction = self.createAction("Parallel projection", slot=self.toggleProjection,
+                                             icon="perspective-ava.svg", tip="Parallel projection", checkable=True)
         
         # add actions
-        self.addActions(toolbar, (showCellAction, showAxesAction, backgroundColourAction, None, 
-                                  setCamToCellAction, rotateViewPoint, cameraSettingsAction, projectionAction, None, 
+        self.addActions(toolbar, (showCellAction, showAxesAction, backgroundColourAction, None,
+                                  setCamToCellAction, rotateViewPoint, cameraSettingsAction, projectionAction, None,
                                   openTextSelectorAction, showOutputDialogAction, None,
                                   aaUpAction, aaDownAction))
         
@@ -131,7 +130,9 @@ class RendererWindow(QtGui.QWidget):
         self.vtkRenWin = vtk.vtkRenderWindow()
         
         # VTK interactor
-        self.vtkRenWinInteract = QVTKRenderWindowInteractor(self, rw=self.vtkRenWin)
+        iren = vtkWindow.VTKRenWinInteractOverride()
+        iren.SetRenderWindow(self.vtkRenWin)
+        self.vtkRenWinInteract = vtkWindow.VTKWindow(self, rw=self.vtkRenWin, iren=iren)
         
         # interactor style
         self.vtkRenWinInteract._Iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
@@ -140,14 +141,15 @@ class RendererWindow(QtGui.QWidget):
         self.vtkRenWinInteract.changeDisableMouseWheel(self.mainWindow.preferences.generalForm.disableMouseWheel)
         
         # add observers
-#         self.vtkRenWinInteract._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
+        self.vtkRenWinInteract._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
+        # self.vtkRenWinInteract._Iren.AddObserver("LeftButtonReleaseEvent", self.leftButtonReleased)
+        self.vtkRenWinInteract._Iren.AddObserver("RightButtonPressEvent", self.rightButtonPressed)
+        # self.vtkRenWinInteract._Iren.AddObserver("RightButtonReleaseEvent", self.rightButtonReleased)
+        self.vtkRenWinInteract._Iren.AddObserver("MouseMoveEvent", self.mouseMoved)
         
-        # connect signals from QVTK
-        self.vtkRenWinInteract.leftButtonPressOverride.connect(self.leftButtonPressed)
-        self.vtkRenWinInteract.leftButtonReleaseOverride.connect(self.leftButtonReleased)
-        self.vtkRenWinInteract.rightButtonPressOverride.connect(self.rightButtonPressed)
-        self.vtkRenWinInteract.rightButtonReleaseOverride.connect(self.rightButtonReleased)
-        self.vtkRenWinInteract.mouseMoveOverride.connect(self.mouseMoved)
+        # connect custom signals (add observer does not work for release events)
+        self.vtkRenWinInteract.leftButtonReleased.connect(self.leftButtonReleased)
+        self.vtkRenWinInteract.rightButtonReleased.connect(self.rightButtonReleased)
         
         # add picker
         self.vtkPicker = vtk.vtkCellPicker()
@@ -164,7 +166,6 @@ class RendererWindow(QtGui.QWidget):
         self.vtkRenWin.SetAAFrames(self.currentAAFrames)
         
         self.vtkRenWinInteract.Initialize()
-        self.vtkRenWinInteract.Start()
         
         layout.addWidget(self.vtkRenWinInteract)
         
@@ -247,11 +248,8 @@ class RendererWindow(QtGui.QWidget):
         
         """
         self.currentAAFrames += 1
-        
-        print("SET AA FRAMES", self.currentAAFrames)
-        
+        self.logger.debug("Set AA Frames: %d", self.currentAAFrames)
         self.vtkRenWin.SetAAFrames(self.currentAAFrames)
-        
         self.vtkRenWinInteract.ReInitialize()
     
     def decreaseAA(self):
@@ -261,13 +259,9 @@ class RendererWindow(QtGui.QWidget):
         """
         if self.currentAAFrames == 0:
             return
-        
         self.currentAAFrames -= 1
-        
-        print("SET AA FRAMES", self.currentAAFrames)
-        
+        self.logger.debug("Set AA Frames: %d", self.currentAAFrames)
         self.vtkRenWin.SetAAFrames(self.currentAAFrames)
-        
         self.vtkRenWinInteract.ReInitialize()
     
     def toggleBackgroundColour(self):
@@ -390,75 +384,65 @@ class RendererWindow(QtGui.QWidget):
         Remove current actors.
         
         """
-        filterLists = self.getFilterLists()
+        self.logger.debug("Removing actors from renderer window %d", self.rendererIndex)
         
-        # remove actors from filter lists
+        modified = False
+        filterLists = self.getFilterLists()
         for filterList in filterLists:
-            filterer = filterList.filterer
-            for actorName, val in six.iteritems(filterer.actorsDict):
-                if isinstance(val, dict):
-#                     self.logger.debug("Removing actors for: '%s'", actorName)
-                    for actorName2, actorObj in six.iteritems(val):
-                        if actorObj.visible:
-#                             self.logger.debug("  Removing actor: '%s'", actorName2)
-                            self.vtkRen.RemoveActor(actorObj.actor)
+            rend = filterList.renderer
+            actorsDict = rend.getActorsDict()
+            for actorName, actorObj in six.iteritems(actorsDict):
+                if actorObj.visible:
+                    self.vtkRen.RemoveActor(actorObj.actor)
+                    modified = True
             
-                else:
-                    actorObj = val
-                    if actorObj.visible:
-#                         self.logger.debug("Removing actor: '%s'", actorName)
-                        self.vtkRen.RemoveActor(actorObj.actor)
-            
-            if filterer.scalarBarAdded:
+            if rend.scalarBarAdded:
                 # which scalar bar
                 if self.blackBackground:
-                    scalarBar = filterer.scalarBar_black_bg
+                    scalarBar = rend._scalarBarBlack
                 else:
-                    scalarBar = filterer.scalarBar_white_bg
-                
+                    scalarBar = rend._scalarBarWhite
                 self.vtkRen.RemoveActor2D(scalarBar)
+                modified = True
         
         # remove slice plane?
-        self.removeSlicePlane()
+        sliceRemoved = self.removeSlicePlane(reinit=False)
         
-        # remove 
+        # remove
+        highlightersRemoved = False
         for key in list(self.highlighters.keys()):
-            self.removeHighlighters(key)
+            self.removeHighlighters(key, reinit=False)
+            highlightersRemoved = True
         
-        self.vtkRenWinInteract.ReInitialize()
+        if modified or sliceRemoved or highlightersRemoved:
+            self.logger.debug("Reinitialising renderer window %d after removing actors", self.rendererIndex)
+            self.vtkRenWinInteract.ReInitialize()
     
     def addActors(self):
-        """
-        Add current actors.
+        """Add current actors."""
+        self.logger.debug("Adding actors to renderer window %d", self.rendererIndex)
         
-        """
+        modified = False
         filterLists = self.getFilterLists()
-        
         for filterList in filterLists:
-            filterer = filterList.filterer
-            for actorName, val in six.iteritems(filterer.actorsDict):
-                if isinstance(val, dict):
-#                     self.logger.debug("Adding actors for: '%s'", actorName)
-                    for actorName2, actorObj in six.iteritems(val):
-#                             self.logger.debug("  Adding actor: '%s'", actorName2)
-                        if actorObj.visible:
-                            self.vtkRen.AddActor(actorObj.actor)
+            rend = filterList.renderer
+            actorsDict = rend.getActorsDict()
+            for actorName, actorObj in six.iteritems(actorsDict):
+                if actorObj.visible:
+                    self.vtkRen.AddActor(actorObj.actor)
+                    modified = True
             
-                else:
-                    actorObj = val
-                    if actorObj.visible:
-#                         self.logger.debug("Adding actor: '%s'", actorName)
-                        self.vtkRen.AddActor(actorObj.actor)
-            
-            if filterer.scalarBarAdded:
+            if rend.scalarBarAdded:
                 # which scalar bar
                 if self.blackBackground:
-                    scalarBar = filterer.scalarBar_black_bg
+                    scalarBar = rend._scalarBarBlack
                 else:
-                    scalarBar = filterer.scalarBar_white_bg
-                
+                    scalarBar = rend._scalarBarWhite
                 self.vtkRen.AddActor2D(scalarBar)
-            
+                modified = True
+        
+        if modified:
+            self.logger.debug("Reinitialising renderer window %d after adding actors", self.rendererIndex)
             self.vtkRenWinInteract.ReInitialize()
     
     def getCurrentRefState(self):
@@ -548,7 +532,6 @@ class RendererWindow(QtGui.QWidget):
         # update index and string
         self.currentPipelineString = str(self.analysisPipelineCombo.currentText())
         self.currentPipelineIndex = self.analysisPipelineCombo.currentIndex()
-        
     
     def newPipeline(self, name):
         """
@@ -558,10 +541,7 @@ class RendererWindow(QtGui.QWidget):
         self.analysisPipelineCombo.addItem(name)
     
     def endPickEvent(self, obj, event):
-        """
-        End of vtk pick event.
-        
-        """
+        """End of vtk pick event."""
         logger = self.logger
         
         if self.leftClick and not self.rightClick:
@@ -589,46 +569,30 @@ class RendererWindow(QtGui.QWidget):
             pipelinePage = self.getCurrentPipelinePage()
             pipelinePage.pickObject(pickPos_np, clickType)
     
-    def mouseMoved(self, event):
-        """
-        Mouse moved
-        
-        """
+    def mouseMoved(self, *args, **kwargs):
+        """Mouse moved."""
         self.mouseMotion = True
     
-    def leftButtonPressed(self, event):
-        """
-        Left mouse button pressed
-        
-        """
+    def leftButtonPressed(self, *args, **kwargs):
+        """Left mouse button pressed."""
         self.mouseMotion = False
         self.rightClick = False
         self.leftClick = True
     
-    def leftButtonReleased(self, event):
-        """
-        Left button released.
-        
-        """
+    def leftButtonReleased(self, *args, **kwargs):
+        """Left button released."""
         if not self.mouseMotion:
             self.leftClick = True
             pos = self.vtkRenWinInteract.GetEventPosition()
             self.vtkPicker.Pick(pos[0], pos[1], 0, self.vtkRen)
-        
         self.leftClick = False
     
-    def rightButtonPressed(self, event):
-        """
-        Left mouse button pressed
-        
-        """
+    def rightButtonPressed(self, *args, **kwargs):
+        """Right mouse button pressed."""
         self.mouseMotion = False
     
-    def rightButtonReleased(self, event):
-        """
-        Left button released.
-        
-        """
+    def rightButtonReleased(self, *args, **kwargs):
+        """Right button released."""
         if not self.mouseMotion:
             self.rightClick = True
             pos = self.vtkRenWinInteract.GetEventPosition()
@@ -1105,25 +1069,30 @@ class RendererWindow(QtGui.QWidget):
                 self.vtkRen.RemoveActor(self.slicePlaneActor)
                 self.vtkRenWinInteract.ReInitialize()
             except:
-                print("REM SLICE ACTOR FAILED")
+                self.logger.warning("Remove slice actor failed")
             
         self.slicePlaneActor = actor
         
         self.vtkRen.AddActor(self.slicePlaneActor)
         self.vtkRenWinInteract.ReInitialize()
     
-    def removeSlicePlane(self):
+    def removeSlicePlane(self, reinit=True):
         """
         Remove the slice plane actor.
         
         """
+        removed = False
         if self.slicePlaneActor is not None:
             try:
                 self.vtkRen.RemoveActor(self.slicePlaneActor)
-                self.vtkRenWinInteract.ReInitialize()
+                if reinit:
+                    self.vtkRenWinInteract.ReInitialize()
                 self.slicePlaneActor = None
+                removed = True
             except:
-                print("REM SLICE ACTOR FAILED")
+                self.logger.warning("Remove slice actor failed")
+        
+        return removed
     
     def addHighlighters(self, highlightersID, highlighters):
         """
@@ -1148,7 +1117,7 @@ class RendererWindow(QtGui.QWidget):
         # add to dict
         self.highlighters[highlightersID] = highlighters
     
-    def removeHighlighters(self, highlightersID):
+    def removeHighlighters(self, highlightersID, reinit=True):
         """
         Remove specified highlighters from render
         
@@ -1157,17 +1126,22 @@ class RendererWindow(QtGui.QWidget):
         logger.debug("Removing highlighters from renderer %d", self.rendererIndex)
         
         if highlightersID not in self.highlighters:
-            return
+            return False
         
         # get highlighters
         hls = self.highlighters[highlightersID]
         
         # remove actors
+        modified = False
         for actor in hls:
             self.vtkRen.RemoveActor(actor)
+            modified = True
         
         # reinit
-        self.vtkRenWinInteract.ReInitialize()
+        if reinit:
+            self.vtkRenWinInteract.ReInitialize()
         
         # remove from dict
         self.highlighters.pop(highlightersID)
+        
+        return modified

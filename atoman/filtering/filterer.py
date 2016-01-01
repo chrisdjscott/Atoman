@@ -10,9 +10,10 @@ from __future__ import unicode_literals
 import copy
 import time
 import logging
-import itertools
 
 import numpy as np
+import six
+from six.moves import zip
 
 from .filters import _filtering as filtering_c
 from ..system.atoms import elements
@@ -21,8 +22,6 @@ from .filters import base
 from . import filters
 from . import atomStructure
 from ..rendering import _rendering
-import six
-from six.moves import zip
 
 
 class Filterer(object):
@@ -403,7 +402,7 @@ class Filterer(object):
             vectorsList = np.split(vectorsFull, NVectors)
             keys = list(self.vectorsDict.keys())
             
-            for key, vectors in itertools.izip(keys, vectorsList):
+            for key, vectors in zip(keys, vectorsList):
                 self.logger.debug("  Storing '%s' vectors", key)
                 assert len(vectors) >= NVisible, "ERROR: vectors (%s) smaller than expected (%d < %d)" % (key,
                                                                                                           len(vectors),

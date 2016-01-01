@@ -49,7 +49,7 @@ def getVersion():
                 except ImportError:
                     version = "vUNKNOWN"
             else:
-                version = stdout.strip()
+                version = stdout.decode('utf-8').strip()
         
         finally:
             os.chdir(CWD)
