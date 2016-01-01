@@ -245,12 +245,12 @@ basicDefectClassification(double vacancyRadius, int NAtoms, char *specieList, in
 //            printf("Classifying site %d: nearest index = %d (sep = %lf)\n", i, nearestIndex, sqrt(nearestSep2));
 
             /* this site is filled; now we check if antisite or normal site */
-            symtemp[0] = specieList[2*specie[nearestIndex]];
-            symtemp[1] = specieList[2*specie[nearestIndex]+1];
+            symtemp[0] = specieList[3*specie[nearestIndex]];
+            symtemp[1] = specieList[3*specie[nearestIndex]+1];
             symtemp[2] = '\0';
 
-            symtemp2[0] = specieListRef[2*specieRef[i]];
-            symtemp2[1] = specieListRef[2*specieRef[i]+1];
+            symtemp2[0] = specieListRef[3*specieRef[i]];
+            symtemp2[1] = specieListRef[3*specieRef[i]+1];
             symtemp2[2] = '\0';
 
             comp = strcmp(symtemp, symtemp2);
@@ -1277,8 +1277,8 @@ findDefects(PyObject *self, PyObject *args)
     int *splitIntSpecCount, minClusterSize, maxClusterSize, *splitInterstitials, identifySplits, driftCompensation;
     int acnaArrayDim, acnaStructureType, filterSpecies, identifySplitsOld, refineAcnaOld;
     double *pos, *refPosIn, *cellDims, vacancyRadius, clusterRadius, *driftVector, *acnaArray;
-    PyArrayObject *specieListIn=NULL;
-    PyArrayObject *specieListRefIn=NULL;
+    PyObject *specieListIn=NULL;
+    PyObject *specieListRefIn=NULL;
     PyArrayObject *NDefectsTypeIn=NULL;
     PyArrayObject *vacanciesIn=NULL;
     PyArrayObject *interstitialsIn=NULL;
@@ -1302,7 +1302,7 @@ findDefects(PyObject *self, PyObject *args)
     PyArrayObject *driftVectorIn=NULL;
     PyArrayObject *acnaArrayIn=NULL;
     
-    int i, boxstat, status, defectCounters[4];
+    int i, boxstat, status, defectCounters[4] = {0};
     int NDefects, NAntisites, NInterstitials, NVacancies;
     int *NDefectsCluster, *NDefectsClusterNew;
     int NClusters, NSplitInterstitials;
@@ -1320,8 +1320,8 @@ findDefects(PyObject *self, PyObject *args)
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "iiiO!O!O!O!O!O!O!iO!O!O!iO!O!O!O!O!didO!O!O!O!O!O!iiO!iiO!O!iiii", &includeVacs, &includeInts, &includeAnts,
             &PyArray_Type, &NDefectsTypeIn, &PyArray_Type, &vacanciesIn, &PyArray_Type, &interstitialsIn, &PyArray_Type, &antisitesIn,
-            &PyArray_Type, &onAntisitesIn, &PyArray_Type, &exclSpecInputIn, &PyArray_Type, &exclSpecRefIn, &NAtoms, &PyArray_Type, 
-            &specieListIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &refNAtoms, &PyArray_Type, &specieListRefIn, &PyArray_Type, 
+            &PyArray_Type, &onAntisitesIn, &PyArray_Type, &exclSpecInputIn, &PyArray_Type, &exclSpecRefIn, &NAtoms, &PyList_Type, 
+            &specieListIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &refNAtoms, &PyList_Type, &specieListRefIn, &PyArray_Type, 
             &specieRefIn, &PyArray_Type, &refPosIn_np, &PyArray_Type, &cellDimsIn, &PyArray_Type, &PBCIn, &vacancyRadius, &findClustersFlag,
             &clusterRadius, &PyArray_Type, &defectClusterIn, &PyArray_Type, &vacSpecCountIn, &PyArray_Type, &intSpecCountIn, &PyArray_Type,
             &antSpecCountIn, &PyArray_Type, &onAntSpecCountIn, &PyArray_Type, &splitIntSpecCountIn, &minClusterSize, &maxClusterSize,
@@ -1352,15 +1352,11 @@ findDefects(PyObject *self, PyObject *args)
     exclSpecRef = pyvector_to_Cptr_int(exclSpecRefIn);
     exclSpecRefDim = (int) PyArray_DIM(exclSpecRefIn, 0);
     
-    specieList = pyvector_to_Cptr_char(specieListIn);
-    
     if (not_intVector(specieIn)) return NULL;
     specie = pyvector_to_Cptr_int(specieIn);
     
     if (not_doubleVector(posIn)) return NULL;
     pos = pyvector_to_Cptr_double(posIn);
-    
-    specieListRef = pyvector_to_Cptr_char(specieListRefIn);
     
     if (not_intVector(specieRefIn)) return NULL;
     specieRef = pyvector_to_Cptr_int(specieRefIn);
@@ -1403,6 +1399,10 @@ findDefects(PyObject *self, PyObject *args)
     acnaArray = pyvector_to_Cptr_double(acnaArrayIn);
     acnaArrayDim = (int) PyArray_DIM(acnaArrayIn, 0);
     
+    /* make C specie lists */
+    specieList = specieListFromPyObject(specieListIn);
+    specieListRef = specieListFromPyObject(specieListRefIn);
+    
     /* drift compensation - modify reference positions */
     if (driftCompensation)
     {
@@ -1414,15 +1414,16 @@ findDefects(PyObject *self, PyObject *args)
         if (refPos == NULL)
         {
             PyErr_SetString(PyExc_MemoryError, "Could not allocate refPos");
+            free(specieList);
+            free(specieListRef);
             return NULL;
         }
         
         for (i = 0; i < refNAtoms; i++)
         {
-            int i3 = 3 * i;
-            refPos[i3    ] = refPosIn[i3    ] + driftVector[0];
-            refPos[i3 + 1] = refPosIn[i3 + 1] + driftVector[1];
-            refPos[i3 + 2] = refPosIn[i3 + 2] + driftVector[2];
+            int j, i3 = 3 * i;
+            for (j = 0; j < 3; j++)
+                refPos[i3 + j] = refPosIn[i3 + j] + driftVector[j];
         }
     }
     else refPos = refPosIn;
@@ -1434,6 +1435,8 @@ findDefects(PyObject *self, PyObject *args)
     /* basic defect classification: interstitials, vacancies and antisites */
     status = basicDefectClassification(vacancyRadius, NAtoms, specieList, specie, pos, refNAtoms, specieListRef, specieRef, refPos, 
             PBC, cellDims, defectCounters, vacancies, interstitials, antisites, onAntisites);
+    free(specieList);
+    free(specieListRef);
     if (status)
     {
         if (driftCompensation) free(refPos);

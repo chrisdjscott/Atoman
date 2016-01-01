@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 import os
 
+
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
     
@@ -16,26 +17,28 @@ def configuration(parent_package='', top_path=None):
     
     arraydeps = [os.path.join("..", "visclibs", "array_utils.c"),
                  os.path.join("..", "visclibs", "array_utils.h")]
+    utildeps = [os.path.join("..", "visclibs", "utilities.c"),
+                os.path.join("..", "visclibs", "utilities.h")]
     
-    config.add_extension("_input", 
+    config.add_extension("_input",
                          ["input.c"],
                          include_dirs=[incdir],
                          depends=arraydeps,
                          libraries=["array_utils"])
     
-    config.add_extension("_output", 
+    config.add_extension("_output",
                          ["output.c"],
                          include_dirs=[incdir],
-                         depends=arraydeps,
-                         libraries=["array_utils"])
+                         depends=arraydeps + utildeps,
+                         libraries=["array_utils", "utilities"])
     
-    config.add_extension("_latticeReaderGeneric", 
+    config.add_extension("_latticeReaderGeneric",
                          ["latticeReaderGeneric.c"],
                          include_dirs=[incdir],
                          depends=arraydeps,
                          libraries=["array_utils"])
     
-    config.add_extension("_lattice", 
+    config.add_extension("_lattice",
                          ["lattice.c"],
                          include_dirs=[incdir],
                          depends=arraydeps,

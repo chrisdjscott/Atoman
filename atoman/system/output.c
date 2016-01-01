@@ -9,6 +9,7 @@
 #include <numpy/arrayobject.h>
 #include <locale.h>
 #include "visclibs/array_utils.h"
+#include "visclibs/utilities.h"
 
 #if PY_MAJOR_VERSION >= 3
     #define PyString_AsString PyUnicode_AsUTF8
@@ -301,8 +302,6 @@ writeLattice(PyObject *self, PyObject *args)
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *posIn=NULL;
     PyArrayObject *chargeIn=NULL;
-
-    Py_ssize_t nspec, j;
     int NAtomsWrite;
     FILE *OUTFILE;
     
@@ -334,20 +333,9 @@ writeLattice(PyObject *self, PyObject *args)
     NAtomsWrite = (writeFullLattice) ? NAtoms : NVisible;
     
     /* local specie list */
-    nspec = PyList_Size(specieList);
-    specieListLocal = malloc(3 * nspec * sizeof(char));
+    specieListLocal = specieListFromPyObject(specieList);
     if (specieListLocal == NULL)
-    {
-        PyErr_SetString(PyExc_MemoryError, "Could not allocate specieListLocal");
         return NULL;
-    }
-    for (j = 0; j < nspec; j++)
-    {
-        char *tmpsym = PyString_AsString(PyList_GetItem(specieList, j));
-        specieListLocal[3 * j    ] = tmpsym[0];
-        specieListLocal[3 * j + 1] = tmpsym[1];
-        specieListLocal[3 * j + 2] = '\0';
-    }
     
     /* open file */
     OUTFILE = fopen(filename, "w");
