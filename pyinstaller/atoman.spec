@@ -10,8 +10,14 @@ import tempfile
 import pkg_resources
 
 
-# read the version
-__version__ = subprocess.Popen(["git", "describe"], stdout=subprocess.PIPE).communicate()[0].strip()
+# get the version
+_owd = os.getcwd()
+os.chdir("..")
+try:
+    import atoman
+    version = atoman.__version__
+finally:
+    os.chdir(_owd)
 
 # write temporary script for use with PyInstaller
 with tempfile.NamedTemporaryFile(mode="w", dir=os.pardir, delete=False) as fh:
@@ -83,7 +89,7 @@ try:
 
     app = BUNDLE(coll,
                  name=os.path.join('dist', 'Atoman.app'),
-                 version=__version__)
+                 version=version)
 
     osname = platform.system()
     if osname == "Darwin":

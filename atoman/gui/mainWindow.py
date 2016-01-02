@@ -36,8 +36,7 @@ from .dialogs import simpleDialogs
 from .dialogs import bondEditor
 from .dialogs import elementEditor
 from .dialogs import consoleWindow
-from ..visutils import version
-__version__ = version.getVersion()
+from .. import _version
 
 
 ################################################################################
@@ -739,10 +738,7 @@ class MainWindow(QtGui.QMainWindow):
         msgBox = QtGui.QMessageBox(self)
         
         # get the version right
-        if __version__.startswith("v"):
-            myVersion = __version__
-        else:
-            myVersion = "v" + __version__
+        version = _version.get_versions()['version']
         
         # construct paragraph with software versions
         softline = "Python %s - Qt %s - PySide %s - VTK %s" % (platform.python_version(), QtCore.__version__,
@@ -767,7 +763,7 @@ class MainWindow(QtGui.QMainWindow):
                           <p>This application can be used to visualise atomistic simulations.</p>
                           <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a>
                              by Marc Robinson.</p>
-                          <p>%s</p>""" % (myVersion, datetime.date.today().year, softline))
+                          <p>%s</p>""" % (version, datetime.date.today().year, softline))
         
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
