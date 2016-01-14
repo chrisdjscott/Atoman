@@ -8,54 +8,39 @@ matrix:
           env:
               - VTK=5.10.1
               - PYTHON=2.7
-              - CCA=gcc
-              - CXXA=g++
-          before_install:
-              - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-              - chmod +x miniconda.sh
-              - ./miniconda.sh -b -p $HOME/miniconda
-              - export PATH=$HOME/miniconda/bin:$PATH
-              - conda update --yes conda
-              - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
-              - source activate testenv
-              - pip install pyhull
+              - CONDAOS=Linux
         
         - os: linux
           compiler: gcc
           env:
               - VTK=6.3.0
               - PYTHON=2.7
-              - CCA=gcc
-              - CXXA=g++
-          before_install:
-              - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-              - chmod +x miniconda.sh
-              - ./miniconda.sh -b -p $HOME/miniconda
-              - export PATH=$HOME/miniconda/bin:$PATH
-              - conda update --yes conda
-              - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
-              - source activate testenv
-              - pip install pyhull
+              - CONDAOS=Linux
         
         - os: osx
           compiler: gcc
           env:
-              - BREW
-              - CCA=gcc-5
-              - CXXA=g++-5
-          before_install:
-              - brew update
-              - brew tap homebrew/science
-              - brew tap homebrew/python
-              - brew outdated gcc || brew upgrade gcc
-              - brew install python
-              - brew install pillow
-              - brew install numpy
-              - brew install scipy
-              - brew install matplotlib
-              - brew install pyside
-              - brew install vtk
-              - pip install pyhull
+              - VTK=5.10.1
+              - PYTHON=2.7
+              - CONDAOS=MacOSX
+        
+        - os: osx
+          compiler: gcc
+          env:
+              - VTK=6.3.0
+              - PYTHON=2.7
+              - CONDAOS=MacOSX
+
+before_install:
+    - wget http://repo.continuum.io/miniconda/Miniconda-latest-${CONDAOS}-x86_64.sh -O miniconda.sh
+    - chmod +x miniconda.sh
+    - ./miniconda.sh -b -p $HOME/miniconda
+    - export PATH=$HOME/miniconda/bin:$PATH
+    - conda update --yes conda
+    - conda create -n testenv --yes gcc numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
+    - source activate testenv
+    - pip install pyhull
+    - pip install pyinstaller
 
 install:
     - echo $CC
@@ -63,8 +48,8 @@ install:
     - python --version
     - cp setup.cfg.example setup.cfg
     - if [ ${TRAVIS_OS_NAME} == "linux" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
-    - CC=$CCA CXX=$CXXA python setup.py build_clib --compiler=unix
-    - CC=$CCA CXX=$CXXA python setup.py build_ext --inplace --compiler=unix
+    - CC=gcc CXX=g++ python setup.py build_clib --compiler=unix
+    - CC=gcc CXX=g++ python setup.py build_ext --inplace --compiler=unix
 
 script:
     - python setup.py test
