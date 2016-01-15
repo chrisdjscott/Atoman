@@ -36,6 +36,7 @@ before_install:
     - chmod +x miniconda.sh
     - ./miniconda.sh -b -p $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
+    - if [ ${TRAVIS_OS_NAME} == "osx" ]; then export DYLD_LIBRARY_PATH=$HOME/miniconda/lib; fi
     - conda update --yes conda
     - conda create -n testenv --yes gcc numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
     - source activate testenv
