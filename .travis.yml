@@ -1,5 +1,5 @@
 sudo: false
-language: c
+language: generic
 
 matrix:
     include:
@@ -37,11 +37,13 @@ before_install:
     - ./miniconda.sh -b -p $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - if [ ${TRAVIS_OS_NAME} == "osx" ]; then export DYLD_LIBRARY_PATH=$HOME/miniconda/lib; fi
+    - echo $PATH
+    - echo $DYLD_LIBRARY_PATH || true
     - conda update --yes conda
     - conda create -n testenv --yes gcc numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
     - source activate testenv
-    - pip install pyhull
-    - pip install pyinstaller
+#    - pip install pyhull
+#    - pip install pyinstaller
 
 install:
     - echo $CC
