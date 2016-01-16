@@ -11,6 +11,7 @@ from . import coordinationNumberSettingsDialog
 from . import cropBoxSettingsDialog
 from . import cropSphereSettingsDialog
 from . import displacementSettingsDialog
+from . import genericScalarSettingsDialog
 from . import pointDefectsSettingsDialog
 from . import sliceSettingsDialog
 from . import slipSettingsDialog

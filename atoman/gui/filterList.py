@@ -794,6 +794,8 @@ class FilterList(QtGui.QWidget):
         
         if filterName.startswith("Point defects"):
             self.defectFilterSelected = False
+        elif filterName.startswith("Bubbles"):
+            self.bubblesFilterSelected = False
         
         # refresh available scalars
         self.colouringOptions.refreshScalarColourOption()
@@ -812,11 +814,10 @@ class FilterList(QtGui.QWidget):
             title = "%s settings (List %d - %d)" % (filterName, self.tab, self.filterCounter)
             
             # load module
-            from .filterSettings import genericScalarSettingsDialog
+            formModule = getattr(filterSettings, "genericScalarSettingsDialog")
             
             # load form
-            form = genericScalarSettingsDialog.GenericScalarSettingsDialog(self.mainWindow, filterName, title,
-                                                                           parent=self)
+            form = formModule.GenericScalarSettingsDialog(self.mainWindow, filterName, title, parent=self)
             self.filterCounter += 1
         
         else:

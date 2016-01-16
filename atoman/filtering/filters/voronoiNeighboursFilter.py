@@ -44,7 +44,7 @@ class VoronoiNeighboursFilter(base.BaseFilter):
         NVectors = filterInput.NVectors
         fullVectors = filterInput.fullVectors
         visibleAtoms = filterInput.visibleAtoms
-        vor = filterInput.voronoiAtoms.getVoronoi()
+        vor = filterInput.voronoiAtoms.getVoronoi(filterInput.inputState)
         
         # settings
         minVoroNebs = settings.getSetting("minVoroNebs")
