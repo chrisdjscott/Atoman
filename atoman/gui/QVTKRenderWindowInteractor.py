@@ -44,7 +44,7 @@ import vtk
 try:
     import vtk.qt
     PyQtImpl = vtk.qt.PyQtImpl
-except ImportError:
+except (ImportError, AttributeError):
     # we're using pyside
     PyQtImpl = "PySide"
 

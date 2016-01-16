@@ -44,18 +44,21 @@ before_install:
     - conda update --yes conda
     - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools python=$PYTHON
     - source activate testenv
-#    - pip install pyhull
-#    - pip install pyinstaller
+    - pip install pyhull
+    - pip install pyinstaller
 
 install:
     - echo $CC
     - echo $CXX
-    - gcc --version
+    - $CC --version
+    - $CXX --version
     - python --version
     - cp setup.cfg.example setup.cfg
     - if [ ${TRAVIS_OS_NAME} == "linux" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
-    - python setup.py build_clib --compiler=unix
-    - python setup.py build_ext --inplace --compiler=unix
+    - python setup.py --version
+    - python setup.py build_clib
+    - python setup.py build_ext --inplace
+    - python setup.py build_sphinx
 
 script:
     - python setup.py test
