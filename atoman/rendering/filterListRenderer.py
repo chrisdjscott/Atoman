@@ -669,6 +669,9 @@ class FilterListRenderer(object):
         self.scalarBar_white_bg = None
         self.scalarBar_black_bg = None
         self.povrayAtomsWritten = False
+        
+        # refresh actors options
+        self.actorsOptions.refresh(self.getActorsDict())
     
     def getActorsDict(self):
         """Return dict containing current actors."""
