@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 import logging
 
 import numpy as np
+from six import string_types
 
 
 class FilterResult(object):
@@ -134,9 +135,9 @@ class BaseSettings(object):
         if name not in self._settings:
             raise ValueError("Specified setting '{0}' does not exist!".format(name))
         
-        if hasattr(self._settings[name], "__len__") and not isinstance(self._settings[name], str):
-            if not hasattr(value, "__len__") or isinstance(value, str):
-                raise TypeError("Try to update an array setting with a scalar ({0})".format(name))
+        if hasattr(self._settings[name], "__len__") and not isinstance(self._settings[name], string_types):
+            if not hasattr(value, "__len__") or isinstance(value, string_types):
+                raise TypeError("Trying to update an array setting with a scalar ({0})".format(name))
         
         self._settings[name] = value
     
@@ -145,7 +146,7 @@ class BaseSettings(object):
         if name not in self._settings:
             raise ValueError("Specified setting '{0}' does not exist!".format(name))
         
-        if not hasattr(self._settings[name], "__len__") or isinstance(self._settings[name], str):
+        if not hasattr(self._settings[name], "__len__") or isinstance(self._settings[name], string_types):
             raise TypeError("Try to update a scalar setting as an array ({0})".format(name))
         
         if index >= len(self._settings[name]):

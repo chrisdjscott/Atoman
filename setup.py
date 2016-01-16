@@ -96,14 +96,15 @@ def do_clean():
             pyc_files = glob.glob(os.path.join(root, "*.pyc"))
             for pyc_file in pyc_files:
                 os.unlink(pyc_file)
-            
-            cachepth = os.path.join(root, "__pycache__")
-            if os.path.isdir(cachepth):
-                shutil.rmtree(cachepth)
     
     finally:
         os.chdir(cwd)
-    
+
+    for root, dirs, files in os.walk(os.getcwd()):
+        cachepth = os.path.join(root, "__pycache__")
+        if os.path.isdir(cachepth):
+            shutil.rmtree(cachepth)
+
     if os.path.isdir("atoman/doc"):
         print("rm -rf atoman/doc")
         shutil.rmtree(os.path.join("atoman", "doc"))
