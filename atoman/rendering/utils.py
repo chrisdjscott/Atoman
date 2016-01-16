@@ -10,6 +10,29 @@ import logging
 
 import numpy as np
 import vtk
+from vtk.util import numpy_support
+
+
+################################################################################
+
+class NumpyVTKData(object):
+    """
+    Hold paired numpy and VTK data.
+    
+    """
+    def __init__(self, data_numpy, name=None):
+        self._numpy = data_numpy
+        self._vtk = numpy_support.numpy_to_vtk(data_numpy)
+        if name is not None:
+            self._vtk.SetName(name)
+    
+    def getVTK(self):
+        """Return VTK array."""
+        return self._vtk
+    
+    def getNumpy(self):
+        """Return Numpy array."""
+        return self._numpy
 
 ################################################################################
 

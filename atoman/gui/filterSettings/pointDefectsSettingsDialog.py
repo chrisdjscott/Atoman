@@ -13,8 +13,6 @@ from ...filtering.filters import pointDefectsFilter
 from ...filtering import filterer
 
 
-################################################################################
-
 class PointDefectsSettingsDialog(base.GenericSettingsDialog):
     """
     Point defects filter settings form.
@@ -29,8 +27,8 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self._settings = pointDefectsFilter.PointDefectsFilterSettings()
         
         # vacancy radius option
-        self.addDoubleSpinBox("vacancyRadius", minVal=0.01, maxVal=10, step=0.1, label="Vacancy radius",
-                              toolTip="The vacancy radius is used to determine if an input atom is associated with a reference site")
+        tip = "<p>The vacancy radius is used to determine if an input atom is associated with a reference site</p>"
+        self.addDoubleSpinBox("vacancyRadius", minVal=0.01, maxVal=10, step=0.1, label="Vacancy radius", toolTip=tip)
         
         self.addHorizontalDivider()
         
@@ -59,47 +57,50 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.addHorizontalDivider()
         
         # identify split ints check box
-        self.addCheckBox("identifySplitInts", toolTip="Turn split interstitial detection on", label="Identify split interstitials")
+        self.addCheckBox("identifySplitInts", toolTip="Turn split interstitial detection on",
+                         label="Identify split interstitials")
         
         self.addHorizontalDivider()
         
         # use acna options
-        toolTip = "Use Adaptive Common Neighbour Analysis to complement the comparison "
+        toolTip = "<p>Use Adaptive Common Neighbour Analysis to complement the comparison "
         toolTip += "to a reference system. Interstitials with the selected structure are "
-        toolTip += "not classified as defects if they have a neighbouring vacancy."
+        toolTip += "not classified as defects if they have a neighbouring vacancy.</p>"
         self.addCheckBox("useAcna", toolTip=toolTip, label="<b>Use ACNA</b>", extraSlot=self.useAcnaToggled)
         
         # acna max bond distance
-        toolTip = "This value is used for spatially decomposing the system. It should be set large enough to "
-        toolTip += "include all required atoms. If unsure just set it to something big, eg. 10.0"
-        self.maxBondDistanceSpin = self.addDoubleSpinBox("acnaMaxBondDistance", minVal=2, maxVal=9.99, step=0.1, toolTip=toolTip,
-                                                         label="Max bond distance", settingEnabled="useAcna")
+        toolTip = "<p>This value is used for spatially decomposing the system. It should be set large enough to "
+        toolTip += "include all required atoms. If unsure just set it to something big, eg. 10.0</p>"
+        self.maxBondDistanceSpin = self.addDoubleSpinBox("acnaMaxBondDistance", minVal=2, maxVal=9.99, step=0.1,
+                                                         toolTip=toolTip, label="Max bond distance",
+                                                         settingEnabled="useAcna")
         
         # acna ideal structure
         knownStructures = filterer.Filterer.knownStructures
         self.acnaStructureCombo = self.addComboBox("acnaStructureType", items=knownStructures, label="Structure",
-                                                   toolTip="Select the ideal structure for the given lattice",
+                                                   toolTip="<p>Select the ideal structure for the given lattice</p>",
                                                    settingEnabled="useAcna")
         
         self.addHorizontalDivider()
         
         # find clusters settings
-        self.addCheckBox("findClusters", toolTip="Identify clusters of defects in the system.", label="<b>Identify clusters</b>",
-                         extraSlot=self.findClustersChanged)
+        self.addCheckBox("findClusters", toolTip="<p>Identify clusters of defects in the system.</p>",
+                         label="<b>Identify clusters</b>", extraSlot=self.findClustersChanged)
         
         # neighbour rad spin box
-        toolTip = "Clusters are constructed using a recursive algorithm where two defects are said to be neighbours "
-        toolTip += "if their separation is less than this value."
+        toolTip = "<p>Clusters are constructed using a recursive algorithm where two defects are said to be neighbours "
+        toolTip += "if their separation is less than this value.</p>"
         self.nebRadSpinBox = self.addDoubleSpinBox("neighbourRadius", minVal=0.01, maxVal=99, step=0.1, toolTip=toolTip,
                                                    label="Neighbour radius", settingEnabled="findClusters")
         
         # minimum size spin box
+        tip = "<p>Only show clusters that contain more than this number of defects.</p>"
         self.minNumSpinBox = self.addSpinBox("minClusterSize", minVal=1, maxVal=1000, label="Minimum cluster size",
-                                             toolTip="Only show clusters that contain more than this number of defects.",
-                                             settingEnabled="findClusters")
+                                             toolTip=tip, settingEnabled="findClusters")
         
         # maximum size spin box
-        toolTip = "Only show clusters that contain less than this number of defects. Set to -1 to disable this condition."
+        toolTip = "<p>Only show clusters that contain less than this number of defects."
+        toolTip += "Set to -1 to disable this condition.</p>"
         self.maxNumSpinBox = self.addSpinBox("maxClusterSize", minVal=-11, maxVal=1000, label="Maximum cluster size",
                                              toolTip=toolTip, settingEnabled="findClusters")
         
@@ -113,13 +114,15 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.convHullVolRadio.toggled.connect(self.calcVolsMethodChanged)
         self.convHullVolRadio.setToolTip("Volume is determined from the convex hull of the defect positions.")
         self.voroVolRadio = QtGui.QRadioButton(parent=self.calcVolsCheck)
-        self.voroVolRadio.setToolTip("Volume is determined by summing the Voronoi volumes of the defects in "
+        self.voroVolRadio.setToolTip("<p>Volume is determined by summing the Voronoi volumes of the defects in "
                                      "the cluster. Ghost atoms are added for vacancies when computing the "
-                                     "individual Voronoi volumes.")
+                                     "individual Voronoi volumes.</p>")
         self.voroVolRadio.setChecked(True)
         self.contentLayout.addRow("Convex hull volumes", self.convHullVolRadio)
         self.contentLayout.addRow("Sum Voronoi volumes", self.voroVolRadio)
-        enabled = True if self._settings.getSetting("findClusters") and self._settings.getSetting("calculateVolumes") else False
+        findClusters = self._settings.getSetting("findClusters")
+        calcVols = self._settings.getSetting("calculateVolumes")
+        enabled = True if findClusters and calcVols else False
         self.convHullVolRadio.setEnabled(enabled)
         self.voroVolRadio.setEnabled(enabled)
         
@@ -149,7 +152,7 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         # hull colour
         hullCol = self._settings.getSetting("hullCol")
-        col = QtGui.QColor(hullCol[0]*255.0, hullCol[1]*255.0, hullCol[2]*255.0)
+        col = QtGui.QColor(hullCol[0] * 255.0, hullCol[1] * 255.0, hullCol[2] * 255.0)
         self.hullColourButton = QtGui.QPushButton("")
         self.hullColourButton.setFixedWidth(50)
         self.hullColourButton.setFixedHeight(30)
@@ -159,14 +162,17 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.displaySettingsLayout.addRow("Hull colour", self.hullColourButton)
         
         # hull opacity
-        self.hullOpacitySpinBox = self.addDoubleSpinBox("hullOpacity", minVal=0.01, maxVal=1, step=0.01, displayLayout=True,
-                                                        toolTip="The opacity of the convex hulls", label="Hull opacity")
+        self.hullOpacitySpinBox = self.addDoubleSpinBox("hullOpacity", minVal=0.01, maxVal=1, step=0.01,
+                                                        displayLayout=True, toolTip="The opacity of the convex hulls",
+                                                        label="Hull opacity")
         
         # hide atoms
-        self.hideAtomsCheckBox = self.addCheckBox("hideDefects", toolTip="Do not show the defects when rendering the convex hulls",
-                                                  label="Hide defects", displayLayout=True)
+        tip = "<p>Do not show the defects when rendering the convex hulls</p>"
+        self.hideAtomsCheckBox = self.addCheckBox("hideDefects", toolTip=tip, label="Hide defects", displayLayout=True)
         
-        enabled = True if self._settings.getSetting("findClusters") and self._settings.getSetting("drawConvexHulls") else False
+        findClusters = self._settings.getSetting("findClusters")
+        drawHulls = self._settings.getSetting("drawConvexHulls")
+        enabled = True if findClusters and drawHulls else False
         self.hullColourButton.setEnabled(enabled)
         self.hullOpacitySpinBox.setEnabled(enabled)
         self.hideAtomsCheckBox.setEnabled(enabled)
@@ -175,41 +181,44 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         # vac display settings
         # scale size
-        self.addDoubleSpinBox("vacScaleSize", minVal=0.1, maxVal=2, step=0.1, label="Vacancy scale size", displayLayout=True,
-                              toolTip="When rendering vacancies scale the atomic radius by this amount (usually < 1)")
+        toolTip = "<p>When rendering vacancies scale the atomic radius by this amount (usually < 1)</p>"
+        self.addDoubleSpinBox("vacScaleSize", minVal=0.1, maxVal=2, step=0.1, label="Vacancy scale size",
+                              displayLayout=True, toolTip=toolTip)
         
         # opacity
-        self.addDoubleSpinBox("vacOpacity", minVal=0.01, maxVal=1, step=0.1, label="Vacancy opacity", displayLayout=True,
-                              toolTip="The opacity value for vacancies.")
+        self.addDoubleSpinBox("vacOpacity", minVal=0.01, maxVal=1, step=0.1, label="Vacancy opacity",
+                              displayLayout=True, toolTip="<p>The opacity value for vacancies.</p>")
         
         # specular
-        self.addDoubleSpinBox("vacSpecular", minVal=0.01, maxVal=1, step=0.01, label="Vacancy specular", displayLayout=True,
-                              toolTip="The specular value for vacancies.")
+        self.addDoubleSpinBox("vacSpecular", minVal=0.01, maxVal=1, step=0.01, label="Vacancy specular",
+                              displayLayout=True, toolTip="<p>The specular value for vacancies.</p>")
         
         # specular power
-        self.addDoubleSpinBox("vacSpecularPower", minVal=0, maxVal=100, step=0.1, label="Vacancy specular power", displayLayout=True,
-                              toolTip="The specular power value for vacancies.")
+        self.addDoubleSpinBox("vacSpecularPower", minVal=0, maxVal=100, step=0.1, label="Vacancy specular power",
+                              displayLayout=True, toolTip="<p>The specular power value for vacancies.</p>")
         
         self.addHorizontalDivider(displaySettings=True)
         
         # draw displacement vector settings
-        self.drawVectorsCheck = self.addCheckBox("drawDisplacementVectors", toolTip="Draw displacement vectors (movement) of defects",
-                                                 label="<b>Draw displacement vectors</b>", extraSlot=self.drawVectorsChanged,
-                                                 displayLayout=True)
+        toolTip = "<p>Draw displacement vectors (movement) of defects</p>"
+        self.drawVectorsCheck = self.addCheckBox("drawDisplacementVectors", toolTip=toolTip, displayLayout=True,
+                                                 label="<b>Draw displacement vectors</b>",
+                                                 extraSlot=self.drawVectorsChanged)
         
         # vtk thickness
-        self.vtkThickSpin = self.addDoubleSpinBox("bondThicknessVTK", minVal=0.01, maxVal=10, step=0.1, displayLayout=True,
-                                                  toolTip="Thickness of lines showing defect movement (VTK)",
-                                                  label="Bond thickness (VTK)")
+        self.vtkThickSpin = self.addDoubleSpinBox("bondThicknessVTK", minVal=0.01, maxVal=10, step=0.1,
+                                                  displayLayout=True, label="Bond thickness (VTK)",
+                                                  toolTip="<p>Thickness of lines showing defect movement (VTK)</p>")
         
         # pov thickness
-        self.povThickSpin = self.addDoubleSpinBox("bondThicknessPOV", minVal=0.01, maxVal=10, step=0.1, displayLayout=True,
-                                                  toolTip="Thickness of lines showing defect movement (POV-Ray)",
-                                                  label="Bond thickness (POV)")
+        self.povThickSpin = self.addDoubleSpinBox("bondThicknessPOV", minVal=0.01, maxVal=10, step=0.1,
+                                                  displayLayout=True, label="Bond thickness (POV)",
+                                                  toolTip="<p>Thickness of lines showing defect movement (POV-Ray)</p>")
         
         # num sides
-        self.numSidesSpin = self.addSpinBox("bondNumSides", minVal=3, maxVal=99, step=1, displayLayout=True, label="Bond number of sides",
-                                            toolTip="Number of sides when rendering displacement vectors (more looks better but is slower)")
+        toolTip = "<p>Number of sides when rendering displacement vectors (more looks better but is slower)</p>"
+        self.numSidesSpin = self.addSpinBox("bondNumSides", minVal=3, maxVal=99, step=1, displayLayout=True,
+                                            label="Bond number of sides", toolTip=toolTip)
         
         self.disableDrawVectorsCheck()
         self.refresh()
@@ -356,7 +365,7 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
             # remove if doesn't exist both ref and input
             if item.symbol not in inputSpecieList and item.symbol not in refSpecieList:
                 self.logger.debug("  Removing specie option: %s", item.symbol)
-                self.specieList.takeItem(i) # does this delete it?
+                self.specieList.takeItem(i)  # does this delete it?
             
             else:
                 currentSpecies.add(item.symbol)
@@ -426,14 +435,14 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         """
         if self.convHullVolRadio.isChecked():
-            self.calculateVolumesHull = True
+            self._settings.updateSetting("calculateVolumesHull", True)
         else:
-            self.calculateVolumesHull = False
+            self._settings.updateSetting("calculateVolumesHull", False)
         
         if self.voroVolRadio.isChecked():
-            self.calculateVolumesVoro = True
+            self._settings.updateSetting("calculateVolumesVoro", True)
         else:
-            self.calculateVolumesVoro = False
+            self._settings.updateSetting("calculateVolumesVoro", False)
     
     def calcVolsChanged(self, state):
         """

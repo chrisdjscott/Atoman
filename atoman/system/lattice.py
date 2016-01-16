@@ -13,7 +13,7 @@ import numpy as np
 from .atoms import elements
 from ..algebra import vectors
 from . import _lattice
-# from ..md import forces
+from . import _output
 
 
 ################################################################################
@@ -32,7 +32,7 @@ class Lattice(object):
         self.specieCount = np.empty(0, np.int32)
         self.specieMass = np.empty(0, np.float64)
         self.specieCovalentRadius = np.empty(0, np.float64)
-        self.specieRGB = np.empty((0,3), np.float64)
+        self.specieRGB = np.empty((0, 3), np.float64)
         self.specieAtomicNumber = np.empty(0, np.int32)
         
         self.minPos = np.zeros(3, np.float64)
@@ -106,7 +106,7 @@ class Lattice(object):
         self.specieCount = np.empty(0, np.int32)
         self.specieMass = np.empty(0, np.float64)
         self.specieCovalentRadius = np.empty(0, np.float64)
-        self.specieRGB = np.empty((0,3), np.float64)
+        self.specieRGB = np.empty((0, 3), np.float64)
         self.specieAtomicNumber = np.empty(0, np.int32)
         
         self.minPos = np.zeros(3, np.float64)
@@ -189,10 +189,10 @@ class Lattice(object):
 #         self.specieMassAMU = np.append(self.specieMassAMU, Atoms.atomicMassAMU(sym))
         self.specieCovalentRadius = np.append(self.specieCovalentRadius, elements.covalentRadius(sym))
         rgbtemp = elements.RGB(sym)
-        rgbnew = np.empty((1,3), np.float64)
+        rgbnew = np.empty((1, 3), np.float64)
         rgbnew[0][0] = rgbtemp[0]
         rgbnew[0][1] = rgbtemp[1]
-        rgbnew[0][2] = rgbtemp[2]            
+        rgbnew[0][2] = rgbtemp[2]
         self.specieRGB = np.append(self.specieRGB, rgbnew, axis=0)
     
     def addAtom(self, sym, pos, charge, atomID=None, scalarVals={}, vectorVals={}):
@@ -220,20 +220,10 @@ class Lattice(object):
         
         # wrap positions
         
-        
         # min/max pos!!??
-        if pos[0] < self.minPos[0]:
-            self.minPos[0] = pos[0]
-        if pos[1] < self.minPos[1]:
-            self.minPos[1] = pos[2]
-        if pos[2] < self.minPos[1]:
-            self.minPos[2] = pos[2]
-        if pos[0] > self.maxPos[0]:
-            self.maxPos[0] = pos[0]
-        if pos[1] > self.maxPos[1]:
-            self.maxPos[1] = pos[2]
-        if pos[2] > self.maxPos[1]:
-            self.maxPos[2] = pos[2]
+        for i in xrange(3):
+            self.minPos[i] = min(self.minPos[i], pos[i])
+            self.maxPos[i] = max(self.maxPos[i], pos[i])
         
         self.NAtoms += 1
         
@@ -254,7 +244,8 @@ class Lattice(object):
                 newval = vectorVals[vectorName]
             
             if len(newval) == 3:
-                self.vectorsDict[vectorName] = np.append(self.vectorsDict[vectorName], np.asarray(newval, dtype=np.float64))
+                self.vectorsDict[vectorName] = np.append(self.vectorsDict[vectorName], np.asarray(newval,
+                                                         dtype=np.float64))
             
             else:
                 self.vectorsDict.pop(vectorName)
@@ -268,7 +259,7 @@ class Lattice(object):
         specInd = self.specie[index]
         self.atomID = np.delete(self.atomID, index)
         self.specie = np.delete(self.specie, index)
-        self.pos = np.delete(self.pos, [3*index,3*index+1,3*index+2])
+        self.pos = np.delete(self.pos, [3 * index, 3 * index + 1, 3 * index + 2])
         self.charge = np.delete(self.charge, index)
         self.NAtoms -= 1
         
@@ -281,7 +272,8 @@ class Lattice(object):
             self.scalarsDict[scalarName] = np.delete(self.scalarsDict[scalarName], index)
         
         for vectorName in self.vectorsDict.keys():
-            self.vectorsDict[vectorName] = np.delete(self.vectorsDict[vectorName], [3*index,3*index+1,3*index+2])
+            self.vectorsDict[vectorName] = np.delete(self.vectorsDict[vectorName],
+                                                     [3 * index, 3 * index + 1, 3 * index + 2])
     
     def removeSpecie(self, index):
         """
@@ -309,7 +301,7 @@ class Lattice(object):
 #         if type(forceConfig) is not forces.ForceConfig:
 #             print "FORCE CONFIG WRONG TYPE"
 #             return 113
-#         
+#
 #         return forces.calc_force(self, forceConfig)
     
     def atomPos(self, index):
@@ -319,7 +311,7 @@ class Lattice(object):
         """
         atomPos = None
         if index < self.NAtoms:
-            atomPos = self.pos[3*index:3*index+3]
+            atomPos = self.pos[3 * index:3 * index + 3]
         
         return atomPos
     
@@ -370,6 +362,57 @@ class Lattice(object):
             self.specieRGB[i][1] = rgbtemp[1]
             self.specieRGB[i][2] = rgbtemp[2]
     
+    def toLKMC(self, storeEnergies=False):
+        """
+        Convert the Lattice to LKMC.Lattice.
+        
+        Returns None if cannot load LKMC.
+        
+        """
+        # try to load LKMC
+        try:
+            from LKMC import Lattice
+            from LKMC import Atoms
+        except ImportError:
+            lkmcLattice = None
+        else:
+            lkmcLattice = Lattice.Lattice(0, storeEnergies=storeEnergies)
+            lkmcLattice.NAtoms = self.NAtoms
+            lkmcLattice.pos = self.pos
+            lkmcLattice.specie = self.specie
+            lkmcLattice.specieList = self.specieList
+            lkmcLattice.specieCount = self.specieCount
+            lkmcLattice.charge = self.charge
+            lkmcLattice.minPos = self.minPos
+            lkmcLattice.maxPos = self.maxPos
+            lkmcLattice.cellDims[0] = self.cellDims[0]
+            lkmcLattice.cellDims[4] = self.cellDims[1]
+            lkmcLattice.cellDims[8] = self.cellDims[2]
+            lkmcLattice.force = np.empty(3 * self.NAtoms, np.float64)
+            lkmcLattice.specieCovalentRadius = self.specieCovalentRadius
+            lkmcLattice.specieRGB = self.specieRGB
+            lkmcLattice.specieMass = np.empty(len(self.specieList), np.float64)
+            lkmcLattice.specieMassAMU = np.empty(len(self.specieList), np.float64)
+            for i, sym in enumerate(self.specieList):
+                lkmcLattice.specieMass[i] = Atoms.atomicMass(sym)
+                lkmcLattice.specieMassAMU[i] = Atoms.atomicMassAMU(sym)
+    
+    def writeLattice(self, filename, visibleAtoms=None):
+        """
+        Write the Lattice to the given file. If visibleAtoms is passed only write those atoms.
+        
+        """
+        # full lattice or just visible atoms
+        if visibleAtoms is None:
+            writeFullLattice = 1
+            visibleAtoms = np.empty(0, np.int32)
+        else:
+            writeFullLattice = 0
+        
+        # call C function to write Lattice
+        _output.writeLattice(filename, visibleAtoms, self.cellDims, self.specieList, self.specie, self.pos, self.charge,
+                             writeFullLattice)
+    
     def clone(self, lattice):
         """
         Copy given lattice into this instance
@@ -413,7 +456,7 @@ class Lattice(object):
             self.specie[i] = lattice.specie[i]
             self.charge[i] = lattice.charge[i]
             for j in xrange(3):
-                self.pos[3*i+j] = lattice.pos[3*i+j]
+                self.pos[3 * i + j] = lattice.pos[3 * i + j]
         
         self.minPos[0] = lattice.minPos[0]
         self.minPos[1] = lattice.minPos[1]

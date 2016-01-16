@@ -775,7 +775,7 @@ class RendererWindow(QtGui.QWidget):
             if filterList.visible:
                 if not filterList.defectFilterSelected:
                     visCountActive = True
-                    visCount += filterList.filterer.NVis
+                    visCount += len(filterList.filterer.visibleAtoms)
                 
                 numClusters += len(filterList.filterer.clusterList)
         
@@ -787,7 +787,7 @@ class RendererWindow(QtGui.QWidget):
         
             visSpecCount = np.zeros(len(inputState.specieList), np.int32)
             for filterList in filterLists:
-                if filterList.visible and not filterList.defectFilterSelected and filterList.filterer.NVis:
+                if filterList.visible and not filterList.defectFilterSelected and len(filterList.filterer.visibleAtoms):
                     if len(visSpecCount) == len(filterList.filterer.visibleSpecieCount):
                         visSpecCount = np.add(visSpecCount, filterList.filterer.visibleSpecieCount)
         
@@ -818,9 +818,9 @@ class RendererWindow(QtGui.QWidget):
             if filterList.visible and filterList.defectFilterSelected:
                 defectFilterActive = True
                 
-                NVac += filterList.filterer.NVac
-                NInt += filterList.filterer.NInt
-                NAnt += filterList.filterer.NAnt
+                NVac += len(filterList.filterer.vacancies)
+                NInt += len(filterList.filterer.interstitials)
+                NAnt += len(filterList.filterer.antisites)
                 
                 # defects settings
                 defectsSettings = filterList.getCurrentFilterSettings()[0].getSettings()
@@ -838,7 +838,7 @@ class RendererWindow(QtGui.QWidget):
                 # bubbles (temporary)
                 showVacs = True
                 defectFilterActive = True
-                NVac += filterList.filterer.NVac
+                NVac += len(filterList.filterer.vacancies)
         
         if defectFilterActive:
             refState = self.getCurrentRefState()
@@ -849,11 +849,14 @@ class RendererWindow(QtGui.QWidget):
             antSpecCount = np.zeros((len(refState.specieList), len(inputState.specieList)), np.int32)
             splitSpecCount = np.zeros((len(inputState.specieList), len(inputState.specieList)), np.int32)
             for filterList in filterLists:
-                if filterList.visible and filterList.defectFilterSelected and filterList.filterer.NVis:
+                if filterList.visible and filterList.defectFilterSelected:
                     if len(vacSpecCount) == len(filterList.filterer.vacancySpecieCount):
                         vacSpecCount = np.add(vacSpecCount, filterList.filterer.vacancySpecieCount)
+                    if len(intSpecCount) == len(filterList.filterer.interstitialSpecieCount):
                         intSpecCount = np.add(intSpecCount, filterList.filterer.interstitialSpecieCount)
+                    if len(antSpecCount) == len(filterList.filterer.antisiteSpecieCount):
                         antSpecCount = np.add(antSpecCount, filterList.filterer.antisiteSpecieCount)
+                    if len(splitSpecCount) == len(filterList.filterer.splitIntSpecieCount):
                         splitSpecCount = np.add(splitSpecCount, filterList.filterer.splitIntSpecieCount)
             
             # now add to dict
@@ -886,11 +889,10 @@ class RendererWindow(QtGui.QWidget):
                 if defectsSettings.getSetting("identifySplitInts"):
                     for i in xrange(len(specListInput)):
                         for j in xrange(i, len(specListInput)):
+                            N = splitSpecCount[i][j]
                             if j == i:
-                                N = splitSpecCount[i][j]
                                 rgb = specRGBInput[i]
                             else:
-                                N = splitSpecCount[i][j] + splitSpecCount[j][i]
                                 rgb = (specRGBInput[i] + specRGBInput[j]) / 2.0
                             
                             self.onScreenInfo["Defect species count"].append([(N, "%s-%s" % (specListInput[i], specListInput[j]), "split ints"), rgb])

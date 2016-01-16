@@ -3,7 +3,29 @@
 Point defects
 =============
 
-Identify point defects in the lattice by comparison to a reference lattice...
+Identify point defects in the lattice by comparison to a reference lattice.
+
+This filter will identify vacancies, interstitials (including split interstitials) and antisites. A vacancy radius is
+used to determine if an atom in the input lattice is associated with a site in the reference lattice. If an input atom
+is not associated with a reference site then it is an interstitial. If a reference site has no input atom associated
+with it then it is a vacancy. If an input atom is sitting on a reference site of a different species then it is an
+anitiste.
+
+Split interstitials are identified by looking for vacancies that have two neighbouring interstitials, forming the split
+interstitial.
+
+Defects can be refined using ACNA, which checks if interstitials have the ideal structure type for the system. If they
+do, and if the interstitial is very close to a vacancy, then we remove the pair from the list of defects. We have found
+this to be important in alloys where the crystal structure is distorted due to the alloying element. In these cases the
+use of a fixed vacancy radius does not always work well by itself.
+
+.. glossary::
+
+    Vacancy radius
+        This parameter is used to determine if an input atom is associated with a reference site.
+    
+    Show interstitials
+        If checked include interstitials in the list of defects.
 
 """
 import numpy as np
@@ -31,7 +53,7 @@ class PointDefectsFilterSettings(base.BaseSettings):
         self.registerSetting("neighbourRadius", default=3.5)
         self.registerSetting("minClusterSize", default=3)
         self.registerSetting("maxClusterSize", default=-1)
-        self.registerSetting("hullCol", default=[0,0,1])
+        self.registerSetting("hullCol", default=[0, 0, 1])
         self.registerSetting("hullOpacity", default=0.5)
         self.registerSetting("calculateVolumes", default=False)
         self.registerSetting("calculateVolumesVoro", default=True)
@@ -52,6 +74,10 @@ class PointDefectsFilterSettings(base.BaseSettings):
         self.registerSetting("bondThicknessVTK", default=0.4)
         self.registerSetting("bondThicknessPOV", default=0.4)
         self.registerSetting("bondNumSides", default=5)
+        
+        # old methods for calculating certain things
+        self.registerSetting("splitIntsOld", default=False)
+        self.registerSetting("acnaOld", default=False)
 
 
 class PointDefectsFilter(base.BaseFilter):
@@ -151,16 +177,19 @@ class PointDefectsFilter(base.BaseFilter):
         identifySplitInts = settings.getSetting("identifySplitInts")
         acnaStructureType = settings.getSetting("acnaStructureType")
         filterSpecies = settings.getSetting("filterSpecies")
+        splitOld = settings.getSetting("splitIntsOld")
+        acnaOld = settings.getSetting("acnaOld")
         
         # call C library
         self.logger.debug("Calling C library")
         _defects.findDefects(showVacancies, showInterstitials, showAntisites, NDefectsByType, vacancies, interstitials,
-                             antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms, inputLattice.specieList,
-                             inputLattice.specie, inputLattice.pos, refLattice.NAtoms, refLattice.specieList, refLattice.specie, 
-                             refLattice.pos, refLattice.cellDims, inputLattice.PBC, vacancyRadius, findClusters, neighbourRadius,
-                             defectCluster, vacSpecCount, intSpecCount, antSpecCount, onAntSpecCount, splitIntSpecCount,
+                             antisites, onAntisites, exclSpecsInput, exclSpecsRef, inputLattice.NAtoms,
+                             inputLattice.specieList, inputLattice.specie, inputLattice.pos, refLattice.NAtoms,
+                             refLattice.specieList, refLattice.specie, refLattice.pos, refLattice.cellDims,
+                             inputLattice.PBC, vacancyRadius, findClusters, neighbourRadius, defectCluster,
+                             vacSpecCount, intSpecCount, antSpecCount, onAntSpecCount, splitIntSpecCount,
                              minClusterSize, maxClusterSize, splitInterstitials, identifySplitInts, driftCompensation,
-                             driftVector, acnaArray, acnaStructureType, int(filterSpecies))
+                             driftVector, acnaArray, acnaStructureType, int(filterSpecies), int(splitOld), int(acnaOld))
         
         # summarise
         NDef = NDefectsByType[0]
@@ -195,7 +224,8 @@ class PointDefectsFilter(base.BaseFilter):
                             N = splitIntSpecCount[i][j]
                         else:
                             N = splitIntSpecCount[i][j] + splitIntSpecCount[j][i]
-                        self.logger.info("      %d %s - %s split interstitials", N, inputLattice.specieList[i], inputLattice.specieList[j])
+                        self.logger.info("      %d %s - %s split interstitials", N, inputLattice.specieList[i],
+                                         inputLattice.specieList[j])
         
         if settings.getSetting("showAntisites"):
             self.logger.info("  %d antisites", NAnt)
@@ -204,7 +234,8 @@ class PointDefectsFilter(base.BaseFilter):
                     if inputLattice.specieList[j] == refLattice.specieList[i]:
                         continue
                     
-                    self.logger.info("    %d %s on %s antisites", onAntSpecCount[i][j], inputLattice.specieList[j], refLattice.specieList[i])
+                    self.logger.info("    %d %s on %s antisites", onAntSpecCount[i][j], inputLattice.specieList[j],
+                                     refLattice.specieList[i])
         
         if settings.getSetting("showInterstitials") and settings.getSetting("identifySplitInts"):
             self.logger.info("Split interstitial analysis")
@@ -213,11 +244,11 @@ class PointDefectsFilter(base.BaseFilter):
             cellDims = inputLattice.cellDims
             
             for i in xrange(NSplit):
-                ind1 = splitInterstitials[3*i+1]
-                ind2 = splitInterstitials[3*i+2]
+                ind1 = splitInterstitials[3 * i + 1]
+                ind2 = splitInterstitials[3 * i + 2]
                 
-                pos1 = inputLattice.pos[3*ind1:3*ind1+3]
-                pos2 = inputLattice.pos[3*ind2:3*ind2+3]
+                pos1 = inputLattice.pos[3 * ind1:3 * ind1 + 3]
+                pos2 = inputLattice.pos[3 * ind2:3 * ind2 + 3]
                 
                 sepVec = vectors.separationVector(pos1, pos2, cellDims, PBC)
                 norm = vectors.normalise(sepVec)
@@ -233,7 +264,7 @@ class PointDefectsFilter(base.BaseFilter):
             
             # build cluster lists
             for i in xrange(NClusters):
-                clusterList.append(clusters.DefectCluster())
+                clusterList.append(clusters.DefectCluster(inputLattice, refLattice))
             
             # add atoms to cluster lists
             clusterIndexMapper = {}
@@ -247,9 +278,7 @@ class PointDefectsFilter(base.BaseFilter):
                     count += 1
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                clusterList[clusterListIndex].vacancies.append(atomIndex)
-                clusterList[clusterListIndex].vacAsIndex.append(i)
+                clusterList[clusterListIndex].addVacancy(atomIndex)
             
             for i in xrange(NInt):
                 atomIndex = interstitials[i]
@@ -260,8 +289,7 @@ class PointDefectsFilter(base.BaseFilter):
                     count += 1
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                clusterList[clusterListIndex].interstitials.append(atomIndex)
+                clusterList[clusterListIndex].addInterstitial(atomIndex)
             
             for i in xrange(NAnt):
                 atomIndex = antisites[i]
@@ -273,9 +301,7 @@ class PointDefectsFilter(base.BaseFilter):
                     count += 1
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                clusterList[clusterListIndex].antisites.append(atomIndex)
-                clusterList[clusterListIndex].onAntisites.append(atomIndex2)
+                clusterList[clusterListIndex].addAntisite(atomIndex, atomIndex2)
             
             for i in xrange(NSplit):
                 clusterIndex = defectCluster[NVac + NInt + NAnt + i]
@@ -285,15 +311,31 @@ class PointDefectsFilter(base.BaseFilter):
                     count += 1
                 
                 clusterListIndex = clusterIndexMapper[clusterIndex]
-                
-                atomIndex = splitInterstitials[3*i]
-                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
-                
-                atomIndex = splitInterstitials[3*i+1]
-                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
-                
-                atomIndex = splitInterstitials[3*i+2]
-                clusterList[clusterListIndex].splitInterstitials.append(atomIndex)
+                index0 = splitInterstitials[3 * i]
+                index1 = splitInterstitials[3 * i + 1]
+                index2 = splitInterstitials[3 * i + 2]
+                clusterList[clusterListIndex].addSplitInterstitial(index0, index1, index2)
+            
+            # calculate volumes
+            calcVols = settings.getSetting("calculateVolumes")
+            if calcVols:
+                self.logger.debug("Calculating defect cluster volumes")
+                for i, cluster in enumerate(clusterList):
+                    cluster.calculateVolume(filterInput.voronoiDefects, settings)
+                    volume = cluster.getVolume()
+                    if volume is not None:
+                        self.logger.debug("Cluster %d: volume is %f", i, volume)
+                    area = cluster.getFacetArea()
+                    if area is not None:
+                        self.logger.debug("Cluster %d: facet area is %f", i, area)
+            
+            # hide defects if required
+            if settings.getSetting("hideDefects"):
+                vacancies.resize(0, refcheck=False)
+                antisites.resize(0, refcheck=False)
+                onAntisites.resize(0, refcheck=False)
+                interstitials.resize(0, refcheck=False)
+                splitInterstitials.resize(0, refcheck=False)
         
         # make result
         result = base.FilterResult()

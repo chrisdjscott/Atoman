@@ -5,11 +5,10 @@ The filter tab for the main toolbar
 @author: Chris Scott
 
 """
-import sys
 import logging
 import functools
 import copy
-import importlib
+import traceback
 
 from PySide import QtGui, QtCore
 
@@ -25,9 +24,8 @@ from .filterListOptions import voronoiOptions
 from . import utils
 from .dialogs import infoDialogs
 from . import filterSettings
+from ..rendering import filterListRenderer
 
-
-################################################################################
 
 class FilterListWidgetItem(QtGui.QListWidgetItem):
     """
@@ -41,7 +39,6 @@ class FilterListWidgetItem(QtGui.QListWidgetItem):
         self.filterSettings = filterSettings
         self.setText(filterName)
 
-################################################################################
 
 class OptionsListItem(QtGui.QListWidgetItem):
     """
@@ -53,40 +50,12 @@ class OptionsListItem(QtGui.QListWidgetItem):
         
         self.dialog = dialog
 
-################################################################################
 
 class FilterList(QtGui.QWidget):
     """
     Filter list widget
     
     """
-    # all available filters
-    defaultFilters = [
-        "Species", 
-        "Point defects", 
-        "Crop box", 
-        "Cluster", 
-        "Displacement",
-        "Charge",
-        "Crop sphere",
-        "Slice",
-        "Coordination number",
-        "Voronoi neighbours",
-        "Voronoi volume",
-        "Bond order",
-        "Atom ID",
-        "ACNA",
-        "Slip",
-        "Bubbles",
-    ]
-    defaultFilters.sort()
-    
-    # filters that are compatible with the 'Point defects' filter
-    defectCompatibleFilters = [
-        "Crop box",
-        "Slice",
-    ]
-    
     def __init__(self, parent, mainToolbar, mainWindow, tab, width):
         super(FilterList, self).__init__(parent)
         
@@ -102,6 +71,7 @@ class FilterList(QtGui.QWidget):
         
         # have to treat defect filter differently
         self.defectFilterSelected = False
+        self.bubblesFilterSelected = False
         
         # info windows stored here
         self.infoWindows = {}
@@ -141,14 +111,6 @@ class FilterList(QtGui.QWidget):
         self.driftCompButton.clicked.connect(self.driftCompClicked)
         self.driftCompensation = False
         
-        # persistent list button
-        self.persistButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/applications-education-miscellaneous.png")), "")
-        self.persistButton.setFixedWidth(35)
-        self.persistButton.setStatusTip("Persistent property/filter list")
-        self.persistButton.setToolTip("Persistent property/filter list")
-        self.persistButton.setCheckable(1)
-        self.persistButton.setChecked(0)
-        
         # static list button
         self.staticListButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/object-unlocked.png")), "")
         self.staticListButton.setFixedWidth(35)
@@ -173,24 +135,20 @@ class FilterList(QtGui.QWidget):
         rowLayout.setAlignment(QtCore.Qt.AlignLeft)
         rowLayout.addWidget(self.visibleButton)
         rowLayout.addWidget(trashButton)
-#        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
         row2 = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row2)
         rowLayout.setAlignment(QtCore.Qt.AlignRight)
         rowLayout.addWidget(self.driftCompButton)
-        rowLayout.addWidget(self.persistButton)
         rowLayout.addWidget(self.staticListButton)
         rowLayout.addWidget(self.scalarBarButton)
-#        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
         row3 = QtGui.QWidget()
         rowLayout = QtGui.QHBoxLayout(row3)
         rowLayout.addWidget(row1)
         rowLayout.addWidget(row2)
-#        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
         self.filterListLayout.addWidget(row3)
@@ -208,8 +166,8 @@ class FilterList(QtGui.QWidget):
         # quick add combo
         self.quickAddCombo = QtGui.QComboBox()
         self.quickAddCombo.addItem("Add property/filter ...")
-        self.quickAddCombo.addItems(self.defaultFilters)
-        self.allFilters = copy.deepcopy(self.defaultFilters)
+        self.quickAddCombo.addItems(filterer.Filterer.defaultFilters)
+        self.allFilters = copy.deepcopy(filterer.Filterer.defaultFilters)
         self.quickAddCombo.currentIndexChanged[str].connect(self.quickAddComboAction)
         
         # clear list button
@@ -247,11 +205,10 @@ class FilterList(QtGui.QWidget):
         self.optionsList.setFixedHeight(120)
         groupLayout.addWidget(self.optionsList)
         
-        # colouring options
-        self.colouringOptions = colouringOptions.ColouringOptionsWindow(parent=self)
-        item = OptionsListItem(self.colouringOptions)
-        item.setText("Colouring: Species")
-        self.colouringOptions.modified.connect(item.setText)
+        # actor visibility
+        self.actorsOptions = actorsOptions.ActorsOptionsWindow(self.mainWindow, parent=self)
+        item = OptionsListItem(self.actorsOptions)
+        item.setText("Actors options")
         self.optionsList.addItem(item)
         
         # bonding options
@@ -261,16 +218,17 @@ class FilterList(QtGui.QWidget):
         self.bondsOptions.modified.connect(item.setText)
         self.optionsList.addItem(item)
         
+        # colouring options
+        self.colouringOptions = colouringOptions.ColouringOptionsWindow(parent=self)
+        item = OptionsListItem(self.colouringOptions)
+        item.setText("Colouring: Species")
+        self.colouringOptions.modified.connect(item.setText)
+        self.optionsList.addItem(item)
+        
         # display options
         self.displayOptions = displayOptions.DisplayOptionsWindow(self.mainWindow, parent=self)
         item = OptionsListItem(self.displayOptions)
         item.setText("Display options")
-        self.optionsList.addItem(item)
-        
-        # Voronoi options
-        self.voronoiOptions = voronoiOptions.VoronoiOptionsWindow(self.mainWindow, parent=self)
-        item = OptionsListItem(self.voronoiOptions)
-        item.setText("Voronoi options")
         self.optionsList.addItem(item)
         
         # trace options
@@ -287,16 +245,19 @@ class FilterList(QtGui.QWidget):
         self.vectorsOptions.modified.connect(item.setText)
         self.optionsList.addItem(item)
         
-        # actor visibility
-        self.actorsOptions = actorsOptions.ActorsOptionsWindow(self.mainWindow, parent=self)
-        item = OptionsListItem(self.actorsOptions)
-        item.setText("Actors options")
+        # Voronoi options
+        self.voronoiOptions = voronoiOptions.VoronoiOptionsWindow(self.mainWindow, parent=self)
+        item = OptionsListItem(self.voronoiOptions)
+        item.setText("Voronoi options")
         self.optionsList.addItem(item)
         
         self.filterListLayout.addWidget(extraOptionsGroupBox)
         
         # the filterer (does the filtering)
-        self.filterer = filterer.Filterer(self)
+        self.filterer = filterer.Filterer(self.voronoiOptions)
+        
+        # the renderer (does the rendering)
+        self.renderer = filterListRenderer.FilterListRenderer(self)
     
     def optionsListItemClicked(self, item):
         """
@@ -315,7 +276,8 @@ class FilterList(QtGui.QWidget):
             # check ok to have drift comp
             pp = self.pipelinePage
             if pp.inputState.NAtoms != pp.refState.NAtoms:
-                self.mainWindow.displayWarning("Drift compensation can only be used if the input and reference atoms match each other")
+                message = "Drift compensation can only be used if the input and reference atoms match each other"
+                self.mainWindow.displayWarning(message)
                 self.driftCompButton.setChecked(QtCore.Qt.Unchecked)
             
             else:
@@ -339,6 +301,8 @@ class FilterList(QtGui.QWidget):
         else:
             if self.defectFilterSelected:
                 window = infoDialogs.DefectClusterInfoWindow(self.pipelinePage, self, clusterIndex, parent=self)
+            elif self.bubblesFilterSelected:
+                pass
             else:
                 window = infoDialogs.ClusterInfoWindow(self.pipelinePage, self, clusterIndex, parent=self)
             
@@ -431,13 +395,11 @@ class FilterList(QtGui.QWidget):
         
         """
         if self.scalarBarButton.isChecked():
-            added = self.filterer.addScalarBar()
-            
+            added = self.renderer.addScalarBar()
             if not added:
                 self.scalarBarButton.setChecked(0)
-        
         else:
-            self.filterer.hideScalarBar()
+            self.renderer.hideScalarBar()
     
     def openFilterSettings(self, item=None):
         """
@@ -450,41 +412,78 @@ class FilterList(QtGui.QWidget):
             item = self.listItems.currentItem()
         
         item.filterSettings.hide()
-#         utils.positionWindow(item.filterSettings, item.filterSettings.size(), self.mainWindow.desktop, self)
         item.filterSettings.show()
     
-    def applyList(self):
+    def clearActors(self, sequencer=False):
+        """Remove all current actors."""
+        self.renderer.removeActors(sequencer=sequencer)
+        
+        # TODO: remove scalar bar too
+    
+    def applyList(self, sequencer=False):
         """
         Run filters in this list.
         
         """
-        # add a progress dialog
-        progDiag = utils.showProgressDialog("Applying list", "Applying list...", self)
+        # skip if static list
+        if self.isStaticList():
+            self.logger.info("Static filter list: skipping")
+            return
+        
+        # otherwise process
+        if not sequencer:
+            # add a progress dialog
+            progDiag = utils.showProgressDialog("Applying list", "Applying list...", self)
         
         try:
+            # list of filters
+            currentFilters = self.getCurrentFilterNames()
+            currentSettingsGuis = self.getCurrentFilterSettings()
+            currentSettings = [settingsGui.getSettings() for settingsGui in currentSettingsGuis]
+            
+            # current states
+            inputState = self.pipelinePage.inputState
+            refState = self.pipelinePage.refState
+            
+            # remove actors first
+            self.clearActors(sequencer=sequencer)
+            
             # apply filters
-            self.filterer.runFilters()
+            self.filterer.runFilters(currentFilters, currentSettings, inputState, refState)
             
             # this is where the rendering should be done
-            
+            self.renderer.render(sequencer=sequencer)
             
             # update on screen text
             self.filterTab.refreshOnScreenInfo()
             
-            # refresh plot options
+            # refresh available scalars in extra options dialog
+            self.colouringOptions.refreshScalarColourOption()
+            
+            # add actors
+            if self.visible:
+                self.renderer.addActors()
+            
+            # refresh plot options and reinit
             for rw in self.pipelinePage.rendererWindows:
                 if rw.currentPipelineIndex == self.pipelinePage.pipelineIndex:
                     rw.outputDialog.plotTab.scalarsForm.refreshScalarPlotOptions()
+                    if self.visible:
+                        rw.vtkRenWinInteract.ReInitialize()
         
         except:
+            # print traceback
+            errstring = traceback.format_exc()
+            
             # show error
-            exctype, value = sys.exc_info()[:2]
-            self.logger.error("Apply list failed! %s: %s", exctype, value)
-            self.mainWindow.displayError("Apply list failed!\n\n%s: %s" % (exctype, value))
+            # exctype, value = sys.exc_info()[:2]
+            self.logger.error("Apply list failed!\n\n%s", errstring)
+            self.mainWindow.displayError("Apply list failed!\n\n%s" % errstring)
         
         finally:
-            # always remove the progress dialog
-            utils.cancelProgressDialog(progDiag)
+            if not sequencer:
+                # always remove the progress dialog
+                utils.cancelProgressDialog(progDiag)
     
     def getCurrentFilterSettings(self):
         """
@@ -506,7 +505,7 @@ class FilterList(QtGui.QWidget):
         currentNames = []
         for i in xrange(self.listItems.count()):
             item = self.listItems.item(i)
-            currentNames.append(item.filterName)
+            currentNames.append(item.filterName.split("[")[0].strip())
         
         return currentNames
     
@@ -527,7 +526,7 @@ class FilterList(QtGui.QWidget):
         Clear filters and actors from list.
         
         """
-        self.filterer.removeActors()
+        self.renderer.removeActors()
         
         # close info windows
         self.removeInfoWindows()
@@ -542,11 +541,10 @@ class FilterList(QtGui.QWidget):
         self.listItems.clear()
         
         self.staticListButton.setChecked(0)
-        self.persistButton.setChecked(0)
-        
         self.defectFilterSelected = False
+        self.bubblesFilterSelected = False
         
-        if self.filterer.scalarBarAdded:
+        if self.renderer.scalarBarAdded:
             self.scalarBarButton.setChecked(0)
         
         # refresh available scalars
@@ -571,13 +569,6 @@ class FilterList(QtGui.QWidget):
         
         """
         return self.staticListButton.isChecked()
-    
-    def isPersistentList(self):
-        """
-        Check if the list is a persistent list.
-        
-        """
-        return self.persistButton.isChecked()
     
     def moveFilterDownInList(self):
         """
@@ -623,7 +614,7 @@ class FilterList(QtGui.QWidget):
     
     def warnDefectFilter(self, name=None):
         """
-        Warn user that defect filter cannot 
+        Warn user that defect filter cannot
         be used with any other filter
         
         """
@@ -631,6 +622,23 @@ class FilterList(QtGui.QWidget):
             message = "The '%s' filter cannot be used in conjuction with the 'Point defects' filter" % name
         else:
             message = "The 'Point defects' filter must be added to the filter list first"
+        
+        msgBox = QtGui.QMessageBox(self)
+        msgBox.setText(message)
+        msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
+        msgBox.setIcon(QtGui.QMessageBox.Warning)
+        msgBox.exec_()
+    
+    def warnBubblesFilter(self, name=None):
+        """
+        Warn user that bubbles filter cannot be used with any other filter.
+        
+        """
+        if name is not None:
+            message = "The '%s' filter cannot be used in conjuction with the 'Bubbles' filter" % name
+        else:
+            message = "The 'Bubbles' filter must be added to the filter list first"
         
         msgBox = QtGui.QMessageBox(self)
         msgBox.setText(message)
@@ -663,7 +671,7 @@ class FilterList(QtGui.QWidget):
         inp = self.pipelinePage.inputState
         scalarsDict = inp.scalarsDict
         
-        numDefault = len(self.defaultFilters)
+        numDefault = len(filterer.Filterer.defaultFilters)
         scalarNames = scalarsDict.keys()
         additionalFilters = ["Scalar: {0}".format(s) for s in scalarNames]
         previousAdditionalFilters = self.allFilters[numDefault:]
@@ -717,14 +725,18 @@ class FilterList(QtGui.QWidget):
             return
         
         # first determine what filter is to be added
+        pp = self.pipelinePage
         if filterName is not None and filterName in self.allFilters:
-            if self.defectFilterSelected and filterName not in self.defectCompatibleFilters:
+            if self.defectFilterSelected and filterName not in self.filterer.defectCompatibleFilters:
                 self.warnDefectFilter(name=filterName)
             
             elif self.listItems.count() > 0 and str(filterName) == "Point defects":
                 self.warnDefectFilter()
             
-            elif str(filterName) == "Displacement" and self.pipelinePage.inputState.NAtoms != self.pipelinePage.refState.NAtoms:
+            elif self.bubblesFilterSelected:
+                self.warnBubblesFilter(name=filterName)
+            
+            elif str(filterName) == "Displacement" and pp.inputState.NAtoms != pp.refState.NAtoms:
                 self.warnDisplacementFilter()
             
             else:
@@ -741,14 +753,13 @@ class FilterList(QtGui.QWidget):
                 # add
                 self.listItems.addItem(item)
                 
-                # position form
-#                 utils.positionWindow(form, form.sizeHint(), self.mainWindow.desktop, self)
-                
                 # show options form
                 form.show()
                 
                 if str(filterName) == "Point defects":
                     self.defectFilterSelected = True
+                elif str(filterName) == "Bubbles":
+                    self.bubblesFilterSelected = True
                 
                 # refresh available scalars
                 self.colouringOptions.refreshScalarColourOption()
@@ -780,6 +791,8 @@ class FilterList(QtGui.QWidget):
         
         if filterName.startswith("Point defects"):
             self.defectFilterSelected = False
+        elif filterName.startswith("Bubbles"):
+            self.bubblesFilterSelected = False
         
         # refresh available scalars
         self.colouringOptions.refreshScalarColourOption()
@@ -798,10 +811,10 @@ class FilterList(QtGui.QWidget):
             title = "%s settings (List %d - %d)" % (filterName, self.tab, self.filterCounter)
             
             # load module
-            from .filterSettings import genericScalarSettingsDialog
+            formModule = getattr(filterSettings, "genericScalarSettingsDialog")
             
             # load form
-            form = genericScalarSettingsDialog.GenericScalarSettingsDialog(self.mainWindow, filterName, title, parent=self)
+            form = formModule.GenericScalarSettingsDialog(self.mainWindow, filterName, title, parent=self)
             self.filterCounter += 1
         
         else:
@@ -811,13 +824,6 @@ class FilterList(QtGui.QWidget):
             moduleName = dialogName[:1].lower() + dialogName[1:]
             self.logger.debug("Loading settings dialog module: '%s'", moduleName)
             self.logger.debug("Creating settings dialog: '%s'", dialogName)
-            
-            # load module
-#             try:
-#                 formModule = importlib.import_module(".{0}".format(moduleName), package="atoman.gui.filterSettings")
-#             except ImportError:
-#                 self.logger.critical("Failed to load filterSettings module: '{0}'".format(moduleName))
-#                 raise
             
             # get module
             formModule = getattr(filterSettings, moduleName)
@@ -841,7 +847,7 @@ class FilterList(QtGui.QWidget):
         if self.visibleButton.isChecked():
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.svg")))
             self.visible = False
-            self.filterer.hideActors()
+            self.renderer.hideActors()
         
         else:
             self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))

@@ -12,7 +12,7 @@
 *-exported.IN
 build/
 *.log
-atoman.egg-info/
+Atoman.egg-info/
 setup.cfg
 .coverage
 .komodotools/

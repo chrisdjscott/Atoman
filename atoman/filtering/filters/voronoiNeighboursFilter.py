@@ -33,7 +33,6 @@ class VoronoiNeighboursFilter(base.BaseFilter):
     """
     def __init__(self, *args, **kwargs):
         super(VoronoiNeighboursFilter, self).__init__(*args, **kwargs)
-        self.requiresVoronoi = True
     
     def apply(self, filterInput, settings):
         """Apply the filter."""
@@ -43,7 +42,7 @@ class VoronoiNeighboursFilter(base.BaseFilter):
         NVectors = filterInput.NVectors
         fullVectors = filterInput.fullVectors
         visibleAtoms = filterInput.visibleAtoms
-        vor = filterInput.voronoi
+        vor = filterInput.voronoiAtoms.getVoronoi(filterInput.inputState)
         
         # settings
         minVoroNebs = settings.getSetting("minVoroNebs")

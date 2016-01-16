@@ -96,84 +96,6 @@ static void addPOVRAYCellFrame(FILE *fp, double xposa, double yposa, double zpos
 
 
 /*******************************************************************************
- ** write visible atoms to pov-ray file
- *******************************************************************************/
-//static PyObject*
-//writePOVRAYAtoms(PyObject *self, PyObject *args)
-//{
-//    char *filename;
-//    int *visibleAtoms, *specie, scalarType, heightAxis, 
-//    double *pos, *specieCovRad, *PE, *KE, *charge, *scalars;
-//    
-//    
-////int writePOVRAYAtoms(char* filename, int NVisible, int *visibleAtoms, int* specie, double* pos, 
-////                     double* specieCovRad, double* PE, double* KE, double* charge, double* scalars, 
-////                     int scalarType, int heightAxis, rgbcalc_t rgbcalc)
-////{
-//    int i, index, specieIndex;
-//    double *rgb, scalar;
-//    FILE *OUTFILE;
-//    
-//    /* open file */
-//    OUTFILE = fopen(filename, "w");
-//    if (OUTFILE == NULL)
-//    {
-//        printf("ERROR: could not open file: %s\n", filename);
-//        printf("       reason: %s\n", strerror(errno));
-//        exit(35);
-//    }
-//    
-//    printf("Scalar type %d\n", scalarType);
-//    
-//    /* loop over visible atoms */
-//    for (i=0; i<NVisible; i++)
-//    {
-//        index = visibleAtoms[i];
-//        specieIndex = specie[index];
-//        
-//        /* scalar */
-//        if (scalarType == 0)
-//        {
-//            scalar = specieIndex;
-//        }
-//        else if (scalarType == 1)
-//        {
-//            scalar = pos[3*index+heightAxis];
-//        }
-//        else if (scalarType == 2)
-//        {
-//            scalar = KE[index];
-//        }
-//        else if (scalarType == 3)
-//        {
-//            scalar = PE[index];
-//        }
-//        else if (scalarType == 4)
-//        {
-//            scalar = charge[index];
-//        }
-//        else
-//        {
-//            scalar = scalars[i];
-//        }
-//        
-//        /* get rgb */
-//        rgb = rgbcalc(scalar);
-//        
-//        printf("VIS ATOM %d; scalar %lf; rgb (%lf, %lf, %lf)\n", index, scalar, rgb[0], rgb[1], rgb[2]);
-//        
-//        /* write atom */
-//        addPOVRAYSphere(OUTFILE, - pos[3*index], pos[3*index+1], pos[3*index+2], 
-//                        specieCovRad[specieIndex], rgb[0], rgb[1], rgb[2]);
-//    }
-//    
-//    fclose(OUTFILE);
-//    
-//    return 0;
-//}
-
-
-/*******************************************************************************
  ** write defects to povray file
  *******************************************************************************/
 static PyObject*
@@ -358,9 +280,8 @@ writeLattice(PyObject *self, PyObject *args)
     PyArrayObject *posIn=NULL;
     PyArrayObject *chargeIn=NULL;
 
-    int i, index, NAtomsWrite;
+    int NAtomsWrite;
     FILE *OUTFILE;
-    char symtemp[3];
     
     
     /* force locale to use dots for decimal separator */
@@ -391,6 +312,9 @@ writeLattice(PyObject *self, PyObject *args)
     
     specieList = pyvector_to_Cptr_char(specieListIn);
     
+    /* how many atoms we are writing */
+    NAtomsWrite = (writeFullLattice) ? NAtoms : NVisible;
+    
     /* open file */
     OUTFILE = fopen(filename, "w");
     if (OUTFILE == NULL)
@@ -400,37 +324,46 @@ writeLattice(PyObject *self, PyObject *args)
         exit(35);
     } 
     
-    NAtomsWrite = (writeFullLattice) ? NAtoms : NVisible;
-    
+    /* write header */
     fprintf(OUTFILE, "%d\n", NAtomsWrite);
     fprintf(OUTFILE, "%f %f %f\n", cellDims[0], cellDims[1], cellDims[2]);
     
+    /* write atoms */
     if (writeFullLattice)
     {
-        for (i=0; i<NAtoms; i++)
+        int i;
+        
+        for (i = 0; i < NAtoms; i++)
         {
-            symtemp[0] = specieList[2*specie[i]];
-            symtemp[1] = specieList[2*specie[i]+1];
-            symtemp[2] = '\0';
+            int i3 = 3 * i;
+            int spec2 = 2 * specie[i];
+            char symtemp[3];
             
-            fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*i], pos[3*i+1], pos[3*i+2], charge[i]);
+            symtemp[0] = specieList[spec2];
+            symtemp[1] = specieList[spec2 + 1];
+            symtemp[2] = '\0';
+            fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[i3], pos[i3 + 1], pos[i3 + 2], charge[i]);
         }
     }
     else
     {
-        for (i=0; i<NVisible; i++)
+        int i;
+        
+        for (i = 0; i < NVisible; i++)
         {
-            index = visibleAtoms[i];
+            int index = visibleAtoms[i];
+            int ind3 = index * 3;
+            int spec2 = 2 * specie[i];
+            char symtemp[3];
             
-            symtemp[0] = specieList[2*specie[index]];
-            symtemp[1] = specieList[2*specie[index]+1];
+            symtemp[0] = specieList[spec2];
+            symtemp[1] = specieList[spec2 + 1];
             symtemp[2] = '\0';
-            
-            fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[3*index], pos[3*index+1], pos[3*index+2], charge[index]);
+            fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[ind3], pos[ind3 + 1], pos[ind3 + 2], charge[index]);
         }
     }
         
     fclose(OUTFILE);
     
-    return Py_BuildValue("i", 0);
+    Py_RETURN_NONE;
 }

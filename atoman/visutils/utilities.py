@@ -27,7 +27,8 @@ EXTENDED_PATH = [
     "/usr/local/bin",
 ]
 
-################################################################################
+RESOURCE_BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+
 
 class TextEditHandler(logging.Handler):
     """
@@ -96,7 +97,7 @@ def resourcePath(relative, dirname="data"):
         path = os.environ.get("RESOURCEPATH", None)
         if path is None:
             # then look in source code directory
-            path = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")), dirname)
+            path = os.path.join(RESOURCE_BASE, dirname)
     
     path = os.path.join(path, relative)
     

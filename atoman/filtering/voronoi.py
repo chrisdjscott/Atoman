@@ -12,9 +12,60 @@ import numpy as np
 
 from . import _voronoi
 
-################################################################################
 
-def computeVoronoi(lattice, voronoiOptions, PBC):
+class VoronoiCalculator(object):
+    """Base object for Voronoi calculators."""
+    def __init__(self, options):
+        self._voronoi = None
+        self._options = options
+    
+    def isCalculated(self):
+        """Have we already calculated the Voronoi tessellation."""
+        return True if isinstance(self._voronoi, _voronoi.Voronoi) else False
+    
+    def getVoronoi(self, *args):
+        """Return the Voronoi object."""
+        if not self.isCalculated():
+            self._calculate(*args)
+        
+        return self._voronoi
+    
+    def calculate(*args):
+        """Calculate Voronoi: to be overridden."""
+        raise NotImplementedError("VoronoiCalculator.calculate has not been implemented")
+
+
+class VoronoiAtomsCalculator(VoronoiCalculator):
+    """
+    Object for calculating Voronoi cells for atoms.
+    
+    """
+    def __init__(self, options):
+        super(VoronoiAtomsCalculator, self).__init__(options)
+        self._logger = logging.getLogger(__name__ + ".VoronoiAtomsCalculator")
+    
+    def _calculate(self, lattice):
+        """Calculate Voronoi."""
+        self._logger.info("Calculating Voronoi (Atoms)")
+        self._voronoi = computeVoronoi(lattice, self._options)
+
+
+class VoronoiDefectsCalculator(VoronoiCalculator):
+    """
+    Object for calculating Voronoi cells for defects.
+    
+    """
+    def __init__(self, options):
+        super(VoronoiDefectsCalculator, self).__init__(options)
+        self._logger = logging.getLogger(__name__ + ".VoronoiDefectsCalculator")
+    
+    def _calculate(self, lattice, refLattice, vacancies):
+        """Calculate Voronoi."""
+        self._logger.info("Calculating Voronoi (Defects)")
+        self._voronoi = computeVoronoiDefects(lattice, refLattice, vacancies, self._options)
+
+
+def computeVoronoi(lattice, voronoiOptions):
     """
     Compute Voronoi using Voro++
     
@@ -25,15 +76,15 @@ def computeVoronoi(lattice, voronoiOptions, PBC):
     
     logger.info("Computing Voronoi")
     logger.debug("  NAtoms: %d", lattice.NAtoms)
-    logger.debug("  PBCs are: %s %s %s", bool(PBC[0]), bool(PBC[1]), bool(PBC[2]))
+    logger.debug("  PBCs are: %s %s %s", bool(lattice.PBC[0]), bool(lattice.PBC[1]), bool(lattice.PBC[2]))
     logger.debug("  Using radii: %s", voronoiOptions.useRadii)
     
     # Voronoi object
-    vor = _voronoi.Voronoi() #TODO: store info on vor obj, eg. useRadii, etc...
+    vor = _voronoi.Voronoi()  # TODO: store info on vor obj, eg. useRadii, etc...
     
     # call c lib
     callTime = time.time()
-    vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, lattice.specie, 
+    vor.computeVoronoi(lattice.pos, lattice.minPos, lattice.maxPos, lattice.cellDims, lattice.PBC, lattice.specie,
                        lattice.specieCovalentRadius, voronoiOptions.useRadii, voronoiOptions.faceAreaThreshold)
     callTime = time.time() - callTime
     
@@ -44,7 +95,7 @@ def computeVoronoi(lattice, voronoiOptions, PBC):
         
         fn = voronoiOptions.outputFilename
         
-        #TODO: make this a CLIB
+        # TODO: make this a CLIB
         
         lines = []
         nl = lines.append
@@ -73,9 +124,8 @@ def computeVoronoi(lattice, voronoiOptions, PBC):
     
     return vor
 
-################################################################################
 
-def computeVoronoiDefects(lattice, refLattice, vacancies, voronoiOptions, PBC):
+def computeVoronoiDefects(lattice, refLattice, vacancies, voronoiOptions):
     """
     Compute Voronoi for system containing defects
     
@@ -86,19 +136,19 @@ def computeVoronoiDefects(lattice, refLattice, vacancies, voronoiOptions, PBC):
     
     logger.info("Computing Voronoi (defects)")
     logger.debug("  NAtoms: %d; NVacancies: %d", lattice.NAtoms, len(vacancies))
-    logger.debug("  PBCs are: %s %s %s", bool(PBC[0]), bool(PBC[1]), bool(PBC[2]))
+    logger.debug("  PBCs are: %s %s %s", bool(lattice.PBC[0]), bool(lattice.PBC[1]), bool(lattice.PBC[2]))
     logger.debug("  Using radii: %s", voronoiOptions.useRadii)
     
     # Voronoi object
-    vor = _voronoi.Voronoi() #TODO: store info on vor obj, eg. useRadii, etc...
+    vor = _voronoi.Voronoi()  # TODO: store info on vor obj, eg. useRadii, etc...
     
     # make new pos/specie arrays, containing vacancies too
-    #TODO: write in C
+    # TODO: write in C
     preptime = time.time()
     dim = lattice.NAtoms + len(vacancies)
-    pos = np.empty(3*dim, np.float64)
+    pos = np.empty(3 * dim, np.float64)
     specie = np.empty(dim, np.int32)
-    pos[:3*lattice.NAtoms] = lattice.pos[:]
+    pos[:3 * lattice.NAtoms] = lattice.pos[:]
     specie[:lattice.NAtoms] = lattice.specie[:]
     for i in xrange(len(vacancies)):
         ind = i + lattice.NAtoms
@@ -107,16 +157,16 @@ def computeVoronoiDefects(lattice, refLattice, vacancies, voronoiOptions, PBC):
         vacind3 = 3 * vacind
         
         pos[ind3] = refLattice.pos[vacind3]
-        pos[ind3+1] = refLattice.pos[vacind3+1]
-        pos[ind3+2] = refLattice.pos[vacind3+2]
+        pos[ind3 + 1] = refLattice.pos[vacind3 + 1]
+        pos[ind3 + 2] = refLattice.pos[vacind3 + 2]
         
         specie[ind] = refLattice.specie[vacind]
     preptime = time.time() - preptime
     
     # call c lib
     callTime = time.time()
-    vor.computeVoronoi(pos, lattice.minPos, lattice.maxPos, lattice.cellDims, PBC, specie, 
-                       lattice.specieCovalentRadius, voronoiOptions.useRadii, voronoiOptions.faceAreaThreshold)    
+    vor.computeVoronoi(pos, lattice.minPos, lattice.maxPos, lattice.cellDims, lattice.PBC, specie,
+                       lattice.specieCovalentRadius, voronoiOptions.useRadii, voronoiOptions.faceAreaThreshold)
     callTime = time.time() - callTime
     
     vorotime = time.time() - vorotime

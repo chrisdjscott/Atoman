@@ -10,7 +10,7 @@ Released under the MIT license, see "LICENSE.md" for details.
 
 This code requires [Python 2.7](http://www.python.org/download/releases/2.7/) to run.  It depends
 on a number of Python libraries, a C and C++ compiler (tested with gcc and g++) and also some other
-software.
+optional software.
 
 ### Python modules
 

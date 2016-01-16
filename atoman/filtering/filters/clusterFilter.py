@@ -3,7 +3,7 @@
 Cluster
 =======
 
-This filter will identify clusters of atoms in the system. It uses a recursive 
+This filter will identify clusters of atoms in the system. It uses a recursive
 algorithm to build the clusters using a fixed cut-off. There are options to
 calculate the volumes of the clusters and also to draw convex hulls around the
 clusters to highlight them.
@@ -70,7 +70,7 @@ class ClusterFilterSettings(base.BaseSettings):
         self.registerSetting("calculateVolumesHull", default=False)
         self.registerSetting("hideAtoms", default=False)
         self.registerSetting("neighbourRadius", default=5.0)
-        self.registerSetting("hullCol", default=[0,0,1])
+        self.registerSetting("hullCol", default=[0, 0, 1])
         self.registerSetting("hullOpacity", default=0.5)
         self.registerSetting("minClusterSize", default=8)
         self.registerSetting("maxClusterSize", default=-1)
@@ -92,18 +92,20 @@ class ClusterFilter(base.BaseFilter):
         fullVectors = filterInput.fullVectors
         visibleAtoms = filterInput.visibleAtoms
         PBC = lattice.PBC
+        voronoiCalculator = filterInput.voronoiAtoms
         
         # settings
         minSize = settings.getSetting("minClusterSize")
         maxSize = settings.getSetting("maxClusterSize")
         nebRad = settings.getSetting("neighbourRadius")
+        calcVols = settings.getSetting("calculateVolumes")
         
         # arrays for the cluster calculation
         atomCluster = np.empty(len(visibleAtoms), np.int32)
         result = np.empty(2, np.int32)
         
         # call C lib
-        _clusters.findClusters(visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC, 
+        _clusters.findClusters(visibleAtoms, lattice.pos, atomCluster, nebRad, lattice.cellDims, PBC,
                                minSize, maxSize, result, NScalars, fullScalars, NVectors, fullVectors)
         
         NVisible = result[0]
@@ -116,7 +118,7 @@ class ClusterFilter(base.BaseFilter):
         # build cluster lists
         clusterList = []
         for i in xrange(NClusters):
-            clusterList.append(clusters.AtomCluster())
+            clusterList.append(clusters.AtomCluster(lattice))
         
         # add atoms to cluster lists
         clusterIndexMapper = {}
@@ -130,7 +132,23 @@ class ClusterFilter(base.BaseFilter):
                 count += 1
             
             clusterListIndex = clusterIndexMapper[clusterIndex]
-            clusterList[clusterListIndex].indexes.append(atomIndex)
+            clusterList[clusterListIndex].addAtom(atomIndex)
+        
+        # calculate volumes
+        if calcVols:
+            self.logger.debug("Calculating cluster volumes")
+            for i, cluster in enumerate(clusterList):
+                cluster.calculateVolume(voronoiCalculator, settings)
+                volume = cluster.getVolume()
+                if volume is not None:
+                    self.logger.debug("Cluster %d: volume is %f", i, volume)
+                area = cluster.getFacetArea()
+                if area is not None:
+                    self.logger.debug("Cluster %d: facet area is %f", i, area)
+        
+        # hide atoms if required
+        if settings.getSetting("drawConvexHulls") and settings.getSetting("hideAtoms"):
+            visibleAtoms.resize(0, refcheck=False)
         
         # result
         result = base.FilterResult()

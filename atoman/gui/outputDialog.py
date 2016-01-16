@@ -24,14 +24,12 @@ from ..visutils import utilities
 from ..visutils import threading_vis
 from ..visutils.utilities import iconPath
 from . import genericForm
-from ..system import _output as output_c
 from ..plotting import rdf
 from ..algebra import _vectors as vectors_c
 from ..plotting import plotDialog
 from . import utils
 
 
-################################################################################
 class OutputDialog(QtGui.QDialog):
     def __init__(self, parent, mainWindow, width, index):
         super(OutputDialog, self).__init__(parent)
@@ -86,7 +84,6 @@ class OutputDialog(QtGui.QDialog):
         # add tab bar to layout
         outputTabLayout.addWidget(self.outputTypeTabBar)
 
-################################################################################
 
 class ScalarsHistogramOptionsForm(genericForm.GenericForm):
     """
@@ -114,7 +111,7 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
         self.stackedWidget = QtGui.QStackedWidget()
         self.newRow().addWidget(self.stackedWidget)
         
-        self.logger = logging.getLogger(__name__+".ScalarsHistogramOptionsForm")
+        self.logger = logging.getLogger(__name__ + ".ScalarsHistogramOptionsForm")
     
     def scalarsComboChanged(self, index):
         """
@@ -260,8 +257,9 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
                     clusterSizes.append(len(c))
                     
                     # cluster volumes
-                    if c.volume is not None:
-                        clusterVolumes.append(c.volume)
+                    vol = c.getVolume()
+                    if vol is not None:
+                        clusterVolumes.append(vol)
                     
                     else:
                         haveVolumes = False
@@ -281,7 +279,6 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
         else:
             self.hide()
 
-################################################################################
 
 class PlotTab(QtGui.QWidget):
     """
@@ -312,7 +309,7 @@ class PlotTab(QtGui.QWidget):
         self.layout.addStretch(1)
         
         # logging
-        self.logger = logging.getLogger(__name__+".PlotTab")
+        self.logger = logging.getLogger(__name__ + ".PlotTab")
     
     def newRow(self):
         """
@@ -324,7 +321,6 @@ class PlotTab(QtGui.QWidget):
         
         return row
 
-################################################################################
 
 class GenericHistogramPlotForm(genericForm.GenericForm):
     """
@@ -338,7 +334,7 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         self.scalarsID = scalarsID
         self.scalarsName = scalarsName
         self.scalarsArray = scalarsArray
-        self.logger = logging.getLogger(__name__+".GenericHistogramPlotForm")
+        self.logger = logging.getLogger(__name__ + ".GenericHistogramPlotForm")
         
         # scalar stats
         self.scalarMin = np.min(scalarsArray)
@@ -347,7 +343,7 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         self.scalarSTD = np.std(scalarsArray)
         self.scalarSE = self.scalarSTD / math.sqrt(len(scalarsArray))
         
-        # default 
+        # default
         self.useNumBins = True
         self.numBins = 10
         self.binWidth = 1.0
@@ -504,21 +500,20 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
             settingsDict["ylabel"] = "Fraction"
             
             # bar plot
-            dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "%s histogram" % self.scalarsID, "bar", 
-                                        (binEdges[:-1], fracHist), {"width": binWidth,}, settingsDict=settingsDict)
+            dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "%s histogram" % self.scalarsID, "bar",
+                                        (binEdges[:-1], fracHist), {"width": binWidth}, settingsDict=settingsDict)
         
         else:
             # y label
             settingsDict["ylabel"] = "Number"
             
             # histogram plot
-            dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "%s histogram" % self.scalarsID, "hist", 
-                                        (scalars, numBins), {"range": (minVal, maxVal),}, settingsDict=settingsDict)
+            dlg = plotDialog.PlotDialog(self, self.parent.mainWindow, "%s histogram" % self.scalarsID, "hist",
+                                        (scalars, numBins), {"range": (minVal, maxVal)}, settingsDict=settingsDict)
         
         # show dialog
         dlg.show()
 
-################################################################################
 
 class RDFForm(genericForm.GenericForm):
     """
@@ -531,7 +526,7 @@ class RDFForm(genericForm.GenericForm):
         self.parent = parent
         self.mainWindow = mainWindow
         self.rendererWindow = self.parent.rendererWindow
-        self.logger = logging.getLogger(__name__+".RDFForm")
+        self.logger = logging.getLogger(__name__ + ".RDFForm")
         
         # defaults
         self.spec1 = "ALL"
@@ -669,7 +664,8 @@ class RDFForm(genericForm.GenericForm):
             warnDims.append("z")
         
         if len(warnDims):
-            msg = "The maximum radius you have requested is greater than half the box length in the %s direction(s)!" % ", ".join(warnDims)
+            msg = "The maximum radius you have requested is greater than half the box length"
+            msg += " in the %s direction(s)!" % ", ".join(warnDims)
             self.mainWindow.displayError(msg)
             return
         
@@ -712,7 +708,7 @@ class RDFForm(genericForm.GenericForm):
         settingsDict["ylabel"] = "g(r) (%s - %s)" % (self.spec1, self.spec2)
         
         # show plot dialog
-        dialog = plotDialog.PlotDialog(self, self.mainWindow, "Radial distribution function ", 
+        dialog = plotDialog.PlotDialog(self, self.mainWindow, "Radial distribution function ",
                                        "plot", (xn, rdfArray), {"linewidth": 2, "label": None},
                                        settingsDict=settingsDict)
         dialog.show()
@@ -752,8 +748,6 @@ class RDFForm(genericForm.GenericForm):
         """
         self.spec2 = str(text)
     
-
-################################################################################
 
 class FileTab(QtGui.QWidget):
     """
@@ -862,18 +856,20 @@ class FileTab(QtGui.QWidget):
         # lattice object
         lattice = self.rendererWindow.getCurrentInputState()
         
-        # gather vis atoms
-        visibleAtoms = self.rendererWindow.gatherVisibleAtoms()
+        # gather vis atoms if required
+        if self.writeFullLattice:
+            visibleAtoms = None
+        else:
+            visibleAtoms = self.rendererWindow.gatherVisibleAtoms()
         
-        # write in C lib
-        output_c.writeLattice(filename, visibleAtoms, lattice.cellDims, lattice.specieList, lattice.specie, lattice.pos, lattice.charge, self.writeFullLattice)
+        # write Lattice
+        lattice.writeLattice(filename, visibleAtoms=visibleAtoms)
     
     def saveToFileDialog(self):
         """
         Open dialog.
         
         """
-#         filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.', options=QtGui.QFileDialog.DontUseNativeDialog)[0]
         filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')[0]
         
         if len(filename):
@@ -887,13 +883,12 @@ class FileTab(QtGui.QWidget):
         """
         self.outputFileType = str(fileType)
 
-################################################################################
 
 class ImageTab(QtGui.QWidget):
     def __init__(self, parent, mainWindow, width):
         super(ImageTab, self).__init__(parent)
         
-        self.logger = logging.getLogger(__name__+".ImageTab")
+        self.logger = logging.getLogger(__name__ + ".ImageTab")
         
         self.parent = parent
         self.mainWindow = mainWindow
@@ -1045,7 +1040,7 @@ class ImageTab(QtGui.QWidget):
         Log message for create movie object
         
         """
-        logger = logging.getLogger(__name__+".MovieGenerator")
+        logger = logging.getLogger(__name__ + ".MovieGenerator")
         method = getattr(logger, level, None)
         if method is not None:
             method(message)
@@ -1080,7 +1075,7 @@ class ImageTab(QtGui.QWidget):
         generator.allDone.connect(generator.deleteLater)
          
         # runnable for sending to thread pool
-        runnable = threading_vis.GenericRunnable(generator, args=(ffmpeg, framerate, inputText, self.imageFormat, 
+        runnable = threading_vis.GenericRunnable(generator, args=(ffmpeg, framerate, inputText, self.imageFormat,
                                                                   bitrate, outputprefix, outputsuffix))
         runnable.setAutoDelete(False)
          
@@ -1089,7 +1084,6 @@ class ImageTab(QtGui.QWidget):
         
 #         generator.run(ffmpeg, framerate, inputText, self.imageFormat, bitrate, outputprefix, outputsuffix)
 
-################################################################################
 
 class MovieGenerator(QtCore.QObject):
     """
@@ -1143,14 +1137,14 @@ class MovieGenerator(QtCore.QObject):
                 
                 # run command
                 self.log.emit("debug", 'Command: "%s"' % command)
-                process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, 
+                process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 output, stderr = process.communicate()
                 status = process.poll()
             
             else:
-                command = "'%s' -r %d -y -i %s.%s -r %d -b:v %dk '%s.%s'" % (ffmpeg, framerate, saveText, 
-                                                                             imageFormat, 25, bitrate, 
+                command = "'%s' -r %d -y -i %s.%s -r %d -b:v %dk '%s.%s'" % (ffmpeg, framerate, saveText,
+                                                                             imageFormat, 25, bitrate,
                                                                              outputPrefix, outputSuffix)
                 
                 self.log.emit("debug", 'Command: "%s"' % command)
@@ -1171,7 +1165,7 @@ class MovieGenerator(QtCore.QObject):
             self.log.emit("debug", "FFmpeg time taken: %f s" % ffmpegTime)
             self.allDone.emit()
 
-################################################################################
+
 class SingleImageTab(QtGui.QWidget):
     def __init__(self, parent, mainWindow, width):
         super(SingleImageTab, self).__init__(parent)
@@ -1287,7 +1281,7 @@ class SingleImageTab(QtGui.QWidget):
             QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
             progress.show()
         
-        filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat, 
+        filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat,
                                                           filename, self.overwriteImage, povray=povray)
         
         # hide progress dialog
@@ -1332,7 +1326,7 @@ class SingleImageTab(QtGui.QWidget):
         else:
             self.overwriteImage = 0
 
-################################################################################
+
 class CreateMovieBox(QtGui.QGroupBox):
     """
     Create movie settings
@@ -1429,7 +1423,7 @@ class CreateMovieBox(QtGui.QGroupBox):
         
         return row
 
-################################################################################
+
 class ImageSequenceTab(QtGui.QWidget):
     def __init__(self, parent, mainWindow, width):
         super(ImageSequenceTab, self).__init__(parent)
@@ -1439,7 +1433,7 @@ class ImageSequenceTab(QtGui.QWidget):
         self.width = width
         self.rendererWindow = self.parent.rendererWindow
         
-        self.logger = logging.getLogger(__name__+".ImageSequenceTab")
+        self.logger = logging.getLogger(__name__ + ".ImageSequenceTab")
         
         # initial values
         self.numberFormats = ["%04d", "%d"]
