@@ -4,28 +4,24 @@ language: generic
 matrix:
     include:
         - os: linux
-          compiler: gcc
           env:
               - VTK=5.10.1
               - PYTHON=2.7
               - CONDAOS=Linux
         
         - os: linux
-          compiler: gcc
           env:
               - VTK=6.3.0
               - PYTHON=2.7
               - CONDAOS=Linux
         
         - os: osx
-          compiler: gcc
           env:
               - VTK=5.10.1
               - PYTHON=2.7
               - CONDAOS=MacOSX
         
         - os: osx
-          compiler: gcc
           env:
               - VTK=6.3.0
               - PYTHON=2.7
