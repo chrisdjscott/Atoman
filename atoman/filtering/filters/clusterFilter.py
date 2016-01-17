@@ -102,6 +102,9 @@ class ClusterFilter(base.BaseFilter):
         maxSize = settings.getSetting("maxClusterSize")
         nebRad = settings.getSetting("neighbourRadius")
         calcVols = settings.getSetting("calculateVolumes")
+        self.logger.debug("Cluster size: %d -> %d", minSize, maxSize)
+        self.logger.debug("Neighbour radius: %f", nebRad)
+        self.logger.debug("Calculating volumes: %r", calcVols)
         
         # arrays for the cluster calculation
         atomCluster = np.empty(len(visibleAtoms), np.int32)
