@@ -50,6 +50,7 @@ class ChargeFilter(base.BaseFilter):
         # settings
         minCharge = settings.getSetting("minCharge")
         maxCharge = settings.getSetting("maxCharge")
+        self.logger.debug("Visible charge range: %f -> %f", minCharge, maxCharge)
         
         # call C lib
         self.logger.debug("Calling charge filter C library")
