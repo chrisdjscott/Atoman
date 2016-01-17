@@ -35,8 +35,6 @@ from . import base
 from . import _acna
 
 
-################################################################################
-
 class AcnaFilterSettings(base.BaseSettings):
     """
     Settings for the ACNA filter
@@ -49,7 +47,6 @@ class AcnaFilterSettings(base.BaseSettings):
         self.registerSetting("maxBondDistance", default=5.0)
         self.registerSetting("structureVisibility", default=np.ones(len(atomStructure.knownStructures), dtype=np.int32))
 
-################################################################################
 
 class AcnaFilter(base.BaseFilter):
     """
@@ -71,6 +68,8 @@ class AcnaFilter(base.BaseFilter):
         maxBondDistance = settings.getSetting("maxBondDistance")
         filteringEnabled = int(settings.getSetting("filteringEnabled"))
         structureVisibility = settings.getSetting("structureVisibility")
+        self.logger.debug("Filtering enabled: %d", filteringEnabled)
+        self.logger.debug("Structure visibility: %r", structureVisibility)
         
         # acna scalars array
         scalars = np.zeros(len(visibleAtoms), dtype=np.float64)
@@ -79,9 +78,9 @@ class AcnaFilter(base.BaseFilter):
         counters = np.zeros(len(atomStructure.knownStructures), np.int32)
         
         # call C library
-        NVisible = _acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.cellDims, pbc,
-                                                        NScalars, fullScalars, maxBondDistance, counters, filteringEnabled,
-                                                        structureVisibility, NVectors, fullVectors)
+        NVisible = _acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.cellDims,
+                                                         pbc, NScalars, fullScalars, maxBondDistance, counters,
+                                                         filteringEnabled, structureVisibility, NVectors, fullVectors)
         
         # result
         result = base.FilterResult()
