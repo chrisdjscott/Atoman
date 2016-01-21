@@ -35,11 +35,11 @@ if platform.system() == "Darwin":
 
 # flags for different compilers (specify openmp...)
 copt = {
-#    'unix': ['-fopenmp'],
+    'unix': ['-fopenmp'],
     'intelem': ['-openmp'],
 }
 lopt = {
-#    'unix': ["-lgomp"],
+    'unix': ["-lgomp"],
     "intelem": ["-openmp", "-lpython2.7"],  # for some reason we have to link to python2.7
 }
 
