@@ -116,6 +116,36 @@ class TestFilteringKennyLattice(base.UsesQApplication):
         self.assertEqual(len(flt.visibleAtoms), 400)
         for i in range(len(flt.visibleAtoms)):
             self.assertGreaterEqual(pp.inputState.charge[flt.visibleAtoms[i]], 0)
+    
+    def test_coordinationNumber(self):
+        """
+        GUI: coordination number
+        
+        """
+        # add the atom ID filter
+        pp = self.mw.mainToolbar.pipelineList[0]
+        flist = pp.filterLists[0]
+        flist.addFilter(filterName="Coordination number")
+        item = flist.listItems.item(0)
+        item.filterSettings.minCoordNumSpinBox.setValue(0)
+        item.filterSettings.maxCoordNumSpinBox.setValue(3)
+        item.filterSettings.filteringToggled(QtCore.Qt.Checked)
+        
+        # run the filter
+        pp.runAllFilterLists()
+        
+        # check the result
+        flt = flist.filterer
+        self.assertEqual(len(flt.visibleAtoms), 858)
+        self.assertEqual(flt.visibleSpecieCount[pp.inputState.getSpecieIndex("Si")], 2)
+        self.assertEqual(flt.visibleSpecieCount[pp.inputState.getSpecieIndex("B_")], 116)
+        self.assertEqual(flt.visibleSpecieCount[pp.inputState.getSpecieIndex("O_")], 740)
+        self.assertTrue("Coordination number" in flt.scalarsDict)
+        scalars = flt.scalarsDict["Coordination number"]
+        self.assertEqual(len(scalars), 858)
+        for val in scalars:
+            self.assertLessEqual(val, 3)
+            self.assertGreaterEqual(val, 0)
 
 
 class TestFilteringGoldLattice(base.UsesQApplication):
@@ -304,8 +334,7 @@ class TestFilteringPuGaRefXyz(base.UsesQApplication):
         flist.addFilter(filterName="Species")
         item = flist.listItems.item(0)
         inputState = pp.inputState
-        puindx = inputState.getSpecieIndex("Pu")
-        item.filterSettings._settings.updateSettingArray("visibleSpeciesList", puindx, 0)
+        item.filterSettings._settings.updateSetting("visibleSpeciesList", ["Ga"])
 
         # run the filter
         pp.runAllFilterLists()
@@ -327,8 +356,7 @@ class TestFilteringPuGaRefXyz(base.UsesQApplication):
         flist.addFilter(filterName="Species")
         item = flist.listItems.item(0)
         inputState = pp.inputState
-        puindx = inputState.getSpecieIndex("Pu")
-        item.filterSettings._settings.updateSettingArray("visibleSpeciesList", puindx, 0)
+        item.filterSettings._settings.updateSetting("visibleSpeciesList", ["Ga"])
         
         # add the clusters filter
         flist.addFilter(filterName="Cluster")
