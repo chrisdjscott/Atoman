@@ -2,6 +2,12 @@
 Changelog
 =========
 
+**160227**
+
+* Rewrite of filtering and rendering (easier to call from scripts)
+* Add support for Python 3 (with VTK 7.0)
+* Add more tests
+
 **151120**
 
 * Add entry point to replace cdjsvis.py script
