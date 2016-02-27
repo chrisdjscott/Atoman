@@ -9,7 +9,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 
 
 ################################################################################
@@ -117,14 +118,14 @@ def showProgressDialog(title, label, parent, overrideCursor=True):
     Show (and return) a progress dialog
     
     """
-    progress = QtGui.QProgressDialog(parent=parent)
+    progress = QtWidgets.QProgressDialog(parent=parent)
     progress.setWindowModality(QtCore.Qt.WindowModal)
     progress.setWindowTitle(title)
     progress.setLabelText(label)
     progress.setRange(0, 0)
     progress.setMinimumDuration(0)
     progress.setModal(True)
-    QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+    QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
     progress.show()
     
     return progress
@@ -139,4 +140,4 @@ def cancelProgressDialog(progress, overrideCursor=True):
     progress.cancel()
     
     if overrideCursor:
-        QtGui.QApplication.restoreOverrideCursor()
+        QtWidgets.QApplication.restoreOverrideCursor()

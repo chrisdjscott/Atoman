@@ -10,14 +10,15 @@ from __future__ import unicode_literals
 import logging
 import functools
 
-from PySide import QtGui, QtCore, QtWebKit
+from PyQt5 import QtGui, QtCore, QtWidgets, QtWebKitWidgets
+
 
 from ..visutils.utilities import iconPath, helpPath
 
 
 ################################################################################
 
-class HelpFormSphinx(QtGui.QDialog):
+class HelpFormSphinx(QtWidgets.QDialog):
     """
     The applications help form.
     
@@ -37,18 +38,18 @@ class HelpFormSphinx(QtGui.QDialog):
         self.helpFormOpen = False
         
         # browser
-        self.webView = QtWebKit.QWebView(self)
+        self.webView = QtWebKitWidgets.QWebView(self)
         
         # toolbar actions
-        backAction = QtGui.QAction(QtGui.QIcon(iconPath("oxygen/go-previous.png")), "&Back", self)
+        backAction = QtWidgets.QAction(QtGui.QIcon(iconPath("oxygen/go-previous.png")), "&Back", self)
         backAction.triggered.connect(self.webView.back)
-        homeAction = QtGui.QAction(QtGui.QIcon(iconPath("oxygen/go-home.png")), "&Home", self)
+        homeAction = QtWidgets.QAction(QtGui.QIcon(iconPath("oxygen/go-home.png")), "&Home", self)
         homeAction.triggered.connect(functools.partial(self.loadPage, "index.html"))
-        forwardAction = QtGui.QAction(QtGui.QIcon(iconPath("oxygen/go-next.png")), "&Foward", self)
+        forwardAction = QtWidgets.QAction(QtGui.QIcon(iconPath("oxygen/go-next.png")), "&Foward", self)
         forwardAction.triggered.connect(self.webView.forward)
         
         # tool bar
-        toolbar = QtGui.QToolBar()
+        toolbar = QtWidgets.QToolBar()
         toolbar.setFixedHeight(50)
         toolbar.addAction(backAction)
         toolbar.addAction(homeAction)
@@ -61,7 +62,7 @@ class HelpFormSphinx(QtGui.QDialog):
         self.loadPage("index.html")
         self.webView.show()
         
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(0)
         layout.addWidget(toolbar)
@@ -75,7 +76,7 @@ class HelpFormSphinx(QtGui.QDialog):
         
         """
         self.logger.debug("Loading URL: '%s'", url)
-        self.webView.load(url)
+        self.webView.load(QtCore.QUrl(url))
     
     def loadPage(self, page):
         """

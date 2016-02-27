@@ -11,7 +11,7 @@ import copy
 import logging
 
 import numpy as np
-from PySide import QtCore
+from PyQt5 import QtCore
 
 from . import _rendering
 from . import utils

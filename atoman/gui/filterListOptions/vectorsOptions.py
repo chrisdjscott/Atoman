@@ -17,13 +17,14 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+
 from six.moves import range
 
 
 ################################################################################
 
-class VectorsListItem(QtGui.QListWidgetItem):
+class VectorsListItem(QtWidgets.QListWidgetItem):
     """
     Item in the vectors list widget.
     
@@ -48,12 +49,12 @@ class VectorsListItem(QtGui.QListWidgetItem):
 
 ################################################################################
 
-class VectorsOptionsWindow(QtGui.QDialog):
+class VectorsOptionsWindow(QtWidgets.QDialog):
     """
     Vectors display options dialog.
     
     """
-    modified = QtCore.Signal(str)
+    modified = QtCore.pyqtSignal(str)
     
     def __init__(self, mainWindow, parent=None):
         super(VectorsOptionsWindow, self).__init__(parent)
@@ -62,7 +63,7 @@ class VectorsOptionsWindow(QtGui.QDialog):
         
         self.parent = parent
         
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
         self.setWindowTitle("Display vectors options")
 #         self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
@@ -81,25 +82,25 @@ class VectorsOptionsWindow(QtGui.QDialog):
         self.vectorNormalise = False
         
         # layout
-        layout = QtGui.QFormLayout(self)
+        layout = QtWidgets.QFormLayout(self)
         self.setLayout(layout)
         
         # draw vectors list widget
-        self.vectorsList = QtGui.QListWidget(self)
+        self.vectorsList = QtWidgets.QListWidget(self)
         self.vectorsList.setFixedHeight(100)
         self.vectorsList.setFixedWidth(180)
         self.vectorsList.itemChanged.connect(self.listItemChanged)
         layout.addRow(self.vectorsList)
         
         # normalise vectors
-        normaliseVectorsCheck = QtGui.QCheckBox()
+        normaliseVectorsCheck = QtWidgets.QCheckBox()
         normaliseVectorsCheck.setChecked(self.vectorNormalise)
         normaliseVectorsCheck.setToolTip("Normalise the vector before applying the scaling")
         normaliseVectorsCheck.stateChanged.connect(self.normaliseChanged)
         layout.addRow("Normalise vector", normaliseVectorsCheck)
         
         # scale vectors
-        scaleVectorsCheck = QtGui.QDoubleSpinBox()
+        scaleVectorsCheck = QtWidgets.QDoubleSpinBox()
         scaleVectorsCheck.setMinimum(0.1)
         scaleVectorsCheck.setMaximum(100)
         scaleVectorsCheck.setSingleStep(0.1)
@@ -129,7 +130,7 @@ class VectorsOptionsWindow(QtGui.QDialog):
 #         layout.addRow("Vector radius (POV)", povRadiusSpin)
         
         # resolution
-        resSpin = QtGui.QSpinBox()
+        resSpin = QtWidgets.QSpinBox()
         resSpin.setMinimum(3)
         resSpin.setMaximum(100)
         resSpin.setSingleStep(1)
@@ -138,7 +139,7 @@ class VectorsOptionsWindow(QtGui.QDialog):
         resSpin.setToolTip("Set the resolution of the vectors")
         layout.addRow("Vector resolution", resSpin)
         
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
         buttonBox.rejected.connect(self.reject)
         layout.addRow(buttonBox)
         

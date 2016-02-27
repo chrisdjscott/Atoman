@@ -5,7 +5,8 @@ Contains GUI forms for the atom ID filter.
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 
 from . import base
 from ...filtering.filters import atomIdFilter
@@ -27,7 +28,7 @@ class AtomIdSettingsDialog(base.GenericSettingsDialog):
         rx = QtCore.QRegExp("[0-9]+(?:[-,]?[0-9]+)*")
         validator = QtGui.QRegExpValidator(rx, self)
         
-        self.lineEdit = QtGui.QLineEdit(self._settings.getSetting("filterString"))
+        self.lineEdit = QtWidgets.QLineEdit(self._settings.getSetting("filterString"))
         self.lineEdit.setValidator(validator)
         self.lineEdit.setToolTip("Comma separated list of atom IDs or ranges of atom IDs (hyphenated) that are visible (eg. '22,30-33' will show atom IDs 22, 30, 31, 32 and 33)")
         self.lineEdit.editingFinished.connect(self.editingFinished)

@@ -19,7 +19,8 @@ import logging
 import functools
 import uuid
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 import vtk
 import numpy as np
 
@@ -35,7 +36,7 @@ from six.moves import range
 
 
 ################################################################################
-class PipelineForm(QtGui.QWidget):
+class PipelineForm(QtWidgets.QWidget):
     def __init__(self, parent, mainWindow, width, pipelineIndex, pipelineString):
         super(PipelineForm, self).__init__(parent)
         
@@ -51,7 +52,7 @@ class PipelineForm(QtGui.QWidget):
         self.rendererWindows = self.mainWindow.rendererWindows
         
         self.pickerContextMenuID = uuid.uuid4()
-        self.pickerContextMenu = QtGui.QMenu(self)
+        self.pickerContextMenu = QtWidgets.QMenu(self)
         self.pickerContextMenu.aboutToHide.connect(self.hidePickerMenuHighlight)
         
         self.filterListCount = 0
@@ -73,79 +74,79 @@ class PipelineForm(QtGui.QWidget):
         self.scalarBarAdded = False
         
         # layout
-        filterTabLayout = QtGui.QVBoxLayout(self)
+        filterTabLayout = QtWidgets.QVBoxLayout(self)
         filterTabLayout.setContentsMargins(0, 0, 0, 0)
         filterTabLayout.setSpacing(0)
         filterTabLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # row
-        row = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget()
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setSpacing(0)
-        label = QtGui.QLabel("<b>Pipeline %d settings</b>" % pipelineIndex)
+        label = QtWidgets.QLabel("<b>Pipeline %d settings</b>" % pipelineIndex)
         rowLayout.addWidget(label)
         filterTabLayout.addWidget(row)
         
         # row
-        row = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget()
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignTop)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setSpacing(0)
         
         # reference selector
-        self.refCombo = QtGui.QComboBox()
+        self.refCombo = QtWidgets.QComboBox()
         self.refCombo.setFixedWidth(220)
         self.refCombo.setToolTip("Select the reference system for this pipeline")
         self.refCombo.currentIndexChanged.connect(self.refChanged)
         
         # add to row
-        rowLayout.addWidget(QtGui.QLabel("Reference:"))
+        rowLayout.addWidget(QtWidgets.QLabel("Reference:"))
         rowLayout.addWidget(self.refCombo)
         filterTabLayout.addWidget(row)
         
         # row
-        row = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget()
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignTop)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setSpacing(0)
         
         # reference selector
-        self.inputCombo = QtGui.QComboBox()
+        self.inputCombo = QtWidgets.QComboBox()
         self.inputCombo.setFixedWidth(220)
         self.inputCombo.setToolTip("Select the input system for this pipeline")
         self.inputCombo.currentIndexChanged.connect(self.inputChanged)
         
         # add to row
-        rowLayout.addWidget(QtGui.QLabel("Input:"))
+        rowLayout.addWidget(QtWidgets.QLabel("Input:"))
         rowLayout.addWidget(self.inputCombo)
         filterTabLayout.addWidget(row)
         
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.setAlignment(QtCore.Qt.AlignHCenter)
-        row.addWidget(QtGui.QLabel("<b>Property/filter lists:</b>"))
+        row.addWidget(QtWidgets.QLabel("<b>Property/filter lists:</b>"))
         filterTabLayout.addLayout(row)
         
         # row
-        row = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget()
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignTop)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setSpacing(0)
         
         # buttons for new/trash filter list
-        runAll = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/view-refresh.png')), 'Apply lists')
+        runAll = QtWidgets.QPushButton(QtGui.QIcon(iconPath('oxygen/view-refresh.png')), 'Apply lists')
         runAll.setStatusTip("Apply all property/filter lists")
         runAll.setToolTip("Apply all property/filter lists")
         runAll.clicked.connect(self.runAllFilterLists)
-        add = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/tab-new-background.png')), 'New list')
+        add = QtWidgets.QPushButton(QtGui.QIcon(iconPath('oxygen/tab-new-background.png')), 'New list')
         add.setToolTip("New property/filter list")
         add.setStatusTip("New property/filter list")
         add.clicked.connect(self.addFilterList)
-        clear = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/tab-close-other.png')), 'Clear lists')
+        clear = QtWidgets.QPushButton(QtGui.QIcon(iconPath('oxygen/tab-close-other.png')), 'Clear lists')
         clear.setStatusTip("Clear all property/filter lists")
         clear.setToolTip("Clear all property/filter lists")
         clear.clicked.connect(self.clearAllFilterLists)
@@ -157,8 +158,8 @@ class PipelineForm(QtGui.QWidget):
         filterTabLayout.addWidget(row)
         
         # add tab bar for filter lists
-        self.filterTabBar = QtGui.QTabWidget(self)
-        self.filterTabBar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.filterTabBar = QtWidgets.QTabWidget(self)
+        self.filterTabBar.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         self.filterTabBar.currentChanged[int].connect(self.filterTabBarChanged)
         self.filterTabBar.setTabsClosable(True)
         self.filterTabBar.tabCloseRequested.connect(self.tabCloseRequested)
@@ -168,26 +169,26 @@ class PipelineForm(QtGui.QWidget):
         self.addFilterList()
         
         # add pbc options
-        group = QtGui.QGroupBox("Periodic boundaries")
+        group = QtWidgets.QGroupBox("Periodic boundaries")
         group.setAlignment(QtCore.Qt.AlignHCenter)
-        groupLayout = QtGui.QVBoxLayout(group)
+        groupLayout = QtWidgets.QVBoxLayout(group)
         groupLayout.setSpacing(0)
         groupLayout.setContentsMargins(0, 0, 0, 0)
         
         # add PBC check boxes
-        self.PBCXCheckBox = QtGui.QCheckBox("x")
+        self.PBCXCheckBox = QtWidgets.QCheckBox("x")
         self.PBCXCheckBox.setChecked(QtCore.Qt.Checked)
-        self.PBCYCheckBox = QtGui.QCheckBox("y")
+        self.PBCYCheckBox = QtWidgets.QCheckBox("y")
         self.PBCYCheckBox.setChecked(QtCore.Qt.Checked)
-        self.PBCZCheckBox = QtGui.QCheckBox("z")
+        self.PBCZCheckBox = QtWidgets.QCheckBox("z")
         self.PBCZCheckBox.setChecked(QtCore.Qt.Checked)
         
         self.PBCXCheckBox.stateChanged[int].connect(self.PBCXChanged)
         self.PBCYCheckBox.stateChanged[int].connect(self.PBCYChanged)
         self.PBCZCheckBox.stateChanged[int].connect(self.PBCZChanged)
         
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         rowLayout.addWidget(self.PBCXCheckBox)
         rowLayout.addWidget(self.PBCYCheckBox)
@@ -196,13 +197,13 @@ class PipelineForm(QtGui.QWidget):
         groupLayout.addWidget(row)
         
         # add shift cell and replicate cell buttons
-        self.replicateCellButton = QtGui.QPushButton("Replicate cell")
+        self.replicateCellButton = QtWidgets.QPushButton("Replicate cell")
         self.replicateCellButton.clicked.connect(self.replicateCell)
         self.replicateCellButton.setToolTip("Replicate in periodic directions")
-        self.shiftCellButton = QtGui.QPushButton("Shift cell")
+        self.shiftCellButton = QtWidgets.QPushButton("Shift cell")
         self.shiftCellButton.clicked.connect(self.shiftCell)
         self.shiftCellButton.setToolTip("Shift cell in periodic directions")
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.setContentsMargins(0, 0, 0, 0)
         hbox.addStretch(1)
         hbox.addWidget(self.shiftCellButton)
@@ -235,7 +236,7 @@ class PipelineForm(QtGui.QWidget):
         dlg = simpleDialogs.ShiftCellDialog(self.PBC, lattice.cellDims, parent=self)
         status = dlg.exec_()
         
-        if status == QtGui.QDialog.Accepted:
+        if status == QtWidgets.QDialog.Accepted:
             # amount
             shift = np.empty(3, np.float64)
             shift[0] = dlg.shiftXSpin.value()
@@ -254,7 +255,7 @@ class PipelineForm(QtGui.QWidget):
                     progressInterval = 500
                 
                 # set override cursor
-                QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+                QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
                 try:
                     # add progress dialog
                     self.mainWindow.updateProgress(0, lattice.NAtoms, "Shifting cell")
@@ -274,7 +275,7 @@ class PipelineForm(QtGui.QWidget):
                 
                 finally:
                     self.mainWindow.hideProgressBar()
-                    QtGui.QApplication.restoreOverrideCursor()
+                    QtWidgets.QApplication.restoreOverrideCursor()
                 
                 # run post ref render of Renderer (redraws cell)
                 for rw in self.rendererWindows:
@@ -295,7 +296,7 @@ class PipelineForm(QtGui.QWidget):
         dlg = simpleDialogs.ReplicateCellDialog(self.PBC, parent=self)
         status = dlg.exec_()
         
-        if status == QtGui.QDialog.Accepted:
+        if status == QtWidgets.QDialog.Accepted:
             repDirs = np.zeros(3, np.int32)
             replicate = False
             
@@ -338,7 +339,7 @@ class PipelineForm(QtGui.QWidget):
                     progressInterval = 500
                 
                 # set override cursor
-                QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+                QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
                 try:
                     # add progress dialog
                     self.mainWindow.updateProgress(0, numadd, "Replicating cell")
@@ -384,7 +385,7 @@ class PipelineForm(QtGui.QWidget):
                 
                 finally:
                     self.mainWindow.hideProgressBar()
-                    QtGui.QApplication.restoreOverrideCursor()
+                    QtWidgets.QApplication.restoreOverrideCursor()
                 
                 # run post ref render of Renderer (redraws cell)
                 for rw in self.rendererWindows:
@@ -693,8 +694,8 @@ class PipelineForm(QtGui.QWidget):
         
         """
         # widget to hold filter list
-        filterListWidget = QtGui.QWidget()
-        filterListLayout = QtGui.QVBoxLayout(filterListWidget)
+        filterListWidget = QtWidgets.QWidget()
+        filterListLayout = QtWidgets.QVBoxLayout(filterListWidget)
         filterListLayout.setContentsMargins(0, 0, 0, 0)
         
         # add list
@@ -923,18 +924,18 @@ class PipelineForm(QtGui.QWidget):
             if clickType == "RightClick" and minSepType == 0:
                 logger.debug("Picked object (right click)")
                 
-                viewAction = QtGui.QAction("View atom", self)
+                viewAction = QtWidgets.QAction("View atom", self)
                 viewAction.setToolTip("View atom info")
                 viewAction.setStatusTip("View atom info")
                 viewAction.triggered.connect(functools.partial(self.viewAtomClicked, minSepIndex, minSepType,
                                              minSepFilterList, minSepScalars, minSepVectors, defList))
                 
-                editAction = QtGui.QAction("Edit atom", self)
+                editAction = QtWidgets.QAction("Edit atom", self)
                 editAction.setToolTip("Edit atom")
                 editAction.setStatusTip("Edit atom")
                 editAction.triggered.connect(functools.partial(self.editAtomClicked, minSepIndex))
                 
-                removeAction = QtGui.QAction("Remove atom", self)
+                removeAction = QtWidgets.QAction("Remove atom", self)
                 removeAction.setToolTip("Remove atom")
                 removeAction.setStatusTip("Remove atom")
                 removeAction.triggered.connect(functools.partial(self.removeAtomClicked, minSepIndex))

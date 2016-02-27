@@ -7,7 +7,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 
 from . import base
 from .speciesSettingsDialog import SpeciesListItem
@@ -36,22 +37,22 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.addHorizontalDivider()
         
         # defect type options
-        self.intTypeCheckBox = QtGui.QCheckBox("Interstitials")
+        self.intTypeCheckBox = QtWidgets.QCheckBox("Interstitials")
         self.intTypeCheckBox.setChecked(1)
         self.intTypeCheckBox.stateChanged[int].connect(self.intVisChanged)
         self.intTypeCheckBox.setToolTip("Show interstitials")
         
-        self.vacTypeCheckBox = QtGui.QCheckBox("Vacancies")
+        self.vacTypeCheckBox = QtWidgets.QCheckBox("Vacancies")
         self.vacTypeCheckBox.setChecked(1)
         self.vacTypeCheckBox.stateChanged[int].connect(self.vacVisChanged)
         self.vacTypeCheckBox.setToolTip("Show vacancies")
         
-        self.antTypeCheckBox = QtGui.QCheckBox("Antisites")
+        self.antTypeCheckBox = QtWidgets.QCheckBox("Antisites")
         self.antTypeCheckBox.setChecked(1)
         self.antTypeCheckBox.stateChanged[int].connect(self.antVisChanged)
         self.antTypeCheckBox.setToolTip("Show antisites")
         
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.intTypeCheckBox)
         vbox.addWidget(self.vacTypeCheckBox)
         vbox.addWidget(self.antTypeCheckBox)
@@ -113,10 +114,10 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
                                               settingEnabled="findClusters")
         
         # radio buttons
-        self.convHullVolRadio = QtGui.QRadioButton(parent=self.calcVolsCheck)
+        self.convHullVolRadio = QtWidgets.QRadioButton(parent=self.calcVolsCheck)
         self.convHullVolRadio.toggled.connect(self.calcVolsMethodChanged)
         self.convHullVolRadio.setToolTip("Volume is determined from the convex hull of the defect positions.")
-        self.voroVolRadio = QtGui.QRadioButton(parent=self.calcVolsCheck)
+        self.voroVolRadio = QtWidgets.QRadioButton(parent=self.calcVolsCheck)
         self.voroVolRadio.setToolTip("<p>Volume is determined by summing the Voronoi volumes of the defects in "
                                      "the cluster. Ghost atoms are added for vacancies when computing the "
                                      "individual Voronoi volumes.</p>")
@@ -132,18 +133,18 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         self.addHorizontalDivider()
         
         # filter species group
-        self.filterSpeciesCheck = QtGui.QCheckBox()
+        self.filterSpeciesCheck = QtWidgets.QCheckBox()
         self.filterSpeciesCheck.setChecked(self._settings.getSetting("filterSpecies"))
         self.filterSpeciesCheck.setToolTip("Filter visible defects by species")
         self.filterSpeciesCheck.stateChanged.connect(self.filterSpeciesToggled)
         
-        self.specieList = QtGui.QListWidget(self)
+        self.specieList = QtWidgets.QListWidget(self)
         self.specieList.setFixedHeight(80)
         self.specieList.setFixedWidth(100)
         self.specieList.setEnabled(self._settings.getSetting("filterSpecies"))
         self.specieList.itemChanged.connect(self.speciesListChanged)
         
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.filterSpeciesCheck)
         vbox.addWidget(self.specieList)
         self.contentLayout.addRow("Filter species", vbox)
@@ -156,7 +157,7 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         # hull colour
         hullCol = self._settings.getSetting("hullCol")
         col = QtGui.QColor(hullCol[0] * 255.0, hullCol[1] * 255.0, hullCol[2] * 255.0)
-        self.hullColourButton = QtGui.QPushButton("")
+        self.hullColourButton = QtWidgets.QPushButton("")
         self.hullColourButton.setFixedWidth(50)
         self.hullColourButton.setFixedHeight(30)
         self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
@@ -423,7 +424,7 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         Show hull colour dialog.
         
         """
-        col = QtGui.QColorDialog.getColor()
+        col = QtWidgets.QColorDialog.getColor()
         
         if col.isValid():
             self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())

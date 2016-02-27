@@ -7,7 +7,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import functools
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+
 
 from . import base
 from ...filtering.filters import cropSphereFilter
@@ -25,7 +26,7 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
         
         self._settings = cropSphereFilter.CropSphereFilterSettings()
         
-        self.xCentreSpinBox = QtGui.QDoubleSpinBox()
+        self.xCentreSpinBox = QtWidgets.QDoubleSpinBox()
         self.xCentreSpinBox.setSingleStep(0.01)
         self.xCentreSpinBox.setMinimum(-9999.0)
         self.xCentreSpinBox.setMaximum( 9999.0)
@@ -33,7 +34,7 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
         self.xCentreSpinBox.setToolTip("Centre of crop region (x)")
         self.xCentreSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "xCentre"))
         
-        self.yCentreSpinBox = QtGui.QDoubleSpinBox()
+        self.yCentreSpinBox = QtWidgets.QDoubleSpinBox()
         self.yCentreSpinBox.setSingleStep(0.01)
         self.yCentreSpinBox.setMinimum(-9999.0)
         self.yCentreSpinBox.setMaximum( 9999.0)
@@ -41,7 +42,7 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
         self.yCentreSpinBox.setToolTip("Centre of crop region (y)")
         self.yCentreSpinBox.valueChanged.connect(functools.partial(self._settings.updateSetting, "yCentre"))
         
-        self.zCentreSpinBox = QtGui.QDoubleSpinBox()
+        self.zCentreSpinBox = QtWidgets.QDoubleSpinBox()
         self.zCentreSpinBox.setSingleStep(0.01)
         self.zCentreSpinBox.setMinimum(-9999.0)
         self.zCentreSpinBox.setMaximum( 9999.0)
@@ -54,7 +55,7 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
         self.contentLayout.addRow("Centre (z)", self.zCentreSpinBox)
         
         # radius
-        self.radiusSpinBox = QtGui.QDoubleSpinBox()
+        self.radiusSpinBox = QtWidgets.QDoubleSpinBox()
         self.radiusSpinBox.setSingleStep(1)
         self.radiusSpinBox.setMinimum(0.0)
         self.radiusSpinBox.setMaximum(9999.0)
@@ -64,14 +65,14 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
         self.contentLayout.addRow("Radius", self.radiusSpinBox)
         
         # invert selection
-        self.invertCheckBox = QtGui.QCheckBox()
+        self.invertCheckBox = QtWidgets.QCheckBox()
         self.invertCheckBox.setChecked(self._settings.getSetting("invertSelection"))
         self.invertCheckBox.setToolTip("Invert selection")
         self.invertCheckBox.stateChanged.connect(self.invertChanged)
         self.contentLayout.addRow("Invert selection", self.invertCheckBox)
         
         # set to centre
-        self.setToLatticeButton = QtGui.QPushButton('Set to lattice centre')
+        self.setToLatticeButton = QtWidgets.QPushButton('Set to lattice centre')
         self.setToLatticeButton.setAutoDefault(0)
         self.setToLatticeButton.setToolTip('Set to lattice centre')
         self.setToLatticeButton.clicked.connect(self.setToLattice)

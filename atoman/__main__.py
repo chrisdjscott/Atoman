@@ -22,7 +22,8 @@ except ImportError:
     # configure logging (we have to set logging.NOTSET here as global for root logger)
     logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s", level=logging.NOTSET)
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 
 # set default for stream handler (we don't want it to be NOTSET by default)
 _argLevel = None
@@ -52,7 +53,7 @@ def main():
         QtGui.QFont.insertSubstitution(".Lucida Grande UI", "Lucida Grande")
     
     # application
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     
     # set application info used by QSettings
     app.setOrganizationName("chrisdjscott")

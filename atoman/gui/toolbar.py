@@ -9,14 +9,15 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 
 from .genericForm import GenericForm
 from .pipelineForm import PipelineForm
 from ..visutils.utilities import iconPath
 
 
-class MainToolbar(QtGui.QDockWidget):
+class MainToolbar(QtWidgets.QDockWidget):
     def __init__(self, parent, width, height):
         super(MainToolbar, self).__init__(parent)
         
@@ -31,21 +32,21 @@ class MainToolbar(QtGui.QDockWidget):
         self.toolbarWidth = width
         self.toolbarHeight = height
         self.setFixedWidth(self.toolbarWidth)
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
         
         self.NPipelines = 0
         
         # create container for widgets
-        self.container = QtGui.QWidget(self)
-        containerLayout = QtGui.QVBoxLayout(self.container)
+        self.container = QtWidgets.QWidget(self)
+        containerLayout = QtWidgets.QVBoxLayout(self.container)
         containerLayout.setSpacing(0)
         containerLayout.setContentsMargins(0, 0, 0, 0)
         containerLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # tab widget
-        self.tabWidget = QtGui.QTabWidget(self)
-        self.tabWidget.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.tabWidget = QtWidgets.QTabWidget(self)
+        self.tabWidget.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         containerLayout.addWidget(self.tabWidget)
         
         # input form
@@ -58,37 +59,37 @@ class MainToolbar(QtGui.QDockWidget):
         
         row = self.analysisPipelinesForm.newRow()
         
-        self.pipelineCombo = QtGui.QComboBox()
+        self.pipelineCombo = QtWidgets.QComboBox()
         self.pipelineCombo.currentIndexChanged.connect(self.currentPipelineChanged)
         row.addWidget(self.pipelineCombo)
         
-        addPipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-add.png")), "")
+        addPipelineButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/list-add.png")), "")
         addPipelineButton.setStatusTip("Add analysis pipeline")
         addPipelineButton.setToolTip("Add analysis pipeline")
         addPipelineButton.clicked.connect(self.addPipeline)
         row.addWidget(addPipelineButton)
         
-        removePipelineButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-remove.png")), "")
+        removePipelineButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/list-remove.png")), "")
         removePipelineButton.setStatusTip("Remove analysis pipeline")
         removePipelineButton.setToolTip("Remove analysis pipeline")
         removePipelineButton.clicked.connect(self.removePipeline)
         row.addWidget(removePipelineButton)
         
-        applyAllButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/view-refresh.png")), "")
+        applyAllButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/view-refresh.png")), "")
         applyAllButton.setStatusTip("Run all pipelines")
         applyAllButton.setToolTip("Run all pipelines")
         applyAllButton.clicked.connect(self.runAllPipelines)
         row.addWidget(applyAllButton)
         
         # divider
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         row = self.analysisPipelinesForm.newRow()
         row.addWidget(line)
         
         # stacked widget (for pipelines)
-        self.stackedWidget = QtGui.QStackedWidget()
+        self.stackedWidget = QtWidgets.QStackedWidget()
         row = self.analysisPipelinesForm.newRow()
         row.addWidget(self.stackedWidget)
         

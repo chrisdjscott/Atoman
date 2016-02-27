@@ -13,7 +13,8 @@ import os
 import copy
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 import numpy as np
 
 from ...system.atoms import elements
@@ -23,7 +24,7 @@ from ...visutils import utilities
 
 ################################################################################
 
-class CameraSettingsDialog(QtGui.QDialog):
+class CameraSettingsDialog(QtWidgets.QDialog):
     """
     Camera settings dialog
     
@@ -40,7 +41,7 @@ class CameraSettingsDialog(QtGui.QDialog):
         self.setWindowTitle("Camera settings")
         self.setWindowIcon(QtGui.QIcon(iconPath("cam.png")))
         
-        self.contentLayout = QtGui.QFormLayout(self)
+        self.contentLayout = QtWidgets.QFormLayout(self)
 #         self.contentLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         # ini vals
@@ -53,82 +54,82 @@ class CameraSettingsDialog(QtGui.QDialog):
         self.camvupbkup = copy.deepcopy(self.camvup)
         
         # cam pos
-        self.camPosXSpin = QtGui.QDoubleSpinBox()
+        self.camPosXSpin = QtWidgets.QDoubleSpinBox()
         self.camPosXSpin.setMinimum(-99999.0)
         self.camPosXSpin.setMaximum(99999.0)
         self.camPosXSpin.setValue(self.campos[0])
         self.camPosXSpin.valueChanged[float].connect(self.camxposChanged)
         
-        self.camPosYSpin = QtGui.QDoubleSpinBox()
+        self.camPosYSpin = QtWidgets.QDoubleSpinBox()
         self.camPosYSpin.setMinimum(-99999.0)
         self.camPosYSpin.setMaximum(99999.0)
         self.camPosYSpin.setValue(self.campos[1])
         self.camPosYSpin.valueChanged[float].connect(self.camyposChanged)
         
-        self.camPosZSpin = QtGui.QDoubleSpinBox()
+        self.camPosZSpin = QtWidgets.QDoubleSpinBox()
         self.camPosZSpin.setMinimum(-99999.0)
         self.camPosZSpin.setMaximum(99999.0)
         self.camPosZSpin.setValue(self.campos[2])
         self.camPosZSpin.valueChanged[float].connect(self.camzposChanged)
         
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.addWidget(self.camPosXSpin)
         row.addWidget(self.camPosYSpin)
         row.addWidget(self.camPosZSpin)
         self.contentLayout.addRow("Position", row)
         
         # cam focal point
-        self.camFocXSpin = QtGui.QDoubleSpinBox()
+        self.camFocXSpin = QtWidgets.QDoubleSpinBox()
         self.camFocXSpin.setMinimum(-99999.0)
         self.camFocXSpin.setMaximum(99999.0)
         self.camFocXSpin.setValue(self.camfoc[0])
         self.camFocXSpin.valueChanged[float].connect(self.camxfocChanged)
         
-        self.camFocYSpin = QtGui.QDoubleSpinBox()
+        self.camFocYSpin = QtWidgets.QDoubleSpinBox()
         self.camFocYSpin.setMinimum(-99999.0)
         self.camFocYSpin.setMaximum(99999.0)
         self.camFocYSpin.setValue(self.camfoc[1])
         self.camFocYSpin.valueChanged[float].connect(self.camyfocChanged)
         
-        self.camFocZSpin = QtGui.QDoubleSpinBox()
+        self.camFocZSpin = QtWidgets.QDoubleSpinBox()
         self.camFocZSpin.setMinimum(-99999.0)
         self.camFocZSpin.setMaximum(99999.0)
         self.camFocZSpin.setValue(self.camfoc[2])
         self.camFocZSpin.valueChanged[float].connect(self.camzfocChanged)
         
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.addWidget(self.camFocXSpin)
         row.addWidget(self.camFocYSpin)
         row.addWidget(self.camFocZSpin)
         self.contentLayout.addRow("Focal point", row)
         
         # cam view up
-        self.camVupXSpin = QtGui.QDoubleSpinBox()
+        self.camVupXSpin = QtWidgets.QDoubleSpinBox()
         self.camVupXSpin.setMinimum(-99999.0)
         self.camVupXSpin.setMaximum(99999.0)
         self.camVupXSpin.setValue(self.camvup[0])
         self.camVupXSpin.valueChanged[float].connect(self.camxvupChanged)
         
-        self.camVupYSpin = QtGui.QDoubleSpinBox()
+        self.camVupYSpin = QtWidgets.QDoubleSpinBox()
         self.camVupYSpin.setMinimum(-99999.0)
         self.camVupYSpin.setMaximum(99999.0)
         self.camVupYSpin.setValue(self.camvup[1])
         self.camVupYSpin.valueChanged[float].connect(self.camyvupChanged)
         
-        self.camVupZSpin = QtGui.QDoubleSpinBox()
+        self.camVupZSpin = QtWidgets.QDoubleSpinBox()
         self.camVupZSpin.setMinimum(-99999.0)
         self.camVupZSpin.setMaximum(99999.0)
         self.camVupZSpin.setValue(self.camvup[2])
         self.camVupZSpin.valueChanged[float].connect(self.camzvupChanged)
         
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.addWidget(self.camVupXSpin)
         row.addWidget(self.camVupYSpin)
         row.addWidget(self.camVupZSpin)
         self.contentLayout.addRow("View up", row)
         
         # button box
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close | QtGui.QDialogButtonBox.Reset)
+        self.buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close | QtWidgets.QDialogButtonBox.Reset)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.buttonBox.clicked.connect(self.buttonBoxClicked)
@@ -136,7 +137,7 @@ class CameraSettingsDialog(QtGui.QDialog):
     
     def buttonBoxClicked(self, button):
         """A button was clicked."""
-        if self.buttonBox.button(QtGui.QDialogButtonBox.Reset) == button:
+        if self.buttonBox.button(QtWidgets.QDialogButtonBox.Reset) == button:
             self.resetChanges()
     
     def resetChanges(self):
@@ -237,7 +238,7 @@ class CameraSettingsDialog(QtGui.QDialog):
 
 ################################################################################
 
-class ImageViewer(QtGui.QDialog):
+class ImageViewer(QtWidgets.QDialog):
     """
     Image viewer.
     
@@ -257,20 +258,20 @@ class ImageViewer(QtGui.QDialog):
         self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/applications-graphics.png")))
         
         # main layout
-        dialogLayout = QtGui.QHBoxLayout()
+        dialogLayout = QtWidgets.QHBoxLayout()
         
         # initial dir
         startDir = os.getcwd()
         
         # dir model
-        self.model = QtGui.QFileSystemModel()
-        self.model.setFilter(QtCore.QDir.NoDotAndDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
+        self.model = QtWidgets.QFileSystemModel()
+        self.model.setFilter(QtCore.QDir.NoDot | QtCore.QDir.NoDotDot | QtCore.QDir.AllDirs | QtCore.QDir.Files)
         self.model.setNameFilters(["*.jpg", "*.tif","*.png","*.bmp"])
         self.model.setNameFilterDisables(0)
         self.model.setRootPath(startDir)
         
         # dir view
-        self.view = QtGui.QTreeView(parent=self)
+        self.view = QtWidgets.QTreeView(parent=self)
         self.view.setModel(self.model)
         self.view.clicked[QtCore.QModelIndex].connect(self.clicked)
         self.view.hideColumn(1)
@@ -283,17 +284,17 @@ class ImageViewer(QtGui.QDialog):
         dialogLayout.addWidget(self.view)
         
         # image label
-        self.imageLabel = QtGui.QLabel()
+        self.imageLabel = QtWidgets.QLabel()
         
-        column = QtGui.QWidget()
-        columnLayout = QtGui.QVBoxLayout(column)
+        column = QtWidgets.QWidget()
+        columnLayout = QtWidgets.QVBoxLayout(column)
         columnLayout.setSpacing(0)
         columnLayout.setContentsMargins(0, 0, 0, 0)
         
         columnLayout.addWidget(self.imageLabel)
         
         # delete button
-        deleteImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-delete.png")), "Delete image")
+        deleteImageButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-delete.png")), "Delete image")
         deleteImageButton.clicked.connect(self.deleteImage)
         deleteImageButton.setStatusTip("Delete image")
         deleteImageButton.setAutoDefault(False)
@@ -330,11 +331,11 @@ class ImageViewer(QtGui.QDialog):
         Delete image.
         
         """
-        reply = QtGui.QMessageBox.question(self, "Message", 
+        reply = QtWidgets.QMessageBox.question(self, "Message", 
                                            "Delete file: %s?" % self.model.filePath(self.view.currentIndex()),
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+                                           QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         
-        if reply == QtGui.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             success = self.model.remove(self.view.currentIndex())
         
             if success:
@@ -367,7 +368,7 @@ class ImageViewer(QtGui.QDialog):
 
 ################################################################################
 
-class AboutMeDialog(QtGui.QMessageBox):
+class AboutMeDialog(QtWidgets.QMessageBox):
     """
     About me dialog.
     
@@ -400,7 +401,7 @@ class AboutMeDialog(QtGui.QMessageBox):
                              by Marc Robinson.</p>""" % (
                           version, datetime.date.today().year))
         
-        packageList = QtGui.QListWidget()
+        packageList = QtWidgets.QListWidget()
         
         packageList.addItem("Python %s" % platform.python_version())
         packageList.addItem("Qt %s" % QtCore.__version__)
@@ -422,12 +423,12 @@ class AboutMeDialog(QtGui.QMessageBox):
         # add widget back in
         l.addWidget(button, l.rowCount(), 1, 1, 1, QtCore.Qt.AlignRight)
         
-        self.setStandardButtons(QtGui.QMessageBox.Ok)
-        self.setIcon(QtGui.QMessageBox.Information)
+        self.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        self.setIcon(QtWidgets.QMessageBox.Information)
 
 ################################################################################
 
-class ConfirmCloseDialog(QtGui.QDialog):
+class ConfirmCloseDialog(QtWidgets.QDialog):
     """
     Confirm close dialog.
     
@@ -440,23 +441,23 @@ class ConfirmCloseDialog(QtGui.QDialog):
         self.setModal(1)
         self.setWindowTitle("Exit application?")
         
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
         
         # label
-        label = QtGui.QLabel("<b>Are you sure you want to exit?</b>")
-        row = QtGui.QHBoxLayout()
+        label = QtWidgets.QLabel("<b>Are you sure you want to exit?</b>")
+        row = QtWidgets.QHBoxLayout()
         row.addWidget(label)
         layout.addLayout(row)
         
         # clear settings
-        self.clearSettingsCheck = QtGui.QCheckBox("Clear settings")
-        row = QtGui.QHBoxLayout()
+        self.clearSettingsCheck = QtWidgets.QCheckBox("Clear settings")
+        row = QtWidgets.QHBoxLayout()
         row.setAlignment(QtCore.Qt.AlignRight)
         row.addWidget(self.clearSettingsCheck)
         layout.addLayout(row)
         
         # buttons
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Yes | QtGui.QDialogButtonBox.No)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Yes | QtWidgets.QDialogButtonBox.No)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         
@@ -464,7 +465,7 @@ class ConfirmCloseDialog(QtGui.QDialog):
 
 ################################################################################
 
-class RotateViewPointDialog(QtGui.QDialog):
+class RotateViewPointDialog(QtWidgets.QDialog):
     """
     Rotate view point dialog
     
@@ -481,15 +482,15 @@ class RotateViewPointDialog(QtGui.QDialog):
         self.rw = rw
         self.parent = parent
         
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
         
         # direction
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         
-        label = QtGui.QLabel("Direction:")
+        label = QtWidgets.QLabel("Direction:")
         
-        self.directionCombo = QtGui.QComboBox()
+        self.directionCombo = QtWidgets.QComboBox()
         self.directionCombo.addItems(["Right", "Left", "Up", "Down"])
         
         rowLayout.addWidget(label)
@@ -498,12 +499,12 @@ class RotateViewPointDialog(QtGui.QDialog):
         layout.addWidget(row)
         
         # angle
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         
-        label = QtGui.QLabel("Angle:")
+        label = QtWidgets.QLabel("Angle:")
         
-        self.angleSpin = QtGui.QDoubleSpinBox()
+        self.angleSpin = QtWidgets.QDoubleSpinBox()
         self.angleSpin.setSingleStep(0.1)
         self.angleSpin.setMinimum(0.0)
         self.angleSpin.setMaximum(360.0)
@@ -515,10 +516,10 @@ class RotateViewPointDialog(QtGui.QDialog):
         layout.addWidget(row)
         
         # apply button
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         
-        applyButton = QtGui.QPushButton("Apply")
+        applyButton = QtWidgets.QPushButton("Apply")
         applyButton.setStatusTip("Apply rotation")
         applyButton.setToolTip("Apply rotation")
         applyButton.clicked.connect(self.applyRotation)
@@ -561,7 +562,7 @@ class RotateViewPointDialog(QtGui.QDialog):
 
 ################################################################################
 
-class ReplicateCellDialog(QtGui.QDialog):
+class ReplicateCellDialog(QtWidgets.QDialog):
     """
     Ask user which directions they want to replicate the cell in
     
@@ -572,11 +573,11 @@ class ReplicateCellDialog(QtGui.QDialog):
         self.setWindowTitle("Replicate cell options")
         
         # layout
-        layout = QtGui.QFormLayout()
+        layout = QtWidgets.QFormLayout()
         self.setLayout(layout)
         
         # x
-        self.replicateInXSpin = QtGui.QSpinBox()
+        self.replicateInXSpin = QtWidgets.QSpinBox()
         self.replicateInXSpin.setMinimum(0)
         self.replicateInXSpin.setMaximum(10)
         self.replicateInXSpin.setValue(0)
@@ -586,7 +587,7 @@ class ReplicateCellDialog(QtGui.QDialog):
         layout.addRow("Replicate in x", self.replicateInXSpin)
         
         # y
-        self.replicateInYSpin = QtGui.QSpinBox()
+        self.replicateInYSpin = QtWidgets.QSpinBox()
         self.replicateInYSpin.setMinimum(0)
         self.replicateInYSpin.setMaximum(10)
         self.replicateInYSpin.setValue(0)
@@ -596,7 +597,7 @@ class ReplicateCellDialog(QtGui.QDialog):
         layout.addRow("Replicate in y", self.replicateInYSpin)
         
         # z
-        self.replicateInZSpin = QtGui.QSpinBox()
+        self.replicateInZSpin = QtWidgets.QSpinBox()
         self.replicateInZSpin.setMinimum(0)
         self.replicateInZSpin.setMaximum(10)
         self.replicateInZSpin.setValue(0)
@@ -606,14 +607,14 @@ class ReplicateCellDialog(QtGui.QDialog):
         layout.addRow("Replicate in z", self.replicateInZSpin)
         
         # button box
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout.addRow(buttonBox)
 
 ################################################################################
 
-class ShiftCellDialog(QtGui.QDialog):
+class ShiftCellDialog(QtWidgets.QDialog):
     """
     Ask user which directions they want to replicate the cell in
     
@@ -624,11 +625,11 @@ class ShiftCellDialog(QtGui.QDialog):
         self.setWindowTitle("Shift cell options")
         
         # layout
-        layout = QtGui.QFormLayout()
+        layout = QtWidgets.QFormLayout()
         self.setLayout(layout)
         
         # x
-        self.shiftXSpin = QtGui.QDoubleSpinBox()
+        self.shiftXSpin = QtWidgets.QDoubleSpinBox()
         self.shiftXSpin.setMinimum(-cellDims[0])
         self.shiftXSpin.setMaximum(cellDims[0])
         self.shiftXSpin.setSingleStep(1)
@@ -639,7 +640,7 @@ class ShiftCellDialog(QtGui.QDialog):
         layout.addRow("Shift in x", self.shiftXSpin)
         
         # y
-        self.shiftYSpin = QtGui.QDoubleSpinBox()
+        self.shiftYSpin = QtWidgets.QDoubleSpinBox()
         self.shiftYSpin.setMinimum(-cellDims[1])
         self.shiftYSpin.setMaximum(cellDims[1])
         self.shiftYSpin.setSingleStep(1)
@@ -650,7 +651,7 @@ class ShiftCellDialog(QtGui.QDialog):
         layout.addRow("Shift in y", self.shiftYSpin)
         
         # z
-        self.shiftZSpin = QtGui.QDoubleSpinBox()
+        self.shiftZSpin = QtWidgets.QDoubleSpinBox()
         self.shiftZSpin.setMinimum(-cellDims[2])
         self.shiftZSpin.setMaximum(cellDims[2])
         self.shiftZSpin.setSingleStep(1)
@@ -661,7 +662,7 @@ class ShiftCellDialog(QtGui.QDialog):
         layout.addRow("Shift in z", self.shiftZSpin)
         
         # button box
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout.addRow(buttonBox)

@@ -9,7 +9,8 @@ of different types and sizes can be generated.
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 
 from ..visutils.utilities import iconPath
 from ..lattice_gen import lattice_gen_pu3ga
@@ -22,7 +23,7 @@ from ..lattice_gen import lattice_gen_sic
 
 ################################################################################
 
-class GenericLatticeGeneratorForm(QtGui.QWidget):
+class GenericLatticeGeneratorForm(QtWidgets.QWidget):
     """
     Generic reader widget.
     
@@ -36,7 +37,7 @@ class GenericLatticeGeneratorForm(QtGui.QWidget):
         self.generatorArgs = None
         self.filename = "generated.dat"
         
-        self.formLayout = QtGui.QFormLayout(self)
+        self.formLayout = QtWidgets.QFormLayout(self)
         
         self.show()
     
@@ -76,7 +77,7 @@ class GenericLatticeGeneratorForm(QtGui.QWidget):
         Add lattice constant option
         
         """
-        latticeConstantSpin = QtGui.QDoubleSpinBox()
+        latticeConstantSpin = QtWidgets.QDoubleSpinBox()
         latticeConstantSpin.setDecimals(5)
         latticeConstantSpin.setSingleStep(0.1)
         latticeConstantSpin.setMinimum(0.00001)
@@ -99,10 +100,10 @@ class GenericLatticeGeneratorForm(QtGui.QWidget):
         Add unit cell options to layout
         
         """
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         
         # num unit cells
-        numUnitCellsXSpin = QtGui.QSpinBox()
+        numUnitCellsXSpin = QtWidgets.QSpinBox()
         numUnitCellsXSpin.setMinimum(1)
         numUnitCellsXSpin.setMaximum(1000)
         numUnitCellsXSpin.setValue(self.generatorArgs.NCells[0])
@@ -110,9 +111,9 @@ class GenericLatticeGeneratorForm(QtGui.QWidget):
         numUnitCellsXSpin.setToolTip("Set the number of unit cells in x")
         row.addWidget(numUnitCellsXSpin)
         
-        row.addWidget(QtGui.QLabel("x"))
+        row.addWidget(QtWidgets.QLabel("x"))
         
-        numUnitCellsYSpin = QtGui.QSpinBox()
+        numUnitCellsYSpin = QtWidgets.QSpinBox()
         numUnitCellsYSpin.setMinimum(1)
         numUnitCellsYSpin.setMaximum(1000)
         numUnitCellsYSpin.setValue(self.generatorArgs.NCells[1])
@@ -120,9 +121,9 @@ class GenericLatticeGeneratorForm(QtGui.QWidget):
         numUnitCellsYSpin.setToolTip("Set the number of unit cells in y")
         row.addWidget(numUnitCellsYSpin)
         
-        row.addWidget(QtGui.QLabel("x"))
+        row.addWidget(QtWidgets.QLabel("x"))
         
-        numUnitCellsZSpin = QtGui.QSpinBox()
+        numUnitCellsZSpin = QtWidgets.QSpinBox()
         numUnitCellsZSpin.setMinimum(1)
         numUnitCellsZSpin.setMaximum(1000)
         numUnitCellsZSpin.setValue(self.generatorArgs.NCells[2])
@@ -165,7 +166,7 @@ class GenericLatticeGeneratorForm(QtGui.QWidget):
         Add filename option
         
         """
-        filenameLineEdit = QtGui.QLineEdit(self.filename)
+        filenameLineEdit = QtWidgets.QLineEdit(self.filename)
         filenameLineEdit.setFixedWidth(130)
         filenameLineEdit.textChanged.connect(self.filenameChanged)
         filenameLineEdit.setToolTip("Enter the display name")
@@ -177,13 +178,13 @@ class GenericLatticeGeneratorForm(QtGui.QWidget):
         
         """
         # periodic boundaries
-        PBCXCheckBox = QtGui.QCheckBox("x   ")
+        PBCXCheckBox = QtWidgets.QCheckBox("x   ")
         PBCXCheckBox.setChecked(QtCore.Qt.Checked)
         PBCXCheckBox.setToolTip("Set periodic boundaries in x")
-        PBCYCheckBox = QtGui.QCheckBox("y   ")
+        PBCYCheckBox = QtWidgets.QCheckBox("y   ")
         PBCYCheckBox.setChecked(QtCore.Qt.Checked)
         PBCYCheckBox.setToolTip("Set periodic boundaries in y")
-        PBCZCheckBox = QtGui.QCheckBox("z   ")
+        PBCZCheckBox = QtWidgets.QCheckBox("z   ")
         PBCZCheckBox.setChecked(QtCore.Qt.Checked)
         PBCZCheckBox.setToolTip("Set periodic boundaries in z")
         
@@ -191,14 +192,14 @@ class GenericLatticeGeneratorForm(QtGui.QWidget):
         PBCYCheckBox.stateChanged.connect(self.PBCYChanged)
         PBCZCheckBox.stateChanged.connect(self.PBCZChanged)
         
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         rowLayout.addWidget(PBCXCheckBox)
         rowLayout.addWidget(PBCYCheckBox)
         rowLayout.addWidget(PBCZCheckBox)
         
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(PBCXCheckBox)
         hbox.addWidget(PBCYCheckBox)
         hbox.addWidget(PBCZCheckBox)
@@ -242,11 +243,11 @@ class GenericLatticeGeneratorForm(QtGui.QWidget):
         Add generate button
         
         """
-        generateButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/run-build.png")), "Generate lattice")
+        generateButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/run-build.png")), "Generate lattice")
         generateButton.clicked.connect(self.generateLattice)
         generateButton.setToolTip("Generate the lattice")
         
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addStretch(1)
         hbox.addWidget(generateButton)
         hbox.addStretch(1)
@@ -273,7 +274,7 @@ class Pu3GaLatticeGeneratorForm(GenericLatticeGeneratorForm):
         self.add_pbc_options()
         
         # percent Ga
-        percGaSpin = QtGui.QDoubleSpinBox()
+        percGaSpin = QtWidgets.QDoubleSpinBox()
         percGaSpin.setSingleStep(0.1)
         percGaSpin.setMinimum(0.0)
         percGaSpin.setMaximum(25.0)
@@ -319,7 +320,7 @@ class FCCLatticeGeneratorForm(GenericLatticeGeneratorForm):
         self.add_filename_option()
         
         # specie
-        self.specie_text = QtGui.QLineEdit(self.generatorArgs.sym)
+        self.specie_text = QtWidgets.QLineEdit(self.generatorArgs.sym)
         self.specie_text.setFixedWidth(30)
         self.specie_text.setMaxLength(2)
         self.specie_text.textEdited.connect(self.specie_text_edited)
@@ -368,7 +369,7 @@ class BCCLatticeGeneratorForm(GenericLatticeGeneratorForm):
         self.add_filename_option()
         
         # specie
-        self.specie_text = QtGui.QLineEdit(self.generatorArgs.sym)
+        self.specie_text = QtWidgets.QLineEdit(self.generatorArgs.sym)
         self.specie_text.setFixedWidth(30)
         self.specie_text.setMaxLength(2)
         self.specie_text.textEdited.connect(self.specie_text_edited)
@@ -417,39 +418,39 @@ class FluoriteLatticeGeneratorForm(GenericLatticeGeneratorForm):
         self.add_filename_option()
         
         # specie 1
-        self.specie1_text = QtGui.QLineEdit(self.generatorArgs.sym1)
+        self.specie1_text = QtWidgets.QLineEdit(self.generatorArgs.sym1)
         self.specie1_text.setFixedWidth(30)
         self.specie1_text.setMaxLength(2)
         self.specie1_text.textEdited.connect(self.specie1_text_edited)
         self.specie1_text.setToolTip("Set the symbol of the first species")
         
         # charge 1
-        charge1Spin = QtGui.QDoubleSpinBox()
+        charge1Spin = QtWidgets.QDoubleSpinBox()
         charge1Spin.setMinimum(-99.99)
         charge1Spin.setValue(self.generatorArgs.charge1)
         charge1Spin.valueChanged.connect(self.charge1_changed)
         charge1Spin.setToolTip("Set the charge of the first species")
         
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.specie1_text)
         hbox.addWidget(charge1Spin)
         self.formLayout.addRow("Species 1", hbox)
         
         # specie 2
-        self.specie2_text = QtGui.QLineEdit(self.generatorArgs.sym2)
+        self.specie2_text = QtWidgets.QLineEdit(self.generatorArgs.sym2)
         self.specie2_text.setFixedWidth(30)
         self.specie2_text.setMaxLength(2)
         self.specie2_text.textEdited.connect(self.specie2_text_edited)
         self.specie2_text.setToolTip("Set the symbol of the second species")
         
         # charge 2
-        charge2Spin = QtGui.QDoubleSpinBox()
+        charge2Spin = QtWidgets.QDoubleSpinBox()
         charge2Spin.setMinimum(-99.99)
         charge2Spin.setValue(self.generatorArgs.charge2)
         charge2Spin.valueChanged.connect(self.charge2_changed)
         charge2Spin.setToolTip("Set the charge of the second species")
         
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.specie2_text)
         hbox.addWidget(charge2Spin)
         self.formLayout.addRow("Species 2", hbox)
@@ -517,39 +518,39 @@ class RockSaltLatticeGeneratorForm(GenericLatticeGeneratorForm):
         self.add_filename_option()
         
         # specie 1
-        self.specie1_text = QtGui.QLineEdit(self.generatorArgs.sym1)
+        self.specie1_text = QtWidgets.QLineEdit(self.generatorArgs.sym1)
         self.specie1_text.setFixedWidth(30)
         self.specie1_text.setMaxLength(2)
         self.specie1_text.textEdited.connect(self.specie1_text_edited)
         self.specie1_text.setToolTip("Set the symbol of the first species")
         
         # charge 1
-        charge1Spin = QtGui.QDoubleSpinBox()
+        charge1Spin = QtWidgets.QDoubleSpinBox()
         charge1Spin.setMinimum(-99.99)
         charge1Spin.setValue(self.generatorArgs.charge1)
         charge1Spin.valueChanged.connect(self.charge1_changed)
         charge1Spin.setToolTip("Set the charge of the first species")
         
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.specie1_text)
         hbox.addWidget(charge1Spin)
         self.formLayout.addRow("Species 1", hbox)
         
         # specie 2
-        self.specie2_text = QtGui.QLineEdit(self.generatorArgs.sym2)
+        self.specie2_text = QtWidgets.QLineEdit(self.generatorArgs.sym2)
         self.specie2_text.setFixedWidth(30)
         self.specie2_text.setMaxLength(2)
         self.specie2_text.textEdited.connect(self.specie2_text_edited)
         self.specie2_text.setToolTip("Set the symbol of the second species")
         
         # charge 2
-        charge2Spin = QtGui.QDoubleSpinBox()
+        charge2Spin = QtWidgets.QDoubleSpinBox()
         charge2Spin.setMinimum(-99.99)
         charge2Spin.setValue(self.generatorArgs.charge2)
         charge2Spin.valueChanged.connect(self.charge2_changed)
         charge2Spin.setToolTip("Set the charge of the second species")
         
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.specie2_text)
         hbox.addWidget(charge2Spin)
         self.formLayout.addRow("Species 2", hbox)
@@ -617,39 +618,39 @@ class SiC4HLatticeGeneratorForm(GenericLatticeGeneratorForm):
         self.add_filename_option()
         
         # specie 1
-        self.specie1_text = QtGui.QLineEdit(self.generatorArgs.sym1)
+        self.specie1_text = QtWidgets.QLineEdit(self.generatorArgs.sym1)
         self.specie1_text.setFixedWidth(30)
         self.specie1_text.setMaxLength(2)
         self.specie1_text.textEdited.connect(self.specie1_text_edited)
         self.specie1_text.setToolTip("Set the symbol of the first species")
         
         # charge 1
-        charge1Spin = QtGui.QDoubleSpinBox()
+        charge1Spin = QtWidgets.QDoubleSpinBox()
         charge1Spin.setMinimum(-99.99)
         charge1Spin.setValue(self.generatorArgs.charge1)
         charge1Spin.valueChanged.connect(self.charge1_changed)
         charge1Spin.setToolTip("Set the charge of the first species")
         
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.specie1_text)
         hbox.addWidget(charge1Spin)
         self.formLayout.addRow("Species 1", hbox)
         
         # specie 2
-        self.specie2_text = QtGui.QLineEdit(self.generatorArgs.sym2)
+        self.specie2_text = QtWidgets.QLineEdit(self.generatorArgs.sym2)
         self.specie2_text.setFixedWidth(30)
         self.specie2_text.setMaxLength(2)
         self.specie2_text.textEdited.connect(self.specie2_text_edited)
         self.specie2_text.setToolTip("Set the symbol of the second species")
         
         # charge 2
-        charge2Spin = QtGui.QDoubleSpinBox()
+        charge2Spin = QtWidgets.QDoubleSpinBox()
         charge2Spin.setMinimum(-99.99)
         charge2Spin.setValue(self.generatorArgs.charge2)
         charge2Spin.valueChanged.connect(self.charge2_changed)
         charge2Spin.setToolTip("Set the charge of the second species")
         
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(self.specie2_text)
         hbox.addWidget(charge2Spin)
         self.formLayout.addRow("Species 2", hbox)

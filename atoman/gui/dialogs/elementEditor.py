@@ -11,7 +11,8 @@ from __future__ import unicode_literals
 import copy
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 import numpy as np
 
 from ...system.atoms import elements
@@ -20,12 +21,12 @@ from ...visutils.utilities import dataPath, iconPath
 
 ################################################################################
 
-class ElementSettingsForm(QtGui.QGroupBox):
+class ElementSettingsForm(QtWidgets.QGroupBox):
     """
     Form for editing element settings
     
     """
-    settingsModified = QtCore.Signal(str)
+    settingsModified = QtCore.pyqtSignal(str)
     
     def __init__(self, sym, parent=None):
         self.sym = sym
@@ -34,7 +35,7 @@ class ElementSettingsForm(QtGui.QGroupBox):
         super(ElementSettingsForm, self).__init__(self.titleText, parent=parent)
         
         # form layout
-        layout = QtGui.QFormLayout(self)
+        layout = QtWidgets.QFormLayout(self)
         self.setAlignment(QtCore.Qt.AlignHCenter)
         
         # colour
@@ -43,7 +44,7 @@ class ElementSettingsForm(QtGui.QGroupBox):
         self.colour = rgb
         
         # colour button
-        self.colourButton = QtGui.QPushButton("")
+        self.colourButton = QtWidgets.QPushButton("")
         self.colourButton.setFixedWidth(50)
         self.colourButton.setFixedHeight(30)
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
@@ -54,7 +55,7 @@ class ElementSettingsForm(QtGui.QGroupBox):
         self.radius = elements.covalentRadius(sym)
         
         # radius spin box
-        self.spinBox = QtGui.QDoubleSpinBox(self)
+        self.spinBox = QtWidgets.QDoubleSpinBox(self)
         self.spinBox.setSingleStep(0.01)
         self.spinBox.setMinimum(0.0)
         self.spinBox.setMaximum(100.0)
@@ -71,7 +72,7 @@ class ElementSettingsForm(QtGui.QGroupBox):
         RGB = self.colour
         cur = QtGui.QColor(RGB[0] * 255.0, RGB[1] * 255.0, RGB[2] * 255.0)
         
-        col = QtGui.QColorDialog.getColor(cur, self, "%s" % sym)
+        col = QtWidgets.QColorDialog.getColor(cur, self, "%s" % sym)
         
         if col.isValid():
             self.colourChanged(qtcolour=col)
@@ -107,7 +108,7 @@ class ElementSettingsForm(QtGui.QGroupBox):
 
 ################################################################################
 
-class ElementEditor(QtGui.QDialog):
+class ElementEditor(QtWidgets.QDialog):
     """
     Element editor dialog
     
@@ -125,7 +126,7 @@ class ElementEditor(QtGui.QDialog):
         self.setWindowTitle("Element editor")
         self.setWindowIcon(QtGui.QIcon(iconPath("other/periodic-table-icon.png")))
         
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
         # lattice objects
         self.systemsDialog = self.mainWindow.systemsDialog
@@ -136,23 +137,23 @@ class ElementEditor(QtGui.QDialog):
         self.modifiedListSave = set()
         self.formsDict = {}
         
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
         layout.setAlignment(QtCore.Qt.AlignHCenter)
 #        layout.setContentsMargins(0, 0, 0, 0)
 #        layout.setSpacing(0)
         
         # combo box with elements
-        self.elementsCombo = QtGui.QComboBox()
+        self.elementsCombo = QtWidgets.QComboBox()
         self.elementsCombo.currentIndexChanged.connect(self.setWidgetStack)
         
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.addStretch(1)
         row.addWidget(self.elementsCombo)
         row.addStretch(1)
         layout.addLayout(row)
         
         # stacked widget
-        self.stackedWidget = QtGui.QStackedWidget()
+        self.stackedWidget = QtWidgets.QStackedWidget()
         layout.addWidget(self.stackedWidget)
         
         # populate combo and stacked widget
@@ -170,25 +171,25 @@ class ElementEditor(QtGui.QDialog):
             self.elementsCombo.addItem("%s - %s" % (sym, elements.atomName(sym)))
         
         # buttons
-        buttonContainer = QtGui.QWidget(self)
-        buttonLayout = QtGui.QHBoxLayout(buttonContainer)
+        buttonContainer = QtWidgets.QWidget(self)
+        buttonLayout = QtWidgets.QHBoxLayout(buttonContainer)
         buttonLayout.setContentsMargins(0, 0, 0, 0)
         buttonLayout.setSpacing(0)
         
         # apply button
-        self.applyButton = QtGui.QPushButton(QtGui.QIcon(iconPath("redo_64.png")), "Apply")
+        self.applyButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("redo_64.png")), "Apply")
         self.applyButton.setStatusTip("Apply changes to current session")
         self.applyButton.setToolTip("Apply changes to current session")
         self.applyButton.clicked.connect(self.applyChanges)
         self.applyButton.setEnabled(False)
         
-        self.saveButton = QtGui.QPushButton(QtGui.QIcon(iconPath("save_64.png")), "Save")
+        self.saveButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("save_64.png")), "Save")
         self.saveButton.setStatusTip("Save changes for use in future sessions")
         self.saveButton.setToolTip("Save changes for use in future sessions")
         self.saveButton.clicked.connect(self.saveChanges)
         self.saveButton.setEnabled(False)
         
-        self.resetButton = QtGui.QPushButton(QtGui.QIcon(iconPath("undo_64.png")), "Reset")
+        self.resetButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("undo_64.png")), "Reset")
         self.resetButton.setStatusTip("Reset changes to last applied")
         self.resetButton.setToolTip("Reset changes to last applied")
         self.resetButton.clicked.connect(self.resetChanges)
@@ -261,9 +262,9 @@ class ElementEditor(QtGui.QDialog):
             msgtext += "\n%s" % text
         msgtext += "\n\nDo you wish to continue?"
         
-        reply = QtGui.QMessageBox.question(self, "Message", msgtext, QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        reply = QtWidgets.QMessageBox.question(self, "Message", msgtext, QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         
-        if reply == QtGui.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             # apply changes first
             self.applyChanges()
             

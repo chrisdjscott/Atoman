@@ -18,7 +18,8 @@ import six.moves.queue
 
 import vtk
 from PIL import Image
-from PySide import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+
 
 from ..visutils import utilities
 from . import cell
@@ -247,13 +248,13 @@ class Renderer(object):
         camvup = self.camera.GetViewUp()
         
         # progress dialog
-        progDialog = QtGui.QProgressDialog("Running rotator...", "Cancel", 0, NRotations)
+        progDialog = QtWidgets.QProgressDialog("Running rotator...", "Cancel", 0, NRotations)
         progDialog.setWindowModality(QtCore.Qt.WindowModal)
         progDialog.setWindowTitle("Progress")
         progDialog.setValue(0)
         
         progDialog.show()
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
         
         # main loop
         try:
@@ -282,7 +283,7 @@ class Renderer(object):
                 # progress
                 progDialog.setValue(i)
                 
-                QtGui.QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
                 
                 # exit if cancelled
                 if progDialog.wasCanceled():
@@ -406,7 +407,7 @@ class Renderer(object):
                 thread.start()
                 while thread.isAlive():
                     thread.join(1)
-                    QtGui.QApplication.processEvents()
+                    QtWidgets.QApplication.processEvents()
                 
                 # result
                 try:

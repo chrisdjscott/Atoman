@@ -35,18 +35,18 @@ Changes by Greg Schussman, Aug. 2014
 
 Changes by Alex Tsui, Apr. 2015
  Port from PyQt4 to PyQt5.
-"""
-from __future__ import print_function
 
+Changes by Fabian Wenzel, Jan. 2016
+ Support for Python3
+"""
 import vtk
 
 # Check whether a specific PyQt implementation was chosen
 try:
     import vtk.qt
     PyQtImpl = vtk.qt.PyQtImpl
-except (ImportError, AttributeError):
-    # we're using pyside
-    PyQtImpl = "PySide"
+except ImportError:
+    PyQtImpl = "PyQt5"
 
 if PyQtImpl is None:
     # Autodetect the PyQt implementation to use
@@ -211,6 +211,7 @@ class QVTKRenderWindowInteractor(QWidget):
 
         WId = self.winId()
 
+        # Python2
         if type(WId).__name__ == 'PyCObject':
             from ctypes import pythonapi, c_void_p, py_object
 
@@ -218,6 +219,20 @@ class QVTKRenderWindowInteractor(QWidget):
             pythonapi.PyCObject_AsVoidPtr.argtypes = [py_object]
 
             WId = pythonapi.PyCObject_AsVoidPtr(WId)
+
+        # Python3
+        elif type(WId).__name__ == 'PyCapsule':
+            from ctypes import pythonapi, c_void_p, py_object, c_char_p
+
+            pythonapi.PyCapsule_GetName.restype = c_char_p
+            pythonapi.PyCapsule_GetName.argtypes = [py_object]
+
+            name = pythonapi.PyCapsule_GetName(WId)
+
+            pythonapi.PyCapsule_GetPointer.restype  = c_void_p
+            pythonapi.PyCapsule_GetPointer.argtypes = [py_object, c_char_p]
+
+            WId = pythonapi.PyCapsule_GetPointer(WId, name)
 
         self._RenderWindow.SetWindowInfo(str(int(WId)))
 
@@ -300,7 +315,7 @@ class QVTKRenderWindowInteractor(QWidget):
         self.Finalize()
 
     def sizeHint(self):
-        return QSize(400, 400)
+        return QSize(1600, 400)
 
     def paintEngine(self):
         return None
@@ -365,6 +380,7 @@ class QVTKRenderWindowInteractor(QWidget):
         ctrl, shift = self._GetCtrlShift(ev)
         self._Iren.SetEventInformationFlipY(ev.x(), ev.y(),
                                             ctrl, shift, chr(0), 0, None)
+
         if self._ActiveButton == Qt.LeftButton:
             self._Iren.LeftButtonReleaseEvent()
         elif self._ActiveButton == Qt.RightButton:
@@ -411,7 +427,7 @@ class QVTKRenderWindowInteractor(QWidget):
         self._Iren.KeyReleaseEvent()
 
     def wheelEvent(self, ev):
-        if ev.delta() >= 0:
+        if ev.angleDelta() >= 0:
             self._Iren.MouseWheelForwardEvent()
         else:
             self._Iren.MouseWheelBackwardEvent()

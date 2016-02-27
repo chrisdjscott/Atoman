@@ -11,7 +11,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 from . import vtkWindow
 import vtk
 import numpy as np
@@ -28,7 +29,7 @@ import six
 from six.moves import range
 
 
-class RendererWindow(QtGui.QWidget):
+class RendererWindow(QtWidgets.QWidget):
     """
     Renderer sub window.
     
@@ -62,7 +63,7 @@ class RendererWindow(QtGui.QWidget):
         self.parallelProjection = False
         
         # layout
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
         
@@ -71,7 +72,7 @@ class RendererWindow(QtGui.QWidget):
         self.onScreenInfoActors = vtk.vtkActor2DCollection()
         
         # toolbar
-        toolbar = QtGui.QToolBar()
+        toolbar = QtWidgets.QToolBar()
         layout.addWidget(toolbar)
         
         # button to displace lattice frame
@@ -190,12 +191,12 @@ class RendererWindow(QtGui.QWidget):
         self.rotateViewPointDialog = simpleDialogs.RotateViewPointDialog(self, parent=self)
         
         # which filter list is it associated with
-        label = QtGui.QLabel("Analysis pipeline:")
-        self.analysisPipelineCombo = QtGui.QComboBox()
+        label = QtWidgets.QLabel("Analysis pipeline:")
+        self.analysisPipelineCombo = QtWidgets.QComboBox()
         self.analysisPipelineCombo.currentIndexChanged.connect(self.pipelineChanged)
         self.initPipelines()
         
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.setContentsMargins(0, 0, 0, 0)
         row.setAlignment(QtCore.Qt.AlignHCenter)
         row.addWidget(label)
@@ -626,7 +627,7 @@ class RendererWindow(QtGui.QWidget):
         Create an action
         
         """
-        action = QtGui.QAction(text, self)
+        action = QtWidgets.QAction(text, self)
         
         if icon is not None:
             action.setIcon(QtGui.QIcon(iconPath(icon)))
@@ -724,10 +725,10 @@ class RendererWindow(QtGui.QWidget):
                 self.onScreenInfo[key] = tuple(utilities.simulationTimeLine(value).split())
             
             else:
-                self.onScreenInfo[key] = (value,)        
+                self.onScreenInfo[key] = (value,)
 
         # lattice temperature
-        if not "Temperature" in inputState.attributes:
+        if "Temperature" not in inputState.attributes:
             temperature = inputState.calcTemperature()
             if temperature is not None:
                 self.onScreenInfo["Temperature"] = ("%.3f" % temperature,)
@@ -848,11 +849,13 @@ class RendererWindow(QtGui.QWidget):
             
             if showVacs:
                 for i, cnt in enumerate(vacSpecCount):
-                    self.onScreenInfo["Defect species count"].append([(cnt, specListRef[i], "vacancies"), specRGBRef[i]])
+                    self.onScreenInfo["Defect species count"].append([(cnt, specListRef[i], "vacancies"),
+                                                                      specRGBRef[i]])
             
             if showInts:
                 for i, cnt in enumerate(intSpecCount):
-                    self.onScreenInfo["Defect species count"].append([(cnt, specListInput[i], "interstitials"), specRGBInput[i]])
+                    self.onScreenInfo["Defect species count"].append([(cnt, specListInput[i], "interstitials"),
+                                                                      specRGBInput[i]])
                 
                 if defectsSettings.getSetting("identifySplitInts"):
                     for i in range(len(specListInput)):
@@ -863,14 +866,19 @@ class RendererWindow(QtGui.QWidget):
                             else:
                                 rgb = (specRGBInput[i] + specRGBInput[j]) / 2.0
                             
-                            self.onScreenInfo["Defect species count"].append([(N, "%s-%s" % (specListInput[i], specListInput[j]), "split ints"), rgb])
+                            self.onScreenInfo["Defect species count"].append([(N, "%s-%s" % (specListInput[i],
+                                                                                             specListInput[j]),
+                                                                               "split ints"), rgb])
             
             if showAnts:
                 for i in range(len(specListRef)):
                     for j in range(len(specListInput)):
                         if i == j:
                             continue
-                        self.onScreenInfo["Defect species count"].append([(antSpecCount[i][j], "%s on %s" % (specListInput[j], specListRef[i]), "antisites"), specRGBRef[i]])
+                        self.onScreenInfo["Defect species count"].append([(antSpecCount[i][j],
+                                                                           "%s on %s" % (specListInput[j],
+                                                                                         specListRef[i]), "antisites"),
+                                                                          specRGBRef[i]])
         
         # alignment/position stuff
         topyLeft = self.vtkRenWinInteract.height() - 5
@@ -1048,10 +1056,11 @@ class RendererWindow(QtGui.QWidget):
         Override close event.
         
         """
-        reply = QtGui.QMessageBox.question(self, 'Message', "Are you sure you want to close this window", 
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        reply = QtWidgets.QMessageBox.question(self, 'Message', "Are you sure you want to close this window",
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
         
-        if reply == QtGui.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             self.closed = True
             self.mainWindow.renderWindowClosed()
             event.accept()

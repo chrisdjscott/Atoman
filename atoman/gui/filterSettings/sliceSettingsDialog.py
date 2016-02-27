@@ -5,7 +5,8 @@ Contains GUI forms for the slice filter.
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from PySide import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+
 
 from . import base
 from ...rendering import slicePlane
@@ -36,7 +37,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         self.showSlicePlaneChecked = False
         
         # show slice plane
-        self.showSlicePlaneCheck = QtGui.QCheckBox()
+        self.showSlicePlaneCheck = QtWidgets.QCheckBox()
         self.showSlicePlaneCheck.stateChanged.connect(self.showPlaneChanged)
         self.showSlicePlaneCheck.setToolTip("Show the slice plane as a visual aid")
         self.contentLayout.addRow("Show slice plane", self.showSlicePlaneCheck)
@@ -44,7 +45,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         self.addHorizontalDivider()
         
         # plane centre
-        x0SpinBox = QtGui.QDoubleSpinBox()
+        x0SpinBox = QtWidgets.QDoubleSpinBox()
         x0SpinBox.setSingleStep(1)
         x0SpinBox.setMinimum(-1000)
         x0SpinBox.setMaximum(1000)
@@ -52,7 +53,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         x0SpinBox.setToolTip("Plane centre x value")
         x0SpinBox.valueChanged.connect(self.x0Changed)
         
-        y0SpinBox = QtGui.QDoubleSpinBox()
+        y0SpinBox = QtWidgets.QDoubleSpinBox()
         y0SpinBox.setSingleStep(1)
         y0SpinBox.setMinimum(-1000)
         y0SpinBox.setMaximum(1000)
@@ -60,7 +61,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         y0SpinBox.setToolTip("Plane centre y value")
         y0SpinBox.valueChanged.connect(self.y0Changed)
         
-        z0SpinBox = QtGui.QDoubleSpinBox()
+        z0SpinBox = QtWidgets.QDoubleSpinBox()
         z0SpinBox.setSingleStep(1)
         z0SpinBox.setMinimum(-1000)
         z0SpinBox.setMaximum(1000)
@@ -68,16 +69,16 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         z0SpinBox.setToolTip("Plane centre z value")
         z0SpinBox.valueChanged.connect(self.z0Changed)
         
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(x0SpinBox)
-        hbox.addWidget(QtGui.QLabel(","))
+        hbox.addWidget(QtWidgets.QLabel(","))
         hbox.addWidget(y0SpinBox)
-        hbox.addWidget(QtGui.QLabel(","))
+        hbox.addWidget(QtWidgets.QLabel(","))
         hbox.addWidget(z0SpinBox)
         self.contentLayout.addRow("Place centre", hbox)
         
         # plane normal 
-        xnSpinBox = QtGui.QDoubleSpinBox()
+        xnSpinBox = QtWidgets.QDoubleSpinBox()
         xnSpinBox.setSingleStep(0.1)
         xnSpinBox.setMinimum(-1000)
         xnSpinBox.setMaximum(1000)
@@ -85,7 +86,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         xnSpinBox.setToolTip("Plane normal x value")
         xnSpinBox.valueChanged.connect(self.xnChanged)
         
-        ynSpinBox = QtGui.QDoubleSpinBox()
+        ynSpinBox = QtWidgets.QDoubleSpinBox()
         ynSpinBox.setSingleStep(0.1)
         ynSpinBox.setMinimum(-1000)
         ynSpinBox.setMaximum(1000)
@@ -93,7 +94,7 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         ynSpinBox.setToolTip("Plane normal y value")
         ynSpinBox.valueChanged.connect(self.ynChanged)
         
-        znSpinBox = QtGui.QDoubleSpinBox()
+        znSpinBox = QtWidgets.QDoubleSpinBox()
         znSpinBox.setSingleStep(0.1)
         znSpinBox.setMinimum(-1000)
         znSpinBox.setMaximum(1000)
@@ -101,18 +102,18 @@ class SliceSettingsDialog(base.GenericSettingsDialog):
         znSpinBox.setToolTip("Plane normal z value")
         znSpinBox.valueChanged.connect(self.znChanged)
         
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(xnSpinBox)
-        hbox.addWidget(QtGui.QLabel(","))
+        hbox.addWidget(QtWidgets.QLabel(","))
         hbox.addWidget(ynSpinBox)
-        hbox.addWidget(QtGui.QLabel(","))
+        hbox.addWidget(QtWidgets.QLabel(","))
         hbox.addWidget(znSpinBox)
         self.contentLayout.addRow("Place normal", hbox)
         
         self.addHorizontalDivider()
         
         # invert
-        self.invertCheck = QtGui.QCheckBox()
+        self.invertCheck = QtWidgets.QCheckBox()
         self.invertCheck.stateChanged.connect(self.changeInvert)
         self.invertCheck.setToolTip("Invert the selection of atoms")
         self.contentLayout.addRow("Invert selection", self.invertCheck)

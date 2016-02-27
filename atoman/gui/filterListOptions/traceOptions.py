@@ -22,17 +22,18 @@ from __future__ import unicode_literals
 
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+
 
 
 ################################################################################
 
-class TraceOptionsWindow(QtGui.QDialog):
+class TraceOptionsWindow(QtWidgets.QDialog):
     """
     Window for setting trace options.
     
     """
-    modified = QtCore.Signal(str)
+    modified = QtCore.pyqtSignal(str)
     
     def __init__(self, mainWindow, parent=None):
         super(TraceOptionsWindow, self).__init__(parent)
@@ -44,7 +45,7 @@ class TraceOptionsWindow(QtGui.QDialog):
         
         self.logger = logging.getLogger(__name__)
         
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
         self.setWindowTitle("Trace options")  # filter list id should be in here
 #        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
@@ -61,10 +62,10 @@ class TraceOptionsWindow(QtGui.QDialog):
         self.vectorResolution = self.bondNumSides
         
         # layout
-        layout = QtGui.QFormLayout(self)
+        layout = QtWidgets.QFormLayout(self)
         
         # draw trace settings
-        self.drawTraceCheck = QtGui.QCheckBox()
+        self.drawTraceCheck = QtWidgets.QCheckBox()
         if self.drawTraceVectors:
             self.drawTraceCheck.setCheckState(QtCore.Qt.Checked)
         else:
@@ -73,7 +74,7 @@ class TraceOptionsWindow(QtGui.QDialog):
         layout.addRow("Draw trace vectors", self.drawTraceCheck)
         
         # draw as arrows
-        self.arrowsCheck = QtGui.QCheckBox()
+        self.arrowsCheck = QtWidgets.QCheckBox()
         if self.drawAsArrows:
             self.arrowsCheck.setCheckState(QtCore.Qt.Checked)
         else:
@@ -83,7 +84,7 @@ class TraceOptionsWindow(QtGui.QDialog):
         layout.addRow("Draw as arrows", self.arrowsCheck)
         
         # bond thickness
-        self.vtkThickSpin = QtGui.QDoubleSpinBox()
+        self.vtkThickSpin = QtWidgets.QDoubleSpinBox()
         self.vtkThickSpin.setMinimum(0.01)
         self.vtkThickSpin.setMaximum(10)
         self.vtkThickSpin.setSingleStep(0.01)
@@ -91,7 +92,7 @@ class TraceOptionsWindow(QtGui.QDialog):
         self.vtkThickSpin.valueChanged.connect(self.vtkThickChanged)
         self.vtkThickSpin.setEnabled(self.drawTraceVectors)
         layout.addRow("Bond thickness (VTK)", self.vtkThickSpin)
-        self.povThickSpin = QtGui.QDoubleSpinBox()
+        self.povThickSpin = QtWidgets.QDoubleSpinBox()
         self.povThickSpin.setMinimum(0.01)
         self.povThickSpin.setMaximum(10)
         self.povThickSpin.setSingleStep(0.01)
@@ -101,7 +102,7 @@ class TraceOptionsWindow(QtGui.QDialog):
         layout.addRow("Bond thickness (POV)", self.povThickSpin)
         
         # num sides
-        self.numSidesSpin = QtGui.QSpinBox()
+        self.numSidesSpin = QtWidgets.QSpinBox()
         self.numSidesSpin.setMinimum(3)
         self.numSidesSpin.setMaximum(999)
         self.numSidesSpin.setSingleStep(1)
@@ -110,7 +111,7 @@ class TraceOptionsWindow(QtGui.QDialog):
         self.numSidesSpin.valueChanged.connect(self.numSidesChanged)
         layout.addRow("Bond number of sides", self.numSidesSpin)
         
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
         buttonBox.rejected.connect(self.reject)
         layout.addRow(buttonBox)
         

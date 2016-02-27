@@ -14,14 +14,15 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 
 from ...visutils.utilities import iconPath
 import functools
 
 
 ################################################################################
-class GenericSettingsDialog(QtGui.QDialog):
+class GenericSettingsDialog(QtWidgets.QDialog):
     def __init__(self, title, parent, filterType):
         super(GenericSettingsDialog, self).__init__(parent)
         
@@ -48,27 +49,27 @@ class GenericSettingsDialog(QtGui.QDialog):
         self.filterID = int(array[3])
         
         self.setModal(0)
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
         self.setWindowTitle(title)
         self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/configure.png")))
 #        self.resize(500,300)
         
-        dialogLayout = QtGui.QVBoxLayout()
+        dialogLayout = QtWidgets.QVBoxLayout()
         dialogLayout.setAlignment(QtCore.Qt.AlignTop)
         
-        tabWidget = QtGui.QTabWidget()
+        tabWidget = QtWidgets.QTabWidget()
         
         # layout/widget
-        self.contentLayout = QtGui.QFormLayout()
-        contentWidget = QtGui.QWidget()
+        self.contentLayout = QtWidgets.QFormLayout()
+        contentWidget = QtWidgets.QWidget()
         contentWidget.setLayout(self.contentLayout)
         
         tabWidget.addTab(contentWidget, "Calculate")
         
         # display settings
-        self.displaySettingsLayout = QtGui.QFormLayout()
-        displaySettingsWidget = QtGui.QWidget()
+        self.displaySettingsLayout = QtWidgets.QFormLayout()
+        displaySettingsWidget = QtWidgets.QWidget()
         displaySettingsWidget.setLayout(self.displaySettingsLayout)
         
         tabWidget.addTab(displaySettingsWidget, "Display")
@@ -77,7 +78,7 @@ class GenericSettingsDialog(QtGui.QDialog):
         self.setLayout(dialogLayout)
         
         # button box
-        self.buttonBox = QtGui.QDialogButtonBox()
+        self.buttonBox = QtWidgets.QDialogButtonBox()
         
         # add close button
         closeButton = self.buttonBox.addButton(self.buttonBox.Close)
@@ -103,7 +104,7 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         """
         # spin box
-        spin = QtGui.QSpinBox()
+        spin = QtWidgets.QSpinBox()
         
         # optional configuration
         if minVal is not None:
@@ -138,7 +139,7 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         """
         # spin box
-        spin = QtGui.QDoubleSpinBox()
+        spin = QtWidgets.QDoubleSpinBox()
         
         # optional configuration
         if minVal is not None:
@@ -173,7 +174,7 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         """
         # check box
-        check = QtGui.QCheckBox()
+        check = QtWidgets.QCheckBox()
         
         # initial check status
         check.setChecked(self._settings.getSetting(setting))
@@ -208,7 +209,7 @@ class GenericSettingsDialog(QtGui.QDialog):
         
         """
         # combo box
-        combo = QtGui.QComboBox()
+        combo = QtWidgets.QComboBox()
         
         # add items
         combo.addItems(items)
@@ -248,9 +249,9 @@ class GenericSettingsDialog(QtGui.QDialog):
     
     def addHorizontalDivider(self, displaySettings=False):
         """Add horizontal divider (QFrame)."""
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         if displaySettings:
             self.displaySettingsLayout.addRow(line)
         else:

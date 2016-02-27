@@ -11,13 +11,13 @@ import sys
 import traceback
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 import matplotlib
 from six.moves import zip
-matplotlib.use("Qt4Agg")
-matplotlib.rcParams["backend.qt4"] = "PySide"
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+matplotlib.use("Qt5Agg")
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from matplotlib import rc
 
@@ -26,7 +26,7 @@ from ..visutils.utilities import iconPath
 
 ################################################################################
 
-class PlotDialog(QtGui.QDialog):
+class PlotDialog(QtWidgets.QDialog):
     """
     Dialog for displaying a plot.
     
@@ -38,7 +38,7 @@ class PlotDialog(QtGui.QDialog):
         self.mainWindow = mainWindow
         
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
         self.setWindowTitle("Plotter - %s" % dlgTitle)
         self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")))
@@ -64,7 +64,7 @@ class PlotDialog(QtGui.QDialog):
         self.setMaximumSize(self.dlgWidth, self.dlgHeight)
         
         # plot widget
-        self.mainWidget = QtGui.QWidget(self)
+        self.mainWidget = QtWidgets.QWidget(self)
         
         # setup figure
         self.fig = Figure((figWidth, figHeight), dpi=figDpi)
@@ -123,23 +123,23 @@ class PlotDialog(QtGui.QDialog):
         self.canvas.draw()
         
         # write to file button
-        writeDataButton = QtGui.QPushButton("Write csv")
+        writeDataButton = QtWidgets.QPushButton("Write csv")
         writeDataButton.setAutoDefault(False)
         writeDataButton.setDefault(False)
         writeDataButton.clicked.connect(self.writeData)
         writeDataButton.setToolTip("Write csv file containing plot data")
         
         # close button
-        closeButton = QtGui.QPushButton("Close")
+        closeButton = QtWidgets.QPushButton("Close")
         closeButton.clicked.connect(self.accept)
         
         # button box
-        buttonBox = QtGui.QDialogButtonBox()
-        buttonBox.addButton(writeDataButton, QtGui.QDialogButtonBox.ActionRole)
-        buttonBox.addButton(closeButton, QtGui.QDialogButtonBox.AcceptRole)
+        buttonBox = QtWidgets.QDialogButtonBox()
+        buttonBox.addButton(writeDataButton, QtWidgets.QDialogButtonBox.ActionRole)
+        buttonBox.addButton(closeButton, QtWidgets.QDialogButtonBox.AcceptRole)
         
         # layout
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(self.canvas)
         vbox.addWidget(self.mplToolbar)
         vbox.addWidget(buttonBox)
@@ -166,7 +166,7 @@ class PlotDialog(QtGui.QDialog):
                 
                 else:
                     if l0 == l1:
-                        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')[0]
+                        filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', '.')[0][0]
                         
                         if len(filename):
                             logger.debug("Writing data to csv file: '%s'", filename)

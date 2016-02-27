@@ -8,7 +8,8 @@ from __future__ import unicode_literals
 import functools
 
 import numpy as np
-from PySide import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+
 
 from . import base
 from ...filtering.filters import acnaFilter
@@ -34,7 +35,7 @@ class AcnaSettingsDialog(base.GenericSettingsDialog):
         self.addHorizontalDivider()
         
         # filter check
-        filterByStructureCheck = QtGui.QCheckBox()
+        filterByStructureCheck = QtWidgets.QCheckBox()
         filterByStructureCheck.setChecked(self._settings.getSetting("filteringEnabled"))
         filterByStructureCheck.setToolTip("Filter atoms by structure type")
         filterByStructureCheck.stateChanged.connect(self.filteringToggled)
@@ -44,7 +45,7 @@ class AcnaSettingsDialog(base.GenericSettingsDialog):
         filterer = self.parent.filterer
         self.structureChecks = {}
         for i, structure in enumerate(filterer.knownStructures):
-            cb = QtGui.QCheckBox()
+            cb = QtWidgets.QCheckBox()
             cb.setChecked(True)
             cb.stateChanged.connect(functools.partial(self.visToggled, i))
             self.contentLayout.addRow(structure, cb)

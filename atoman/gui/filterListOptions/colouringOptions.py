@@ -29,7 +29,8 @@ import functools
 import logging
 import math
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 
 from ...visutils.utilities import iconPath
 from .. import genericForm
@@ -38,12 +39,12 @@ from six.moves import range
 
 ################################################################################
 
-class ColouringOptionsWindow(QtGui.QDialog):
+class ColouringOptionsWindow(QtWidgets.QDialog):
     """
     Dialog for colouring options.
     
     """
-    modified = QtCore.Signal(str)
+    modified = QtCore.pyqtSignal(str)
     
     def __init__(self, parent=None):
         super(ColouringOptionsWindow, self).__init__(parent)
@@ -69,10 +70,10 @@ class ColouringOptionsWindow(QtGui.QDialog):
         self.scalarBarText = "Height in Y (A)"
         
         # layout
-        windowLayout = QtGui.QVBoxLayout(self)
+        windowLayout = QtWidgets.QVBoxLayout(self)
         
         # combo box
-        self.colouringCombo = QtGui.QComboBox()
+        self.colouringCombo = QtWidgets.QComboBox()
         self.colouringCombo.addItem("Species")
         self.colouringCombo.addItem("Height")
         self.colouringCombo.addItem("Solid colour")
@@ -82,7 +83,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         windowLayout.addWidget(self.colouringCombo)
         
         # stacked widget
-        self.stackedWidget = QtGui.QStackedWidget(self)
+        self.stackedWidget = QtWidgets.QStackedWidget(self)
         
         # specie widget
         self.specieOptions = genericForm.GenericForm(self, 0, "Species colouring options")
@@ -93,7 +94,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         heightOptions = genericForm.GenericForm(self, 0, "Height colouring options")
         
         # axis
-        axisCombo = QtGui.QComboBox()
+        axisCombo = QtWidgets.QComboBox()
         axisCombo.addItem("Height in X")
         axisCombo.addItem("Height in Y")
         axisCombo.addItem("Height in Z")
@@ -104,22 +105,22 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(axisCombo)
         
         # min/max
-        self.minValSpinBox = QtGui.QDoubleSpinBox()
+        self.minValSpinBox = QtWidgets.QDoubleSpinBox()
         self.minValSpinBox.setSingleStep(0.1)
         self.minValSpinBox.setMinimum(-9999.0)
         self.minValSpinBox.setMaximum(9999.0)
         self.minValSpinBox.setValue(0)
         self.minValSpinBox.valueChanged.connect(self.minValChanged)
         
-        self.maxValSpinBox = QtGui.QDoubleSpinBox()
+        self.maxValSpinBox = QtWidgets.QDoubleSpinBox()
         self.maxValSpinBox.setSingleStep(0.1)
         self.maxValSpinBox.setMinimum(-9999.0)
         self.maxValSpinBox.setMaximum(9999.0)
         self.maxValSpinBox.setValue(1)
         self.maxValSpinBox.valueChanged.connect(self.maxValChanged)
         
-        label = QtGui.QLabel(" Min ")
-        label2 = QtGui.QLabel(" Max ")
+        label = QtWidgets.QLabel(" Min ")
+        label2 = QtWidgets.QLabel(" Max ")
         
         row = heightOptions.newRow()
         row.addWidget(label)
@@ -130,7 +131,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(self.maxValSpinBox)
         
         # set to lattice
-        setHeightToLatticeButton = QtGui.QPushButton("Set to lattice")
+        setHeightToLatticeButton = QtWidgets.QPushButton("Set to lattice")
         setHeightToLatticeButton.setAutoDefault(0)
         setHeightToLatticeButton.clicked.connect(self.setHeightToLattice)
         
@@ -138,10 +139,10 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(setHeightToLatticeButton)
         
         # scalar bar text
-        self.scalarBarTextEdit = QtGui.QLineEdit("Height in Y (A)")
+        self.scalarBarTextEdit = QtWidgets.QLineEdit("Height in Y (A)")
         self.scalarBarTextEdit.textChanged.connect(self.scalarBarTextChanged)
         
-        label = QtGui.QLabel("Scalar bar title:")
+        label = QtWidgets.QLabel("Scalar bar title:")
         row = heightOptions.newRow()
         row.addWidget(label)
         
@@ -154,7 +155,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         solidColourOptions = genericForm.GenericForm(self, 0, "Solid colour options")
         
         # solid colour button
-        self.colourButton = QtGui.QPushButton("")
+        self.colourButton = QtWidgets.QPushButton("")
         self.colourButton.setFixedWidth(60)
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.solidColour.name())
         self.colourButton.clicked.connect(self.changeSolidColour)
@@ -168,20 +169,20 @@ class ColouringOptionsWindow(QtGui.QDialog):
         chargeOptions = genericForm.GenericForm(self, 0, "Charge colouring options")
         
         # min/max
-        self.chargeMinSpin = QtGui.QDoubleSpinBox()
+        self.chargeMinSpin = QtWidgets.QDoubleSpinBox()
         self.chargeMinSpin.setSingleStep(0.1)
         self.chargeMinSpin.setMinimum(-9999.0)
         self.chargeMinSpin.setMaximum(9999.0)
         self.chargeMinSpin.setValue(0)
         
-        self.chargeMaxSpin = QtGui.QDoubleSpinBox()
+        self.chargeMaxSpin = QtWidgets.QDoubleSpinBox()
         self.chargeMaxSpin.setSingleStep(0.1)
         self.chargeMaxSpin.setMinimum(-9999.0)
         self.chargeMaxSpin.setMaximum(9999.0)
         self.chargeMaxSpin.setValue(1)
         
-        label = QtGui.QLabel(" Min ")
-        label2 = QtGui.QLabel(" Max ")
+        label = QtWidgets.QLabel(" Min ")
+        label2 = QtWidgets.QLabel(" Max ")
         
         row = chargeOptions.newRow()
         row.addWidget(label)
@@ -192,7 +193,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(self.chargeMaxSpin)
         
         # set to scalar range
-        setToChargeRangeButton = QtGui.QPushButton("Set to charge range")
+        setToChargeRangeButton = QtWidgets.QPushButton("Set to charge range")
         setToChargeRangeButton.setAutoDefault(0)
         setToChargeRangeButton.clicked.connect(self.setToChargeRange)
         
@@ -200,9 +201,9 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(setToChargeRangeButton)
         
         # scalar bar text
-        self.scalarBarTextEdit3 = QtGui.QLineEdit("Charge")
+        self.scalarBarTextEdit3 = QtWidgets.QLineEdit("Charge")
         
-        label = QtGui.QLabel("Scalar bar title:")
+        label = QtWidgets.QLabel("Scalar bar title:")
         row = chargeOptions.newRow()
         row.addWidget(label)
         row = chargeOptions.newRow()
@@ -218,7 +219,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         windowLayout.addWidget(self.stackedWidget)
         
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
         buttonBox.rejected.connect(self.reject)
         windowLayout.addWidget(buttonBox)
     
@@ -287,22 +288,22 @@ class ColouringOptionsWindow(QtGui.QDialog):
         scalarOptions = genericForm.GenericForm(self, 0, "Options")
          
         # min/max
-        scalarMinSpin = QtGui.QDoubleSpinBox()
+        scalarMinSpin = QtWidgets.QDoubleSpinBox()
         scalarMinSpin.setSingleStep(0.1)
         scalarMinSpin.setMinimum(-9999.0)
         scalarMinSpin.setMaximum(9999.0)
         scalarMinSpin.setValue(0)
         self.scalarMinSpins[name] = scalarMinSpin
          
-        scalarMaxSpin = QtGui.QDoubleSpinBox()
+        scalarMaxSpin = QtWidgets.QDoubleSpinBox()
         scalarMaxSpin.setSingleStep(0.1)
         scalarMaxSpin.setMinimum(-9999.0)
         scalarMaxSpin.setMaximum(9999.0)
         scalarMaxSpin.setValue(1)
         self.scalarMaxSpins[name] = scalarMaxSpin
          
-        label = QtGui.QLabel(" Min ")
-        label2 = QtGui.QLabel(" Max ")
+        label = QtWidgets.QLabel(" Min ")
+        label2 = QtWidgets.QLabel(" Max ")
          
         row = scalarOptions.newRow()
         row.addWidget(label)
@@ -313,7 +314,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         row.addWidget(scalarMaxSpin)
          
         # set to scalar range
-        setToScalarRangeButton = QtGui.QPushButton("Set to scalar range")
+        setToScalarRangeButton = QtWidgets.QPushButton("Set to scalar range")
         setToScalarRangeButton.setAutoDefault(0)
         setToScalarRangeButton.clicked.connect(functools.partial(self.setToScalarRange, name))
          
@@ -326,10 +327,10 @@ class ColouringOptionsWindow(QtGui.QDialog):
         else:
             scalarBarName = name
         
-        scalarBarTextEdit = QtGui.QLineEdit("%s" % scalarBarName)
+        scalarBarTextEdit = QtWidgets.QLineEdit("%s" % scalarBarName)
         self.scalarBarTexts[name] = scalarBarTextEdit
          
-        label = QtGui.QLabel("Scalar bar title:")
+        label = QtWidgets.QLabel("Scalar bar title:")
         row = scalarOptions.newRow()
         row.addWidget(label)
         row = scalarOptions.newRow()
@@ -415,7 +416,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         Change solid colour.
         
         """
-        col = QtGui.QColorDialog.getColor(initial=self.solidColour, title="Set solid colour")
+        col = QtWidgets.QColorDialog.getColor(initial=self.solidColour, title="Set solid colour")
         
         if col.isValid():
             self.solidColour = col

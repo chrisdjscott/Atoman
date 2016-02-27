@@ -11,7 +11,8 @@ import uuid
 import functools
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 
 from ...algebra import vectors
 from ...rendering import highlight
@@ -19,7 +20,7 @@ from .. import utils
 import six
 
 
-class ClusterListWidgetItem(QtGui.QListWidgetItem):
+class ClusterListWidgetItem(QtWidgets.QListWidgetItem):
     """
     Item for cluster info window list widget
     
@@ -30,7 +31,7 @@ class ClusterListWidgetItem(QtGui.QListWidgetItem):
         self.defectType = defectType
 
 
-class ClusterInfoWindow(QtGui.QDialog):
+class ClusterInfoWindow(QtWidgets.QDialog):
     """
     Cluster info window
     
@@ -55,7 +56,7 @@ class ClusterInfoWindow(QtGui.QDialog):
                                    float(self.highlightColour.green()) / 255.0,
                                    float(self.highlightColour.blue()) / 255.0]
         
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
         
         # cluster
         self.cluster = filterList.filterer.clusterList[clusterIndex]
@@ -63,18 +64,18 @@ class ClusterInfoWindow(QtGui.QDialog):
         # volume
         vol = self.cluster.getVolume()
         if vol is not None:
-            layout.addWidget(QtGui.QLabel("Volume: %f units^3" % vol))
+            layout.addWidget(QtWidgets.QLabel("Volume: %f units^3" % vol))
         
         # facet area
         facetArea = self.cluster.getFacetArea()
         if facetArea is not None:
-            layout.addWidget(QtGui.QLabel("Facet area: %f units^2" % facetArea))
+            layout.addWidget(QtWidgets.QLabel("Facet area: %f units^2" % facetArea))
         
         # label
-        layout.addWidget(QtGui.QLabel("Cluster atoms (%d):" % len(self.cluster)))
+        layout.addWidget(QtWidgets.QLabel("Cluster atoms (%d):" % len(self.cluster)))
         
         # list widget
-        self.listWidget = QtGui.QListWidget(self)
+        self.listWidget = QtWidgets.QListWidget(self)
         self.listWidget.setMinimumWidth(300)
         self.listWidget.setMinimumHeight(175)
         layout.addWidget(self.listWidget)
@@ -90,21 +91,21 @@ class ClusterInfoWindow(QtGui.QDialog):
             self.listWidget.addItem(item)
         
         # colour button
-        self.colourButton = QtGui.QPushButton("")
+        self.colourButton = QtWidgets.QPushButton("")
         self.colourButton.setFixedWidth(60)
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
         self.colourButton.clicked.connect(self.changeHighlighterColour)
         self.colourButton.setAutoDefault(False)
-        self.highlightCheck = QtGui.QCheckBox("Highlight")
+        self.highlightCheck = QtWidgets.QCheckBox("Highlight")
         self.highlightCheck.setChecked(True)
         self.highlightCheck.stateChanged.connect(self.highlightChanged)
         
         # close button
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.addWidget(self.colourButton)
         row.addWidget(self.highlightCheck)
         row.addStretch(1)
-        closeButton = QtGui.QPushButton("Close")
+        closeButton = QtWidgets.QPushButton("Close")
         closeButton.clicked.connect(self.close)
         closeButton.setAutoDefault(True)
         row.addWidget(closeButton)
@@ -128,7 +129,7 @@ class ClusterInfoWindow(QtGui.QDialog):
         Change highlighter colour
         
         """
-        col = QtGui.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
+        col = QtWidgets.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
         
         if col.isValid():
             self.highlightColour = col
@@ -190,7 +191,7 @@ class ClusterInfoWindow(QtGui.QDialog):
         event.accept()
 
 
-class NeighbourListWidgetItem(QtGui.QListWidgetItem):
+class NeighbourListWidgetItem(QtWidgets.QListWidgetItem):
     """
     Item for neighbours info window list widget
     
@@ -201,7 +202,7 @@ class NeighbourListWidgetItem(QtGui.QListWidgetItem):
         self.separation = separation
 
 
-class AtomNeighboursInfoWindow(QtGui.QDialog):
+class AtomNeighboursInfoWindow(QtWidgets.QDialog):
     """
     Neighbours info window
     
@@ -228,13 +229,13 @@ class AtomNeighboursInfoWindow(QtGui.QDialog):
                                    float(self.highlightColour.green()) / 255.0,
                                    float(self.highlightColour.blue()) / 255.0]
         
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
         
         # label
-        layout.addWidget(QtGui.QLabel("Neighbours (%d):" % len(self.nebList)))
+        layout.addWidget(QtWidgets.QLabel("Neighbours (%d):" % len(self.nebList)))
         
         # list widget
-        self.listWidget = QtGui.QListWidget(self)
+        self.listWidget = QtWidgets.QListWidget(self)
         self.listWidget.setMinimumWidth(300)
         self.listWidget.setMinimumHeight(175)
         layout.addWidget(self.listWidget)
@@ -249,21 +250,21 @@ class AtomNeighboursInfoWindow(QtGui.QDialog):
             self.listWidget.addItem(item)
         
         # colour button
-        self.colourButton = QtGui.QPushButton("")
+        self.colourButton = QtWidgets.QPushButton("")
         self.colourButton.setFixedWidth(60)
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
         self.colourButton.clicked.connect(self.changeHighlighterColour)
         self.colourButton.setAutoDefault(False)
-        self.highlightCheck = QtGui.QCheckBox("Highlight")
+        self.highlightCheck = QtWidgets.QCheckBox("Highlight")
         self.highlightCheck.setChecked(True)
         self.highlightCheck.stateChanged.connect(self.highlightChanged)
         
         # close button
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.addWidget(self.colourButton)
         row.addWidget(self.highlightCheck)
         row.addStretch(1)
-        closeButton = QtGui.QPushButton("Close")
+        closeButton = QtWidgets.QPushButton("Close")
         closeButton.clicked.connect(self.close)
         closeButton.setAutoDefault(True)
         row.addWidget(closeButton)
@@ -287,7 +288,7 @@ class AtomNeighboursInfoWindow(QtGui.QDialog):
         Change highlighter colour
         
         """
-        col = QtGui.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
+        col = QtWidgets.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
         
         if col.isValid():
             self.highlightColour = col
@@ -349,7 +350,7 @@ class AtomNeighboursInfoWindow(QtGui.QDialog):
         event.accept()
 
 
-class DefectClusterInfoWindow(QtGui.QDialog):
+class DefectClusterInfoWindow(QtWidgets.QDialog):
     """
     Defect cluster info window
     
@@ -375,7 +376,7 @@ class DefectClusterInfoWindow(QtGui.QDialog):
                                    float(self.highlightColour.green()) / 255.0,
                                    float(self.highlightColour.blue()) / 255.0]
         
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
         
         # cluster
         self.cluster = filterList.filterer.clusterList[clusterIndex]
@@ -383,18 +384,18 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         # volume
         vol = self.cluster.getVolume()
         if vol is not None:
-            layout.addWidget(QtGui.QLabel("Volume: %f units^3" % vol))
+            layout.addWidget(QtWidgets.QLabel("Volume: %f units^3" % vol))
         
         # facet area
         facetArea = self.cluster.getFacetArea()
         if facetArea is not None:
-            layout.addWidget(QtGui.QLabel("Facet area: %f units^2" % facetArea))
+            layout.addWidget(QtWidgets.QLabel("Facet area: %f units^2" % facetArea))
         
         # label
-        layout.addWidget(QtGui.QLabel("Cluster defects (%d):" % self.cluster.getNDefects()))
+        layout.addWidget(QtWidgets.QLabel("Cluster defects (%d):" % self.cluster.getNDefects()))
         
         # list widget
-        self.listWidget = QtGui.QListWidget(self)
+        self.listWidget = QtWidgets.QListWidget(self)
         self.listWidget.setMinimumWidth(380)
         self.listWidget.setMinimumHeight(200)
         layout.addWidget(self.listWidget)
@@ -437,21 +438,21 @@ class DefectClusterInfoWindow(QtGui.QDialog):
             self.listWidget.addItem(item)
         
         # colour button
-        self.colourButton = QtGui.QPushButton("")
+        self.colourButton = QtWidgets.QPushButton("")
         self.colourButton.setFixedWidth(60)
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
         self.colourButton.clicked.connect(self.changeHighlighterColour)
         self.colourButton.setAutoDefault(False)
-        self.highlightCheck = QtGui.QCheckBox("Highlight")
+        self.highlightCheck = QtWidgets.QCheckBox("Highlight")
         self.highlightCheck.setChecked(True)
         self.highlightCheck.stateChanged.connect(self.highlightChanged)
         
         # close button
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.addWidget(self.colourButton)
         row.addWidget(self.highlightCheck)
         row.addStretch(1)
-        closeButton = QtGui.QPushButton("Close")
+        closeButton = QtWidgets.QPushButton("Close")
         closeButton.clicked.connect(self.close)
         closeButton.setAutoDefault(True)
         row.addWidget(closeButton)
@@ -462,7 +463,7 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         Change highlighter colour
         
         """
-        col = QtGui.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
+        col = QtWidgets.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
         
         if col.isValid():
             self.highlightColour = col
@@ -611,7 +612,7 @@ class DefectClusterInfoWindow(QtGui.QDialog):
         event.accept()
 
 
-class SystemInfoWindow(QtGui.QDialog):
+class SystemInfoWindow(QtWidgets.QDialog):
     """
     System info window.
     
@@ -625,9 +626,9 @@ class SystemInfoWindow(QtGui.QDialog):
         # attributes
         lattice = item.lattice
         
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         
-        listWidget = QtGui.QListWidget(self)
+        listWidget = QtWidgets.QListWidget(self)
         listWidget.setMinimumWidth(400)
         listWidget.setMinimumHeight(200)
         layout.addWidget(listWidget)
@@ -650,13 +651,13 @@ class SystemInfoWindow(QtGui.QDialog):
             listWidget.addItem("%s: %s" % (key, value))
         
         # button box
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout.addWidget(buttonBox)
 
 
-class AtomInfoWindow(QtGui.QDialog):
+class AtomInfoWindow(QtWidgets.QDialog):
     """
     Atom info window.
     
@@ -688,9 +689,9 @@ class AtomInfoWindow(QtGui.QDialog):
                                    float(self.highlightColour.green()) / 255.0,
                                    float(self.highlightColour.blue()) / 255.0]
         
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         
-        listWidget = QtGui.QListWidget(self)
+        listWidget = QtWidgets.QListWidget(self)
         listWidget.setMinimumWidth(300)
         listWidget.setMinimumHeight(175)
         layout.addWidget(listWidget)
@@ -730,10 +731,10 @@ class AtomInfoWindow(QtGui.QDialog):
             
             if len(self.voroNebList):
                 # add button
-                nebButton = QtGui.QPushButton("Neighbour list")
+                nebButton = QtWidgets.QPushButton("Neighbour list")
                 nebButton.clicked.connect(self.showVoroNeighbourInfoWindow)
                 nebButton.setAutoDefault(False)
-                row = QtGui.QHBoxLayout()
+                row = QtWidgets.QHBoxLayout()
                 row.addStretch()
                 row.addWidget(nebButton)
                 row.addStretch()
@@ -748,31 +749,31 @@ class AtomInfoWindow(QtGui.QDialog):
         # add button to show cluster info
         if len(clusterIndexes):
             for clusterIndex in clusterIndexes:
-                clusterButton = QtGui.QPushButton("Cluster %d info" % clusterIndex)
+                clusterButton = QtWidgets.QPushButton("Cluster %d info" % clusterIndex)
                 clusterButton.clicked.connect(functools.partial(filterList.showClusterInfoWindow, clusterIndex))
                 clusterButton.setAutoDefault(False)
-                row = QtGui.QHBoxLayout()
+                row = QtWidgets.QHBoxLayout()
                 row.addStretch()
                 row.addWidget(clusterButton)
                 row.addStretch()
                 layout.addLayout(row)
         
         # colour button
-        self.colourButton = QtGui.QPushButton("")
+        self.colourButton = QtWidgets.QPushButton("")
         self.colourButton.setFixedWidth(60)
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
         self.colourButton.clicked.connect(self.changeHighlighterColour)
         self.colourButton.setAutoDefault(False)
-        self.highlightCheck = QtGui.QCheckBox("Highlight")
+        self.highlightCheck = QtWidgets.QCheckBox("Highlight")
         self.highlightCheck.setChecked(True)
         self.highlightCheck.stateChanged.connect(self.highlightChanged)
         
         # close button
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.addWidget(self.colourButton)
         row.addWidget(self.highlightCheck)
         row.addStretch(1)
-        closeButton = QtGui.QPushButton("Close")
+        closeButton = QtWidgets.QPushButton("Close")
         closeButton.clicked.connect(self.close)
         closeButton.setAutoDefault(True)
         row.addWidget(closeButton)
@@ -802,7 +803,7 @@ class AtomInfoWindow(QtGui.QDialog):
         Change highlighter colour
         
         """
-        col = QtGui.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
+        col = QtWidgets.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
         
         if col.isValid():
             self.highlightColour = col
@@ -876,7 +877,7 @@ class AtomInfoWindow(QtGui.QDialog):
 
 ################################################################################
 
-class DefectInfoWindow(QtGui.QDialog):
+class DefectInfoWindow(QtWidgets.QDialog):
     """
     Atom info window.
     
@@ -911,7 +912,7 @@ class DefectInfoWindow(QtGui.QDialog):
         
         self.setWindowTitle("Defect info")
         
-        self.mainLayout = QtGui.QVBoxLayout()
+        self.mainLayout = QtWidgets.QVBoxLayout()
         layout = self.mainLayout
         
         if defectType == 1:
@@ -920,20 +921,20 @@ class DefectInfoWindow(QtGui.QDialog):
             # vacancy
             index = vacancies[defectIndex]
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Type: vacancy"))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Type: vacancy"))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Site index: %d" % refState.atomID[index]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Site index: %d" % refState.atomID[index]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Species: %s" % refState.specieList[refState.specie[index]]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Species: %s" % refState.specieList[refState.specie[index]]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (refState.pos[3 * index], refState.pos[3 * index + 1],
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Position: (%f, %f, %f)" % (refState.pos[3 * index], refState.pos[3 * index + 1],
                                                                    refState.pos[3 * index + 2])))
             layout.addLayout(row)
         
@@ -943,11 +944,11 @@ class DefectInfoWindow(QtGui.QDialog):
             # interstitial
             index = interstitials[defectIndex]
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Type: interstitial"))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Type: interstitial"))
             layout.addLayout(row)
             
-            listWidget = QtGui.QListWidget(self)
+            listWidget = QtWidgets.QListWidget(self)
             listWidget.setMinimumWidth(300)
             listWidget.setMinimumHeight(150)
             layout.addWidget(listWidget)
@@ -978,43 +979,43 @@ class DefectInfoWindow(QtGui.QDialog):
             index = antisites[defectIndex]
             index2 = onAntisites[defectIndex]
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Type: antisite"))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Type: antisite"))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Site index: %d" % refState.atomID[index]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Site index: %d" % refState.atomID[index]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Position: (%f, %f, %f)" % (refState.pos[3 * index], refState.pos[3 * index + 1],
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Position: (%f, %f, %f)" % (refState.pos[3 * index], refState.pos[3 * index + 1],
                                                                    refState.pos[3 * index + 2])))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Species: %s" % refState.specieList[refState.specie[index]]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Species: %s" % refState.specieList[refState.specie[index]]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Occupying atom:"))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Occupying atom:"))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Atom: %d" % inputState.atomID[index2]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Atom: %d" % inputState.atomID[index2]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Position: (%f, %f, %f)" % (inputState.pos[3 * index2],
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Position: (%f, %f, %f)" % (inputState.pos[3 * index2],
                                                                        inputState.pos[3 * index2 + 1],
                                                                        inputState.pos[3 * index2 + 2])))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Specie: %s" % inputState.specieList[inputState.specie[index2]]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Specie: %s" % inputState.specieList[inputState.specie[index2]]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Charge: %f" % (inputState.charge[index2],)))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Charge: %f" % (inputState.charge[index2],)))
             layout.addLayout(row)
             
             if vor is not None:
@@ -1028,65 +1029,65 @@ class DefectInfoWindow(QtGui.QDialog):
             int1Index = splitInts[3*defectIndex+1]
             int2Index = splitInts[3*defectIndex+2]
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Type: split interstitial"))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Type: split interstitial"))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Site index: %d" % refState.atomID[vacIndex]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Site index: %d" % refState.atomID[vacIndex]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Vacancy position: (%f, %f, %f)" % (refState.pos[3 * vacIndex],
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Vacancy position: (%f, %f, %f)" % (refState.pos[3 * vacIndex],
                                                                            refState.pos[3 * vacIndex + 1],
                                                                            refState.pos[3 * vacIndex + 2])))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Vacancy specie: %s" % refState.specieList[refState.specie[vacIndex]]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Vacancy specie: %s" % refState.specieList[refState.specie[vacIndex]]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Interstitial 1:"))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Interstitial 1:"))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Atom: %d" % inputState.atomID[int1Index]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Atom: %d" % inputState.atomID[int1Index]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Position: (%f, %f, %f)" % (inputState.pos[3*int1Index], inputState.pos[3*int1Index+1], inputState.pos[3*int1Index+2])))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Position: (%f, %f, %f)" % (inputState.pos[3*int1Index], inputState.pos[3*int1Index+1], inputState.pos[3*int1Index+2])))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Specie: %s" % inputState.specieList[inputState.specie[int1Index]]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Specie: %s" % inputState.specieList[inputState.specie[int1Index]]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Charge: %f" % (inputState.charge[int1Index],)))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Charge: %f" % (inputState.charge[int1Index],)))
             layout.addLayout(row)
             
             if vor is not None:
                 self.voroVolLine(vor.atomVolume(int1Index))
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Interstitial 2:"))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Interstitial 2:"))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Atom: %d" % inputState.atomID[int2Index]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Atom: %d" % inputState.atomID[int2Index]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Position: (%f, %f, %f)" % (inputState.pos[3*int2Index], inputState.pos[3*int2Index+1], inputState.pos[3*int2Index+2])))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Position: (%f, %f, %f)" % (inputState.pos[3*int2Index], inputState.pos[3*int2Index+1], inputState.pos[3*int2Index+2])))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Specie: %s" % inputState.specieList[inputState.specie[int2Index]]))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Specie: %s" % inputState.specieList[inputState.specie[int2Index]]))
             layout.addLayout(row)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("    Charge: %f" % (inputState.charge[int2Index],)))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("    Charge: %f" % (inputState.charge[int2Index],)))
             layout.addLayout(row)
             
             if vor is not None:
@@ -1099,8 +1100,8 @@ class DefectInfoWindow(QtGui.QDialog):
             sepVec = vectors.separationVector(pos1, pos2, inputState.cellDims, self.pipelinePage.PBC)
             norm = vectors.normalise(sepVec)
             
-            row = QtGui.QHBoxLayout()
-            row.addWidget(QtGui.QLabel("Orientation: (%f %f %f)" % (norm[0], norm[1], norm[2])))
+            row = QtWidgets.QHBoxLayout()
+            row.addWidget(QtWidgets.QLabel("Orientation: (%f %f %f)" % (norm[0], norm[1], norm[2])))
             layout.addLayout(row)
         
         # check if belongs to a cluster?
@@ -1121,31 +1122,31 @@ class DefectInfoWindow(QtGui.QDialog):
         
         # add button to show cluster info
         if clusterIndex is not None:
-            clusterButton = QtGui.QPushButton("Cluster %d info" % clusterIndex)
+            clusterButton = QtWidgets.QPushButton("Cluster %d info" % clusterIndex)
             clusterButton.clicked.connect(functools.partial(filterList.showClusterInfoWindow, clusterIndex))
             clusterButton.setAutoDefault(False)
-            row = QtGui.QHBoxLayout()
+            row = QtWidgets.QHBoxLayout()
             row.addStretch()
             row.addWidget(clusterButton)
             row.addStretch()
             layout.addLayout(row)
         
         # colour button
-        self.colourButton = QtGui.QPushButton("")
+        self.colourButton = QtWidgets.QPushButton("")
         self.colourButton.setFixedWidth(60)
         self.colourButton.setStyleSheet("QPushButton { background-color: %s }" % self.highlightColour.name())
         self.colourButton.clicked.connect(self.changeHighlighterColour)
         self.colourButton.setAutoDefault(False)
-        self.highlightCheck = QtGui.QCheckBox("Highlight")
+        self.highlightCheck = QtWidgets.QCheckBox("Highlight")
         self.highlightCheck.setChecked(True)
         self.highlightCheck.stateChanged.connect(self.highlightChanged)
         
         # close button
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.addWidget(self.colourButton)
         row.addWidget(self.highlightCheck)
         row.addStretch(1)
-        closeButton = QtGui.QPushButton("Close")
+        closeButton = QtWidgets.QPushButton("Close")
         closeButton.clicked.connect(self.close)
         row.addWidget(closeButton)
         layout.addLayout(row)
@@ -1157,8 +1158,8 @@ class DefectInfoWindow(QtGui.QDialog):
         Return line containing Voronoi volume
         
         """
-        row = QtGui.QHBoxLayout()
-        row.addWidget(QtGui.QLabel("Voronoi volume: %f" % vol))
+        row = QtWidgets.QHBoxLayout()
+        row.addWidget(QtWidgets.QLabel("Voronoi volume: %f" % vol))
         self.mainLayout.addLayout(row)
     
     def highlightChanged(self, state):
@@ -1290,7 +1291,7 @@ class DefectInfoWindow(QtGui.QDialog):
         Change highlighter colour
         
         """
-        col = QtGui.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
+        col = QtWidgets.QColorDialog.getColor(initial=self.highlightColour, title="Set highlighter colour")
         
         if col.isValid():
             self.highlightColour = col

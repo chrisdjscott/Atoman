@@ -14,10 +14,11 @@ from __future__ import unicode_literals
 import functools
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
 
 
-class ActorsOptionsWindow(QtGui.QDialog):
+
+class ActorsOptionsWindow(QtWidgets.QDialog):
     """
     Actors options dialog.
     
@@ -29,7 +30,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
         
         self._filterList = parent
         
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
         self.setWindowTitle("Actors options")
 #         self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
@@ -46,18 +47,18 @@ class ActorsOptionsWindow(QtGui.QDialog):
         self.specularPowerSpins = []
         
         # layout
-        layout = QtGui.QFormLayout(self)
+        layout = QtWidgets.QFormLayout(self)
         self.setLayout(layout)
         
         # draw vectors list widget
-        self.tree = QtGui.QTreeWidget()
+        self.tree = QtWidgets.QTreeWidget()
         self.tree.setColumnCount(4)
         self.tree.itemChanged.connect(self.itemChanged)
         self.tree.setHeaderLabels(("Visibility", "Ambient", "Specular", "Specular power"))
         layout.addRow(self.tree)
         
         # button box
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
         buttonBox.rejected.connect(self.reject)
         layout.addRow(buttonBox)
     
@@ -88,7 +89,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
         
         """
         globalChanges = False
-        it = QtGui.QTreeWidgetItemIterator(self.tree)
+        it = QtWidgets.QTreeWidgetItemIterator(self.tree)
         while it.value():
             item = it.value()
             
@@ -139,13 +140,13 @@ class ActorsOptionsWindow(QtGui.QDialog):
         """
         flt = self._filterList.renderer
         
-        item = QtGui.QTreeWidgetItem(parent)
+        item = QtWidgets.QTreeWidgetItem(parent)
         item.setText(0, name)
         item.setFlags(item.flags() | QtCore.Qt.ItemIsUserCheckable)
         item.setFlags(item.flags() & ~QtCore.Qt.ItemIsSelectable)
         item.setCheckState(0, QtCore.Qt.Checked)
         
-        spin = QtGui.QDoubleSpinBox()
+        spin = QtWidgets.QDoubleSpinBox()
         minval = 0
         maxval = 1
         spin.setMinimum(minval)
@@ -158,7 +159,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
         self.ambientSpins.append(spin)
         self.tree.setItemWidget(item, 1, spin)
         
-        spin = QtGui.QDoubleSpinBox()
+        spin = QtWidgets.QDoubleSpinBox()
         minval = 0
         maxval = 1
         spin.setMinimum(minval)
@@ -171,7 +172,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
         self.specularSpins.append(spin)
         self.tree.setItemWidget(item, 2, spin)
         
-        spin = QtGui.QDoubleSpinBox()
+        spin = QtWidgets.QDoubleSpinBox()
         minval = 0
         maxval = 1000
         spin.setMinimum(minval)

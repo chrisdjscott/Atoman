@@ -16,7 +16,8 @@ from __future__ import unicode_literals
 
 import functools
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+
 
 from .. import genericForm
 import six
@@ -24,7 +25,7 @@ import six
 
 ################################################################################
 
-class DisplayOptionsWindow(QtGui.QDialog):
+class DisplayOptionsWindow(QtWidgets.QDialog):
     """
     Display options dialog.
     
@@ -37,7 +38,7 @@ class DisplayOptionsWindow(QtGui.QDialog):
         self.parent = parent
         self.mainWindow = mainWindow
         
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
         self.setWindowTitle("Filter list %d display options" % self.parent.tab)
 #        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
@@ -57,14 +58,14 @@ class DisplayOptionsWindow(QtGui.QDialog):
         }
         
         # layout 
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
         
         # group box
         scaleFactorGroup = genericForm.GenericForm(self, None, "Atom size scale factor")
         scaleFactorGroup.show()
         
         # scale factor
-        self.atomScaleFactorSpin = QtGui.QDoubleSpinBox()
+        self.atomScaleFactorSpin = QtWidgets.QDoubleSpinBox()
         self.atomScaleFactorSpin.setMinimum(0.1)
         self.atomScaleFactorSpin.setMaximum(2.0)
         self.atomScaleFactorSpin.setSingleStep(0.1)
@@ -73,7 +74,7 @@ class DisplayOptionsWindow(QtGui.QDialog):
         row = scaleFactorGroup.newRow()
         row.addWidget(self.atomScaleFactorSpin)
         
-        self.atomScaleFactorSlider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.atomScaleFactorSlider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self.atomScaleFactorSlider.setMinimum(1)
         self.atomScaleFactorSlider.setMaximum(20)
         self.atomScaleFactorSlider.setSingleStep(1)
@@ -91,12 +92,12 @@ class DisplayOptionsWindow(QtGui.QDialog):
         resGroupBox = genericForm.GenericForm(self, None, "Sphere resolution")
         resGroupBox.show()
         
-        label = QtGui.QLabel("res = a.N^(-b)")
+        label = QtWidgets.QLabel("res = a.N^(-b)")
         row = resGroupBox.newRow()
         row.addWidget(label)
         
-        label = QtGui.QLabel("a = ")
-        self.resASpin = QtGui.QDoubleSpinBox()
+        label = QtWidgets.QLabel("a = ")
+        self.resASpin = QtWidgets.QDoubleSpinBox()
         self.resASpin.setMinimum(1)
         self.resASpin.setMaximum(500)
         self.resASpin.setSingleStep(1)
@@ -105,8 +106,8 @@ class DisplayOptionsWindow(QtGui.QDialog):
         row.addWidget(label)
         row.addWidget(self.resASpin)
         
-        label = QtGui.QLabel("b = ")
-        self.resBSpin = QtGui.QDoubleSpinBox()
+        label = QtWidgets.QLabel("b = ")
+        self.resBSpin = QtWidgets.QDoubleSpinBox()
         self.resBSpin.setMinimum(0.01)
         self.resBSpin.setMaximum(1)
         self.resBSpin.setSingleStep(0.01)
@@ -118,7 +119,7 @@ class DisplayOptionsWindow(QtGui.QDialog):
         # defaults buttons
         self.defaultButtonsDict = {}
         for setting in self.resDefaults:
-            settingButton = QtGui.QPushButton(setting, parent=self)
+            settingButton = QtWidgets.QPushButton(setting, parent=self)
             settingButton.setToolTip("Use default: %s" % setting)
             settingButton.clicked.connect(functools.partial(self.applyDefault, setting))
             settingButton.setAutoDefault(0)
@@ -133,7 +134,7 @@ class DisplayOptionsWindow(QtGui.QDialog):
         self.resBSpin.setValue(self.resB)
         
         # store as default
-        storeDefaultButton = QtGui.QPushButton("Store as default", parent=self)
+        storeDefaultButton = QtWidgets.QPushButton("Store as default", parent=self)
         storeDefaultButton.setToolTip("Store settings as default values")
         storeDefaultButton.setAutoDefault(0)
         storeDefaultButton.clicked.connect(self.storeResSettings)
@@ -142,7 +143,7 @@ class DisplayOptionsWindow(QtGui.QDialog):
         
         layout.addWidget(resGroupBox)
         
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
         buttonBox.rejected.connect(self.reject)
         layout.addWidget(buttonBox)
     

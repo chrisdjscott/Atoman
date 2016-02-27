@@ -24,12 +24,13 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+
 
 
 ################################################################################
 
-class VoronoiOptionsWindow(QtGui.QDialog):
+class VoronoiOptionsWindow(QtWidgets.QDialog):
     """
     Options dialog for Voronoi tessellation.
     
@@ -43,7 +44,7 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         
         self.logger = logging.getLogger(__name__)
         
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
         self.setWindowTitle("Voronoi options")  # filter list id should be in here
 #        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
@@ -58,16 +59,16 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         self.faceAreaThreshold = 0.1
         
         # layout
-        dialogLayout = QtGui.QFormLayout(self)
+        dialogLayout = QtWidgets.QFormLayout(self)
         
         # use radii
-        self.useRadiiCheck = QtGui.QCheckBox()
+        self.useRadiiCheck = QtWidgets.QCheckBox()
         self.useRadiiCheck.stateChanged.connect(self.useRadiiChanged)
         self.useRadiiCheck.setToolTip("Positions are weighted by their radii")
         dialogLayout.addRow("Use radii", self.useRadiiCheck)
         
         # face area threshold
-        faceThreshSpin = QtGui.QDoubleSpinBox()
+        faceThreshSpin = QtWidgets.QDoubleSpinBox()
         faceThreshSpin.setMinimum(0.0)
         faceThreshSpin.setMaximum(1.0)
         faceThreshSpin.setSingleStep(0.1)
@@ -78,30 +79,30 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         dialogLayout.addRow("Face area threshold", faceThreshSpin)
         
         # save to file
-        saveToFileCheck = QtGui.QCheckBox()
+        saveToFileCheck = QtWidgets.QCheckBox()
         saveToFileCheck.stateChanged.connect(self.saveToFileChanged)
         saveToFileCheck.setToolTip("Save Voronoi volumes/number of neighbours to file")
-        filenameEdit = QtGui.QLineEdit(self.outputFilename)
+        filenameEdit = QtWidgets.QLineEdit(self.outputFilename)
         filenameEdit.textChanged.connect(self.filenameChanged)
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.addWidget(saveToFileCheck)
         vbox.addWidget(filenameEdit)
         dialogLayout.addRow("Save to file", vbox)
         
         # break
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         dialogLayout.addRow(line)
         
         # display voronoi cells
-        self.displayVoronoiCheck = QtGui.QCheckBox()
+        self.displayVoronoiCheck = QtWidgets.QCheckBox()
         self.displayVoronoiCheck.stateChanged.connect(self.displayVoronoiToggled)
         self.displayVoronoiCheck.setToolTip("Display the Voronoi cells of the visible atoms")
         dialogLayout.addRow("Display Voronoi cells", self.displayVoronoiCheck)
         
         # opacity
-        self.opacitySpin = QtGui.QDoubleSpinBox()
+        self.opacitySpin = QtWidgets.QDoubleSpinBox()
         self.opacitySpin.setMinimum(0.0)
         self.opacitySpin.setMaximum(1.0)
         self.opacitySpin.setSingleStep(0.01)
@@ -111,7 +112,7 @@ class VoronoiOptionsWindow(QtGui.QDialog):
         dialogLayout.addRow("Opacity", self.opacitySpin)
         
         # button box
-        buttonBox = QtGui.QDialogButtonBox()
+        buttonBox = QtWidgets.QDialogButtonBox()
         dialogLayout.addRow(buttonBox)
         
         # help button

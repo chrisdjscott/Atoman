@@ -17,7 +17,8 @@ import sys
 import logging
 import glob
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 
 from ..visutils.utilities import iconPath, resourcePath
 from ..system import latticeReaderGeneric
@@ -27,7 +28,7 @@ from six.moves import zip
 
 ################################################################################
 
-class GeneralLatticeReaderForm(QtGui.QWidget):
+class GeneralLatticeReaderForm(QtWidgets.QWidget):
     """
     Lattice reader form
     
@@ -43,24 +44,24 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
         
         self.logger = logging.getLogger(__name__)
         
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         
         # lattice reader
         self.latticeReader = latticeReaderGeneric.LatticeReaderGeneric(tmpLocation=self.tmpLocation, updateProgress=self.mainWindow.updateProgress, 
                                                                        hideProgress=self.mainWindow.hideProgressBar)
         
         # open dialog
-        self.openLatticeButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "File dialog")
+        self.openLatticeButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "File dialog")
         self.openLatticeButton.setToolTip("Open file dialog")
         self.openLatticeButton.setCheckable(0)
         self.openLatticeButton.clicked.connect(self.openFileDialog)
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.setAlignment(QtCore.Qt.AlignHCenter)
         hbox.addWidget(self.openLatticeButton)
         
         # sftp browser
         if hasattr(self.loadSystemForm, "sftp_browser"):
-            openSFTPBrowserButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open-remote.png')), "SFTP browser")
+            openSFTPBrowserButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open-remote.png')), "SFTP browser")
             openSFTPBrowserButton.setToolTip("Open SFTP browser")
             openSFTPBrowserButton.setCheckable(0)
             openSFTPBrowserButton.clicked.connect(self.openSFTPBrowser)
@@ -120,19 +121,21 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             self.logger.error("No file formats have been defined")
             return
         
-        fdiag = QtGui.QFileDialog()
+        fdiag = QtWidgets.QFileDialog()
         
         # open the dialog
-        filenames = fdiag.getOpenFileNames(parent=self, caption="Open file", dir=os.getcwd(), options=QtGui.QFileDialog.DontResolveSymlinks)[0]
+        self.logger.debug("Getting filenames to open")
+        filenames = fdiag.getOpenFileNames(parent=self, caption="Open file", directory=os.getcwd(), options=QtWidgets.QFileDialog.DontResolveSymlinks)[0]
         filenames = [str(fn) for fn in filenames]
+        self.logger.debug("Filenames: %r", filenames)
         
         if not len(filenames):
             return None
         
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         try:
             for filename in filenames:
-                nwd, filename = os.path.split(filename)        
+                nwd, filename = os.path.split(filename)
                 
                 # change to new working directory
                 if nwd != os.getcwd():
@@ -147,7 +150,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
                     break
         
         finally:
-            QtGui.QApplication.restoreOverrideCursor()
+            QtWidgets.QApplication.restoreOverrideCursor()
         
         return result
     
@@ -235,14 +238,14 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             items = [item[0] for item in availableSystems]
             
             # open dialog
-            QtGui.QApplication.restoreOverrideCursor()
-            QtGui.QApplication.processEvents()
+            QtWidgets.QApplication.restoreOverrideCursor()
+            QtWidgets.QApplication.processEvents()
             dlg = SelectLinkedLatticeDialog(properName, items, parent=self)
             status = dlg.exec_()
-            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-            QtGui.QApplication.processEvents()
+            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            QtWidgets.QApplication.processEvents()
             
-            if status == QtGui.QDialog.Accepted:
+            if status == QtWidgets.QDialog.Accepted:
                 index = dlg.combo.currentIndex()
                 latticeDisplayName, lattice = availableSystems[index]
                 self.logger.debug("User selected linked lattice %d: '%s'", index, latticeDisplayName)
@@ -320,12 +323,12 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
             self.logger.debug("Found %d possible file formats", len(matchedFormats))
             
             # open dialog
-            QtGui.QApplication.restoreOverrideCursor()
-            QtGui.QApplication.processEvents()
+            QtWidgets.QApplication.restoreOverrideCursor()
+            QtWidgets.QApplication.processEvents()
             items = [fmt.name for fmt in matchedFormats]
-            name, ok = QtGui.QInputDialog.getItem(self, "Select file format", "File '%s'" % properName, items, editable=False)
-            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-            QtGui.QApplication.processEvents()
+            name, ok = QtWidgets.QInputDialog.getItem(self, "Select file format", "File '%s'" % properName, items, editable=False)
+            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            QtWidgets.QApplication.processEvents()
             
             if ok:
                 self.logger.debug("User selected format '%s'", name)
@@ -343,7 +346,7 @@ class GeneralLatticeReaderForm(QtGui.QWidget):
 
 ################################################################################
 
-class SelectLinkedLatticeDialog(QtGui.QDialog):
+class SelectLinkedLatticeDialog(QtWidgets.QDialog):
     """
     Select linked lattice from a list
     
@@ -354,17 +357,17 @@ class SelectLinkedLatticeDialog(QtGui.QDialog):
         self.setWindowTitle("Select linked Lattice")
         
         # layout
-        layout = QtGui.QFormLayout()
+        layout = QtWidgets.QFormLayout()
         self.setLayout(layout)
         
         # combo box
-        self.combo = QtGui.QComboBox()
+        self.combo = QtWidgets.QComboBox()
         self.combo.addItems(items)
         self.combo.setCurrentIndex(self.combo.count() - 1)
         layout.addRow("File '{0}'".format(filename), self.combo)
         
         # buttons
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout.addRow(buttonBox)

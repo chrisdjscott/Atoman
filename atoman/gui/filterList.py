@@ -12,7 +12,8 @@ import functools
 import copy
 import traceback
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 
 from ..visutils.utilities import iconPath
 from ..filtering import filterer
@@ -30,7 +31,7 @@ from ..rendering import filterListRenderer
 from six.moves import range
 
 
-class FilterListWidgetItem(QtGui.QListWidgetItem):
+class FilterListWidgetItem(QtWidgets.QListWidgetItem):
     """
     Item that goes in the filter list
     
@@ -43,7 +44,7 @@ class FilterListWidgetItem(QtGui.QListWidgetItem):
         self.setText(filterName)
 
 
-class OptionsListItem(QtGui.QListWidgetItem):
+class OptionsListItem(QtWidgets.QListWidgetItem):
     """
     Item that goes in the options list
     
@@ -54,7 +55,7 @@ class OptionsListItem(QtGui.QListWidgetItem):
         self.dialog = dialog
 
 
-class FilterList(QtGui.QWidget):
+class FilterList(QtWidgets.QWidget):
     """
     Filter list widget
     
@@ -83,13 +84,13 @@ class FilterList(QtGui.QWidget):
         self.visible = True
         
         # layout
-        self.filterListLayout = QtGui.QVBoxLayout(self)
+        self.filterListLayout = QtWidgets.QVBoxLayout(self)
         self.filterListLayout.setSpacing(0)
         
         # add the top set of buttons
         
         # visibility of filter list
-        self.visibleButton = QtGui.QPushButton(QtGui.QIcon(iconPath("eye-ava.svg")), "")
+        self.visibleButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("eye-ava.svg")), "")
         self.visibleButton.setFixedWidth(35)
         self.visibleButton.setStatusTip("Visible")
         self.visibleButton.setToolTip("Visible")
@@ -98,14 +99,14 @@ class FilterList(QtGui.QWidget):
         self.visibleButton.clicked.connect(self.visibilityChanged)
         
         # trash the list
-        trashButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-delete.png")), "")
+        trashButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-delete.png")), "")
         trashButton.setStatusTip("Delete property/filter list")
         trashButton.setToolTip("Delete property/filter list")
         trashButton.setFixedWidth(35)
         trashButton.clicked.connect(self.filterTab.removeFilterList)
         
         # drift compenstation
-        self.driftCompButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/Drift.jpg")), "")
+        self.driftCompButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("other/Drift.jpg")), "")
         self.driftCompButton.setStatusTip("Drift compensation")
         self.driftCompButton.setToolTip("Drift compensation")
         self.driftCompButton.setFixedWidth(35)
@@ -115,7 +116,7 @@ class FilterList(QtGui.QWidget):
         self.driftCompensation = False
         
         # static list button
-        self.staticListButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/object-unlocked.png")), "")
+        self.staticListButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/object-unlocked.png")), "")
         self.staticListButton.setFixedWidth(35)
         self.staticListButton.setStatusTip("Freeze property/filter list")
         self.staticListButton.setToolTip("Freeze property/filter list")
@@ -124,7 +125,7 @@ class FilterList(QtGui.QWidget):
         self.staticListButton.clicked.connect(self.staticListButtonClicked)
         
         # show scalar bar
-        self.scalarBarButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/color-spectrum-hi.png")), "")
+        self.scalarBarButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("other/color-spectrum-hi.png")), "")
         self.scalarBarButton.setFixedWidth(35)
         self.scalarBarButton.setStatusTip("Show scalar bar")
         self.scalarBarButton.setToolTip("Show scalar bar")
@@ -133,23 +134,23 @@ class FilterList(QtGui.QWidget):
         self.scalarBarButton.clicked.connect(self.toggleScalarBar)
         
         # set up the row of buttons
-        row1 = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row1)
+        row1 = QtWidgets.QWidget()
+        rowLayout = QtWidgets.QHBoxLayout(row1)
         rowLayout.setAlignment(QtCore.Qt.AlignLeft)
         rowLayout.addWidget(self.visibleButton)
         rowLayout.addWidget(trashButton)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
-        row2 = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row2)
+        row2 = QtWidgets.QWidget()
+        rowLayout = QtWidgets.QHBoxLayout(row2)
         rowLayout.setAlignment(QtCore.Qt.AlignRight)
         rowLayout.addWidget(self.driftCompButton)
         rowLayout.addWidget(self.staticListButton)
         rowLayout.addWidget(self.scalarBarButton)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
-        row3 = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row3)
+        row3 = QtWidgets.QWidget()
+        rowLayout = QtWidgets.QHBoxLayout(row3)
         rowLayout.addWidget(row1)
         rowLayout.addWidget(row2)
         rowLayout.setContentsMargins(0, 0, 0, 0)
@@ -157,35 +158,35 @@ class FilterList(QtGui.QWidget):
         self.filterListLayout.addWidget(row3)
         
         # Now add the list widget
-        self.listItems = QtGui.QListWidget(self)
+        self.listItems = QtWidgets.QListWidget(self)
         self.listItems.setFixedHeight(120)
         self.listItems.itemDoubleClicked.connect(self.openFilterSettings)
         self.listItems.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.listItems.customContextMenuRequested.connect(self.showListWidgetContextMenu)
         self.listItems.setDragEnabled(True)
-        self.listItems.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+        self.listItems.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.filterListLayout.addWidget(self.listItems)
         
         # quick add combo
-        self.quickAddCombo = QtGui.QComboBox()
+        self.quickAddCombo = QtWidgets.QComboBox()
         self.quickAddCombo.addItem("Add property/filter ...")
         self.quickAddCombo.addItems(filterer.Filterer.defaultFilters)
         self.allFilters = copy.deepcopy(filterer.Filterer.defaultFilters)
         self.quickAddCombo.currentIndexChanged[str].connect(self.quickAddComboAction)
         
         # clear list button
-        clearList = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-clear.png")), "")
+        clearList = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-clear.png")), "")
         clearList.setStatusTip("Clear current property/filter list")
         clearList.setToolTip("Clear current property/filter list")
         clearList.clicked.connect(self.clearList)
         
         # apply list button
-        applyList = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/view-refresh.png")), "")
+        applyList = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/view-refresh.png")), "")
         applyList.setStatusTip("Apply current property/filter list")
         applyList.setToolTip("Apply current property/filter list")
         applyList.clicked.connect(self.applyList)
         
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.setAlignment(QtCore.Qt.AlignHCenter)
         row.addWidget(self.quickAddCombo)
         row.addStretch()
@@ -194,15 +195,15 @@ class FilterList(QtGui.QWidget):
         self.filterListLayout.addLayout(row)
         
         # add other option like colour by height etc
-        extraOptionsGroupBox = QtGui.QGroupBox("Additional filter list options")
+        extraOptionsGroupBox = QtWidgets.QGroupBox("Additional filter list options")
         extraOptionsGroupBox.setAlignment(QtCore.Qt.AlignHCenter)
         
-        groupLayout = QtGui.QVBoxLayout(extraOptionsGroupBox)
+        groupLayout = QtWidgets.QVBoxLayout(extraOptionsGroupBox)
         groupLayout.setAlignment(QtCore.Qt.AlignTop)
         groupLayout.setContentsMargins(0, 0, 0, 0)
         groupLayout.setSpacing(0)
         
-        self.optionsList = QtGui.QListWidget()
+        self.optionsList = QtWidgets.QListWidget()
         self.optionsList.itemClicked.connect(self.optionsListItemClicked)
         self.optionsList.setSelectionMode(self.optionsList.NoSelection)
         self.optionsList.setFixedHeight(120)
@@ -351,17 +352,17 @@ class FilterList(QtGui.QWidget):
             logger.debug("  Showing context menu for item at row: %d", index)
             
             # context menu
-            menu = QtGui.QMenu(self)
+            menu = QtWidgets.QMenu(self)
             
             # make actions
             # edit action
-            editAction = QtGui.QAction("Edit settings", self)
+            editAction = QtWidgets.QAction("Edit settings", self)
             editAction.setToolTip("Edit settings")
             editAction.setStatusTip("Edit settings")
             editAction.triggered.connect(functools.partial(self.openFilterSettings, item))
             
             # removee action
-            removeAction = QtGui.QAction("Remove from list", self)
+            removeAction = QtWidgets.QAction("Remove from list", self)
             removeAction.setToolTip("Remove from list")
             removeAction.setStatusTip("Remove from list")
             removeAction.triggered.connect(functools.partial(self.removeFilter, index))
@@ -626,11 +627,11 @@ class FilterList(QtGui.QWidget):
         else:
             message = "The 'Point defects' filter must be added to the filter list first"
         
-        msgBox = QtGui.QMessageBox(self)
+        msgBox = QtWidgets.QMessageBox(self)
         msgBox.setText(message)
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-        msgBox.setIcon(QtGui.QMessageBox.Warning)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgBox.setIcon(QtWidgets.QMessageBox.Warning)
         msgBox.exec_()
     
     def warnBubblesFilter(self, name=None):
@@ -643,11 +644,11 @@ class FilterList(QtGui.QWidget):
         else:
             message = "The 'Bubbles' filter must be added to the filter list first"
         
-        msgBox = QtGui.QMessageBox(self)
+        msgBox = QtWidgets.QMessageBox(self)
         msgBox.setText(message)
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-        msgBox.setIcon(QtGui.QMessageBox.Warning)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgBox.setIcon(QtWidgets.QMessageBox.Warning)
         msgBox.exec_()
     
     def warnDisplacementFilter(self):
@@ -657,11 +658,11 @@ class FilterList(QtGui.QWidget):
         """
         message = "The Displacement filter can only be used when the reference and input number of atoms match!"
         
-        msgBox = QtGui.QMessageBox(self)
+        msgBox = QtWidgets.QMessageBox(self)
         msgBox.setText(message)
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-        msgBox.setIcon(QtGui.QMessageBox.Warning)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgBox.setIcon(QtWidgets.QMessageBox.Warning)
         msgBox.exec_()
     
     def refreshAvailableFilters(self):

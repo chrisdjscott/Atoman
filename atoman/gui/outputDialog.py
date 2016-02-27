@@ -20,7 +20,8 @@ import datetime
 import time
 
 import numpy as np
-from PySide import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 from PIL import Image
 
 from ..visutils import utilities
@@ -35,7 +36,7 @@ import six
 from six.moves import range
 
 
-class OutputDialog(QtGui.QDialog):
+class OutputDialog(QtWidgets.QDialog):
     def __init__(self, parent, mainWindow, width, index):
         super(OutputDialog, self).__init__(parent)
         
@@ -52,20 +53,20 @@ class OutputDialog(QtGui.QDialog):
         self.resize(QtCore.QSize(350, 600))
         
         # layout
-        outputTabLayout = QtGui.QVBoxLayout(self)
+        outputTabLayout = QtWidgets.QVBoxLayout(self)
         outputTabLayout.setContentsMargins(0, 0, 0, 0)
         outputTabLayout.setSpacing(0)
         outputTabLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # add tab bar
-        self.outputTypeTabBar = QtGui.QTabWidget(self)
-        self.outputTypeTabBar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.outputTypeTabBar = QtWidgets.QTabWidget(self)
+        self.outputTypeTabBar.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
         # add tabs to tab bar
         
         # image tab
-        imageTabWidget = QtGui.QWidget()
-        imageTabLayout = QtGui.QVBoxLayout(imageTabWidget)
+        imageTabWidget = QtWidgets.QWidget()
+        imageTabLayout = QtWidgets.QVBoxLayout(imageTabWidget)
         imageTabLayout.setContentsMargins(0, 0, 0, 0)
         
         self.imageTab = ImageTab(self, self.mainWindow, self.width)
@@ -74,8 +75,8 @@ class OutputDialog(QtGui.QDialog):
         self.outputTypeTabBar.addTab(imageTabWidget, "Image")
         
         # file tab
-        fileTabWidget = QtGui.QWidget()
-        fileTabLayout = QtGui.QVBoxLayout(fileTabWidget)
+        fileTabWidget = QtWidgets.QWidget()
+        fileTabLayout = QtWidgets.QVBoxLayout(fileTabWidget)
         fileTabLayout.setContentsMargins(0, 0, 0, 0)
         
         self.fileTab = FileTab(self, self.mainWindow, self.width)
@@ -108,12 +109,12 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
         self.currentPlots = {}
         
         # add combo box
-        self.scalarsCombo = QtGui.QComboBox()
+        self.scalarsCombo = QtWidgets.QComboBox()
         self.scalarsCombo.currentIndexChanged[int].connect(self.scalarsComboChanged)
         self.newRow().addWidget(self.scalarsCombo)
         
         # add stacked widget
-        self.stackedWidget = QtGui.QStackedWidget()
+        self.stackedWidget = QtWidgets.QStackedWidget()
         self.newRow().addWidget(self.stackedWidget)
         
         self.logger = logging.getLogger(__name__ + ".ScalarsHistogramOptionsForm")
@@ -285,7 +286,7 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
             self.hide()
 
 
-class PlotTab(QtGui.QWidget):
+class PlotTab(QtWidgets.QWidget):
     """
     Plot tab
     
@@ -297,7 +298,7 @@ class PlotTab(QtGui.QWidget):
         self.rendererWindow = rendererWindow
         
         # layout
-        self.layout = QtGui.QVBoxLayout(self)
+        self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.setAlignment(QtCore.Qt.AlignTop)
         self.layout.setSpacing(0)
         
@@ -356,25 +357,25 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         
         # stats labels
         row = self.newRow()
-        row.addWidget(QtGui.QLabel("Min: %f" % self.scalarMin))
+        row.addWidget(QtWidgets.QLabel("Min: %f" % self.scalarMin))
         row = self.newRow()
-        row.addWidget(QtGui.QLabel("Max: %f" % self.scalarMax))
+        row.addWidget(QtWidgets.QLabel("Max: %f" % self.scalarMax))
         row = self.newRow()
-        row.addWidget(QtGui.QLabel("Mean: %f" % self.scalarMean))
+        row.addWidget(QtWidgets.QLabel("Mean: %f" % self.scalarMean))
         row = self.newRow()
-        row.addWidget(QtGui.QLabel("STD: %f; SE: %f" % (self.scalarSTD, self.scalarSE)))
+        row.addWidget(QtWidgets.QLabel("STD: %f; SE: %f" % (self.scalarSTD, self.scalarSE)))
         
         # num bins/bin width combo
-        binCombo = QtGui.QComboBox()
+        binCombo = QtWidgets.QComboBox()
         binCombo.addItem("Number of bins:")
         binCombo.addItem("Bin width:")
         binCombo.currentIndexChanged[int].connect(self.binComboChanged)
         
         # bin stack
-        self.binStack = QtGui.QStackedWidget()
+        self.binStack = QtWidgets.QStackedWidget()
         
         # number of bins spin
-        numBinsSpin = QtGui.QSpinBox()
+        numBinsSpin = QtWidgets.QSpinBox()
         numBinsSpin.setMinimum(2)
         numBinsSpin.setMaximum(999)
         numBinsSpin.setSingleStep(1)
@@ -383,7 +384,7 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         self.binStack.addWidget(numBinsSpin)
         
         # bin width spin
-        binWidthSpin = QtGui.QDoubleSpinBox()
+        binWidthSpin = QtWidgets.QDoubleSpinBox()
         binWidthSpin.setMinimum(0.01)
         binWidthSpin.setMaximum(99.99)
         binWidthSpin.setSingleStep(0.1)
@@ -399,14 +400,14 @@ class GenericHistogramPlotForm(genericForm.GenericForm):
         row.addWidget(self.binStack)
         
         # show as fraction option
-        showAsFractionCheck = QtGui.QCheckBox("Show as fraction")
+        showAsFractionCheck = QtWidgets.QCheckBox("Show as fraction")
         showAsFractionCheck.setCheckState(QtCore.Qt.Unchecked)
         showAsFractionCheck.stateChanged.connect(self.showAsFractionChanged)
         row = self.newRow()
         row.addWidget(showAsFractionCheck)
         
         # plot button
-        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")), "Plot")
+        plotButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")), "Plot")
         plotButton.clicked.connect(self.makePlot)
         row = self.newRow()
         row.addWidget(plotButton)
@@ -541,29 +542,29 @@ class RDFForm(genericForm.GenericForm):
         self.binWidth = 0.1
         
         # bond type
-        label = QtGui.QLabel("Bond type:")
+        label = QtWidgets.QLabel("Bond type:")
         row = self.newRow()
         row.addWidget(label)
         
-        self.spec1Combo = QtGui.QComboBox()
+        self.spec1Combo = QtWidgets.QComboBox()
         self.spec1Combo.addItem("ALL")
         self.spec1Combo.currentIndexChanged[str].connect(self.spec1Changed)
         row.addWidget(self.spec1Combo)
         
-        label = QtGui.QLabel(" - ")
+        label = QtWidgets.QLabel(" - ")
         row.addWidget(label)
         
-        self.spec2Combo = QtGui.QComboBox()
+        self.spec2Combo = QtWidgets.QComboBox()
         self.spec2Combo.addItem("ALL")
         self.spec2Combo.currentIndexChanged[str].connect(self.spec2Changed)
         row.addWidget(self.spec2Combo)
         
         # bin range
-        label = QtGui.QLabel("Bin range:")
+        label = QtWidgets.QLabel("Bin range:")
         row = self.newRow()
         row.addWidget(label)
         
-        binMinSpin = QtGui.QDoubleSpinBox()
+        binMinSpin = QtWidgets.QDoubleSpinBox()
         binMinSpin.setMinimum(0.0)
         binMinSpin.setMaximum(500.0)
         binMinSpin.setSingleStep(1.0)
@@ -571,10 +572,10 @@ class RDFForm(genericForm.GenericForm):
         binMinSpin.valueChanged.connect(self.binMinChanged)
         row.addWidget(binMinSpin)
         
-        label = QtGui.QLabel(" - ")
+        label = QtWidgets.QLabel(" - ")
         row.addWidget(label)
         
-        binMaxSpin = QtGui.QDoubleSpinBox()
+        binMaxSpin = QtWidgets.QDoubleSpinBox()
         binMaxSpin.setMinimum(0.0)
         binMaxSpin.setMaximum(500.0)
         binMaxSpin.setSingleStep(1.0)
@@ -583,11 +584,11 @@ class RDFForm(genericForm.GenericForm):
         row.addWidget(binMaxSpin)
         
         # num bins
-        label = QtGui.QLabel("Bin width:")
+        label = QtWidgets.QLabel("Bin width:")
         row = self.newRow()
         row.addWidget(label)
         
-        binWidthSpin = QtGui.QDoubleSpinBox()
+        binWidthSpin = QtWidgets.QDoubleSpinBox()
         binWidthSpin.setMinimum(0.01)
         binWidthSpin.setMaximum(1.00)
         binWidthSpin.setSingleStep(0.1)
@@ -596,7 +597,7 @@ class RDFForm(genericForm.GenericForm):
         row.addWidget(binWidthSpin)
         
         # plot button
-        plotButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")), "Plot")
+        plotButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/office-chart-bar.png")), "Plot")
         plotButton.clicked.connect(self.plotRDF)
         row = self.newRow()
         row.addWidget(plotButton)
@@ -754,7 +755,7 @@ class RDFForm(genericForm.GenericForm):
         self.spec2 = str(text)
     
 
-class FileTab(QtGui.QWidget):
+class FileTab(QtWidgets.QWidget):
     """
     File output tab.
     
@@ -772,7 +773,7 @@ class FileTab(QtGui.QWidget):
         self.writeFullLattice = True
         
         # layout
-        mainLayout = QtGui.QVBoxLayout(self)
+        mainLayout = QtWidgets.QVBoxLayout(self)
         mainLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # name group
@@ -780,21 +781,21 @@ class FileTab(QtGui.QWidget):
         fileNameGroup.show()
         
         # file type
-        outputTypeCombo = QtGui.QComboBox()
+        outputTypeCombo = QtWidgets.QComboBox()
         outputTypeCombo.addItem("LATTICE")
 #         outputTypeCombo.addItem("LBOMD REF")
 #         outputTypeCombo.addItem("LBOMD XYZ")
 #         outputTypeCombo.addItem("LBOMD FAILSAFE")
         outputTypeCombo.currentIndexChanged[str].connect(self.outputTypeChanged)
         
-        label = QtGui.QLabel("File type: ")
+        label = QtWidgets.QLabel("File type: ")
         
         row = fileNameGroup.newRow()
         row.addWidget(label)
         row.addWidget(outputTypeCombo)
         
         # option to write full lattice
-        fullLatticeCheck = QtGui.QCheckBox("Write full lattice (not just visible)")
+        fullLatticeCheck = QtWidgets.QCheckBox("Write full lattice (not just visible)")
         fullLatticeCheck.setCheckState(QtCore.Qt.Checked)
         fullLatticeCheck.stateChanged.connect(self.fullLatticeCheckChanged)
         
@@ -804,10 +805,10 @@ class FileTab(QtGui.QWidget):
         # file name, save image button
         row = fileNameGroup.newRow()
         
-        label = QtGui.QLabel("File name: ")
-        self.outputFileName = QtGui.QLineEdit("lattice.dat")
+        label = QtWidgets.QLabel("File name: ")
+        self.outputFileName = QtWidgets.QLineEdit("lattice.dat")
         self.outputFileName.setFixedWidth(120)
-        saveFileButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/document-save.png")), "")
+        saveFileButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/document-save.png")), "")
         saveFileButton.setToolTip("Save to file")
         saveFileButton.clicked.connect(self.saveToFile)
         
@@ -818,7 +819,7 @@ class FileTab(QtGui.QWidget):
         # dialog
         row = fileNameGroup.newRow()
         
-        saveFileDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "Save to file")
+        saveFileDialogButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "Save to file")
         saveFileDialogButton.setToolTip("Save to file")
         saveFileDialogButton.setCheckable(0)
         saveFileDialogButton.setFixedWidth(150)
@@ -827,7 +828,7 @@ class FileTab(QtGui.QWidget):
         row.addWidget(saveFileDialogButton)
         
         # overwrite
-        self.overwriteCheck = QtGui.QCheckBox("Overwrite")
+        self.overwriteCheck = QtWidgets.QCheckBox("Overwrite")
         
         row = fileNameGroup.newRow()
         row.addWidget(self.overwriteCheck)
@@ -875,7 +876,7 @@ class FileTab(QtGui.QWidget):
         Open dialog.
         
         """
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')[0]
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', '.')[0][0]
         
         if len(filename):
             self.outputFileName.setText(str(filename))
@@ -889,7 +890,7 @@ class FileTab(QtGui.QWidget):
         self.outputFileType = str(fileType)
 
 
-class ImageTab(QtGui.QWidget):
+class ImageTab(QtWidgets.QWidget):
     def __init__(self, parent, mainWindow, width):
         super(ImageTab, self).__init__(parent)
         
@@ -905,37 +906,37 @@ class ImageTab(QtGui.QWidget):
         self.imageFormat = "jpg"
 #        self.overlayImage = False
         
-        imageTabLayout = QtGui.QVBoxLayout(self)
+        imageTabLayout = QtWidgets.QVBoxLayout(self)
 #        imageTabLayout.setContentsMargins(0, 0, 0, 0)
 #        imageTabLayout.setSpacing(0)
         imageTabLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # Add the generic image options at the top
-        group = QtGui.QGroupBox("Image options")
+        group = QtWidgets.QGroupBox("Image options")
         group.setAlignment(QtCore.Qt.AlignHCenter)
         
-        groupLayout = QtGui.QVBoxLayout(group)
+        groupLayout = QtWidgets.QVBoxLayout(group)
         groupLayout.setContentsMargins(0, 0, 0, 0)
         groupLayout.setSpacing(0)
         
         # render type (povray or vtk)
-        renderTypeButtonGroup = QtGui.QButtonGroup(self)
+        renderTypeButtonGroup = QtWidgets.QButtonGroup(self)
         renderTypeButtonGroup.setExclusive(1)
         renderTypeButtonGroup.buttonClicked[int].connect(self.setRenderType)
         
-        self.POVButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/pov-icon.svg")), "POV-Ray")
+        self.POVButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("other/pov-icon.svg")), "POV-Ray")
         self.POVButton.setCheckable(1)
         self.POVButton.setChecked(0)
         
-        self.VTKButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/vtk-icon.svg")), "VTK")
+        self.VTKButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("other/vtk-icon.svg")), "VTK")
         self.VTKButton.setCheckable(1)
         self.VTKButton.setChecked(1)
         
         renderTypeButtonGroup.addButton(self.VTKButton)
         renderTypeButtonGroup.addButton(self.POVButton)
         
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignTop)
         rowLayout.addWidget(self.VTKButton)
         rowLayout.addWidget(self.POVButton)
@@ -943,18 +944,18 @@ class ImageTab(QtGui.QWidget):
         groupLayout.addWidget(row)
         
         # image format
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        imageFormatButtonGroup = QtGui.QButtonGroup(self)
+        imageFormatButtonGroup = QtWidgets.QButtonGroup(self)
         imageFormatButtonGroup.setExclusive(1)
         imageFormatButtonGroup.buttonClicked[int].connect(self.setImageFormat)
         
-        self.JPEGCheck = QtGui.QCheckBox("JPEG")
+        self.JPEGCheck = QtWidgets.QCheckBox("JPEG")
         self.JPEGCheck.setChecked(1)
-        self.PNGCheck = QtGui.QCheckBox("PNG")
-        self.TIFFCheck = QtGui.QCheckBox("TIFF")
+        self.PNGCheck = QtWidgets.QCheckBox("PNG")
+        self.TIFFCheck = QtWidgets.QCheckBox("TIFF")
         
         imageFormatButtonGroup.addButton(self.JPEGCheck)
         imageFormatButtonGroup.addButton(self.PNGCheck)
@@ -967,8 +968,8 @@ class ImageTab(QtGui.QWidget):
         groupLayout.addWidget(row)
         
         # additional (POV-Ray) options
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
         groupLayout.addWidget(row)
@@ -976,26 +977,26 @@ class ImageTab(QtGui.QWidget):
         imageTabLayout.addWidget(group)
         
         # tab bar for different types of image output
-        self.imageTabBar = QtGui.QTabWidget(self)
-        self.imageTabBar.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.imageTabBar = QtWidgets.QTabWidget(self)
+        self.imageTabBar.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
         # add tabs to tab bar
-        singleImageTabWidget = QtGui.QWidget()
-        singleImageTabLayout = QtGui.QVBoxLayout(singleImageTabWidget)
+        singleImageTabWidget = QtWidgets.QWidget()
+        singleImageTabLayout = QtWidgets.QVBoxLayout(singleImageTabWidget)
         singleImageTabLayout.setContentsMargins(0, 0, 0, 0)
         self.singleImageTab = SingleImageTab(self, self.mainWindow, self.width)
         singleImageTabLayout.addWidget(self.singleImageTab)
         self.imageTabBar.addTab(singleImageTabWidget, "Single")
         
-        imageSequenceTabWidget = QtGui.QWidget()
-        imageSequenceTabLayout = QtGui.QVBoxLayout(imageSequenceTabWidget)
+        imageSequenceTabWidget = QtWidgets.QWidget()
+        imageSequenceTabLayout = QtWidgets.QVBoxLayout(imageSequenceTabWidget)
         imageSequenceTabLayout.setContentsMargins(0, 0, 0, 0)
         self.imageSequenceTab = ImageSequenceTab(self, self.mainWindow, self.width)
         imageSequenceTabLayout.addWidget(self.imageSequenceTab)
         self.imageTabBar.addTab(imageSequenceTabWidget, "Sequence")
         
-        imageRotateTabWidget = QtGui.QWidget()
-        imageRotateTabLayout = QtGui.QVBoxLayout(imageRotateTabWidget)
+        imageRotateTabWidget = QtWidgets.QWidget()
+        imageRotateTabLayout = QtWidgets.QVBoxLayout(imageRotateTabWidget)
         imageRotateTabLayout.setContentsMargins(0, 0, 0, 0)
         self.imageRotateTab = ImageRotateTab(self, self.mainWindow, self.width)
         imageRotateTabLayout.addWidget(self.imageRotateTab)
@@ -1095,8 +1096,8 @@ class MovieGenerator(QtCore.QObject):
     Call ffmpeg to generate a movie
     
     """
-    log = QtCore.Signal(str, str)
-    allDone = QtCore.Signal()
+    log = QtCore.pyqtSignal(str, str)
+    allDone = QtCore.pyqtSignal()
     
     def __init__(self):
         super(MovieGenerator, self).__init__()
@@ -1171,7 +1172,7 @@ class MovieGenerator(QtCore.QObject):
             self.allDone.emit()
 
 
-class SingleImageTab(QtGui.QWidget):
+class SingleImageTab(QtWidgets.QWidget):
     def __init__(self, parent, mainWindow, width):
         super(SingleImageTab, self).__init__(parent)
         
@@ -1185,21 +1186,21 @@ class SingleImageTab(QtGui.QWidget):
         self.openImage = 1
         
         # layout
-        mainLayout = QtGui.QVBoxLayout(self)
+        mainLayout = QtWidgets.QVBoxLayout(self)
 #        mainLayout.setContentsMargins(0, 0, 0, 0)
 #        mainLayout.setSpacing(0)
         mainLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # file name, save image button
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
-        label = QtGui.QLabel("File name")
-        self.imageFileName = QtGui.QLineEdit("image")
+        label = QtWidgets.QLabel("File name")
+        self.imageFileName = QtWidgets.QLineEdit("image")
         self.imageFileName.setFixedWidth(120)
-        saveImageButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/document-save.png")), "")
+        saveImageButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/document-save.png")), "")
         saveImageButton.setToolTip("Save image")
         saveImageButton.clicked.connect(functools.partial(self.saveSingleImage, True))
         
@@ -1210,12 +1211,12 @@ class SingleImageTab(QtGui.QWidget):
         mainLayout.addWidget(row)
         
         # dialog
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         
-        saveImageDialogButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "Save image")
+        saveImageDialogButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath('oxygen/document-open.png')), "Save image")
         saveImageDialogButton.setToolTip("Save image")
         saveImageDialogButton.setCheckable(0)
         saveImageDialogButton.setFixedWidth(150)
@@ -1226,16 +1227,16 @@ class SingleImageTab(QtGui.QWidget):
         mainLayout.addWidget(row)
         
         # options
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        self.overwriteCheck = QtGui.QCheckBox("Overwrite")
+        self.overwriteCheck = QtWidgets.QCheckBox("Overwrite")
         self.overwriteCheck.stateChanged[int].connect(self.overwriteCheckChanged)
         
-        self.openImageCheck = QtGui.QCheckBox("Open image")
+        self.openImageCheck = QtWidgets.QCheckBox("Open image")
         self.openImageCheck.setChecked(True)
         self.openImageCheck.stateChanged[int].connect(self.openImageCheckChanged)
         
@@ -1249,7 +1250,7 @@ class SingleImageTab(QtGui.QWidget):
         Open dialog to get save file name
         
         """
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save File', '.')[0]
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', '.')[0][0]
         
         if len(filename):
             self.imageFileName.setText(str(filename))
@@ -1277,13 +1278,13 @@ class SingleImageTab(QtGui.QWidget):
         
         # show progress dialog
         if showProgress and self.parent.renderType == "POV":
-            progress = QtGui.QProgressDialog(parent=self)
+            progress = QtWidgets.QProgressDialog(parent=self)
             progress.setWindowModality(QtCore.Qt.WindowModal)
             progress.setWindowTitle("Busy")
             progress.setLabelText("Running POV-Ray...")
             progress.setRange(0, 0)
             progress.setMinimumDuration(0)
-            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
             progress.show()
         
         filename = self.rendererWindow.renderer.saveImage(self.parent.renderType, self.parent.imageFormat,
@@ -1291,7 +1292,7 @@ class SingleImageTab(QtGui.QWidget):
         
         # hide progress dialog
         if showProgress and self.parent.renderType == "POV":
-            QtGui.QApplication.restoreOverrideCursor()
+            QtWidgets.QApplication.restoreOverrideCursor()
             progress.cancel()
         
         if filename is None:
@@ -1332,7 +1333,7 @@ class SingleImageTab(QtGui.QWidget):
             self.overwriteImage = 0
 
 
-class CreateMovieBox(QtGui.QGroupBox):
+class CreateMovieBox(QtWidgets.QGroupBox):
     """
     Create movie settings
     
@@ -1351,33 +1352,33 @@ class CreateMovieBox(QtGui.QGroupBox):
         self.suffix = "mp4"
         
         # layout
-        self.contentLayout = QtGui.QVBoxLayout(self)
+        self.contentLayout = QtWidgets.QVBoxLayout(self)
         self.contentLayout.setContentsMargins(0, 0, 0, 0)
         self.contentLayout.setSpacing(0)
         
         # framerate
         rowLayout = self.newRow()
         
-        label = QtGui.QLabel("Framerate:")
+        label = QtWidgets.QLabel("Framerate:")
         rowLayout.addWidget(label)
         
-        framerateSpin = QtGui.QSpinBox()
+        framerateSpin = QtWidgets.QSpinBox()
         framerateSpin.setMinimum(1)
         framerateSpin.setMaximum(10000)
         framerateSpin.setValue(self.framerate)
         framerateSpin.valueChanged.connect(self.framerateChanged)
         rowLayout.addWidget(framerateSpin)
         
-        label = QtGui.QLabel(" fps")
+        label = QtWidgets.QLabel(" fps")
         rowLayout.addWidget(label)
         
         # file prefix
         rowLayout = self.newRow()
         
-        label = QtGui.QLabel("File prefix:")
+        label = QtWidgets.QLabel("File prefix:")
         rowLayout.addWidget(label)
         
-        prefixLineEdit = QtGui.QLineEdit(self.prefix)
+        prefixLineEdit = QtWidgets.QLineEdit(self.prefix)
         prefixLineEdit.setFixedWidth(130)
         prefixLineEdit.textChanged.connect(self.prefixChanged)
         rowLayout.addWidget(prefixLineEdit)
@@ -1385,10 +1386,10 @@ class CreateMovieBox(QtGui.QGroupBox):
         # container
         rowLayout = self.newRow()
         
-        label = QtGui.QLabel("Container:")
+        label = QtWidgets.QLabel("Container:")
         rowLayout.addWidget(label)
         
-        containerCombo = QtGui.QComboBox()
+        containerCombo = QtWidgets.QComboBox()
         containerCombo.addItem("mp4")
         containerCombo.addItem("flv")
         containerCombo.addItem("mpg")
@@ -1429,7 +1430,7 @@ class CreateMovieBox(QtGui.QGroupBox):
         return row
 
 
-class ImageSequenceTab(QtGui.QWidget):
+class ImageSequenceTab(QtWidgets.QWidget):
     def __init__(self, parent, mainWindow, width):
         super(ImageSequenceTab, self).__init__(parent)
         
@@ -1453,20 +1454,20 @@ class ImageSequenceTab(QtGui.QWidget):
 #         self.createMovie = 1
         
         # layout
-        mainLayout = QtGui.QVBoxLayout(self)
+        mainLayout = QtWidgets.QVBoxLayout(self)
 #        mainLayout.setContentsMargins(0, 0, 0, 0)
 #        mainLayout.setSpacing(0)
         mainLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # output directory
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        label = QtGui.QLabel("Output folder")
-        self.outputFolder = QtGui.QLineEdit("sequencer")
+        label = QtWidgets.QLabel("Output folder")
+        self.outputFolder = QtWidgets.QLineEdit("sequencer")
         self.outputFolder.setFixedWidth(120)
         
         rowLayout.addWidget(label)
@@ -1475,19 +1476,19 @@ class ImageSequenceTab(QtGui.QWidget):
         mainLayout.addWidget(row)
         
         # file prefix
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        label = QtGui.QLabel("File prefix")
+        label = QtWidgets.QLabel("File prefix")
                 
-        self.fileprefix = QtGui.QLineEdit(self.fileprefixText)
+        self.fileprefix = QtWidgets.QLineEdit(self.fileprefixText)
         self.fileprefix.setFixedWidth(120)
         self.fileprefix.textChanged[str].connect(self.fileprefixChanged)
         
-        resetPrefixButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-find.png")), "")
+        resetPrefixButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/edit-find.png")), "")
         resetPrefixButton.setStatusTip("Set prefix to input file")
         resetPrefixButton.setToolTip("Set prefix to input file")
         resetPrefixButton.clicked.connect(self.resetPrefix)
@@ -1498,22 +1499,22 @@ class ImageSequenceTab(QtGui.QWidget):
         
         mainLayout.addWidget(row)
         
-        group = QtGui.QGroupBox("Numbering")
+        group = QtWidgets.QGroupBox("Numbering")
         group.setAlignment(QtCore.Qt.AlignHCenter)
         
-        groupLayout = QtGui.QVBoxLayout(group)
+        groupLayout = QtWidgets.QVBoxLayout(group)
         groupLayout.setContentsMargins(0, 0, 0, 0)
         groupLayout.setSpacing(0)
         
         # numbering format
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
 #        label = QtGui.QLabel("Number format")
-        self.numberFormatCombo = QtGui.QComboBox()
+        self.numberFormatCombo = QtWidgets.QComboBox()
         self.numberFormatCombo.addItems(self.numberFormats)
         self.numberFormatCombo.currentIndexChanged[str].connect(self.numberFormatChanged)
         
@@ -1522,30 +1523,30 @@ class ImageSequenceTab(QtGui.QWidget):
         
         groupLayout.addWidget(row)
         
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        self.minIndexSpinBox = QtGui.QSpinBox()
+        self.minIndexSpinBox = QtWidgets.QSpinBox()
         self.minIndexSpinBox.setMinimum(0)
         self.minIndexSpinBox.setMaximum(99999)
         self.minIndexSpinBox.setValue(self.minIndex)
         self.minIndexSpinBox.valueChanged[int].connect(self.minIndexChanged)
         
-        label = QtGui.QLabel("to")
+        label = QtWidgets.QLabel("to")
         
-        self.maxIndexSpinBox = QtGui.QSpinBox()
+        self.maxIndexSpinBox = QtWidgets.QSpinBox()
         self.maxIndexSpinBox.setMinimum(-1)
         self.maxIndexSpinBox.setMaximum(99999)
         self.maxIndexSpinBox.setValue(self.maxIndex)
         self.maxIndexSpinBox.valueChanged[int].connect(self.maxIndexChanged)
         self.maxIndexSpinBox.setToolTip("The max index (inclusive; if less than min index do all we can find)")
         
-        label2 = QtGui.QLabel("by")
+        label2 = QtWidgets.QLabel("by")
         
-        self.intervalSpinBox = QtGui.QSpinBox()
+        self.intervalSpinBox = QtWidgets.QSpinBox()
         self.intervalSpinBox.setMinimum(1)
         self.intervalSpinBox.setMaximum(99999)
         self.intervalSpinBox.setValue(self.interval)
@@ -1562,15 +1563,15 @@ class ImageSequenceTab(QtGui.QWidget):
         mainLayout.addWidget(group)
         
         # first file
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        label = QtGui.QLabel("First file:")
+        label = QtWidgets.QLabel("First file:")
         
-        self.firstFileLabel = QtGui.QLabel("")
+        self.firstFileLabel = QtWidgets.QLabel("")
         self.setFirstFileLabel()
         
         rowLayout.addWidget(label)
@@ -1590,11 +1591,11 @@ class ImageSequenceTab(QtGui.QWidget):
 #         mainLayout.addWidget(row)
         
         # eliminate flicker check
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
-        self.flickerCheck = QtGui.QCheckBox("Eliminate flicker")
+        self.flickerCheck = QtWidgets.QCheckBox("Eliminate flicker")
         self.flickerCheck.stateChanged[int].connect(self.flickerCheckChanged)
         rowLayout.addWidget(self.flickerCheck)
 #         mainLayout.addWidget(row)
@@ -1605,19 +1606,19 @@ class ImageSequenceTab(QtGui.QWidget):
 #         rowLayout.setContentsMargins(0, 0, 0, 0)
 #         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         rowLayout.addStretch()
-        self.rotateAfterCheck = QtGui.QCheckBox("Rotate at end")
+        self.rotateAfterCheck = QtWidgets.QCheckBox("Rotate at end")
         self.rotateAfterCheck.stateChanged[int].connect(self.rotateAfterCheckChanged)
         rowLayout.addWidget(self.rotateAfterCheck)
         mainLayout.addWidget(row)
         
         # link to other renderer combo
         self.linkedRenderWindowIndex = None
-        self.linkedRendererCombo = QtGui.QComboBox()
+        self.linkedRendererCombo = QtWidgets.QComboBox()
         self.linkedRendererCombo.currentIndexChanged[str].connect(self.linkedRendererChanged)
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.setContentsMargins(0, 0, 0, 0)
         row.setAlignment(QtCore.Qt.AlignHCenter)
-        row.addWidget(QtGui.QLabel("Linked render window:"))
+        row.addWidget(QtWidgets.QLabel("Linked render window:"))
         row.addWidget(self.linkedRendererCombo)
         mainLayout.addLayout(row)
         
@@ -1632,13 +1633,13 @@ class ImageSequenceTab(QtGui.QWidget):
         mainLayout.addWidget(self.createMovieBox)
         
         # start button
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        startSequencerButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/go-last.png")), "START")
+        startSequencerButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/go-last.png")), "START")
         startSequencerButton.setStatusTip("Start sequencer")
         startSequencerButton.setToolTip("Start sequencer")
         startSequencerButton.clicked.connect(self.startSequencer)
@@ -1929,13 +1930,13 @@ class ImageSequenceTab(QtGui.QWidget):
         
         # progress dialog
         NSteps = int((maxIndex - self.minIndex) / self.interval) + 1
-        progDialog = QtGui.QProgressDialog("Running sequencer...", "Cancel", self.minIndex, NSteps)
+        progDialog = QtWidgets.QProgressDialog("Running sequencer...", "Cancel", self.minIndex, NSteps)
         progDialog.setWindowModality(QtCore.Qt.WindowModal)
         progDialog.setWindowTitle("Progress")
         progDialog.setValue(self.minIndex)
         progDialog.show()
         
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
         
         # loop over files
         status = 0
@@ -2114,7 +2115,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 # update progress
                 progDialog.setValue(count)
                 
-                QtGui.QApplication.processEvents()
+                QtWidgets.QApplication.processEvents()
             
             # create movie
             if not status and self.createMovieBox.isChecked():
@@ -2181,11 +2182,11 @@ class ImageSequenceTab(QtGui.QWidget):
         
         message = "Could not locate %s file in sequence: %s" % (tag, filename)
         
-        msgBox = QtGui.QMessageBox(self)
+        msgBox = QtWidgets.QMessageBox(self)
         msgBox.setText(message)
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-        msgBox.setIcon(QtGui.QMessageBox.Warning)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgBox.setIcon(QtWidgets.QMessageBox.Warning)
         msgBox.exec_()
     
     def flickerCheckChanged(self, state):
@@ -2289,7 +2290,7 @@ class ImageSequenceTab(QtGui.QWidget):
 
 
 ################################################################################
-class ImageRotateTab(QtGui.QWidget):
+class ImageRotateTab(QtWidgets.QWidget):
     def __init__(self, parent, mainWindow, width):
         super(ImageRotateTab, self).__init__(parent)
         
@@ -2306,20 +2307,20 @@ class ImageRotateTab(QtGui.QWidget):
         self.logger = logging.getLogger(__name__+".ImageRotateTab")
         
         # layout
-        mainLayout = QtGui.QVBoxLayout(self)
+        mainLayout = QtWidgets.QVBoxLayout(self)
 #        mainLayout.setContentsMargins(0, 0, 0, 0)
 #        mainLayout.setSpacing(0)
         mainLayout.setAlignment(QtCore.Qt.AlignTop)
         
         # output directory
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        label = QtGui.QLabel("Output folder")
-        self.outputFolder = QtGui.QLineEdit("rotate")
+        label = QtWidgets.QLabel("Output folder")
+        self.outputFolder = QtWidgets.QLineEdit("rotate")
         self.outputFolder.setFixedWidth(120)
         
         rowLayout.addWidget(label)
@@ -2328,15 +2329,15 @@ class ImageRotateTab(QtGui.QWidget):
         mainLayout.addWidget(row)
         
         # file prefix
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        label = QtGui.QLabel("File prefix")
+        label = QtWidgets.QLabel("File prefix")
                 
-        self.fileprefix = QtGui.QLineEdit(self.fileprefixText)
+        self.fileprefix = QtWidgets.QLineEdit(self.fileprefixText)
         self.fileprefix.setFixedWidth(120)
         self.fileprefix.textChanged[str].connect(self.fileprefixChanged)
         
@@ -2346,16 +2347,16 @@ class ImageRotateTab(QtGui.QWidget):
         mainLayout.addWidget(row)
         
         # degrees per rotation
-        label = QtGui.QLabel("Degrees per rotation")
+        label = QtWidgets.QLabel("Degrees per rotation")
         
-        degPerRotSpinBox = QtGui.QSpinBox(self)
+        degPerRotSpinBox = QtWidgets.QSpinBox(self)
         degPerRotSpinBox.setMinimum(1)
         degPerRotSpinBox.setMaximum(360)
         degPerRotSpinBox.setValue(self.degreesPerRotation)
         degPerRotSpinBox.valueChanged.connect(self.degPerRotChanged)
         
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
@@ -2365,13 +2366,13 @@ class ImageRotateTab(QtGui.QWidget):
         mainLayout.addWidget(row)
                 
         # overwrite check box
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        self.overwriteCheck = QtGui.QCheckBox("Overwrite")
+        self.overwriteCheck = QtWidgets.QCheckBox("Overwrite")
         self.overwriteCheck.stateChanged[int].connect(self.overwriteCheckChanged)
         
         rowLayout.addWidget(self.overwriteCheck)
@@ -2383,13 +2384,13 @@ class ImageRotateTab(QtGui.QWidget):
         mainLayout.addWidget(self.createMovieBox)
         
         # start button
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget(self)
+        rowLayout = QtWidgets.QHBoxLayout(row)
 #        rowLayout.setSpacing(0)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        startRotatorButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/go-last.png")), "START")
+        startRotatorButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/go-last.png")), "START")
         startRotatorButton.setToolTip("Start sequencer")
         startRotatorButton.clicked.connect(self.startRotator)
         
@@ -2444,7 +2445,7 @@ class ImageRotateTab(QtGui.QWidget):
             # create movie
             if self.createMovieBox.isChecked():
                 # show wait cursor
-                QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+                QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
                 
                 
                 try:
@@ -2453,7 +2454,7 @@ class ImageRotateTab(QtGui.QWidget):
                 
                 finally:
                     # set cursor to normal
-                    QtGui.QApplication.restoreOverrideCursor()
+                    QtWidgets.QApplication.restoreOverrideCursor()
     
     def degPerRotChanged(self, val):
         """

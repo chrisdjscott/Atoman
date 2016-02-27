@@ -17,8 +17,8 @@ import traceback
 import logging
 import datetime
 
-from PySide import QtGui, QtCore
-import PySide
+from PyQt5 import QtGui, QtCore, QtWidgets
+
 import vtk
 import numpy as np
 import matplotlib
@@ -40,7 +40,7 @@ from .. import _version
 
 
 ################################################################################
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
     """
     The main window.
     
@@ -250,11 +250,11 @@ class MainWindow(QtGui.QMainWindow):
         self.addActions(helpMenu, (aboutAction, helpAction))
         
         # add cwd to status bar
-        self.currentDirectoryLabel = QtGui.QLabel("")
+        self.currentDirectoryLabel = QtWidgets.QLabel("")
         self.updateCWD()
-        sb = QtGui.QStatusBar()
+        sb = QtWidgets.QStatusBar()
         self.setStatusBar(sb)
-        self.progressBar = QtGui.QProgressBar(self.statusBar())
+        self.progressBar = QtWidgets.QProgressBar(self.statusBar())
         self.statusBar().addPermanentWidget(self.progressBar)
         self.statusBar().addPermanentWidget(self.currentDirectoryLabel)
         self.hideProgressBar()
@@ -271,7 +271,7 @@ class MainWindow(QtGui.QMainWindow):
         # load input dialog
 #         self.loadInputDialog = inputDialog.InputDialog(self, self, None)
         
-        self.mdiArea = QtGui.QMdiArea()
+        self.mdiArea = QtWidgets.QMdiArea()
         self.mdiArea.subWindowActivated.connect(self.rendererWindowActivated)
         self.setCentralWidget(self.mdiArea)
         self.rendererWindows = []
@@ -285,7 +285,7 @@ class MainWindow(QtGui.QMainWindow):
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
         
         # connect window destroyed to updateInstances
-        self.connect(self, QtCore.SIGNAL("destroyed(QObject*)"), MainWindow.updateInstances)
+        self.destroyed.connect(MainWindow.updateInstances)
         
         self.setStatus('Ready')
     
@@ -315,7 +315,7 @@ class MainWindow(QtGui.QMainWindow):
         Change current working directory...
         
         """
-        new_dir = QtGui.QFileDialog.getExistingDirectory(self, "New working directory", os.getcwd())
+        new_dir = QtWidgets.QFileDialog.getExistingDirectory(self, "New working directory", os.getcwd())
         
         logging.debug("Changing directory: '%s'", new_dir)
         
@@ -390,13 +390,14 @@ class MainWindow(QtGui.QMainWindow):
         """
         msg = "This will overwrite the current element properties file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
-        reply = QtGui.QMessageBox.question(self, "Message", msg,
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        reply = QtWidgets.QMessageBox.question(self, "Message", msg,
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
         
-        if reply == QtGui.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             # open file dialog
             title = "Atoman - Import element properties"
-            fname = QtGui.QFileDialog.getOpenFileName(self, title, ".", "IN files (*.IN)")[0]
+            fname = QtWidgets.QFileDialog.getOpenFileName(self, title, ".", "IN files (*.IN)")[0]
             
             if fname:
                 self.logger.info("Importing elements settings from '%s'", fname)
@@ -417,8 +418,9 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         fname = os.path.join(".", "atoms-exported.IN")
-        fname = QtGui.QFileDialog.getSaveFileName(self, "Atoman - Export element properties", fname,
-                                                  "IN files (*.IN)", options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+        fname = QtWidgets.QFileDialog.getSaveFileName(self, "Atoman - Export element properties", fname,
+                                                      "IN files (*.IN)",
+                                                      options=QtWidgets.QFileDialog.DontUseNativeDialog)[0]
         
         if fname:
             if "." not in fname or fname[-3:] != ".IN":
@@ -431,20 +433,20 @@ class MainWindow(QtGui.QMainWindow):
         """Reset elements settings."""
         msg = "This will overwrite the current element properties file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
-        reply = QtGui.QMessageBox.question(self, "Message", msg,
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        reply = QtWidgets.QMessageBox.question(self, "Message", msg,
+                                           QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         
-        if reply == QtGui.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             atoms.resetAtoms()
     
     def resetBonds(self):
         """Reset bonds settings."""
         msg = "This will overwrite the current bonds file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
-        reply = QtGui.QMessageBox.question(self, "Message", msg,
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        reply = QtWidgets.QMessageBox.question(self, "Message", msg,
+                                           QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
         
-        if reply == QtGui.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             atoms.resetBonds()
     
     def importBonds(self):
@@ -454,13 +456,14 @@ class MainWindow(QtGui.QMainWindow):
         """
         msg = "This will overwrite the current bonds file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
-        reply = QtGui.QMessageBox.question(self, "Message", msg,
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        reply = QtWidgets.QMessageBox.question(self, "Message", msg,
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
         
-        if reply == QtGui.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             # open file dialog
-            fname = QtGui.QFileDialog.getOpenFileName(self, "Atoman - Import bonds file", ".", "IN files (*.IN)",
-                                                      options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+            fname = QtWidgets.QFileDialog.getOpenFileName(self, "Atoman - Import bonds file", ".", "IN files (*.IN)",
+                                                          options=QtWidgets.QFileDialog.DontUseNativeDialog)[0]
             
             if fname:
                 self.logger.info("Import bonds settings from '%s'", fname)
@@ -480,8 +483,8 @@ class MainWindow(QtGui.QMainWindow):
         """
         fname = os.path.join(".", "bonds-exported.IN")
         
-        fname = QtGui.QFileDialog.getSaveFileName(self, "Atoman - Export bonds file", fname, "IN files (*.IN)",
-                                                  options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+        fname = QtWidgets.QFileDialog.getSaveFileName(self, "Atoman - Export bonds file", fname, "IN files (*.IN)",
+                                                      options=QtWidgets.QFileDialog.DontUseNativeDialog)[0]
         
         if fname:
             if "." not in fname or fname[-3:] != ".IN":
@@ -521,7 +524,7 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         qr = self.frameGeometry()
-        cp = QtGui.QDesktopWidget().availableGeometry().center()
+        cp = QtWidgets.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
     
@@ -653,7 +656,7 @@ class MainWindow(QtGui.QMainWindow):
         self.progressBar.setRange(0, nmax)
         self.progressBar.setValue(n)
         self.setStatus(message)
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
     
     def setStatus(self, message):
         """
@@ -711,11 +714,11 @@ class MainWindow(QtGui.QMainWindow):
         Display warning message.
         
         """
-        msgBox = QtGui.QMessageBox(self)
+        msgBox = QtWidgets.QMessageBox(self)
         msgBox.setText(message)
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-        msgBox.setIcon(QtGui.QMessageBox.Warning)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgBox.setIcon(QtWidgets.QMessageBox.Warning)
         msgBox.exec_()
     
     def displayError(self, message):
@@ -723,11 +726,11 @@ class MainWindow(QtGui.QMainWindow):
         Display error message
         
         """
-        msgBox = QtGui.QMessageBox(self)
+        msgBox = QtWidgets.QMessageBox(self)
         msgBox.setText(message)
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-        msgBox.setIcon(QtGui.QMessageBox.Critical)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgBox.setIcon(QtWidgets.QMessageBox.Critical)
         msgBox.exec_()
     
     def aboutMe(self):
@@ -735,14 +738,14 @@ class MainWindow(QtGui.QMainWindow):
         Display about message.
         
         """
-        msgBox = QtGui.QMessageBox(self)
+        msgBox = QtWidgets.QMessageBox(self)
         
         # get the version right
         version = _version.get_versions()['version']
         
         # construct paragraph with software versions
-        softline = "Python %s - Qt %s - PySide %s - VTK %s" % (platform.python_version(), QtCore.__version__,
-                                                               PySide.__version__, vtk.vtkVersion.GetVTKVersion())
+        softline = "Python %s - Qt %s - PyQt5 %s - VTK %s" % (platform.python_version(), QtCore.QT_VERSION_STR,
+                                                              QtCore.PYQT_VERSION_STR, vtk.vtkVersion.GetVTKVersion())
         softline += " - NumPy %s - SciPy %s - Matplotlib %s" % (np.__version__, scipy.__version__,
                                                                 matplotlib.__version__)
         
@@ -766,8 +769,8 @@ class MainWindow(QtGui.QMainWindow):
                           <p>%s</p>""" % (version, datetime.date.today().year, softline))
         
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-        msgBox.setIcon(QtGui.QMessageBox.Information)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgBox.setIcon(QtWidgets.QMessageBox.Information)
         msgBox.exec_()
         
 #         dlg = dialogs.AboutMeDialog(parent=self)
@@ -778,7 +781,7 @@ class MainWindow(QtGui.QMainWindow):
         Create an action
         
         """
-        action = QtGui.QAction(text, self)
+        action = QtWidgets.QAction(text, self)
         
         if icon is not None:
             action.setIcon(QtGui.QIcon(iconPath(icon)))

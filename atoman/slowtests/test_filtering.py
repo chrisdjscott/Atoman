@@ -7,7 +7,7 @@ import os
 import tempfile
 import shutil
 
-from PySide import QtCore
+from PyQt5 import QtCore
 from six.moves import range
 
 from . import base

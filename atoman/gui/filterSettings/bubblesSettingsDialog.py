@@ -7,7 +7,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PySide import QtGui, QtCore
+from PyQt5 import QtCore, QtWidgets
+
 
 from . import base
 from .speciesSettingsDialog import SpeciesListItem
@@ -32,7 +33,7 @@ class BubblesSettingsDialog(base.GenericSettingsDialog):
         self._settings = bubblesFilter.BubblesFilterSettings()
         
         # bubble species
-        self.speciesList = QtGui.QListWidget(self)
+        self.speciesList = QtWidgets.QListWidget(self)
         self.speciesList.setFixedHeight(80)
         self.speciesList.setFixedWidth(100)
         self.speciesList.itemChanged.connect(self.speciesListChanged)
