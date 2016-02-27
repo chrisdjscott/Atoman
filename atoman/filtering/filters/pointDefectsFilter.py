@@ -28,6 +28,8 @@ use of a fixed vacancy radius does not always work well by itself.
         If checked include interstitials in the list of defects.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import numpy as np
 
 from . import base
@@ -35,6 +37,7 @@ from . import _defects
 from . import acnaFilter
 from .. import clusters
 from ...algebra import vectors
+from six.moves import range
 
 
 class PointDefectsFilterSettings(base.BaseSettings):
@@ -208,18 +211,18 @@ class PointDefectsFilter(base.BaseFilter):
         
         if settings.getSetting("showVacancies"):
             self.logger.info("  %d vacancies", NVac)
-            for i in xrange(len(refLattice.specieList)):
+            for i in range(len(refLattice.specieList)):
                 self.logger.info("    %d %s vacancies", vacSpecCount[i], refLattice.specieList[i])
         
         if settings.getSetting("showInterstitials"):
             self.logger.info("  %d interstitials", NInt + NSplit)
-            for i in xrange(len(inputLattice.specieList)):
+            for i in range(len(inputLattice.specieList)):
                 self.logger.info("    %d %s interstitials", intSpecCount[i], inputLattice.specieList[i])
         
             if settings.getSetting("identifySplitInts"):
                 self.logger.info("    %d split interstitials", NSplit)
-                for i in xrange(len(inputLattice.specieList)):
-                    for j in xrange(i, len(inputLattice.specieList)):
+                for i in range(len(inputLattice.specieList)):
+                    for j in range(i, len(inputLattice.specieList)):
                         if j == i:
                             N = splitIntSpecCount[i][j]
                         else:
@@ -229,8 +232,8 @@ class PointDefectsFilter(base.BaseFilter):
         
         if settings.getSetting("showAntisites"):
             self.logger.info("  %d antisites", NAnt)
-            for i in xrange(len(refLattice.specieList)):
-                for j in xrange(len(inputLattice.specieList)):
+            for i in range(len(refLattice.specieList)):
+                for j in range(len(inputLattice.specieList)):
                     if inputLattice.specieList[j] == refLattice.specieList[i]:
                         continue
                     
@@ -243,7 +246,7 @@ class PointDefectsFilter(base.BaseFilter):
             PBC = inputLattice.PBC
             cellDims = inputLattice.cellDims
             
-            for i in xrange(NSplit):
+            for i in range(NSplit):
                 ind1 = splitInterstitials[3 * i + 1]
                 ind2 = splitInterstitials[3 * i + 2]
                 
@@ -263,13 +266,13 @@ class PointDefectsFilter(base.BaseFilter):
             defectCluster.resize(NDef)
             
             # build cluster lists
-            for i in xrange(NClusters):
+            for i in range(NClusters):
                 clusterList.append(clusters.DefectCluster(inputLattice, refLattice))
             
             # add atoms to cluster lists
             clusterIndexMapper = {}
             count = 0
-            for i in xrange(NVac):
+            for i in range(NVac):
                 atomIndex = vacancies[i]
                 clusterIndex = defectCluster[i]
                 
@@ -280,7 +283,7 @@ class PointDefectsFilter(base.BaseFilter):
                 clusterListIndex = clusterIndexMapper[clusterIndex]
                 clusterList[clusterListIndex].addVacancy(atomIndex)
             
-            for i in xrange(NInt):
+            for i in range(NInt):
                 atomIndex = interstitials[i]
                 clusterIndex = defectCluster[NVac + i]
                 
@@ -291,7 +294,7 @@ class PointDefectsFilter(base.BaseFilter):
                 clusterListIndex = clusterIndexMapper[clusterIndex]
                 clusterList[clusterListIndex].addInterstitial(atomIndex)
             
-            for i in xrange(NAnt):
+            for i in range(NAnt):
                 atomIndex = antisites[i]
                 atomIndex2 = onAntisites[i]
                 clusterIndex = defectCluster[NVac + NInt + i]
@@ -303,7 +306,7 @@ class PointDefectsFilter(base.BaseFilter):
                 clusterListIndex = clusterIndexMapper[clusterIndex]
                 clusterList[clusterListIndex].addAntisite(atomIndex, atomIndex2)
             
-            for i in xrange(NSplit):
+            for i in range(NSplit):
                 clusterIndex = defectCluster[NVac + NInt + NAnt + i]
                 
                 if clusterIndex not in clusterIndexMapper:

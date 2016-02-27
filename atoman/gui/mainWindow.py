@@ -6,6 +6,8 @@ The main window class
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import sys
 import shutil
@@ -34,8 +36,7 @@ from .dialogs import simpleDialogs
 from .dialogs import bondEditor
 from .dialogs import elementEditor
 from .dialogs import consoleWindow
-from ..visutils import version
-__version__ = version.getVersion()
+from .. import _version
 
 
 ################################################################################
@@ -84,7 +85,8 @@ class MainWindow(QtGui.QMainWindow):
         self.refLoaded = False
         
         # MD code resource (not currently used!?)
-        logger.debug("MD resource path: %s (exists %s)", resourcePath("lbomd.IN", dirname="md_input"), os.path.exists(resourcePath("lbomd.IN", dirname="md_input")))
+        logger.debug("MD resource path: %s (exists %s)", resourcePath("lbomd.IN", dirname="md_input"),
+                     os.path.exists(resourcePath("lbomd.IN", dirname="md_input")))
         
         # get settings object
         settings = QtCore.QSettings()
@@ -113,7 +115,7 @@ class MainWindow(QtGui.QMainWindow):
         self.renderWindowHeight = 715 * 1.2
         
         # default size
-        windowWidth = self.renderWindowWidth+self.mainToolbarWidth
+        windowWidth = self.renderWindowWidth + self.mainToolbarWidth
         windowHeight = self.renderWindowHeight
         
         self.defaultWindowWidth = windowWidth
@@ -146,17 +148,16 @@ class MainWindow(QtGui.QMainWindow):
         self.bondsEditor = bondEditor.BondEditorDialog(parent=self)
         
         # add file actions
-        exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "oxygen/application-exit.png", 
-                                       "Exit application")
-        newWindowAction = self.createAction("&New app window", slot=self.openNewWindow, shortcut="Ctrl-N", 
+        exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "oxygen/application-exit.png", "Exit application")
+        newWindowAction = self.createAction("&New app window", slot=self.openNewWindow, shortcut="Ctrl-N",
                                             icon="atoman.png", tip="Open new application window")
         newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow, shortcut="Ctrl-O",
-                                            icon="oxygen/window-new.png", tip="Open new render sub window")
+                                               icon="oxygen/window-new.png", tip="Open new render sub window")
         openFileAction = self.createAction("Open file", slot=self.showOpenFileDialog, icon="oxygen/document-open.png",
                                            tip="Open file")
-        openRemoteFileAction = self.createAction("Open remote file", slot=self.showOpenRemoteFileDialog, 
+        openRemoteFileAction = self.createAction("Open remote file", slot=self.showOpenRemoteFileDialog,
                                                  icon="oxygen/document-open-remote.png", tip="Open remote file")
-        openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="oxygen/folder-open.png", 
+        openCWDAction = self.createAction("Open CWD", slot=self.openCWD, icon="oxygen/folder-open.png",
                                           tip="Open current working directory")
         exportElementsAction = self.createAction("Export elements", slot=self.exportElements,
                                                  icon="oxygen/document-export", tip="Export element properties")
@@ -165,47 +166,48 @@ class MainWindow(QtGui.QMainWindow):
         resetElementsAction = self.createAction("Reset elements", slot=self.resetElements, icon="oxygen/edit-undo.png",
                                                 tip="Reset elements settings to default values")
         exportBondsAction = self.createAction("Export bonds", slot=self.exportBonds,
-                                                 icon="oxygen/document-export.png", tip="Export bonds file")
+                                              icon="oxygen/document-export.png", tip="Export bonds file")
         importBondsAction = self.createAction("Import bonds", slot=self.importBonds,
-                                                 icon="oxygen/document-import.png", tip="Import bonds file")
+                                              icon="oxygen/document-import.png", tip="Import bonds file")
         resetBondsAction = self.createAction("Reset bonds", slot=self.resetBonds, icon="oxygen/edit-undo.png",
-                                                tip="Reset bonds settings to default values")
-        showImageViewerAction = self.createAction("Image viewer", slot=self.showImageViewer, 
+                                             tip="Reset bonds settings to default values")
+        showImageViewerAction = self.createAction("Image viewer", slot=self.showImageViewer,
                                                   icon="oxygen/applications-graphics.png", tip="Show image viewer")
-        showPreferencesAction = self.createAction("Preferences", slot=self.showPreferences, 
+        showPreferencesAction = self.createAction("Preferences", slot=self.showPreferences,
                                                   icon="oxygen/configure.png", tip="Show preferences window")
-        changeCWDAction = self.createAction("Change CWD", slot=self.changeCWD, icon="oxygen/folder-new.png", 
+        changeCWDAction = self.createAction("Change CWD", slot=self.changeCWD, icon="oxygen/folder-new.png",
                                             tip="Change current working directory")
         
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, openFileAction, openRemoteFileAction, openCWDAction, 
-                                   changeCWDAction, None, exitAction))
+        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, openFileAction, openRemoteFileAction,
+                                   openCWDAction, changeCWDAction, None, exitAction))
         
         # settings menu
         settingsMenu = self.menuBar().addMenu("&Settings")
-        self.addActions(settingsMenu, (importElementsAction, exportElementsAction, resetElementsAction, importBondsAction,
-                                       exportBondsAction, resetBondsAction))
+        self.addActions(settingsMenu, (importElementsAction, exportElementsAction, resetElementsAction,
+                                       importBondsAction, exportBondsAction, resetBondsAction))
         
         # button to show console window
-        openConsoleAction = self.createAction("Console", self.showConsole, None, "oxygen/utilities-log-viewer.png", "Show console window")
+        openConsoleAction = self.createAction("Console", self.showConsole, None, "oxygen/utilities-log-viewer.png",
+                                              "Show console window")
         
         # element editor action
-        openElementEditorAction = self.createAction("Element editor", slot=self.openElementEditor, icon="other/periodic-table-icon.png", 
-                                                    tip="Show element editor")
+        openElementEditorAction = self.createAction("Element editor", slot=self.openElementEditor,
+                                                    icon="other/periodic-table-icon.png", tip="Show element editor")
         
         # open bonds editor action
-        openBondsEditorAction = self.createAction("Bonds editor", slot=self.openBondsEditor, icon="other/molecule1.png", 
+        openBondsEditorAction = self.createAction("Bonds editor", slot=self.openBondsEditor, icon="other/molecule1.png",
                                                   tip="Show bonds editor")
         
         # default window size action
-        defaultWindowSizeAction = self.createAction("Default size", slot=self.defaultWindowSize, icon="oxygen/view-restore.png", 
-                                                    tip="Resize window to default size")
+        defaultWindowSizeAction = self.createAction("Default size", slot=self.defaultWindowSize,
+                                                    icon="oxygen/view-restore.png", tip="Resize window to default size")
         
         # add view menu
         viewMenu = self.menuBar().addMenu("&View")
-        self.addActions(viewMenu, (openConsoleAction, showImageViewerAction, openElementEditorAction, openBondsEditorAction, 
-                                   showPreferencesAction))
+        self.addActions(viewMenu, (openConsoleAction, showImageViewerAction, openElementEditorAction,
+                        openBondsEditorAction, showPreferencesAction))
         
         # add window menu
         windowMenu = self.menuBar().addMenu("&Window")
@@ -232,12 +234,12 @@ class MainWindow(QtGui.QMainWindow):
         viewToolbar.addAction(showPreferencesAction)
         viewToolbar.addSeparator()
         
-        
         # add about action
-        aboutAction = self.createAction("About Atoman", slot=self.aboutMe, icon="oxygen/help-about.png", 
-                                           tip="About Atoman")
+        aboutAction = self.createAction("About Atoman", slot=self.aboutMe, icon="oxygen/help-about.png",
+                                        tip="About Atoman")
         
-        helpAction = self.createAction("Atoman Help", slot=self.showHelp, icon="oxygen/help-browser.png", tip="Show help window")
+        helpAction = self.createAction("Atoman Help", slot=self.showHelp, icon="oxygen/help-browser.png",
+                                       tip="Show help window")
         
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
@@ -272,15 +274,11 @@ class MainWindow(QtGui.QMainWindow):
         self.mdiArea = QtGui.QMdiArea()
         self.mdiArea.subWindowActivated.connect(self.rendererWindowActivated)
         self.setCentralWidget(self.mdiArea)
-        
         self.rendererWindows = []
         self.rendererWindowsSubWin = []
         self.subWinCount = 0
-        
         self.addRendererWindow(ask=False)
-        
         self.mdiArea.tileSubWindows()
-#        self.mdiArea.cascadeSubWindows()
         
         # add the main tool bar
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
@@ -290,11 +288,6 @@ class MainWindow(QtGui.QMainWindow):
         self.connect(self, QtCore.SIGNAL("destroyed(QObject*)"), MainWindow.updateInstances)
         
         self.setStatus('Ready')
-        
-#         self.show()
-#         
-#         # give focus
-#         self.raise_()
     
     def showOpenRemoteFileDialog(self):
         """
@@ -395,13 +388,15 @@ class MainWindow(QtGui.QMainWindow):
         Import element properties file.
         
         """
-        reply = QtGui.QMessageBox.question(self, "Message", 
-                                           "This will overwrite the current element properties file. You should create a backup first!\n\nDo you wish to continue?",
+        msg = "This will overwrite the current element properties file. You should create a backup first!\n\n"
+        msg += "Do you wish to continue?"
+        reply = QtGui.QMessageBox.question(self, "Message", msg,
                                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         
         if reply == QtGui.QMessageBox.Yes:
             # open file dialog
-            fname = QtGui.QFileDialog.getOpenFileName(self, "Atoman - Import element properties", ".", "IN files (*.IN)")[0]
+            title = "Atoman - Import element properties"
+            fname = QtGui.QFileDialog.getOpenFileName(self, title, ".", "IN files (*.IN)")[0]
             
             if fname:
                 self.logger.info("Importing elements settings from '%s'", fname)
@@ -422,12 +417,11 @@ class MainWindow(QtGui.QMainWindow):
         
         """
         fname = os.path.join(".", "atoms-exported.IN")
-        
-        fname = QtGui.QFileDialog.getSaveFileName(self, "Atoman - Export element properties", fname, 
+        fname = QtGui.QFileDialog.getSaveFileName(self, "Atoman - Export element properties", fname,
                                                   "IN files (*.IN)", options=QtGui.QFileDialog.DontUseNativeDialog)[0]
         
         if fname:
-            if not "." in fname or fname[-3:] != ".IN":
+            if "." not in fname or fname[-3:] != ".IN":
                 fname += ".IN"
             
             self.logger.info("Exporting elements settings to '%s'", fname)
@@ -435,8 +429,9 @@ class MainWindow(QtGui.QMainWindow):
     
     def resetElements(self):
         """Reset elements settings."""
-        reply = QtGui.QMessageBox.question(self, "Message", 
-                                           "This will overwrite the current element properties file. You should create a backup first!\n\nDo you wish to continue?",
+        msg = "This will overwrite the current element properties file. You should create a backup first!\n\n"
+        msg += "Do you wish to continue?"
+        reply = QtGui.QMessageBox.question(self, "Message", msg,
                                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         
         if reply == QtGui.QMessageBox.Yes:
@@ -444,8 +439,9 @@ class MainWindow(QtGui.QMainWindow):
     
     def resetBonds(self):
         """Reset bonds settings."""
-        reply = QtGui.QMessageBox.question(self, "Message", 
-                                           "This will overwrite the current bonds file. You should create a backup first!\n\nDo you wish to continue?",
+        msg = "This will overwrite the current bonds file. You should create a backup first!\n\n"
+        msg += "Do you wish to continue?"
+        reply = QtGui.QMessageBox.question(self, "Message", msg,
                                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         
         if reply == QtGui.QMessageBox.Yes:
@@ -456,13 +452,14 @@ class MainWindow(QtGui.QMainWindow):
         Import bonds file.
         
         """
-        reply = QtGui.QMessageBox.question(self, "Message", 
-                                           "This will overwrite the current bonds file. You should create a backup first!\n\nDo you wish to continue?",
+        msg = "This will overwrite the current bonds file. You should create a backup first!\n\n"
+        msg += "Do you wish to continue?"
+        reply = QtGui.QMessageBox.question(self, "Message", msg,
                                            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         
         if reply == QtGui.QMessageBox.Yes:
             # open file dialog
-            fname = QtGui.QFileDialog.getOpenFileName(self, "Atoman - Import bonds file", ".", "IN files (*.IN)", 
+            fname = QtGui.QFileDialog.getOpenFileName(self, "Atoman - Import bonds file", ".", "IN files (*.IN)",
                                                       options=QtGui.QFileDialog.DontUseNativeDialog)[0]
             
             if fname:
@@ -483,11 +480,11 @@ class MainWindow(QtGui.QMainWindow):
         """
         fname = os.path.join(".", "bonds-exported.IN")
         
-        fname = QtGui.QFileDialog.getSaveFileName(self, "Atoman - Export bonds file", fname, "IN files (*.IN)", 
+        fname = QtGui.QFileDialog.getSaveFileName(self, "Atoman - Export bonds file", fname, "IN files (*.IN)",
                                                   options=QtGui.QFileDialog.DontUseNativeDialog)[0]
         
         if fname:
-            if not "." in fname or fname[-3:] != ".IN":
+            if "." not in fname or fname[-3:] != ".IN":
                 fname += ".IN"
             
             self.logger.info("Exporting bonds settings to '%s'", fname)
@@ -504,12 +501,10 @@ class MainWindow(QtGui.QMainWindow):
         osname = platform.system()
         if osname == "Linux":
             os.system("xdg-open '%s'" % dirname)
-        
         elif osname == "Darwin":
             os.system("open '%s'" % dirname)
-        
-#        elif osname == "Windows":
-#            os.startfile(dirname)
+        elif osname == "Windows":
+            os.startfile(dirname)
     
     def openNewWindow(self):
         """
@@ -696,7 +691,7 @@ class MainWindow(QtGui.QMainWindow):
                 line = f.readline().strip()
                 array = line.split()
                 try:
-                    PBC = [0]*3
+                    PBC = [0] * 3
                     PBC[0] = int(array[0])
                     PBC[1] = int(array[1])
                     PBC[2] = int(array[2])
@@ -704,8 +699,9 @@ class MainWindow(QtGui.QMainWindow):
                 except IndexError:
                     logger.warning("Index error 2 (check lbomd.IN format)")
             
-            except Exception as e:
-                self.displayError("Read lbomd.IN failed with error:\n\n%s" % "".join(traceback.format_exception(*sys.exc_info())))
+            except Exception:
+                err = "Read lbomd.IN failed with error:\n\n%s" % "".join(traceback.format_exception(*sys.exc_info()))
+                self.displayError(err)
             
             finally:
                 f.close()
@@ -742,17 +738,13 @@ class MainWindow(QtGui.QMainWindow):
         msgBox = QtGui.QMessageBox(self)
         
         # get the version right
-        if __version__.startswith("v"):
-            myVersion = __version__
-        else:
-            myVersion = "v" + __version__
+        version = _version.get_versions()['version']
         
         # construct paragraph with software versions
-        softline = "Python %s - Qt %s - PySide %s - VTK %s - NumPy %s - SciPy %s - Matplotlib %s" % (platform.python_version(),
-                                                                                                     QtCore.__version__, PySide.__version__,
-                                                                                                     vtk.vtkVersion.GetVTKVersion(),
-                                                                                                     np.__version__, scipy.__version__,
-                                                                                                     matplotlib.__version__)
+        softline = "Python %s - Qt %s - PySide %s - VTK %s" % (platform.python_version(), QtCore.__version__,
+                                                               PySide.__version__, vtk.vtkVersion.GetVTKVersion())
+        softline += " - NumPy %s - SciPy %s - Matplotlib %s" % (np.__version__, scipy.__version__,
+                                                                matplotlib.__version__)
         
         # add paramiko if available
         try:
@@ -769,9 +761,9 @@ class MainWindow(QtGui.QMainWindow):
         msgBox.setText("""<p><b>Atoman</b> %s</p>
                           <p>Copyright &copy; %d Chris Scott</p>
                           <p>This application can be used to visualise atomistic simulations.</p>
-                          <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a> 
+                          <p>GUI based on <a href="http://sourceforge.net/projects/avas/">AVAS</a>
                              by Marc Robinson.</p>
-                          <p>%s</p>""" % (myVersion, datetime.date.today().year, softline))
+                          <p>%s</p>""" % (version, datetime.date.today().year, softline))
         
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
@@ -781,8 +773,7 @@ class MainWindow(QtGui.QMainWindow):
 #         dlg = dialogs.AboutMeDialog(parent=self)
 #         dlg.exec_()
     
-    def createAction(self, text, slot=None, shortcut=None, icon=None,
-                     tip=None, checkable=False, signal="triggered()"):
+    def createAction(self, text, slot=None, shortcut=None, icon=None, tip=None, checkable=False):
         """
         Create an action
         
@@ -799,8 +790,8 @@ class MainWindow(QtGui.QMainWindow):
             action.setToolTip(tip)
             action.setStatusTip(tip)
         
-        if slot is not None:
-            self.connect(action, QtCore.SIGNAL(signal), slot)
+        if callable(slot):
+            action.triggered.connect(slot)
         
         if checkable:
             action.setCheckable(True)
@@ -825,7 +816,7 @@ class MainWindow(QtGui.QMainWindow):
         Make sure only alive windows appear in the set
         
         """
-        MainWindow.Instances = set([window for window in MainWindow.Instances if isAlive(window)])   
+        MainWindow.Instances = set([window for window in MainWindow.Instances if isAlive(window)])
 
 
 ################################################################################
@@ -841,4 +832,4 @@ def isAlive(qobj):
         sip.unwrapinstance(qobj)
     except RuntimeError:
         return False
-    return True   
+    return True

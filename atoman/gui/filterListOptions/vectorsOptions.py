@@ -13,9 +13,12 @@ Vectors display options for a filter list.
 * "Vector resolution" sets the resolution of the arrows cone and shaft.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 from PySide import QtGui, QtCore
+from six.moves import range
 
 
 ################################################################################
@@ -199,7 +202,7 @@ class VectorsOptionsWindow(QtGui.QDialog):
             self.modified.emit("Vectors options: '{0}'".format(self.selectedVectorsName))
             
             # deselect others
-            for i in xrange(self.vectorsList.count()):
+            for i in range(self.vectorsList.count()):
                 item = self.vectorsList.item(i)
                 
                 if i == index:
@@ -228,7 +231,7 @@ class VectorsOptionsWindow(QtGui.QDialog):
         
         # remove vectors that no longer exist
         num = self.vectorsList.count()
-        for i in xrange(num - 1, -1, -1):
+        for i in range(num - 1, -1, -1):
             item = self.vectorsList.item(i)
             
             # make this 'and' so that if a lattice is missing one specie we still

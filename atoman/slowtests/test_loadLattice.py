@@ -3,6 +3,8 @@
 Slow tests for loading systems
    
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import tempfile
 import shutil
@@ -14,12 +16,9 @@ from ..gui import mainWindow
 from ..system.lattice import Lattice
 
 
-################################################################################
-
 def path_to_file(path):
     return os.path.join(os.path.dirname(__file__), "..", "..", "testing", path)
 
-################################################################################
 
 class TestLoadLattice(base.UsesQApplication):
     """
@@ -69,11 +68,11 @@ class TestLoadLattice(base.UsesQApplication):
         self.assertTrue("Si" in state.specieList)
         self.assertTrue("B_" in state.specieList)
         self.assertTrue("O_" in state.specieList)
-        indx = np.where(state.specieList == "Si")[0][0]
+        indx = state.specieList.index("Si")
         self.assertEqual(state.specieCount[indx], 280)
-        indx = np.where(state.specieList == "B_")[0][0]
+        indx = state.specieList.index("B_")
         self.assertEqual(state.specieCount[indx], 120)
-        indx = np.where(state.specieList == "O_")[0][0]
+        indx = state.specieList.index("O_")
         self.assertEqual(state.specieCount[indx], 740)
     
     def test_loadLbomdRef(self):
@@ -90,11 +89,11 @@ class TestLoadLattice(base.UsesQApplication):
         self.assertTrue("Ga" in state.specieList)
         self.assertTrue("Pu" in state.specieList)
         self.assertTrue("H_" in state.specieList)
-        indx = np.where(state.specieList == "Ga")[0][0]
+        indx = state.specieList.index("Ga")
         self.assertEqual(state.specieCount[indx], 819)
-        indx = np.where(state.specieList == "Pu")[0][0]
+        indx = state.specieList.index("Pu")
         self.assertEqual(state.specieCount[indx], 15565)
-        indx = np.where(state.specieList == "H_")[0][0]
+        indx = state.specieList.index("H_")
         self.assertEqual(state.specieCount[indx], 8)
     
 #     def test_displayAtomsUnfiltered(self):

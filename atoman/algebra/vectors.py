@@ -3,6 +3,9 @@
 Vector operations.
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import numpy as np
 
 from . import _vectors as c_vectors
@@ -29,7 +32,7 @@ def normalise(vect):
     """
     mag = magnitude(vect)
     if mag == 0:
-        print "WARNING: attempting to normalise zero vector"
+        print("WARNING: attempting to normalise zero vector")
         return vect
     return vect / mag
 

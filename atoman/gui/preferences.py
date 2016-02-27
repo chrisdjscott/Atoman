@@ -5,6 +5,9 @@ Preferences dialog.
 @author: Chris Scott
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import logging
 import datetime
@@ -17,6 +20,7 @@ import numpy as np
 from ..visutils.utilities import iconPath, resourcePath
 from ..visutils import utilities
 from . import _preferences
+from six.moves import range
 # from ..md import forces
 
 ################################################################################
@@ -317,7 +321,7 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
         exe = utilities.checkForExe(self.pathToFFmpeg)
         
         if exe:
-            print "STORING FFMPEG PATH IN SETTINGS", exe, self.pathToFFmpeg
+            print("STORING FFMPEG PATH IN SETTINGS", exe, self.pathToFFmpeg)
             settings = QtCore.QSettings()
             settings.setValue("ffmpeg/pathToFFmpeg", exe)
     
@@ -725,7 +729,7 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
         
         """
         if len(self.pathToMDDir) == 0 or os.path.isdir(self.pathToMDDir):
-            print "STORING MD DIR PATH IN SETTINGS", self.pathToMDDir
+            print("STORING MD DIR PATH IN SETTINGS", self.pathToMDDir)
             settings = QtCore.QSettings()
             settings.setValue("forces/pathToMDDir", self.pathToMDDir)
             
@@ -735,7 +739,7 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
             else:
                 self.forcesConfig.md_dir = self.pathToMDDir
             
-            print "CONFIG PATH TO MD DIR", self.forcesConfig.md_dir
+            print("CONFIG PATH TO MD DIR", self.forcesConfig.md_dir)
     
     def pathToMDDirChanged(self, text):
         """
@@ -831,7 +835,7 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         self.logger.debug("Default PBCs (initial value): %r", list(self.defaultPBC))
         row = QtGui.QHBoxLayout()
         xyz = ["x", "y", "z"]
-        for i in xrange(3):
+        for i in range(3):
             check = QtGui.QCheckBox(xyz[i])
             if self.defaultPBC[i]:
                 check.setCheckState(QtCore.Qt.Checked)

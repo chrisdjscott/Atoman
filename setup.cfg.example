@@ -31,3 +31,10 @@ where = atoman
 max-line-length = 120
 ignore = W293,W291
 
+[versioneer]
+VCS = git
+style = pep440
+versionfile_source = atoman/_version.py
+versionfile_build = atoman/_version.py
+tag_prefix =
+parentdir_prefix = atoman-

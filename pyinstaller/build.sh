@@ -9,13 +9,14 @@
 PYINSTALLER_PATH="pyinstaller"
 # END CONFIG
 
-VERSION=$(git describe)
-echo "BUILDING: Atoman $VERSION"
-echo "__version__ = \"$VERSION\"" > ../atoman/visutils/version_freeze.py
-
+# clean previous build
 rm -rf build/ dist/ *.log
 
 cd ..
+
+# get version
+VERSION=$(python setup.py --version)
+echo "BUILDING: Atoman $VERSION"
 
 # start with a clean
 python setup.py clean

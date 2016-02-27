@@ -3,6 +3,8 @@
 Unit tests for bond order filter (Q4, Q6)
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 
 import numpy as np
@@ -11,6 +13,7 @@ from .. import base
 from .. import bondOrderFilter
 from ....lattice_gen import lattice_gen_fcc, lattice_gen_bcc
 from ....gui import _preferences
+from six.moves import range
 
 
 ################################################################################
@@ -78,7 +81,7 @@ class TestBondOrderBCC(unittest.TestCase):
         
         # check Q4
         scalarsQ4 = result.getScalars()["Q4"]
-        for i in xrange(NVis):
+        for i in range(NVis):
             self.assertAlmostEqual(0.036, scalarsQ4[i], places=3)
     
     def test_bondOrderBCCQ6(self):
@@ -115,7 +118,7 @@ class TestBondOrderBCC(unittest.TestCase):
         
         # check Q6
         scalarsQ6 = result.getScalars()["Q6"]
-        for i in xrange(NVis):
+        for i in range(NVis):
             self.assertAlmostEqual(0.511, scalarsQ6[i], places=3)
     
     def test_bondOrderBCCQ4_4threads(self):
@@ -152,7 +155,7 @@ class TestBondOrderBCC(unittest.TestCase):
         
         # check Q4
         scalarsQ4 = result.getScalars()["Q4"]
-        for i in xrange(NVis):
+        for i in range(NVis):
             self.assertAlmostEqual(0.036, scalarsQ4[i], places=3)
     
     def test_bondOrderBCCQ6_4threads(self):
@@ -189,7 +192,7 @@ class TestBondOrderBCC(unittest.TestCase):
         
         # check Q6
         scalarsQ6 = result.getScalars()["Q6"]
-        for i in xrange(NVis):
+        for i in range(NVis):
             self.assertAlmostEqual(0.511, scalarsQ6[i], places=3)
 
 ################################################################################
@@ -257,7 +260,7 @@ class TestBondOrderFCC(unittest.TestCase):
         
         # check Q4
         scalarsQ4 = result.getScalars()["Q4"]
-        for i in xrange(NVis):
+        for i in range(NVis):
             self.assertAlmostEqual(0.191, scalarsQ4[i], places=3)
     
     def test_bondOrderFCCQ6(self):
@@ -294,7 +297,7 @@ class TestBondOrderFCC(unittest.TestCase):
         
         # check Q6
         scalarsQ6 = result.getScalars()["Q6"]
-        for i in xrange(NVis):
+        for i in range(NVis):
             self.assertAlmostEqual(0.575, scalarsQ6[i], places=3)
     
     def test_bondOrderFCCQ4_4threads(self):
@@ -331,7 +334,7 @@ class TestBondOrderFCC(unittest.TestCase):
         
         # check Q4
         scalarsQ4 = result.getScalars()["Q4"]
-        for i in xrange(NVis):
+        for i in range(NVis):
             self.assertAlmostEqual(0.191, scalarsQ4[i], places=3)
     
     def test_bondOrderFCCQ6_4threads(self):
@@ -368,5 +371,5 @@ class TestBondOrderFCC(unittest.TestCase):
         
         # check Q6
         scalarsQ6 = result.getScalars()["Q6"]
-        for i in xrange(NVis):
+        for i in range(NVis):
             self.assertAlmostEqual(0.575, scalarsQ6[i], places=3)

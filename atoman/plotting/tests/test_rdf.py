@@ -3,6 +3,8 @@
 Unit tests for the rdf module.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import unittest
 

@@ -9,7 +9,24 @@
 #include <numpy/arrayobject.h>
 #include <locale.h>
 #include "visclibs/array_utils.h"
+#include "visclibs/utilities.h"
 
+#if PY_MAJOR_VERSION >= 3
+    #define PyString_AsString PyUnicode_AsUTF8
+    #define MOD_ERROR_VAL NULL
+    #define MOD_SUCCESS_VAL(val) val
+    #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
+        ob = PyModule_Create(&moduledef);
+#else
+    #define MOD_ERROR_VAL
+    #define MOD_SUCCESS_VAL(val)
+    #define MOD_INIT(name) void init##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        ob = Py_InitModule3(name, methods, doc);
+#endif
 
 //static PyObject* writePOVRAYAtoms(PyObject*, PyObject*);
 static PyObject* writePOVRAYDefects(PyObject*, PyObject*);
@@ -22,7 +39,7 @@ static void addPOVRAYCellFrame(FILE *, double, double, double, double, double, d
 /*******************************************************************************
  ** List of python methods available in this module
  *******************************************************************************/
-static struct PyMethodDef methods[] = {
+static struct PyMethodDef module_methods[] = {
 //    {"writePOVRAYAtoms", writePOVRAYAtoms, METH_VARARGS, "Write atoms to POV-Ray file"},
     {"writePOVRAYDefects", writePOVRAYDefects, METH_VARARGS, "Write defects to POV-Ray file"},
     {"writeLattice", writeLattice, METH_VARARGS, "Write (visible) atoms to lattice file"},
@@ -32,11 +49,17 @@ static struct PyMethodDef methods[] = {
 /*******************************************************************************
  ** Module initialisation function
  *******************************************************************************/
-PyMODINIT_FUNC
-init_output(void)
+MOD_INIT(_output)
 {
-    (void)Py_InitModule("_output", methods);
+    PyObject *mod;
+    
+    MOD_DEF(mod, "_output", "Output C extension", module_methods)
+    if (mod == NULL)
+        return MOD_ERROR_VAL;
+    
     import_array();
+    
+    return MOD_SUCCESS_VAL(mod);
 }
 
 /*******************************************************************************
@@ -270,26 +293,22 @@ writePOVRAYDefects(PyObject *self, PyObject *args)
 static PyObject*
 writeLattice(PyObject *self, PyObject *args)
 {
-    char *filename, *specieList;
+    char *filename, *specieListLocal;
     int NAtoms, NVisible, *visibleAtoms, *specie, writeFullLattice;
     double *cellDims, *pos, *charge;
-    PyArrayObject *specieListIn=NULL;
+    PyObject *specieList=NULL;
     PyArrayObject *visibleAtomsIn=NULL;
     PyArrayObject *specieIn=NULL;
     PyArrayObject *cellDimsIn=NULL;
     PyArrayObject *posIn=NULL;
     PyArrayObject *chargeIn=NULL;
-
     int NAtomsWrite;
     FILE *OUTFILE;
     
     
-    /* force locale to use dots for decimal separator */
-    setlocale(LC_NUMERIC, "C");
-    
     /* parse and check arguments from Python */
     if (!PyArg_ParseTuple(args, "sO!O!O!O!O!O!i", &filename, &PyArray_Type, &visibleAtomsIn, &PyArray_Type, &cellDimsIn, 
-            &PyArray_Type, &specieListIn, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &PyArray_Type, &chargeIn,
+            &PyList_Type, &specieList, &PyArray_Type, &specieIn, &PyArray_Type, &posIn, &PyArray_Type, &chargeIn,
             &writeFullLattice))
         return NULL;
     
@@ -310,10 +329,13 @@ writeLattice(PyObject *self, PyObject *args)
     if (not_doubleVector(chargeIn)) return NULL;
     charge = pyvector_to_Cptr_double(chargeIn);
     
-    specieList = pyvector_to_Cptr_char(specieListIn);
-    
     /* how many atoms we are writing */
     NAtomsWrite = (writeFullLattice) ? NAtoms : NVisible;
+    
+    /* local specie list */
+    specieListLocal = specieListFromPyObject(specieList);
+    if (specieListLocal == NULL)
+        return NULL;
     
     /* open file */
     OUTFILE = fopen(filename, "w");
@@ -336,11 +358,11 @@ writeLattice(PyObject *self, PyObject *args)
         for (i = 0; i < NAtoms; i++)
         {
             int i3 = 3 * i;
-            int spec2 = 2 * specie[i];
+            int spec3 = 3 * specie[i];
             char symtemp[3];
             
-            symtemp[0] = specieList[spec2];
-            symtemp[1] = specieList[spec2 + 1];
+            symtemp[0] = specieListLocal[spec3];
+            symtemp[1] = specieListLocal[spec3 + 1];
             symtemp[2] = '\0';
             fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[i3], pos[i3 + 1], pos[i3 + 2], charge[i]);
         }
@@ -353,17 +375,18 @@ writeLattice(PyObject *self, PyObject *args)
         {
             int index = visibleAtoms[i];
             int ind3 = index * 3;
-            int spec2 = 2 * specie[i];
+            int spec3 = 3 * specie[i];
             char symtemp[3];
             
-            symtemp[0] = specieList[spec2];
-            symtemp[1] = specieList[spec2 + 1];
+            symtemp[0] = specieListLocal[spec3];
+            symtemp[1] = specieListLocal[spec3 + 1];
             symtemp[2] = '\0';
             fprintf(OUTFILE, "%s %f %f %f %f\n", &symtemp[0], pos[ind3], pos[ind3 + 1], pos[ind3 + 2], charge[index]);
         }
     }
         
     fclose(OUTFILE);
+    free(specieListLocal);
     
     Py_RETURN_NONE;
 }

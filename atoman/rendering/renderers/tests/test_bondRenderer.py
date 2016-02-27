@@ -3,6 +3,8 @@
 Unit tests for the bond renderer
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import unittest
 import shutil
@@ -16,6 +18,7 @@ from ... import utils
 from ... import _rendering
 from ....system import lattice
 from ....system.latticeReaders import LbomdDatReader, basic_displayError, basic_displayWarning, basic_log
+from six.moves import range
 
 
 def path_to_file(path):
@@ -171,7 +174,7 @@ class TestBondRenderer(unittest.TestCase):
         self.lut.SetNumberOfTableValues(self.nspecies)
         self.lut.SetTableRange(0, self.nspecies - 1)
         self.lut.SetRange(0, self.nspecies - 1)
-        for i in xrange(self.nspecies):
+        for i in range(self.nspecies):
             self.lut.SetTableValue(i, 1, 0, 0, 1.0)
 
     def tearDown(self):

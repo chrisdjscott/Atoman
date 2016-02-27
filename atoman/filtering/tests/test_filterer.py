@@ -3,6 +3,8 @@
 Unit tests for the Filterer
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import copy
 import unittest
 
@@ -13,6 +15,7 @@ from ...lattice_gen import lattice_gen_bcc
 from ..filters import acnaFilter
 from ..filters import bondOrderFilter
 from ..filters import cropBoxFilter
+from six.moves import range
 
 
 ################################################################################
@@ -104,7 +107,7 @@ class TestFilterer(unittest.TestCase):
         self.assertTrue("ACNA" in self.filterer.scalarsDict)
         self.assertTrue("Q4" in self.filterer.scalarsDict)
         self.assertTrue("Q6" in self.filterer.scalarsDict)
-        for i in xrange(self.inputState.NAtoms):
+        for i in range(self.inputState.NAtoms):
             self.assertEqual(3, self.filterer.scalarsDict["ACNA"][i])
             self.assertAlmostEqual(0.036, self.filterer.scalarsDict["Q4"][i], places=3)
             self.assertAlmostEqual(0.511, self.filterer.scalarsDict["Q6"][i], places=3)
@@ -146,7 +149,7 @@ class TestFilterer(unittest.TestCase):
         self.assertTrue("ACNA" in self.filterer.scalarsDict)
         self.assertTrue("Q4" in self.filterer.scalarsDict)
         self.assertTrue("Q6" in self.filterer.scalarsDict)
-        for i in xrange(nvis):
+        for i in range(nvis):
             self.assertEqual(3, self.filterer.scalarsDict["ACNA"][i])
             self.assertAlmostEqual(0.036, self.filterer.scalarsDict["Q4"][i], places=3)
             self.assertAlmostEqual(0.511, self.filterer.scalarsDict["Q6"][i], places=3)

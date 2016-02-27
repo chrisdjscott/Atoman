@@ -9,6 +9,8 @@ that are created, for example the atoms actor or bonds actor.
 Work in progress...
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import functools
 import logging
 

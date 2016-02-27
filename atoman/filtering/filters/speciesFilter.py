@@ -7,6 +7,8 @@ This filter allows you to filter atoms by their species. Only atoms of the
 selected species will be visible.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import numpy as np
 
 from . import base
@@ -57,7 +59,7 @@ class SpeciesFilter(base.BaseFilter):
         visSpecArray = np.asarray(visSpecArray, dtype=np.int32)
         
         # call C library to filter by species
-        NVisible = _filtering.specieFilter(visibleAtoms, visSpecArray, inputState.specie, NScalars, fullScalars, 
+        NVisible = _filtering.specieFilter(visibleAtoms, visSpecArray, inputState.specie, NScalars, fullScalars,
                                            NVectors, fullVectors)
 
         # resize visible atoms

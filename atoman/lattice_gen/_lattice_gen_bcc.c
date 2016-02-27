@@ -10,6 +10,21 @@
 #include <math.h>
 #include "visclibs/array_utils.h"
 
+#if PY_MAJOR_VERSION >= 3
+    #define MOD_ERROR_VAL NULL
+    #define MOD_SUCCESS_VAL(val) val
+    #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
+        ob = PyModule_Create(&moduledef);
+#else
+    #define MOD_ERROR_VAL
+    #define MOD_SUCCESS_VAL(val)
+    #define MOD_INIT(name) void init##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        ob = Py_InitModule3(name, methods, doc);
+#endif
 
 static PyObject* generateBCCLattice(PyObject*, PyObject*);
 
@@ -17,7 +32,7 @@ static PyObject* generateBCCLattice(PyObject*, PyObject*);
 /*******************************************************************************
  ** List of python methods available in this module
  *******************************************************************************/
-static struct PyMethodDef methods[] = {
+static struct PyMethodDef module_methods[] = {
     {"generateBCCLattice", generateBCCLattice, METH_VARARGS, "Generate a BCC lattice"},
     {NULL, NULL, 0, NULL}
 };
@@ -25,11 +40,17 @@ static struct PyMethodDef methods[] = {
 /*******************************************************************************
  ** Module initialisation function
  *******************************************************************************/
-PyMODINIT_FUNC
-init_lattice_gen_bcc(void)
+MOD_INIT(_lattice_gen_bcc)
 {
-    (void)Py_InitModule("_lattice_gen_bcc", methods);
+    PyObject *mod;
+    
+    MOD_DEF(mod, "_lattice_gen_bcc", "BCC lattice generator", module_methods)
+    if (mod == NULL)
+        return MOD_ERROR_VAL;
+    
     import_array();
+    
+    return MOD_SUCCESS_VAL(mod);
 }
 
 /*******************************************************************************

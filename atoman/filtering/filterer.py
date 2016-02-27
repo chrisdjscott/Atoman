@@ -5,12 +5,15 @@ The filterer object.
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import copy
 import time
 import logging
-import itertools
 
 import numpy as np
+import six
+from six.moves import zip
 
 from .filters import _filtering as filtering_c
 from ..system.atoms import elements
@@ -142,13 +145,13 @@ class Filterer(object):
             
             # set Lattice scalars
             self.logger.debug("Adding initial scalars from inputState")
-            for scalarsName, scalars in inputState.scalarsDict.iteritems():
+            for scalarsName, scalars in six.iteritems(inputState.scalarsDict):
                 self.logger.debug("  Adding '%s' scalars", scalarsName)
                 self.latticeScalarsDict[scalarsName] = copy.deepcopy(scalars)
             
             # set initial vectors
             self.logger.debug("Adding initial vectors from inputState")
-            for vectorsName, vectors in inputState.vectorsDict.iteritems():
+            for vectorsName, vectors in six.iteritems(inputState.vectorsDict):
                 self.logger.debug("  Adding '%s' vectors", vectorsName)
                 self.vectorsDict[vectorsName] = vectors
         
@@ -307,13 +310,13 @@ class Filterer(object):
         self.logger.debug("Making full scalars array (N=%d)", len(self.scalarsDict) + len(self.latticeScalarsDict))
         
         scalarsList = []
-        for name, scalars in self.scalarsDict.iteritems():
+        for name, scalars in six.iteritems(self.scalarsDict):
             self.logger.debug("  Adding '%s' scalars", name)
             scalarsList.append(scalars)
             if len(scalars) != len(self.visibleAtoms):
                 raise RuntimeError("Wrong length for scalars: '{0}'".format(name))
         
-        for name, scalars in self.latticeScalarsDict.iteritems():
+        for name, scalars in six.iteritems(self.latticeScalarsDict):
             self.logger.debug("  Adding '%s' scalars (Lattice)", name)
             scalarsList.append(scalars)
             if len(scalars) != len(self.visibleAtoms):
@@ -334,7 +337,7 @@ class Filterer(object):
         self.logger.debug("Making full vectors array (N=%d)", len(self.vectorsDict))
         
         vectorsList = []
-        for name, vectors in self.vectorsDict.iteritems():
+        for name, vectors in six.iteritems(self.vectorsDict):
             self.logger.debug("Adding '%s' vectors", name)
             vectorsList.append(vectors)
             if vectors.shape != (len(self.visibleAtoms), 3):
@@ -361,7 +364,7 @@ class Filterer(object):
             scalarsList = np.split(scalarsFull, NScalars)
             
             # Filterer.scalarsDict
-            keys = self.scalarsDict.keys()
+            keys = list(self.scalarsDict.keys())
             for i, key in enumerate(keys):
                 self.logger.debug("Storing '%s' scalars", key)
                 scalars = scalarsList[i]
@@ -374,7 +377,7 @@ class Filterer(object):
             
             # Lattice.scalarsDict
             offset = len(keys)
-            keys = self.latticeScalarsDict.keys()
+            keys = list(self.latticeScalarsDict.keys())
             for j, key in enumerate(keys):
                 self.logger.debug("  Storing '%s' scalars (Lattice)", key)
                 i = j + offset
@@ -397,9 +400,9 @@ class Filterer(object):
         if NVectors > 0:
             self.logger.debug("Storing full vectors array in dict")
             vectorsList = np.split(vectorsFull, NVectors)
-            keys = self.vectorsDict.keys()
+            keys = list(self.vectorsDict.keys())
             
-            for key, vectors in itertools.izip(keys, vectorsList):
+            for key, vectors in zip(keys, vectorsList):
                 self.logger.debug("  Storing '%s' vectors", key)
                 assert len(vectors) >= NVisible, "ERROR: vectors (%s) smaller than expected (%d < %d)" % (key,
                                                                                                           len(vectors),

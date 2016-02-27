@@ -5,6 +5,8 @@ The main toolbar
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 from PySide import QtGui, QtCore
@@ -14,7 +16,6 @@ from .pipelineForm import PipelineForm
 from ..visutils.utilities import iconPath
 
 
-################################################################################
 class MainToolbar(QtGui.QDockWidget):
     def __init__(self, parent, width, height):
         super(MainToolbar, self).__init__(parent)

@@ -3,6 +3,9 @@
 Unit tests for rendering.c
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 
 import numpy as np
@@ -108,9 +111,9 @@ class TestRendering(unittest.TestCase):
         specieRef = np.asarray([0,0,1,1,2,0,1,1], dtype=np.int32)
         specieInput = np.asarray([0,1,1,0,0,1,0,1], dtype=np.int32)
         
-        print "HELLO"
-        print _rendering
-        print _rendering.countAntisitesBySpecie
+        print("HELLO")
+        print(_rendering)
+        print(_rendering.countAntisitesBySpecie)
         
         # call function
         speciesCount = _rendering.countAntisitesBySpecie(antisites, NSpeciesRef, specieRef, onAntisites, NSpeciesInput,

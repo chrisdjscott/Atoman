@@ -5,12 +5,15 @@ Generate Fluorite lattice
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 import numpy as np
 
 from ..system.lattice import Lattice
 from . import lattice_gen_utils
+from six.moves import range
 
 
 ################################################################################
@@ -125,16 +128,16 @@ class SiC4HLatticeGenerator(object):
         # generate lattice
         count = 0
         totalQ = 0.0
-        for i in xrange(iStop):
+        for i in range(iStop):
             ifac = i * a0
             
-            for j in xrange(jStop):
+            for j in range(jStop):
                 jfac = j * a0
                 
-                for k in xrange(kStop):
+                for k in range(kStop):
                     kfac = k * a0
                     
-                    for l in xrange(8):
+                    for l in range(8):
                         # position of new atom
                         l3 = 3 * l
                         rx_tmp = pos_uc[l3    ] + ifac

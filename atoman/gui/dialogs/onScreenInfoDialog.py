@@ -5,11 +5,15 @@ On screen info dialog
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 from PySide import QtGui, QtCore
 
 from ...visutils.utilities import iconPath
+import six
+from six.moves import range
 
 
 ################################################################################
@@ -63,7 +67,7 @@ class TextSettingsDialog(QtGui.QDialog):
         self.textFormatLine.editingFinished.connect(self.textFormatEdited)
         formLayout.addWidget(self.textFormatLine)
         
-        for k, v in item.formatInfo.iteritems():
+        for k, v in six.iteritems(item.formatInfo):
             formLayout.addWidget(QtGui.QLabel("'%s' = %s" % (k, v)))
         
         # add close button
@@ -88,7 +92,7 @@ class TextSettingsDialog(QtGui.QDialog):
         Position changed.
         
         """
-        for pos in self.positionRadios.keys():
+        for pos in list(self.positionRadios.keys()):
             rb = self.positionRadios[pos]
             if rb.isChecked():
                 self.item.positionChanged(pos)
@@ -228,7 +232,7 @@ class OnScreenInfoDialog(QtGui.QDialog):
         
         """
         selectedText = []
-        for i in xrange(self.textList.count()):
+        for i in range(self.textList.count()):
             item = self.textList.item(i)
             if item.checkState() == QtCore.Qt.Checked:
                 selectedText.append(item)

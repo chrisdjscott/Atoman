@@ -5,6 +5,10 @@ Utility methods
 @author: Chris Scott
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from __future__ import division
 import os
 import sys
 import random
@@ -18,6 +22,7 @@ import pkg_resources
 from PySide import QtGui, QtCore
 
 from .appdirs import appdirs
+from six.moves import range
 
 # set where to look for executables when os.getenv("PATH")
 # returns something less than expected (eg when running
@@ -117,7 +122,7 @@ def createDataFile(relative, text=""):
     """Create the given path within the data directory with the given text."""
     # create the directory if it doesn't exist
     if not os.path.exists(_dataDir):
-        os.makedirs(_dataDir, 0755)
+        os.makedirs(_dataDir, 0o755)
     
     # check if there are subdirectories within relative
     head, tail = os.path.split(relative)
@@ -125,7 +130,7 @@ def createDataFile(relative, text=""):
     # directory file is going in
     dirname = os.path.join(_dataDir, head)
     if not os.path.exists(dirname):
-        os.makedirs(dirname, 0755)
+        os.makedirs(dirname, 0o755)
     
     # write file
     with open(os.path.join(dirname, tail), "w") as fh:
@@ -176,7 +181,7 @@ def idGenerator(size=16, chars=string.digits + string.ascii_letters + string.dig
     Generate random string of size "size" (defaults to 16)
     
     """
-    return ''.join(random.choice(chars) for _ in xrange(size))
+    return ''.join(random.choice(chars) for _ in range(size))
 
 ################################################################################
 def createTmpDirectory():
@@ -231,7 +236,7 @@ def warnExeNotFound(parent, exe):
 ################################################################################
 def checkForExe(exe):
     """
-    Check if executable can be located 
+    Check if executable can be located
     
     """
     exepath = None
@@ -279,7 +284,7 @@ def checkForExe(exe):
 ################################################################################
 def checkForExeGlob(exe):
     """
-    Check if executable can be located 
+    Check if executable can be located
     
     """
     # check if exe programme located
@@ -320,13 +325,13 @@ def runSubProcess(command, verbose=0):
     
     """
     if verbose:
-        print command
+        print(command)
     
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, stderr = process.communicate()
     status = process.poll()
     
-    return output, stderr, status
+    return output.decode('utf-8'), stderr.decode('utf-8'), status
 
 ################################################################################
 def runSubprocessInThread(command, resultQ, verbose=False):

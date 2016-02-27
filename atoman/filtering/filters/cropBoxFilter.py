@@ -6,6 +6,8 @@ Crop box
 Crop atoms within a box or, alternatively, the inverse.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import base
 from . import _filtering
 

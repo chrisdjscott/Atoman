@@ -6,12 +6,15 @@ Generate Ga stabilised delta-Pu lattice using Pu3Ga technique
 
 """
 from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 import numpy as np
 
 from ..system.lattice import Lattice
 from . import _lattice_gen_pu3ga
+from six.moves import range
 
 ################################################################################
 
@@ -80,7 +83,7 @@ class Pu3GaLatticeGenerator(object):
         lattice.NAtoms = NAtoms
         
         # min/max pos
-        for i in xrange(3):
+        for i in range(3):
             lattice.minPos[i] = np.min(lattice.pos[i::3])
             lattice.maxPos[i] = np.max(lattice.pos[i::3])
         

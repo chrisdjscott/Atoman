@@ -50,11 +50,14 @@ Parameters are:
         set of points in the cluster.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import numpy as np
 
 from . import base
 from .. import clusters
 from .. import _clusters
+from six.moves import range
 
 
 class ClusterFilterSettings(base.BaseSettings):
@@ -99,6 +102,9 @@ class ClusterFilter(base.BaseFilter):
         maxSize = settings.getSetting("maxClusterSize")
         nebRad = settings.getSetting("neighbourRadius")
         calcVols = settings.getSetting("calculateVolumes")
+        self.logger.debug("Cluster size: %d -> %d", minSize, maxSize)
+        self.logger.debug("Neighbour radius: %f", nebRad)
+        self.logger.debug("Calculating volumes: %r", calcVols)
         
         # arrays for the cluster calculation
         atomCluster = np.empty(len(visibleAtoms), np.int32)
@@ -117,13 +123,13 @@ class ClusterFilter(base.BaseFilter):
         
         # build cluster lists
         clusterList = []
-        for i in xrange(NClusters):
+        for i in range(NClusters):
             clusterList.append(clusters.AtomCluster(lattice))
         
         # add atoms to cluster lists
         clusterIndexMapper = {}
         count = 0
-        for i in xrange(NVisible):
+        for i in range(NVisible):
             atomIndex = visibleAtoms[i]
             clusterIndex = atomCluster[i]
             

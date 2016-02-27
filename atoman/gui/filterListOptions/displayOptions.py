@@ -11,12 +11,15 @@ Display options for a filter list.
   settings manually.  In the formula "N" is the number of visible spheres.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import functools
 
 from PySide import QtGui, QtCore
 
 from .. import genericForm
+import six
 
 
 ################################################################################
@@ -171,7 +174,7 @@ class DisplayOptionsWindow(QtGui.QDialog):
         """
         self.resA = val
         
-        for setting, values in self.resDefaults.iteritems():
+        for setting, values in six.iteritems(self.resDefaults):
             aval, bval = values
             if aval == self.resA and bval == self.resB:
                 self.defaultButtonsDict[setting].setChecked(1)

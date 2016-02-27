@@ -11,6 +11,22 @@
 #include "visclibs/utilities.h"
 #include "visclibs/array_utils.h"
 
+#if PY_MAJOR_VERSION >= 3
+    #define MOD_ERROR_VAL NULL
+    #define MOD_SUCCESS_VAL(val) val
+    #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
+        ob = PyModule_Create(&moduledef);
+#else
+    #define MOD_ERROR_VAL
+    #define MOD_SUCCESS_VAL(val)
+    #define MOD_INIT(name) void init##name(void)
+    #define MOD_DEF(ob, name, doc, methods) \
+        ob = Py_InitModule3(name, methods, doc);
+#endif
+
 static PyObject* calculateBonds(PyObject*, PyObject*);
 static PyObject* calculateDisplacementVectors(PyObject*, PyObject*);
 
@@ -18,7 +34,7 @@ static PyObject* calculateDisplacementVectors(PyObject*, PyObject*);
 /*******************************************************************************
  ** List of python methods available in this module
  *******************************************************************************/
-static struct PyMethodDef methods[] = {
+static struct PyMethodDef module_methods[] = {
     {"calculateBonds", calculateBonds, METH_VARARGS, "Find bonds between visible atoms"},
     {"calculateDisplacementVectors", calculateDisplacementVectors, METH_VARARGS, "Calculate atom displacement vectors"},
     {NULL, NULL, 0, NULL}
@@ -27,11 +43,17 @@ static struct PyMethodDef methods[] = {
 /*******************************************************************************
  ** Module initialisation function
  *******************************************************************************/
-PyMODINIT_FUNC
-initbonds(void)
+MOD_INIT(bonds)
 {
-    (void)Py_InitModule("bonds", methods);
+    PyObject *mod;
+
+    MOD_DEF(mod, "bonds", "Bonds C extension", module_methods)
+    if (mod == NULL)
+        return MOD_ERROR_VAL;
+
     import_array();
+
+    return MOD_SUCCESS_VAL(mod);
 }
 
 /*******************************************************************************

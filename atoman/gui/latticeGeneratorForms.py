@@ -7,6 +7,8 @@ In the *Generate new system* section of the *Input* tab of the main toolbar latt
 of different types and sizes can be generated.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from PySide import QtGui, QtCore
 
 from ..visutils.utilities import iconPath
@@ -81,7 +83,7 @@ class GenericLatticeGeneratorForm(QtGui.QWidget):
         latticeConstantSpin.setMaximum(99.99999)
         latticeConstantSpin.setValue(self.generatorArgs.a0)
         latticeConstantSpin.valueChanged.connect(self.latticeConstantChanged)
-        latticeConstantSpin.setSuffix(u" \u212B")
+        latticeConstantSpin.setSuffix(" \u212B")
         latticeConstantSpin.setToolTip("Set the lattice constant")
         self.formLayout.addRow("Lattice constant", latticeConstantSpin)
         

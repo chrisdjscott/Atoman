@@ -5,6 +5,9 @@ Lattice reader objects.
 @author: Chris Scott
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import copy
 import re
@@ -16,18 +19,19 @@ from . import _input as input_c
 from .atoms import elements
 from ..visutils import utilities
 from .lattice import Lattice
+from six.moves import range
 
 
 ################################################################################
 
 def basic_displayWarning(message):
-    print "WARNING: %s" % message
+    print("WARNING: %s" % message)
 
 def basic_displayError(message):
-    print "ERROR: %s" % message
+    print("ERROR: %s" % message)
 
 def basic_log(message):
-    print message
+    print(message)
 
 ################################################################################
 
@@ -194,7 +198,7 @@ class LbomdXYZReader(GenericLatticeReader):
         # check input exists, unzip if necessary
         filepath, zipFlag = self.checkForZipped(xyzfilename)
         if zipFlag == -1:
-            self.displayWarning("Could not find file: "+xyzfilename)
+            self.displayWarning("Could not find file: " + xyzfilename)
             self.logger.warning("Could not find file: %s", xyzfilename)
             return -1, None
         
@@ -205,7 +209,7 @@ class LbomdXYZReader(GenericLatticeReader):
         
         if status:
             if status == -1:
-                self.displayWarning("Could not find file: "+xyzfilename)
+                self.displayWarning("Could not find file: " + xyzfilename)
                 self.logger.warning("Could not find file: %s", xyzfilename)
             
             elif status == -2:
@@ -269,8 +273,9 @@ class LbomdXYZReader(GenericLatticeReader):
         pe = np.empty(NAtoms, np.float64)
         
         # call clib
-        status = input_c.readLBOMDXYZ(filename, state.atomID, state.pos, state.charge, ke, pe, velocityArray, 
-                                      state.maxPos, state.minPos, xyzformat, state.specie, refLattice.specie, refLattice.charge)
+        status = input_c.readLBOMDXYZ(filename, state.atomID, state.pos, state.charge, ke, pe, velocityArray,
+                                      state.maxPos, state.minPos, xyzformat, state.specie, refLattice.specie,
+                                      refLattice.charge)
         
         if status:
             return status, None
@@ -292,8 +297,9 @@ class LbomdXYZReader(GenericLatticeReader):
         state.specieRGB = copy.deepcopy(refLattice.specieRGB)
         state.specieAtomicNumber = copy.deepcopy(refLattice.specieAtomicNumber)
         
-        for i in xrange(len(state.specieList)):
-            self.logger.info("    %d %s (%s) atoms", state.specieCount[i], state.specieList[i], elements.atomName(state.specieList[i]))
+        for i in range(len(state.specieList)):
+            self.logger.info("    %d %s (%s) atoms", state.specieCount[i], state.specieList[i],
+                             elements.atomName(state.specieList[i]))
         
         return 0, state
         
@@ -343,18 +349,17 @@ class LbomdRefReader(GenericLatticeReader):
         self.logger.info("  %d atoms", NAtoms)
         
         # temporary specie list and counter arrays
-        maxNumSpecies = 20 ## if there are more than 20 species these must be changed
-        dt = np.dtype((str, 2))
-        specieListTemp = np.empty(maxNumSpecies+1, dt) 
-        specieCountTemp = np.zeros(maxNumSpecies+1, np.int32)
+        maxNumSpecies = 20  # if there are more than 20 species these must be changed
+        specieList = []
+        specieCountTemp = np.zeros(maxNumSpecies + 1, np.int32)
         
         forceArray = np.empty((NAtoms, 3), np.float64)
         ke = np.empty(NAtoms, np.float64)
         pe = np.empty(NAtoms, np.float64)
         
         # call c lib
-        status = input_c.readRef(filename, state.atomID, state.specie, state.pos, state.charge, ke, pe, forceArray, 
-                                 specieListTemp, specieCountTemp, state.maxPos, state.minPos)
+        status = input_c.readRef(filename, state.atomID, state.specie, state.pos, state.charge, ke, pe, forceArray,
+                                 specieList, specieCountTemp, state.maxPos, state.minPos)
         
         if status:
             return status, None
@@ -365,25 +370,17 @@ class LbomdRefReader(GenericLatticeReader):
         state.vectorsDict["Force"] = forceArray
         
         # build specie list and counter in lattice object
-        NSpecies = 0
-        for i in range(maxNumSpecies):
-            if specieListTemp[i] == 'XX':
-                break
-            else:
-                NSpecies += 1
+        NSpecies = len(specieList)
                 
         # allocate specieList/Counter arrays
-        dt = np.dtype((str, 2))
-        state.specieList = np.empty(NSpecies, dt)
+        state.specieList = specieList
         state.specieCount = np.empty(NSpecies, np.int32)
         state.specieMass = np.empty(NSpecies, np.float64)
         state.specieCovalentRadius = np.empty(NSpecies, np.float64)
         state.specieAtomicNumber = np.empty(NSpecies, np.int32)
         state.specieRGB = np.empty((NSpecies, 3), np.float64)
-        for i in xrange(NSpecies):
-            state.specieList[i] = specieListTemp[i]
+        for i in range(NSpecies):
             state.specieCount[i] = specieCountTemp[i]
-            
             state.specieMass[i] = elements.atomicMass(state.specieList[i])
             state.specieCovalentRadius[i] = elements.covalentRadius(state.specieList[i])
             state.specieAtomicNumber[i] = elements.atomicNumber(state.specieList[i])
@@ -392,7 +389,8 @@ class LbomdRefReader(GenericLatticeReader):
             state.specieRGB[i][1] = rgbtemp[1]
             state.specieRGB[i][2] = rgbtemp[2]
             
-            self.logger.info("    %d %s (%s) atoms", specieCountTemp[i], specieListTemp[i], elements.atomName(specieListTemp[i]))
+            self.logger.info("    %d %s (%s) atoms", specieCountTemp[i], specieList[i],
+                             elements.atomName(specieList[i]))
     
         return 0, state
 
@@ -442,37 +440,28 @@ class LbomdDatReader(GenericLatticeReader):
         
         # need temporary specie list and counter arrays
         maxNumSpecies = 20
-        dt = np.dtype((str, 2))
-        specieListTemp = np.empty( maxNumSpecies+1, dt ) 
-        specieCountTemp = np.zeros( maxNumSpecies+1, np.int32 )
+        specieList = []
+        specieCountTemp = np.zeros(maxNumSpecies + 1, np.int32)
         
         # call c lib
-        status = input_c.readLatticeLBOMD(filename, state.atomID, state.specie, state.pos, state.charge, specieListTemp, 
+        status = input_c.readLatticeLBOMD(filename, state.atomID, state.specie, state.pos, state.charge, specieList,
                                           specieCountTemp, state.maxPos, state.minPos)
         
         if status:
             return status, None
         
         # build specie list and counter in lattice object
-        NSpecies = 0
-        for i in range(maxNumSpecies):
-            if specieListTemp[i] == 'XX':
-                break
-            else:
-                NSpecies += 1
+        NSpecies = len(specieList)
                 
         # allocate specieList/Counter arrays
-        dt = np.dtype((str, 2))
-        state.specieList = np.empty(NSpecies, dt)
+        state.specieList = specieList
         state.specieCount = np.empty(NSpecies, np.int32)
         state.specieMass = np.empty(NSpecies, np.float64)
         state.specieCovalentRadius = np.empty(NSpecies, np.float64)
         state.specieAtomicNumber = np.empty(NSpecies, np.int32)
         state.specieRGB = np.empty((NSpecies, 3), np.float64)
-        for i in xrange(NSpecies):
-            state.specieList[i] = specieListTemp[i]
+        for i in range(NSpecies):
             state.specieCount[i] = specieCountTemp[i]
-            
             state.specieMass[i] = elements.atomicMass(state.specieList[i])
             state.specieCovalentRadius[i] = elements.covalentRadius(state.specieList[i])
             state.specieAtomicNumber[i] = elements.atomicNumber(state.specieList[i])
@@ -481,7 +470,8 @@ class LbomdDatReader(GenericLatticeReader):
             state.specieRGB[i][1] = rgbtemp[1]
             state.specieRGB[i][2] = rgbtemp[2]
             
-            self.logger.info("    %d %s (%s) atoms", specieCountTemp[i], specieListTemp[i], elements.atomName(specieListTemp[i]))
+            self.logger.info("    %d %s (%s) atoms", specieCountTemp[i], specieList[i],
+                             elements.atomName(specieList[i]))
         
         # guess roulette
         stepNumber = None

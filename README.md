@@ -8,9 +8,9 @@ Released under the MIT license, see "LICENSE.md" for details.
 
 ## Requirements
 
-This code requires [Python 2.7](http://www.python.org/download/releases/2.7/) to run.  It depends
-on a number of Python libraries, a C and C++ compiler (tested with gcc and g++) and also some other
-optional software.
+This code requires [Python](http://www.python.org) to run. Currently Python 2.7, 3.2, 3.3 and 3.4 should work. Atoman
+depends on a number of Python libraries, a C and C++ compiler (tested with gcc and g++) and also some other optional
+software.
 
 ### Python modules
 
@@ -26,7 +26,7 @@ Required:
 * [Matplotlib](http://matplotlib.org/)
 * [PySide](https://pypi.python.org/pypi/PySide)
 * [Pillow](https://pillow.readthedocs.org/)
-* [VTK](http://www.vtk.org/) (with the Python bindings enabled)
+* [VTK](http://www.vtk.org/) - version 7.0 or later required for Python 3
 * [Sphinx](http://sphinx-doc.org/)
 * [nose](https://nose.readthedocs.org/en/latest/) (testing)
 * [setuptools](https://pypi.python.org/pypi/setuptools)

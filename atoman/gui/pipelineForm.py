@@ -9,6 +9,8 @@ lists. These lists operate independently of one another and calculate properties
 filters/calculators are shown below:
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import sys
 import glob
@@ -28,6 +30,8 @@ from .dialogs import infoDialogs
 from . import utils
 from ..rendering import highlight
 from .dialogs import simpleDialogs
+import six
+from six.moves import range
 
 
 ################################################################################
@@ -256,9 +260,9 @@ class PipelineForm(QtGui.QWidget):
                     self.mainWindow.updateProgress(0, lattice.NAtoms, "Shifting cell")
                     
                     # loop over atoms
-                    for i in xrange(lattice.NAtoms):
+                    for i in range(lattice.NAtoms):
                         i3 = 3 * i
-                        for j in xrange(3):
+                        for j in range(3):
                             lattice.pos[i3 + j] += shift[j]
                         
                         # progress
@@ -321,7 +325,7 @@ class PipelineForm(QtGui.QWidget):
                 
                 # calculate final number of atoms
                 numfin = lattice.NAtoms
-                for i in xrange(3):
+                for i in range(3):
                     numfin += numfin * repDirs[i]
                 numadd = numfin - lattice.NAtoms
                 self.logger.debug("Replicating cell: adding %d atoms", numadd)
@@ -341,24 +345,24 @@ class PipelineForm(QtGui.QWidget):
                     
                     # loop over directions
                     count = 0
-                    for i in xrange(3):
+                    for i in range(3):
                         self.logger.debug("Replicating along axis %d: %d times", i, repDirs[i])
                         
                         # store num atoms at beginning of this direction
                         NAtoms = lattice.NAtoms
                         
                         # loop over number of replications in this direction
-                        for j in xrange(repDirs[i]):
+                        for j in range(repDirs[i]):
                             # loop over atoms
-                            for k in xrange(NAtoms):
+                            for k in range(NAtoms):
                                 # attributes to copy to new atom
                                 sym = lattice.atomSym(k)
                                 q = lattice.charge[k]
                                 scalarVals = {}
-                                for name, scalarsArray in lattice.scalarsDict.iteritems():
+                                for name, scalarsArray in six.iteritems(lattice.scalarsDict):
                                     scalarVals[name] = scalarsArray[k]
                                 vectorVals = {}
-                                for name, vectorsArray in lattice.vectorsDict.iteritems():
+                                for name, vectorsArray in six.iteritems(lattice.vectorsDict):
                                     vectorVals[name] = vectorsArray[k]
                                 
                                 # new position
@@ -475,7 +479,7 @@ class PipelineForm(QtGui.QWidget):
         inp = self.inputState
         
         diff = False
-        for i in xrange(3):
+        for i in range(3):
             if math.fabs(inp.cellDims[i] - ref.cellDims[i]) > 1e-4:
                 diff = True
                 break
@@ -744,7 +748,7 @@ class PipelineForm(QtGui.QWidget):
         
         self.filterLists[currentList].clearList()
         
-        for i in xrange(self.filterListCount):
+        for i in range(self.filterListCount):
             if i > currentList:
                 self.filterTabBar.setTabText(i, str(i - 1))
                 self.filterLists[i].tab -= 1
@@ -832,7 +836,7 @@ class PipelineForm(QtGui.QWidget):
         # we need the min/max of ref/input/pickPos
         minPos = np.zeros(3, np.float64)
         maxPos = np.zeros(3, np.float64)
-        for i in xrange(3):
+        for i in range(3):
             # set to min ref pos
             minPos[i] = min(refState.pos[i::3])
             maxPos[i] = max(refState.pos[i::3])
@@ -903,13 +907,13 @@ class PipelineForm(QtGui.QWidget):
                         defList = (splitInts,)
                 
                 minSepScalars = {}
-                for scalarType, scalarArray in scalarsDict.iteritems():
+                for scalarType, scalarArray in six.iteritems(scalarsDict):
                     minSepScalars[scalarType] = scalarArray[tmp_index]
-                for scalarType, scalarArray in latticeScalarsDict.iteritems():
+                for scalarType, scalarArray in six.iteritems(latticeScalarsDict):
                     minSepScalars[scalarType] = scalarArray[tmp_index]
                 
                 minSepVectors = {}
-                for vectorType, vectorArray in vectorsDict.iteritems():
+                for vectorType, vectorArray in six.iteritems(vectorsDict):
                     minSepVectors[vectorType] = vectorArray[tmp_index]
         
         logger.debug("Closest object to pick: %f (threshold: %f)", minSep, 0.1)

@@ -46,6 +46,8 @@ The bond order calculator has the following parameters:
 .. [2] A. Stukowski. *Modelling Simul. Mater. Sci. Eng.* **20** (2012) 045021; `doi: 10.1088/0965-0393/20/4/045021 <http://dx.doi.org/10.1088/0965-0393/20/4/045021>`_.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import base
 from . import _bond_order
 

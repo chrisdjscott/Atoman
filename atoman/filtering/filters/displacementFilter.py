@@ -33,6 +33,8 @@ Parameters for this filter are:
         The number of sides the bonds have. More looks better but is slower.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import numpy as np
 
 from . import base

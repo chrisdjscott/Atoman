@@ -4,6 +4,8 @@ This filter can be used to filter a generic scalar array stored on
 a Lattice object.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import base
 from . import _filtering
 

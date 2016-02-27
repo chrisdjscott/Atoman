@@ -9,11 +9,14 @@ atoms are bonded. If no minimum/maximum bond lengths are specified for a
 given pair of elements then bonds between them will not be counted.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import numpy as np
 
 from . import base
 from . import _filtering
 from ...system.atoms import elements
+from six.moves import range
 
 
 class CoordinationNumberFilterSettings(base.BaseSettings):
@@ -59,13 +62,13 @@ class CoordinationNumberFilter(base.BaseFilter):
         # construct bonds array (bond distances squared)
         calcBonds = False
         maxBond = -1
-        for i in xrange(NSpecies):
+        for i in range(NSpecies):
             symi = specieList[i]
             
             if symi in bondDict:
                 d = bondDict[symi]
                 
-                for j in xrange(NSpecies):
+                for j in range(NSpecies):
                     symj = specieList[j]
                     
                     if symj in d:

@@ -14,6 +14,8 @@ using hyphens. For example:
 will show atoms: 1, 2, 3, 4, 56, 105, 106 and 107.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import base
 from . import _filtering
 

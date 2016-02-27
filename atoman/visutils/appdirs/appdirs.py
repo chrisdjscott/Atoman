@@ -7,6 +7,9 @@
 
 See <http://github.com/ActiveState/appdirs> for details and usage.
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from six.moves import map
 # Dev Notes:
 # - MSDN on where to store app data files:
 #   http://support.microsoft.com/default.aspx?scid=kb;en-us;310294#XSLTH3194121123120121120120
@@ -23,7 +26,7 @@ import os
 PY3 = sys.version_info[0] == 3
 
 if PY3:
-    unicode = str
+    str = str
 
 if sys.platform.startswith('java'):
     import platform
@@ -413,7 +416,7 @@ def _get_win_folder_from_registry(csidl_name):
     if PY3:
       import winreg as _winreg
     else:
-      import _winreg
+      import six.moves.winreg
 
     shell_folder_name = {
         "CSIDL_APPDATA": "AppData",
@@ -421,11 +424,11 @@ def _get_win_folder_from_registry(csidl_name):
         "CSIDL_LOCAL_APPDATA": "Local AppData",
     }[csidl_name]
 
-    key = _winreg.OpenKey(
-        _winreg.HKEY_CURRENT_USER,
+    key = six.moves.winreg.OpenKey(
+        six.moves.winreg.HKEY_CURRENT_USER,
         r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders"
     )
-    dir, type = _winreg.QueryValueEx(key, shell_folder_name)
+    dir, type = six.moves.winreg.QueryValueEx(key, shell_folder_name)
     return dir
 
 
@@ -436,7 +439,7 @@ def _get_win_folder_with_pywin32(csidl_name):
     # not return unicode strings when there is unicode data in the
     # path.
     try:
-        dir = unicode(dir)
+        dir = str(dir)
 
         # Downgrade to short path name if have highbit chars. See
         # <http://bugs.activestate.com/show_bug.cgi?id=85099>.

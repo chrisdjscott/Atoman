@@ -3,6 +3,8 @@
 Unit tests for ACNA filter
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 
 import numpy as np
@@ -11,6 +13,7 @@ from ....lattice_gen import lattice_gen_fcc, lattice_gen_bcc
 from .. import acnaFilter
 from .. import base
 from ....gui import _preferences
+from six.moves import range
 
 
 ################################################################################
@@ -77,7 +80,7 @@ class TestACNABCC(unittest.TestCase):
         
         # check Q4 (all atoms same in perfect lattice...) (or should I check them all)
         scalars = result.getScalars()["ACNA"]
-        for i in xrange(len(filterInput.visibleAtoms)):
+        for i in range(len(filterInput.visibleAtoms)):
             self.assertEqual(3, scalars[i])
     
     def test_ACNABCC_4threads(self):
@@ -113,7 +116,7 @@ class TestACNABCC(unittest.TestCase):
         
         # check Q4 (all atoms same in perfect lattice...) (or should I check them all)
         scalars = result.getScalars()["ACNA"]
-        for i in xrange(len(filterInput.visibleAtoms)):
+        for i in range(len(filterInput.visibleAtoms)):
             self.assertEqual(3, scalars[i])
 
 ################################################################################
@@ -180,7 +183,7 @@ class TestACNAFCC(unittest.TestCase):
         
         # check Q4 (all atoms same in perfect lattice...) (or should I check them all)
         scalars = result.getScalars()["ACNA"]
-        for i in xrange(len(filterInput.visibleAtoms)):
+        for i in range(len(filterInput.visibleAtoms)):
             self.assertEqual(1, scalars[i])
     
     def test_ACNAFCC_4threads(self):
@@ -216,5 +219,5 @@ class TestACNAFCC(unittest.TestCase):
         
         # check Q4 (all atoms same in perfect lattice...) (or should I check them all)
         scalars = result.getScalars()["ACNA"]
-        for i in xrange(len(filterInput.visibleAtoms)):
+        for i in range(len(filterInput.visibleAtoms)):
             self.assertEqual(1, scalars[i])

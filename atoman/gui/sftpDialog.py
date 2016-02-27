@@ -19,6 +19,8 @@ directory you are in.  You can change the current working directory using one of
 buttons on the toolbar at the top of the main window.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import stat
 import getpass
@@ -27,6 +29,7 @@ import re
 import errno
 
 from PySide import QtGui, QtCore
+from six.moves import range
 try:
     import paramiko
     logging.getLogger("paramiko").setLevel(logging.WARNING)
@@ -346,7 +349,7 @@ class SFTPBrowser(QtGui.QGroupBox):
         try:
             pathn = self.sftp.normalize(path)
         
-        except IOError, e:
+        except IOError as e:
             if e.errno == errno.ENOENT:
                 self.logger.debug("File does not exist")
                 return None
@@ -414,13 +417,13 @@ class SFTPBrowser(QtGui.QGroupBox):
         
         # all visible
         if not len(filters):
-            for i in xrange(1, self.listWidget.count()):
+            for i in range(1, self.listWidget.count()):
                 item = self.listWidget.item(i)
                 item.setHidden(False)
         
         # need to check
         else:
-            for i in xrange(1, self.listWidget.count()):
+            for i in range(1, self.listWidget.count()):
                 item = self.listWidget.item(i)
                 if item.is_dir:
                     continue

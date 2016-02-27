@@ -20,6 +20,8 @@ was written to provide direct access to Voro++ from the Python code.
   during the computation.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import logging
 
 from PySide import QtGui, QtCore

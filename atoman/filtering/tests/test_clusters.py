@@ -3,6 +3,8 @@
 Test for the clusters module.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 
 import numpy as np
@@ -12,6 +14,7 @@ from .. import voronoi
 from ..filters import clusterFilter
 from ..filters import pointDefectsFilter
 from ...system import lattice
+from six.moves import zip
 
 
 class DummyVoronoiOpts(object):

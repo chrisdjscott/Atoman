@@ -5,13 +5,16 @@ Module for rendering
 @author: Chris Scott
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import sys
 import shutil
 import logging
 import time
 import threading
-import Queue
+import six.moves.queue
 
 import vtk
 from PIL import Image
@@ -20,6 +23,7 @@ from PySide import QtGui, QtCore
 from ..visutils import utilities
 from . import cell
 from . import axes
+from six.moves import range
 
 
 class Renderer(object):
@@ -254,7 +258,7 @@ class Renderer(object):
         # main loop
         try:
             status = 0
-            for i in xrange(NRotations):
+            for i in range(NRotations):
                 # file name
                 fileprefixFull = "%s%d" % (fileprefix, i)
                 
@@ -395,7 +399,7 @@ class Renderer(object):
                 
                 # run povray
                 command = "%s '%s'" % (povray, povIniFile)
-                resultQ = Queue.Queue()
+                resultQ = six.moves.queue.Queue()
                 
                 # run in thread
                 thread = threading.Thread(target=utilities.runSubprocessInThread, args=(command, resultQ))
@@ -407,7 +411,7 @@ class Renderer(object):
                 # result
                 try:
                     output, stderr, status = resultQ.get(timeout=1)
-                except Queue.Empty:
+                except six.moves.queue.Empty:
                     logger.error("Could not get result from POV-Ray thread!")
                     return None
                     
@@ -431,7 +435,7 @@ class Renderer(object):
             try:
                 shutil.move(os.path.join(self.mainWindow.tmpDirectory, tmpPovOutputFile), filename)
             except:
-                print "ERROR COPYING POV FILE", sys.exc_info()
+                print("ERROR COPYING POV FILE", sys.exc_info())
                         
             # remove image files
             # os.unlink(povfile)
@@ -482,7 +486,7 @@ class Renderer(object):
             overlayFilePrefix = os.path.join(self.mainWindow.tmpDirectory, "renderer%d_overlay" % renIndex)
             overlayFile = self.saveImage("VTK", "jpg", overlayFilePrefix, False)
             if not os.path.exists(overlayFile):
-                print "WARNING: overlay file does not exist: %s" % overlayFile
+                print("WARNING: overlay file does not exist: %s" % overlayFile)
                 return
             
             try:
@@ -592,8 +596,8 @@ class Renderer(object):
         ymax = 0
         xmin = 1000
         ymin = 1000
-        for i in xrange(i0, i1):
-            for j in xrange(j0, j1):
+        for i in range(i0, i1):
+            for j in range(j0, j1):
                 r, g, b = im.getpixel((i, j))
                 
                 if r != R and g != G and b != B:

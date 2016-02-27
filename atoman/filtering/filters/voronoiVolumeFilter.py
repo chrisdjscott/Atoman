@@ -6,6 +6,8 @@ Voronoi volume
 This filter allows you to filter atoms by their Voronoi volumes.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import numpy as np
 
 from . import base

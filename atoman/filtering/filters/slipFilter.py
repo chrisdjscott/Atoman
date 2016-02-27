@@ -23,6 +23,8 @@ Parameters affecting this filter are:
         neighbours is less than this value we ignore it.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import numpy as np
 
 from . import base

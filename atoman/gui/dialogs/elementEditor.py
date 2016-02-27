@@ -6,6 +6,8 @@ Dialogs and classes for editting element properties.
 @author: Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import copy
 import logging
 

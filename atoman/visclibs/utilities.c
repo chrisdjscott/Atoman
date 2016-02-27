@@ -1,15 +1,46 @@
 
 /*******************************************************************************
- ** Copyright Chris Scott 2012
  ** Utility functions
  *******************************************************************************/
 
+#include <Python.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 #include "visclibs/utilities.h"
 
+#if PY_MAJOR_VERSION >= 3
+    #define PyString_AsString PyUnicode_AsUTF8
+#endif
+
+/*******************************************************************************
+ ** makes a species list in C from PyObject
+ *******************************************************************************/
+ char* specieListFromPyObject(PyObject *specieListPy)
+ {
+     char *specieList;
+     Py_ssize_t nspec, j;
+     
+     
+     nspec = PyList_Size(specieListPy);
+     specieList = malloc(3 * nspec * sizeof(char));
+     if (specieList == NULL)
+     {
+         PyErr_SetString(PyExc_MemoryError, "specieListFromPyObject: could not allocate specieList");
+         return NULL;
+     }
+     for (j = 0; j < nspec; j++)
+     {
+         int j3 = 3 * j;
+         char *tmpsym = PyString_AsString(PyList_GetItem(specieListPy, j));
+         specieList[j3    ] = tmpsym[0];
+         specieList[j3 + 1] = tmpsym[1];
+         specieList[j3 + 2] = '\0';
+     }
+     
+     return specieList;
+ }
 
 /*******************************************************************************
  ** returns specie index of given specie in the specie list

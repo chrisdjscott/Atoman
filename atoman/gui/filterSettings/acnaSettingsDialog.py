@@ -3,6 +3,8 @@
 Contains GUI forms for the ACNA filter.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import functools
 
 import numpy as np
@@ -11,8 +13,6 @@ from PySide import QtGui, QtCore
 from . import base
 from ...filtering.filters import acnaFilter
 
-
-################################################################################
 
 class AcnaSettingsDialog(base.GenericSettingsDialog):
     """
@@ -26,9 +26,10 @@ class AcnaSettingsDialog(base.GenericSettingsDialog):
         self._settings = acnaFilter.AcnaFilterSettings()
         
         # max bond distance spin box
-        toolTip = "This is used for spatially decomposing the system. "
-        toolTip += "This should be set large enough that the required neighbours will be included."
-        self.addDoubleSpinBox("maxBondDistance", label="Max bond distance", minVal=2.0, maxVal=9.99, step=0.1, toolTip=toolTip)
+        toolTip = "<p>This is used for spatially decomposing the system. "
+        toolTip += "This should be set large enough that the required neighbours will be included.</p>"
+        self.addDoubleSpinBox("maxBondDistance", label="Max bond distance", minVal=2.0, maxVal=9.99, step=0.1,
+                              toolTip=toolTip)
         
         self.addHorizontalDivider()
         

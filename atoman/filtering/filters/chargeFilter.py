@@ -16,6 +16,8 @@ The parameters are:
         The maximum charge for an atom to be visible.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from . import base
 from . import _filtering
 
@@ -50,6 +52,7 @@ class ChargeFilter(base.BaseFilter):
         # settings
         minCharge = settings.getSetting("minCharge")
         maxCharge = settings.getSetting("maxCharge")
+        self.logger.debug("Visible charge range: %f -> %f", minCharge, maxCharge)
         
         # call C lib
         self.logger.debug("Calling charge filter C library")

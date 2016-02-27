@@ -6,6 +6,9 @@ The output tab for the main toolbar
 @author: Chris Scott
 
 """
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import shutil
 import subprocess
@@ -28,6 +31,8 @@ from ..plotting import rdf
 from ..algebra import _vectors as vectors_c
 from ..plotting import plotDialog
 from . import utils
+import six
+from six.moves import range
 
 
 class OutputDialog(QtGui.QDialog):
@@ -126,7 +131,7 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
         
         """
         self.logger.debug("Removing scalar plot options")
-        for scalarsID in self.currentPlots.keys():
+        for scalarsID in list(self.currentPlots.keys()):
             self.logger.debug(" Removing: '%s'", scalarsID)
             form = self.currentPlots.pop(scalarsID)
             self.stackedWidget.removeWidget(form)
@@ -222,7 +227,7 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
             self.logger.debug("Filter list %d; id '%s'", filterList.tab, filterListID)
             
             # loop over scalars in scalarsDict on filterer
-            for scalarsName, scalarsArray in filterList.filterer.scalarsDict.iteritems():
+            for scalarsName, scalarsArray in six.iteritems(filterList.filterer.scalarsDict):
                 # make unique id
                 scalarsID = "%s (%s)" % (scalarsName, filterListID)
                 
@@ -230,7 +235,7 @@ class ScalarsHistogramOptionsForm(genericForm.GenericForm):
                 self.addScalarPlotOptions(scalarsID, scalarsName, scalarsArray)
             
             # loop over scalars in latticeScalarsDict on filterer
-            latticeScalarKeys = filterList.pipelinePage.inputState.scalarsDict.keys()
+            latticeScalarKeys = list(filterList.pipelinePage.inputState.scalarsDict.keys())
             for key in latticeScalarKeys:
                 if key in filterList.filterer.latticeScalarsDict:
                     scalarsArray = filterList.filterer.latticeScalarsDict[key]
@@ -1149,7 +1154,7 @@ class MovieGenerator(QtCore.QObject):
                 
                 self.log.emit("debug", 'Command: "%s"' % command)
                 
-                process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE, 
+                process = subprocess.Popen(command, shell=True, stdin=subprocess.PIPE,
                                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                  
                 output, stderr = process.communicate()
@@ -1157,8 +1162,8 @@ class MovieGenerator(QtCore.QObject):
             
             if status:
                 self.log.emit("error", "FFmpeg failed (%d)" % status)
-                self.log.emit("error", output)
-                self.log.emit("error", stderr)
+                self.log.emit("error", output.decode('utf-8'))
+                self.log.emit("error", stderr.decode('utf-8'))
         
         finally:
             ffmpegTime = time.time() - ffmpegTime
@@ -1290,7 +1295,7 @@ class SingleImageTab(QtGui.QWidget):
             progress.cancel()
         
         if filename is None:
-            print "SAVE IMAGE FAILED"
+            print("SAVE IMAGE FAILED")
             return
         
         # open image viewer
@@ -1734,7 +1739,7 @@ class ImageSequenceTab(QtGui.QWidget):
         """
         count = 0
         lim = None
-        for i in xrange(len(filename)):
+        for i in range(len(filename)):
             if filename[i] == ".":
                 break
             
@@ -1814,7 +1819,7 @@ class ImageSequenceTab(QtGui.QWidget):
             sysDiag = self.mainWindow.systemsDialog
             sftpDlg = sysDiag.load_system_form.sftp_browser
             match = False
-            for i in xrange(sftpDlg.stackedWidget.count()):
+            for i in range(sftpDlg.stackedWidget.count()):
                 w = sftpDlg.stackedWidget.widget(i)
                 if w.connectionID == sftpHost:
                     match = True
@@ -1937,7 +1942,7 @@ class ImageSequenceTab(QtGui.QWidget):
         previousPos = None
         try:
             count = 0
-            for i in xrange(self.minIndex, maxIndex + self.interval, self.interval):
+            for i in range(self.minIndex, maxIndex + self.interval, self.interval):
                 if sftpBrowser is None:
                     currentFile = fileText % i
                     self.logger.info("Current file: '%s'", currentFile)
@@ -1989,7 +1994,7 @@ class ImageSequenceTab(QtGui.QWidget):
                 state.PBC[:] = origInput.PBC[:]
                 
                 # attempt to read any scalars/vectors files
-                for vectorsName, vectorsFile in origInput.vectorsFiles.iteritems():
+                for vectorsName, vectorsFile in six.iteritems(origInput.vectorsFiles):
                     self.logger.debug("Sequencer checking vectors file: '%s'", vectorsFile)
                     
                     vdn, vbn = os.path.split(vectorsFile)
@@ -2433,7 +2438,7 @@ class ImageRotateTab(QtGui.QWidget):
         
         # movie?
         if status:
-            print "ERROR: rotate failed"
+            print("ERROR: rotate failed")
         
         else:
             # create movie

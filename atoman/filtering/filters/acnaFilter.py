@@ -28,14 +28,14 @@ Parameters for this filter are:
 .. [1] A. Stukowski. *Modelling Simul. Mater. Sci. Eng.* **20** (2012) 045021; `doi: 10.1088/0965-0393/20/4/045021 <http://dx.doi.org/10.1088/0965-0393/20/4/045021>`_.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import numpy as np
 
 from .. import atomStructure
 from . import base
 from . import _acna
 
-
-################################################################################
 
 class AcnaFilterSettings(base.BaseSettings):
     """
@@ -49,7 +49,6 @@ class AcnaFilterSettings(base.BaseSettings):
         self.registerSetting("maxBondDistance", default=5.0)
         self.registerSetting("structureVisibility", default=np.ones(len(atomStructure.knownStructures), dtype=np.int32))
 
-################################################################################
 
 class AcnaFilter(base.BaseFilter):
     """
@@ -71,6 +70,8 @@ class AcnaFilter(base.BaseFilter):
         maxBondDistance = settings.getSetting("maxBondDistance")
         filteringEnabled = int(settings.getSetting("filteringEnabled"))
         structureVisibility = settings.getSetting("structureVisibility")
+        self.logger.debug("Filtering enabled: %d", filteringEnabled)
+        self.logger.debug("Structure visibility: %r", structureVisibility)
         
         # acna scalars array
         scalars = np.zeros(len(visibleAtoms), dtype=np.float64)
@@ -79,9 +80,9 @@ class AcnaFilter(base.BaseFilter):
         counters = np.zeros(len(atomStructure.knownStructures), np.int32)
         
         # call C library
-        NVisible = _acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.cellDims, pbc,
-                                                        NScalars, fullScalars, maxBondDistance, counters, filteringEnabled,
-                                                        structureVisibility, NVectors, fullVectors)
+        NVisible = _acna.adaptiveCommonNeighbourAnalysis(visibleAtoms, inputState.pos, scalars, inputState.cellDims,
+                                                         pbc, NScalars, fullScalars, maxBondDistance, counters,
+                                                         filteringEnabled, structureVisibility, NVectors, fullVectors)
         
         # result
         result = base.FilterResult()

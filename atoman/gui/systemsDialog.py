@@ -9,6 +9,8 @@ Note that systems that are currently selected on an analysis pipeline, as either
 or input, cannot be removed.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import logging
 import functools
@@ -24,6 +26,7 @@ from . import latticeGeneratorForms
 from . import sftpDialog
 from .dialogs import infoDialogs
 from .filterList import FilterList
+from six.moves import range
 
 
 ################################################################################
@@ -692,7 +695,7 @@ class SystemsDialog(QtGui.QWidget):
                 index = abspathList.index(abspath)
                 
                 # select this one
-                for row in xrange(self.systems_list_widget.count()):
+                for row in range(self.systems_list_widget.count()):
                     self.systems_list_widget.item(row).setSelected(False)
                 self.systems_list_widget.item(index).setSelected(True)
                 
@@ -715,7 +718,7 @@ class SystemsDialog(QtGui.QWidget):
         self.systems_list_widget.addItem(list_item)
         
         # select last one added only
-        for row in xrange(index):
+        for row in range(index):
             self.systems_list_widget.item(row).setSelected(False)
         self.systems_list_widget.item(index).setSelected(True)
         
@@ -730,7 +733,7 @@ class SystemsDialog(QtGui.QWidget):
         
         """
         abspathList = []
-        for i in xrange(self.systems_list_widget.count()):
+        for i in range(self.systems_list_widget.count()):
             item = self.systems_list_widget.item(i)
             
             abspathList.append(item.abspath)
@@ -743,7 +746,7 @@ class SystemsDialog(QtGui.QWidget):
         
         """
         latticeList = []
-        for i in xrange(self.systems_list_widget.count()):
+        for i in range(self.systems_list_widget.count()):
             item = self.systems_list_widget.item(i)
             
             latticeList.append(item.lattice)
@@ -756,7 +759,7 @@ class SystemsDialog(QtGui.QWidget):
         
         """
         lattices = []
-        for i in xrange(self.systems_list_widget.count()):
+        for i in range(self.systems_list_widget.count()):
             item = self.systems_list_widget.item(i)
             if item.fileFormat is not None and item.fileFormat.name == formatName:
                 lattices.append((item.displayName, item.lattice))
@@ -769,7 +772,7 @@ class SystemsDialog(QtGui.QWidget):
         
         """
         displayNames = []
-        for i in xrange(self.systems_list_widget.count()):
+        for i in range(self.systems_list_widget.count()):
             item = self.systems_list_widget.item(i)
             
             displayNames.append(item.displayName)
@@ -817,7 +820,7 @@ class SystemsDialog(QtGui.QWidget):
             self.mainWindow.mainToolbar.removeStateFromPipelines(index)
             
         # select last one in list
-        for row in xrange(self.systems_list_widget.count() - 1):
+        for row in range(self.systems_list_widget.count() - 1):
             self.systems_list_widget.item(row).setSelected(False)
         self.systems_list_widget.item(self.systems_list_widget.count() - 1).setSelected(True)
 

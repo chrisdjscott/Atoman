@@ -6,10 +6,13 @@ Generic form class.
 Modified by Chris Scott
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import sys
 
 from PySide import QtGui, QtCore
+from six.moves import range
 
 
 ################################################################################
@@ -53,7 +56,7 @@ class GenericForm(QtGui.QWidget):
         self.ContentLayout.removeWidget(row)    
     
     def removeAllRows(self):
-        for i in xrange(0,self.ContentLayout.count()):
+        for i in range(0,self.ContentLayout.count()):
             temp = self.ContentLayout.removeItem(self.ContentLayout.itemAt(0))
             del temp    
 

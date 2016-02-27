@@ -3,12 +3,16 @@
 Classes for writing POV-Ray files from renderers.
 
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import copy
 
 import numpy as np
 
 from ...filtering import clusters
 from ...filtering import _clusters
+import six
+from six.moves import range
 
 
 class PovrayAtomsWriter(object):
@@ -30,7 +34,7 @@ class PovrayAtomsWriter(object):
         # TODO: write in C to improve performance
         with open(filename, mode) as fh:
             # loop over visible atoms
-            for i in xrange(len(points)):
+            for i in range(len(points)):
                 # colour for povray atom
                 lut.GetColor(scalars[i], rgb)
                 
@@ -67,7 +71,7 @@ class PovrayBondsWriter(object):
         # TODO: write in C to improve performance
         with open(filename, mode) as fh:
             # loop over visible atoms
-            for i in xrange(len(points)):
+            for i in range(len(points)):
                 # colour for povray bond
                 lut.GetColor(scalars[i], rgb)
                 
@@ -134,7 +138,7 @@ class PovrayClustersWriter(object):
             vertexMapper = {}
             NVertices = 0
             for facet in facets:
-                for j in xrange(3):
+                for j in range(3):
                     if facet[j] not in vertices:
                         vertices.add(facet[j])
                         vertexMapper[facet[j]] = NVertices
@@ -147,7 +151,7 @@ class PovrayClustersWriter(object):
             nl("  vertex_vectors {")
             nl("    %d," % NVertices)
             count = 0
-            for key, value in sorted(vertexMapper.iteritems(), key=lambda (k, v): (v, k)):
+            for key, value in sorted(six.iteritems(vertexMapper), key=lambda k_v1: (k_v1[1], k_v1[0])):
                 string = "" if count == NVertices - 1 else ","
                 nl("    <%f,%f,%f>%s" % (- clusterPos[3 * key], clusterPos[3 * key + 1], clusterPos[3 * key + 2],
                                          string))
@@ -191,7 +195,7 @@ class PovrayVacanciesWriter(object):
         # TODO: write in C to improve performance
         with open(filename, mode) as fh:
             # loop over visible atoms
-            for i in xrange(len(points)):
+            for i in range(len(points)):
                 # colour for povray vacancy
                 lut.GetColor(scalars[i], rgb)
                 
@@ -230,7 +234,7 @@ class PovrayAntisitesWriter(object):
         # TODO: write in C to improve performance
         with open(filename, mode) as fh:
             # loop over visible atoms
-            for i in xrange(len(points)):
+            for i in range(len(points)):
                 # colour for povray vacancy
                 lut.GetColor(scalars[i], rgb)
                 
@@ -300,7 +304,7 @@ class PovrayVoronoiWriter(object):
                     vertexMapper = {}
                     NVertices = 0
                     for facet in facets:
-                        for j in xrange(3):
+                        for j in range(3):
                             if facet[j] not in vertices:
                                 vertices.add(facet[j])
                                 vertexMapper[facet[j]] = NVertices
@@ -313,7 +317,7 @@ class PovrayVoronoiWriter(object):
                     nl("  vertex_vectors {")
                     nl("    %d," % NVertices)
                     count = 0
-                    for key, value in sorted(vertexMapper.iteritems(), key=lambda (k, v): (v, k)):
+                    for key, value in sorted(six.iteritems(vertexMapper), key=lambda k_v: (k_v[1], k_v[0])):
                         string = "" if count == NVertices - 1 else ","
                         nl("    <%f,%f,%f>%s" % (- pos[3 * key], pos[3 * key + 1], pos[3 * key + 2], string))
                         count += 1
