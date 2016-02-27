@@ -1,13 +1,14 @@
-  
+
 """
 Slow tests for filtering systems
-   
+
 """
 import os
 import tempfile
 import shutil
 
 from PySide import QtCore
+from six.moves import range
 
 from . import base
 from ..gui import mainWindow
@@ -21,7 +22,7 @@ def path_to_file(path):
 class TestFilteringKennyLattice(base.UsesQApplication):
     """
     Test filtering a system
-       
+    
     """
     def setUp(self):
         """
@@ -92,7 +93,7 @@ class TestFilteringKennyLattice(base.UsesQApplication):
         flt = flist.filterer
         atomids = (104, 1, 4, 5, 6, 7)
         self.assertEqual(len(flt.visibleAtoms), 6)
-        for i in xrange(6):
+        for i in range(6):
             self.assertTrue(pp.inputState.atomID[flt.visibleAtoms[i]] in atomids)
     
     def test_filterCharge(self):
@@ -113,7 +114,7 @@ class TestFilteringKennyLattice(base.UsesQApplication):
         # check the result
         flt = flist.filterer
         self.assertEqual(len(flt.visibleAtoms), 400)
-        for i in xrange(len(flt.visibleAtoms)):
+        for i in range(len(flt.visibleAtoms)):
             self.assertGreaterEqual(pp.inputState.charge[flt.visibleAtoms[i]], 0)
 
 
@@ -188,7 +189,7 @@ class TestFilteringGoldLattice(base.UsesQApplication):
         flt = flist.filterer
         self.assertEqual(len(flt.visibleAtoms), 6912)
         self.assertTrue("ACNA" in flt.scalarsDict)
-        for i in xrange(6912):
+        for i in range(6912):
             self.assertEqual(flt.scalarsDict["ACNA"][i], 1)
         
         # check filtering
@@ -220,7 +221,7 @@ class TestFilteringGoldLattice(base.UsesQApplication):
         self.assertEqual(len(flt.visibleAtoms), 6912)
         self.assertTrue("Q4" in flt.scalarsDict)
         self.assertTrue("Q6" in flt.scalarsDict)
-        for i in xrange(6912):
+        for i in range(6912):
             self.assertAlmostEqual(flt.scalarsDict["Q4"][i], 0.191, places=3)
             self.assertAlmostEqual(flt.scalarsDict["Q6"][i], 0.575, places=3)
 
@@ -305,14 +306,14 @@ class TestFilteringPuGaRefXyz(base.UsesQApplication):
         inputState = pp.inputState
         puindx = inputState.getSpecieIndex("Pu")
         item.filterSettings._settings.updateSettingArray("visibleSpeciesList", puindx, 0)
-        
+
         # run the filter
         pp.runAllFilterLists()
         
         # check the result
         flt = flist.filterer
         self.assertEqual(len(flt.visibleAtoms), 2764)
-        for i in xrange(len(flt.visibleAtoms)):
+        for i in range(len(flt.visibleAtoms)):
             self.assertEqual(inputState.atomSym(flt.visibleAtoms[i]), "Ga")
     
     def test_filterSpeciesClusters(self):
@@ -338,5 +339,5 @@ class TestFilteringPuGaRefXyz(base.UsesQApplication):
         # check the result
         flt = flist.filterer
         self.assertEqual(len(flt.visibleAtoms), 923)
-        for i in xrange(len(flt.visibleAtoms)):
+        for i in range(len(flt.visibleAtoms)):
             self.assertEqual(inputState.atomSym(flt.visibleAtoms[i]), "Ga")

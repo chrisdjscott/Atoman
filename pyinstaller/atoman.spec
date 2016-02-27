@@ -1,6 +1,9 @@
 # -*- mode: python -*-
 
+from __future__ import print_function
 import os
+import sys
+sys.path.insert(0, os.path.abspath(os.pardir))
 import glob
 import platform
 import shutil
@@ -95,13 +98,13 @@ try:
     if osname == "Darwin":
         # check qtmenu.nib got copied
         if not os.path.isdir("dist/Atoman.app/Contents/Resources/qt_menu.nib"):
-            print "qt_menu.nib not found -> attempting to fix..."
+            print("qt_menu.nib not found -> attempting to fix...")
             shutil.copytree("/opt/local/libexec/qt4/Library/Frameworks/QtGui.framework/Versions/Current/Resources/qt_menu.nib", "dist/Atoman.app/Contents/Resources/qt_menu.nib")
 
     # copy icns file
     new_icns = os.path.join("dist", "Atoman.app", "Contents", "Resources", "atoman.icns")
     cmd = "cp -f atoman.icns %s" % os.path.join("dist", "Atoman.app", "Contents", "Resources", "atoman.icns")
-    print cmd
+    print(cmd)
     os.system(cmd)
 
     # edit plist
