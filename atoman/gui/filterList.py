@@ -284,10 +284,10 @@ class FilterList(QtGui.QWidget):
                 self.driftCompButton.setChecked(QtCore.Qt.Unchecked)
             
             else:
-                self.driftCompensation = True
+                self.filterer.toggleDriftCompensation(True)
         
         else:
-            self.driftCompensation = False
+            self.filterer.toggleDriftCompensation(False)
     
     def showClusterInfoWindow(self, clusterIndex):
         """

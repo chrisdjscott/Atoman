@@ -2,15 +2,21 @@
 Changelog
 =========
 
+**160301**
+
+* Fix bug where checking drift compensation did nothing
+* Interstitial count displayed on screen now includes split interstitials
+
 **160227**
 
 * Rewrite of filtering and rendering (easier to call from scripts)
 * Add support for Python 3 (with VTK 7.0)
 * Add more tests
+* Add versioneer for reporting the version (section added to setup.cfg.example)
 
 **151120**
 
-* Add entry point to replace cdjsvis.py script
+* Add entry point to replace cdjsvis.py script (run as 'python -m atoman')
 * Rearrange structure of subpackages
 * Remove dependency on GSL
 * Add lots more tests

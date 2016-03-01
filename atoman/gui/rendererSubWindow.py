@@ -787,7 +787,8 @@ class RendererWindow(QtGui.QWidget):
                 defectFilterActive = True
                 
                 NVac += len(filterList.filterer.vacancies)
-                NInt += len(filterList.filterer.interstitials)
+                NSplit = len(filterList.filterer.splitInterstitials) / 3
+                NInt += len(filterList.filterer.interstitials) + NSplit
                 NAnt += len(filterList.filterer.antisites)
                 
                 # defects settings
