@@ -9,6 +9,7 @@ Mdi sub window for displaying VTK render window.
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import division
 import logging
 
 from PySide import QtGui, QtCore
@@ -787,7 +788,7 @@ class RendererWindow(QtGui.QWidget):
                 defectFilterActive = True
                 
                 NVac += len(filterList.filterer.vacancies)
-                NSplit = len(filterList.filterer.splitInterstitials) / 3
+                NSplit = len(filterList.filterer.splitInterstitials) // 3
                 NInt += len(filterList.filterer.interstitials) + NSplit
                 NAnt += len(filterList.filterer.antisites)
                 
