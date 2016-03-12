@@ -571,7 +571,7 @@ class FilterListRenderer(object):
         refState = self._filterer.refState if name == "Point defects" else None
         
         # check if we are supposed to be rendering clusters
-        if settings.getSetting("drawConvexHulls"):
+        if settings.getSetting("drawConvexHulls") and settings.getSetting("hullOpacity") > 0:
             # render
             rend = clusterRenderer.ClusterRenderer()
             rend.render(clusterList, settings, refState=refState)
