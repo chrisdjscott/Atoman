@@ -404,7 +404,7 @@ class Filterer(object):
                 else:
                     scalars_cp = copy.copy(scalars)
                     scalars_cp.resize(NVisible, refcheck=False)
-                    self.scalarsDict[key] = scalars_cp
+                    self.latticeScalarsDict[key] = scalars_cp
             
             if lenError:
                 self.latticeScalarsDict.clear()
@@ -434,7 +434,7 @@ class Filterer(object):
                 
                 else:
                     vectors_cp = copy.copy(vectors)
-                    vectors_cp.resize(NVisible, refcheck=False)
+                    vectors_cp.resize((NVisible, 3), refcheck=False)
                     self.vectorsDict[key] = vectors_cp
             
             if lenError:
