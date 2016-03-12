@@ -236,14 +236,7 @@ class ClusterFilter(base.BaseFilter):
         for clusterIndex, cluster in enumerate(clusterList):
             n = len(cluster)
             appliedPBCs = np.zeros(7, np.int32)
-            clusterPos = np.empty(3 * n, np.float64)
-            # TODO: write this in C
-            for i, index in enumerate(cluster):
-                index3 = 3 * index
-                i3 = 3 * i
-                clusterPos[i3  ] = lattice.pos[index3  ]
-                clusterPos[i3+1] = lattice.pos[index3+1]
-                clusterPos[i3+2] = lattice.pos[index3+2]
+            clusterPos = cluster.makeClusterPos()
             
             _clusters.prepareClusterToDrawHulls(len(cluster), clusterPos, cellDims, np.ones(3, np.int32), appliedPBCs,
                                                 neighbourRadius)

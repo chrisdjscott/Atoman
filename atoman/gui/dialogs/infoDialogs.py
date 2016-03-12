@@ -71,7 +71,12 @@ class ClusterInfoWindow(QtGui.QDialog):
             layout.addWidget(QtGui.QLabel("Facet area: %f units^2" % facetArea))
         
         # label
-        layout.addWidget(QtGui.QLabel("Cluster atoms (%d):" % len(self.cluster)))
+        text = "%d cluster atoms: " % len(self.cluster)
+        speciesCount = self.cluster.getSpeciesCount()
+        speciesList = lattice.specieList
+        specStrList = ["%d %s" % (cnt, sym) for cnt, sym in zip(speciesCount, speciesList)]
+        text += ", ".join(specStrList)
+        layout.addWidget(QtGui.QLabel(text))
         
         # list widget
         self.listWidget = QtGui.QListWidget(self)

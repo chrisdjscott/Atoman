@@ -269,6 +269,15 @@ class AtomCluster(object):
     def __contains__(self, item):
         return item in self._indexes
     
+    def getSpeciesCount(self):
+        """Return the species count (species are ordered the same as the input lattice)."""
+        lattice = self._lattice
+        speciesCount = np.zeros(len(lattice.specieList), np.int32)
+        for index in self:
+            speciesCount[lattice.specie[index]] += 1
+        
+        return speciesCount
+    
     def addAtom(self, index):
         self._indexes.append(index)
     
@@ -283,9 +292,11 @@ class AtomCluster(object):
         clusterPos = np.empty(3 * num, np.float64)
         for i in range(num):
             index = self._indexes[i]
-            clusterPos[3 * i] = lattice.pos[3 * index]
-            clusterPos[3 * i + 1] = lattice.pos[3 * index + 1]
-            clusterPos[3 * i + 2] = lattice.pos[3 * index + 2]
+            i3 = 3 * i
+            ind3 = 3 * index
+            clusterPos[i3] = lattice.pos[ind3]
+            clusterPos[i3 + 1] = lattice.pos[ind3 + 1]
+            clusterPos[i3 + 2] = lattice.pos[ind3 + 2]
         
         return clusterPos
     
