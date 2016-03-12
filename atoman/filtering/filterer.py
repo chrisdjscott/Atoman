@@ -370,7 +370,7 @@ class Filterer(object):
                 self.logger.debug("Storing '%s' scalars", key)
                 scalars = scalarsList[i]
                 
-                if len(scalars) >= NVisible:
+                if len(scalars) < NVisible:
                     msg = "'%s' scalars smaller than expected (%d < %d) (this is expected in some situations); "
                     msg += "clearing scalars list"
                     self.logger.warning(msg, key, len(scalars), NVisible)
@@ -394,7 +394,7 @@ class Filterer(object):
                 i = j + offset
                 scalars = scalarsList[i]
                 
-                if len(scalars) >= NVisible:
+                if len(scalars) < NVisible:
                     msg = "'%s' scalars smaller than expected (%d < %d) (this is expected in some situations); "
                     msg += "clearing scalars list"
                     self.logger.warning(msg, key, len(scalars), NVisible)
@@ -425,7 +425,7 @@ class Filterer(object):
             for key, vectors in zip(keys, vectorsList):
                 self.logger.debug("  Storing '%s' vectors", key)
                 
-                if len(vectors) >= NVisible:
+                if len(vectors) < NVisible:
                     msg = "'%s' vectors smaller than expected (%d < %d) (this is expected in some situations); "
                     msg += "clearing vectors list"
                     self.logger.warning(msg, key, len(vectors), NVisible)
