@@ -634,6 +634,7 @@ class MainWindow(QtGui.QMainWindow):
         """
         shutil.rmtree(self.tmpDirectory)
         self.console.accept()
+        self.threadPool.waitForDone()
     
     def hideProgressBar(self):
         """
