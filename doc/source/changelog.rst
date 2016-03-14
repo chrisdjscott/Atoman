@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**160314**
+
+* Add option to clusters filter to display all atoms in/out-side the convex hulls 
+
 **160301**
 
 * Fix bug where checking drift compensation did nothing
