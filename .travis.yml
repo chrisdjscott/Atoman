@@ -38,7 +38,8 @@ before_install:
     - echo $PATH
     - echo $DYLD_LIBRARY_PATH || true
     - conda update --yes conda
-    - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools sphinx python=$PYTHON
+    - conda create -n testenv --yes numpy scipy matplotlib pillow vtk=$VTK pip nose setuptools sphinx python=$PYTHON
+    - conda install -n testenv -c https://conda.anaconda.org/dsdale24 qt5 pyqt5
     - source activate testenv
     - pip install sphinx_rtd_theme
     - pip install pyhull
