@@ -45,7 +45,7 @@ import vtk
 try:
     import vtk.qt
     PyQtImpl = vtk.qt.PyQtImpl
-except ImportError:
+except (ImportError, AttributeError):
     PyQtImpl = "PyQt5"
 
 if PyQtImpl is None:
