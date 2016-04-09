@@ -348,14 +348,14 @@ class PointDefectsFilter(base.BaseFilter):
                 interstitials.resize(0, refcheck=False)
                 splitInterstitials.resize(0, refcheck=False)
         
-        # get spaghetti atoms
-        if settings.getSetting("drawSpaghetti"):
-            spaghettiAtoms = self.getSpaghettiAtoms(filterInput, vacancyRadius)
-        
         # make result
         result = base.FilterResult()
         result.setClusterList(clusterList)
-        result.setSpaghettiAtoms(spaghettiAtoms)
+        
+        # get spaghetti atoms
+        if settings.getSetting("drawSpaghetti"):
+            spaghettiAtoms = self.getSpaghettiAtoms(filterInput, vacancyRadius)
+            result.setSpaghettiAtoms(spaghettiAtoms)
         
         return result
     
@@ -366,8 +366,8 @@ class PointDefectsFilter(base.BaseFilter):
         This means atoms that are displaced from their original site by more than the vacancy radius.
         
         """
-        inputLattice = filterInput.inputLattice
-        refLattice = filterInput.refLattice
+        inputLattice = filterInput.inputState
+        refLattice = filterInput.refState
         
         if inputLattice.NAtoms != refLattice.NAtoms:
             self.logger.warning("Cannot find spaghetti atoms if number of atoms in input and ref differ")
@@ -376,13 +376,13 @@ class PointDefectsFilter(base.BaseFilter):
         else:
             # displacement filter settings
             dispSettings = displacementFilter.DisplacementFilterSettings()
-            dispSettings.updateSetting("minDisplacement", filterInput.vacancyRadius)
+            dispSettings.updateSetting("minDisplacement", vacancyRadius)
             dispSettings.updateSetting("filteringEnabled", True)
             
             # displacmeent filter input
             dispInput = base.FilterInput()
             dispInput.inputState = inputLattice
-            dispInput.refLattice = refLattice
+            dispInput.refState = refLattice
             dispInput.NScalars = 0
             dispInput.fullScalars = np.empty(dispInput.NScalars, np.float64)
             dispInput.NVectors = 0

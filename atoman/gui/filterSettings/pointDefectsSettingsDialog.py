@@ -202,10 +202,6 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         self.addHorizontalDivider(displaySettings=True)
         
-        # spaghetti
-        self.addCheckBox("drawSpaghetti", toolTip="Turn on rendering 'spaghetti'", label="Render spaghetti",
-                         displayLayout=True)
-        
         # draw displacement vector settings
         toolTip = "<p>Draw displacement vectors (movement) of defects</p>"
         self.drawVectorsCheck = self.addCheckBox("drawDisplacementVectors", toolTip=toolTip, displayLayout=True,
@@ -229,6 +225,12 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         self.disableDrawVectorsCheck()
         self.refresh()
+        
+        self.addHorizontalDivider(displaySettings=True)
+        
+        # spaghetti
+        self.addCheckBox("drawSpaghetti", toolTip="Turn on rendering 'spaghetti'", label="Render spaghetti",
+                         displayLayout=True)
     
     def useAcnaToggled(self, enabled):
         """
