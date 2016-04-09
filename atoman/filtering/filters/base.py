@@ -25,6 +25,7 @@ class FilterResult(object):
         self._scalars = {}
         self._vectors = {}
         self._text = {}
+        self._spaghettiAtoms = np.empty(0, np.int32)
     
     def addScalars(self, name, scalars):
         """Add the given scalars."""
@@ -81,6 +82,18 @@ class FilterResult(object):
     def hasBubbleList(self):
         """Returns True if the bubble list is not empty."""
         return True if len(self._bubbleList) else False
+    
+    def setSpaghettiAtoms(self, spaghettiAtoms):
+        """Set the spaghetti atoms."""
+        self._spaghettiAtoms = spaghettiAtoms
+    
+    def getSpaghettiAtoms(self):
+        """Return the spaghetti atoms."""
+        return self._spaghettiAtoms
+    
+    def hasSpaghettiAtoms(self):
+        """Returns True if spaghetti atoms have been set."""
+        return True if len(self._spaghettiAtoms) else False
 
 
 class FilterInput(object):

@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**160409**
+
+* Add spaghetti rendering to point defects filter
+
 **160314**
 
 * Add option to clusters filter to display all atoms in/out-side the convex hulls 

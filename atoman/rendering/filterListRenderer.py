@@ -344,16 +344,24 @@ class FilterListRenderer(object):
         for name, settings in zip(self._filterer.currentFilters, self._filterer.currentSettings):
             if name == "Displacement" and settings.getSetting("drawDisplacementVectors"):
                 if not numAtomsMatch:
-                    self._logger.warning("Cannot render atom displacement vectors when num atoms differ")
+                    msg = "Cannot render atom displacement vectors when num atoms in ref and input differ"
+                    self._logger.warning(msg)
                 else:
                     self._renderDisplacmentVectorsList(self._filterer.visibleAtoms, lut, "Atom")
             
             elif name == "Point defects" and settings.getSetting("drawDisplacementVectors"):
                 if not numAtomsMatch:
-                    self._logger.warning("Cannot render interstitial displacement vectors when num atoms differ")
+                    msg = "Cannot render interstitial displacement vectors when num atoms in ref and input differ"
+                    self._logger.warning(msg)
                 else:
                     # TODO: split ints should be done too
                     self._renderDisplacmentVectorsList(self._filterer.interstitials, lut, "Interstitial")
+            
+            elif name == "Point defects" and settings.getSetting("drawSpaghetti"):
+                if not numAtomsMatch:
+                    self._logger.warning("Cannot render spaghetti when num atoms in ref and input differ")
+                else:
+                    self._renderDisplacmentVectorsList(self._filterer.spaghettiAtoms, lut, "Spaghetti")
     
     def _renderDefects(self, lut, resolution):
         """Render defects."""
