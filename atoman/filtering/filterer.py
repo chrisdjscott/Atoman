@@ -102,6 +102,7 @@ class Filterer(object):
         self.vectorsDict = {}
         self.defectFilterSelected = False
         self.bubblesFilterSelected = False
+        self.spaghettiAtoms = np.asarray([], dtype=np.int32)
     
     def runFilters(self, currentFilters, currentSettings, inputState, refState, sequencer=False):
         """
@@ -231,6 +232,10 @@ class Filterer(object):
                 # structure counters
                 if result.hasStructureCounterDict():
                     self.structureCounterDicts[result.getStructureCounterName()] = result.getStructureCounterDict()
+                
+                # spaghetti analysis
+                if result.hasSpaghettiAtoms():
+                    self.spaghettiAtoms = result.getSpaghettiAtoms()
                 
                 # full vectors/scalars
                 self.storeFullScalarsArray(len(self.visibleAtoms), filterInput.NScalars, filterInput.fullScalars)

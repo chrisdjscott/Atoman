@@ -26,6 +26,12 @@ use of a fixed vacancy radius does not always work well by itself.
     
     Show interstitials
         If checked include interstitials in the list of defects.
+    
+    Render spaghetti
+        Render spaghetti as described in [1]_.
+
+.. [1] A. F. Calder et al. *Philos. Mag.* **90** (2010) 863-884;
+       `doi: 10.1080/14786430903117141 <http://dx.doi.org/10.1080/14786430903117141>`_.
 
 """
 from __future__ import absolute_import
@@ -35,6 +41,7 @@ import numpy as np
 from . import base
 from . import _defects
 from . import acnaFilter
+from . import displacementFilter
 from .. import clusters
 from ...algebra import vectors
 from six.moves import range
@@ -77,6 +84,7 @@ class PointDefectsFilterSettings(base.BaseSettings):
         self.registerSetting("bondThicknessVTK", default=0.4)
         self.registerSetting("bondThicknessPOV", default=0.4)
         self.registerSetting("bondNumSides", default=5)
+        self.registerSetting("drawSpaghetti", default=False)
         
         # old methods for calculating certain things
         self.registerSetting("splitIntsOld", default=False)
@@ -340,8 +348,59 @@ class PointDefectsFilter(base.BaseFilter):
                 interstitials.resize(0, refcheck=False)
                 splitInterstitials.resize(0, refcheck=False)
         
+        # get spaghetti atoms
+        if settings.getSetting("drawSpaghetti"):
+            spaghettiAtoms = self.getSpaghettiAtoms(filterInput, vacancyRadius)
+        
         # make result
         result = base.FilterResult()
         result.setClusterList(clusterList)
+        result.setSpaghettiAtoms(spaghettiAtoms)
         
         return result
+    
+    def getSpaghettiAtoms(self, filterInput, vacancyRadius):
+        """
+        Find atoms for rendering spaghetti.
+        
+        This means atoms that are displaced from their original site by more than the vacancy radius.
+        
+        """
+        inputLattice = filterInput.inputLattice
+        refLattice = filterInput.refLattice
+        
+        if inputLattice.NAtoms != refLattice.NAtoms:
+            self.logger.warning("Cannot find spaghetti atoms if number of atoms in input and ref differ")
+            spaghettiAtoms = np.empty(0, np.int32)
+        
+        else:
+            # displacement filter settings
+            dispSettings = displacementFilter.DisplacementFilterSettings()
+            dispSettings.updateSetting("minDisplacement", filterInput.vacancyRadius)
+            dispSettings.updateSetting("filteringEnabled", True)
+            
+            # displacmeent filter input
+            dispInput = base.FilterInput()
+            dispInput.inputState = inputLattice
+            dispInput.refLattice = refLattice
+            dispInput.NScalars = 0
+            dispInput.fullScalars = np.empty(dispInput.NScalars, np.float64)
+            dispInput.NVectors = 0
+            dispInput.fullVectors = np.empty(dispInput.NVectors, np.float64)
+            dispInput.ompNumThreads = filterInput.ompNumThreads
+            dispInput.visibleAtoms = np.arange(inputLattice.NAtoms, dtype=np.int32)
+            dispInput.driftCompensation = filterInput.driftCompensation
+            dispInput.driftVector = filterInput.driftVector
+            
+            # displacement filter
+            disp = displacementFilter.DisplacementFilter("Displacement (spaghetti)")
+            
+            # run filter
+            disp.apply(dispInput, dispSettings)
+            
+            # spaghetti atoms are the visible atoms
+            spaghettiAtoms = dispInput.visibleAtoms
+            self.logger.debug("Found %d 'spaghetti' atoms (atoms that have moved from their original site)",
+                              len(spaghettiAtoms))
+        
+        return spaghettiAtoms
