@@ -490,6 +490,15 @@ class FilterListRenderer(object):
         if not self.bondsOptions.drawBonds:
             return
         
+        haveBonds = False
+        for i in range(self.bondsOptions.bondsList.count()):
+            item = self.bondsOptions.bondsList.item(i)
+            if item.checkState() == QtCore.Qt.Checked:
+                haveBonds = True
+                break
+        if not haveBonds:
+            return
+        
         self._logger.info("Calculating bonds")
         
         # visible atoms array

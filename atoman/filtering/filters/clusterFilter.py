@@ -173,7 +173,7 @@ class ClusterFilter(base.BaseFilter):
             # TODO: write in C
             inClusterMask = np.zeros(lattice.NAtoms, np.int32)
             pos = np.empty((1, 3), np.float64)
-            for i in xrange(lattice.NAtoms):
+            for i in range(lattice.NAtoms):
                 pos[0][:] = lattice.atomPos(i)[:]
                 for hull, hullMap in zip(hulls, hullsMap):
                     res = hull.find_simplex(pos) >= 0
@@ -194,7 +194,7 @@ class ClusterFilter(base.BaseFilter):
             visibleMask = 1 if showInHulls else 0
             # TODO: write in C
             numVisible = 0
-            for i in xrange(lattice.NAtoms):
+            for i in range(lattice.NAtoms):
                 if inClusterMask[i] == visibleMask:
                     visibleAtoms[numVisible] = i
                     numVisible += 1
@@ -234,7 +234,6 @@ class ClusterFilter(base.BaseFilter):
         hulls = []
         hullClusterMap = []
         for clusterIndex, cluster in enumerate(clusterList):
-            n = len(cluster)
             appliedPBCs = np.zeros(7, np.int32)
             clusterPos = cluster.makeClusterPos()
             
@@ -259,11 +258,11 @@ class ClusterFilter(base.BaseFilter):
         # TODO: C or view
         num = len(clusterPos) // 3
         pts = np.empty((num, 3), np.float64)
-        for i in xrange(num):
+        for i in range(num):
             i3 = 3 * i
-            pts[i][0] = clusterPos[i3  ]
-            pts[i][1] = clusterPos[i3+1]
-            pts[i][2] = clusterPos[i3+2]
+            pts[i][0] = clusterPos[i3]
+            pts[i][1] = clusterPos[i3 + 1]
+            pts[i][2] = clusterPos[i3 + 2]
         
         # make hull
         hull = Delaunay(pts)
