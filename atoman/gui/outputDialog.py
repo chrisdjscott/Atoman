@@ -681,17 +681,15 @@ class RDFForm(genericForm.GenericForm):
             return
         
         # then determine species
-        specieList = inputLattice.specieList
-        
         if self.spec1 == "ALL":
             spec1Index = -1
         else:
-            spec1Index = int(np.where(specieList == self.spec1)[0][0])
+            spec1Index = inputLattice.getSpecieIndex(self.spec1)
         
         if self.spec2 == "ALL":
             spec2Index = -1
         else:
-            spec2Index = int(np.where(specieList == self.spec2)[0][0])
+            spec2Index = inputLattice.getSpecieIndex(self.spec2)
         
         # rdf calulator
         rdfCalculator = rdf.RDFCalculator()

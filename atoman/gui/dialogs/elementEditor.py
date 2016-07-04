@@ -226,7 +226,7 @@ class ElementEditor(QtGui.QDialog):
             for latt in latticeList:
                 # first modify the Lattice objects
                 if sym in latt.specieList:
-                    index = np.where(latt.specieList == sym)[0][0]
+                    index = latt.getSpecieIndex(sym)
                     
                     # radius
                     latt.specieCovalentRadius[index] = radius

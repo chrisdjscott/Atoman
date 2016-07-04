@@ -188,6 +188,11 @@ class ClusterFilter(base.BaseFilter):
                         
                         break
             
+            # make sure all cluster atoms are included
+            for cluster in clusterList:
+                for index in cluster:
+                    inClusterMask[index] = 1
+            
             # make the new visible atoms array, starting with full system
             self.logger.info("Overriding visible atoms based on cluster occupancy")
             visibleAtoms.resize(lattice.NAtoms, refcheck=False)
@@ -247,7 +252,7 @@ class ClusterFilter(base.BaseFilter):
             while max(appliedPBCs) > 0:
                 tmpClusterPos = copy.deepcopy(clusterPos)
                 clusters.applyPBCsToCluster(tmpClusterPos, cellDims, appliedPBCs)
-                hulls.append(self.makeDelaunay(clusterPos))
+                hulls.append(self.makeDelaunay(tmpClusterPos))
                 hullClusterMap.append(clusterIndex)
         
         return hulls, hullClusterMap
