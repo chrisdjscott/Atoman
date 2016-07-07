@@ -2,6 +2,14 @@
 Changelog
 =========
 
+**160704**
+
+* Fix bug when determining if atoms belong within a convex hull
+* Fix use of numpy.where
+* Add overrides for all mouse events to ensure picking works properly
+* Version printed properly on about screen from pyinstaller app
+* Fix bug when drawBonds is selected but no bonds are checked
+
 **160409**
 
 * Add spaghetti rendering to point defects filter

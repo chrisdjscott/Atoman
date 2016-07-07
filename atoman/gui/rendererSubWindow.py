@@ -142,15 +142,18 @@ class RendererWindow(QtGui.QWidget):
         self.vtkRenWinInteract.changeDisableMouseWheel(self.mainWindow.preferences.generalForm.disableMouseWheel)
         
         # add observers
-        self.vtkRenWinInteract._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
+        # self.vtkRenWinInteract._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
         # self.vtkRenWinInteract._Iren.AddObserver("LeftButtonReleaseEvent", self.leftButtonReleased)
-        self.vtkRenWinInteract._Iren.AddObserver("RightButtonPressEvent", self.rightButtonPressed)
+        # self.vtkRenWinInteract._Iren.AddObserver("RightButtonPressEvent", self.rightButtonPressed)
         # self.vtkRenWinInteract._Iren.AddObserver("RightButtonReleaseEvent", self.rightButtonReleased)
-        self.vtkRenWinInteract._Iren.AddObserver("MouseMoveEvent", self.mouseMoved)
+        # self.vtkRenWinInteract._Iren.AddObserver("MouseMoveEvent", self.mouseMoved)
         
         # connect custom signals (add observer does not work for release events)
+        self.vtkRenWinInteract.leftButtonPressed.connect(self.leftButtonPressed)
         self.vtkRenWinInteract.leftButtonReleased.connect(self.leftButtonReleased)
+        self.vtkRenWinInteract.rightButtonPressed.connect(self.rightButtonPressed)
         self.vtkRenWinInteract.rightButtonReleased.connect(self.rightButtonReleased)
+        self.vtkRenWinInteract.mouseMoved.connect(self.mouseMoved)
         
         # add picker
         self.vtkPicker = vtk.vtkCellPicker()

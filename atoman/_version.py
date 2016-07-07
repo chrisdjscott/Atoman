@@ -421,7 +421,18 @@ def get_versions():
     # __file__, we can work backwards from there to the root. Some
     # py2exe/bbfreeze/non-CPython implementations don't do __file__, in which
     # case we can only use expanded keywords.
-
+    
+    # check if specified in a module
+    try:
+        from . import version_freeze
+        version = version_freeze.__version__
+        return {"version": version,
+                "full-revisionid": None,
+                "dirty": None,
+                "error": False}
+    except ImportError:
+        pass
+    
     cfg = get_config()
     verbose = cfg.verbose
 
