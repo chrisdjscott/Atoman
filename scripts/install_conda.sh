@@ -83,8 +83,9 @@ case ${PYVER} in
     PYVER=2.7
     ;;
     3)
-    PYVER=3.5
-    echo "Info: using Python 3 - we will have to compile PySide from source (this will take a while)"
+    PYVER=3.4
+    # PYVER=3.5
+    # echo "Info: using Python 3 - we will have to compile PySide from source (this will take a while)"
     ;;
     *)
     echo "Error: Python version must be '2' or '3' ('2' is default)"

@@ -21,7 +21,7 @@ env:
     - VTK=5 PYTHON=2
     - VTK=6 PYTHON=2
     - VTK=7 PYTHON=2
-    - VTK=7 PYTHON=3
+    # - VTK=7 PYTHON=3
 
 before_install:
     - if [ ${TRAVIS_OS_NAME} == "osx" ]; then brew update; brew outdated gcc || brew upgrade gcc; fi
