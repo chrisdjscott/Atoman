@@ -95,7 +95,7 @@ esac
 
 case ${VTKVER} in
     5)
-    VTKVER=5.10.0
+    VTKVER=5.10.1
     ;;
     6)
     VTKVER=6.3.0
