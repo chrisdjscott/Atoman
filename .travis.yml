@@ -1,48 +1,35 @@
 sudo: false
 language: generic
 
-matrix:
-    include:
-        - os: linux
-          env:
-              - VTK=5.10.1
-              - PYTHON=2.7
-              - CONDAOS=Linux
+# install recent GCC
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
         
-        - os: linux
-          env:
-              - VTK=6.3.0
-              - PYTHON=2.7
-              - CONDAOS=Linux
-        
-        - os: osx
-          env:
-              - VTK=5.10.1
-              - PYTHON=2.7
-              - CONDAOS=MacOSX
-        
-        - os: osx
-          env:
-              - VTK=6.3.0
-              - PYTHON=2.7
-              - CONDAOS=MacOSX
+        packages:
+            - gcc-6
+            - g++-6
+
+# run on linux and mac
+os:
+    - linux
+    - osx
+
+# different builds
+env:
+    - VTK=5 PYTHON=2
+    - VTK=6 PYTHON=2
+    - VTK=7 PYTHON=2
+    # - VTK=7 PYTHON=3
 
 before_install:
-    - wget http://repo.continuum.io/miniconda/Miniconda-latest-${CONDAOS}-x86_64.sh -O miniconda.sh
-    - chmod +x miniconda.sh
-    - ./miniconda.sh -b -p $HOME/miniconda
-    - export PATH=$HOME/miniconda/bin:$PATH
     - if [ ${TRAVIS_OS_NAME} == "osx" ]; then brew update; brew outdated gcc || brew upgrade gcc; fi
-    - if [ ${TRAVIS_OS_NAME} == "osx" ]; then export CC=gcc-6; export CXX=g++-6; fi
-    - if [ ${TRAVIS_OS_NAME} == "linux" ]; then export CC=gcc; export CXX=g++; fi
-    - echo $PATH
-    - echo $DYLD_LIBRARY_PATH || true
-    - conda update --yes conda
-    - conda create -n testenv --yes numpy scipy matplotlib pillow pyside vtk=$VTK pip nose setuptools sphinx python=$PYTHON
-    - source activate testenv
-    - pip install sphinx_rtd_theme
-    - pip install pyhull
-    - pip install pyinstaller
+    - export CC=gcc-6
+    - export CXX=g++-6
+    - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
+    - export PATH=$HOME/miniconda/bin:$PATH
+    - source activate atoman
 
 install:
     - echo $CC
