@@ -921,11 +921,11 @@ class ImageTab(QtGui.QWidget):
         renderTypeButtonGroup.setExclusive(1)
         renderTypeButtonGroup.buttonClicked[int].connect(self.setRenderType)
         
-        self.POVButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/pov-icon.svg")), "POV-Ray")
+        self.POVButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/pov-icon.png")), "POV-Ray")
         self.POVButton.setCheckable(1)
         self.POVButton.setChecked(0)
         
-        self.VTKButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/vtk-icon.svg")), "VTK")
+        self.VTKButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/vtk-icon.png")), "VTK")
         self.VTKButton.setCheckable(1)
         self.VTKButton.setChecked(1)
         
