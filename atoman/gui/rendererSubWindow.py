@@ -76,11 +76,11 @@ class RendererWindow(QtGui.QWidget):
         layout.addWidget(toolbar)
         
         # button to displace lattice frame
-        showCellAction = self.createAction("Toggle cell", slot=self.toggleCellFrame, icon="cell_icon.svg",
+        showCellAction = self.createAction("Toggle cell", slot=self.toggleCellFrame, icon="cell_icon.png",
                                            tip="Toggle cell frame visibility")
         
         # button to display axes
-        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon.svg",
+        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon.png",
                                            tip="Toggle axes visiblity")
         
         # reset camera to cell
@@ -119,7 +119,7 @@ class RendererWindow(QtGui.QWidget):
         
         # parallel projection action
         projectionAction = self.createAction("Parallel projection", slot=self.toggleProjection,
-                                             icon="perspective-ava.svg", tip="Parallel projection", checkable=True)
+                                             icon="perspective-ava.png", tip="Parallel projection", checkable=True)
         
         # add actions
         self.addActions(toolbar, (showCellAction, showAxesAction, backgroundColourAction, None,

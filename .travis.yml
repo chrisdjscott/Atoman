@@ -25,11 +25,11 @@ env:
 
 before_install:
     - if [ ${TRAVIS_OS_NAME} == "osx" ]; then brew update; brew outdated gcc || brew upgrade gcc; fi
-    - export CC=gcc-6
-    - export CXX=g++-6
     - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate atoman
+    - export CC=gcc
+    - export CXX=g++
 
 install:
     - echo $CC
