@@ -1,16 +1,19 @@
 #!/bin/bash -e
 
 # This script will install a conda environment with all the requirements for running Atoman
+# NOTE: if you already have conda installed you can pass the path to the conda install
+#       directory to the -d flag.
 # Author: Chris Scott
 
 # usage
 display_usage() {
     echo
-    echo "Usage: $0 [-d install_dir] [-p python_version] [-V vtk_version] [-e conda_env] [-h]"
+    echo "Usage: $0 [-d conda_dir] [-p python_version] [-V vtk_version] [-e conda_env] [-h]"
     echo
 }
 
 # default args
+# NOTE: Python 3 will be much slower as it has to install PySide from source
 CONDIR=${HOME}/miniconda
 PYVER=2
 VTKVER=7
@@ -156,23 +159,27 @@ conda update --yes conda
 
 # create conda environment
 echo Creating conda environment: \"${CONDENV}\"...
-conda create -n ${CONDENV} --yes python=${PYVER}
+conda create -y -n ${CONDENV} python=${PYVER}
 echo Installing numpy...
-conda install -y -n ${CONDENV} --yes numpy
+conda install -y -n ${CONDENV} numpy
 echo Installing scipy...
-conda install -y -n ${CONDENV} --yes scipy
+conda install -y -n ${CONDENV} scipy
 echo Installing matplotlib...
-conda install -y -n ${CONDENV} --yes matplotlib
+conda install -y -n ${CONDENV} matplotlib
 echo Installing pillow...
-conda install -y -n ${CONDENV} --yes pillow
+conda install -y -n ${CONDENV} pillow
 echo Installing pip...
-conda install -y -n ${CONDENV} --yes pip
+conda install -y -n ${CONDENV} pip
 echo Installing nose...
-conda install -y -n ${CONDENV} --yes nose
+conda install -y -n ${CONDENV} nose
 echo Installing setuptools...
-conda install -y -n ${CONDENV} --yes setuptools
+conda install -y -n ${CONDENV} setuptools
 echo Installing sphinx...
-conda install -y -n ${CONDENV} --yes sphinx
+conda install -y -n ${CONDENV} sphinx sphinx_rtd_theme
+echo Installing paramiko
+conda install -y -n ${CONDENV} paramiko
+echo Installing Qt4...
+conda install -y -n ${CONDENV} -c asmeurer qt=4.8.5
 
 # install VTK
 case $VTKVER in
@@ -191,7 +198,6 @@ source activate ${CONDENV}
 
 # install additional packages using pip
 echo Installing additional packages using pip...
-pip install sphinx_rtd_theme
 pip install pyhull
 pip install pyinstaller
 
@@ -219,7 +225,7 @@ case $PYVER in
     ;;
     *)
     echo "Installing pyside..."
-    conda install -y -n ${CONDENV} --yes pyside
+    conda install -y -n ${CONDENV} -c asmeurer pyside
     ;;
 esac
 
