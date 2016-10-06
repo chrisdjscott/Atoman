@@ -28,6 +28,8 @@ before_install:
     - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate atoman
+    - export CC=gcc
+    - export CXX=g++
 
 install:
     - echo $CC
