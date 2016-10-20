@@ -231,6 +231,24 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         # spaghetti
         self.addCheckBox("drawSpaghetti", toolTip="Turn on rendering 'spaghetti'", label="Render spaghetti",
                          displayLayout=True)
+        
+        self.addHorizontalDivider(displaySettings=True)
+        
+        # option to output defects to a file
+        self.addCheckBox("writeDefectsFile", toolTip="Write the defects to a file", label="Write defects file",
+                         displayLayout=True)
+        label = QtGui.QLabel("Defects file:")
+        defectsFileEdit = QtGui.QLineEdit(self.getSettings().getSetting("defectsFile"))
+        defectsFileEdit.textEdited.connect(self.defectsFileChanged)
+        row = QtGui.QHBoxLayout()
+        row.addWidget(label)
+        row.addWidget(defectsFileEdit)
+        self.displaySettingsLayout.addRow(row)
+    
+    def defectsFileChanged(self, text):
+        """Defects file name changed."""
+        settings = self.getSettings()
+        settings.updateSetting("defectsFile", text)
     
     def useAcnaToggled(self, enabled):
         """
