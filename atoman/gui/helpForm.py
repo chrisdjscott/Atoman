@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 import logging
 import functools
 
-from PyQt5 import QtGui, QtCore, QtWidgets, QtWebKitWidgets
+from PyQt5 import QtGui, QtCore, QtWidgets, QtWebEngineWidgets
 
 
 from ..visutils.utilities import iconPath, helpPath
@@ -38,7 +38,7 @@ class HelpFormSphinx(QtWidgets.QDialog):
         self.helpFormOpen = False
         
         # browser
-        self.webView = QtWebKitWidgets.QWebView(self)
+        self.webView = QtWebEngineWidgets.QWebEngineView(self)
         
         # toolbar actions
         backAction = QtWidgets.QAction(QtGui.QIcon(iconPath("oxygen/go-previous.png")), "&Back", self)
