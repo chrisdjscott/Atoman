@@ -39,14 +39,23 @@ Changes by Alex Tsui, Apr. 2015
 Changes by Fabian Wenzel, Jan. 2016
  Support for Python3
 """
-import vtk
 
 # Check whether a specific PyQt implementation was chosen
 try:
     import vtk.qt
     PyQtImpl = vtk.qt.PyQtImpl
 except (ImportError, AttributeError):
-    PyQtImpl = "PyQt5"
+    pass
+
+# Check whether a specific QVTKRenderWindowInteractor base
+# class was chosen, can be set to "QGLWidget"
+QVTKRWIBase = "QWidget"
+QVTKRWIBase = "QGLWidget"
+try:
+    import vtk.qt
+    QVTKRWIBase = vtk.qt.QVTKRWIBase
+except (ImportError, AttributeError):
+    pass
 
 if PyQtImpl is None:
     # Autodetect the PyQt implementation to use
@@ -65,6 +74,8 @@ if PyQtImpl is None:
                 raise ImportError("Cannot load either PyQt or PySide")
 
 if PyQtImpl == "PyQt5":
+    if QVTKRWIBase == "QGLWidget":
+        from PyQt5.QtOpenGL import QGLWidget
     from PyQt5.QtWidgets import QWidget
     from PyQt5.QtWidgets import QSizePolicy
     from PyQt5.QtWidgets import QApplication
@@ -74,6 +85,8 @@ if PyQtImpl == "PyQt5":
     from PyQt5.QtCore import QSize
     from PyQt5.QtCore import QEvent
 elif PyQtImpl == "PyQt4":
+    if QVTKRWIBase == "QGLWidget":
+        from PyQt4.QtOpenGL import QGLWidget
     from PyQt4.QtGui import QWidget
     from PyQt4.QtGui import QSizePolicy
     from PyQt4.QtGui import QApplication
@@ -83,6 +96,8 @@ elif PyQtImpl == "PyQt4":
     from PyQt4.QtCore import QSize
     from PyQt4.QtCore import QEvent
 elif PyQtImpl == "PySide":
+    if QVTKRWIBase == "QGLWidget":
+        from PySide.QtOpenGL import QGLWidget
     from PySide.QtGui import QWidget
     from PySide.QtGui import QSizePolicy
     from PySide.QtGui import QApplication
@@ -94,7 +109,15 @@ elif PyQtImpl == "PySide":
 else:
     raise ImportError("Unknown PyQt implementation " + repr(PyQtImpl))
 
-class QVTKRenderWindowInteractor(QWidget):
+# Define types for base class, based on string
+if QVTKRWIBase == "QWidget":
+    QVTKRWIBaseClass = QWidget
+elif QVTKRWIBase == "QGLWidget":
+    QVTKRWIBaseClass = QGLWidget
+else:
+    raise ImportError("Unknown base class for QVTKRenderWindowInteractor " + QVTKRWIBase)
+
+class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
 
     """ A QVTKRenderWindowInteractor for Python and Qt.  Uses a
     vtkGenericRenderWindowInteractor to handle the interactions.  Use
@@ -178,7 +201,7 @@ class QVTKRenderWindowInteractor(QWidget):
         10: Qt.CrossCursor,          # VTK_CURSOR_CROSSHAIR
     }
 
-    def __init__(self, parent=None, wflags=Qt.WindowFlags(), **kw):
+    def __init__(self, parent=None, **kw):
         # the current button
         self._ActiveButton = Qt.NoButton
 
@@ -187,6 +210,7 @@ class QVTKRenderWindowInteractor(QWidget):
         self.__saveY = 0
         self.__saveModifiers = Qt.NoModifier
         self.__saveButtons = Qt.NoButton
+        self.__wheelDelta = 0
 
         # do special handling of some keywords:
         # stereo, rw
@@ -201,8 +225,15 @@ class QVTKRenderWindowInteractor(QWidget):
         except KeyError:
             rw = None
 
-        # create qt-level widget
-        QWidget.__init__(self, parent, wflags|Qt.MSWindowsOwnDC)
+        # create base qt-level widget
+        if QVTKRWIBase == "QWidget":
+            if "wflags" in kw:
+                wflags = kw['wflags']
+            else:
+                wflags = Qt.WindowFlags()
+            QWidget.__init__(self, parent, wflags | Qt.MSWindowsOwnDC)
+        elif QVTKRWIBase == "QGLWidget":
+            QGLWidget.__init__(self, parent)
 
         if rw: # user-supplied render window
             self._RenderWindow = rw
@@ -315,7 +346,7 @@ class QVTKRenderWindowInteractor(QWidget):
         self.Finalize()
 
     def sizeHint(self):
-        return QSize(1600, 400)
+        return QSize(400, 400)
 
     def paintEngine(self):
         return None
@@ -427,10 +458,17 @@ class QVTKRenderWindowInteractor(QWidget):
         self._Iren.KeyReleaseEvent()
 
     def wheelEvent(self, ev):
-        if ev.angleDelta() >= 0:
-            self._Iren.MouseWheelForwardEvent()
+        if hasattr(ev, 'delta'):
+            self.__wheelDelta += ev.delta()
         else:
+            self.__wheelDelta += ev.angleDelta().y()
+
+        if self.__wheelDelta >= 120:
+            self._Iren.MouseWheelForwardEvent()
+            self.__wheelDelta = 0
+        elif self.__wheelDelta <= -120:
             self._Iren.MouseWheelBackwardEvent()
+            self.__wheelDelta = 0
 
     def GetRenderWindow(self):
         return self._RenderWindow
