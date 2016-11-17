@@ -90,7 +90,7 @@ class FilterList(QtWidgets.QWidget):
         # add the top set of buttons
         
         # visibility of filter list
-        self.visibleButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("eye-ava.svg")), "")
+        self.visibleButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("eye-ava.png")), "")
         self.visibleButton.setFixedWidth(35)
         self.visibleButton.setStatusTip("Visible")
         self.visibleButton.setToolTip("Visible")
@@ -106,7 +106,7 @@ class FilterList(QtWidgets.QWidget):
         trashButton.clicked.connect(self.filterTab.removeFilterList)
         
         # drift compenstation
-        self.driftCompButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("other/Drift.jpg")), "")
+        self.driftCompButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("other/Drift.png")), "")
         self.driftCompButton.setStatusTip("Drift compensation")
         self.driftCompButton.setToolTip("Drift compensation")
         self.driftCompButton.setFixedWidth(35)
@@ -285,10 +285,10 @@ class FilterList(QtWidgets.QWidget):
                 self.driftCompButton.setChecked(QtCore.Qt.Unchecked)
             
             else:
-                self.driftCompensation = True
+                self.filterer.toggleDriftCompensation(True)
         
         else:
-            self.driftCompensation = False
+            self.filterer.toggleDriftCompensation(False)
     
     def showClusterInfoWindow(self, clusterIndex):
         """
@@ -849,12 +849,12 @@ class FilterList(QtWidgets.QWidget):
         
         """
         if self.visibleButton.isChecked():
-            self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.svg")))
+            self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.png")))
             self.visible = False
             self.renderer.hideActors()
         
         else:
-            self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))
+            self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.png")))
             self.visible = True
             self.actorsOptions.addCheckedActors()
         

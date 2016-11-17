@@ -33,8 +33,11 @@ class VTKWindow(QVTKRenderWindowInteractor):
     The VTK window
     
     """
+    leftButtonPressed = QtCore.pyqtSignal(QtCore.QEvent)
     leftButtonReleased = QtCore.pyqtSignal(QtCore.QEvent)
+    rightButtonPressed = QtCore.pyqtSignal(QtCore.QEvent)
     rightButtonReleased = QtCore.pyqtSignal(QtCore.QEvent)
+    mouseMoved = QtCore.pyqtSignal(QtCore.QEvent)
     
     def __init__(self, parent=None, wflags=QtCore.Qt.WindowFlags(), **kw):
         super(VTKWindow, self).__init__(parent=parent, wflags=wflags, **kw)
@@ -54,6 +57,14 @@ class VTKWindow(QVTKRenderWindowInteractor):
         if not self._disableMouseWheel:
             super(VTKWindow, self).wheelEvent(ev)
     
+    def mousePressEvent(self, ev):
+        """Override mouse press event."""
+        super(VTKWindow, self).mousePressEvent(ev)
+        if self._ActiveButton == QtCore.Qt.LeftButton:
+            self.leftButtonPressed.emit(ev)
+        elif self._ActiveButton == QtCore.Qt.RightButton:
+            self.rightButtonPressed.emit(ev)
+    
     def mouseReleaseEvent(self, ev):
         """Override mouse release event as not working."""
         super(VTKWindow, self).mouseReleaseEvent(ev)
@@ -61,3 +72,8 @@ class VTKWindow(QVTKRenderWindowInteractor):
             self.leftButtonReleased.emit(ev)
         elif self._ActiveButton == QtCore.Qt.RightButton:
             self.rightButtonReleased.emit(ev)
+    
+    def mouseMoveEvent(self, ev):
+        """Override mouse move event."""
+        super(VTKWindow, self).mouseMoveEvent(ev)
+        self.mouseMoved.emit(ev)

@@ -226,6 +226,12 @@ class PointDefectsSettingsDialog(base.GenericSettingsDialog):
         
         self.disableDrawVectorsCheck()
         self.refresh()
+        
+        self.addHorizontalDivider(displaySettings=True)
+        
+        # spaghetti
+        self.addCheckBox("drawSpaghetti", toolTip="Turn on rendering 'spaghetti'", label="Render spaghetti",
+                         displayLayout=True)
     
     def useAcnaToggled(self, enabled):
         """

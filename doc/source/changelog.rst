@@ -2,15 +2,37 @@
 Changelog
 =========
 
+**160704**
+
+* Fix bug when determining if atoms belong within a convex hull
+* Fix use of numpy.where
+* Add overrides for all mouse events to ensure picking works properly
+* Version printed properly on about screen from pyinstaller app
+* Fix bug when drawBonds is selected but no bonds are checked
+
+**160409**
+
+* Add spaghetti rendering to point defects filter
+
+**160314**
+
+* Add option to clusters filter to display all atoms in/out-side the convex hulls 
+
+**160301**
+
+* Fix bug where checking drift compensation did nothing
+* Interstitial count displayed on screen now includes split interstitials
+
 **160227**
 
 * Rewrite of filtering and rendering (easier to call from scripts)
 * Add support for Python 3 (with VTK 7.0)
 * Add more tests
+* Add versioneer for reporting the version (section added to setup.cfg.example)
 
 **151120**
 
-* Add entry point to replace cdjsvis.py script
+* Add entry point to replace cdjsvis.py script (run as 'python -m atoman')
 * Rearrange structure of subpackages
 * Remove dependency on GSL
 * Add lots more tests

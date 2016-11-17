@@ -3,16 +3,16 @@
 Bonds options
 -------------
 
-Selecting "Draw bonds" will result in bonds being drawn between visible 
-atoms from this filter list. You must also select the bonds you want to 
-draw from the list (eg. "Pu-Pu" or "Pu-Ga"). 
+Selecting "Draw bonds" will result in bonds being drawn between visible
+atoms from this filter list. You must also select the bonds you want to
+draw from the list (eg. "Pu-Pu" or "Pu-Ga").
 
 The "Bond thickness" settings determine the size of the bonds when they are
-rendered.  "VTK" is the onscreen rendering while "POV" is used during 
+rendered.  "VTK" is the onscreen rendering while "POV" is used during
 POV-Ray rendering.
 
 The "Number of sides" settings determines how many sides make up the tube
-used to render the bond.  A higher setting will look better but will be 
+used to render the bond.  A higher setting will look better but will be
 much slower to render and interact with.
 
 """
@@ -26,8 +26,6 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 from ...visutils.utilities import iconPath
 from six.moves import range
 
-
-################################################################################
 
 class BondListItem(QtWidgets.QListWidgetItem):
     """
@@ -53,7 +51,6 @@ class BondListItem(QtWidgets.QListWidgetItem):
         # set text
         self.setText("%s - %s" % (syma, symb))
 
-################################################################################
 
 class BondsOptionsWindow(QtWidgets.QDialog):
     """
@@ -231,10 +228,10 @@ class BondsOptionsWindow(QtWidgets.QDialog):
             item = self.bondsList.item(i)
             
             # make this 'and' so that if a lattice is missing one specie we still
-            # keep the pair in case it comes back later... 
+            # keep the pair in case it comes back later...
             if item.syma not in specieList and item.symb not in specieList:
                 self.logger.debug("  Removing bond option: %s - %s", item.syma, item.symb)
-                self.bondsList.takeItem(i) # does this delete it?
+                self.bondsList.takeItem(i)  # does this delete it?
             
             else:
                 currentPairs.add("%s - %s" % (item.syma, item.symb))
@@ -255,3 +252,15 @@ class BondsOptionsWindow(QtWidgets.QDialog):
                     self.logger.debug("  Adding bond option: %s", p1)
                     item = BondListItem(specieList[i], specieList[j])
                     self.bondsList.addItem(item)
+        
+        # check if bonds should still be selected
+        if self.drawBonds:
+            haveChecked = False
+            for i in range(self.bondsList.count()):
+                item = self.bondsList.item(i)
+                if item.checkState() == QtCore.Qt.Checked:
+                    haveChecked = True
+                    break
+            
+            if not haveChecked:
+                self.drawBondsGroup.setChecked(False)

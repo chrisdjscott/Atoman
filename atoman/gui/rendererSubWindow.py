@@ -9,6 +9,7 @@ Mdi sub window for displaying VTK render window.
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import division
 import logging
 
 from PyQt5 import QtGui, QtCore, QtWidgets
@@ -76,11 +77,11 @@ class RendererWindow(QtWidgets.QWidget):
         layout.addWidget(toolbar)
         
         # button to displace lattice frame
-        showCellAction = self.createAction("Toggle cell", slot=self.toggleCellFrame, icon="cell_icon.svg",
+        showCellAction = self.createAction("Toggle cell", slot=self.toggleCellFrame, icon="cell_icon.png",
                                            tip="Toggle cell frame visibility")
         
         # button to display axes
-        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon.svg",
+        showAxesAction = self.createAction("Toggle axes", slot=self.toggleAxes, icon="axis_icon.png",
                                            tip="Toggle axes visiblity")
         
         # reset camera to cell
@@ -119,7 +120,7 @@ class RendererWindow(QtWidgets.QWidget):
         
         # parallel projection action
         projectionAction = self.createAction("Parallel projection", slot=self.toggleProjection,
-                                             icon="perspective-ava.svg", tip="Parallel projection", checkable=True)
+                                             icon="perspective-ava.png", tip="Parallel projection", checkable=True)
         
         # add actions
         self.addActions(toolbar, (showCellAction, showAxesAction, backgroundColourAction, None,
@@ -142,15 +143,18 @@ class RendererWindow(QtWidgets.QWidget):
         self.vtkRenWinInteract.changeDisableMouseWheel(self.mainWindow.preferences.generalForm.disableMouseWheel)
         
         # add observers
-        self.vtkRenWinInteract._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
+        # self.vtkRenWinInteract._Iren.AddObserver("LeftButtonPressEvent", self.leftButtonPressed)
         # self.vtkRenWinInteract._Iren.AddObserver("LeftButtonReleaseEvent", self.leftButtonReleased)
-        self.vtkRenWinInteract._Iren.AddObserver("RightButtonPressEvent", self.rightButtonPressed)
+        # self.vtkRenWinInteract._Iren.AddObserver("RightButtonPressEvent", self.rightButtonPressed)
         # self.vtkRenWinInteract._Iren.AddObserver("RightButtonReleaseEvent", self.rightButtonReleased)
-        self.vtkRenWinInteract._Iren.AddObserver("MouseMoveEvent", self.mouseMoved)
+        # self.vtkRenWinInteract._Iren.AddObserver("MouseMoveEvent", self.mouseMoved)
         
         # connect custom signals (add observer does not work for release events)
+        self.vtkRenWinInteract.leftButtonPressed.connect(self.leftButtonPressed)
         self.vtkRenWinInteract.leftButtonReleased.connect(self.leftButtonReleased)
+        self.vtkRenWinInteract.rightButtonPressed.connect(self.rightButtonPressed)
         self.vtkRenWinInteract.rightButtonReleased.connect(self.rightButtonReleased)
+        self.vtkRenWinInteract.mouseMoved.connect(self.mouseMoved)
         
         # add picker
         self.vtkPicker = vtk.vtkCellPicker()
@@ -788,7 +792,8 @@ class RendererWindow(QtWidgets.QWidget):
                 defectFilterActive = True
                 
                 NVac += len(filterList.filterer.vacancies)
-                NInt += len(filterList.filterer.interstitials)
+                NSplit = len(filterList.filterer.splitInterstitials) // 3
+                NInt += len(filterList.filterer.interstitials) + NSplit
                 NAnt += len(filterList.filterer.antisites)
                 
                 # defects settings

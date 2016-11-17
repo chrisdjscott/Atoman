@@ -169,3 +169,20 @@ class TestLattice(unittest.TestCase):
                     self.assertEqual(float(array[j + 1]), self.lattice.pos[3 * index + j])
                 self.assertEqual(float(array[4]), self.lattice.charge[index])
             self.assertEqual(i + 1, len(visatoms))
+
+    def test_getSpecieIndex(self):
+        """
+        Lattice getSpecieIndex
+
+        """
+        index = self.lattic2.getSpecieIndex("Si")
+        self.assertEqual("Si", self.lattic2.specieList[index])
+
+        index = self.lattic2.getSpecieIndex("B_")
+        self.assertEqual("B_", self.lattic2.specieList[index])
+
+        index = self.lattic2.getSpecieIndex("O_")
+        self.assertEqual("O_", self.lattic2.specieList[index])
+
+        with self.assertRaises(ValueError):
+            self.lattic2.getSpecieIndex("Zn")

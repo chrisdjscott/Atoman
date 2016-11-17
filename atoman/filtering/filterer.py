@@ -102,6 +102,7 @@ class Filterer(object):
         self.vectorsDict = {}
         self.defectFilterSelected = False
         self.bubblesFilterSelected = False
+        self.spaghettiAtoms = np.asarray([], dtype=np.int32)
     
     def runFilters(self, currentFilters, currentSettings, inputState, refState, sequencer=False):
         """
@@ -231,6 +232,10 @@ class Filterer(object):
                 # structure counters
                 if result.hasStructureCounterDict():
                     self.structureCounterDicts[result.getStructureCounterName()] = result.getStructureCounterDict()
+                
+                # spaghetti analysis
+                if result.hasSpaghettiAtoms():
+                    self.spaghettiAtoms = result.getSpaghettiAtoms()
                 
                 # full vectors/scalars
                 self.storeFullScalarsArray(len(self.visibleAtoms), filterInput.NScalars, filterInput.fullScalars)
@@ -365,29 +370,49 @@ class Filterer(object):
             
             # Filterer.scalarsDict
             keys = list(self.scalarsDict.keys())
+            lenError = False
             for i, key in enumerate(keys):
                 self.logger.debug("Storing '%s' scalars", key)
                 scalars = scalarsList[i]
-                assert len(scalars) >= NVisible, "ERROR: scalars (%s) smaller than expected (%d < %d)" % (key,
-                                                                                                          len(scalars),
-                                                                                                          NVisible)
-                scalars_cp = copy.copy(scalars)
-                scalars_cp.resize(NVisible, refcheck=False)
-                self.scalarsDict[key] = scalars_cp
+                
+                if len(scalars) < NVisible:
+                    msg = "'%s' scalars smaller than expected (%d < %d) (this is expected in some situations); "
+                    msg += "clearing scalars list"
+                    self.logger.warning(msg, key, len(scalars), NVisible)
+                    lenError = True
+                    break
+                
+                else:
+                    scalars_cp = copy.copy(scalars)
+                    scalars_cp.resize(NVisible, refcheck=False)
+                    self.scalarsDict[key] = scalars_cp
+            
+            if lenError:
+                self.scalarsDict.clear()
             
             # Lattice.scalarsDict
             offset = len(keys)
             keys = list(self.latticeScalarsDict.keys())
+            lenError = False
             for j, key in enumerate(keys):
                 self.logger.debug("  Storing '%s' scalars (Lattice)", key)
                 i = j + offset
                 scalars = scalarsList[i]
-                assert len(scalars) >= NVisible, "ERROR: scalars (%s) smaller than expected (%d < %d)" % (key,
-                                                                                                          len(scalars),
-                                                                                                          NVisible)
-                scalars_cp = copy.copy(scalars)
-                scalars_cp.resize(NVisible, refcheck=False)
-                self.latticeScalarsDict[key] = scalars_cp
+                
+                if len(scalars) < NVisible:
+                    msg = "'%s' scalars smaller than expected (%d < %d) (this is expected in some situations); "
+                    msg += "clearing scalars list"
+                    self.logger.warning(msg, key, len(scalars), NVisible)
+                    lenError = True
+                    break
+                
+                else:
+                    scalars_cp = copy.copy(scalars)
+                    scalars_cp.resize(NVisible, refcheck=False)
+                    self.latticeScalarsDict[key] = scalars_cp
+            
+            if lenError:
+                self.latticeScalarsDict.clear()
     
     def storeFullVectorsArray(self, NVisible, NVectors, vectorsFull):
         """
@@ -401,12 +426,21 @@ class Filterer(object):
             self.logger.debug("Storing full vectors array in dict")
             vectorsList = np.split(vectorsFull, NVectors)
             keys = list(self.vectorsDict.keys())
-            
+            lenError = False
             for key, vectors in zip(keys, vectorsList):
                 self.logger.debug("  Storing '%s' vectors", key)
-                assert len(vectors) >= NVisible, "ERROR: vectors (%s) smaller than expected (%d < %d)" % (key,
-                                                                                                          len(vectors),
-                                                                                                          NVisible)
-                vectors_cp = copy.copy(vectors)
-                vectors_cp.resize((NVisible, 3), refcheck=False)
-                self.vectorsDict[key] = vectors_cp
+                
+                if len(vectors) < NVisible:
+                    msg = "'%s' vectors smaller than expected (%d < %d) (this is expected in some situations); "
+                    msg += "clearing vectors list"
+                    self.logger.warning(msg, key, len(vectors), NVisible)
+                    lenError = True
+                    break
+                
+                else:
+                    vectors_cp = copy.copy(vectors)
+                    vectors_cp.resize((NVisible, 3), refcheck=False)
+                    self.vectorsDict[key] = vectors_cp
+            
+            if lenError:
+                self.vectorsDict.clear()

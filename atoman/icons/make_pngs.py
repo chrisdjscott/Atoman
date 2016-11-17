@@ -10,7 +10,7 @@ import glob
 SIZE = 512
 FORCE = False
 
-svg_fns = glob.glob("*.svgz")
+svg_fns = glob.glob("*.svg*")
 for svg_fn in svg_fns:
     png_fn = os.path.splitext(svg_fn)[0] + ".png"
     if os.path.isfile(png_fn) and not FORCE:
