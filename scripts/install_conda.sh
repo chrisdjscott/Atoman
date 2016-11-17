@@ -86,9 +86,7 @@ case ${PYVER} in
     PYVER=2.7
     ;;
     3)
-    PYVER=3.4
-    # PYVER=3.5
-    # echo "Info: using Python 3 - we will have to compile PySide from source (this will take a while)"
+    PYVER=3.5
     ;;
     *)
     echo "Error: Python version must be '2' or '3' ('2' is default)"
@@ -180,8 +178,8 @@ echo Installing sphinx...
 conda install -y -n ${CONDENV} sphinx sphinx_rtd_theme
 echo Installing paramiko
 conda install -y -n ${CONDENV} paramiko
-echo Installing Qt4...
-conda install -y -n ${CONDENV} -c asmeurer qt=4.8.5
+echo Installing PyQt5
+conda install -y -n ${CONDENV} pyqt
 
 # install VTK
 case $VTKVER in
@@ -202,34 +200,6 @@ source activate ${CONDENV}
 echo Installing additional packages using pip...
 pip install pyhull
 pip install pyinstaller
-
-# install PySide
-case $PYVER in
-    3.5)
-    # TODO: probably should install other requirements here, like CMake and GCC?
-    echo "Installing pyside from source (this will take a while)..."
-    pysidedir=$(mktemp -d 2>/dev/null || mktemp -d -t 'pysidetmp')
-    cd "${pysidedir}"
-    git clone https://github.com/PySide/pyside-setup.git pyside-setup
-    cd pyside-setup
-    if [ "${CONDOS}" == "MacOSX" ]; then
-        SED="sed -i ''"
-    else
-        SED="sed -i"
-    fi
-    # python 3.5 is disabled in setup.py but it works if you just reenable it
-    ${SED} 's/Programming Language :: Python :: 3.4/Programming Language :: Python :: 3.5/g' setup.py
-    python setup.py bdist_wheel --version=1.2.4
-    fn=$(ls dist)
-    pip install "dist/${fn}"
-    cd
-    rm -rf "${pysidedir}"
-    ;;
-    *)
-    echo "Installing pyside..."
-    conda install -y -n ${CONDENV} -c asmeurer pyside
-    ;;
-esac
 
 echo
 echo ==============================================================================================================
