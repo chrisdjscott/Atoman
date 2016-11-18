@@ -39,8 +39,10 @@ Changes by Alex Tsui, Apr. 2015
 Changes by Fabian Wenzel, Jan. 2016
  Support for Python3
 """
+from __future__ import print_function
 
 # Check whether a specific PyQt implementation was chosen
+PyQtImpl = 'PyQt5'
 try:
     import vtk.qt
     PyQtImpl = vtk.qt.PyQtImpl
