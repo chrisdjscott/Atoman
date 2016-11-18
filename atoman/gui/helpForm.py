@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 import logging
 import functools
 
-from PyQt5 import QtGui, QtCore, QtWidgets, QtWebEngineWidgets
+from PyQt5 import QtGui, QtCore, QtWidgets #, QtWebEngineWidgets
 
 
 from ..visutils.utilities import iconPath, helpPath
@@ -38,15 +38,16 @@ class HelpFormSphinx(QtWidgets.QDialog):
         self.helpFormOpen = False
         
         # browser
-        self.webView = QtWebEngineWidgets.QWebEngineView(self)
+#        self.webView = QtWebEngineWidgets.QWebEngineView(self)
+        self.webView = None
         
         # toolbar actions
         backAction = QtWidgets.QAction(QtGui.QIcon(iconPath("oxygen/go-previous.png")), "&Back", self)
-        backAction.triggered.connect(self.webView.back)
+#        backAction.triggered.connect(self.webView.back)
         homeAction = QtWidgets.QAction(QtGui.QIcon(iconPath("oxygen/go-home.png")), "&Home", self)
         homeAction.triggered.connect(functools.partial(self.loadPage, "index.html"))
         forwardAction = QtWidgets.QAction(QtGui.QIcon(iconPath("oxygen/go-next.png")), "&Foward", self)
-        forwardAction.triggered.connect(self.webView.forward)
+#        forwardAction.triggered.connect(self.webView.forward)
         
         # tool bar
         toolbar = QtWidgets.QToolBar()
@@ -60,13 +61,13 @@ class HelpFormSphinx(QtWidgets.QDialog):
         logger.debug("Setting up help form")
         
         self.loadPage("index.html")
-        self.webView.show()
+#        self.webView.show()
         
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0,0,0,0)
         layout.setSpacing(0)
         layout.addWidget(toolbar)
-        layout.addWidget(self.webView)
+#        layout.addWidget(self.webView)
         
         self.resize(950, 700)
     
@@ -76,7 +77,7 @@ class HelpFormSphinx(QtWidgets.QDialog):
         
         """
         self.logger.debug("Loading URL: '%s'", url)
-        self.webView.load(QtCore.QUrl(url))
+#        self.webView.load(QtCore.QUrl(url))
     
     def loadPage(self, page):
         """
