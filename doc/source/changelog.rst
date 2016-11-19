@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**161119**
+
+* Fix bug when scalar bar is shown and changing the background colour
+
 **160704**
 
 * Fix bug when determining if atoms belong within a convex hull
