@@ -11,6 +11,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from __future__ import division
 import logging
+import platform
+import ctypes
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 
@@ -135,6 +137,15 @@ class RendererWindow(QtWidgets.QWidget):
         iren = vtkWindow.VTKRenWinInteractOverride()
         iren.SetRenderWindow(self.vtkRenWin)
         self.vtkRenWinInteract = vtkWindow.VTKWindow(self, rw=self.vtkRenWin, iren=iren)
+        
+        # handle retina "bug" with VTK7 and Qt5 on OS X
+        if platform.system() == "Darwin":
+            try:
+                osx_helper = ctypes.CDLL("libosx_helper.dylib")
+            except OSError:
+                self.logger.warning("If you have problems with the VTK window not displaying properly try building libosx_helper in the extra directory")
+            else:
+                osx_helper.osx_retina_hack(ctypes.c_long(self.vtkRenWinInteract.qvtkWinId))
         
         # interactor style
         self.vtkRenWinInteract._Iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())

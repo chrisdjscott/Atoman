@@ -180,6 +180,8 @@ echo Installing paramiko
 conda install -y -n ${CONDENV} paramiko
 echo Installing PyQt5
 conda install -y -n ${CONDENV} pyqt
+echo Installing pyinstaller from conda-forge
+conda install -y -n ${CONDENV} -c conda-forge pyinstaller
 
 # install VTK
 case $VTKVER in
