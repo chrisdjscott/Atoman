@@ -106,6 +106,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         # min/max
         self.minValSpinBox = QtGui.QDoubleSpinBox()
         self.minValSpinBox.setSingleStep(0.1)
+        self.minValSpinBox.setDecimals(5)
         self.minValSpinBox.setMinimum(-9999.0)
         self.minValSpinBox.setMaximum(9999.0)
         self.minValSpinBox.setValue(0)
@@ -113,6 +114,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         
         self.maxValSpinBox = QtGui.QDoubleSpinBox()
         self.maxValSpinBox.setSingleStep(0.1)
+        self.maxValSpinBox.setDecimals(5)
         self.maxValSpinBox.setMinimum(-9999.0)
         self.maxValSpinBox.setMaximum(9999.0)
         self.maxValSpinBox.setValue(1)
@@ -170,12 +172,14 @@ class ColouringOptionsWindow(QtGui.QDialog):
         # min/max
         self.chargeMinSpin = QtGui.QDoubleSpinBox()
         self.chargeMinSpin.setSingleStep(0.1)
+        self.chargeMinSpin.setDecimals(5)
         self.chargeMinSpin.setMinimum(-9999.0)
         self.chargeMinSpin.setMaximum(9999.0)
         self.chargeMinSpin.setValue(0)
         
         self.chargeMaxSpin = QtGui.QDoubleSpinBox()
         self.chargeMaxSpin.setSingleStep(0.1)
+        self.chargeMaxSpin.setDecimals(5)
         self.chargeMaxSpin.setMinimum(-9999.0)
         self.chargeMaxSpin.setMaximum(9999.0)
         self.chargeMaxSpin.setValue(1)
@@ -289,6 +293,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
         # min/max
         scalarMinSpin = QtGui.QDoubleSpinBox()
         scalarMinSpin.setSingleStep(0.1)
+        scalarMinSpin.setDecimals(5)
         scalarMinSpin.setMinimum(-9999.0)
         scalarMinSpin.setMaximum(9999.0)
         scalarMinSpin.setValue(0)
@@ -296,6 +301,7 @@ class ColouringOptionsWindow(QtGui.QDialog):
          
         scalarMaxSpin = QtGui.QDoubleSpinBox()
         scalarMaxSpin.setSingleStep(0.1)
+        scalarMaxSpin.setDecimals(5)
         scalarMaxSpin.setMinimum(-9999.0)
         scalarMaxSpin.setMaximum(9999.0)
         scalarMaxSpin.setValue(1)
