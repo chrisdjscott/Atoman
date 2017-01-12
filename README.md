@@ -28,6 +28,7 @@ Required:
 * [Pillow](https://pillow.readthedocs.org/)
 * [VTK](http://www.vtk.org/) - version 7.0 or later required for Python 3
 * [Sphinx](http://sphinx-doc.org/)
+* [sphinx_rtd_theme](https://pypi.python.org/pypi/sphinx_rtd_theme)
 * [nose](https://nose.readthedocs.org/en/latest/) (testing)
 * [setuptools](https://pypi.python.org/pypi/setuptools)
 
