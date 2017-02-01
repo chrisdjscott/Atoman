@@ -2,6 +2,11 @@
 Changelog
 =========
 
+**170201**
+
+* Update dependencies in README.md
+* Fix bug when writing partial lattice (species were not correct)
+
 **161205**
 
 * Add option to set the number of labels on the scalar bar
