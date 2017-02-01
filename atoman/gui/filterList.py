@@ -89,7 +89,7 @@ class FilterList(QtGui.QWidget):
         # add the top set of buttons
         
         # visibility of filter list
-        self.visibleButton = QtGui.QPushButton(QtGui.QIcon(iconPath("eye-ava.svg")), "")
+        self.visibleButton = QtGui.QPushButton(QtGui.QIcon(iconPath("eye-ava.png")), "")
         self.visibleButton.setFixedWidth(35)
         self.visibleButton.setStatusTip("Visible")
         self.visibleButton.setToolTip("Visible")
@@ -105,7 +105,7 @@ class FilterList(QtGui.QWidget):
         trashButton.clicked.connect(self.filterTab.removeFilterList)
         
         # drift compenstation
-        self.driftCompButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/Drift.jpg")), "")
+        self.driftCompButton = QtGui.QPushButton(QtGui.QIcon(iconPath("other/Drift.png")), "")
         self.driftCompButton.setStatusTip("Drift compensation")
         self.driftCompButton.setToolTip("Drift compensation")
         self.driftCompButton.setFixedWidth(35)
@@ -848,12 +848,12 @@ class FilterList(QtGui.QWidget):
         
         """
         if self.visibleButton.isChecked():
-            self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.svg")))
+            self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-close-ava.png")))
             self.visible = False
             self.renderer.hideActors()
         
         else:
-            self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.svg")))
+            self.visibleButton.setIcon(QtGui.QIcon(iconPath("eye-ava.png")))
             self.visible = True
             self.actorsOptions.addCheckedActors()
         

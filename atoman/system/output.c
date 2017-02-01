@@ -375,7 +375,7 @@ writeLattice(PyObject *self, PyObject *args)
         {
             int index = visibleAtoms[i];
             int ind3 = index * 3;
-            int spec3 = 3 * specie[i];
+            int spec3 = 3 * specie[index];
             char symtemp[3];
             
             symtemp[0] = specieListLocal[spec3];

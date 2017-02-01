@@ -200,8 +200,9 @@ class FilterListRenderer(object):
     def _createScalarBar(self, lut):
         """Create the scalar bars."""
         if self.colouringOptions.colourBy != "Species" and self.colouringOptions.colourBy != "Solid colour":
-            self._scalarBarWhite = utils.makeScalarBar(lut, self.colouringOptions, (0, 0, 0))
-            self._scalarBarBlack = utils.makeScalarBar(lut, self.colouringOptions, (1, 1, 1))
+            prefs = self._filterList.mainWindow.preferences.renderingForm
+            self._scalarBarWhite = utils.makeScalarBar(lut, self.colouringOptions, (0, 0, 0), prefs)
+            self._scalarBarBlack = utils.makeScalarBar(lut, self.colouringOptions, (1, 1, 1), prefs)
     
     def addScalarBar(self):
         """Show the scalar bar."""
