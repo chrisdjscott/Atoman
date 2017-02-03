@@ -77,9 +77,9 @@ class BondsOptionsWindow(QtGui.QDialog):
         
         # options
         self.drawBonds = False
-        self.bondThicknessPOV = 0.2
-        self.bondThicknessVTK = 0.2
-        self.bondNumSides = 5
+        self.bondThicknessPOV = 0.15
+        self.bondThicknessVTK = 0.15
+        self.bondNumSides = 15
         
         # layout
         layout = QtGui.QVBoxLayout(self)
