@@ -908,13 +908,13 @@ class PipelineForm(QtGui.QWidget):
                 
                 minSepScalars = {}
                 for scalarType, scalarArray in six.iteritems(scalarsDict):
-                    minSepScalars[scalarType] = scalarArray[tmp_index]
+                    minSepScalars[scalarType] = scalarArray[int(tmp_index)]
                 for scalarType, scalarArray in six.iteritems(latticeScalarsDict):
-                    minSepScalars[scalarType] = scalarArray[tmp_index]
+                    minSepScalars[scalarType] = scalarArray[int(tmp_index)]
                 
                 minSepVectors = {}
                 for vectorType, vectorArray in six.iteritems(vectorsDict):
-                    minSepVectors[vectorType] = vectorArray[tmp_index]
+                    minSepVectors[vectorType] = vectorArray[int(tmp_index)]
         
         logger.debug("Closest object to pick: %f (threshold: %f)", minSep, 0.1)
         
