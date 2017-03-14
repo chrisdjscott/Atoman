@@ -61,9 +61,9 @@ class GenericPreferencesSettingsForm(QtWidgets.QWidget):
     
     def addHorizontalDivide(self):
         """Add a horizontal divider to the layout."""
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.layout.addWidget(line)
     
     def init(self):
@@ -280,7 +280,7 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
         self.addHorizontalDivide()
         
         # scalar bar options
-        numScalarBarLabelsSpin = QtGui.QSpinBox()
+        numScalarBarLabelsSpin = QtWidgets.QSpinBox()
         numScalarBarLabelsSpin.setMinimum(2)
         numScalarBarLabelsSpin.setMaximum(9)
         numScalarBarLabelsSpin.setValue(self.numScalarBarLabels)
@@ -288,14 +288,14 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
         numScalarBarLabelsSpin.valueChanged.connect(self.numScalarBarLabelsChanged)
         self.layout.addRow("Number of scalar bar labels", numScalarBarLabelsSpin)
         
-        self.fmtScalarBarLabelsEdit = QtGui.QLineEdit(self.fmtScalarBarLabels)
+        self.fmtScalarBarLabelsEdit = QtWidgets.QLineEdit(self.fmtScalarBarLabels)
         self.fmtScalarBarLabelsEdit.setToolTip("<p>Custom format for scalar bar labels</p>")
         self.fmtScalarBarLabelsEdit.editingFinished.connect(self.fmtEdited)
         regexp = QtCore.QRegExp("%[+- 0#]*[0-9]*([.]?[0-9]+)?[adefgADEFG]")
         validator = QtGui.QRegExpValidator(regexp, self)
         self.fmtScalarBarLabelsEdit.setValidator(validator)
         
-        enableFmtCheck = QtGui.QCheckBox()
+        enableFmtCheck = QtWidgets.QCheckBox()
         if self.enableFmtScalarBarLabels:
             enableFmtCheck.setCheckState(QtCore.Qt.Checked)
             self.fmtScalarBarLabelsEdit.setEnabled(True)
