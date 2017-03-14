@@ -8,7 +8,17 @@
 # usage
 display_usage() {
     echo
-    echo "Usage: $0 [-d conda_dir] [-p python_version] [-V vtk_version] [-e conda_env] [-h]"
+    echo "Usage: $0 [-d conda_dir] [-p python_version] [-V vtk_version] [-e conda_env] [-g] [-h]"
+    echo
+    echo "Arguments:"
+    echo
+    echo "    [-d conda_dir] The location to install conda. If conda already exists at that"
+    echo "                   location we use it. (default is '$HOME/miniconda')"
+    echo "    [-p python_version] The version of python to use (either 2 or 3, default is 2)"
+    echo "    [-V vtk_version] The version of VTK to use (5, 6, or 7, default is 7)"
+    echo "    [-e conda_env] The name of the conda environment to create (default is 'atoman')"
+    echo "    [-g] Do not install gcc from conda; assume another version will be used"
+    echo "    [-h] Display help"
     echo
 }
 
@@ -18,6 +28,7 @@ CONDIR=${HOME}/miniconda
 PYVER=2
 VTKVER=7
 CONDENV=atoman
+WITH_GCC=1
 
 # parse args
 while [[ $# -gt 0 ]]
@@ -36,9 +47,12 @@ do
         VTKVER="$2"
         shift
         ;;
-        -e|--env)
+        -e|--cenv)
         CONDENV="$2"
         shift
+        ;;
+        -g|--no-gcc)
+        WITH_GCC=0
         ;;
         -h|--help)
         display_usage
@@ -157,31 +171,13 @@ conda update --yes conda
 
 # create conda environment
 echo Creating conda environment: \"${CONDENV}\"...
-conda create -y -n ${CONDENV} python=${PYVER}
-echo Installing gcc...
-conda install -y -n ${CONDENV} gcc
-echo Installing numpy...
-conda install -y -n ${CONDENV} numpy
-echo Installing scipy...
-conda install -y -n ${CONDENV} scipy
-echo Installing matplotlib...
-conda install -y -n ${CONDENV} matplotlib
-echo Installing pillow...
-conda install -y -n ${CONDENV} pillow
-echo Installing pip...
-conda install -y -n ${CONDENV} pip
-echo Installing nose...
-conda install -y -n ${CONDENV} nose
-echo Installing setuptools...
-conda install -y -n ${CONDENV} setuptools
-echo Installing sphinx...
-conda install -y -n ${CONDENV} sphinx sphinx_rtd_theme
-echo Installing paramiko
-conda install -y -n ${CONDENV} paramiko
-echo Installing PyQt5
-conda install -y -n ${CONDENV} pyqt
-echo Installing pyinstaller from conda-forge
-conda install -y -n ${CONDENV} -c conda-forge pyinstaller
+conda create -y -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip nose setuptools sphinx \
+        sphinx_rtd_theme paramiko pyqt
+
+# install GCC if required
+if [ "$WITH_GCC" = "1" ]; then
+    conda install -y -n ${CONDENV} gcc
+fi
 
 # install VTK
 case $VTKVER in

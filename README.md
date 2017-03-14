@@ -8,7 +8,7 @@ Released under the MIT license, see "LICENSE.md" for details.
 
 ## Requirements
 
-This code requires [Python](http://www.python.org) to run. Currently Python 2.7, 3.2, 3.3 and 3.4 should work. Atoman
+This code requires [Python](http://www.python.org) to run. Currently Python 2.7, 3.2+ should work. Atoman
 depends on a number of Python libraries, a C and C++ compiler (tested with gcc and g++) and also some other optional
 software.
 
@@ -28,6 +28,7 @@ Required:
 * [Pillow](https://pillow.readthedocs.org/)
 * [VTK](http://www.vtk.org/) - version 7.0 or later required for Python 3
 * [Sphinx](http://sphinx-doc.org/)
+* [sphinx_rtd_theme](https://pypi.python.org/pypi/sphinx_rtd_theme)
 * [nose](https://nose.readthedocs.org/en/latest/) (testing)
 * [setuptools](https://pypi.python.org/pypi/setuptools)
 

@@ -59,6 +59,13 @@ class GenericPreferencesSettingsForm(QtWidgets.QWidget):
         
         return rowLayout
     
+    def addHorizontalDivide(self):
+        """Add a horizontal divider to the layout."""
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.layout.addWidget(line)
+    
     def init(self):
 #         self.layout.addStretch(1)
         pass
@@ -237,15 +244,29 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
         If the number of atoms in the selected input file is less that this value then the
         filter/calculator lists run automatically after the system is loaded.
     
+    **Number of scalar bar labels**
+        The number of labels to display above the scalar bar (defaults to 5).
+    
+    **Enable custom scalar bar labels**
+        Enable the custom format for the scalar bar labels.
+    
+    **Custom scalar bar label format**
+        The custom format to use for the scalar bar labels. Must match the regular expression:
+        "%[+- 0#]*[0-9]*([.]?[0-9]+)?[adefgADEFG]".
+    
     """
     def __init__(self, parent):
         super(RenderingSettingsForm, self).__init__(parent)
         
         # settings object
         settings = QtCore.QSettings()
+        self.logger = logging.getLogger(__name__ + ".RenderingSettingsForm")
         
         # default settings
         self.maxAtomsAutoRun = int(settings.value("rendering/maxAtomsAutoRun", 10000))
+        self.numScalarBarLabels = int(settings.value("rendering/numScalarBarLabels", 5))
+        self.enableFmtScalarBarLabels = bool(int(settings.value("rendering/enableFmtScalarBarLabels", 0)))
+        self.fmtScalarBarLabels = settings.value("rendering/fmtScalarBarLabels", "%+#6.2e")
         
         # max atoms auto run
         maxAtomsSpin = QtWidgets.QSpinBox()
@@ -253,9 +274,56 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
         maxAtomsSpin.setMaximum(99999)
         maxAtomsSpin.setValue(self.maxAtomsAutoRun)
         maxAtomsSpin.valueChanged.connect(self.maxAtomsChanged)
+        maxAtomsSpin.setToolTip("<p>Automatically render a system after loading if fewer atoms than this value.</p>")
         self.layout.addRow("Max atoms auto run", maxAtomsSpin)
         
+        self.addHorizontalDivide()
+        
+        # scalar bar options
+        numScalarBarLabelsSpin = QtWidgets.QSpinBox()
+        numScalarBarLabelsSpin.setMinimum(2)
+        numScalarBarLabelsSpin.setMaximum(9)
+        numScalarBarLabelsSpin.setValue(self.numScalarBarLabels)
+        numScalarBarLabelsSpin.setToolTip("<p>Set the number of labels on the scalar bar.</p>")
+        numScalarBarLabelsSpin.valueChanged.connect(self.numScalarBarLabelsChanged)
+        self.layout.addRow("Number of scalar bar labels", numScalarBarLabelsSpin)
+        
+        self.fmtScalarBarLabelsEdit = QtWidgets.QLineEdit(self.fmtScalarBarLabels)
+        self.fmtScalarBarLabelsEdit.setToolTip("<p>Custom format for scalar bar labels</p>")
+        self.fmtScalarBarLabelsEdit.editingFinished.connect(self.fmtEdited)
+        regexp = QtCore.QRegExp("%[+- 0#]*[0-9]*([.]?[0-9]+)?[adefgADEFG]")
+        validator = QtGui.QRegExpValidator(regexp, self)
+        self.fmtScalarBarLabelsEdit.setValidator(validator)
+        
+        enableFmtCheck = QtWidgets.QCheckBox()
+        if self.enableFmtScalarBarLabels:
+            enableFmtCheck.setCheckState(QtCore.Qt.Checked)
+            self.fmtScalarBarLabelsEdit.setEnabled(True)
+        else:
+            enableFmtCheck.setCheckState(QtCore.Qt.Unchecked)
+            self.fmtScalarBarLabelsEdit.setEnabled(False)
+        enableFmtCheck.setToolTip("<p>Enable custom format for scalar bar labels (below)</p>")
+        enableFmtCheck.stateChanged.connect(self.enableFmtCheckChanged)
+        
+        self.layout.addRow("Enable custom scalar bar labels", enableFmtCheck)
+        self.layout.addRow("Custom scalar bar label format", self.fmtScalarBarLabelsEdit)
+        
         self.init()
+    
+    def fmtEdited(self):
+        """Custom format has been edited."""
+        text = str(self.fmtScalarBarLabelsEdit.text())
+        self.logger.debug("Custom scalar bar format changed: '%s'", text)
+        self.fmtScalarBarLabels = text
+    
+    def enableFmtCheckChanged(self, state):
+        """Enable custom format changed."""
+        self.enableFmtScalarBarLabels = False if state == QtCore.Qt.Unchecked else True
+        self.fmtScalarBarLabelsEdit.setEnabled(self.enableFmtScalarBarLabels)
+        
+        # store in settings
+        settings = QtCore.QSettings()
+        settings.setValue("rendering/maxAtomsAutoRun", int(self.enableFmtScalarBarLabels))
     
     def maxAtomsChanged(self, val):
         """
@@ -267,6 +335,14 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
         # store in settings
         settings = QtCore.QSettings()
         settings.setValue("rendering/maxAtomsAutoRun", val)
+    
+    def numScalarBarLabelsChanged(self, val):
+        """Number of scalar bar labels changed."""
+        self.numScalarBarLabels = val
+        
+        # store in settings
+        settings = QtCore.QSettings()
+        settings.setValue("rendering/numScalarBarLabels", val)
 
 ################################################################################
 
