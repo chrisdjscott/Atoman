@@ -144,7 +144,7 @@ if [ "$NEED_CONDA" = "1" ]; then
     # download and run miniconda (to /tmp for now)
     mincon=/tmp/miniconda.sh
     echo "Downloading miniconda..."
-    wget http://repo.continuum.io/miniconda/Miniconda-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+    wget http://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
     chmod +x "${mincon}"
     echo "Installing miniconda..."
     "${mincon}" -b -p ${CONDIR}
