@@ -38,7 +38,7 @@ class DisplayOptionsWindow(QtGui.QDialog):
         self.mainWindow = mainWindow
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-        
+        self.setMinimumWidth(250)
         self.setWindowTitle("Filter list %d display options" % self.parent.tab)
 #        self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
         

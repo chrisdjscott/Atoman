@@ -210,6 +210,17 @@ class PipelineForm(QtGui.QWidget):
         hbox.addStretch(1)
         groupLayout.addLayout(hbox)
         
+        # add shift atom button
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        self.shiftAtomButton = QtGui.QPushButton("Shift atom")
+        self.shiftAtomButton.clicked.connect(self.shiftAtom)
+        self.shiftAtomButton.setToolTip("Shift an atom in periodic directions")
+        rowLayout.addWidget(self.shiftAtomButton)
+        groupLayout.addWidget(row)
+        
+        
         filterTabLayout.addWidget(group)
         
         # add systems to combos
@@ -222,6 +233,56 @@ class PipelineForm(QtGui.QWidget):
         # refresh if ref already loaded
         if self.mainWindow.refLoaded:
             self.refreshAllFilters()
+    
+    def shiftAtom(self):
+        """
+        Shift atom
+        
+        """
+        # lattice
+        lattice = self.inputState
+        
+        # show dialog
+        dlg = simpleDialogs.ShiftAtomDialog(1, self.PBC, lattice.cellDims, lattice.NAtoms, parent=self)
+        status = dlg.exec_()
+        
+        if status == QtGui.QDialog.Accepted:
+            # amount
+            shift = np.empty(3, np.float64)
+            shift[0] = dlg.shiftXSpin.value()
+            shift[1] = dlg.shiftYSpin.value()
+            shift[2] = dlg.shiftZSpin.value()
+            # atomID
+            atomID = int(dlg.atomID.value())
+        
+            # loop over atoms
+            if shift[0] or shift[1] or shift[2] or atomID:
+                self.logger.debug("Shifting atom: x = %f; y = %f; z = %f", shift[0], shift[1], shift[2])
+                
+                # set override cursor
+                QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+                try:                 
+                    # shift atom
+                    i3 = 3 * (atomID-1)
+                    for j in range(3):
+                        lattice.pos[i3 + j] += shift[j]                   
+                    
+                    # wrap atoms back into periodic cell
+                    lattice.wrapAtoms()
+                
+                finally:
+                    QtGui.QApplication.restoreOverrideCursor()
+                
+                # run post ref render of Renderer (redraws cell)
+                for rw in self.rendererWindows:
+                    if rw.currentPipelineIndex == self.pipelineIndex:
+                        rw.renderer.postRefRender()
+                        rw.textSelector.refresh()
+                
+                # run post input loaded method
+                self.postInputLoaded()
+        
+    
     
     def shiftCell(self):
         """

@@ -575,6 +575,9 @@ class ReplicateCellDialog(QtGui.QDialog):
         layout = QtGui.QFormLayout()
         self.setLayout(layout)
         
+        self.setMinimumWidth(230)
+        #self.setMinimumHeight(200)
+        
         # x
         self.replicateInXSpin = QtGui.QSpinBox()
         self.replicateInXSpin.setMinimum(0)
@@ -665,3 +668,77 @@ class ShiftCellDialog(QtGui.QDialog):
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout.addRow(buttonBox)
+
+
+################################################################################
+
+class ShiftAtomDialog(QtGui.QDialog):
+    """
+    Ask user which atom should be shifted and the distance of the shift in each direction.
+    
+    """
+    def __init__(self, inputID, pbc, cellDims, NumAtoms, parent=None):
+        super(ShiftAtomDialog, self).__init__(parent)
+        
+        self.setWindowTitle("Shift atom options")
+        
+        # layout
+        layout = QtGui.QFormLayout()
+        self.setLayout(layout)
+        
+        self.setMinimumWidth(220)
+        self.setMinimumHeight(200)
+        
+        # Atom ID
+        self.atomID = QtGui.QSpinBox()
+        self.atomID.setMinimum(1)
+        self.atomID.setMaximum(NumAtoms)
+        self.atomID.setValue(int(inputID))
+        self.atomID.setWrapping(True)
+        self.atomID.setToolTip("The atom ID of the atom to be shifted")
+        
+        layout.addRow("Atom ID", self.atomID)
+        
+        
+        # x
+        self.shiftXSpin = QtGui.QDoubleSpinBox()
+        self.shiftXSpin.setMinimum(-cellDims[0])
+        self.shiftXSpin.setMaximum(cellDims[0])
+        self.shiftXSpin.setSingleStep(1)
+        self.shiftXSpin.setValue(0)
+        self.shiftXSpin.setToolTip("Distance to shift the atom in the x direction")
+        if not pbc[0]:
+            self.shiftXSpin.setEnabled(False)
+        layout.addRow("Shift in x", self.shiftXSpin)
+        
+        # y
+        self.shiftYSpin = QtGui.QDoubleSpinBox()
+        self.shiftYSpin.setMinimum(-cellDims[1])
+        self.shiftYSpin.setMaximum(cellDims[1])
+        self.shiftYSpin.setSingleStep(1)
+        self.shiftYSpin.setValue(0)
+        self.shiftYSpin.setToolTip("Distance to shift the atom in the y direction")
+        if not pbc[1]:
+            self.shiftYSpin.setEnabled(False)
+        layout.addRow("Shift in y", self.shiftYSpin)
+        
+        # z
+        self.shiftZSpin = QtGui.QDoubleSpinBox()
+        self.shiftZSpin.setMinimum(-cellDims[2])
+        self.shiftZSpin.setMaximum(cellDims[2])
+        self.shiftZSpin.setSingleStep(1)
+        self.shiftZSpin.setValue(0)
+        self.shiftZSpin.setToolTip("Distance to shift the atom in the z direction")
+        if not pbc[2]:
+            self.shiftZSpin.setEnabled(False)
+        layout.addRow("Shift in z", self.shiftZSpin)
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        layout.addRow(buttonBox)
+
+
+
+
