@@ -255,7 +255,6 @@ class PipelineForm(QtGui.QWidget):
             
             # atomIDstring
             atomIDstring = dlg.lineEdit.text()
-            #print(atomIDstring)
             
             # parse atomIDstring
             array = [val for val in atomIDstring.split(",") if val]
@@ -275,8 +274,6 @@ class PipelineForm(QtGui.QWidget):
                 rangeArray[i][0] = minval
                 rangeArray[i][1] = maxval
             
-            #print(rangeArray)
-            
             
             # loop over atoms
             if (shift[0] or shift[1] or shift[2]) and (num>0):
@@ -290,13 +287,7 @@ class PipelineForm(QtGui.QWidget):
                         for k in range(rangeArray[i][1]-rangeArray[i][0]+1): 
                             i3 = 3 * (rangeArray[i][0]+k-1)  
                             for j in range(3):
-                                lattice.pos[i3 + j] += shift[j]
-                               
-                                
-                    # shift atom
-                    #i3 = 3 * (atomID-1)
-                    #for j in range(3):
-                    #    lattice.pos[i3 + j] += shift[j]                   
+                                lattice.pos[i3 + j] += shift[j]                 
                     
                     # wrap atoms back into periodic cell
                     lattice.wrapAtoms()
