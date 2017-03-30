@@ -783,9 +783,9 @@ class AtomInfoWindow(QtGui.QDialog):
         row.addWidget(self.highlightCheck)
         row.addStretch(1)
         
-        shiftAtomButton = QtGui.QPushButton("Shift atom")
+        shiftAtomButton = QtGui.QPushButton("Shift atoms")
         shiftAtomButton.clicked.connect(self.shiftAtom)
-        shiftAtomButton.setToolTip("Shift an atom in periodic directions")
+        shiftAtomButton.setToolTip("Shift an atom (or set of atoms) in periodic directions")
         row.addWidget(shiftAtomButton)
         
         # close button
@@ -819,21 +819,43 @@ class AtomInfoWindow(QtGui.QDialog):
             shift[0] = dlg.shiftXSpin.value()
             shift[1] = dlg.shiftYSpin.value()
             shift[2] = dlg.shiftZSpin.value()
-            # atomID
-            atomID = int(dlg.atomID.value())
-        
+            
+            # atomIDstring
+            atomIDstring = dlg.lineEdit.text()
+            
+            # parse atomIDstring
+            array = [val for val in atomIDstring.split(",") if val]
+            num = len(array)
+            rangeArray = np.empty((num, 2), np.int32)
+            for i, item in enumerate(array):
+                if "-" in item:
+                    values = [val for val in item.split("-") if val]
+                    minval = int(values[0])
+                    if len(values) == 1:
+                        maxval = minval
+                    else:
+                        maxval = int(values[1])
+                else:
+                    minval = maxval = int(item)
+            
+                rangeArray[i][0] = minval
+                rangeArray[i][1] = maxval
+            
+            
             # loop over atoms
             if shift[0] or shift[1] or shift[2] or atomID:
                 self.logger.debug("Shifting atom: x = %f; y = %f; z = %f", shift[0], shift[1], shift[2])
                 
                 # set override cursor
                 QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-                try:                 
-                    # shift atom
-                    i3 = 3 * (atomID-1)
-                    for j in range(3):
-                        lattice.pos[i3 + j] += shift[j]                   
-                    
+                try:
+                    # shift atoms
+                    for i in range(num):
+                        for k in range(rangeArray[i][1]-rangeArray[i][0]+1): 
+                            i3 = 3 * (rangeArray[i][0]+k-1)  
+                            for j in range(3):
+                                lattice.pos[i3 + j] += shift[j]
+                                
                     # wrap atoms back into periodic cell
                     lattice.wrapAtoms()
                 

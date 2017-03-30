@@ -690,14 +690,19 @@ class ShiftAtomDialog(QtGui.QDialog):
         self.setMinimumHeight(200)
         
         # Atom ID
-        self.atomID = QtGui.QSpinBox()
-        self.atomID.setMinimum(1)
-        self.atomID.setMaximum(NumAtoms)
-        self.atomID.setValue(int(inputID))
-        self.atomID.setWrapping(True)
-        self.atomID.setToolTip("The atom ID of the atom to be shifted")
+        # only allow numbers, commas and hyphens
+        rx = QtCore.QRegExp("[0-9]+(?:[-,]?[0-9]+)*")
+        validator = QtGui.QRegExpValidator(rx, self)
         
-        layout.addRow("Atom ID", self.atomID)
+        self.lineEdit = QtGui.QLineEdit()
+        self.lineEdit.setValidator(validator)
+        if (inputID>=0):
+            self.lineEdit.setText(str(inputID))
+        self.lineEdit.setToolTip("Comma separated list of atom IDs or ranges of atom IDs (hyphenated) that are visible (eg. '22,30-33' will show atom IDs 22, 30, 31, 32 and 33)")
+        #self.lineEdit.editingFinished.connect(self._settings.updateSetting("filterString", str(self.lineEdit.text())))
+        layout.addRow("Atom IDs", self.lineEdit)
+        
+        
         
         
         # x
