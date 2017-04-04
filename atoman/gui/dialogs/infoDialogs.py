@@ -786,6 +786,7 @@ class AtomInfoWindow(QtGui.QDialog):
         shiftAtomButton = QtGui.QPushButton("Shift atoms")
         shiftAtomButton.clicked.connect(self.shiftAtom)
         shiftAtomButton.setToolTip("Shift an atom (or set of atoms) in periodic directions")
+        shiftAtomButton.setAutoDefault(False)
         row.addWidget(shiftAtomButton)
         
         # close button

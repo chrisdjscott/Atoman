@@ -481,23 +481,16 @@ class RotateViewPointDialog(QtGui.QDialog):
         self.rw = rw
         self.parent = parent
         
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtGui.QGridLayout(self)
         
-        # direction
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        # rotate up button
+        UpButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotup.png')),"Rotate Up")
+        UpButton.setStatusTip("Rotate Up")
+        UpButton.setToolTip("Rotate Up")
+        UpButton.clicked.connect(self.RotateUp)
+        layout.addWidget(UpButton, 0, 1 )
         
-        label = QtGui.QLabel("Direction:")
-        
-        self.directionCombo = QtGui.QComboBox()
-        self.directionCombo.addItems(["Right", "Left", "Up", "Down"])
-        
-        rowLayout.addWidget(label)
-        rowLayout.addWidget(self.directionCombo)
-        
-        layout.addWidget(row)
-        
-        # angle
+        # angle selection
         row = QtGui.QWidget(self)
         rowLayout = QtGui.QHBoxLayout(row)
         
@@ -512,53 +505,123 @@ class RotateViewPointDialog(QtGui.QDialog):
         rowLayout.addWidget(label)
         rowLayout.addWidget(self.angleSpin)
         
-        layout.addWidget(row)
+        layout.addWidget(row, 1, 1)
         
-        # apply button
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
+        # rotate left button
+        LeftButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotleft.png')), "Rotate Left")
+        LeftButton.setStatusTip("Rotate Left")
+        LeftButton.setToolTip("Rotate Left")
+        LeftButton.clicked.connect(self.RotateLeft)
         
-        applyButton = QtGui.QPushButton("Apply")
-        applyButton.setStatusTip("Apply rotation")
-        applyButton.setToolTip("Apply rotation")
-        applyButton.clicked.connect(self.applyRotation)
+        layout.addWidget(LeftButton, 1, 0)
+            
+        # rotate right button
+        RightButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotright.png')), 'Rotate right')
+        RightButton.setStatusTip("Rotate right")
+        RightButton.setToolTip("Rotate right")
+        RightButton.clicked.connect(self.RotateRight)
         
-        rowLayout.addWidget(applyButton)
+        layout.addWidget(RightButton, 1, 2)
         
-        layout.addWidget(row)
-    
-    def applyRotation(self):
+        # rotate down button
+        DownButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotdown.png')),"Rotate Down")
+        DownButton.setStatusTip("Rotate Down")
+        DownButton.setToolTip("Rotate Down")
+        DownButton.clicked.connect(self.RotateDown)
+        
+        layout.addWidget(DownButton, 2, 1)
+        
+        # Reset button
+        ResetButton = QtGui.QPushButton("Reset")
+        ResetButton.setStatusTip("Reset")
+        ResetButton.setToolTip("Reset")
+        ResetButton.clicked.connect(self.setCameraToCell)
+        ResetButton.setDefault(True)
+        layout.addWidget(ResetButton, 3, 1)
+        
+
+    def RotateRight(self):
         """
-        Apply the rotation
+        Apply the rotation, RotateRight
         
         """
         logger = logging.getLogger(__name__+".RotateViewPoint")
         renderer = self.rw.renderer
         
         angle = self.angleSpin.value()
-        direction = str(self.directionCombo.currentText())
-        logger.debug("Appling rotation: %s by %f degrees", direction, angle)
+        angle = - angle
         
-        if direction == "Right" or direction == "Left":
-            if direction == "Right":
-                angle = - angle
-            
-            # apply rotation
-            renderer.camera.Azimuth(angle)
-            renderer.camera.OrthogonalizeViewUp()
-            logger.debug("Calling: azimuth %f", angle)
-        
-        else:
-            if direction == "Up":
-                angle = - angle
-            
-            # apply rotation
-            renderer.camera.Elevation(angle)
-            renderer.camera.OrthogonalizeViewUp()
-            logger.debug("Calling: elevation %f", angle)
+        # apply rotation
+        logger.debug("Appling right rotation by %f degrees", angle)
+        renderer.camera.Azimuth(angle)
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: azimuth %f", angle)
         
         renderer.reinit()
+        
+    def RotateLeft(self):
+        """
+        Apply the rotation, RotateLeft
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        angle = self.angleSpin.value()
+        
+        # apply rotation
+        logger.debug("Appling right rotation by %f degrees", angle)
+        renderer.camera.Azimuth(angle)
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: azimuth %f", angle)
+        
+        renderer.reinit()   
 
+    def RotateUp(self):
+        """
+        Apply the rotation, RotateUp
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        angle = self.angleSpin.value()
+        angle = - angle
+        
+        # apply rotation
+        logger.debug("Appling right rotation by %f degrees", angle)
+        renderer.camera.Elevation(angle)
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: elevation %f", angle)
+        
+        renderer.reinit()
+        
+    def RotateDown(self):
+        """
+        Apply the rotation, RotateDown
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        angle = self.angleSpin.value()
+        
+        # apply rotation
+        logger.debug("Appling right rotation by %f degrees", angle)
+        renderer.camera.Elevation(angle)
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: elevation %f", angle)
+        
+        renderer.reinit()
+        
+    def setCameraToCell(self):
+        """
+        Reset the camera to point at the cell
+        
+        """
+        renderer = self.rw.renderer
+        renderer.setCameraToCell()
+        
 ################################################################################
 
 class ReplicateCellDialog(QtGui.QDialog):
