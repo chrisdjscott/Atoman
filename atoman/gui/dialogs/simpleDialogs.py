@@ -499,7 +499,7 @@ class RotateViewPointDialog(QtGui.QDialog):
         self.angleSpin = QtGui.QDoubleSpinBox()
         self.angleSpin.setSingleStep(0.1)
         self.angleSpin.setMinimum(0.0)
-        self.angleSpin.setMaximum(360.0)
+        self.angleSpin.setMaximum(180.0)
         self.angleSpin.setValue(90)
         
         rowLayout.addWidget(label)
@@ -553,11 +553,13 @@ class RotateViewPointDialog(QtGui.QDialog):
         
         # apply rotation
         logger.debug("Appling right rotation by %f degrees", angle)
-        renderer.camera.Azimuth(angle)
-        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Azimuth(float(angle))
+        
+        #renderer.camera.OrthogonalizeViewUp()
         logger.debug("Calling: azimuth %f", angle)
         
         renderer.reinit()
+        
         
     def RotateLeft(self):
         """
@@ -571,11 +573,13 @@ class RotateViewPointDialog(QtGui.QDialog):
         
         # apply rotation
         logger.debug("Appling right rotation by %f degrees", angle)
-        renderer.camera.Azimuth(angle)
-        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Azimuth(float(angle))
+        
+        #renderer.camera.OrthogonalizeViewUp()
         logger.debug("Calling: azimuth %f", angle)
         
         renderer.reinit()   
+
 
     def RotateUp(self):
         """
@@ -590,8 +594,18 @@ class RotateViewPointDialog(QtGui.QDialog):
         
         # apply rotation
         logger.debug("Appling right rotation by %f degrees", angle)
-        renderer.camera.Elevation(angle)
-        renderer.camera.OrthogonalizeViewUp()
+        if( ((angle > 89) and (angle < 91)) or ((angle > -91) and (angle < -89))  ):
+            # This is done in two steps so new viewup can be calculated correctly
+            # otherwise ViewUp and DirectionOfProjection vectors become paralell
+            logger.debug("two steps")
+            renderer.camera.Elevation(float(angle/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+            renderer.camera.Elevation(float(angle/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+        else:
+            renderer.camera.Elevation(float(angle))
+            renderer.camera.OrthogonalizeViewUp() 
+        
         logger.debug("Calling: elevation %f", angle)
         
         renderer.reinit()
@@ -608,8 +622,18 @@ class RotateViewPointDialog(QtGui.QDialog):
         
         # apply rotation
         logger.debug("Appling right rotation by %f degrees", angle)
-        renderer.camera.Elevation(angle)
-        renderer.camera.OrthogonalizeViewUp()
+        if( ((angle > 89) and (angle < 91)) or ((angle > -91) and (angle < -89))  ):
+            # This is done in two steps so new viewup can be calculated correctly
+            # otherwise ViewUp and DirectionOfProjection vectors become paralell
+            logger.debug("two steps")
+            renderer.camera.Elevation(float(angle/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+            renderer.camera.Elevation(float(angle/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+        else:
+            renderer.camera.Elevation(float(angle))
+            renderer.camera.OrthogonalizeViewUp() 
+        
         logger.debug("Calling: elevation %f", angle)
         
         renderer.reinit()
@@ -620,7 +644,8 @@ class RotateViewPointDialog(QtGui.QDialog):
         
         """
         renderer = self.rw.renderer
-        renderer.setCameraToCell()
+        renderer.setCameraToCell()  
+        
         
 ################################################################################
 
