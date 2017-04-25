@@ -481,14 +481,21 @@ class RotateViewPointDialog(QtGui.QDialog):
         self.rw = rw
         self.parent = parent
         
+        # Dialog layout
         layout = QtGui.QGridLayout(self)
         
+        
+        # Rotation group
+        RotGroup = QtGui.QGroupBox("Custom Rotation")
+        RotGroup.setAlignment(QtCore.Qt.AlignHCenter)
+        RotGroupLayout = QtGui.QGridLayout(RotGroup)
+           
         # rotate up button
         UpButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotup.png')),"Rotate Up")
-        UpButton.setStatusTip("Rotate Up")
-        UpButton.setToolTip("Rotate Up")
+        UpButton.setStatusTip("Rotate Up by selected angle")
+        UpButton.setToolTip("Rotate Up by selected angle")
         UpButton.clicked.connect(self.RotateUp)
-        layout.addWidget(UpButton, 0, 1 )
+        RotGroupLayout.addWidget(UpButton, 0, 1 )
         
         # angle selection
         row = QtGui.QWidget(self)
@@ -504,41 +511,131 @@ class RotateViewPointDialog(QtGui.QDialog):
         
         rowLayout.addWidget(label)
         rowLayout.addWidget(self.angleSpin)
-        
-        layout.addWidget(row, 1, 1)
+        RotGroupLayout.addWidget(row, 1, 1)
         
         # rotate left button
         LeftButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotleft.png')), "Rotate Left")
-        LeftButton.setStatusTip("Rotate Left")
-        LeftButton.setToolTip("Rotate Left")
+        LeftButton.setStatusTip("Rotate Left by selected angle")
+        LeftButton.setToolTip("Rotate Left by selected angle")
         LeftButton.clicked.connect(self.RotateLeft)
-        
-        layout.addWidget(LeftButton, 1, 0)
+        RotGroupLayout.addWidget(LeftButton, 1, 0)
             
         # rotate right button
         RightButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotright.png')), 'Rotate right')
-        RightButton.setStatusTip("Rotate right")
-        RightButton.setToolTip("Rotate right")
+        RightButton.setStatusTip("Rotate right by selected angle")
+        RightButton.setToolTip("Rotate right by selected angle")
         RightButton.clicked.connect(self.RotateRight)
-        
-        layout.addWidget(RightButton, 1, 2)
+        RotGroupLayout.addWidget(RightButton, 1, 2)
         
         # rotate down button
         DownButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotdown.png')),"Rotate Down")
-        DownButton.setStatusTip("Rotate Down")
-        DownButton.setToolTip("Rotate Down")
+        DownButton.setStatusTip("Rotate Down by selected angle")
+        DownButton.setToolTip("Rotate Down by selected angle")
         DownButton.clicked.connect(self.RotateDown)
-        
-        layout.addWidget(DownButton, 2, 1)
+        RotGroupLayout.addWidget(DownButton, 2, 1)
         
         # Reset button
         ResetButton = QtGui.QPushButton("Reset")
-        ResetButton.setStatusTip("Reset")
-        ResetButton.setToolTip("Reset")
+        ResetButton.setStatusTip("Reset view to the visualiser default")
+        ResetButton.setToolTip("Reset view to the visualiser default")
         ResetButton.clicked.connect(self.setCameraToCell)
-        ResetButton.setDefault(True)
-        layout.addWidget(ResetButton, 3, 1)
+        RotGroupLayout.addWidget(ResetButton, 3, 1)
         
+        # Add RotGroup to window
+        layout.addWidget(RotGroup,1,0)
+        
+        
+        # Top-down view shortcuts group
+        ShortcutGroup = QtGui.QGroupBox("Top-down view shortcuts")
+        ShortcutGroup.setAlignment(QtCore.Qt.AlignHCenter)
+        ShortcutGroupLayout = QtGui.QGridLayout(ShortcutGroup)
+        
+        # 001
+        View001Button = QtGui.QPushButton("(001) Plane")
+        View001Button.setStatusTip("Rotate to a top-down view of the (001) Plane")
+        View001Button.setToolTip("Rotate to a top-down view of the (001) Plane")
+        View001Button.clicked.connect(self.RotateView001)
+        ShortcutGroupLayout.addWidget(View001Button, 1, 2)
+        
+        # 010
+        View010Button = QtGui.QPushButton("(010) Plane")
+        View010Button.setStatusTip("Rotate to a top-down view of the (010) Plane")
+        View010Button.setToolTip("Rotate to a top-down view of the (010) Plane")
+        View010Button.clicked.connect(self.RotateView010)
+        ShortcutGroupLayout.addWidget(View010Button, 1, 1)
+        
+        # 100
+        View100Button = QtGui.QPushButton("(100) Plane")
+        View100Button.setStatusTip("Rotate to a top-down view of the (100) Plane")
+        View100Button.setToolTip("Rotate to a top-down view of the (100) Plane")
+        View100Button.clicked.connect(self.RotateView100)
+        ShortcutGroupLayout.addWidget(View100Button, 1, 0)
+        
+        # 110
+        View110Button = QtGui.QPushButton("(110) Plane")
+        View110Button.setStatusTip("Rotate to a top-down view of the (110) Plane")
+        View110Button.setToolTip("Rotate to a top-down view of the (110) Plane")
+        View110Button.clicked.connect(self.RotateView110)
+        ShortcutGroupLayout.addWidget(View110Button, 2, 0)
+        
+        # 101
+        View101Button = QtGui.QPushButton("(101) Plane")
+        View101Button.setStatusTip("Rotate to a top-down view of the (101) Plane")
+        View101Button.setToolTip("Rotate to a top-down view of the (101) Plane")
+        View101Button.clicked.connect(self.RotateView101)
+        ShortcutGroupLayout.addWidget(View101Button, 2, 1)
+        
+        # 011
+        View011Button = QtGui.QPushButton("(011) Plane")
+        View011Button.setStatusTip("Rotate to a top-down view of the (011) Plane")
+        View011Button.setToolTip("Rotate to a top-down view of the (011) Plane")
+        View011Button.clicked.connect(self.RotateView011)
+        ShortcutGroupLayout.addWidget(View011Button, 2, 2)
+        
+        # 111
+        View111Button = QtGui.QPushButton("(111) Plane")
+        View111Button.setStatusTip("Rotate to a top-down view of the (111) Plane")
+        View111Button.setToolTip("Rotate to a top-down view of the (111) Plane")
+        View111Button.clicked.connect(self.RotateView111)
+        ShortcutGroupLayout.addWidget(View111Button, 3, 1)
+        
+        # 102
+        View102Button = QtGui.QPushButton("(102) Plane")
+        View102Button.setStatusTip("Rotate to a top-down view of the (102) Plane")
+        View102Button.setToolTip("Rotate to a top-down view of the (102) Plane")
+        View102Button.clicked.connect(self.RotateView102)
+        ShortcutGroupLayout.addWidget(View102Button, 4, 0)
+        
+        # 103
+        View103Button = QtGui.QPushButton("(103) Plane")
+        View103Button.setStatusTip("Rotate to a top-down view of the (103) Plane")
+        View103Button.setToolTip("Rotate to a top-down view of the (103) Plane")
+        View103Button.clicked.connect(self.RotateView103)
+        ShortcutGroupLayout.addWidget(View103Button, 4, 1)
+        
+        # 104
+        View104Button = QtGui.QPushButton("(104) Plane")
+        View104Button.setStatusTip("Rotate to a top-down view of the (104) Plane")
+        View104Button.setToolTip("Rotate to a top-down view of the (104) Plane")
+        View104Button.clicked.connect(self.RotateView104)
+        ShortcutGroupLayout.addWidget(View104Button, 4, 2)
+        
+        
+        # Add shortcuts group to window
+        layout.addWidget(ShortcutGroup,2,0)
+        
+        
+        # Close Button
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        
+        CloseButton = QtGui.QPushButton("Close")
+        CloseButton.clicked.connect(self.reject) 
+        CloseButton.setDefault(True)
+        rowLayout.addWidget(CloseButton)
+        layout.addWidget(row,3,0)
+
 
     def RotateRight(self):
         """
@@ -557,6 +654,23 @@ class RotateViewPointDialog(QtGui.QDialog):
         
         #renderer.camera.OrthogonalizeViewUp()
         logger.debug("Calling: azimuth %f", angle)
+        
+        renderer.reinit()
+        
+    def RotateRight90(self):
+        """
+        Apply the rotation, RotateRight90
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # apply rotation
+        logger.debug("Appling right rotation by %f degrees", -90.0)
+        renderer.camera.Azimuth(float(-90.0))
+        
+        #renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: azimuth %f", -90.0)
         
         renderer.reinit()
         
@@ -580,7 +694,23 @@ class RotateViewPointDialog(QtGui.QDialog):
         
         renderer.reinit()   
 
-
+    def RotateLeft90(self):
+        """
+        Apply the rotation, RotateLeft90
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # apply rotation
+        logger.debug("Appling right rotation by %f degrees", 90.0)
+        renderer.camera.Azimuth(float(90.0))
+        
+        #renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: azimuth %f", 90.0)
+        
+        renderer.reinit()  
+        
     def RotateUp(self):
         """
         Apply the rotation, RotateUp
@@ -606,6 +736,24 @@ class RotateViewPointDialog(QtGui.QDialog):
             renderer.camera.OrthogonalizeViewUp() 
         
         logger.debug("Calling: elevation %f", angle)
+        
+        renderer.reinit()
+     
+    def RotateUp90(self):
+        """
+        Apply the rotation, RotateUp
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # This is done in two steps so new viewup can be calculated correctly
+        # otherwise ViewUp and DirectionOfProjection vectors become parallel
+        renderer.camera.Elevation(float(-45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Elevation(float(-45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: elevation %f", -90.0)
         
         renderer.reinit()
         
@@ -636,6 +784,24 @@ class RotateViewPointDialog(QtGui.QDialog):
         
         renderer.reinit()
         
+    def RotateDown90(self):
+        """
+        Apply the rotation, RotateDown90
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # This is done in two steps so new viewup can be calculated correctly
+        # otherwise ViewUp and DirectionOfProjection vectors become parallel
+        renderer.camera.Elevation(float(45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Elevation(float(45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: elevation %f", 90.0)
+        
+        renderer.reinit()
+        
     def setCameraToCell(self):
         """
         Reset the camera to point at the cell
@@ -645,6 +811,203 @@ class RotateViewPointDialog(QtGui.QDialog):
         renderer.setCameraToCell()  
         
         
+    def RotateView001(self):  
+        self.setCameraToCell()
+        
+        #RotateLeft90
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # apply rotation
+        logger.debug("Appling right rotation by %f degrees", 90.0)
+        renderer.camera.Azimuth(float(90.0))
+        
+        #renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: azimuth %f", 90.0)
+        
+        renderer.reinit()  
+        
+        
+    def RotateView010(self):  
+        self.setCameraToCell()
+        
+        #RotateDown90
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # This is done in two steps so new viewup can be calculated correctly
+        # otherwise ViewUp and DirectionOfProjection vectors become parallel
+        renderer.camera.Elevation(float(45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Elevation(float(45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: elevation %f", 90.0)
+        
+        renderer.reinit()
+        
+    def RotateView100(self):  
+        self.setCameraToCell()
+        
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # RotateDown90
+        # This is done in two steps so new viewup can be calculated correctly
+        # otherwise ViewUp and DirectionOfProjection vectors become parallel
+        renderer.camera.Elevation(float(45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Elevation(float(45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: elevation %f", 90.0)
+        
+        # RotateRight90
+        renderer.camera.Azimuth(float(-90.0))
+        logger.debug("Calling: azimuth %f", -90.0)
+        
+        # RotateDown90
+        # This is done in two steps so new viewup can be calculated correctly
+        # otherwise ViewUp and DirectionOfProjection vectors become parallel
+        renderer.camera.Elevation(float(45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Elevation(float(45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: elevation %f", 90.0)
+        
+        renderer.reinit()
+        
+        
+    def RotateView111(self):  
+        self.setCameraToCell()
+        
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # RotateLeft135
+        logger.debug("Appling right rotation by %f degrees", 135.0)
+        renderer.camera.Azimuth(float(135.0))
+        logger.debug("Calling: azimuth %f", 135.0)
+        
+        # RotateDown
+        # Rotation angle is angle between [1,1,1] and [1,1,0] = 35.26438968
+        renderer.camera.Elevation(float(35.26438968))
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: elevation %f", 35.26438968)
+        
+        renderer.reinit()  
+        
+        
+    def RotateView110(self):  
+        self.setCameraToCell()
+        
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # RotateLeft90
+        logger.debug("Appling right rotation by %f degrees", 90.0)
+        renderer.camera.Azimuth(float(90.0))
+        logger.debug("Calling: azimuth %f", 90.0)
+        
+        # RotateUp90
+        # This is done in two steps so new viewup can be calculated correctly
+        # otherwise ViewUp and DirectionOfProjection vectors become parallel
+        renderer.camera.Elevation(float(-45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Elevation(float(-45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: elevation %f", -90.0)
+        
+        # RotateLeft135
+        logger.debug("Appling right rotation by %f degrees", 135.0)
+        renderer.camera.Azimuth(float(135.0))
+        logger.debug("Calling: azimuth %f", 135.0)
+        
+        renderer.reinit()  
+        
+    def RotateView101(self):  
+        self.setCameraToCell()
+        
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # RotateLeft135
+        logger.debug("Appling right rotation by %f degrees", 135.0)
+        renderer.camera.Azimuth(float(135.0))
+        logger.debug("Calling: azimuth %f", 135.0)
+        
+        renderer.reinit()  
+    
+    def RotateView011(self):  
+        self.setCameraToCell()
+        
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # RotateDown90
+        # This is done in two steps so new viewup can be calculated correctly
+        # otherwise ViewUp and DirectionOfProjection vectors become parallel
+        renderer.camera.Elevation(float(45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Elevation(float(45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        logger.debug("Calling: elevation %f", 90.0)
+        
+        # RotateLeft45
+        logger.debug("Appling right rotation by %f degrees", 45.0)
+        renderer.camera.Azimuth(float(45.0))
+        logger.debug("Calling: azimuth %f", 45.0)
+        
+        renderer.reinit()  
+    
+    
+    
+    def RotateView102(self):  
+        self.setCameraToCell()
+        
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # tan^-1 1/2
+        # 26.56505118 + 90.0
+        
+        # RotateLeft116.5650512
+        logger.debug("Appling right rotation by %f degrees", 116.5650512)
+        renderer.camera.Azimuth(float(116.5650512))
+        logger.debug("Calling: azimuth %f", 116.5650512)
+        
+        renderer.reinit()  
+        
+    def RotateView103(self):  
+        self.setCameraToCell()
+        
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # tan^-1 1/3
+        # 18.43494882 + 90.0
+        
+        # RotateLeft108.4349488
+        logger.debug("Appling right rotation by %f degrees", 108.4349488)
+        renderer.camera.Azimuth(float(108.4349488))
+        logger.debug("Calling: azimuth %f", 108.4349488)
+        
+        renderer.reinit() 
+        
+    def RotateView104(self):  
+        self.setCameraToCell()
+        
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        # tan^-1 1/4
+        # 14.03624347 + 90.0
+        
+        # RotateLeft104.0362435
+        logger.debug("Appling right rotation by %f degrees", 104.0362435)
+        renderer.camera.Azimuth(float(104.0362435))
+        logger.debug("Calling: azimuth %f", 104.0362435)
+        
+        renderer.reinit()        
+              
 ################################################################################
 
 class ReplicateCellDialog(QtGui.QDialog):
