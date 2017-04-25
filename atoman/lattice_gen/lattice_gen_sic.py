@@ -181,6 +181,14 @@ class SiC4HLatticeGenerator(object):
         
         lattice.NAtoms = count
         
+        
+        # cut trailing zero's if reqired
+        if(count != len(lattice.specie) ):
+            lattice.specie = lattice.specie[0:count]
+            lattice.charge = lattice.charge[0:count]
+            lattice.pos = lattice.pos[0:count*3]
+
+        
         # min/max pos
         for i in range(3):
             lattice.minPos[i] = np.min(lattice.pos[i::3])
