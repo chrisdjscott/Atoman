@@ -842,7 +842,6 @@ class AtomInfoWindow(QtGui.QDialog):
                 rangeArray[i][0] = minval
                 rangeArray[i][1] = maxval
             
-            print(num)
             # loop over atoms
             if (shift[0] or shift[1] or shift[2]) and (num>0):
                 self.logger.debug("Shifting atom: x = %f; y = %f; z = %f", shift[0], shift[1], shift[2])

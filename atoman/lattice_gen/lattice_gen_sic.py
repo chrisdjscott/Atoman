@@ -125,6 +125,16 @@ class SiC4HLatticeGenerator(object):
         # set dimensions
         lattice.setDims(dims)
         
+        # create specie list
+        lattice.addSpecie(args.sym1)
+        if args.sym2 not in lattice.specieList:
+            lattice.addSpecie(args.sym2)
+        
+        
+        lattice.specie = np.zeros(iStop*jStop*kStop*8, dtype=np.int32)                   
+        lattice.charge = np.zeros(iStop*jStop*kStop*8, dtype=np.float64)      
+        lattice.pos = np.zeros((iStop*jStop*kStop*8*3), dtype=np.float64)       
+        
         # generate lattice
         count = 0
         totalQ = 0.0
@@ -149,21 +159,42 @@ class SiC4HLatticeGenerator(object):
                             continue
                         
                         # add to lattice structure
-                        lattice.addAtom(sym_uc[l], (rx_tmp, ry_tmp, rz_tmp), q_uc[l])
+                        #lattice.addAtom(sym_uc[l], (rx_tmp, ry_tmp, rz_tmp), q_uc[l])
+        
+                        specInd = lattice.getSpecieIndex(sym_uc[l])
+                        lattice.specieCount[specInd] += 1
+        
+                        #pos = np.asarray((rx_tmp, ry_tmp, rz_tmp), dtype=np.float64)
+        
+                        #lattice.atomID = np.append(lattice.atomID, np.int32(count+1))
+                        #lattice.specie = np.append(lattice.specie, np.int32(specInd))
+                        #lattice.pos = np.append(lattice.pos, pos)
+                        #lattice.charge = np.append(lattice.charge, np.float64(q_uc[l]))
+                        lattice.specie[count] = np.int32(specInd)
+                        lattice.pos[count*3] = np.float64(rx_tmp)    
+                        lattice.pos[count*3+1] = np.float64(ry_tmp)    
+                        lattice.pos[count*3+2] = np.float64(rz_tmp)                    
+                        lattice.charge[count] = np.float64(q_uc[l])
                         
                         totalQ += q_uc[l]
                         count += 1
         
-        NAtoms = count
+        lattice.NAtoms = count
         
-        assert NAtoms == lattice.NAtoms
+        # min/max pos
+        for i in range(3):
+            lattice.minPos[i] = np.min(lattice.pos[i::3])
+            lattice.maxPos[i] = np.max(lattice.pos[i::3])
+            
+        # atom ID
+        lattice.atomID = np.arange(1, lattice.NAtoms + 1, dtype=np.int32)
         
         # periodic boundaries
         lattice.PBC[0] = int(args.pbcx)
         lattice.PBC[1] = int(args.pbcy)
         lattice.PBC[2] = int(args.pbcz)
         
-        logger.info("  Number of atoms: %d", NAtoms)
+        logger.info("  Number of atoms: %d", lattice.NAtoms)
         logger.info("  Dimensions: %s", str(dims))
         logger.info("  Total charge: %f", totalQ)
         
