@@ -18,7 +18,7 @@ from ..lattice_gen import lattice_gen_bcc
 from ..lattice_gen import lattice_gen_fluorite
 from ..lattice_gen import lattice_gen_rockSalt
 from ..lattice_gen import lattice_gen_sic
-
+from ..lattice_gen import lattice_gen_graphite
 
 ################################################################################
 
@@ -697,6 +697,162 @@ class SiC4HLatticeGeneratorForm(GenericLatticeGeneratorForm):
         
         """
         generator = lattice_gen_sic.SiC4HLatticeGenerator()
+        
+        status, lattice = generator.generateLattice(self.generatorArgs)
+        
+        return status, lattice
+
+
+#######################################################################################
+
+class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
+    """
+    Graphite lattice generator
+    
+    """
+    def __init__(self, parent, mainWindow):
+        super(GraphiteLatticeGeneratorForm, self).__init__(parent, mainWindow, "Graphite lattice generator")
+        
+        self.generatorArgs = lattice_gen_graphite.Args()
+        
+        self.add_filename_option()
+        
+        # specie
+        self.specie1_text = QtGui.QLineEdit(self.generatorArgs.sym1)
+        self.specie1_text.setFixedWidth(30)
+        self.specie1_text.setMaxLength(2)
+        self.specie1_text.textEdited.connect(self.specie1_text_edited)
+        self.specie1_text.setToolTip("Set the atom symbol")
+        
+        # charge
+        charge1Spin = QtGui.QDoubleSpinBox()
+        charge1Spin.setMinimum(-99.99)
+        charge1Spin.setValue(self.generatorArgs.charge1)
+        charge1Spin.valueChanged.connect(self.charge1_changed)
+        charge1Spin.setToolTip("Set the atom charge")
+        
+        hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(self.specie1_text)
+        hbox.addWidget(charge1Spin)
+        self.formLayout.addRow("Species", hbox)
+        
+        
+        
+        self.add_unit_cell_options()
+        
+        # Lattice constants
+        
+        # Lattice parameter presets combo
+        ParamCombo = QtGui.QComboBox()
+        ParamCombo.addItem("AIREBO")
+        ParamCombo.addItem("ReaxFF May2016")
+        ParamCombo.addItem("Custom")
+        ParamCombo.currentIndexChanged.connect(self.ParamComboChanged)
+        ParamCombo.setToolTip("Set lattice parameter presets")
+        
+        hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(ParamCombo)
+        self.formLayout.addRow("Parameter presets", hbox)
+        
+        # Lattice 'a' parameter
+        self.latticeAConstSpin = QtGui.QDoubleSpinBox()
+        self.latticeAConstSpin.setDecimals(5)
+        self.latticeAConstSpin.setSingleStep(0.1)
+        self.latticeAConstSpin.setMinimum(0.00001)
+        self.latticeAConstSpin.setMaximum(99.99999)
+        self.latticeAConstSpin.setValue(self.generatorArgs.a0)
+        self.latticeAConstSpin.setEnabled( False )
+        self.latticeAConstSpin.valueChanged.connect(self.latticeAConstChanged)
+        self.latticeAConstSpin.setSuffix(" \u212B")
+        self.latticeAConstSpin.setToolTip("Set the lattice 'a' constant (select custom to edit this)")
+        self.formLayout.addRow("Lattice 'a' constant", self.latticeAConstSpin)
+        
+        # Lattice 'c' parameter
+        self.latticeCConstSpin = QtGui.QDoubleSpinBox()
+        self.latticeCConstSpin.setDecimals(5)
+        self.latticeCConstSpin.setSingleStep(0.1)
+        self.latticeCConstSpin.setMinimum(0.00001)
+        self.latticeCConstSpin.setMaximum(99.99999)
+        self.latticeCConstSpin.setValue(self.generatorArgs.c0)
+        self.latticeCConstSpin.setEnabled( False )
+        self.latticeCConstSpin.valueChanged.connect(self.latticeCConstChanged)
+        self.latticeCConstSpin.setSuffix(" \u212B")
+        self.latticeCConstSpin.setToolTip("Set the lattice 'c' constant (select custom to edit this)")
+        self.formLayout.addRow("Lattice 'c' constant", self.latticeCConstSpin)
+
+        
+        
+        self.add_pbc_options()
+        
+        
+                
+        # generate button
+        self.add_generate_button()
+        
+   
+        
+    def latticeAConstChanged(self, val):
+        """
+        Lattice constant changed
+        
+        """
+        self.generatorArgs.a0 = val
+        
+    def latticeCConstChanged(self, val):
+        """
+        Lattice constant changed
+        
+        """
+        self.generatorArgs.c0 = val
+    
+    def ParamComboChanged(self, index):
+        """
+        Parameter presets combo changed
+        
+        """
+        
+        # AIREBO
+        if(index == 0):
+            self.generatorArgs.a0 = 2.4175
+            self.generatorArgs.c0 = 3.358
+            self.latticeAConstSpin.setValue(2.4175)
+            self.latticeAConstSpin.setEnabled( False )
+            self.latticeCConstSpin.setValue(3.358)
+            self.latticeCConstSpin.setEnabled( False )
+        # ReaxFF May 2016
+        if(index == 1):
+            self.generatorArgs.a0 = 2.433
+            self.generatorArgs.c0 = 3.2567
+            self.latticeAConstSpin.setValue(2.433)
+            self.latticeAConstSpin.setEnabled( False )
+            self.latticeCConstSpin.setValue(3.2567)
+            self.latticeCConstSpin.setEnabled( False )   
+            
+        # Custom
+        if(index == 2):
+            self.latticeAConstSpin.setEnabled( True )
+            self.latticeCConstSpin.setEnabled( True )
+    
+    def charge1_changed(self, val):
+        """
+        Charge 1 changed
+        
+        """
+        self.generatorArgs.charge1 = val
+    
+    def specie1_text_edited(self, text):
+        """
+        Specie 1 text edited
+        
+        """
+        self.generatorArgs.sym1 = str(text)
+    
+    def generateLatticeMain(self):
+        """
+        Generate lattice
+        
+        """
+        generator = lattice_gen_graphite.GraphiteLatticeGenerator()
         
         status, lattice = generator.generateLattice(self.generatorArgs)
         
