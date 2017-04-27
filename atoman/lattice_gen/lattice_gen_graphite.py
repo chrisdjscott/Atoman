@@ -123,7 +123,7 @@ class GraphiteLatticeGenerator(object):
                         Zshift = (len(stacking)*z+l)*c0
                         
                         # stacking position a
-                        if( stacking[l] == 'a'):
+                        if( stacking[l] == 'a' or stacking[l] == 'A'):
                             # Pos 1
                             rx_tmp = Xshift
                             ry_tmp = Yshift
@@ -194,7 +194,7 @@ class GraphiteLatticeGenerator(object):
                                 
                                 
                         # stacking position b
-                        elif(stacking[l] == 'b'):   
+                        elif(stacking[l] == 'b' or stacking[l] == 'B'):   
                             # Pos 1
                             rx_tmp = Xshift
                             ry_tmp = Yshift
@@ -264,7 +264,7 @@ class GraphiteLatticeGenerator(object):
                                 count += 1  
                                 
                         # stacking position c
-                        elif (stacking[l] == 'c'):
+                        elif (stacking[l] == 'c' or stacking[l] == 'C'):
                             # Pos 1
                             rx_tmp = Xshift + a0 * 0.577350269189626  # / math.sqrt(3)
                             ry_tmp = Yshift

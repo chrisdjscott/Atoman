@@ -781,6 +781,19 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
         self.formLayout.addRow("Lattice 'c' constant", self.latticeCConstSpin)
 
         
+        # Graphite layer stacking input
+        rx = QtCore.QRegExp("([a-c]?[A-C]?)*")
+        validator = QtGui.QRegExpValidator(rx, self)
+        
+        self.GrahiteLayerStacking = QtGui.QLineEdit()
+        self.GrahiteLayerStacking.setValidator(validator)
+        self.GrahiteLayerStacking.setText('ab')
+        self.GrahiteLayerStacking.setToolTip("Graphene layer stacking pattern. (String consisting of 'a', 'b' and 'c' only.) ")
+        self.GrahiteLayerStacking.textChanged.connect(self.GrahiteLayerStackingChanged)
+        self.formLayout.addRow("Grahite Layer Stacking", self.GrahiteLayerStacking)
+        
+        
+        
         
         self.add_pbc_options()
         
@@ -788,8 +801,13 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
                 
         # generate button
         self.add_generate_button()
+    
+    def GrahiteLayerStackingChanged(self, val):
+        """
+        Lattice layer stacking changed
         
-   
+        """
+        self.generatorArgs.stacking = val
         
     def latticeAConstChanged(self, val):
         """
