@@ -509,6 +509,7 @@ class RotateViewPointDialog(QtGui.QDialog):
         self.angleSpin.setMinimum(0.0)
         self.angleSpin.setMaximum(180.0)
         self.angleSpin.setValue(90)
+        self.angleSpin.setToolTip("Rotation angle")
         
         rowLayout.addWidget(label)
         rowLayout.addWidget(self.angleSpin)
@@ -569,12 +570,13 @@ class RotateViewPointDialog(QtGui.QDialog):
         label2 = QtGui.QLabel("Select crystal plane")
         CrystalGroupLayout.addWidget(label2, 0, 1)
         
-        
+        # inputs for crystal plane Miller index
         self.CrystalXSpin = QtGui.QSpinBox()
         self.CrystalXSpin.setSingleStep(1)
         self.CrystalXSpin.setMinimum(-10)
         self.CrystalXSpin.setMaximum(10)
         self.CrystalXSpin.setValue(1)
+        self.CrystalXSpin.setToolTip("X param of crystal plane Miller Index")
         CrystalGroupLayout.addWidget(self.CrystalXSpin, 1, 0)
         
         self.CrystalYSpin = QtGui.QSpinBox()
@@ -582,6 +584,7 @@ class RotateViewPointDialog(QtGui.QDialog):
         self.CrystalYSpin.setMinimum(-10)
         self.CrystalYSpin.setMaximum(10)
         self.CrystalYSpin.setValue(1)
+        self.CrystalYSpin.setToolTip("Y param of crystal plane Miller Index")
         CrystalGroupLayout.addWidget(self.CrystalYSpin, 1, 1)
         
         self.CrystalZSpin = QtGui.QSpinBox()
@@ -589,6 +592,7 @@ class RotateViewPointDialog(QtGui.QDialog):
         self.CrystalZSpin.setMinimum(-10)
         self.CrystalZSpin.setMaximum(10)
         self.CrystalZSpin.setValue(1)
+        self.CrystalZSpin.setToolTip("Z param of crystal plane Miller Index")
         CrystalGroupLayout.addWidget(self.CrystalZSpin, 1, 2)
         
         # Button to do the rotation
@@ -598,10 +602,9 @@ class RotateViewPointDialog(QtGui.QDialog):
         CrystalRotButton.clicked.connect(self.RotateViewGeneral)
         CrystalGroupLayout.addWidget(CrystalRotButton, 2, 1)
         
-        # Add shortcuts group to window
+        # Add CrystalGroup to window
         layout.addWidget(CrystalGroup,2,0)
-        
-        
+             
         
         # Top-down view shortcuts group
         ShortcutGroup = QtGui.QGroupBox("Rotate to a top-down view of some crystal planes")
@@ -628,58 +631,6 @@ class RotateViewPointDialog(QtGui.QDialog):
         View100Button.setToolTip("Rotate to a top-down view of the (100) Plane")
         View100Button.clicked.connect(self.RotateView100)
         ShortcutGroupLayout.addWidget(View100Button, 1, 0)
-        
-        # commented out to de-clutter the window
-        """
-        # 110
-        View110Button = QtGui.QPushButton("(110) Plane")
-        View110Button.setStatusTip("Rotate to a top-down view of the (110) Plane")
-        View110Button.setToolTip("Rotate to a top-down view of the (110) Plane")
-        View110Button.clicked.connect(self.RotateView110)
-        ShortcutGroupLayout.addWidget(View110Button, 2, 0)
-        
-        # 101
-        View101Button = QtGui.QPushButton("(101) Plane")
-        View101Button.setStatusTip("Rotate to a top-down view of the (101) Plane")
-        View101Button.setToolTip("Rotate to a top-down view of the (101) Plane")
-        View101Button.clicked.connect(self.RotateView101)
-        ShortcutGroupLayout.addWidget(View101Button, 2, 1)
-        
-        # 011
-        View011Button = QtGui.QPushButton("(011) Plane")
-        View011Button.setStatusTip("Rotate to a top-down view of the (011) Plane")
-        View011Button.setToolTip("Rotate to a top-down view of the (011) Plane")
-        View011Button.clicked.connect(self.RotateView011)
-        ShortcutGroupLayout.addWidget(View011Button, 2, 2)
-        
-        # 111
-        View111Button = QtGui.QPushButton("(111) Plane")
-        View111Button.setStatusTip("Rotate to a top-down view of the (111) Plane")
-        View111Button.setToolTip("Rotate to a top-down view of the (111) Plane")
-        View111Button.clicked.connect(self.RotateView111)
-        ShortcutGroupLayout.addWidget(View111Button, 3, 1)
-        
-        # 102
-        View102Button = QtGui.QPushButton("(102) Plane")
-        View102Button.setStatusTip("Rotate to a top-down view of the (102) Plane")
-        View102Button.setToolTip("Rotate to a top-down view of the (102) Plane")
-        View102Button.clicked.connect(self.RotateView102)
-        ShortcutGroupLayout.addWidget(View102Button, 4, 0)
-        
-        # 103
-        View103Button = QtGui.QPushButton("(103) Plane")
-        View103Button.setStatusTip("Rotate to a top-down view of the (103) Plane")
-        View103Button.setToolTip("Rotate to a top-down view of the (103) Plane")
-        View103Button.clicked.connect(self.RotateView103)
-        ShortcutGroupLayout.addWidget(View103Button, 4, 1)
-        
-        # 104
-        View104Button = QtGui.QPushButton("(104) Plane")
-        View104Button.setStatusTip("Rotate to a top-down view of the (104) Plane")
-        View104Button.setToolTip("Rotate to a top-down view of the (104) Plane")
-        View104Button.clicked.connect(self.RotateView104)
-        ShortcutGroupLayout.addWidget(View104Button, 4, 2)
-        """
         
         # Add shortcuts group to window
         layout.addWidget(ShortcutGroup,3,0)
@@ -835,12 +786,11 @@ class RotateViewPointDialog(QtGui.QDialog):
         mag_proj = math.sqrt(x*x + y*y)
         
         # Angle between normal and projection to xy plane
-        # xy projection plane (1/sqrt(2),1/sqrt(2),0)
         if(z == 0):
             ang_norm_xy = 0
         elif( (x == 0) and (y == 0) ):
             ang_norm_xy = 90.0
-        if( (z < 0) ):
+        elif( (z < 0) ):
             ang_dp = x*x + y*y
             ang_norm_xy = 360 - math.degrees( math.acos(ang_dp/(mag_proj*mag_norm)) )
         else:
@@ -850,7 +800,7 @@ class RotateViewPointDialog(QtGui.QDialog):
         # Angle between xy projection and x axis
         if( (x == 0) and (y == 0) ):
             ang_norm_xz = 0.0
-        if( (y < 0) ):
+        elif( (y < 0) ):
             mag_proj = math.sqrt(x*x + y*y)
             ang_norm_xz = 360 - math.degrees( math.acos(x/mag_proj) )
         else:
@@ -873,8 +823,16 @@ class RotateViewPointDialog(QtGui.QDialog):
         # rotate to the crystal plane
         renderer.camera.Azimuth(float(ang_norm_xz))
         
-        renderer.camera.Elevation(float(ang_norm_xy))
-        renderer.camera.OrthogonalizeViewUp()
+        if( ((ang_norm_xy > 89) and (ang_norm_xy < 91)) or ((ang_norm_xy > -91) and (ang_norm_xy < -89))  ):
+            # This is done in two steps so new viewup can be calculated correctly
+            # otherwise ViewUp and DirectionOfProjection vectors become parallel
+            renderer.camera.Elevation(float(ang_norm_xy/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+            renderer.camera.Elevation(float(ang_norm_xy/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+        else:
+            renderer.camera.Elevation(float(ang_norm_xy))
+            renderer.camera.OrthogonalizeViewUp() 
         
         renderer.reinit()  
         
@@ -935,125 +893,7 @@ class RotateViewPointDialog(QtGui.QDialog):
         renderer.camera.Elevation(float(45.0))
         renderer.camera.OrthogonalizeViewUp()
         renderer.reinit()
-        
-    def RotateView111(self):  
-        self.setCameraToCell()
-        
-        logger = logging.getLogger(__name__+".RotateViewPoint")
-        renderer = self.rw.renderer
-        
-        # RotateLeft135
-        logger.debug("Appling right rotation by %f degrees", 135.0)
-        logger.debug("Calling: azimuth %f", 135.0)
-        renderer.camera.Azimuth(float(135.0))
-        
-        # RotateDown
-        # Rotation angle is angle between [1,1,1] and [1,1,0] = 35.26438968
-        logger.debug("Calling: elevation %f", 35.26438968)
-        renderer.camera.Elevation(float(35.26438968))
-        renderer.camera.OrthogonalizeViewUp()
-        renderer.reinit()  
-        
-    def RotateView110(self):  
-        self.setCameraToCell()
-        
-        logger = logging.getLogger(__name__+".RotateViewPoint")
-        renderer = self.rw.renderer
-        
-        # RotateLeft90
-        logger.debug("Appling right rotation by %f degrees", 90.0)
-        logger.debug("Calling: azimuth %f", 90.0)
-        renderer.camera.Azimuth(float(90.0))
-        
-        # RotateUp90
-        # This is done in two steps so new viewup can be calculated correctly
-        # otherwise ViewUp and DirectionOfProjection vectors become parallel
-        logger.debug("Calling: elevation %f", -90.0)
-        renderer.camera.Elevation(float(-45.0))
-        renderer.camera.OrthogonalizeViewUp()
-        renderer.camera.Elevation(float(-45.0))
-        renderer.camera.OrthogonalizeViewUp()
-        
-        # RotateLeft135
-        logger.debug("Appling right rotation by %f degrees", 135.0)
-        logger.debug("Calling: azimuth %f", 135.0)
-        renderer.camera.Azimuth(float(135.0))
-        renderer.reinit()  
-        
-    def RotateView101(self):  
-        self.setCameraToCell()
-        
-        logger = logging.getLogger(__name__+".RotateViewPoint")
-        renderer = self.rw.renderer
-        
-        # RotateLeft135
-        logger.debug("Appling right rotation by %f degrees", 135.0)
-        logger.debug("Calling: azimuth %f", 135.0)
-        renderer.camera.Azimuth(float(135.0))
-        renderer.reinit()  
-    
-    def RotateView011(self):  
-        self.setCameraToCell()
-        
-        logger = logging.getLogger(__name__+".RotateViewPoint")
-        renderer = self.rw.renderer
-        
-        # RotateDown90
-        # This is done in two steps so new viewup can be calculated correctly
-        # otherwise ViewUp and DirectionOfProjection vectors become parallel
-        logger.debug("Calling: elevation %f", 90.0)
-        renderer.camera.Elevation(float(45.0))
-        renderer.camera.OrthogonalizeViewUp()
-        renderer.camera.Elevation(float(45.0))
-        renderer.camera.OrthogonalizeViewUp()
-        
-        # RotateLeft45
-        logger.debug("Appling right rotation by %f degrees", 45.0)
-        logger.debug("Calling: azimuth %f", 45.0)
-        renderer.camera.Azimuth(float(45.0))
-        renderer.reinit()  
-    
-    def RotateView102(self):  
-        self.setCameraToCell()
-        
-        logger = logging.getLogger(__name__+".RotateViewPoint")
-        renderer = self.rw.renderer
-        
-        # tan^-1 1/2  + 90.0
-        # 26.56505118 + 90.0
-        # RotateLeft116.5650512
-        logger.debug("Appling right rotation by %f degrees", 116.5650512)
-        logger.debug("Calling: azimuth %f", 116.5650512)
-        renderer.camera.Azimuth(float(116.5650512))
-        renderer.reinit()  
-        
-    def RotateView103(self):  
-        self.setCameraToCell()
-        
-        logger = logging.getLogger(__name__+".RotateViewPoint")
-        renderer = self.rw.renderer
-        
-        # tan^-1 1/3  + 90.0
-        # 18.43494882 + 90.0
-        # RotateLeft108.4349488
-        logger.debug("Appling right rotation by %f degrees", 108.4349488)
-        logger.debug("Calling: azimuth %f", 108.4349488)
-        renderer.camera.Azimuth(float(108.4349488))
-        renderer.reinit() 
-        
-    def RotateView104(self):  
-        self.setCameraToCell()
-        
-        logger = logging.getLogger(__name__+".RotateViewPoint")
-        renderer = self.rw.renderer
-        
-        # tan^-1 1/4  + 90.0
-        # 14.03624347 + 90.0
-        # RotateLeft104.0362435
-        logger.debug("Appling right rotation by %f degrees", 104.0362435)
-        logger.debug("Calling: azimuth %f", 104.0362435)
-        renderer.camera.Azimuth(float(104.0362435))
-        renderer.reinit()        
+     
               
 ################################################################################
 
