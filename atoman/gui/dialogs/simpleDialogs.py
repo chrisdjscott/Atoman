@@ -15,6 +15,7 @@ import logging
 
 from PySide import QtGui, QtCore
 import numpy as np
+import math as math
 
 from ...system.atoms import elements
 from ...visutils.utilities import resourcePath, iconPath
@@ -560,6 +561,48 @@ class RotateViewPointDialog(QtGui.QDialog):
         layout.addWidget(RotGroup,1,0)
         
         
+        # Custom rotate to crystal plane
+        CrystalGroup = QtGui.QGroupBox("Rotate to top-down view of given crystal plane (EXPERIMENTAL)")
+        CrystalGroup.setAlignment(QtCore.Qt.AlignHCenter)
+        CrystalGroupLayout = QtGui.QGridLayout(CrystalGroup)
+        
+        label2 = QtGui.QLabel("Select crystal plane")
+        CrystalGroupLayout.addWidget(label2, 0, 1)
+        
+        
+        self.CrystalXSpin = QtGui.QSpinBox()
+        self.CrystalXSpin.setSingleStep(1)
+        self.CrystalXSpin.setMinimum(-10)
+        self.CrystalXSpin.setMaximum(10)
+        self.CrystalXSpin.setValue(1)
+        CrystalGroupLayout.addWidget(self.CrystalXSpin, 1, 0)
+        
+        self.CrystalYSpin = QtGui.QSpinBox()
+        self.CrystalYSpin.setSingleStep(1)
+        self.CrystalYSpin.setMinimum(-10)
+        self.CrystalYSpin.setMaximum(10)
+        self.CrystalYSpin.setValue(1)
+        CrystalGroupLayout.addWidget(self.CrystalYSpin, 1, 1)
+        
+        self.CrystalZSpin = QtGui.QSpinBox()
+        self.CrystalZSpin.setSingleStep(1)
+        self.CrystalZSpin.setMinimum(-10)
+        self.CrystalZSpin.setMaximum(10)
+        self.CrystalZSpin.setValue(1)
+        CrystalGroupLayout.addWidget(self.CrystalZSpin, 1, 2)
+        
+        # Button to do the rotation
+        CrystalRotButton = QtGui.QPushButton("Rotate")
+        CrystalRotButton.setStatusTip("Rotate to a top-down view of the given plane above.")
+        CrystalRotButton.setToolTip("Rotate to a top-down view of the given plane above.")
+        CrystalRotButton.clicked.connect(self.RotateViewGeneral)
+        CrystalGroupLayout.addWidget(CrystalRotButton, 2, 1)
+        
+        # Add shortcuts group to window
+        layout.addWidget(CrystalGroup,2,0)
+        
+        
+        
         # Top-down view shortcuts group
         ShortcutGroup = QtGui.QGroupBox("Rotate to a top-down view of some crystal planes")
         ShortcutGroup.setAlignment(QtCore.Qt.AlignHCenter)
@@ -586,6 +629,8 @@ class RotateViewPointDialog(QtGui.QDialog):
         View100Button.clicked.connect(self.RotateView100)
         ShortcutGroupLayout.addWidget(View100Button, 1, 0)
         
+        # commented out to de-clutter the window
+        """
         # 110
         View110Button = QtGui.QPushButton("(110) Plane")
         View110Button.setStatusTip("Rotate to a top-down view of the (110) Plane")
@@ -634,10 +679,10 @@ class RotateViewPointDialog(QtGui.QDialog):
         View104Button.setToolTip("Rotate to a top-down view of the (104) Plane")
         View104Button.clicked.connect(self.RotateView104)
         ShortcutGroupLayout.addWidget(View104Button, 4, 2)
-        
+        """
         
         # Add shortcuts group to window
-        layout.addWidget(ShortcutGroup,2,0)
+        layout.addWidget(ShortcutGroup,3,0)
         
         
         # Close Button
@@ -649,7 +694,7 @@ class RotateViewPointDialog(QtGui.QDialog):
         CloseButton.clicked.connect(self.reject) 
         CloseButton.setDefault(True)
         rowLayout.addWidget(CloseButton)
-        layout.addWidget(row,3,0)
+        layout.addWidget(row,4,0)
 
 
     def RotateClockWise(self):
@@ -775,6 +820,63 @@ class RotateViewPointDialog(QtGui.QDialog):
         """
         renderer = self.rw.renderer
         renderer.setCameraToCell()  
+        
+    def RotateViewGeneral(self):  
+        # crystal plane (also normal vector)
+        x = self.CrystalXSpin.value()
+        y = self.CrystalYSpin.value()
+        z = self.CrystalZSpin.value()
+        # return without doing anything if zero plane is given
+        if( (x == 0) and (y == 0) and (z == 0) ):
+            return
+        
+        mag_norm = math.sqrt(x*x + y*y +z*z)
+        
+        mag_proj = math.sqrt(x*x + y*y)
+        
+        # Angle between normal and projection to xy plane
+        # xy projection plane (1/sqrt(2),1/sqrt(2),0)
+        if(z == 0):
+            ang_norm_xy = 0
+        elif( (x == 0) and (y == 0) ):
+            ang_norm_xy = 90.0
+        if( (z < 0) ):
+            ang_dp = x*x + y*y
+            ang_norm_xy = 360 - math.degrees( math.acos(ang_dp/(mag_proj*mag_norm)) )
+        else:
+            ang_dp = x*x + y*y
+            ang_norm_xy = math.degrees( math.acos(ang_dp/(mag_proj*mag_norm)) )
+        
+        # Angle between xy projection and x axis
+        if( (x == 0) and (y == 0) ):
+            ang_norm_xz = 0.0
+        if( (y < 0) ):
+            mag_proj = math.sqrt(x*x + y*y)
+            ang_norm_xz = 360 - math.degrees( math.acos(x/mag_proj) )
+        else:
+            mag_proj = math.sqrt(x*x + y*y)
+            ang_norm_xz = math.degrees( math.acos(x/mag_proj) )
+        
+        
+        # reset view
+        self.setCameraToCell()
+        # get renderer
+        renderer = self.rw.renderer
+        # Rotate to view yz plane down the x axis
+        renderer.camera.Azimuth(float(90.0))
+        renderer.camera.Elevation(float(-45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Elevation(float(-45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Azimuth(float(90.0))
+        
+        # rotate to the crystal plane
+        renderer.camera.Azimuth(float(ang_norm_xz))
+        
+        renderer.camera.Elevation(float(ang_norm_xy))
+        renderer.camera.OrthogonalizeViewUp()
+        
+        renderer.reinit()  
         
     def RotateView001(self):  
         self.setCameraToCell()
