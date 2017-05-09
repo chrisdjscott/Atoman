@@ -604,36 +604,6 @@ class RotateViewPointDialog(QtGui.QDialog):
         
         # Add CrystalGroup to window
         layout.addWidget(CrystalGroup,2,0)
-             
-        
-        # Top-down view shortcuts group
-        ShortcutGroup = QtGui.QGroupBox("Rotate to a top-down view of some crystal planes")
-        ShortcutGroup.setAlignment(QtCore.Qt.AlignHCenter)
-        ShortcutGroupLayout = QtGui.QGridLayout(ShortcutGroup)
-        
-        # 001
-        View001Button = QtGui.QPushButton("(001) Plane")
-        View001Button.setStatusTip("Rotate to a top-down view of the (001) Plane")
-        View001Button.setToolTip("Rotate to a top-down view of the (001) Plane")
-        View001Button.clicked.connect(self.RotateView001)
-        ShortcutGroupLayout.addWidget(View001Button, 1, 2)
-        
-        # 010
-        View010Button = QtGui.QPushButton("(010) Plane")
-        View010Button.setStatusTip("Rotate to a top-down view of the (010) Plane")
-        View010Button.setToolTip("Rotate to a top-down view of the (010) Plane")
-        View010Button.clicked.connect(self.RotateView010)
-        ShortcutGroupLayout.addWidget(View010Button, 1, 1)
-        
-        # 100
-        View100Button = QtGui.QPushButton("(100) Plane")
-        View100Button.setStatusTip("Rotate to a top-down view of the (100) Plane")
-        View100Button.setToolTip("Rotate to a top-down view of the (100) Plane")
-        View100Button.clicked.connect(self.RotateView100)
-        ShortcutGroupLayout.addWidget(View100Button, 1, 0)
-        
-        # Add shortcuts group to window
-        layout.addWidget(ShortcutGroup,3,0)
         
         
         # Close Button
@@ -645,7 +615,7 @@ class RotateViewPointDialog(QtGui.QDialog):
         CloseButton.clicked.connect(self.reject) 
         CloseButton.setDefault(True)
         rowLayout.addWidget(CloseButton)
-        layout.addWidget(row,4,0)
+        layout.addWidget(row,3,0)
 
 
     def RotateClockWise(self):
@@ -835,64 +805,6 @@ class RotateViewPointDialog(QtGui.QDialog):
             renderer.camera.OrthogonalizeViewUp() 
         
         renderer.reinit()  
-        
-    def RotateView001(self):  
-        self.setCameraToCell()
-        
-        #RotateLeft90
-        logger = logging.getLogger(__name__+".RotateViewPoint")
-        renderer = self.rw.renderer
-        
-        # apply rotation
-        logger.debug("Appling right rotation by %f degrees", 90.0)
-        logger.debug("Calling: azimuth %f", 90.0)
-        renderer.camera.Azimuth(float(90.0))
-        renderer.reinit()  
-        
-    def RotateView010(self):  
-        self.setCameraToCell()
-        
-        #RotateDown90
-        logger = logging.getLogger(__name__+".RotateViewPoint")
-        renderer = self.rw.renderer
-        
-        # This is done in two steps so new viewup can be calculated correctly
-        # otherwise ViewUp and DirectionOfProjection vectors become parallel
-        logger.debug("Calling: elevation %f", 90.0)
-        renderer.camera.Elevation(float(45.0))
-        renderer.camera.OrthogonalizeViewUp()
-        renderer.camera.Elevation(float(45.0))
-        renderer.camera.OrthogonalizeViewUp()
-        renderer.reinit()
-        
-    def RotateView100(self):  
-        self.setCameraToCell()
-        
-        logger = logging.getLogger(__name__+".RotateViewPoint")
-        renderer = self.rw.renderer
-        
-        # RotateDown90
-        # This is done in two steps so new viewup can be calculated correctly
-        # otherwise ViewUp and DirectionOfProjection vectors become parallel
-        logger.debug("Calling: elevation %f", 90.0)
-        renderer.camera.Elevation(float(45.0))
-        renderer.camera.OrthogonalizeViewUp()
-        renderer.camera.Elevation(float(45.0))
-        renderer.camera.OrthogonalizeViewUp()
-        
-        # RotateRight90
-        logger.debug("Calling: azimuth %f", -90.0)
-        renderer.camera.Azimuth(float(-90.0))
-        
-        # RotateDown90
-        # This is done in two steps so new viewup can be calculated correctly
-        # otherwise ViewUp and DirectionOfProjection vectors become parallel
-        logger.debug("Calling: elevation %f", 90.0)
-        renderer.camera.Elevation(float(45.0))
-        renderer.camera.OrthogonalizeViewUp()
-        renderer.camera.Elevation(float(45.0))
-        renderer.camera.OrthogonalizeViewUp()
-        renderer.reinit()
      
               
 ################################################################################

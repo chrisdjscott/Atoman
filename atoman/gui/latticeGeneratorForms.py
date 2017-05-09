@@ -19,6 +19,8 @@ from ..lattice_gen import lattice_gen_fluorite
 from ..lattice_gen import lattice_gen_rockSalt
 from ..lattice_gen import lattice_gen_sic
 from ..lattice_gen import lattice_gen_graphite
+from ..lattice_gen import lattice_gen_diamond
+from ..lattice_gen import lattice_gen_diamond_indenter
 
 ################################################################################
 
@@ -875,3 +877,158 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
         status, lattice = generator.generateLattice(self.generatorArgs)
         
         return status, lattice
+
+
+################################################################################
+
+class DiamondLatticeGeneratorForm(GenericLatticeGeneratorForm):
+    """
+    Diamond lattice generator
+    
+    """
+    def __init__(self, parent, mainWindow):
+        super(DiamondLatticeGeneratorForm, self).__init__(parent, mainWindow, "Diamond lattice generator")
+        
+        self.generatorArgs = lattice_gen_diamond.Args()
+        
+        self.add_filename_option()
+        
+        # specie 1
+        self.specie1_text = QtGui.QLineEdit(self.generatorArgs.sym1)
+        self.specie1_text.setFixedWidth(30)
+        self.specie1_text.setMaxLength(2)
+        self.specie1_text.textEdited.connect(self.specie1_text_edited)
+        self.specie1_text.setToolTip("Set the symbol of the first species")
+        
+        # charge 1
+        charge1Spin = QtGui.QDoubleSpinBox()
+        charge1Spin.setMinimum(-99.99)
+        charge1Spin.setValue(self.generatorArgs.charge1)
+        charge1Spin.valueChanged.connect(self.charge1_changed)
+        charge1Spin.setToolTip("Set the charge of the first species")
+        
+        hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(self.specie1_text)
+        hbox.addWidget(charge1Spin)
+        self.formLayout.addRow("Species 1", hbox)
+        
+        self.add_unit_cell_options()
+        
+        self.add_a0_option()
+        
+        self.add_pbc_options()
+                
+        # generate button
+        self.add_generate_button()
+    
+    def charge1_changed(self, val):
+        """
+        Charge 1 changed
+        
+        """
+        self.generatorArgs.charge1 = val
+    
+    def specie1_text_edited(self, text):
+        """
+        Specie 1 text edited
+        
+        """
+        self.generatorArgs.sym1 = str(text)
+    
+    def generateLatticeMain(self):
+        """
+        Generate lattice
+        
+        """
+        generator = lattice_gen_diamond.DiamondLatticeGenerator()
+        
+        status, lattice = generator.generateLattice(self.generatorArgs)
+        
+        return status, lattice
+
+
+################################################################################
+
+class DiamondIndenterGeneratorForm(GenericLatticeGeneratorForm):
+    """
+    Diamond Indenter generator
+    
+    """
+    def __init__(self, parent, mainWindow):
+        super(DiamondIndenterGeneratorForm, self).__init__(parent, mainWindow, "Diamond Indenter generator")
+        
+        self.generatorArgs = lattice_gen_diamond_indenter.Args()
+        
+        self.add_filename_option()
+        
+        # specie 1
+        self.specie1_text = QtGui.QLineEdit(self.generatorArgs.sym1)
+        self.specie1_text.setFixedWidth(30)
+        self.specie1_text.setMaxLength(2)
+        self.specie1_text.textEdited.connect(self.specie1_text_edited)
+        self.specie1_text.setEnabled( False )
+        self.specie1_text.setToolTip("Set the symbol of the first species")
+        
+        # charge 1
+        charge1Spin = QtGui.QDoubleSpinBox()
+        charge1Spin.setMinimum(-99.99)
+        charge1Spin.setValue(self.generatorArgs.charge1)
+        charge1Spin.valueChanged.connect(self.charge1_changed)
+        charge1Spin.setEnabled( False )
+        charge1Spin.setToolTip("Set the charge of the first species")
+        
+        # Display atom 
+        hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(self.specie1_text)
+        hbox.addWidget(charge1Spin)
+        self.formLayout.addRow("Carbon: ", hbox)
+        
+        # Indenter atom layers
+        AtomLayersSpin = QtGui.QSpinBox()
+        AtomLayersSpin.setMinimum(1)
+        AtomLayersSpin.setMaximum(1000)
+        AtomLayersSpin.setValue(self.generatorArgs.AtomLayers)
+        AtomLayersSpin.valueChanged.connect(self.AtomLayersSpinChanged)
+        AtomLayersSpin.setToolTip("Set the number of layers of carbon atoms in the indenter")
+        
+        self.formLayout.addRow("Carbon Atom Layers: ", AtomLayersSpin)
+        
+        
+        self.add_a0_option()
+        
+                
+        # generate button
+        self.add_generate_button()
+    
+    def charge1_changed(self, val):
+        """
+        Charge 1 changed
+        
+        """
+        self.generatorArgs.charge1 = val
+        
+    def AtomLayersSpinChanged(self, val):
+        """
+        Number of atom layers changed
+        
+        """
+        self.generatorArgs.AtomLayers = val
+    
+    def specie1_text_edited(self, text):
+        """
+        Specie 1 text edited
+        
+        """
+        self.generatorArgs.sym1 = str(text)
+    
+    def generateLatticeMain(self):
+        """
+        Generate lattice
+        
+        """
+        generator = lattice_gen_diamond_indenter.DiamondIndenterGenerator()
+        
+        status, lattice = generator.generateLattice(self.generatorArgs)
+        
+        return status, lattice
+
