@@ -28,7 +28,7 @@ class Args(object):
     pbcx,pbcy,pbcz: PBCs in each direction (default=True)
     
     """
-    def __init__(self, sym1="C_", charge1=0.0, AtomLayers=8, a0=3.56693, TipPos=[30,30,40],
+    def __init__(self, sym1="C_", charge1=0.0, AtomLayers=8, a0=3.56693,
                  TipCutLayers=1,
                  pbcx=False, pbcy=False, pbcz=False):
         self.sym1 = sym1
@@ -38,9 +38,6 @@ class Args(object):
         self.pbcx = pbcx
         self.pbcy = pbcy
         self.pbcz = pbcz
-        self.tipposx = TipPos[0]
-        self.tipposy = TipPos[1]
-        self.tipposz = TipPos[2]
         self.TipCutLayers=TipCutLayers
 
 ################################################################################
@@ -126,6 +123,13 @@ class DiamondIndenterGenerator(object):
         # lattice dimensions
         dims = [2.0*a0*args.AtomLayers, 2.0*a0*args.AtomLayers, 2.0*a0*args.AtomLayers]
         
+        # Center tip position in x and y
+        tipposx = a0*args.AtomLayers
+        tipposy = a0*args.AtomLayers
+        # place at top of the box
+        tipposz = a0*args.AtomLayers*(2.0-0.577350269189626)   # height is a0*args.AtomLayers/math.sqrt(3)
+        
+        
         # lattice structure
         lattice = Lattice()
         
@@ -193,9 +197,9 @@ class DiamondIndenterGenerator(object):
                         rz_tmp = v[2]
                         
                         # Translate to given tip position
-                        rx_tmp = rx_tmp + args.tipposx
-                        ry_tmp = ry_tmp + args.tipposy
-                        rz_tmp = rz_tmp + args.tipposz
+                        rx_tmp = rx_tmp + tipposx
+                        ry_tmp = ry_tmp + tipposy
+                        rz_tmp = rz_tmp + tipposz
                         
                         
                         # Save position to lattice structure
