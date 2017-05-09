@@ -28,7 +28,8 @@ class Args(object):
     pbcx,pbcy,pbcz: PBCs in each direction (default=True)
     
     """
-    def __init__(self, sym1="C_", charge1=0.0, AtomLayers=8, a0=3.56693,
+    def __init__(self, sym1="C_", charge1=0.0, AtomLayers=8, a0=3.56693, TipPos=[30,30,40],
+                 TipCutLayers=1,
                  pbcx=False, pbcy=False, pbcz=False):
         self.sym1 = sym1
         self.charge1 = charge1
@@ -37,6 +38,10 @@ class Args(object):
         self.pbcx = pbcx
         self.pbcy = pbcy
         self.pbcz = pbcz
+        self.tipposx = TipPos[0]
+        self.tipposy = TipPos[1]
+        self.tipposz = TipPos[2]
+        self.TipCutLayers=TipCutLayers
 
 ################################################################################
 
@@ -119,7 +124,7 @@ class DiamondIndenterGenerator(object):
         
         
         # lattice dimensions
-        dims = [a0*args.AtomLayers, a0*args.AtomLayers, a0*args.AtomLayers]
+        dims = [2.0*a0*args.AtomLayers, 2.0*a0*args.AtomLayers, 2.0*a0*args.AtomLayers]
         
         # lattice structure
         lattice = Lattice()
@@ -132,7 +137,8 @@ class DiamondIndenterGenerator(object):
         
         # slice plane x coord
         slice_x0 = np.float64(a0*args.AtomLayers + 1.0)
-        
+        # slice plane x coord tip cut plane
+        slice_x0_tip = np.float64(a0*args.TipCutLayers + 1.0)
         
         lattice.specie = np.zeros(iStop*jStop*kStop*8, dtype=np.int32)                   
         lattice.charge = np.zeros(iStop*jStop*kStop*8, dtype=np.float64)      
@@ -166,6 +172,10 @@ class DiamondIndenterGenerator(object):
                         if (rz_tmp > slice_z):
                             continue
                         
+                        # skip if below tip cut layers
+                        if (rz_tmp < (slice_x0_tip - rx_tmp - ry_tmp) ):
+                            continue
+                        
                         # Increment specie counter
                         specInd = lattice.getSpecieIndex(sym_uc)
                         lattice.specieCount[specInd] += 1
@@ -180,7 +190,12 @@ class DiamondIndenterGenerator(object):
                         
                         rx_tmp = v[0]
                         ry_tmp = v[1]
-                        rz_tmp = v[2]      
+                        rz_tmp = v[2]
+                        
+                        # Translate to given tip position
+                        rx_tmp = rx_tmp + args.tipposx
+                        ry_tmp = ry_tmp + args.tipposy
+                        rz_tmp = rz_tmp + args.tipposz
                         
                         
                         # Save position to lattice structure

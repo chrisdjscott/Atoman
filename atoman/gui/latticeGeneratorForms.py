@@ -986,12 +986,22 @@ class DiamondIndenterGeneratorForm(GenericLatticeGeneratorForm):
         # Indenter atom layers
         AtomLayersSpin = QtGui.QSpinBox()
         AtomLayersSpin.setMinimum(1)
-        AtomLayersSpin.setMaximum(1000)
+        AtomLayersSpin.setMaximum(10000)
         AtomLayersSpin.setValue(self.generatorArgs.AtomLayers)
         AtomLayersSpin.valueChanged.connect(self.AtomLayersSpinChanged)
         AtomLayersSpin.setToolTip("Set the number of layers of carbon atoms in the indenter")
         
         self.formLayout.addRow("Carbon Atom Layers: ", AtomLayersSpin)
+        
+        # Layers to cut from tip
+        AtomLayersCutSpin = QtGui.QSpinBox()
+        AtomLayersCutSpin.setMinimum(0)
+        AtomLayersCutSpin.setMaximum(10000)
+        AtomLayersCutSpin.setValue(self.generatorArgs.TipCutLayers)
+        AtomLayersCutSpin.valueChanged.connect(self.AtomLayersCutSpinChanged)
+        AtomLayersCutSpin.setToolTip("Set the number of layers of carbon atoms to cut off the tip")
+        
+        self.formLayout.addRow("Layers cut from tip: ", AtomLayersCutSpin)
         
         
         self.add_a0_option()
@@ -1013,6 +1023,13 @@ class DiamondIndenterGeneratorForm(GenericLatticeGeneratorForm):
         
         """
         self.generatorArgs.AtomLayers = val
+        
+    def AtomLayersCutSpinChanged(self, val):
+        """
+        Number of atom layers changed
+        
+        """
+        self.generatorArgs.TipCutLayers = val
     
     def specie1_text_edited(self, text):
         """
