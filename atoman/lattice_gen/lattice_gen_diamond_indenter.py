@@ -1,6 +1,6 @@
 
 """
-Generate Carbon Diamond Lattice
+Generate Carbon Diamond Indenter Lattice
 
 @author: Kenny Jolley
 Derived from similar form by Chris Scott
@@ -24,11 +24,11 @@ class Args(object):
     """
     NCells: 3-tuple containing number of unit cells in each direction (default=(6,6,6))
     charge is defaulted to zero, and should not be changed for pure carbon systems
-    a0: lattice 'a' constant (default=3.56693) (AIREBO) TODO
+    a0: lattice 'a' constant (default=3.556717) (AIREBO)
     pbcx,pbcy,pbcz: PBCs in each direction (default=True)
     
     """
-    def __init__(self, sym1="C_", charge1=0.0, AtomLayers=8, a0=3.56693,
+    def __init__(self, sym1="C_", charge1=0.0, AtomLayers=8, a0=3.556717,
                  TipCutLayers=1,
                  pbcx=False, pbcy=False, pbcz=False):
         self.sym1 = sym1

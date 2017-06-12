@@ -1056,7 +1056,32 @@ class DiamondIndenterGeneratorForm(GenericLatticeGeneratorForm):
         self.formLayout.addRow("Layers cut from tip: ", AtomLayersCutSpin)
 
 
-        self.add_a0_option()
+        # Lattice constants
+
+        # Lattice parameter presets combo
+        ParamCombo = QtGui.QComboBox()
+        ParamCombo.addItem("AIREBO")
+        ParamCombo.addItem("ReaxFF May2016")
+        ParamCombo.addItem("Custom")
+        ParamCombo.currentIndexChanged.connect(self.ParamComboChanged)
+        ParamCombo.setToolTip("Set lattice parameter presets")
+
+        hbox = QtGui.QHBoxLayout()
+        hbox.addWidget(ParamCombo)
+        self.formLayout.addRow("Parameter presets", hbox)
+
+        # Lattice 'a' parameter
+        self.latticeAConstSpin = QtGui.QDoubleSpinBox()
+        self.latticeAConstSpin.setDecimals(8)
+        self.latticeAConstSpin.setSingleStep(0.1)
+        self.latticeAConstSpin.setMinimum(0.00001)
+        self.latticeAConstSpin.setMaximum(99.99999)
+        self.latticeAConstSpin.setValue(self.generatorArgs.a0)
+        self.latticeAConstSpin.setEnabled( False )
+        self.latticeAConstSpin.valueChanged.connect(self.latticeAConstChanged)
+        self.latticeAConstSpin.setSuffix(" \u212B")
+        self.latticeAConstSpin.setToolTip("Set the lattice 'a' constant (select custom to edit this)")
+        self.formLayout.addRow("Lattice 'a' constant", self.latticeAConstSpin)
 
 
         # generate button
@@ -1089,6 +1114,33 @@ class DiamondIndenterGeneratorForm(GenericLatticeGeneratorForm):
 
         """
         self.generatorArgs.sym1 = str(text)
+        
+    def latticeAConstChanged(self, val):
+        """
+        Lattice constant changed
+
+        """
+        self.generatorArgs.a0 = val
+
+    def ParamComboChanged(self, index):
+        """
+        Parameter presets combo changed
+
+        """
+
+        # AIREBO
+        if(index == 0):
+            self.generatorArgs.a0 = 3.556717
+            self.latticeAConstSpin.setValue(3.556717)
+            self.latticeAConstSpin.setEnabled( False )
+        # ReaxFF May 2016
+        if(index == 1):
+            self.generatorArgs.a0 = 3.54723712
+            self.latticeAConstSpin.setValue(3.54723712)
+            self.latticeAConstSpin.setEnabled( False )
+        # Custom
+        if(index == 2):
+            self.latticeAConstSpin.setEnabled( True )
 
     def generateLatticeMain(self):
         """
