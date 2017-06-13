@@ -168,8 +168,22 @@ class DiamondIndenterGenerator(object):
                         rz_tmp = pos_uc[l3 + 2] + kfac
                         
                         # skip if outside lattice (ie when making extra cell to get surface for non-periodic boundaries)
-                        if (rx_tmp > dims[0]+0.0001) or (ry_tmp > dims[1]+0.0001) or (rz_tmp > dims[2]+0.0001):
+                        if (rx_tmp > dims[0]/2.0+0.0001) or (ry_tmp > dims[1]/2.0+0.0001) or (rz_tmp > dims[2]/2.0+0.0001):
                             continue
+                        
+                        # rotation 90 degrees around y axis so dimer rows are paralel to surface
+                        v = [rx_tmp,ry_tmp,rz_tmp]
+                        axis = [0,1,0]
+                        theta = -1.570796327
+                        v = np.dot(self.rotation_matrix(axis,theta), v)
+                        
+                        rx_tmp = v[0]
+                        ry_tmp = v[1]
+                        rz_tmp = v[2]
+                        
+                        # Translate since the rotation was about origin 
+                        rx_tmp = rx_tmp + a0*args.AtomLayers
+                        
                         
                         # skip if above (111) slice plane
                         slice_z = slice_x0 - rx_tmp - ry_tmp
@@ -180,6 +194,50 @@ class DiamondIndenterGenerator(object):
                         if (rz_tmp < (slice_x0_tip - rx_tmp - ry_tmp) ):
                             continue
                         
+                        # skip edge atoms
+                        if( (rx_tmp - 0.001 < 0) and (ry_tmp - 0.001 < 0) ):
+                            c = int( rz_tmp/a0 + 0.5)
+                            if(c%2!=0):
+                                continue
+                        if( (rx_tmp - 0.001 < 0) and (rz_tmp - 0.001 < 0) ):
+                            c = int( ry_tmp/a0 + 0.5)
+                            if(c%2!=0):
+                                continue    
+                        if( (ry_tmp - 0.001 < 0) and (rz_tmp - 0.001 < 0) ):
+                            c = int( rx_tmp/a0 + 0.5)
+                            if(c%2!=0):
+                                continue     
+                        
+                        
+                        # displace atoms on surface to form dimer rows.
+                        if(rx_tmp - 0.001 < 0):
+                            c = int( (ry_tmp + rz_tmp)/a0 + 0.5)
+                            if(c%2==0):
+                                ry_tmp = ry_tmp + 0.4
+                                rz_tmp = rz_tmp + 0.4
+                            else:
+                                ry_tmp = ry_tmp - 0.4
+                                rz_tmp = rz_tmp - 0.4
+                        
+                        if(ry_tmp - 0.001 < 0):
+                            c = int( (rx_tmp + rz_tmp)/a0 + 0.5)
+                            if(c%2==0):
+                                rx_tmp = rx_tmp + 0.4
+                                rz_tmp = rz_tmp + 0.4
+                            else:
+                                rx_tmp = rx_tmp - 0.4
+                                rz_tmp = rz_tmp - 0.4
+                        
+                        if(rz_tmp - 0.001 < 0):
+                            c = int( (rx_tmp + ry_tmp)/a0 + 0.5)
+                            if(c%2==0):
+                                rx_tmp = rx_tmp + 0.4
+                                ry_tmp = ry_tmp + 0.4
+                            else:
+                                rx_tmp = rx_tmp - 0.4
+                                ry_tmp = ry_tmp - 0.4
+                        
+                        
                         # Increment specie counter
                         specInd = lattice.getSpecieIndex(sym_uc)
                         lattice.specieCount[specInd] += 1
@@ -188,18 +246,18 @@ class DiamondIndenterGenerator(object):
                         
                         # Rotate lattice
                         v = [rx_tmp,ry_tmp,rz_tmp]
-                        axis = [-1,1,0]
-                        theta = -0.955316618124509 # -math.acos(1 / math.sqrt(3))
-                        v = np.dot(self.rotation_matrix(axis,theta), v)
+                        #axis = [-1,1,0]
+                        #theta = -0.955316618124509 # -math.acos(1 / math.sqrt(3))
+                        #v = np.dot(self.rotation_matrix(axis,theta), v)
                         
                         rx_tmp = v[0]
                         ry_tmp = v[1]
                         rz_tmp = v[2]
                         
                         # Translate to given tip position
-                        rx_tmp = rx_tmp + tipposx
-                        ry_tmp = ry_tmp + tipposy
-                        rz_tmp = rz_tmp + tipposz
+                        #rx_tmp = rx_tmp + tipposx
+                        #ry_tmp = ry_tmp + tipposy
+                        #rz_tmp = rz_tmp + tipposz
                         
                         
                         # Save position to lattice structure
