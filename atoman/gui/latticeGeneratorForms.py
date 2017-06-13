@@ -740,7 +740,6 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
 
         # unit cell options
         row = QtGui.QHBoxLayout()
-        
         row.addWidget(QtGui.QLabel("No. unit cells:"))
 
         # num unit cells
@@ -772,33 +771,23 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
         numUnitCellsZSpin.setToolTip("Set the number of unit cells in z")
         row.addWidget(numUnitCellsZSpin)
 
-        #self.formLayout.addRow("No. unit cells", row)
         self.formLayout.addRow(row)
 
-    
-
         # output total lattice size before generating
-        hbox = QtGui.QHBoxLayout()
+        infogrid = QtGui.QGridLayout()
         self.latsize_x = 1
         self.latsize_y = 2
         self.latsize_z = 3
-        self.latsize_text = QtGui.QLabel("lat size")
-        
-        hbox.addWidget(self.latsize_text)
-        self.formLayout.addRow(hbox)
+        self.latsize_text = QtGui.QLabel()
+        infogrid.addWidget(self.latsize_text,0,0)
         
         # Show number of atoms, before generating
-        hbox = QtGui.QHBoxLayout()
         self.lat_numatoms = 3
-        self.lat_numatoms_text = QtGui.QLabel("lat size")
-        
-        hbox.addWidget(self.lat_numatoms_text)
-        self.formLayout.addRow(hbox)
-
-
+        self.lat_numatoms_text = QtGui.QLabel()
+        infogrid.addWidget(self.lat_numatoms_text,1,0)     
+        self.formLayout.addRow("Lattice dimensions",infogrid)
 
         # Lattice constants
-
         # Lattice parameter presets combo
         ParamCombo = QtGui.QComboBox()
         ParamCombo.addItem("AIREBO")
@@ -837,7 +826,6 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
         self.latticeCConstSpin.setToolTip("Set the lattice 'c' constant (select custom to edit this)")
         self.formLayout.addRow("Lattice 'c' constant", self.latticeCConstSpin)
 
-
         # Graphite layer stacking input
         rx = QtCore.QRegExp("([a-c]?[A-C]?)*")
         validator = QtGui.QRegExpValidator(rx, self)
@@ -849,32 +837,32 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
         self.GrahiteLayerStacking.textChanged.connect(self.GrahiteLayerStackingChanged)
         self.formLayout.addRow("Grahite Layer Stacking", self.GrahiteLayerStacking)
 
-
-
-
+        # checkboxes for periodic boundaries
         self.add_pbc_options()
-
-
 
         # generate button
         self.add_generate_button()
         
-        # update lattice size text 
+        # update lattice dimension and no. atoms text to correct initial values
         self.UpdateLatticeSizeText()
         
     def UpdateLatticeSizeText(self):
-        self.UpdateLatticeSizeVars()
-        self.latsize_text.setText("Lattice size: " + 
-                                  '{:.1f}'.format(self.latsize_x) + " \u212B x " + 
-                                  '{:.1f}'.format(self.latsize_y) + " \u212B x " + 
-                                  '{:.1f}'.format(self.latsize_z) + " \u212B ")
-        self.lat_numatoms_text.setText("Lattice number of atoms: " + str(self.lat_numatoms) )
-        
-    def UpdateLatticeSizeVars(self):   
+        """
+        Updates the Lattice dimensions and num atoms string in the generator form.
+
+        """
         self.latsize_x = 1.732050808 * self.latticeAConstSpin.value() * self.generatorArgs.NCells[0]
         self.latsize_y = self.latticeAConstSpin.value() * self.generatorArgs.NCells[1]
         self.latsize_z = self.latticeCConstSpin.value() * self.generatorArgs.NCells[2] * len(self.GrahiteLayerStacking.text())
-        self.lat_numatoms = int(4 * len(self.GrahiteLayerStacking.text()) * self.generatorArgs.NCells[0] * self.generatorArgs.NCells[1] * self.generatorArgs.NCells[2])
+        self.lat_numatoms = int(4 * len(self.GrahiteLayerStacking.text()) * 
+                                self.generatorArgs.NCells[0] * 
+                                self.generatorArgs.NCells[1] * 
+                                self.generatorArgs.NCells[2])
+        
+        self.latsize_text.setText('{:.1f}'.format(self.latsize_x) + " \u212B x " + 
+                                  '{:.1f}'.format(self.latsize_y) + " \u212B x " + 
+                                  '{:.1f}'.format(self.latsize_z) + " \u212B ")
+        self.lat_numatoms_text.setText(str(self.lat_numatoms) + " Atoms" )
 
     def GrahiteLayerStackingChanged(self, val):
         """
