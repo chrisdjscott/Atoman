@@ -999,7 +999,55 @@ class DiamondLatticeGeneratorForm(GenericLatticeGeneratorForm):
         hbox.addWidget(charge1Spin)
         self.formLayout.addRow("Species 1", hbox)
 
-        self.add_unit_cell_options()
+        # unit cell options
+        row = QtGui.QHBoxLayout()
+        row.addWidget(QtGui.QLabel("No. unit cells:"))
+
+        # num unit cells
+        numUnitCellsXSpin = QtGui.QSpinBox()
+        numUnitCellsXSpin.setMinimum(1)
+        numUnitCellsXSpin.setMaximum(1000)
+        numUnitCellsXSpin.setValue(self.generatorArgs.NCells[0])
+        numUnitCellsXSpin.valueChanged.connect(self.numUnitCellsXChanged)
+        numUnitCellsXSpin.setToolTip("Set the number of unit cells in x")
+        row.addWidget(numUnitCellsXSpin)
+
+        row.addWidget(QtGui.QLabel("x"))
+
+        numUnitCellsYSpin = QtGui.QSpinBox()
+        numUnitCellsYSpin.setMinimum(1)
+        numUnitCellsYSpin.setMaximum(1000)
+        numUnitCellsYSpin.setValue(self.generatorArgs.NCells[1])
+        numUnitCellsYSpin.valueChanged.connect(self.numUnitCellsYChanged)
+        numUnitCellsYSpin.setToolTip("Set the number of unit cells in y")
+        row.addWidget(numUnitCellsYSpin)
+
+        row.addWidget(QtGui.QLabel("x"))
+
+        numUnitCellsZSpin = QtGui.QSpinBox()
+        numUnitCellsZSpin.setMinimum(1)
+        numUnitCellsZSpin.setMaximum(1000)
+        numUnitCellsZSpin.setValue(self.generatorArgs.NCells[2])
+        numUnitCellsZSpin.valueChanged.connect(self.numUnitCellsZChanged)
+        numUnitCellsZSpin.setToolTip("Set the number of unit cells in z")
+        row.addWidget(numUnitCellsZSpin)
+
+        self.formLayout.addRow(row)
+
+        # output total lattice size before generating
+        infogrid = QtGui.QGridLayout()
+        self.latsize_x = 1
+        self.latsize_y = 2
+        self.latsize_z = 3
+        self.latsize_text = QtGui.QLabel()
+        infogrid.addWidget(self.latsize_text,0,0)
+        
+        # Show number of atoms, before generating
+        self.lat_numatoms = 3
+        self.lat_numatoms_text = QtGui.QLabel()
+        infogrid.addWidget(self.lat_numatoms_text,1,0)     
+        self.formLayout.addRow("Lattice dimensions",infogrid)
+        
 
         # Lattice constants
 
@@ -1032,6 +1080,50 @@ class DiamondLatticeGeneratorForm(GenericLatticeGeneratorForm):
 
         # generate button
         self.add_generate_button()
+        
+        # update lattice dimension and no. atoms text to correct initial values
+        self.UpdateLatticeSizeText()
+        
+    def UpdateLatticeSizeText(self):
+        """
+        Updates the Lattice dimensions and num atoms string in the generator form.
+
+        """
+        self.latsize_x = self.latticeAConstSpin.value() * self.generatorArgs.NCells[0]
+        self.latsize_y = self.latticeAConstSpin.value() * self.generatorArgs.NCells[1]
+        self.latsize_z = self.latticeAConstSpin.value() * self.generatorArgs.NCells[2]
+        self.lat_numatoms = int(8 * self.generatorArgs.NCells[0] * 
+                                self.generatorArgs.NCells[1] * 
+                                self.generatorArgs.NCells[2])
+        
+        self.latsize_text.setText('{:.1f}'.format(self.latsize_x) + " \u212B x " + 
+                                  '{:.1f}'.format(self.latsize_y) + " \u212B x " + 
+                                  '{:.1f}'.format(self.latsize_z) + " \u212B ")
+        self.lat_numatoms_text.setText(str(self.lat_numatoms) + " Atoms" )
+
+    def numUnitCellsXChanged(self, val):
+        """
+        Number of unit cells changed.
+
+        """
+        self.generatorArgs.NCells[0] = val
+        self.UpdateLatticeSizeText()
+
+    def numUnitCellsYChanged(self, val):
+        """
+        Number of unit cells changed.
+
+        """
+        self.generatorArgs.NCells[1] = val
+        self.UpdateLatticeSizeText()
+
+    def numUnitCellsZChanged(self, val):
+        """
+        Number of unit cells changed.
+
+        """
+        self.generatorArgs.NCells[2] = val
+        self.UpdateLatticeSizeText()
 
     def charge1_changed(self, val):
         """
@@ -1053,6 +1145,7 @@ class DiamondLatticeGeneratorForm(GenericLatticeGeneratorForm):
 
         """
         self.generatorArgs.a0 = val
+        self.UpdateLatticeSizeText()
 
     def ParamComboChanged(self, index):
         """
