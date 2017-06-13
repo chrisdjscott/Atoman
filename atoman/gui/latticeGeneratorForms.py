@@ -738,9 +738,64 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
         hbox.addWidget(charge1Spin)
         self.formLayout.addRow("Species", hbox)
 
+        # unit cell options
+        row = QtGui.QHBoxLayout()
+        
+        row.addWidget(QtGui.QLabel("No. unit cells:"))
+
+        # num unit cells
+        numUnitCellsXSpin = QtGui.QSpinBox()
+        numUnitCellsXSpin.setMinimum(1)
+        numUnitCellsXSpin.setMaximum(1000)
+        numUnitCellsXSpin.setValue(self.generatorArgs.NCells[0])
+        numUnitCellsXSpin.valueChanged.connect(self.numUnitCellsXChanged)
+        numUnitCellsXSpin.setToolTip("Set the number of unit cells in x")
+        row.addWidget(numUnitCellsXSpin)
+
+        row.addWidget(QtGui.QLabel("x"))
+
+        numUnitCellsYSpin = QtGui.QSpinBox()
+        numUnitCellsYSpin.setMinimum(1)
+        numUnitCellsYSpin.setMaximum(1000)
+        numUnitCellsYSpin.setValue(self.generatorArgs.NCells[1])
+        numUnitCellsYSpin.valueChanged.connect(self.numUnitCellsYChanged)
+        numUnitCellsYSpin.setToolTip("Set the number of unit cells in y")
+        row.addWidget(numUnitCellsYSpin)
+
+        row.addWidget(QtGui.QLabel("x"))
+
+        numUnitCellsZSpin = QtGui.QSpinBox()
+        numUnitCellsZSpin.setMinimum(1)
+        numUnitCellsZSpin.setMaximum(1000)
+        numUnitCellsZSpin.setValue(self.generatorArgs.NCells[2])
+        numUnitCellsZSpin.valueChanged.connect(self.numUnitCellsZChanged)
+        numUnitCellsZSpin.setToolTip("Set the number of unit cells in z")
+        row.addWidget(numUnitCellsZSpin)
+
+        #self.formLayout.addRow("No. unit cells", row)
+        self.formLayout.addRow(row)
+
+    
+
+        # output total lattice size before generating
+        hbox = QtGui.QHBoxLayout()
+        self.latsize_x = 1
+        self.latsize_y = 2
+        self.latsize_z = 3
+        self.latsize_text = QtGui.QLabel("lat size")
+        
+        hbox.addWidget(self.latsize_text)
+        self.formLayout.addRow(hbox)
+        
+        # Show number of atoms, before generating
+        hbox = QtGui.QHBoxLayout()
+        self.lat_numatoms = 3
+        self.lat_numatoms_text = QtGui.QLabel("lat size")
+        
+        hbox.addWidget(self.lat_numatoms_text)
+        self.formLayout.addRow(hbox)
 
 
-        self.add_unit_cell_options()
 
         # Lattice constants
 
@@ -803,6 +858,23 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
 
         # generate button
         self.add_generate_button()
+        
+        # update lattice size text 
+        self.UpdateLatticeSizeText()
+        
+    def UpdateLatticeSizeText(self):
+        self.UpdateLatticeSizeVars()
+        self.latsize_text.setText("Lattice size: " + 
+                                  '{:.1f}'.format(self.latsize_x) + " \u212B x " + 
+                                  '{:.1f}'.format(self.latsize_y) + " \u212B x " + 
+                                  '{:.1f}'.format(self.latsize_z) + " \u212B ")
+        self.lat_numatoms_text.setText("Lattice number of atoms: " + str(self.lat_numatoms) )
+        
+    def UpdateLatticeSizeVars(self):   
+        self.latsize_x = 1.732050808 * self.latticeAConstSpin.value() * self.generatorArgs.NCells[0]
+        self.latsize_y = self.latticeAConstSpin.value() * self.generatorArgs.NCells[1]
+        self.latsize_z = self.latticeCConstSpin.value() * self.generatorArgs.NCells[2] * len(self.GrahiteLayerStacking.text())
+        self.lat_numatoms = int(4 * len(self.GrahiteLayerStacking.text()) * self.generatorArgs.NCells[0] * self.generatorArgs.NCells[1] * self.generatorArgs.NCells[2])
 
     def GrahiteLayerStackingChanged(self, val):
         """
@@ -810,6 +882,7 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
 
         """
         self.generatorArgs.stacking = val
+        self.UpdateLatticeSizeText()
 
     def latticeAConstChanged(self, val):
         """
@@ -817,6 +890,7 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
 
         """
         self.generatorArgs.a0 = val
+        self.UpdateLatticeSizeText()
 
     def latticeCConstChanged(self, val):
         """
@@ -824,6 +898,7 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
 
         """
         self.generatorArgs.c0 = val
+        self.UpdateLatticeSizeText()
 
     def ParamComboChanged(self, index):
         """
@@ -866,6 +941,30 @@ class GraphiteLatticeGeneratorForm(GenericLatticeGeneratorForm):
 
         """
         self.generatorArgs.sym1 = str(text)
+        
+    def numUnitCellsXChanged(self, val):
+        """
+        Number of unit cells changed.
+
+        """
+        self.generatorArgs.NCells[0] = val
+        self.UpdateLatticeSizeText()
+
+    def numUnitCellsYChanged(self, val):
+        """
+        Number of unit cells changed.
+
+        """
+        self.generatorArgs.NCells[1] = val
+        self.UpdateLatticeSizeText()
+
+    def numUnitCellsZChanged(self, val):
+        """
+        Number of unit cells changed.
+
+        """
+        self.generatorArgs.NCells[2] = val
+        self.UpdateLatticeSizeText()
 
     def generateLatticeMain(self):
         """
