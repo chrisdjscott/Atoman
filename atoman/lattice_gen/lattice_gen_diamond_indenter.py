@@ -28,12 +28,13 @@ class Args(object):
     pbcx,pbcy,pbcz: PBCs in each direction (default=True)
     
     """
-    def __init__(self, sym1="C_", charge1=0.0, AtomLayers=8, a0=3.556717,
-                 TipCutLayers=1,
+    def __init__(self, sym1="C_", charge1=0.0, AtomLayers=15, a0=3.556717,
+                 TipCutLayers=1,CornerSliceLayers=3,
                  pbcx=False, pbcy=False, pbcz=False):
         self.sym1 = sym1
         self.charge1 = charge1
         self.AtomLayers = AtomLayers
+        self.CornerSliceLayers = CornerSliceLayers
         self.a0 = a0
         self.pbcx = pbcx
         self.pbcy = pbcy
@@ -127,7 +128,9 @@ class DiamondIndenterGenerator(object):
         tipposx = a0*args.AtomLayers
         tipposy = a0*args.AtomLayers
         # place at top of the box
-        tipposz = a0*args.AtomLayers*(2.0-0.577350269189626)   # height is a0*args.AtomLayers/math.sqrt(3)
+        #tipposz = a0*args.AtomLayers*(2.0-0.577350269189626)   # height is a0*args.AtomLayers/math.sqrt(3)
+        tipposz = 2.0*a0*args.AtomLayers - 0.577350269189626*a0*(args.AtomLayers+1)   # height is a0*args.AtomLayers/math.sqrt(3)
+        
         
         
         # lattice structure
@@ -143,6 +146,9 @@ class DiamondIndenterGenerator(object):
         slice_x0 = np.float64(a0*args.AtomLayers + 1.0)
         # slice plane x coord tip cut plane
         slice_x0_tip = np.float64(a0*args.TipCutLayers + 1.0)
+        
+        # corner slices
+        corner_slice_x0 = a0*(args.AtomLayers-args.CornerSliceLayers) - 0.5
         
         lattice.specie = np.zeros(iStop*jStop*kStop*8, dtype=np.int32)                   
         lattice.charge = np.zeros(iStop*jStop*kStop*8, dtype=np.float64)      
@@ -192,6 +198,18 @@ class DiamondIndenterGenerator(object):
                         
                         # skip if below tip cut layers
                         if (rz_tmp < (slice_x0_tip - rx_tmp - ry_tmp) ):
+                            continue
+                        
+                        # x corner slice, skip if above slice plane
+                        if (rx_tmp > (corner_slice_x0 + ry_tmp + rz_tmp) ):
+                            continue
+                        
+                        # y corner slice, skip if above slice plane
+                        if (ry_tmp > (corner_slice_x0 + rx_tmp + rz_tmp) ):
+                            continue
+                        
+                        # z corner slice, skip if above slice plane
+                        if (rz_tmp > (corner_slice_x0 + rx_tmp + ry_tmp) ):
                             continue
                         
                         # skip edge atoms
@@ -250,14 +268,22 @@ class DiamondIndenterGenerator(object):
                         #theta = -0.955316618124509 # -math.acos(1 / math.sqrt(3))
                         #v = np.dot(self.rotation_matrix(axis,theta), v)
                         
+                        axis = [1,0,0]
+                        theta = 0.785398163397448
+                        v = np.dot(self.rotation_matrix(axis,theta), v)
+                        
+                        axis = [0,1,0]
+                        theta = -0.615479709
+                        v = np.dot(self.rotation_matrix(axis,theta), v)
+                        
                         rx_tmp = v[0]
                         ry_tmp = v[1]
                         rz_tmp = v[2]
                         
                         # Translate to given tip position
-                        #rx_tmp = rx_tmp + tipposx
-                        #ry_tmp = ry_tmp + tipposy
-                        #rz_tmp = rz_tmp + tipposz
+                        rx_tmp = rx_tmp + tipposx
+                        ry_tmp = ry_tmp + tipposy
+                        rz_tmp = rz_tmp + tipposz
                         
                         
                         # Save position to lattice structure

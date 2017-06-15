@@ -1234,6 +1234,16 @@ class DiamondIndenterGeneratorForm(GenericLatticeGeneratorForm):
         AtomLayersCutSpin.setToolTip("Set the number of layers of carbon atoms to cut off the tip")
 
         self.formLayout.addRow("Layers cut from tip: ", AtomLayersCutSpin)
+        
+        # Layers to cut from corners
+        AtomLayersCornerCutSpin = QtGui.QSpinBox()
+        AtomLayersCornerCutSpin.setMinimum(0)
+        AtomLayersCornerCutSpin.setMaximum(10000)
+        AtomLayersCornerCutSpin.setValue(self.generatorArgs.CornerSliceLayers)
+        AtomLayersCornerCutSpin.valueChanged.connect(self.AtomLayersCornerCutSpinChanged)
+        AtomLayersCornerCutSpin.setToolTip("Set the number of layers of carbon atoms to cut off the corners")
+
+        self.formLayout.addRow("Layers cut from corners: ", AtomLayersCornerCutSpin)
 
 
         # Lattice constants
@@ -1287,6 +1297,13 @@ class DiamondIndenterGeneratorForm(GenericLatticeGeneratorForm):
 
         """
         self.generatorArgs.TipCutLayers = val
+        
+    def AtomLayersCornerCutSpinChanged(self, val):
+        """
+        Number of atom layers changed
+
+        """
+        self.generatorArgs.CornerSliceLayers = val
 
     def specie1_text_edited(self, text):
         """
