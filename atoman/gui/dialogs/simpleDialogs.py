@@ -960,8 +960,8 @@ class ShiftAtomDialog(QtGui.QDialog):
         self.shiftXSpin.setSingleStep(1)
         self.shiftXSpin.setValue(0)
         self.shiftXSpin.setToolTip("Distance to shift the atom in the x direction")
-        if not pbc[0]:
-            self.shiftXSpin.setEnabled(False)
+        #if not pbc[0]:
+        #    self.shiftXSpin.setEnabled(False)
         layout.addRow("Shift in x", self.shiftXSpin)
         
         # y
@@ -971,8 +971,8 @@ class ShiftAtomDialog(QtGui.QDialog):
         self.shiftYSpin.setSingleStep(1)
         self.shiftYSpin.setValue(0)
         self.shiftYSpin.setToolTip("Distance to shift the atom in the y direction")
-        if not pbc[1]:
-            self.shiftYSpin.setEnabled(False)
+        #if not pbc[1]:
+        #    self.shiftYSpin.setEnabled(False)
         layout.addRow("Shift in y", self.shiftYSpin)
         
         # z
@@ -982,8 +982,8 @@ class ShiftAtomDialog(QtGui.QDialog):
         self.shiftZSpin.setSingleStep(1)
         self.shiftZSpin.setValue(0)
         self.shiftZSpin.setToolTip("Distance to shift the atom in the z direction")
-        if not pbc[2]:
-            self.shiftZSpin.setEnabled(False)
+        #if not pbc[2]:
+        #    self.shiftZSpin.setEnabled(False)
         layout.addRow("Shift in z", self.shiftZSpin)
         
         # button box
