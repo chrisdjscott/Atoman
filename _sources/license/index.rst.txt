@@ -1,0 +1,25 @@
+========
+Licenses
+========
+
+Atoman license
+--------------
+
+Atoman is licensed under the :download:`MIT license <license_atoman.txt>`
+
+Dependencies
+------------
+
+.. toctree::
+   :maxdepth: 1
+
+   license_numpy
+   license_scipy
+   license_matplotlib
+   license_pyside
+   license_vtk
+   license_pil
+   license_pyhull
+   license_qhull
+   license_voro
+   license_oxygen

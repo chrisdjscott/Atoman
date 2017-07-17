@@ -1,0 +1,371 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Filter list options &mdash; Atoman 170308+0.g5ca03f7.dirty documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Atoman 170308+0.g5ca03f7.dirty documentation" href="../../index.html"/>
+        <link rel="up" title="Analysis" href="index.html"/>
+        <link rel="next" title="Output" href="../output/index.html"/>
+        <link rel="prev" title="Voronoi volume" href="filters/voronoiVolume.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Atoman
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                170308+0.g5ca03f7.dirty
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Usage</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../input/index.html">Input</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Analysis</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="filters/acna.html">Adaptive common neighbour analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/atomID.html">Atom ID</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/bondOrder.html">Bond order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/bubbles.html">Bubbles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/charge.html">Charge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/cluster.html">Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/coordinationNumber.html">Coordination number</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/cropBox.html">Crop box</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/cropSphere.html">Crop sphere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/displacement.html">Displacement</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/pointDefects.html">Point defects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/slice.html">Slice</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/slip.html">Slip</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/species.html">Species</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/voronoiNeighbours.html">Voronoi neighbours</a></li>
+<li class="toctree-l3"><a class="reference internal" href="filters/voronoiVolume.html">Voronoi volume</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Filter list options</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#actors-options">Actors options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bonds-options">Bonds options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#colouring-options">Colouring options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#display-options">Display options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#trace-options">Trace options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#vectors-options">Vectors options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#voronoi-options">Voronoi options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../output/index.html">Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../preferences.html">Preferences</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license/index.html">Licenses</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Atoman</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Usage</a> &raquo;</li>
+        
+          <li><a href="index.html">Analysis</a> &raquo;</li>
+        
+      <li>Filter list options</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/usage/analysis/filterListOptions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="filter-list-options">
+<h1>Filter list options<a class="headerlink" href="#filter-list-options" title="Permalink to this headline">¶</a></h1>
+<p>Each filter list has options that influence the calculation of properties and/or displaying the
+result.</p>
+<span class="target" id="module-atoman.gui.filterListOptions.actorsOptions"></span><div class="section" id="actors-options">
+<h2>Actors options<a class="headerlink" href="#actors-options" title="Permalink to this headline">¶</a></h2>
+<p>It is possible to set display options on the different groups of actors
+that are created, for example the atoms actor or bonds actor.</p>
+<p>Work in progress…</p>
+</div>
+<span class="target" id="module-atoman.gui.filterListOptions.bondsOptions"></span><div class="section" id="bonds-options">
+<h2>Bonds options<a class="headerlink" href="#bonds-options" title="Permalink to this headline">¶</a></h2>
+<p>Selecting “Draw bonds” will result in bonds being drawn between visible
+atoms from this filter list. You must also select the bonds you want to
+draw from the list (eg. “Pu-Pu” or “Pu-Ga”).</p>
+<p>The “Bond thickness” settings determine the size of the bonds when they are
+rendered.  “VTK” is the onscreen rendering while “POV” is used during
+POV-Ray rendering.</p>
+<p>The “Number of sides” settings determines how many sides make up the tube
+used to render the bond.  A higher setting will look better but will be
+much slower to render and interact with.</p>
+</div>
+<span class="target" id="module-atoman.gui.filterListOptions.colouringOptions"></span><div class="section" id="colouring-options">
+<h2>Colouring options<a class="headerlink" href="#colouring-options" title="Permalink to this headline">¶</a></h2>
+<p>By default the following colouring options are available:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>Species</strong>: colour by atom species</li>
+<li><strong>Height</strong>: colour by the x, y or z coordinate</li>
+<li><strong>Solid colour</strong>: colour all atoms in the filter list by the selected
+colour</li>
+<li><strong>Atom property</strong>: colour by on of the available atom properties:
+“Kinetic energy”, “Potential energy” or “Charge”</li>
+</ul>
+</div></blockquote>
+<p>If you add filters/calculators that calculate scalar properties of the
+system, for example “Displacement” or “Bond order”, then there will also
+be an option to colour by these scalar values (you must “Apply lists”
+after adding these calculators before they appear in the combo box).</p>
+<p>There are options to set the min/max values for colouring; and option to
+set these min/max values to the range of the chosen scalar and and option
+to set the text that appears on the scalar bar.</p>
+</div>
+<span class="target" id="module-atoman.gui.filterListOptions.displayOptions"></span><div class="section" id="display-options">
+<h2>Display options<a class="headerlink" href="#display-options" title="Permalink to this headline">¶</a></h2>
+<p>Display options for a filter list.</p>
+<ul class="simple">
+<li>“Atom size scale factor” scales the radii of the atoms by the selected amount</li>
+<li>The “Sphere resolution” settings determine how the atoms (spheres) are drawn.
+There are three defaults: “low”, “medium” and “high, or you can enter the 
+settings manually.  In the formula “N” is the number of visible spheres.</li>
+</ul>
+</div>
+<span class="target" id="module-atoman.gui.filterListOptions.traceOptions"></span><div class="section" id="trace-options">
+<h2>Trace options<a class="headerlink" href="#trace-options" title="Permalink to this headline">¶</a></h2>
+<p>This feature is currently in development…</p>
+<p>The trace options settings allow you to track the movement of the visible 
+atoms within the filter list.  This will calculate the displacement of all
+visible atoms and draw a tube/bond from their initial locations to their
+current positions.</p>
+<ul class="simple">
+<li>The “Bond thickness” option specifies the thickness of the bond during 
+onscreen rendering (“VTK”) or offline/POV-Ray rendering (“POV”)</li>
+<li>The “Number of sides” option determines how many sides make up the tube
+used to render the bond.  A higher setting will look better but will be 
+much slower to render and interact with.</li>
+</ul>
+</div>
+<span class="target" id="module-atoman.gui.filterListOptions.vectorsOptions"></span><div class="section" id="vectors-options">
+<h2>Vectors options<a class="headerlink" href="#vectors-options" title="Permalink to this headline">¶</a></h2>
+<p>Vectors display options for a filter list.</p>
+<ul class="simple">
+<li>Vectors that have been loaded onto the current input state are shown in
+the list. If one of the options is checked the vectors will be displayed
+by drawing arrows for each of the visible atoms. The size of the arrows
+is calculated from the magnitude of that atoms component.</li>
+<li>Vectors will be scaled by “Scale vector” before being rendered.</li>
+<li>“Vector resolution” sets the resolution of the arrows cone and shaft.</li>
+</ul>
+</div>
+<span class="target" id="module-atoman.gui.filterListOptions.voronoiOptions"><span id="voronoi-options-label"></span></span><div class="section" id="voronoi-options">
+<h2>Voronoi options<a class="headerlink" href="#voronoi-options" title="Permalink to this headline">¶</a></h2>
+<p>Voronoi tessellation computations are carried out using <a class="reference external" href="http://math.lbl.gov/voro++/">Voro++</a>. A Python extension 
+was written to provide direct access to Voro++ from the Python code.</p>
+<ul class="simple">
+<li>Ticking “Display Voronoi cells” will render the Voronoi cells around all visible
+atoms.</li>
+<li>Ticking “Use radii” will perform a radical Voronoi tessellation (or Laguerre 
+tessellation). More information can be found on the <a class="reference external" href="http://math.lbl.gov/voro++/about.html">Voro++ website</a>.</li>
+<li>“Face area threshold” is used when determining the number of Voronoi 
+neighbours. This is done by counting the number of faces of the Voronoi
+cell. Faces with an area less than “Face area threshold” are ignored in
+this calculation. A value of 0.1 seems to work well for most systems.</li>
+<li>There is also an option to save the volumes and number of neighbours to a file
+during the computation.</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../output/index.html" class="btn btn-neutral float-right" title="Output" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="filters/voronoiVolume.html" class="btn btn-neutral" title="Voronoi volume" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Chris Scott.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'170308+0.g5ca03f7.dirty',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

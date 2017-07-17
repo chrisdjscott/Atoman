@@ -1,0 +1,858 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Changelog &mdash; Atoman 170308+0.g5ca03f7.dirty documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Atoman 170308+0.g5ca03f7.dirty documentation" href="index.html"/>
+        <link rel="next" title="Licenses" href="license/index.html"/>
+        <link rel="prev" title="Preferences" href="usage/preferences.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Atoman
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                170308+0.g5ca03f7.dirty
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage/index.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license/index.html">Licenses</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Atoman</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Changelog</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/changelog.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<p><strong>170308</strong></p>
+<ul class="simple">
+<li>Fix bug when picking atoms</li>
+</ul>
+<p><strong>170201</strong></p>
+<ul class="simple">
+<li>Update dependencies in README.md</li>
+<li>Fix bug when writing partial lattice (species were not correct)</li>
+</ul>
+<p><strong>161205</strong></p>
+<ul class="simple">
+<li>Add option to set the number of labels on the scalar bar</li>
+<li>Add option to set the format of the labels on the scalar bar</li>
+<li>Increase number of decimal places in spin boxes on colouring options form</li>
+</ul>
+<p><strong>161119</strong></p>
+<ul class="simple">
+<li>Fix bug when scalar bar is shown and changing the background colour</li>
+</ul>
+<p><strong>160704</strong></p>
+<ul class="simple">
+<li>Fix bug when determining if atoms belong within a convex hull</li>
+<li>Fix use of numpy.where</li>
+<li>Add overrides for all mouse events to ensure picking works properly</li>
+<li>Version printed properly on about screen from pyinstaller app</li>
+<li>Fix bug when drawBonds is selected but no bonds are checked</li>
+</ul>
+<p><strong>160409</strong></p>
+<ul class="simple">
+<li>Add spaghetti rendering to point defects filter</li>
+</ul>
+<p><strong>160314</strong></p>
+<ul class="simple">
+<li>Add option to clusters filter to display all atoms in/out-side the convex hulls</li>
+</ul>
+<p><strong>160301</strong></p>
+<ul class="simple">
+<li>Fix bug where checking drift compensation did nothing</li>
+<li>Interstitial count displayed on screen now includes split interstitials</li>
+</ul>
+<p><strong>160227</strong></p>
+<ul class="simple">
+<li>Rewrite of filtering and rendering (easier to call from scripts)</li>
+<li>Add support for Python 3 (with VTK 7.0)</li>
+<li>Add more tests</li>
+<li>Add versioneer for reporting the version (section added to setup.cfg.example)</li>
+</ul>
+<p><strong>151120</strong></p>
+<ul class="simple">
+<li>Add entry point to replace cdjsvis.py script (run as ‘python -m atoman’)</li>
+<li>Rearrange structure of subpackages</li>
+<li>Remove dependency on GSL</li>
+<li>Add lots more tests</li>
+<li>Set numpy deprecated api version</li>
+<li>Fix bug in defects filter regarding filtering by species</li>
+<li>Many other changes</li>
+</ul>
+<p><strong>151002</strong></p>
+<ul class="simple">
+<li>Rewrite filters to be objects, with settings objects</li>
+<li>Rewrite filter settings forms to use new settings objects</li>
+<li>Add documentation and tests for many filters</li>
+<li>Update other parts of the documentation</li>
+<li>Extra options for Slip filter</li>
+</ul>
+<p><strong>150828</strong></p>
+<ul class="simple">
+<li>Fix bug that could have caused a segfault in some C libraries</li>
+<li>Add option to generate H.264 mp4 movies (default)</li>
+</ul>
+<p><strong>150811</strong></p>
+<ul class="simple">
+<li>Add basic slip filter</li>
+<li>Fix bug that might prevent scalar bar being displayed</li>
+<li>Orthogonalise view up vector after rotating lattice</li>
+</ul>
+<p><strong>150616</strong></p>
+<ul class="simple">
+<li>Fix bug when loading FAILSAFE files: make sure all scalar/vector data is stored as float (for now)</li>
+</ul>
+<p><strong>150609</strong></p>
+<ul class="simple">
+<li>Fix bug preventing split interstitials from being displayed</li>
+</ul>
+<p><strong>150527</strong></p>
+<ul class="simple">
+<li>Fix bug preventing displaying file dialog when loading scalar/vector data.</li>
+</ul>
+<p><strong>150420.1</strong></p>
+<ul class="simple">
+<li>Fix bug regarding split interstitials and filtering defects by species</li>
+</ul>
+<p><strong>150420</strong></p>
+<ul class="simple">
+<li>Disable multiple reference site check in defects filter</li>
+<li>Set the default PBCs for newly loaded systems</li>
+<li>Fix bug preventing lattice attributes being displayed</li>
+</ul>
+<p><strong>150312</strong></p>
+<ul class="simple">
+<li>Improve split interstitial detection to work in clusters of interstitials too</li>
+<li>Improve Atom ID filter to accept ranges and lists of atom IDs</li>
+<li>Improve ACNA refinement of point defects to work in clusters of defects too</li>
+<li>Colouring options are available as soon as a filter is added</li>
+<li>Change default oxygen radius to 0.66</li>
+<li>Fix bug when rendering bonds and colouring by charge</li>
+</ul>
+<p><strong>150303</strong></p>
+<ul class="simple">
+<li>Handle case where file name contains colons (was wrongly detecting them as SFTP files)</li>
+</ul>
+<p><strong>150226</strong></p>
+<ul class="simple">
+<li>Revert change regarding displaying antisites</li>
+<li>Fix bug preventing “Solid colour” from working</li>
+<li>“Crop box” filter works with “Point defects” filter</li>
+<li>“Slice” filter works with “Point defects” filter</li>
+</ul>
+<p><strong>150223</strong></p>
+<ul class="simple">
+<li>Fix bug that could have prevented some bonds being displayed</li>
+<li>No longer require qresources file; doc and icons are added as data instead</li>
+</ul>
+<p><strong>150211</strong></p>
+<ul class="simple">
+<li>Fix bug preventing Lattice being reloaded</li>
+</ul>
+<p><strong>150206</strong></p>
+<ul class="simple">
+<li>Better error handling during type conversion when reading lattice files</li>
+<li>Add option to shift the lattice in periodic directions</li>
+<li>Add dialog to display information about a loaded system</li>
+</ul>
+<p><strong>150204.1</strong></p>
+<ul class="simple">
+<li>Fix bug when colouring by lattice scalars</li>
+</ul>
+<p><strong>150204</strong></p>
+<ul class="simple">
+<li>Better error handling from C code (raise exception instead of exiting)</li>
+<li>Better normalisation of RDF</li>
+<li>Fix bug when picking split interstitials</li>
+<li>Improve “Replicate cell” option</li>
+<li>Display Exception if running filters fails</li>
+</ul>
+<p><strong>150126</strong></p>
+<ul class="simple">
+<li>Added generic file input module (much easier to add new lattice file formats)</li>
+<li>Add progress dialog to status bar</li>
+<li>Show progress when unzipping and reading files</li>
+<li>Show progress when copying file via SFTP browser</li>
+<li>Refresh plot options when running a single list</li>
+<li>Systems dialog moved to tab in toolbar</li>
+<li>Add option to change ambient, specular, specular power on actors</li>
+<li>Replace most icons with icons from the Oxygen icon theme</li>
+</ul>
+<p><strong>150114</strong></p>
+<ul class="simple">
+<li>Try and autodetect the number format for the sequencer</li>
+<li>Add option to normalise a vector before rendering/scaling it</li>
+<li>Fix min value when specifying bin width in plot histogram</li>
+<li>All scalar/vector data shown on atom info windows</li>
+<li>Improved scalar data handling on Lattice</li>
+<li>Ability to read LBOMD xyz files with velocities</li>
+</ul>
+<p><strong>v150105</strong></p>
+<ul class="simple">
+<li>If max index on sequencer is less than min index we auto detect the max</li>
+<li>SFTP browser and sequencer work with zipped files</li>
+</ul>
+<p><strong>v141212</strong></p>
+<ul class="simple">
+<li>Close info windows when clearing a filter list</li>
+<li>Compatible with VTK 5 and 6</li>
+<li>Add ability to load scalar/vector data from a file to a lattice object</li>
+<li>Loading vector data works with the sequencer if the files are named properly</li>
+<li>Add option to render vector data (filter list options)</li>
+<li>Add fine grained actor visibility options to filer lists</li>
+<li>One actor created for all atoms, not per specie (faster when there are multiple species)</li>
+<li>Add option to replicate the cell in periodic directions</li>
+<li>Add SiC 4H (diamond) lattice generator</li>
+<li>Add axes that are always displayed and can be moved around the screen</li>
+</ul>
+<p><strong>v141202</strong></p>
+<ul class="simple">
+<li>Fix bug preventing rendering defects</li>
+<li>Add ability to load custom scalar values from a file for a Lattice</li>
+</ul>
+<p><strong>v141127</strong></p>
+<ul class="simple">
+<li>Display error message if max bonds per atom exceeded</li>
+<li>Use QFormLayout for many forms/dialogs</li>
+<li>FCC/BCC/Pu-Ga lattice generators written in C to improve performance</li>
+<li>Fix bug when reading animation reference format file - species could be wrong if the atoms in the file were not ordered by atom ID</li>
+</ul>
+<p><strong>v141113</strong></p>
+<ul class="simple">
+<li>Histogram min/max are always a multiple of the bin width</li>
+<li>Do not show progress dialog when running filter lists</li>
+<li>Add option to disable mouse wheel events in the VTK window (on by default)</li>
+</ul>
+<p><strong>v141031</strong></p>
+<ul class="simple">
+<li>Make paramiko optional</li>
+<li>Selected ACNA value from point defect filter was not being used</li>
+</ul>
+<p><strong>v141021</strong></p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Rewrite on-screen info dialog</dt>
+<dd><ul class="first last">
+<li>Change layout</li>
+<li>Add option to customise the text</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>Fix bug when clicking defect (introduced in last version)</li>
+<li>Add ability to render two render windows side by side (same pipeline only for now)</li>
+<li>Can now be installed using ‘python setup.py install’ like any other Python package</li>
+</ul>
+<p><strong>v141015</strong></p>
+<ul class="simple">
+<li>Fix bug in defect filter when using ACNA to refine results (seg fault)</li>
+<li>Make pyhull an optional dependency</li>
+<li>Only add specie options for current species (point defect/specie filters)</li>
+</ul>
+<p><strong>v141013</strong></p>
+<ul class="simple">
+<li>Add option to plot distribution of cluster volumes, if they have been calculated</li>
+<li>Fix plotting distribution of defect clusters</li>
+<li>Make Voronoi volume method the default way to calculate cluster volumes</li>
+<li>Show mean, standard deviation and standard error on histogram plot forms</li>
+</ul>
+<p><strong>v141010</strong></p>
+<ul class="simple">
+<li>Add neighbour info window - shows information (separation, etc) about an atoms neighbours</li>
+<li>Display number of clusters on screen (if there are any clusters)</li>
+<li>Add option to plot the cluster size distribution</li>
+</ul>
+<p><strong>v141008</strong></p>
+<ul class="simple">
+<li>Add option to set how many OpenMP threads will be used in C extensions</li>
+<li>Add face area threshold option when computing Voronoi neighbours</li>
+</ul>
+<p><strong>v141003</strong></p>
+<ul class="simple">
+<li>When using Voronoi volumes to compute volume of defect cluster, sum volumes of vacancies as well as interstitials/antisites</li>
+<li>Add option to trace the positions of atoms in a filter list</li>
+<li>Use list widget for bonds options (better when lots of different specie types)</li>
+<li>Only add bond options for species present in the current lattice</li>
+</ul>
+<p><strong>v140929</strong></p>
+<ul class="simple">
+<li>Show progress dialog when applying lists and calculating RDF</li>
+<li>Display error if try to compute RDF out to distance greater than half the cell dimensions</li>
+<li>Add option to use ACNA filter within point defects filter, to refine defect detection</li>
+<li>Write C extension interface to Voro++ =&gt; big improvement in speed of Voronoi calculations</li>
+<li>Parallelised some sections of C extensions using OpenMP (bond order, RDF, ACNA)</li>
+</ul>
+<p><strong>v140922</strong></p>
+<ul class="simple">
+<li>Add option to draw displacement vector showing where displaced atoms have moved from</li>
+<li>Use spherical harmonics function from GSL library in bond order filter</li>
+<li>Add adaptive common neighbour analysis</li>
+<li>Convert all ctypes C libraries to C extensions</li>
+<li>Add option to write csv file containing plot data</li>
+</ul>
+<p><strong>v140605</strong></p>
+<ul class="simple">
+<li>Fix bug to do with writing POV-Ray atoms/running Ffmpeg on thread pool</li>
+</ul>
+<p><strong>v140604</strong></p>
+<ul class="simple">
+<li>Fix bug when rendering bonds and colouring by scalar value</li>
+</ul>
+<p><strong>v140603</strong></p>
+<ul class="simple">
+<li>Element editor lets you change any elements settings, not just elements in loaded systems</li>
+<li>Add option to do a rotation after sequencer has finished</li>
+<li>Add option to toggle between parallel/perspective projection</li>
+<li>Add option to write logging output to file</li>
+</ul>
+<p><strong>v140529</strong></p>
+<ul class="simple">
+<li>Add dialog for editing bonds settings with ability to add new bond pairs</li>
+<li>Add option to attempt to eliminate flicker across PBCs when running sequencer</li>
+</ul>
+<p><strong>v140516</strong></p>
+<ul class="simple">
+<li>Enable multiple item selection in SFTP browser</li>
+</ul>
+<p><strong>v140515</strong></p>
+<ul class="simple">
+<li>FFmpeg runs in thread pool</li>
+<li>Defect clusters work with split interstitials</li>
+<li>Calculating volumes of defect clusters works</li>
+<li>Option to compute defect cluster volume using convex hull volume or sum of Voronoi volumes</li>
+<li>If “Voronoi volume” calculator is selected, report the sum of visible atom’s volumes</li>
+<li>Remove some buttons from filter list (move up/down replaced by drag/drop; add/remove replaced by combo/right click)</li>
+<li>Add cluster info windows and highlight atoms that are in the selected cluster</li>
+<li>Atoms/defects that belong to a cluster have a link to the cluster info dialog on their info windows</li>
+<li>Add option to all info windows to change the colour of the highlighters</li>
+</ul>
+<p><strong>v140513</strong></p>
+<ul class="simple">
+<li>Add atom index filter</li>
+<li>POV-Ray call runs in separate thread</li>
+<li>Add “KMC step” option to on screen info</li>
+<li><dl class="first docutils">
+<dt>Add SFTP browser</dt>
+<dd><ul class="first last">
+<li>Browse and load files on SFTP server</li>
+<li>Sequencer works with files loaded via SFTP</li>
+<li>Also looks for Roulette files and copies them too if available</li>
+<li>Only available on “AUTO DETECT” reader</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>Append timestamp to ‘rotator’ and ‘sequencer’ directories</li>
+</ul>
+<p><strong>v140417</strong></p>
+<ul class="simple">
+<li>After running sequencer change back to original settings on systems dialog</li>
+<li>Fix bug in renderBonds/Voronoi introduced when adding multiple scalars</li>
+<li>Fix bug: don’t try to add scalar plot option if there are no visible atoms</li>
+<li>On filter settings forms use group box with check button to enable filtering</li>
+<li>Add option to “Bond order” calculator to filter by Q4 and/or Q6</li>
+</ul>
+<p><strong>v140415</strong></p>
+<ul class="simple">
+<li>Add drift compensation to “point defects” and “displacement” filters</li>
+<li>Fix bug in picker: ignore filter lists that are not visible</li>
+</ul>
+<p><strong>v140407</strong></p>
+<ul class="simple">
+<li>Added app icon (icns file)</li>
+<li>Added toolbar to help page</li>
+<li>Replaced Q4 filter with “bond order” filter/property calculator, which calculates Q4 and Q6 parameters</li>
+<li>Added some documentation for the “bond order” filter</li>
+</ul>
+<p><strong>v140401</strong></p>
+<ul class="simple">
+<li>Fix bug in window positioning</li>
+<li>Add histogram plots for atom properties (PE, KE, charge)</li>
+<li>Option to specify bin width instead of number of bins for histogram plots</li>
+</ul>
+<p><strong>v140331</strong></p>
+<ul class="simple">
+<li>Add ability to store multiple scalar values</li>
+<li>Rename ‘filter list’ to ‘property/filter list’</li>
+<li>Add context menu to items in property/filter lists with options to edit settings and remove from list</li>
+<li>Items in property/filter lists can be reordered by dragging</li>
+<li>Added quick add combo box to property/filter list (quicker than adding via dialog)</li>
+<li>When selecting atom property from colouring options scalar bar text is automatically determined</li>
+<li>Add option to plot histogram of scalar values (to Plot tab in output dialog)</li>
+<li>Fix not being able to use native file dialog</li>
+</ul>
+<p><strong>v140328</strong></p>
+<ul class="simple">
+<li>Add sphere resolution settings to “Display options” on “Filter list”</li>
+<li>Increase default sphere resolution</li>
+<li>Atom indexes taken from input file instead of using internal index (i.e. now they normally start from 1)</li>
+<li>Better handling of small files (&lt; 5 atoms) in Auto-Detect reader</li>
+<li>Change version numbering to date</li>
+</ul>
+<p><strong>v0.12.2</strong></p>
+<ul class="simple">
+<li>Fix bug when generating lattice (addAtom)</li>
+</ul>
+<p><strong>v0.12.1</strong></p>
+<ul class="simple">
+<li>Fix bug in element editor</li>
+</ul>
+<p><strong>v0.12</strong></p>
+<ul class="simple">
+<li>Improve render atoms speed (rewrite some bits in C)</li>
+<li>Add title to Pipeline Form</li>
+<li>POV-Ray atoms file is written in separate thread (unless in Sequencer)</li>
+<li>Add POV-Ray cell frame radius option in Preferences</li>
+<li>Preferences option to automatically run filter list when less than specified number of atoms in lattice</li>
+</ul>
+<p><strong>v0.11.1</strong></p>
+<ul class="simple">
+<li>Fix bug: AutoDetectReaderForm has no displayWarning method; use one from mainWindow instead</li>
+</ul>
+<p><strong>v0.11</strong></p>
+<ul class="simple">
+<li>Add context menu to systems list widget</li>
+<li>Add display name to system (shown in pipeline combo)</li>
+<li>Add ability to duplicate loaded system</li>
+<li>Add BCC lattice generator</li>
+<li>Fix picker bug: include pick pos when setting max/min pos for spatial decomposition</li>
+<li>Add rock salt (MgO) lattice generator</li>
+<li>Add fluorite lattice generator (HfO2, PuH2, …)</li>
+<li>Reset counters (number visible) when removing actors from filter list</li>
+<li>Automatically run filter lists on systems with less than 5000 atoms</li>
+<li>Add option to reload a system (if you edit a lattice file that has already been loaded)</li>
+</ul>
+<p><strong>v0.10.1</strong></p>
+<ul class="simple">
+<li>Add ‘invert selection’ option to crop filter</li>
+</ul>
+<p><strong>v0.10</strong></p>
+<ul class="simple">
+<li>New documentation<ul>
+<li>Sphinx documentation</li>
+<li>Displayed in QtWebKit browser</li>
+</ul>
+</li>
+</ul>
+<p><strong>v0.9.4</strong></p>
+<ul class="simple">
+<li>Ignore PBCs when picking atoms (was resulting in atoms on opposite boundary being picked)</li>
+<li>Added Miao Yu’s changes to atoms/bonds data files</li>
+</ul>
+<p><strong>v0.9.3</strong></p>
+<ul class="simple">
+<li>Only create one info dialog per object even if clicked multiple times</li>
+<li>Object highlighting rewritten to work better with multiple renderer windows/pipelines</li>
+<li>Info windows close automatically when no longer relevant</li>
+</ul>
+<p><strong>v0.9.2</strong></p>
+<ul class="simple">
+<li>Atom/defect info windows open near cursor but not over the atom/defect</li>
+<li>Auto detect input file format</li>
+<li>New logging mechanism, much better logging to stream and console window</li>
+<li>Option to save console window output to file</li>
+<li>Option to set console window logging level (DEBUG, INFO, etc) in preferences</li>
+<li>Option to resize main window to default size</li>
+</ul>
+<p><strong>v0.9.1</strong></p>
+<ul class="simple">
+<li>Added Q4 filter (untested!)</li>
+<li>Adding highlighting picked defects</li>
+<li>Highlighting works much better</li>
+</ul>
+<p><strong>v0.9</strong></p>
+<ul class="simple">
+<li>Added ability to load multiple files at once from file dialog</li>
+<li>Added ability to remove files that have already been loaded</li>
+<li>Multiple files can be selected for removal at once</li>
+<li>Fixed bug in picker, now works much better</li>
+<li>Picker now works by single press not double click</li>
+<li>Fix separate bug to do with picking antisites</li>
+<li>Added option to rotate camera around lattice (note: up/down not working well)</li>
+<li>Cannot load the same file more than once</li>
+</ul>
+<p><strong>v0.8.1</strong></p>
+<ul class="simple">
+<li>Add ‘flv’ container option when creating movie (make it default too)</li>
+<li>flv can be embedded in pdf with LaTeX media9 package</li>
+<li>Movied ffmpeg container setting to output dialog from preference dialog</li>
+</ul>
+<p><strong>v0.8</strong></p>
+<ul class="simple">
+<li>Added Voronoi tessellation using Voro++</li>
+<li>Voronoi cells can be drawn around visible atoms</li>
+<li>Can filter by Voronoi volume and number of neighbours (num faces on Voronoi cell)</li>
+<li>Can write out Voronoi volumes and num neighbours to file</li>
+<li>Currently only works well with PBCs</li>
+<li>Voronoi tessellation only recalculated if Voronoi settings have changed</li>
+<li>Option added to cluster filter to calculate volumes of clusters by summing Voronoi volumes of the atoms</li>
+</ul>
+<p><strong>v0.7.5</strong></p>
+<ul class="simple">
+<li>Colouring options work with defect filter</li>
+<li>Moved movie framerate/filename options onto sequencer/rotate pages</li>
+<li>Add camera settings dialog for manually inputting position, etc.</li>
+</ul>
+<p><strong>v0.7.4</strong></p>
+<ul class="simple">
+<li>Bug fix: read ref not setting refState on XYZ reader properly</li>
+<li>Got rid of annoying invalid drawable warning</li>
+<li>Antisite occupying atoms rendered using their pos, not ref pos of antisite</li>
+</ul>
+<p><strong>v0.7.3</strong></p>
+<ul class="simple">
+<li>Updated atoms/bonds files (Kenny’s changes)</li>
+<li>Scalars array modified when running subsequent filters</li>
+<li>Option to change working directory</li>
+<li>Bonds options now work in additional pipelines</li>
+<li>Sequencer fixed when using xyz files</li>
+<li>Sequencer works with filename with numbers in the prefix (as long as not at the end)</li>
+<li>Fix bug in crop sphere settings (set to centre of lattice button)</li>
+</ul>
+<p><strong>v0.7.2</strong></p>
+<ul class="simple">
+<li>Update parsing of pyhull output to get volume/facet area</li>
+<li>Update to latest version of pyhull</li>
+</ul>
+<p><strong>v0.7.1</strong></p>
+<ul class="simple">
+<li>Element editor now works with changes</li>
+</ul>
+<p><strong>v0.7</strong></p>
+<ul class="simple">
+<li>Add ability to generate lattices (FCC and Pu-Ga so far)</li>
+<li>Add ability to load multiple files</li>
+<li>Can have different ref/input lattices on different pipelines; easy to switch between</li>
+<li>Option to write full lattice or just visible atoms</li>
+<li>Make scalar bar text white when background is black</li>
+<li>PBC settings is an attribute of pipeline</li>
+<li>Highlight atom when it is double clicked (pretty basic at the moment)</li>
+<li>Add antialiasing options to renderer window</li>
+</ul>
+<p><strong>v0.6.1</strong></p>
+<ul class="simple">
+<li>Put quotes round filenames before unzipping</li>
+</ul>
+<p><strong>v0.6</strong></p>
+<ul class="simple">
+<li>Convert to PySide (from PyQt4)</li>
+<li>Better detection of errors during file input</li>
+<li>Preferences option to specify paths to POV-Ray/Ffmpeg (persistent)</li>
+<li>Option to have black or white background</li>
+<li>Bug fix in read lbomd.IN method</li>
+</ul>
+<p><strong>v0.5.4</strong></p>
+<ul class="simple">
+<li>Bug fix: render split interstitials when using POV-Ray</li>
+<li>Add basic splash screen</li>
+</ul>
+<p><strong>v0.5.3</strong></p>
+<ul class="simple">
+<li>Fix bug when reading lbomd.IN file</li>
+<li>Able to specify custom povray/ffmpeg paths/executables</li>
+<li>Added “black background” option</li>
+<li>Added scale atom sizes option to display options on filter list</li>
+</ul>
+<p><strong>v0.5.2</strong></p>
+<ul class="simple">
+<li>Fix bug in colouring of onAntisite atoms when ref/input specie lists differ</li>
+</ul>
+<p><strong>v0.5.1</strong></p>
+<ul class="simple">
+<li>Store mainWindow size and working directory on exit and reload on startup</li>
+<li>Add option to exit message box to clear global settings</li>
+<li>Add progress bar and cancel button to rotator</li>
+<li>Rotator reinits VTK window at every step (looks better)</li>
+<li>Rotator always returns to original camera (even if cancelled/failed)</li>
+</ul>
+<p><strong>v0.5</strong></p>
+<ul class="simple">
+<li>Implement MDI with multiple render windows</li>
+<li>Ability to have multiple analysis (filter) pipelines</li>
+<li>Always look for roulette file (not just in sequencer)</li>
+<li>Added coordination number filter</li>
+<li>Tidied up menus and toolbars</li>
+<li>Convert C libraries from SWIG to ctypes</li>
+</ul>
+<p><strong>v0.4.2</strong></p>
+<ul class="simple">
+<li>Added option to draw bonds between visible atoms</li>
+<li>Added preferences dialog for POV-Ray, ffmpeg, matplotlib, etc options</li>
+<li>Fix POV-Ray rendering in sequencer/rotate</li>
+<li>Added vacancy display options to defect filter</li>
+</ul>
+<p><strong>v0.4.1</strong></p>
+<ul class="simple">
+<li>Added RDF plotter</li>
+</ul>
+<p><strong>v0.4</strong></p>
+<ul class="simple">
+<li>Rewritten file input so that reference and inputs can be different types (eg. lattice reference and xyz input)</li>
+<li>Use pyhull module to interface with qhull instead of subprocess calls</li>
+<li>Can have the same filter multiple times in the same filter list</li>
+<li>Sequencer output files are always numbered 0,1,2,… regardless of start or increment</li>
+<li>One slice plane per slice filter</li>
+</ul>
+<p><strong>v0.3.3</strong></p>
+<ul class="simple">
+<li>Version number automatically determined using “git describe”</li>
+<li>Text position dialogs made modal with “Ok” button</li>
+<li>If a filter list is cleared or a filter removed its settings window is closed</li>
+<li>Use pyhull module to interface with qhull instead of subprocess calls</li>
+<li>Added slice filter</li>
+</ul>
+<p><strong>v0.3.2</strong></p>
+<ul class="simple">
+<li>Added option to show “Energy barrier” on screen (if Roulette file available)</li>
+</ul>
+<p><strong>v0.3.1</strong></p>
+<ul class="simple">
+<li>Fix bug in picker</li>
+</ul>
+<p><strong>v0.3</strong></p>
+<ul class="simple">
+<li>Added picker: double clicking atom/defect shows info window about what you just clicked</li>
+<li>Small change to colouring options<ul>
+<li>PE, KE, Q options are always available</li>
+<li>Displacement (etc) only available if that filter is selected</li>
+</ul>
+</li>
+</ul>
+<p><strong>v0.2</strong></p>
+<ul class="simple">
+<li>Recognise split interstitials (this can be turned on/off)<ul>
+<li>Note the defect cluster filter does not work with this option selected (currently)</li>
+</ul>
+</li>
+<li>Added options to colour by PE, KE, Q, displacement</li>
+<li>Read time from Roulette files during lattice sequencer assuming Roulette file is:<ul>
+<li>in current directory and named like Roulette%d.dat</li>
+<li>in ../Step%d/Roulette.dat</li>
+</ul>
+</li>
+</ul>
+<p><strong>v0.1</strong></p>
+<ul class="simple">
+<li>Fix element editor never giving focus back</li>
+<li>Added colouring options (height, solid colour)</li>
+<li>Added scalar bar</li>
+<li>Added on-screen information<ul>
+<li>Including atom count, visible count, defect count, (defect) specie count, time</li>
+<li>Optionally place in top left or top right corner</li>
+</ul>
+</li>
+<li>Added option to overlay on-screen information and scalar bar onto POV-Ray image</li>
+</ul>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="license/index.html" class="btn btn-neutral float-right" title="Licenses" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="usage/preferences.html" class="btn btn-neutral" title="Preferences" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Chris Scott.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'170308+0.g5ca03f7.dirty',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

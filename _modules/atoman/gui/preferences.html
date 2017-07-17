@@ -1,0 +1,1291 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>atoman.gui.preferences &mdash; Atoman 170308+0.g5ca03f7.dirty documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Atoman 170308+0.g5ca03f7.dirty documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Atoman
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                170308+0.g5ca03f7.dirty
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage/index.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license/index.html">Licenses</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Atoman</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>atoman.gui.preferences</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for atoman.gui.preferences</h1><div class="highlight"><pre>
+<span></span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Preferences dialog.</span>
+
+<span class="sd">@author: Chris Scott</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span> <span class="k">as</span> <span class="nn">mp</span>
+<span class="kn">import</span> <span class="nn">functools</span>
+
+<span class="kn">from</span> <span class="nn">PySide</span> <span class="k">import</span> <span class="n">QtGui</span><span class="p">,</span> <span class="n">QtCore</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">..visutils.utilities</span> <span class="k">import</span> <span class="n">iconPath</span><span class="p">,</span> <span class="n">resourcePath</span>
+<span class="kn">from</span> <span class="nn">..visutils</span> <span class="k">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_preferences</span>
+<span class="kn">from</span> <span class="nn">six.moves</span> <span class="k">import</span> <span class="nb">range</span>
+<span class="c1"># from ..md import forces</span>
+
+<span class="c1">################################################################################</span>
+
+<span class="k">class</span> <span class="nc">GenericPreferencesSettingsForm</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tab for preference dialog.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GenericPreferencesSettingsForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        
+        <span class="c1"># tab layout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFormLayout</span><span class="p">()</span>
+<span class="c1">#         self.layout = QtGui.QVBoxLayout()</span>
+<span class="c1">#         self.layout.setContentsMargins(0, 0, 0, 0)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        
+    <span class="k">def</span> <span class="nf">newRow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create new row.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        
+        <span class="n">rowLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="n">rowLayout</span><span class="o">.</span><span class="n">setContentsMargins</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">rowLayout</span><span class="o">.</span><span class="n">setAlignment</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignHCenter</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">rowLayout</span>
+    
+    <span class="k">def</span> <span class="nf">addHorizontalDivide</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a horizontal divider to the layout.&quot;&quot;&quot;</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFrame</span><span class="p">()</span>
+        <span class="n">line</span><span class="o">.</span><span class="n">setFrameShape</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QFrame</span><span class="o">.</span><span class="n">HLine</span><span class="p">)</span>
+        <span class="n">line</span><span class="o">.</span><span class="n">setFrameShadow</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QFrame</span><span class="o">.</span><span class="n">Sunken</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="c1">#         self.layout.addStretch(1)</span>
+        <span class="k">pass</span>
+
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="LogFileSettingsForm"><a class="viewcode-back" href="../../../usage/preferences.html#atoman.gui.preferences.LogFileSettingsForm">[docs]</a><span class="k">class</span> <span class="nc">LogFileSettingsForm</span><span class="p">(</span><span class="n">GenericPreferencesSettingsForm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Settings for creating a log file (for debugging).  Options that can be set</span>
+<span class="sd">    on this form are:</span>
+<span class="sd">    </span>
+<span class="sd">    **Create log file**</span>
+<span class="sd">        Create a log file. This setting persists when you close and reopen the</span>
+<span class="sd">        application, so you can get a log file with everything from startup.</span>
+<span class="sd">    </span>
+<span class="sd">    **Log dir**</span>
+<span class="sd">        Directory to place log files into.</span>
+<span class="sd">    </span>
+<span class="sd">    **Level**</span>
+<span class="sd">        The logging level (should be self-explanatory).</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LogFileSettingsForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="o">+</span><span class="s2">&quot;.LogFileSettingsForm&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># settings object</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+        
+        <span class="c1"># default settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">createLogFile</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;logfile/create_log_file&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logDirectory</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;logfile/directory&quot;</span><span class="p">,</span> <span class="s2">&quot;/tmp&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logLevel</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;logfile/level&quot;</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">))</span>
+        
+        <span class="c1"># create log file</span>
+        <span class="n">createCheck</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">(</span><span class="s2">&quot;Create log file&quot;</span><span class="p">)</span>
+        <span class="n">createCheck</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">createLogFile</span><span class="p">)</span>
+        <span class="n">createCheck</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">createToggled</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Create log file&quot;</span><span class="p">,</span> <span class="n">createCheck</span><span class="p">)</span>
+        
+        <span class="c1"># directory button</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logDirButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logDirectory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logDirButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">showLogDirectoryDialog</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logDirButton</span><span class="o">.</span><span class="n">setAutoDefault</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logDirButton</span><span class="o">.</span><span class="n">setDefault</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logDirButton</span><span class="o">.</span><span class="n">setFixedWidth</span><span class="p">(</span><span class="mi">160</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Log directory&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">logDirButton</span><span class="p">)</span>
+        
+        <span class="c1"># logging levels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loggingLevels</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span>
+                              <span class="s2">&quot;ERROR&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span>
+                              <span class="s2">&quot;WARNING&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span>
+                              <span class="s2">&quot;INFO&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                              <span class="s2">&quot;DEBUG&quot;</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">}</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">loggingLevelsSorted</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CRITICAL&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;WARNING&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;INFO&quot;</span><span class="p">,</span>
+                                    <span class="s2">&quot;DEBUG&quot;</span><span class="p">]</span>
+        
+        <span class="c1"># log file level</span>
+        <span class="n">levelCombo</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QComboBox</span><span class="p">()</span>
+        <span class="n">levelCombo</span><span class="o">.</span><span class="n">addItems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loggingLevelsSorted</span><span class="p">)</span>
+        <span class="n">levelIndex</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getLevelIndex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logLevel</span><span class="p">)</span>
+        <span class="n">levelCombo</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">levelIndex</span><span class="p">)</span>
+        <span class="n">levelCombo</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logLevelChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Level&quot;</span><span class="p">,</span> <span class="n">levelCombo</span><span class="p">)</span>
+        
+        <span class="c1"># create handler... (should be on main window!)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">createLogFile</span><span class="p">:</span>
+            <span class="n">logfile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logDirectory</span><span class="p">,</span> <span class="s2">&quot;atoman-</span><span class="si">%s</span><span class="s2">.log&quot;</span> <span class="o">%</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%y%m</span><span class="si">%d</span><span class="s2">-%H%M%S&quot;</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Logging to file: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">,</span> <span class="n">logfile</span><span class="p">)</span>
+            
+            <span class="c1"># handler</span>
+            <span class="n">fh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">logfile</span><span class="p">)</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+            
+            <span class="c1"># formatter</span>
+            <span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="si">%(name)s</span><span class="s2">:</span><span class="si">%(funcName)s</span><span class="s2">():</span><span class="si">%(lineno)d</span><span class="s2">: </span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">fh</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+            
+            <span class="c1"># add to root logger</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
+            
+            <span class="c1"># write version first</span>
+            
+    
+    <span class="k">def</span> <span class="nf">logLevelChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">levelString</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Log level has changed</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loggingLevels</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">levelString</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Log level (file) changed: </span><span class="si">%s</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">levelString</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+        
+        <span class="c1"># change level on handler</span>
+        
+        
+        <span class="c1"># settings object</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+        
+        <span class="c1"># store</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;logfile/level&quot;</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+        
+        
+        
+    
+    <span class="k">def</span> <span class="nf">getLevelIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the level index in the list</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">levelIndex</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loggingLevelsSorted</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">loggingLevels</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="n">level</span><span class="p">:</span>
+                <span class="n">levelIndex</span> <span class="o">=</span> <span class="n">count</span>
+                <span class="k">break</span>
+            
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="k">return</span> <span class="n">levelIndex</span>
+    
+    <span class="k">def</span> <span class="nf">showLogDirectoryDialog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show dialog to choose log dir</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_dir</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getExistingDirectory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Log directory&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">logDirectory</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">new_dir</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">new_dir</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logDirectory</span> <span class="o">=</span> <span class="n">new_dir</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logDirButton</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">new_dir</span><span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Log file directory changed: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">,</span> <span class="n">new_dir</span><span class="p">)</span>
+            
+            <span class="c1"># settings object</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+            
+            <span class="c1"># store</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;logfile/directory&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">logDirectory</span><span class="p">)</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Changes to log file directory will only take effect when the application is restarted&quot;</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">createToggled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create check box toggled</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Unchecked</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">createLogFile</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">createLogFile</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Create log file toggled: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="ow">not</span> <span class="n">state</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Unchecked</span><span class="p">)</span>
+        
+        <span class="c1"># settings object</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+        
+        <span class="c1"># store</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;logfile/create_log_file&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">createLogFile</span><span class="p">))</span>
+        
+        <span class="c1"># start writing log file...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Changes to &#39;Create log file&#39; will only take effect when the application is restarted&quot;</span><span class="p">)</span></div>
+
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="RenderingSettingsForm"><a class="viewcode-back" href="../../../usage/preferences.html#atoman.gui.preferences.RenderingSettingsForm">[docs]</a><span class="k">class</span> <span class="nc">RenderingSettingsForm</span><span class="p">(</span><span class="n">GenericPreferencesSettingsForm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rendering settings form for the preferences dialog. Options that can be set on this form</span>
+<span class="sd">    are:</span>
+<span class="sd">    </span>
+<span class="sd">    **Max atoms auto run**</span>
+<span class="sd">        If the number of atoms in the selected input file is less that this value then the</span>
+<span class="sd">        filter/calculator lists run automatically after the system is loaded.</span>
+<span class="sd">    </span>
+<span class="sd">    **Number of scalar bar labels**</span>
+<span class="sd">        The number of labels to display above the scalar bar (defaults to 5).</span>
+<span class="sd">    </span>
+<span class="sd">    **Enable custom scalar bar labels**</span>
+<span class="sd">        Enable the custom format for the scalar bar labels.</span>
+<span class="sd">    </span>
+<span class="sd">    **Custom scalar bar label format**</span>
+<span class="sd">        The custom format to use for the scalar bar labels. Must match the regular expression:</span>
+<span class="sd">        &quot;%[+- 0#]*[0-9]*([.]?[0-9]+)?[adefgADEFG]&quot;.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RenderingSettingsForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        
+        <span class="c1"># settings object</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;.RenderingSettingsForm&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># default settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxAtomsAutoRun</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;rendering/maxAtomsAutoRun&quot;</span><span class="p">,</span> <span class="mi">10000</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numScalarBarLabels</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;rendering/numScalarBarLabels&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enableFmtScalarBarLabels</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;rendering/enableFmtScalarBarLabels&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabels</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;rendering/fmtScalarBarLabels&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%+#6.2e</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># max atoms auto run</span>
+        <span class="n">maxAtomsSpin</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+        <span class="n">maxAtomsSpin</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">maxAtomsSpin</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">99999</span><span class="p">)</span>
+        <span class="n">maxAtomsSpin</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxAtomsAutoRun</span><span class="p">)</span>
+        <span class="n">maxAtomsSpin</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maxAtomsChanged</span><span class="p">)</span>
+        <span class="n">maxAtomsSpin</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s2">&quot;&lt;p&gt;Automatically render a system after loading if fewer atoms than this value.&lt;/p&gt;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Max atoms auto run&quot;</span><span class="p">,</span> <span class="n">maxAtomsSpin</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">addHorizontalDivide</span><span class="p">()</span>
+        
+        <span class="c1"># scalar bar options</span>
+        <span class="n">numScalarBarLabelsSpin</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+        <span class="n">numScalarBarLabelsSpin</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">numScalarBarLabelsSpin</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span>
+        <span class="n">numScalarBarLabelsSpin</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numScalarBarLabels</span><span class="p">)</span>
+        <span class="n">numScalarBarLabelsSpin</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s2">&quot;&lt;p&gt;Set the number of labels on the scalar bar.&lt;/p&gt;&quot;</span><span class="p">)</span>
+        <span class="n">numScalarBarLabelsSpin</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numScalarBarLabelsChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Number of scalar bar labels&quot;</span><span class="p">,</span> <span class="n">numScalarBarLabelsSpin</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabelsEdit</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabelsEdit</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s2">&quot;&lt;p&gt;Custom format for scalar bar labels&lt;/p&gt;&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabelsEdit</span><span class="o">.</span><span class="n">editingFinished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fmtEdited</span><span class="p">)</span>
+        <span class="n">regexp</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QRegExp</span><span class="p">(</span><span class="s2">&quot;%[+- 0#]*[0-9]*([.]?[0-9]+)?[adefgADEFG]&quot;</span><span class="p">)</span>
+        <span class="n">validator</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QRegExpValidator</span><span class="p">(</span><span class="n">regexp</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabelsEdit</span><span class="o">.</span><span class="n">setValidator</span><span class="p">(</span><span class="n">validator</span><span class="p">)</span>
+        
+        <span class="n">enableFmtCheck</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enableFmtScalarBarLabels</span><span class="p">:</span>
+            <span class="n">enableFmtCheck</span><span class="o">.</span><span class="n">setCheckState</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Checked</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabelsEdit</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">enableFmtCheck</span><span class="o">.</span><span class="n">setCheckState</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Unchecked</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabelsEdit</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">enableFmtCheck</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s2">&quot;&lt;p&gt;Enable custom format for scalar bar labels (below)&lt;/p&gt;&quot;</span><span class="p">)</span>
+        <span class="n">enableFmtCheck</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">enableFmtCheckChanged</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Enable custom scalar bar labels&quot;</span><span class="p">,</span> <span class="n">enableFmtCheck</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Custom scalar bar label format&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabelsEdit</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">fmtEdited</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Custom format has been edited.&quot;&quot;&quot;</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabelsEdit</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Custom scalar bar format changed: &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabels</span> <span class="o">=</span> <span class="n">text</span>
+    
+    <span class="k">def</span> <span class="nf">enableFmtCheckChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Enable custom format changed.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enableFmtScalarBarLabels</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Unchecked</span> <span class="k">else</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fmtScalarBarLabelsEdit</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">enableFmtScalarBarLabels</span><span class="p">)</span>
+        
+        <span class="c1"># store in settings</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;rendering/maxAtomsAutoRun&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">enableFmtScalarBarLabels</span><span class="p">))</span>
+    
+    <span class="k">def</span> <span class="nf">maxAtomsChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        maxAtomsAutoRun changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxAtomsAutoRun</span> <span class="o">=</span> <span class="n">val</span>
+        
+        <span class="c1"># store in settings</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;rendering/maxAtomsAutoRun&quot;</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">numScalarBarLabelsChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Number of scalar bar labels changed.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numScalarBarLabels</span> <span class="o">=</span> <span class="n">val</span>
+        
+        <span class="c1"># store in settings</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;rendering/numScalarBarLabels&quot;</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span></div>
+
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="FfmpegSettingsForm"><a class="viewcode-back" href="../../../usage/preferences.html#atoman.gui.preferences.FfmpegSettingsForm">[docs]</a><span class="k">class</span> <span class="nc">FfmpegSettingsForm</span><span class="p">(</span><span class="n">GenericPreferencesSettingsForm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    FFmpeg settings form for the preferences dialog. Options that can be set on this form</span>
+<span class="sd">    are:</span>
+<span class="sd">    </span>
+<span class="sd">    **Path to FFmpeg**</span>
+<span class="sd">        Specify the path to the &quot;ffmpeg&quot; executable.  If FFmpeg is installed in a default location,</span>
+<span class="sd">        for example &quot;/usr/bin&quot;, then you can just write &quot;ffmpeg&quot; in the box (or whatever you FFmpeg</span>
+<span class="sd">        executable is called). Otherwise, you should specify the full path, eg </span>
+<span class="sd">        &quot;/opt/somewhere/bin/ffmpeg&quot;.</span>
+<span class="sd">    </span>
+<span class="sd">    **Bitrate**</span>
+<span class="sd">        Here you can specify the bitrate to use when creating movies using FFmpeg.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FfmpegSettingsForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        
+        <span class="c1"># settings object</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+        
+        <span class="c1"># default settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">=</span> <span class="mi">10000</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">pathToFFmpeg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;ffmpeg/pathToFFmpeg&quot;</span><span class="p">,</span> <span class="s2">&quot;ffmpeg&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToFFmpeg</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pathToFFmpeg</span> <span class="o">=</span> <span class="s2">&quot;ffmpeg&quot;</span>
+        
+        <span class="c1"># path to povray</span>
+        <span class="n">pathToFFmpegLineEdit</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToFFmpeg</span><span class="p">)</span>
+        <span class="n">pathToFFmpegLineEdit</span><span class="o">.</span><span class="n">textChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToFFmpegChanged</span><span class="p">)</span>
+        <span class="n">pathToFFmpegLineEdit</span><span class="o">.</span><span class="n">editingFinished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToFFmpegEdited</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;FFmpeg path&quot;</span><span class="p">,</span> <span class="n">pathToFFmpegLineEdit</span><span class="p">)</span>
+        
+        <span class="c1"># bitrate</span>
+        <span class="n">bitrateSpin</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+        <span class="n">bitrateSpin</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">bitrateSpin</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mf">1e8</span><span class="p">)</span>
+        <span class="n">bitrateSpin</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span><span class="p">)</span>
+        <span class="n">bitrateSpin</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bitrateChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Bitrate (kbits/s)&quot;</span><span class="p">,</span> <span class="n">bitrateSpin</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">pathToFFmpegEdited</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Path to FFmpeg finished being edited.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">exe</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">checkForExe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToFFmpeg</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">exe</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;STORING FFMPEG PATH IN SETTINGS&quot;</span><span class="p">,</span> <span class="n">exe</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pathToFFmpeg</span><span class="p">)</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;ffmpeg/pathToFFmpeg&quot;</span><span class="p">,</span> <span class="n">exe</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">pathToFFmpegChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Path to FFmpeg changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pathToFFmpeg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">bitrateChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Bitrate changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bitrate</span> <span class="o">=</span> <span class="n">val</span></div>
+
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="PovraySettingsForm"><a class="viewcode-back" href="../../../usage/preferences.html#atoman.gui.preferences.PovraySettingsForm">[docs]</a><span class="k">class</span> <span class="nc">PovraySettingsForm</span><span class="p">(</span><span class="n">GenericPreferencesSettingsForm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    POV-Ray settings form for the preferences dialog. Options that can be set on this form</span>
+<span class="sd">    are:</span>
+<span class="sd">    </span>
+<span class="sd">    **Path to POV-Ray**</span>
+<span class="sd">        Specify the path to the &quot;povray&quot; executable.  If POV-Ray is installed in a default location,</span>
+<span class="sd">        for example &quot;/usr/bin&quot;, then you can just write &quot;povray&quot; in the box (or whatever you POV-Ray</span>
+<span class="sd">        executable is called). Otherwise, you should specify the full path, eg </span>
+<span class="sd">        &quot;/opt/somewhere/bin/povray&quot;.</span>
+<span class="sd">    </span>
+<span class="sd">    **Overlay image**</span>
+<span class="sd">        Here you can specify whether or not to overlay on screen information onto the generated POV-Ray</span>
+<span class="sd">        image.  Examples of things that will be overlayed onto the POV-Ray image are on-screen text and </span>
+<span class="sd">        the scalar bar.</span>
+<span class="sd">    </span>
+<span class="sd">    **Shadowless**</span>
+<span class="sd">        Use the shadowless option when rendering POV-Ray images.</span>
+<span class="sd">    </span>
+<span class="sd">    **Dimensions**</span>
+<span class="sd">        The dimensions of the POV-Ray image</span>
+<span class="sd">    </span>
+<span class="sd">    **View angle**</span>
+<span class="sd">        The view angle to use when creating the POV-Ray image</span>
+<span class="sd">    </span>
+<span class="sd">    **Cell frame radius**</span>
+<span class="sd">        The radius of the lattice cell frame to use in POV-Ray images</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PovraySettingsForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        
+        <span class="c1"># settings object</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+        
+        <span class="c1"># default settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">overlayImage</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shadowless</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">HRes</span> <span class="o">=</span> <span class="mi">800</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">VRes</span> <span class="o">=</span> <span class="mi">600</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewAngle</span> <span class="o">=</span> <span class="mi">45</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cellFrameRadius</span> <span class="o">=</span> <span class="mf">0.15</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">pathToPovray</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;povray/pathToPovray&quot;</span><span class="p">,</span> <span class="s2">&quot;povray&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToPovray</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pathToPovray</span> <span class="o">=</span> <span class="s2">&quot;povray&quot;</span>
+        
+        <span class="c1"># path to povray</span>
+        <span class="n">pathToPovrayLineEdit</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToPovray</span><span class="p">)</span>
+        <span class="n">pathToPovrayLineEdit</span><span class="o">.</span><span class="n">textChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToPovrayChanged</span><span class="p">)</span>
+        <span class="n">pathToPovrayLineEdit</span><span class="o">.</span><span class="n">editingFinished</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToPovrayEdited</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;POV-Ray path&quot;</span><span class="p">,</span> <span class="n">pathToPovrayLineEdit</span><span class="p">)</span>
+        
+        <span class="c1"># overlay check box</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">overlayImageCheck</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">overlayImageCheck</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">overlayImageCheck</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">overlayImageChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Overlay image&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlayImageCheck</span><span class="p">)</span>
+        
+        <span class="c1"># shadowless check box</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shadowlessCheck</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shadowlessCheck</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shadowlessChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Shadowless&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shadowlessCheck</span><span class="p">)</span>
+        
+        <span class="c1"># dimensions</span>
+        <span class="n">HResSpinBox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+        <span class="n">HResSpinBox</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">HResSpinBox</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">10000</span><span class="p">)</span>
+        <span class="n">HResSpinBox</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">HRes</span><span class="p">)</span>
+        <span class="n">HResSpinBox</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">HResChanged</span><span class="p">)</span>
+        
+        <span class="n">VResSpinBox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+        <span class="n">VResSpinBox</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">VResSpinBox</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">10000</span><span class="p">)</span>
+        <span class="n">VResSpinBox</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">VRes</span><span class="p">)</span>
+        <span class="n">VResSpinBox</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">VResChanged</span><span class="p">)</span>
+        
+        <span class="n">hbox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">hbox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">HResSpinBox</span><span class="p">)</span>
+        <span class="n">hbox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">))</span>
+        <span class="n">hbox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">VResSpinBox</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Dimensions&quot;</span><span class="p">,</span> <span class="n">hbox</span><span class="p">)</span>
+        
+        <span class="c1"># view angle</span>
+        <span class="n">angleSpinBox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QDoubleSpinBox</span><span class="p">()</span>
+        <span class="n">angleSpinBox</span><span class="o">.</span><span class="n">setSingleStep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">angleSpinBox</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">angleSpinBox</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mf">360.0</span><span class="p">)</span>
+        <span class="n">angleSpinBox</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">viewAngle</span><span class="p">)</span>
+        <span class="n">angleSpinBox</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">viewAngleChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;View angle (degrees)&quot;</span><span class="p">,</span> <span class="n">angleSpinBox</span><span class="p">)</span>
+        
+        <span class="c1"># cell frame radius</span>
+        <span class="n">cellFrameSpinBox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QDoubleSpinBox</span><span class="p">()</span>
+        <span class="n">cellFrameSpinBox</span><span class="o">.</span><span class="n">setSingleStep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="n">cellFrameSpinBox</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="n">cellFrameSpinBox</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mf">5.0</span><span class="p">)</span>
+        <span class="n">cellFrameSpinBox</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cellFrameRadius</span><span class="p">)</span>
+        <span class="n">cellFrameSpinBox</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cellFrameRadiusChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Cell frame radius&quot;</span><span class="p">,</span> <span class="n">cellFrameSpinBox</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">pathToPovrayEdited</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Path to povray finished being edited.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">exe</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">checkForExe</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToPovray</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">exe</span><span class="p">:</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;povray/pathToPovray&quot;</span><span class="p">,</span> <span class="n">exe</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">pathToPovrayChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Path to POV-Ray changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pathToPovray</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">viewAngleChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        View angle changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">viewAngle</span> <span class="o">=</span> <span class="n">val</span>
+    
+    <span class="k">def</span> <span class="nf">cellFrameRadiusChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Cell frame radius changed</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cellFrameRadius</span> <span class="o">=</span> <span class="n">val</span>
+    
+    <span class="k">def</span> <span class="nf">VResChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Horizontal resolution changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">VRes</span> <span class="o">=</span> <span class="n">val</span>
+    
+    <span class="k">def</span> <span class="nf">HResChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Horizontal resolution changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">HRes</span> <span class="o">=</span> <span class="n">val</span>
+    
+    <span class="k">def</span> <span class="nf">overlayImageChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Overlay image changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">overlayImageCheck</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">overlayImage</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">overlayImage</span> <span class="o">=</span> <span class="kc">False</span>
+    
+    <span class="k">def</span> <span class="nf">shadowlessChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Overlay image changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shadowlessCheck</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shadowless</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shadowless</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="MatplotlibSettingsForm"><a class="viewcode-back" href="../../../usage/preferences.html#atoman.gui.preferences.MatplotlibSettingsForm">[docs]</a><span class="k">class</span> <span class="nc">MatplotlibSettingsForm</span><span class="p">(</span><span class="n">GenericPreferencesSettingsForm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Matplotlib settings for the preferences dialog. Options that can be set on this</span>
+<span class="sd">    form are:</span>
+<span class="sd">    </span>
+<span class="sd">    **Fig size**</span>
+<span class="sd">        The size of the Matplotlib figure</span>
+<span class="sd">    </span>
+<span class="sd">    **Dpi**</span>
+<span class="sd">        The dpi value to use when creating the Matplotlib figure</span>
+<span class="sd">    </span>
+<span class="sd">    **Show grid**</span>
+<span class="sd">        Whether or not to show a grid on the Matplotlib figures</span>
+<span class="sd">    </span>
+<span class="sd">    **Font size**</span>
+<span class="sd">        Set the font sizes for different labels on the Matplotlib figure</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MatplotlibSettingsForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        
+        <span class="c1"># settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figWidth</span> <span class="o">=</span> <span class="mi">8</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figHeight</span> <span class="o">=</span> <span class="mi">6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figDpi</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">showGrid</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fontsize</span> <span class="o">=</span> <span class="mi">18</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tickFontsize</span> <span class="o">=</span> <span class="mi">16</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">legendFontsize</span> <span class="o">=</span> <span class="mi">16</span>
+        
+        <span class="c1"># dimensions</span>
+        <span class="n">widthSpinBox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QDoubleSpinBox</span><span class="p">()</span>
+        <span class="n">widthSpinBox</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">widthSpinBox</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+        <span class="n">widthSpinBox</span><span class="o">.</span><span class="n">setSingleStep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">widthSpinBox</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figWidth</span><span class="p">)</span>
+        <span class="n">widthSpinBox</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">widthChanged</span><span class="p">)</span>
+        
+        <span class="n">heightSpinBox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QDoubleSpinBox</span><span class="p">()</span>
+        <span class="n">heightSpinBox</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">heightSpinBox</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+        <span class="n">heightSpinBox</span><span class="o">.</span><span class="n">setSingleStep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="n">heightSpinBox</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figHeight</span><span class="p">)</span>
+        <span class="n">heightSpinBox</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">heightChanged</span><span class="p">)</span>
+        
+        <span class="n">hbox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">hbox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">widthSpinBox</span><span class="p">)</span>
+        <span class="n">hbox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">))</span>
+        <span class="n">hbox</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">heightSpinBox</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Fig size (inches)&quot;</span><span class="p">,</span> <span class="n">hbox</span><span class="p">)</span>
+        
+        <span class="c1"># dpi</span>
+        <span class="n">dpiSpinBox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+        <span class="n">dpiSpinBox</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">dpiSpinBox</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+        <span class="n">dpiSpinBox</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figDpi</span><span class="p">)</span>
+        <span class="n">dpiSpinBox</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dpiChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Dpi&quot;</span><span class="p">,</span> <span class="n">dpiSpinBox</span><span class="p">)</span>
+        
+        <span class="c1"># show grid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">showGridCheck</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">showGridCheck</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">showGrid</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">showGridCheck</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">showGridChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Show grid&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">showGridCheck</span><span class="p">)</span>
+        
+        <span class="c1"># general font size</span>
+        <span class="n">generalFontSizeSpin</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+        <span class="n">generalFontSizeSpin</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">generalFontSizeSpin</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">generalFontSizeSpin</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fontsize</span><span class="p">)</span>
+        <span class="n">generalFontSizeSpin</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalFontSizeChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Font size (general)&quot;</span><span class="p">,</span> <span class="n">generalFontSizeSpin</span><span class="p">)</span>
+        
+        <span class="c1"># ticks</span>
+        <span class="n">legendFontSizeSpin</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+        <span class="n">legendFontSizeSpin</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">legendFontSizeSpin</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">legendFontSizeSpin</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">legendFontsize</span><span class="p">)</span>
+        <span class="n">legendFontSizeSpin</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">legendFontSizeChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Font size (legend)&quot;</span><span class="p">,</span> <span class="n">legendFontSizeSpin</span><span class="p">)</span>
+        
+        <span class="c1"># ticks</span>
+        <span class="n">tickFontSizeSpin</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+        <span class="n">tickFontSizeSpin</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">tickFontSizeSpin</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">tickFontSizeSpin</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tickFontsize</span><span class="p">)</span>
+        <span class="n">tickFontSizeSpin</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tickFontSizeChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Font size (ticks)&quot;</span><span class="p">,</span> <span class="n">tickFontSizeSpin</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">legendFontSizeChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Legend font size changed changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">legendFontsize</span> <span class="o">=</span> <span class="n">val</span>
+    
+    <span class="k">def</span> <span class="nf">tickFontSizeChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tick font size changed changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tickFontsize</span> <span class="o">=</span> <span class="n">val</span>
+    
+    <span class="k">def</span> <span class="nf">generalFontSizeChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        General font size changed changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fontsize</span> <span class="o">=</span> <span class="n">val</span>
+    
+    <span class="k">def</span> <span class="nf">showGridChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show grid changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">showGridCheck</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">showGrid</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">showGrid</span> <span class="o">=</span> <span class="kc">False</span>
+    
+    <span class="k">def</span> <span class="nf">dpiChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        dpi changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figDpi</span> <span class="o">=</span> <span class="n">val</span>
+    
+    <span class="k">def</span> <span class="nf">widthChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Width changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figWidth</span> <span class="o">=</span> <span class="n">val</span>
+    
+    <span class="k">def</span> <span class="nf">heightChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Height changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figHeight</span> <span class="o">=</span> <span class="n">val</span></div>
+
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="ForcesSettingsForm"><a class="viewcode-back" href="../../../usage/preferences.html#atoman.gui.preferences.ForcesSettingsForm">[docs]</a><span class="k">class</span> <span class="nc">ForcesSettingsForm</span><span class="p">(</span><span class="n">GenericPreferencesSettingsForm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Forces settings form for preferences dialog.</span>
+<span class="sd">    </span>
+<span class="sd">    *This is not implemented currently!*</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ForcesSettingsForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        
+        <span class="c1"># logging</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+        
+        <span class="c1"># settings object</span>
+<span class="c1">#         settings = QtCore.QSettings()</span>
+<span class="c1">#         </span>
+<span class="c1">#         # default settings</span>
+<span class="c1">#         self.forcesConfig = forces.ForceConfig()</span>
+<span class="c1">#         self.forcesConfig.log = self.parent.parent.console.write</span>
+<span class="c1">#         </span>
+<span class="c1">#         # path to md dir</span>
+<span class="c1">#         self.pathToMDDir = str(settings.value(&quot;forces/pathToMDDir&quot;, &quot;&quot;))</span>
+<span class="c1">#         if len(self.pathToMDDir) and not os.path.isdir(self.pathToMDDir):</span>
+<span class="c1">#             self.pathToMDDir = &quot;&quot;</span>
+<span class="c1">#         logger.debug(&quot;Path to MD dir ini: &#39;%s&#39;&quot;, self.pathToMDDir)</span>
+<span class="c1">#         </span>
+<span class="c1">#         if not len(self.pathToMDDir):</span>
+<span class="c1">#             self.forcesConfig.md_dir = resourcePath(&quot;&quot;, dirname=&quot;md&quot;)</span>
+<span class="c1">#         </span>
+<span class="c1">#         else:</span>
+<span class="c1">#             self.forcesConfig.md_dir = self.pathToMDDir</span>
+<span class="c1">#         </span>
+<span class="c1">#         logger.debug(&quot;Config path to MD dir ini: &#39;%s&#39;&quot;, self.forcesConfig.md_dir)</span>
+<span class="c1">#         </span>
+<span class="c1">#         # interface type</span>
+<span class="c1">#         self.interfaceType = str(settings.value(&quot;forces/interface&quot;, &quot;LBOMD&quot;))</span>
+<span class="c1">#         logger.debug(&quot;Force interface ini: &#39;%s&#39;&quot;, self.interfaceType)</span>
+<span class="c1">#         </span>
+<span class="c1">#         self.forcesConfig.md_type = self.interfaceType</span>
+        
+        <span class="c1"># path to povray</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pathToMDDir</span> <span class="o">=</span> <span class="s2">&quot;&lt;not implemented&gt;&quot;</span>
+        <span class="n">pathToMDDirLineEdit</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToMDDir</span><span class="p">)</span>
+<span class="c1">#         pathToMDDirLineEdit.textChanged.connect(self.pathToMDDirChanged)</span>
+<span class="c1">#         pathToMDDirLineEdit.editingFinished.connect(self.pathToMDDirEdited)</span>
+        
+        <span class="n">rowLayout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">newRow</span><span class="p">()</span>
+        <span class="n">rowLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Path to MD dir:&quot;</span><span class="p">))</span>
+        <span class="n">rowLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">pathToMDDirLineEdit</span><span class="p">)</span>
+        
+        <span class="c1"># file suffix</span>
+        <span class="n">rowLayout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">newRow</span><span class="p">()</span>
+        
+        <span class="n">label</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QLabel</span><span class="p">(</span><span class="s2">&quot;Interface:&quot;</span><span class="p">)</span>
+        <span class="n">rowLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+        
+        <span class="n">interfaceCombo</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QComboBox</span><span class="p">()</span>
+        <span class="n">interfaceCombo</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="s2">&quot;LBOMD&quot;</span><span class="p">)</span>
+<span class="c1">#         interfaceCombo.currentIndexChanged[str].connect(self.interfaceChanged)</span>
+        <span class="n">rowLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">interfaceCombo</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">pathToMDDirEdited</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Path to MD dir finished being edited.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToMDDir</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToMDDir</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;STORING MD DIR PATH IN SETTINGS&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pathToMDDir</span><span class="p">)</span>
+            <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+            <span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;forces/pathToMDDir&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pathToMDDir</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pathToMDDir</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forcesConfig</span><span class="o">.</span><span class="n">md_dir</span> <span class="o">=</span> <span class="n">resourcePath</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">dirname</span><span class="o">=</span><span class="s2">&quot;md&quot;</span><span class="p">)</span>
+            
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forcesConfig</span><span class="o">.</span><span class="n">md_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pathToMDDir</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CONFIG PATH TO MD DIR&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">forcesConfig</span><span class="o">.</span><span class="n">md_dir</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">pathToMDDirChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Path to MD dir changed.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pathToMDDir</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">interfaceChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Interface changed</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interfaceType</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;forces/interface&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interfaceType</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">forcesConfig</span><span class="o">.</span><span class="n">md_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interfaceType</span></div>
+
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="GeneralSettingsForm"><a class="viewcode-back" href="../../../usage/preferences.html#atoman.gui.preferences.GeneralSettingsForm">[docs]</a><span class="k">class</span> <span class="nc">GeneralSettingsForm</span><span class="p">(</span><span class="n">GenericPreferencesSettingsForm</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    General settings form for preferences dialog. Options that can be set on this form</span>
+<span class="sd">    are:</span>
+<span class="sd">    </span>
+<span class="sd">    **OMP_NUM_THREADS**</span>
+<span class="sd">        This sets the number of threads that will be used in parts of the C extensions</span>
+<span class="sd">        that are parallelised using OpenMP. At present this is only relevant in a few</span>
+<span class="sd">        places, for example the &quot;Bond order&quot; and &quot;ACNA&quot; filters and RDF plotting. The </span>
+<span class="sd">        default is &quot;0&quot; which will run on all available threads.</span>
+<span class="sd">    </span>
+<span class="sd">    **DISABLE_MOUSE_WHEEL**</span>
+<span class="sd">        Setting this option disables the use of the mouse wheel for zooming in/out of</span>
+<span class="sd">        the VTK window. This was added because it is easy to accidentally touch the</span>
+<span class="sd">        Apple Magic mouse and zoom in/out really far.</span>
+<span class="sd">    </span>
+<span class="sd">    **DEFAULT_PBCS**</span>
+<span class="sd">        Set the default periodic boundary conditions for all subsequently loaded</span>
+<span class="sd">        systems. This does not effect systems that are currently loaded or systems</span>
+<span class="sd">        that are generated.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">GeneralSettingsForm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        
+        <span class="c1"># logging</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="o">+</span><span class="s2">&quot;.ForcesSettingsForm&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># settings object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QSettings</span><span class="p">()</span>
+        
+        <span class="c1"># initial value</span>
+        <span class="n">maxthread</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+        <span class="n">ini</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;omp/numThreads&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">ini</span> <span class="o">&gt;</span> <span class="n">maxthread</span><span class="p">:</span>
+            <span class="n">ini</span> <span class="o">=</span> <span class="n">maxthread</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxNumThreads</span> <span class="o">=</span> <span class="n">maxthread</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ompNumThreadsChanged</span><span class="p">(</span><span class="n">ini</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Initial value of OMP_NUM_THREADS = </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">openmpNumThreads</span><span class="p">)</span>
+        
+        <span class="c1"># omp number of threads to use</span>
+        <span class="n">ompNumThreadsSpin</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+        <span class="n">ompNumThreadsSpin</span><span class="o">.</span><span class="n">setMinimum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ompNumThreadsSpin</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="n">maxthread</span><span class="p">)</span>
+        <span class="n">ompNumThreadsSpin</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">ini</span><span class="p">)</span>
+        <span class="n">ompNumThreadsSpin</span><span class="o">.</span><span class="n">valueChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ompNumThreadsChanged</span><span class="p">)</span>
+        <span class="n">ompNumThreadsSpin</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s1">&#39;&lt;p&gt;The number of threads that can be used by OpenMP. &quot;0&quot; means use all available processors.&lt;/p&gt;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;OpenMP threads&quot;</span><span class="p">,</span> <span class="n">ompNumThreadsSpin</span><span class="p">)</span>
+        
+        <span class="c1"># disable mouse wheel</span>
+        <span class="n">disableMouseWheel</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;mouse/disableWheel&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disableMouseWheel</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">disableMouseWheel</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Disable mouse wheel (initial value): </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">disableMouseWheel</span><span class="p">)</span>
+        <span class="n">disableMouseWheelCheck</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">()</span>
+        <span class="n">tip</span> <span class="o">=</span> <span class="s2">&quot;&lt;p&gt;Disables the mouse wheel in the VTK window. The &quot;</span>
+        <span class="n">tip</span> <span class="o">+=</span> <span class="s2">&quot;mouse wheel can be used to zoom in and out. This is &quot;</span>
+        <span class="n">tip</span> <span class="o">+=</span> <span class="s2">&quot;most useful with the wireless Apple Magic mouse.&lt;/p&gt;&quot;</span>
+        <span class="n">disableMouseWheelCheck</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="n">tip</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">disableMouseWheel</span><span class="p">:</span>
+            <span class="n">disableMouseWheelCheck</span><span class="o">.</span><span class="n">setCheckState</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Checked</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">disableMouseWheelCheck</span><span class="o">.</span><span class="n">setCheckState</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Unchecked</span><span class="p">)</span>
+        <span class="n">disableMouseWheelCheck</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">disableMouseWheelChanged</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Disable mouse wheel (VTK)&quot;</span><span class="p">,</span> <span class="n">disableMouseWheelCheck</span><span class="p">)</span>
+        
+        <span class="c1"># default PBCs</span>
+        <span class="n">xpbc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;defaultPBC/x&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">ypbc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;defaultPBC/y&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">zpbc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="s2">&quot;defaultPBC/z&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defaultPBC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xpbc</span><span class="p">,</span> <span class="n">ypbc</span><span class="p">,</span> <span class="n">zpbc</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Default PBCs (initial value): </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">defaultPBC</span><span class="p">))</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">xyz</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">check</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">(</span><span class="n">xyz</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaultPBC</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="n">check</span><span class="o">.</span><span class="n">setCheckState</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Checked</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">check</span><span class="o">.</span><span class="n">setCheckState</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Unchecked</span><span class="p">)</span>
+            <span class="n">check</span><span class="o">.</span><span class="n">stateChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">defaultPBCChanged</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+            <span class="n">check</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s1">&#39;&lt;p&gt;Set the default PBC value in the &quot;</span><span class="si">%s</span><span class="s1">&quot; direction for subsequently loaded systems&lt;/p&gt;&#39;</span> <span class="o">%</span> <span class="n">xyz</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">row</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">check</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layout</span><span class="o">.</span><span class="n">addRow</span><span class="p">(</span><span class="s2">&quot;Default PBCs&quot;</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">defaultPBCChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Default PBC has changed</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Unchecked</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">defaultPBC</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">defaultPBC</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        
+        <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;defaultPBC/x&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">defaultPBC</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">elif</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;defaultPBC/y&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">defaultPBC</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;defaultPBC/z&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">defaultPBC</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updated default PBCs: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">defaultPBC</span><span class="p">))</span>
+    
+    <span class="k">def</span> <span class="nf">disableMouseWheelChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Disable mouse wheel changed</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Unchecked</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">disableMouseWheel</span> <span class="o">=</span> <span class="kc">False</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">disableMouseWheel</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;mouse/disableWheel&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">disableMouseWheel</span><span class="p">))</span>
+        
+        <span class="c1"># broadcast</span>
+        <span class="k">for</span> <span class="n">rw</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mainWindow</span><span class="o">.</span><span class="n">rendererWindows</span><span class="p">:</span>
+            <span class="n">rw</span><span class="o">.</span><span class="n">vtkRenWinInteract</span><span class="o">.</span><span class="n">changeDisableMouseWheel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">disableMouseWheel</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">ompNumThreadsChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Number of OpenMP threads has been changed</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;OMP_NUM_THREADS CHANGED TO: </span><span class="si">%d</span><span class="s2"> (</span><span class="si">%d</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxNumThreads</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">openmpNumThreads</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxNumThreads</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;OMP_NUM_THREADS CHANGED TO: </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">openmpNumThreads</span> <span class="o">=</span> <span class="n">n</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="s2">&quot;omp/numThreads&quot;</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        
+        <span class="c1"># set environment variable</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;OMP_NUM_THREADS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">openmpNumThreads</span><span class="p">)</span>
+        
+        <span class="c1"># set C value</span>
+        <span class="n">_preferences</span><span class="o">.</span><span class="n">setNumThreads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">openmpNumThreads</span><span class="p">)</span></div>
+
+<span class="c1">################################################################################</span>
+
+<div class="viewcode-block" id="PreferencesDialog"><a class="viewcode-back" href="../../../usage/preferences.html#atoman.gui.preferences.PreferencesDialog">[docs]</a><span class="k">class</span> <span class="nc">PreferencesDialog</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QDialog</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A number of global application settings can be configured on the Preferences dialog.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mainWindow</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PreferencesDialog</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowFlags</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">windowFlags</span><span class="p">()</span> <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">WindowStaysOnTopHint</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mainWindow</span> <span class="o">=</span> <span class="n">mainWindow</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setSizePolicy</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Minimum</span><span class="p">,</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Minimum</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;Preferences&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowIcon</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">iconPath</span><span class="p">(</span><span class="s2">&quot;oxygen/configure.png&quot;</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">360</span><span class="p">,</span> <span class="mi">540</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">buttonCount</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="c1"># layout</span>
+        <span class="n">dlgLayout</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        
+        <span class="c1"># toolbox</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QToolBox</span><span class="p">()</span>
+        
+        <span class="c1"># add toolbox to layout</span>
+        <span class="n">dlgLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="p">)</span>
+        
+        <span class="c1"># general settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generalForm</span> <span class="o">=</span> <span class="n">GeneralSettingsForm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generalForm</span><span class="p">,</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">iconPath</span><span class="p">(</span><span class="s2">&quot;oxygen/applications-system.png&quot;</span><span class="p">)),</span> <span class="s2">&quot;General&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># log file settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logFileForm</span> <span class="o">=</span> <span class="n">LogFileSettingsForm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logFileForm</span><span class="p">,</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">iconPath</span><span class="p">(</span><span class="s2">&quot;oxygen/accessories-text-editor.png&quot;</span><span class="p">)),</span> <span class="s2">&quot;Log file&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># rendering tab</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">renderingForm</span> <span class="o">=</span> <span class="n">RenderingSettingsForm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">renderingForm</span><span class="p">,</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">iconPath</span><span class="p">(</span><span class="s2">&quot;oxygen/applications-graphics.png&quot;</span><span class="p">)),</span> <span class="s2">&quot;Rendering&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># povray tab</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">povrayForm</span> <span class="o">=</span> <span class="n">PovraySettingsForm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">povrayForm</span><span class="p">,</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">iconPath</span><span class="p">(</span><span class="s2">&quot;other/pov-icon.svg&quot;</span><span class="p">)),</span> <span class="s2">&quot;POV-Ray&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># ffmpeg tab</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ffmpegForm</span> <span class="o">=</span> <span class="n">FfmpegSettingsForm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ffmpegForm</span><span class="p">,</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">iconPath</span><span class="p">(</span><span class="s2">&quot;other/ffmpeg.png&quot;</span><span class="p">)),</span> <span class="s2">&quot;FFmpeg&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># matplotlib tab</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matplotlibForm</span> <span class="o">=</span> <span class="n">MatplotlibSettingsForm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matplotlibForm</span><span class="p">,</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">iconPath</span><span class="p">(</span><span class="s2">&quot;oxygen/office-chart-bar.png&quot;</span><span class="p">)),</span> <span class="s2">&quot;Matplotlib&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># forces tab</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forcesForm</span> <span class="o">=</span> <span class="n">ForcesSettingsForm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toolbox</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forcesForm</span><span class="p">,</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">iconPath</span><span class="p">(</span><span class="s2">&quot;capital_f.gif&quot;</span><span class="p">)),</span> <span class="s2">&quot;Forces&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># help button (links to help page on preferences dialog)</span>
+        <span class="n">helpButton</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QPushButton</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">iconPath</span><span class="p">(</span><span class="s2">&quot;oxygen/system-help.png&quot;</span><span class="p">)),</span> <span class="s2">&quot;Show help&quot;</span><span class="p">)</span>
+        <span class="n">helpButton</span><span class="o">.</span><span class="n">setToolTip</span><span class="p">(</span><span class="s2">&quot;Show help page&quot;</span><span class="p">)</span>
+        <span class="n">helpButton</span><span class="o">.</span><span class="n">setFixedWidth</span><span class="p">(</span><span class="mi">150</span><span class="p">)</span>
+        <span class="n">helpButton</span><span class="o">.</span><span class="n">setAutoDefault</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">helpButton</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loadHelpPage</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">helpPage</span> <span class="o">=</span> <span class="s2">&quot;usage/preferences.html&quot;</span>
+        
+        <span class="n">row</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">()</span>
+        <span class="n">row</span><span class="o">.</span><span class="n">setAlignment</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignHCenter</span><span class="p">)</span>
+        <span class="n">row</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">helpButton</span><span class="p">)</span>
+        <span class="n">dlgLayout</span><span class="o">.</span><span class="n">addLayout</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        
+    
+    <span class="k">def</span> <span class="nf">loadHelpPage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the help page</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">helpPage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">helpWindow</span><span class="o">.</span><span class="n">loadPage</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">helpPage</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">showHelp</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Chris Scott.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'170308+0.g5ca03f7.dirty',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

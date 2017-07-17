@@ -1,0 +1,282 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Slip &mdash; Atoman 170308+0.g5ca03f7.dirty documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../../genindex.html"/>
+        <link rel="search" title="Search" href="../../../search.html"/>
+    <link rel="top" title="Atoman 170308+0.g5ca03f7.dirty documentation" href="../../../index.html"/>
+        <link rel="up" title="Analysis" href="../index.html"/>
+        <link rel="next" title="Species" href="species.html"/>
+        <link rel="prev" title="Slice" href="slice.html"/> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> Atoman
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                170308+0.g5ca03f7.dirty
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Usage</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../input/index.html">Input</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html">Analysis</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="acna.html">Adaptive common neighbour analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="atomID.html">Atom ID</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bondOrder.html">Bond order</a></li>
+<li class="toctree-l3"><a class="reference internal" href="bubbles.html">Bubbles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="charge.html">Charge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cluster.html">Cluster</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coordinationNumber.html">Coordination number</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cropBox.html">Crop box</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cropSphere.html">Crop sphere</a></li>
+<li class="toctree-l3"><a class="reference internal" href="displacement.html">Displacement</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pointDefects.html">Point defects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="slice.html">Slice</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Slip</a></li>
+<li class="toctree-l3"><a class="reference internal" href="species.html">Species</a></li>
+<li class="toctree-l3"><a class="reference internal" href="voronoiNeighbours.html">Voronoi neighbours</a></li>
+<li class="toctree-l3"><a class="reference internal" href="voronoiVolume.html">Voronoi volume</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../filterListOptions.html">Filter list options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../output/index.html">Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../preferences.html">Preferences</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license/index.html">Licenses</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Atoman</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Usage</a> &raquo;</li>
+        
+          <li><a href="../index.html">Analysis</a> &raquo;</li>
+        
+      <li>Slip</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../../_sources/usage/analysis/filters/slip.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-atoman.filtering.filters.slipFilter"></span><div class="section" id="slip">
+<h1>Slip<a class="headerlink" href="#slip" title="Permalink to this headline">¶</a></h1>
+<p>Calculate slip within the lattice, on an atom by atom basis. This filter works by
+comparing the displacement of an atom from its reference position, to the
+equivalent displacements of neighbouring atoms from the reference lattice.
+If an atom as moved in a different direction to one of its neighbours in the
+reference then it has “slipped”. Once slip is calculated you can filter atoms by
+their slip value.</p>
+<p>Parameters affecting this filter are:</p>
+<dl class="glossary docutils">
+<dt id="term-neighbour-cut-off">Neighbour cut-off</dt>
+<dd>Atoms are said to have been neighbours in the reference lattice if their
+separation was less than this value.</dd>
+<dt id="term-slip-tolerance">Slip tolerance</dt>
+<dd>If the magnitude of the slip contribution between an atom and one of its
+neighbours is less than this value we ignore it.</dd>
+</dl>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="species.html" class="btn btn-neutral float-right" title="Species" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="slice.html" class="btn btn-neutral" title="Slice" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Chris Scott.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'170308+0.g5ca03f7.dirty',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
