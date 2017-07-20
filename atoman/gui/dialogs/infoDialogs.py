@@ -682,11 +682,11 @@ class AtomInfoWindow(QtGui.QDialog):
         self.filterList = filterList
         self.neighbourInfoWindow = None
         
-        self.PBC = [1,1,1]
-        
         lattice = self.pipelinePage.inputState
         self.inputState = lattice
         self.setWindowTitle("Atom info")
+         
+        self.PBC = lattice.PBC
         
         # logger
         self.logger = logging.getLogger(__name__ + ".AtomInfoWindow")
