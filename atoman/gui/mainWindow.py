@@ -235,7 +235,7 @@ class MainWindow(QtGui.QMainWindow):
                                         tip="About Atoman")
 
         helpAction = self.createAction("Atoman Help", slot=self.showHelp, icon="oxygen/help-browser.png",
-                                       tip="<p>Show help window (opens in external browser)</p>")
+                                       tip="Show help window (opens in external browser)")
 
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
@@ -790,7 +790,7 @@ class MainWindow(QtGui.QMainWindow):
             action.setShortcut(shortcut)
 
         if tip is not None:
-            action.setToolTip(tip)
+            action.setToolTip("<p>{0}</p>".format(tip))
             action.setStatusTip(tip)
 
         if callable(slot):
