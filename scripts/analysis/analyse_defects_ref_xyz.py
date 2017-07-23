@@ -17,7 +17,7 @@ from __future__ import print_function
 import os
 import sys
 
-# this line forces the use of this atoman
+# this line forces the use of this atoman (not required if atoman is installed, e.g. with PYTHONPATH)
 sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), os.pardir, os.pardir))
 print(os.path.join(os.path.abspath(os.path.dirname(__file__)), os.pardir, os.pardir))
 
