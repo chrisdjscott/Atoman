@@ -58,7 +58,7 @@ if HAVE_SPHINX:
             ret = subprocess.call([sys.executable, sys.argv[0], 'build_ext', '-i'])
             if ret != 0:
                 raise RuntimeError("Building atoman failed (%d)" % ret)
-            
+
             # build doc
             BuildDoc.run(self)
 
@@ -66,16 +66,16 @@ if HAVE_SPHINX:
 # package configuration method
 def configuration(parent_package='', top_path=None):
     from numpy.distutils.misc_util import Configuration
-    
+
     config = Configuration(None, parent_package, top_path, version=versioneer.get_version())
     config.set_options(ignore_setup_xxx_py=True,
                        assume_default_configuration=True,
                        delegate_options_to_subpackages=True,
                        quiet=True)
-    
+
     config.add_subpackage("atoman")
     config.add_data_dir(("atoman/doc", os.path.join("doc", "build", "html")))
-    
+
     return config
 
 
@@ -89,14 +89,14 @@ def do_clean():
             for so_file in so_files:
                 print("rm atoman/%s" % os.path.relpath(so_file))
                 os.unlink(so_file)
-            
+
             if "resources.py" in files:
                 os.unlink(os.path.join(root, "resources.py"))
-           
+
             pyc_files = glob.glob(os.path.join(root, "*.pyc"))
             for pyc_file in pyc_files:
                 os.unlink(pyc_file)
-    
+
     finally:
         os.chdir(cwd)
 
@@ -108,15 +108,15 @@ def do_clean():
     if os.path.isdir("atoman/doc"):
         print("rm -rf atoman/doc")
         shutil.rmtree(os.path.join("atoman", "doc"))
-    
-    if os.path.isdir(os.path.join("doc", "build")):
-        print("rm -rf doc/build/*")
-        os.system("rm -rf doc/build/*")
-    
+
+#    if os.path.isdir(os.path.join("doc", "build")):
+#        print("rm -rf doc/build/*")
+#        os.system("rm -rf doc/build/*")
+
     if os.path.isdir("dist"):
         print("rm -rf dist/")
         shutil.rmtree("dist")
-    
+
     if os.path.isdir("build"):
         print("rm -rf build/")
         shutil.rmtree("build")
@@ -130,12 +130,12 @@ def setup_package():
     # clean?
     if "clean" in sys.argv:
         do_clean()
-     
+
     # documentation (see scipy...)
     cmdclass = versioneer.get_cmdclass()
     if HAVE_SPHINX:
         cmdclass['build_sphinx'] = AtomanBuildDoc
-    
+
     # metadata
     metadata = dict(
         name="Atoman",
@@ -179,7 +179,7 @@ def setup_package():
         },
         zip_safe=False,
     )
-    
+
     if len(sys.argv) >= 2 and ('--help' in sys.argv[1:] or sys.argv[1] in ('--help-commands', 'egg_info',
                                                                            '--version', 'clean', 'nosetests',
                                                                            'test')):
@@ -187,15 +187,15 @@ def setup_package():
             from setuptools import setup
         except ImportError:
             from distutils.core import setup
-        
+
         metadata['version'] = versioneer.get_version()
         metadata['test_suite'] = "nose.collector"
-    
+
     else:
         from numpy.distutils.core import setup
         from numpy.distutils.command.build_ext import build_ext
         from numpy.distutils.command.build_clib import build_clib
-    
+
         # subclass build_ext to use additional compiler options (eg. for OpenMP)
         class build_ext_subclass(build_ext):
             def build_extensions(self, *args, **kwargs):
@@ -206,9 +206,9 @@ def setup_package():
                     if c in lopt:
                         e.extra_link_args.extend(lopt[c])
                     e.include_dirs.append(distutils.sysconfig.get_python_inc())
-                
+
                 return build_ext.build_extensions(self, *args, **kwargs)
-        
+
         # subclass build_clib to use additional compiler options (eg. for OpenMP)
         class build_clib_subclass(build_clib):
             def build_libraries(self, *args, **kwargs):
@@ -222,13 +222,13 @@ def setup_package():
                     if "include_dirs" not in opts:
                         opts["include_dirs"] = []
                     opts["include_dirs"].append(distutils.sysconfig.get_python_inc())
-                
+
                 return build_clib.build_libraries(self, *args, **kwargs)
-        
+
         cmdclass["build_ext"] = build_ext_subclass
         cmdclass["build_clib"] = build_clib_subclass
         metadata["configuration"] = configuration
-    
+
     # run setup
     setup(**metadata)
 
