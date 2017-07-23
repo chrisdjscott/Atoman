@@ -15,6 +15,7 @@ import logging
 
 from PySide import QtGui, QtCore
 import numpy as np
+import math as math
 
 from ...system.atoms import elements
 from ...visutils.utilities import resourcePath, iconPath
@@ -481,23 +482,23 @@ class RotateViewPointDialog(QtGui.QDialog):
         self.rw = rw
         self.parent = parent
         
-        layout = QtGui.QVBoxLayout(self)
+        # Dialog layout
+        layout = QtGui.QGridLayout(self)
         
-        # direction
-        row = QtGui.QWidget(self)
-        rowLayout = QtGui.QHBoxLayout(row)
         
-        label = QtGui.QLabel("Direction:")
+        # Rotation group
+        RotGroup = QtGui.QGroupBox("Custom Rotation")
+        RotGroup.setAlignment(QtCore.Qt.AlignHCenter)
+        RotGroupLayout = QtGui.QGridLayout(RotGroup)
+           
+        # rotate up button
+        UpButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotup.png')),"Up")
+        UpButton.setStatusTip("Rotate Up by selected angle")
+        UpButton.setToolTip("Rotate Up by selected angle")
+        UpButton.clicked.connect(self.RotateUp)
+        RotGroupLayout.addWidget(UpButton, 0, 1 )
         
-        self.directionCombo = QtGui.QComboBox()
-        self.directionCombo.addItems(["Right", "Left", "Up", "Down"])
-        
-        rowLayout.addWidget(label)
-        rowLayout.addWidget(self.directionCombo)
-        
-        layout.addWidget(row)
-        
-        # angle
+        # angle selection
         row = QtGui.QWidget(self)
         rowLayout = QtGui.QHBoxLayout(row)
         
@@ -506,59 +507,306 @@ class RotateViewPointDialog(QtGui.QDialog):
         self.angleSpin = QtGui.QDoubleSpinBox()
         self.angleSpin.setSingleStep(0.1)
         self.angleSpin.setMinimum(0.0)
-        self.angleSpin.setMaximum(360.0)
+        self.angleSpin.setMaximum(180.0)
         self.angleSpin.setValue(90)
+        self.angleSpin.setToolTip("Rotation angle")
         
         rowLayout.addWidget(label)
         rowLayout.addWidget(self.angleSpin)
+        RotGroupLayout.addWidget(row, 1, 1)
         
-        layout.addWidget(row)
+        # rotate left button
+        LeftButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotleft.png')), "Left")
+        LeftButton.setStatusTip("Rotate Left by selected angle")
+        LeftButton.setToolTip("Rotate Left by selected angle")
+        LeftButton.clicked.connect(self.RotateLeft)
+        RotGroupLayout.addWidget(LeftButton, 1, 0)
+            
+        # rotate right button
+        RightButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotright.png')), 'Right')
+        RightButton.setStatusTip("Rotate right by selected angle")
+        RightButton.setToolTip("Rotate right by selected angle")
+        RightButton.clicked.connect(self.RotateRight)
+        RotGroupLayout.addWidget(RightButton, 1, 2)
         
-        # apply button
+        # rotate down button
+        DownButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/rotdown.png')),"Down")
+        DownButton.setStatusTip("Rotate Down by selected angle")
+        DownButton.setToolTip("Rotate Down by selected angle")
+        DownButton.clicked.connect(self.RotateDown)
+        RotGroupLayout.addWidget(DownButton, 2, 1)
+        
+        # Reset button
+        ResetButton = QtGui.QPushButton("Reset View")
+        ResetButton.setStatusTip("Reset view to the visualiser default")
+        ResetButton.setToolTip("Reset view to the visualiser default")
+        ResetButton.clicked.connect(self.setCameraToCell)
+        RotGroupLayout.addWidget(ResetButton, 4, 1)
+        
+        # Clockwise Rotation
+        CWButton = QtGui.QPushButton(QtGui.QIcon(iconPath('oxygen/view-refresh.png')),"ClockWise")
+        CWButton.setStatusTip("Rotate lattice clockwise by selected angle")
+        CWButton.setToolTip("Rotate lattice clockwise by selected angle")
+        CWButton.clicked.connect(self.RotateClockWise)
+        RotGroupLayout.addWidget(CWButton, 3, 0)
+        
+        # AntiClockwise Rotation
+        ACWButton = QtGui.QPushButton(QtGui.QIcon(iconPath('other/anticlockwise.png')),"Anti-ClockWise")
+        ACWButton.setStatusTip("Rotate lattice anti-clockwise by selected angle")
+        ACWButton.setToolTip("Rotate lattice anti-clockwise by selected angle")
+        ACWButton.clicked.connect(self.RotateAntiClockWise)
+        RotGroupLayout.addWidget(ACWButton, 3, 2)   
+        
+        
+        # Add RotGroup to window
+        layout.addWidget(RotGroup,1,0)
+        
+        
+        # Custom rotate to crystal plane
+        CrystalGroup = QtGui.QGroupBox("Rotate to top-down view of given crystal plane (EXPERIMENTAL)")
+        CrystalGroup.setAlignment(QtCore.Qt.AlignHCenter)
+        CrystalGroupLayout = QtGui.QGridLayout(CrystalGroup)
+        
+        label2 = QtGui.QLabel("Select crystal plane")
+        CrystalGroupLayout.addWidget(label2, 0, 1)
+        
+        # inputs for crystal plane Miller index
+        self.CrystalXSpin = QtGui.QSpinBox()
+        self.CrystalXSpin.setSingleStep(1)
+        self.CrystalXSpin.setMinimum(-10)
+        self.CrystalXSpin.setMaximum(10)
+        self.CrystalXSpin.setValue(1)
+        self.CrystalXSpin.setToolTip("X param of crystal plane Miller Index")
+        CrystalGroupLayout.addWidget(self.CrystalXSpin, 1, 0)
+        
+        self.CrystalYSpin = QtGui.QSpinBox()
+        self.CrystalYSpin.setSingleStep(1)
+        self.CrystalYSpin.setMinimum(-10)
+        self.CrystalYSpin.setMaximum(10)
+        self.CrystalYSpin.setValue(1)
+        self.CrystalYSpin.setToolTip("Y param of crystal plane Miller Index")
+        CrystalGroupLayout.addWidget(self.CrystalYSpin, 1, 1)
+        
+        self.CrystalZSpin = QtGui.QSpinBox()
+        self.CrystalZSpin.setSingleStep(1)
+        self.CrystalZSpin.setMinimum(-10)
+        self.CrystalZSpin.setMaximum(10)
+        self.CrystalZSpin.setValue(1)
+        self.CrystalZSpin.setToolTip("Z param of crystal plane Miller Index")
+        CrystalGroupLayout.addWidget(self.CrystalZSpin, 1, 2)
+        
+        # Button to do the rotation
+        CrystalRotButton = QtGui.QPushButton("Rotate")
+        CrystalRotButton.setStatusTip("Rotate to a top-down view of the given plane above.")
+        CrystalRotButton.setToolTip("Rotate to a top-down view of the given plane above.")
+        CrystalRotButton.clicked.connect(self.RotateViewGeneral)
+        CrystalGroupLayout.addWidget(CrystalRotButton, 2, 1)
+        
+        # Add CrystalGroup to window
+        layout.addWidget(CrystalGroup,2,0)
+        
+        
+        # Close Button
         row = QtGui.QWidget(self)
         rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
         
-        applyButton = QtGui.QPushButton("Apply")
-        applyButton.setStatusTip("Apply rotation")
-        applyButton.setToolTip("Apply rotation")
-        applyButton.clicked.connect(self.applyRotation)
-        
-        rowLayout.addWidget(applyButton)
-        
-        layout.addWidget(row)
-    
-    def applyRotation(self):
+        CloseButton = QtGui.QPushButton("Close")
+        CloseButton.clicked.connect(self.reject) 
+        CloseButton.setDefault(True)
+        rowLayout.addWidget(CloseButton)
+        layout.addWidget(row,3,0)
+
+
+    def RotateClockWise(self):
         """
-        Apply the rotation
+        Rotate viewpoint clockwise about the vector coming out of the center of the screen.
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        angle = -self.angleSpin.value()
+        
+        # apply rotation
+        logger.debug("Appling clockwise rotation by %f degrees", angle)
+        logger.debug("Calling: Roll %f", angle)
+        renderer.camera.Roll(float(angle))
+        renderer.reinit()
+        
+    def RotateAntiClockWise(self):
+        """
+        Rotate viewpoint anticlockwise about the vector coming out of the center of the screen.
         
         """
         logger = logging.getLogger(__name__+".RotateViewPoint")
         renderer = self.rw.renderer
         
         angle = self.angleSpin.value()
-        direction = str(self.directionCombo.currentText())
-        logger.debug("Appling rotation: %s by %f degrees", direction, angle)
         
-        if direction == "Right" or direction == "Left":
-            if direction == "Right":
-                angle = - angle
-            
-            # apply rotation
-            renderer.camera.Azimuth(angle)
-            renderer.camera.OrthogonalizeViewUp()
-            logger.debug("Calling: azimuth %f", angle)
-        
-        else:
-            if direction == "Up":
-                angle = - angle
-            
-            # apply rotation
-            renderer.camera.Elevation(angle)
-            renderer.camera.OrthogonalizeViewUp()
-            logger.debug("Calling: elevation %f", angle)
-        
+        # apply rotation
+        logger.debug("Appling anticlockwise rotation by %f degrees", angle)
+        logger.debug("Calling: Roll %f", angle)
+        renderer.camera.Roll(float(angle))
         renderer.reinit()
 
+    def RotateRight(self):
+        """
+        Rotate viewpoint Right by the given angle.
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        angle = -self.angleSpin.value()
+        
+        # apply rotation
+        logger.debug("Appling right rotation by %f degrees", angle)
+        logger.debug("Calling: azimuth %f", angle)
+        renderer.camera.Azimuth(float(angle)) 
+        renderer.reinit()
+        
+    def RotateLeft(self):
+        """
+        Rotate viewpoint Left by the given angle.
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        angle = self.angleSpin.value()
+        
+        # apply rotation
+        logger.debug("Appling right rotation by %f degrees", angle)
+        logger.debug("Calling: azimuth %f", angle)
+        renderer.camera.Azimuth(float(angle))
+        renderer.reinit()   
+        
+    def RotateUp(self):
+        """
+        Rotate viewpoint Up by the given angle.
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        angle = -self.angleSpin.value()
+        
+        # apply rotation
+        logger.debug("Appling right rotation by %f degrees", angle)
+        logger.debug("Calling: elevation %f", angle)
+        if( ((angle > 89) and (angle < 91)) or ((angle > -91) and (angle < -89))  ):
+            # This is done in two steps so new viewup can be calculated correctly
+            # otherwise ViewUp and DirectionOfProjection vectors become parallel
+            renderer.camera.Elevation(float(angle/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+            renderer.camera.Elevation(float(angle/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+        else:
+            renderer.camera.Elevation(float(angle))
+            renderer.camera.OrthogonalizeViewUp() 
+        
+        renderer.reinit()
+        
+    def RotateDown(self):
+        """
+        Rotate viewpoint Down by the given angle.
+        
+        """
+        logger = logging.getLogger(__name__+".RotateViewPoint")
+        renderer = self.rw.renderer
+        
+        angle = self.angleSpin.value()
+        
+        # apply rotation
+        logger.debug("Appling right rotation by %f degrees", angle)
+        logger.debug("Calling: elevation %f", angle)
+        if( ((angle > 89) and (angle < 91)) or ((angle > -91) and (angle < -89))  ):
+            # This is done in two steps so new viewup can be calculated correctly
+            # otherwise ViewUp and DirectionOfProjection vectors become parallel
+            renderer.camera.Elevation(float(angle/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+            renderer.camera.Elevation(float(angle/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+        else:
+            renderer.camera.Elevation(float(angle))
+            renderer.camera.OrthogonalizeViewUp() 
+        
+        renderer.reinit()
+        
+    def setCameraToCell(self):
+        """
+        Reset the camera to point at the cell
+        
+        """
+        renderer = self.rw.renderer
+        renderer.setCameraToCell()  
+        
+    def RotateViewGeneral(self):  
+        # crystal plane (also normal vector)
+        x = self.CrystalXSpin.value()
+        y = self.CrystalYSpin.value()
+        z = self.CrystalZSpin.value()
+        # return without doing anything if zero plane is given
+        if( (x == 0) and (y == 0) and (z == 0) ):
+            return
+        
+        mag_norm = math.sqrt(x*x + y*y +z*z)
+        
+        mag_proj = math.sqrt(x*x + y*y)
+        
+        # Angle between normal and projection to xy plane
+        if(z == 0):
+            ang_norm_xy = 0
+        elif( (x == 0) and (y == 0) ):
+            ang_norm_xy = 90.0
+        elif( (z < 0) ):
+            ang_dp = x*x + y*y
+            ang_norm_xy = 360 - math.degrees( math.acos(ang_dp/(mag_proj*mag_norm)) )
+        else:
+            ang_dp = x*x + y*y
+            ang_norm_xy = math.degrees( math.acos(ang_dp/(mag_proj*mag_norm)) )
+        
+        # Angle between xy projection and x axis
+        if( (x == 0) and (y == 0) ):
+            ang_norm_xz = 0.0
+        elif( (y < 0) ):
+            mag_proj = math.sqrt(x*x + y*y)
+            ang_norm_xz = 360 - math.degrees( math.acos(x/mag_proj) )
+        else:
+            mag_proj = math.sqrt(x*x + y*y)
+            ang_norm_xz = math.degrees( math.acos(x/mag_proj) )
+        
+        
+        # reset view
+        self.setCameraToCell()
+        # get renderer
+        renderer = self.rw.renderer
+        # Rotate to view yz plane down the x axis
+        renderer.camera.Azimuth(float(90.0))
+        renderer.camera.Elevation(float(-45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Elevation(float(-45.0))
+        renderer.camera.OrthogonalizeViewUp()
+        renderer.camera.Azimuth(float(90.0))
+        
+        # rotate to the crystal plane
+        renderer.camera.Azimuth(float(ang_norm_xz))
+        
+        if( ((ang_norm_xy > 89) and (ang_norm_xy < 91)) or ((ang_norm_xy > -91) and (ang_norm_xy < -89))  ):
+            # This is done in two steps so new viewup can be calculated correctly
+            # otherwise ViewUp and DirectionOfProjection vectors become parallel
+            renderer.camera.Elevation(float(ang_norm_xy/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+            renderer.camera.Elevation(float(ang_norm_xy/2.0))
+            renderer.camera.OrthogonalizeViewUp()
+        else:
+            renderer.camera.Elevation(float(ang_norm_xy))
+            renderer.camera.OrthogonalizeViewUp() 
+        
+        renderer.reinit()  
+     
+              
 ################################################################################
 
 class ReplicateCellDialog(QtGui.QDialog):
@@ -574,6 +822,9 @@ class ReplicateCellDialog(QtGui.QDialog):
         # layout
         layout = QtGui.QFormLayout()
         self.setLayout(layout)
+        
+        self.setMinimumWidth(230)
+        #self.setMinimumHeight(200)
         
         # x
         self.replicateInXSpin = QtGui.QSpinBox()
@@ -665,3 +916,82 @@ class ShiftCellDialog(QtGui.QDialog):
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout.addRow(buttonBox)
+
+
+################################################################################
+
+class ShiftAtomDialog(QtGui.QDialog):
+    """
+    Ask user which atom should be shifted and the distance of the shift in each direction.
+    
+    """
+    def __init__(self, inputID, pbc, cellDims, NumAtoms, parent=None):
+        super(ShiftAtomDialog, self).__init__(parent)
+        
+        self.setWindowTitle("Shift atom options")
+        
+        # layout
+        layout = QtGui.QFormLayout()
+        self.setLayout(layout)
+        
+        self.setMinimumWidth(220)
+        self.setMinimumHeight(200)
+        
+        # Atom ID
+        # only allow numbers, commas and hyphens
+        rx = QtCore.QRegExp("[0-9]+(?:[-,]?[0-9]+)*")
+        validator = QtGui.QRegExpValidator(rx, self)
+        
+        self.lineEdit = QtGui.QLineEdit()
+        self.lineEdit.setValidator(validator)
+        if (inputID>=0):
+            self.lineEdit.setText(str(inputID))
+        self.lineEdit.setToolTip("Comma separated list of atom IDs or ranges of atom IDs (hyphenated) that are visible (eg. '22,30-33' will show atom IDs 22, 30, 31, 32 and 33)")
+        #self.lineEdit.editingFinished.connect(self._settings.updateSetting("filterString", str(self.lineEdit.text())))
+        layout.addRow("Atom IDs", self.lineEdit)
+        
+        
+        
+        
+        # x
+        self.shiftXSpin = QtGui.QDoubleSpinBox()
+        self.shiftXSpin.setMinimum(-cellDims[0])
+        self.shiftXSpin.setMaximum(cellDims[0])
+        self.shiftXSpin.setSingleStep(1)
+        self.shiftXSpin.setValue(0)
+        self.shiftXSpin.setToolTip("Distance to shift the atom in the x direction")
+        #if not pbc[0]:
+        #    self.shiftXSpin.setEnabled(False)
+        layout.addRow("Shift in x", self.shiftXSpin)
+        
+        # y
+        self.shiftYSpin = QtGui.QDoubleSpinBox()
+        self.shiftYSpin.setMinimum(-cellDims[1])
+        self.shiftYSpin.setMaximum(cellDims[1])
+        self.shiftYSpin.setSingleStep(1)
+        self.shiftYSpin.setValue(0)
+        self.shiftYSpin.setToolTip("Distance to shift the atom in the y direction")
+        #if not pbc[1]:
+        #    self.shiftYSpin.setEnabled(False)
+        layout.addRow("Shift in y", self.shiftYSpin)
+        
+        # z
+        self.shiftZSpin = QtGui.QDoubleSpinBox()
+        self.shiftZSpin.setMinimum(-cellDims[2])
+        self.shiftZSpin.setMaximum(cellDims[2])
+        self.shiftZSpin.setSingleStep(1)
+        self.shiftZSpin.setValue(0)
+        self.shiftZSpin.setToolTip("Distance to shift the atom in the z direction")
+        #if not pbc[2]:
+        #    self.shiftZSpin.setEnabled(False)
+        layout.addRow("Shift in z", self.shiftZSpin)
+        
+        # button box
+        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+        layout.addRow(buttonBox)
+
+
+
+

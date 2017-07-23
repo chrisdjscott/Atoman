@@ -30,7 +30,7 @@ class ActorsOptionsWindow(QtGui.QDialog):
         self._filterList = parent
         
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
-        
+        self.setMinimumWidth(450)
         self.setWindowTitle("Actors options")
 #         self.setWindowIcon(QtGui.QIcon(iconPath("bonding.jpg")))
         
