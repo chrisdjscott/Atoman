@@ -816,7 +816,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 target.addAction(action)
 
     @staticmethod
-    def updateInstances(qobj):
+    def updateInstances():
         """
         Make sure only alive windows appear in the set
 

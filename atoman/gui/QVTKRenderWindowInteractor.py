@@ -75,17 +75,17 @@ if PyQtImpl is None:
             except ImportError:
                 raise ImportError("Cannot load either PyQt or PySide")
 
-if PyQtImpl == "PySide2":
+if PyQtImpl == "PyQt5":
     if QVTKRWIBase == "QGLWidget":
-        from PySide2.QtOpenGL import QGLWidget
-    from PySide2.QtWidgets import QWidget
-    from PySide2.QtWidgets import QSizePolicy
-    from PySide2.QtWidgets import QApplication
-    from PySide2.QtCore import Qt
-    from PySide2.QtCore import QTimer
-    from PySide2.QtCore import QObject
-    from PySide2.QtCore import QSize
-    from PySide2.QtCore import QEvent
+        from PyQt5.QtOpenGL import QGLWidget
+    from PyQt5.QtWidgets import QWidget
+    from PyQt5.QtWidgets import QSizePolicy
+    from PyQt5.QtWidgets import QApplication
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtCore import QTimer
+    from PyQt5.QtCore import QObject
+    from PyQt5.QtCore import QSize
+    from PyQt5.QtCore import QEvent
 elif PyQtImpl == "PyQt4":
     if QVTKRWIBase == "QGLWidget":
         from PyQt4.QtOpenGL import QGLWidget
@@ -97,6 +97,17 @@ elif PyQtImpl == "PyQt4":
     from PyQt4.QtCore import QObject
     from PyQt4.QtCore import QSize
     from PyQt4.QtCore import QEvent
+elif PyQtImpl == "PySide2":
+    if QVTKRWIBase == "QGLWidget":
+        from PySide2.QtOpenGL import QGLWidget
+    from PySide2.QtWidgets import QWidget
+    from PySide2.QtWidgets import QSizePolicy
+    from PySide2.QtWidgets import QApplication
+    from PySide2.QtCore import Qt
+    from PySide2.QtCore import QTimer
+    from PySide2.QtCore import QObject
+    from PySide2.QtCore import QSize
+    from PySide2.QtCore import QEvent
 elif PyQtImpl == "PySide":
     if QVTKRWIBase == "QGLWidget":
         from PySide.QtOpenGL import QGLWidget
