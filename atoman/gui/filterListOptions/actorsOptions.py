@@ -14,7 +14,7 @@ from __future__ import unicode_literals
 import functools
 import logging
 
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 
 

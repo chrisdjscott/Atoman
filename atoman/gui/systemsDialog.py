@@ -16,7 +16,7 @@ import logging
 import functools
 import copy
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 import numpy as np
 

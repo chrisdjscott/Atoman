@@ -11,7 +11,7 @@ import sys
 import traceback
 import logging
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 import matplotlib
 from six.moves import zip

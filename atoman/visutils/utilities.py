@@ -19,7 +19,7 @@ import tempfile
 import logging
 
 import pkg_resources
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 
 from .appdirs import appdirs

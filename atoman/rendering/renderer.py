@@ -18,7 +18,7 @@ import six.moves.queue
 
 import vtk
 from PIL import Image
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 
 from ..visutils import utilities

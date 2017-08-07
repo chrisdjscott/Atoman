@@ -7,13 +7,13 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 import vtk
-from PyQt5 import QtCore
+from PySide2 import QtCore
 
 from .QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 # from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 try:
     import vtk.qt
-    vtk.qt.PyQtImpl = "PyQt5"
+    vtk.qt.PyQtImpl = "PySide2"
 except:
     pass
 
@@ -33,11 +33,11 @@ class VTKWindow(QVTKRenderWindowInteractor):
     The VTK window
     
     """
-    leftButtonPressed = QtCore.pyqtSignal(QtCore.QEvent)
-    leftButtonReleased = QtCore.pyqtSignal(QtCore.QEvent)
-    rightButtonPressed = QtCore.pyqtSignal(QtCore.QEvent)
-    rightButtonReleased = QtCore.pyqtSignal(QtCore.QEvent)
-    mouseMoved = QtCore.pyqtSignal(QtCore.QEvent)
+    leftButtonPressed = QtCore.Signal(QtCore.QEvent)
+    leftButtonReleased = QtCore.Signal(QtCore.QEvent)
+    rightButtonPressed = QtCore.Signal(QtCore.QEvent)
+    rightButtonReleased = QtCore.Signal(QtCore.QEvent)
+    mouseMoved = QtCore.Signal(QtCore.QEvent)
     
     def __init__(self, parent=None, wflags=QtCore.Qt.WindowFlags(), **kw):
         super(VTKWindow, self).__init__(parent=parent, wflags=wflags, **kw)

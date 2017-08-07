@@ -20,7 +20,7 @@ import datetime
 import time
 
 import numpy as np
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 from PIL import Image
 
@@ -1094,8 +1094,8 @@ class MovieGenerator(QtCore.QObject):
     Call ffmpeg to generate a movie
     
     """
-    log = QtCore.pyqtSignal(str, str)
-    allDone = QtCore.pyqtSignal()
+    log = QtCore.Signal(str, str)
+    allDone = QtCore.Signal()
     
     def __init__(self):
         super(MovieGenerator, self).__init__()

@@ -5,7 +5,7 @@ Contains GUI forms for the atom ID filter.
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 
 from . import base

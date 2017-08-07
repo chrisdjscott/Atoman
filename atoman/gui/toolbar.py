@@ -9,7 +9,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 
 from .genericForm import GenericForm

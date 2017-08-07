@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import functools
 
-from PyQt5 import QtWidgets
+from PySide2 import QtWidgets
 
 
 from . import base

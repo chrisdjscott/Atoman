@@ -17,7 +17,7 @@ import sys
 import logging
 import glob
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 
 from ..visutils.utilities import iconPath, resourcePath

@@ -17,7 +17,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 from six.moves import range
 
@@ -54,7 +54,7 @@ class VectorsOptionsWindow(QtWidgets.QDialog):
     Vectors display options dialog.
     
     """
-    modified = QtCore.pyqtSignal(str)
+    modified = QtCore.Signal(str)
     
     def __init__(self, mainWindow, parent=None):
         super(VectorsOptionsWindow, self).__init__(parent)

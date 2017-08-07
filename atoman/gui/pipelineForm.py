@@ -19,7 +19,7 @@ import logging
 import functools
 import uuid
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 import vtk
 import numpy as np

@@ -11,7 +11,7 @@ import uuid
 import functools
 import logging
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 
 from ...algebra import vectors

@@ -7,7 +7,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 
 from . import base

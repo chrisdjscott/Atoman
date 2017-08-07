@@ -14,7 +14,7 @@ import datetime
 import multiprocessing as mp
 import functools
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 import numpy as np
 

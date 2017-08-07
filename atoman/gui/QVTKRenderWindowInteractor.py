@@ -34,7 +34,7 @@ Changes by Greg Schussman, Aug. 2014
  The keyPressEvent function now passes keysym instead of None.
 
 Changes by Alex Tsui, Apr. 2015
- Port from PyQt4 to PyQt5.
+ Port from PyQt4 to PySide2.
 
 Changes by Fabian Wenzel, Jan. 2016
  Support for Python3
@@ -43,7 +43,7 @@ from __future__ import print_function
 import vtk
 
 # Check whether a specific PyQt implementation was chosen
-PyQtImpl = 'PyQt5'
+PyQtImpl = 'PySide2'
 try:
     import vtk.qt
     PyQtImpl = vtk.qt.PyQtImpl
@@ -62,8 +62,8 @@ except (ImportError, AttributeError):
 if PyQtImpl is None:
     # Autodetect the PyQt implementation to use
     try:
-        import PyQt5
-        PyQtImpl = "PyQt5"
+        import PySide2
+        PyQtImpl = "PySide2"
     except ImportError:
         try:
             import PyQt4
@@ -75,17 +75,17 @@ if PyQtImpl is None:
             except ImportError:
                 raise ImportError("Cannot load either PyQt or PySide")
 
-if PyQtImpl == "PyQt5":
+if PyQtImpl == "PySide2":
     if QVTKRWIBase == "QGLWidget":
-        from PyQt5.QtOpenGL import QGLWidget
-    from PyQt5.QtWidgets import QWidget
-    from PyQt5.QtWidgets import QSizePolicy
-    from PyQt5.QtWidgets import QApplication
-    from PyQt5.QtCore import Qt
-    from PyQt5.QtCore import QTimer
-    from PyQt5.QtCore import QObject
-    from PyQt5.QtCore import QSize
-    from PyQt5.QtCore import QEvent
+        from PySide2.QtOpenGL import QGLWidget
+    from PySide2.QtWidgets import QWidget
+    from PySide2.QtWidgets import QSizePolicy
+    from PySide2.QtWidgets import QApplication
+    from PySide2.QtCore import Qt
+    from PySide2.QtCore import QTimer
+    from PySide2.QtCore import QObject
+    from PySide2.QtCore import QSize
+    from PySide2.QtCore import QEvent
 elif PyQtImpl == "PyQt4":
     if QVTKRWIBase == "QGLWidget":
         from PyQt4.QtOpenGL import QGLWidget

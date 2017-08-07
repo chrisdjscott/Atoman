@@ -16,7 +16,7 @@ from __future__ import unicode_literals
 
 import functools
 
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 
 from .. import genericForm

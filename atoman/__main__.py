@@ -22,7 +22,7 @@ except ImportError:
     # configure logging (we have to set logging.NOTSET here as global for root logger)
     logging.basicConfig(format="%(levelname)s: %(name)s: %(message)s", level=logging.NOTSET)
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 
 # set default for stream handler (we don't want it to be NOTSET by default)

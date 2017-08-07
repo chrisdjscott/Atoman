@@ -13,7 +13,7 @@ import os
 import copy
 import logging
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 import numpy as np
 

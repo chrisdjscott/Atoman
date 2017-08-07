@@ -28,7 +28,7 @@ import logging
 import re
 import errno
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 from six.moves import range
 try:

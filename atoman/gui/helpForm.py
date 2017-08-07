@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 import logging
 import functools
 
-from PyQt5 import QtGui, QtCore, QtWidgets #, QtWebEngineWidgets
+from PySide2 import QtGui, QtCore, QtWidgets #, QtWebEngineWidgets
 
 
 from ..visutils.utilities import iconPath, helpPath

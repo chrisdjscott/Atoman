@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import unittest
 
-from PyQt5.QtWidgets import QApplication
+from PySide2.QtWidgets import QApplication
 _instance = None
 
 class UsesQApplication(unittest.TestCase):

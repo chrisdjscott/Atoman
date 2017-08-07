@@ -5,7 +5,7 @@ Contains GUI forms for the species filter.
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 
 from . import base

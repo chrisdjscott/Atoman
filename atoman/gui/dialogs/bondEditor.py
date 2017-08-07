@@ -10,7 +10,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 
 from ...system.atoms import elements
@@ -192,7 +192,7 @@ class BondEditorSettingsForm(QtWidgets.QGroupBox):
     Settings for bond
     
     """
-    settingModified = QtCore.pyqtSignal(str)
+    settingModified = QtCore.Signal(str)
     
     def __init__(self, parent, syma, symb, bondMin, bondMax):
         super(BondEditorSettingsForm, self).__init__("%s - %s" % (syma, symb), parent=parent)

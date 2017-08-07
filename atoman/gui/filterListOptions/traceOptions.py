@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from PyQt5 import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 
 
@@ -33,7 +33,7 @@ class TraceOptionsWindow(QtWidgets.QDialog):
     Window for setting trace options.
     
     """
-    modified = QtCore.pyqtSignal(str)
+    modified = QtCore.Signal(str)
     
     def __init__(self, mainWindow, parent=None):
         super(TraceOptionsWindow, self).__init__(parent)

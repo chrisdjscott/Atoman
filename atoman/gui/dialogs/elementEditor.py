@@ -11,7 +11,7 @@ from __future__ import unicode_literals
 import copy
 import logging
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 import numpy as np
 
@@ -26,7 +26,7 @@ class ElementSettingsForm(QtWidgets.QGroupBox):
     Form for editing element settings
     
     """
-    settingsModified = QtCore.pyqtSignal(str)
+    settingsModified = QtCore.Signal(str)
     
     def __init__(self, sym, parent=None):
         self.sym = sym
