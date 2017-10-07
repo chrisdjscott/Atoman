@@ -25,12 +25,12 @@ env:
 
 before_install:
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then 
-        brew install gcc6
-        export CC=gcc-6
-        export CXX=g++-6
+        brew install gcc6;
+        export CC=gcc-6;
+        export CXX=g++-6;
       else
-        export CC=gcc
-        export CXX=g++
+        export CC=gcc;
+        export CXX=g++;
       fi
     - $CC --version
     - $CXX --version
