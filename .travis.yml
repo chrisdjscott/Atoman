@@ -18,13 +18,15 @@ os:
 
 # different builds
 env:
-    - VTK=5 PYTHON=2
+#    - VTK=5 PYTHON=2
     - VTK=6 PYTHON=2
     - VTK=7 PYTHON=2
     # - VTK=7 PYTHON=3
 
 before_install:
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then 
+        brew update;
+        brew upgrade;
         brew install gcc6;
         export CC=gcc-6;
         export CXX=g++-6;
@@ -32,6 +34,7 @@ before_install:
         export CC=gcc;
         export CXX=g++;
       fi
+    - which gcc-6 || true
     - $CC --version
     - $CXX --version
     - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
@@ -41,12 +44,19 @@ before_install:
 install:
     - python --version
     - cp setup.cfg.example setup.cfg
-    - if [ ${TRAVIS_OS_NAME} == "linux" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
+#    - if [ ${TRAVIS_OS_NAME} == "linux" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
     - if [ ${TRAVIS_OS_NAME} == "osx" ]; then sed -i '' 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
     - python setup.py --version
     - python setup.py build_clib
     - python setup.py build_ext --inplace
     - python setup.py build_sphinx
+
+before_script:
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+        "export DISPLAY=:99.0";
+        "sh -e /etc/init.d/xvfb start";
+        sleep 3; # give xvfb some time to start
+      fi
 
 script:
     - python setup.py test
