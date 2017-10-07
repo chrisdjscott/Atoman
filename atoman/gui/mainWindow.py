@@ -271,8 +271,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # view ports / renderer windows
         self.rendererWindows = []  # TODO: remove
-#        self.rendererWindowsSubWin = []  # TODO: remove
-        self.viewPorts = viewPorts.ViewPortsWidget(int(numViewPortsCombo.currentText()), parent=self)
+        self.viewPorts = viewPorts.ViewPortsWidget(parent=self)
+        self.numViewPortsChanged(int(numViewPortsCombo.currentText()))
         self.setCentralWidget(self.viewPorts)
 
         # add the main tool bar
@@ -327,29 +327,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.viewPorts.numViewPortsChanged(int(num_str))
 
         self.rendererWindows = self.viewPorts.getViewPorts()
-        for rw in self.rendererWindows:
-            rw.outputDialog.imageTab.imageSequenceTab.refreshLinkedRenderers()
-
-    def addRendererWindow(self, ask=True):
-        """
-        Add renderer window to mdi area.
-
-        """
-        rendererWindow = rendererSubWindow.RendererWindow(self, self.subWinCount, parent=self)
-        rendererWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-
-        subwin = self.mdiArea.addSubWindow(rendererWindow)
-        subwin.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        subwin.activateWindow()
-        subwin.show()
-
-        self.rendererWindows.append(rendererWindow)
-        self.rendererWindowsSubWin.append(subwin)
-
-        self.subWinCount += 1
-
-        self.mdiArea.tileSubWindows()
-
         for rw in self.rendererWindows:
             rw.outputDialog.imageTab.imageSequenceTab.refreshLinkedRenderers()
 

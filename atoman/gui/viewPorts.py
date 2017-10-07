@@ -21,14 +21,13 @@ class ViewPortsWidget(QtWidgets.QWidget):
     Class for holding view ports (renderer windows)
 
     """
-    def __init__(self, numInitial, parent=None):
+    def __init__(self, parent=None):
         super(ViewPortsWidget, self).__init__(parent)
 
         self._logger = logging.getLogger(__name__)
         self._viewPorts = []
         self._layout = QtWidgets.QGridLayout(self)
         self._mainWindow = parent
-        self.numViewPortsChanged(numInitial)
 
     def numViewPortsChanged(self, num):
         """Add/remove view ports."""
