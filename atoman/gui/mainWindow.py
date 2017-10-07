@@ -32,6 +32,7 @@ from . import helpForm
 from . import preferences
 from . import rendererSubWindow
 from . import systemsDialog
+from . import viewPorts
 from .dialogs import simpleDialogs
 from .dialogs import bondEditor
 from .dialogs import elementEditor
@@ -223,6 +224,17 @@ class MainWindow(QtWidgets.QMainWindow):
         viewToolbar.addAction(showPreferencesAction)
         viewToolbar.addSeparator()
 
+        # vis tool bar
+        visToolbar = self.addToolBar("Visualisation")
+        numViewPortsCombo = QtWidgets.QComboBox()
+        numViewPortsCombo.addItem("1")
+        numViewPortsCombo.addItem("2")
+        numViewPortsCombo.addItem("4")
+        numViewPortsCombo.currentIndexChanged[str].connect(self.numViewPortsChanged)
+        visToolbar.addWidget(QtWidgets.QLabel("View ports:"))
+        visToolbar.addWidget(numViewPortsCombo)
+        visToolbar.addSeparator()
+
         # add about action
         aboutAction = self.createAction("About Atoman", slot=self.aboutMe, icon="oxygen/help-about.png",
                                         tip="About Atoman")
@@ -257,17 +269,11 @@ class MainWindow(QtWidgets.QMainWindow):
         # element editor
         self.elementEditor = elementEditor.ElementEditor(parent=self)
 
-        # load input dialog
-#         self.loadInputDialog = inputDialog.InputDialog(self, self, None)
-
-        self.mdiArea = QtWidgets.QMdiArea()
-        self.mdiArea.subWindowActivated.connect(self.rendererWindowActivated)
-        self.setCentralWidget(self.mdiArea)
-        self.rendererWindows = []
-        self.rendererWindowsSubWin = []
-        self.subWinCount = 0
-        self.addRendererWindow(ask=False)
-        self.mdiArea.tileSubWindows()
+        # view ports / renderer windows
+        self.rendererWindows = []  # TODO: remove
+#        self.rendererWindowsSubWin = []  # TODO: remove
+        self.viewPorts = viewPorts.ViewPortsWidget(int(numViewPortsCombo.currentText()), parent=self)
+        self.setCentralWidget(self.viewPorts)
 
         # add the main tool bar
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
@@ -315,6 +321,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         """
         pass
+
+    def numViewPortsChanged(self, num_str):
+        """Update the number of view ports."""
+        self.viewPorts.numViewPortsChanged(int(num_str))
+
+        self.rendererWindows = self.viewPorts.getViewPorts()
+        for rw in self.rendererWindows:
+            rw.outputDialog.imageTab.imageSequenceTab.refreshLinkedRenderers()
 
     def addRendererWindow(self, ask=True):
         """
