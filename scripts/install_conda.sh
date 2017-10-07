@@ -17,7 +17,7 @@ display_usage() {
     echo "    [-p python_version] The version of python to use (either 2 or 3, default is 2)"
     echo "    [-V vtk_version] The version of VTK to use (5, 6, or 7, default is 7)"
     echo "    [-e conda_env] The name of the conda environment to create (default is 'atoman')"
-    echo "    [-g] Do not install gcc from conda; assume another version will be used"
+    echo "    [-g] Install gcc from conda"
     echo "    [-h] Display help"
     echo
 }
@@ -28,7 +28,7 @@ CONDIR=${HOME}/miniconda
 PYVER=2
 VTKVER=7
 CONDENV=atoman
-WITH_GCC=1
+WITH_GCC=0
 
 # parse args
 while [[ $# -gt 0 ]]
@@ -51,8 +51,8 @@ do
         CONDENV="$2"
         shift
         ;;
-        -g|--no-gcc)
-        WITH_GCC=0
+        -g|--gcc)
+        WITH_GCC=1
         ;;
         -h|--help)
         display_usage
@@ -167,16 +167,16 @@ fi
 
 # update conda
 echo Updating conda...
-conda update --yes conda
+conda update --yes --quiet conda
 
 # create conda environment
 echo Creating conda environment: \"${CONDENV}\"...
-conda create -y -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip nose setuptools sphinx \
+conda create -y -q -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip nose setuptools sphinx \
         sphinx_rtd_theme paramiko pyqt
 
 # install GCC if required
 if [ "$WITH_GCC" = "1" ]; then
-    conda install -y -n ${CONDENV} gcc
+    conda install -y -q -n ${CONDENV} gcc
 fi
 
 # install VTK
@@ -196,7 +196,7 @@ source activate ${CONDENV}
 
 # install additional packages using pip
 echo Installing additional packages using pip...
-pip install pyhull
+pip install pyhull || true
 pip install pyinstaller
 
 echo
