@@ -187,11 +187,11 @@ fi
 case $VTKVER in
     7.0.0)
     echo Installing VTK 7.0.0 ...
-    conda install -y -n ${CONDENV} -c menpo vtk=${VTKVER}
+    conda install -y -q -n ${CONDENV} -c menpo vtk=${VTKVER}
     ;;
     *)
     echo Installing VTK ${VTKVER} ...
-    conda install -y -n ${CONDENV} vtk=${VTKVER}
+    conda install -y -q -n ${CONDENV} vtk=${VTKVER}
     ;;
 esac
 

@@ -1,15 +1,6 @@
-sudo: false
+sudo: required
+dist: trusty
 language: generic
-
-# install recent GCC
-addons:
-    apt:
-        sources:
-            - ubuntu-toolchain-r-test
-        
-        packages:
-            - gcc-6
-            - g++-6
 
 # run on linux and mac
 os:
@@ -18,7 +9,6 @@ os:
 
 # different builds
 env:
-#    - VTK=5 PYTHON=2
     - VTK=6 PYTHON=2
     - VTK=7 PYTHON=2
     # - VTK=7 PYTHON=3
@@ -26,15 +16,14 @@ env:
 before_install:
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then 
         brew update;
-        brew upgrade;
         brew install gcc6;
-        export CC=gcc-6;
-        export CXX=g++-6;
       else
-        export CC=gcc;
-        export CXX=g++;
+        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y;
+        sudo apt-get update -q;
+        sudo apt-get install gcc-6 -y;
       fi
-    - which gcc-6 || true
+    - export CC=gcc-6;
+    - export CXX=g++-6;
     - $CC --version
     - $CXX --version
     - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
