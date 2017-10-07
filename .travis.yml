@@ -24,18 +24,21 @@ env:
     # - VTK=7 PYTHON=3
 
 before_install:
-    - if [ ${TRAVIS_OS_NAME} == "osx" ]; then brew update; brew outdated gcc || brew upgrade gcc; fi
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then 
+        brew install gcc6
+        export CC=gcc-6
+        export CXX=g++-6
+      else
+        export CC=gcc
+        export CXX=g++
+      fi
+    - $CC --version
+    - $CXX --version
     - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate atoman
-    - export CC=gcc
-    - export CXX=g++
 
 install:
-    - echo $CC
-    - echo $CXX
-    - $CC --version
-    - $CXX --version
     - python --version
     - cp setup.cfg.example setup.cfg
     - if [ ${TRAVIS_OS_NAME} == "linux" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
