@@ -156,7 +156,11 @@ if [ "$NEED_CONDA" = "1" ]; then
     # download and run miniconda (to /tmp for now)
     mincon=/tmp/miniconda.sh
     echo "Downloading miniconda..."
-    wget http://repo.continuum.io/miniconda/Miniconda-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+    if [ "$PYVER" = "2.7" ]; then
+        wget http://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+    else
+        wget http://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+    fi
     chmod +x "${mincon}"
     echo "Installing miniconda..."
     "${mincon}" -b -p ${CONDIR}
