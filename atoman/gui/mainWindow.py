@@ -28,7 +28,6 @@ from ..visutils.utilities import iconPath, resourcePath, dataPath
 from ..system import atoms
 from ..system.atoms import elements
 from . import toolbar as toolbarModule
-from . import helpForm
 from . import preferences
 from . import rendererSubWindow
 from . import systemsDialog
@@ -130,9 +129,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # console window for logging output to
         self.console = consoleWindow.ConsoleWindow(self)
-
-        # help window for displaying help
-        self.helpWindow = helpForm.HelpFormSphinx(parent=self)
 
         # image viewer
         self.imageViewer = simpleDialogs.ImageViewer(self, parent=self)
@@ -240,7 +236,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         tip="About Atoman")
 
         helpAction = self.createAction("Atoman Help", slot=self.showHelp, icon="oxygen/help-browser.png",
-                                       tip="Show help window")
+                                       tip="Show help window (opens in external browser)")
 
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
@@ -411,7 +407,8 @@ class MainWindow(QtWidgets.QMainWindow):
         msg = "This will overwrite the current element properties file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
         reply = QtWidgets.QMessageBox.question(self, "Message", msg,
-                                           QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
 
         if reply == QtWidgets.QMessageBox.Yes:
             atoms.resetAtoms()
@@ -421,7 +418,8 @@ class MainWindow(QtWidgets.QMainWindow):
         msg = "This will overwrite the current bonds file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
         reply = QtWidgets.QMessageBox.question(self, "Message", msg,
-                                           QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
 
         if reply == QtWidgets.QMessageBox.Yes:
             atoms.resetBonds()
@@ -503,12 +501,18 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         self.console.show()
 
-    def showHelp(self):
+    def showHelp(self, relativeUrl=None):
         """
         Show the help window.
 
         """
-        self.helpWindow.show()
+        baseUrl = 'https://chrisdjscott.github.io/Atoman/'
+        if relativeUrl is not None and relativeUrl:
+            url = QtCore.QUrl(os.path.join(baseUrl, relativeUrl))
+        else:
+            url = QtCore.QUrl(baseUrl)
+        self.logger.debug("Opening help url: {0}".format(url.toString()))
+        QtGui.QDesktopServices.openUrl(url)
 
     def renderWindowClosed(self):
         """
@@ -759,7 +763,7 @@ class MainWindow(QtWidgets.QMainWindow):
             action.setShortcut(shortcut)
 
         if tip is not None:
-            action.setToolTip(tip)
+            action.setToolTip("<p>{0}</p>".format(tip))
             action.setStatusTip(tip)
 
         if callable(slot):

@@ -2,6 +2,10 @@
 Changelog
 =========
 
+**170308**
+
+* Fix bug when picking atoms
+
 **170201**
 
 * Update dependencies in README.md

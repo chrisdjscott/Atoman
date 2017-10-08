@@ -109,9 +109,9 @@ def do_clean():
         print("rm -rf atoman/doc")
         shutil.rmtree(os.path.join("atoman", "doc"))
 
-    if os.path.isdir(os.path.join("doc", "build")):
-        print("rm -rf doc/build/*")
-        os.system("rm -rf doc/build/*")
+#    if os.path.isdir(os.path.join("doc", "build")):
+#        print("rm -rf doc/build/*")
+#        os.system("rm -rf doc/build/*")
 
     if os.path.isdir("dist"):
         print("rm -rf dist/")
