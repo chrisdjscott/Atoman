@@ -27,7 +27,7 @@ before_install:
     - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate atoman
-    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then conda install -q gcc; fi
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then conda install -q -y gcc; fi
     - echo $CC
     - echo $CXX
     - $CC --version
@@ -37,7 +37,7 @@ before_install:
 install:
     - cp setup.cfg.example setup.cfg
     - if [ "${TRAVIS_OS_NAME}" == "linux" ] && [ "$VTK" == "7" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
-#    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then sed -i '' 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then sed -i '' 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
     - python setup.py --version
     - python setup.py build_clib
     - python setup.py build_ext --inplace
@@ -47,6 +47,13 @@ before_script:
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export DISPLAY=:99.0; fi
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then sh -e /etc/init.d/xvfb start; fi
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then sleep 3; fi # give xvfb some time to start
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then glxinfo || true; fi
 
 script:
     - python setup.py test
+
+notifications:
+    email: false
+    slack:
+      rooms:
+        - secure: "neuHuwQthASkc0MRU9M5JxaSfUM6Ckk2O1dkROVJZY7xzoJbdwVLV2quYqkCGmCJqSUfR5GGnBBYSGLOUyTas8hXcncC8nafr2NiBLKxQ+ylTt5CAXLOnSQNtVOR+pmaHzLGOSU89EGMQIFzKw5C2DDAXg1bXgXBCnpjy9E6dtkfio+CpNRbRtRibXRvtLXDqdmEY2/4UxIEM7Z9AjCzJT77YEY73wLjO3Khxu3Q/YDqWC7zNYT5lHJKyc0Tc0WJ99yjVJeWiXDxHImA7b10qsG7uqiyqQO0BsDYCm+pku+/aC5CP4tRfc4FGgR3eoi//oz74aTXIyKLAJ9qJxIbuRobGtYEW3T4mdn4kVqyoHG5f+OFnUYbj9Ruz+TWoCmzyv8Wvz1ZV+2ed0Iq9o5HSn6m7C4D9p1wVgUHgQKALow8RjnOBpSNy2MwfsKYM+XVwFm/ptPKpjSSw4bdExP3XXnZKyuUa1zmUEQtqVrWCYO3oN4PaL6067osP5YuhztGHcy9Z0XhhTLMlObFXYyYSqAEklHS42+ldlRJr2N1Smrd4ba0X+XLfb4a+DmdndncxujyYopMwlMdGTZeUZLJ+nWa4M7f5LbcU8oB0YTeDsovKktm6IZXQXXsQZdz9eFTCMolvUel9vzolK5BkuigNW/cZR3tfOdAeXBpsuYBBCQ="
