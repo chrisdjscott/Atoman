@@ -16,7 +16,7 @@ env:
 before_install:
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then 
         export CC=gcc;
-        export CXX=g++
+        export CXX=g++;
       else
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y;
         sudo apt-get update -q;
@@ -28,6 +28,8 @@ before_install:
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate atoman
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then conda install -q gcc; fi
+    - echo $CC
+    - echo $CXX
     - $CC --version
     - $CXX --version
     - python --version
