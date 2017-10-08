@@ -24,15 +24,15 @@ before_install:
         export CC=gcc-6;
         export CXX=g++-6;
       fi
-    - $CC --version
-    - $CXX --version
     - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate atoman
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then conda install -q gcc; fi
+    - $CC --version
+    - $CXX --version
+    - python --version
 
 install:
-    - python --version
     - cp setup.cfg.example setup.cfg
 #    - if [ ${TRAVIS_OS_NAME} == "linux" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
     - if [ ${TRAVIS_OS_NAME} == "osx" ]; then sed -i '' 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
