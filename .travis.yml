@@ -15,20 +15,21 @@ env:
 
 before_install:
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then 
-        brew update;
-        brew install gcc6;
+        export CC=gcc;
+        export CXX=g++
       else
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y;
         sudo apt-get update -q;
-        sudo apt-get install gcc-6 -y;
+        sudo apt-get install gcc-6 g++-6 -y;
+        export CC=gcc-6;
+        export CXX=g++-6;
       fi
-    - export CC=gcc-6;
-    - export CXX=g++-6;
     - $CC --version
     - $CXX --version
     - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate atoman
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then conda install -q gcc; fi
 
 install:
     - python --version
