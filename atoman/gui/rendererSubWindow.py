@@ -141,9 +141,9 @@ class RendererWindow(QtWidgets.QWidget):
         # handle retina "bug" with VTK7 and Qt5 on OS X
         if platform.system() == "Darwin":
             try:
-                osx_helper = ctypes.CDLL("libosx_helper.dylib")
+                osx_helper = ctypes.CDLL("libatoman_osx_helper.dylib")
             except OSError:
-                self.logger.warning("If you have problems with the VTK window not displaying properly try building libosx_helper in the extra directory")
+                self.logger.warning("If you have problems with the VTK window not displaying properly try installing https://github.com/AtomanVis/atoman-osx-helper")
             else:
                 self.logger.info("Applying OS X retina fix")
                 osx_helper.osx_retina_hack(ctypes.c_long(self.vtkRenWinInteract.qvtkWinId))

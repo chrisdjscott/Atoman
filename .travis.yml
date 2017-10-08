@@ -20,7 +20,7 @@ before_install:
       else
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y;
         sudo apt-get update -q;
-        sudo apt-get install gcc-6 g++-6 -y;
+        sudo apt-get install gcc-6 g++-6 mesa-utils -y;
         export CC=gcc-6;
         export CXX=g++-6;
       fi
