@@ -316,16 +316,16 @@ class RendererWindow(QtGui.QWidget):
         filterLists = self.getFilterLists()
         
         for filterList in filterLists:
-            filterer = filterList.filterer
+            rend = filterList.renderer
             
-            if filterer.scalarBarAdded:
+            if rend.scalarBarAdded:
                 # which scalar bar
                 if black_bg:
-                    scalarBar = filterer.scalarBar_black_bg
-                    scalarBarAdd = filterer.scalarBar_white_bg
+                    scalarBar = rend._scalarBarBlack
+                    scalarBarAdd = rend._scalarBarWhite
                 else:
-                    scalarBar = filterer.scalarBar_white_bg
-                    scalarBarAdd = filterer.scalarBar_black_bg
+                    scalarBar = rend._scalarBarWhite
+                    scalarBarAdd = rend._scalarBarBlack
                 
                 # remove it
                 self.vtkRen.RemoveActor2D(scalarBar)

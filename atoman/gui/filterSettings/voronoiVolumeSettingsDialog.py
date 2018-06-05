@@ -18,7 +18,7 @@ class VoronoiVolumeSettingsDialog(base.GenericSettingsDialog):
     """
     def __init__(self, mainWindow, title, parent=None):
         super(VoronoiVolumeSettingsDialog, self).__init__(title, parent, "Voronoi volume")
-        
+        self.setMinimumWidth(350)
         self.addProvidedScalar("Voronoi volume")
         
         # settings

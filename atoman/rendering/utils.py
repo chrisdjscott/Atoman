@@ -103,7 +103,7 @@ class RGBCallBackClass(object):
 
 ################################################################################
 
-def makeScalarBar(lut, colouringOptions, text_colour):
+def makeScalarBar(lut, colouringOptions, text_colour, renderingPrefs):
     """
     Make a scalar bar
     
@@ -120,6 +120,9 @@ def makeScalarBar(lut, colouringOptions, text_colour):
     
     scalarBar.SetTitle(title)
     scalarBar.SetOrientationToHorizontal()
+    scalarBar.SetNumberOfLabels(renderingPrefs.numScalarBarLabels)
+    if renderingPrefs.enableFmtScalarBarLabels:
+        scalarBar.SetLabelFormat(renderingPrefs.fmtScalarBarLabels)
     
     lprop = scalarBar.GetTitleTextProperty()
     lprop.SetColor(text_colour)

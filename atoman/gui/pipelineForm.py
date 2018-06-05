@@ -210,6 +210,17 @@ class PipelineForm(QtGui.QWidget):
         hbox.addStretch(1)
         groupLayout.addLayout(hbox)
         
+        # add shift atom button
+        row = QtGui.QWidget(self)
+        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
+        self.shiftAtomButton = QtGui.QPushButton("Shift atoms")
+        self.shiftAtomButton.clicked.connect(self.shiftAtom)
+        self.shiftAtomButton.setToolTip("Shift an atom (or set of atoms) in periodic directions")
+        rowLayout.addWidget(self.shiftAtomButton)
+        groupLayout.addWidget(row)
+        
+        
         filterTabLayout.addWidget(group)
         
         # add systems to combos
@@ -222,6 +233,78 @@ class PipelineForm(QtGui.QWidget):
         # refresh if ref already loaded
         if self.mainWindow.refLoaded:
             self.refreshAllFilters()
+    
+    def shiftAtom(self):
+        """
+        Shift atom
+        
+        """
+        # lattice
+        lattice = self.inputState
+        
+        # show dialog
+        dlg = simpleDialogs.ShiftAtomDialog(-1, self.PBC, lattice.cellDims, lattice.NAtoms, parent=self)
+        status = dlg.exec_()
+        
+        if status == QtGui.QDialog.Accepted:
+            # amount
+            shift = np.empty(3, np.float64)
+            shift[0] = dlg.shiftXSpin.value()
+            shift[1] = dlg.shiftYSpin.value()
+            shift[2] = dlg.shiftZSpin.value()
+            
+            # atomIDstring
+            atomIDstring = dlg.lineEdit.text()
+            
+            # parse atomIDstring
+            array = [val for val in atomIDstring.split(",") if val]
+            num = len(array)
+            rangeArray = np.empty((num, 2), np.int32)
+            for i, item in enumerate(array):
+                if "-" in item:
+                    values = [val for val in item.split("-") if val]
+                    minval = int(values[0])
+                    if len(values) == 1:
+                        maxval = minval
+                    else:
+                        maxval = int(values[1])
+                else:
+                    minval = maxval = int(item)
+            
+                rangeArray[i][0] = minval
+                rangeArray[i][1] = maxval
+            
+            
+            # loop over atoms
+            if (shift[0] or shift[1] or shift[2]) and (num>0):
+                self.logger.debug("Shifting atom: x = %f; y = %f; z = %f", shift[0], shift[1], shift[2])
+                
+                # set override cursor
+                QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+                try:
+                    # shift atoms
+                    for i in range(num):
+                        for k in range(rangeArray[i][1]-rangeArray[i][0]+1): 
+                            i3 = 3 * (rangeArray[i][0]+k-1)  
+                            for j in range(3):
+                                lattice.pos[i3 + j] += shift[j]                 
+                    
+                    # wrap atoms back into periodic cell
+                    lattice.wrapAtoms()
+                
+                finally:
+                    QtGui.QApplication.restoreOverrideCursor()
+                
+                # run post ref render of Renderer (redraws cell)
+                for rw in self.rendererWindows:
+                    if rw.currentPipelineIndex == self.pipelineIndex:
+                        rw.renderer.postRefRender()
+                        rw.textSelector.refresh()
+                
+                # run post input loaded method
+                self.postInputLoaded()
+        
+    
     
     def shiftCell(self):
         """
@@ -908,13 +991,13 @@ class PipelineForm(QtGui.QWidget):
                 
                 minSepScalars = {}
                 for scalarType, scalarArray in six.iteritems(scalarsDict):
-                    minSepScalars[scalarType] = scalarArray[tmp_index]
+                    minSepScalars[scalarType] = scalarArray[int(tmp_index)]
                 for scalarType, scalarArray in six.iteritems(latticeScalarsDict):
-                    minSepScalars[scalarType] = scalarArray[tmp_index]
+                    minSepScalars[scalarType] = scalarArray[int(tmp_index)]
                 
                 minSepVectors = {}
                 for vectorType, vectorArray in six.iteritems(vectorsDict):
-                    minSepVectors[vectorType] = vectorArray[tmp_index]
+                    minSepVectors[vectorType] = vectorArray[int(tmp_index)]
         
         logger.debug("Closest object to pick: %f (threshold: %f)", minSep, 0.1)
         

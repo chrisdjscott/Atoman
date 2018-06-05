@@ -61,7 +61,7 @@ class VectorsOptionsWindow(QtGui.QDialog):
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
         
         self.parent = parent
-        
+        self.setMinimumWidth(250)
         self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         
         self.setWindowTitle("Display vectors options")
