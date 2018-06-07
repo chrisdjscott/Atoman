@@ -170,11 +170,10 @@ if [ "$NEED_CONDA" = "1" ]; then
     rm "${mincon}"
     # set PATH
     export PATH=${CONDIR}/bin:${PATH}
-
-    # fix SSL error??
-    conda remove -y -q certifi
-    conda install -y -q certifi
 fi
+
+# fix SSL issue on travis??
+conda config --set ssl_verify false
 
 # info about conda
 echo "Conda installation info..."
