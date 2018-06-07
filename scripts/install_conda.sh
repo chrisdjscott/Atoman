@@ -170,16 +170,16 @@ if [ "$NEED_CONDA" = "1" ]; then
     rm "${mincon}"
     # set PATH
     export PATH=${CONDIR}/bin:${PATH}
+
+    # fix SSL error??
+    conda remove -y -q certifi
+    conda install -y -q certifi
 fi
 
 # info about conda
 echo "Conda installation info..."
 type conda
 conda info -a
-
-# fix SSL error??
-conda -y -q remove certifi
-conda -y -q install certifi
 
 # enable conda-forge channel
 conda config --add channels conda-forge
