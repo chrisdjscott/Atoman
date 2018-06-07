@@ -8,16 +8,28 @@
 # usage
 display_usage() {
     echo
-    echo "Usage: $0 [-d conda_dir] [-p python_version] [-V vtk_version] [-e conda_env] [-h]"
+    echo "Usage: $0 [-d conda_dir] [-p python_version] [-V vtk_version] [-e conda_env] [-g] [-h]"
+    echo
+    echo "Arguments:"
+    echo
+    echo "    [-d conda_dir] The location to install conda. If conda already exists at that"
+    echo "                   location we use it. (default is '$HOME/miniconda')"
+    echo "    [-p python_version] The version of python to use (either 2 or 3, default is 3)"
+    echo "    [-V vtk_version] The version of VTK to use (7 or 8, default is 8)"
+    echo "    [-e conda_env] The name of the conda environment to create (default is 'atoman')"
+    echo "    [-g] Install gcc from conda"
+    echo "    [-h] Display help"
     echo
 }
 
 # default args
 # NOTE: Python 3 will be much slower as it has to install PySide from source
 CONDIR=${HOME}/miniconda
-PYVER=2
-VTKVER=7
+PYVER=3
+VTKVER=8
 CONDENV=atoman
+WITH_GCC=0
+QTVER=4.8.7
 
 # parse args
 while [[ $# -gt 0 ]]
@@ -36,9 +48,12 @@ do
         VTKVER="$2"
         shift
         ;;
-        -e|--env)
+        -e|--cenv)
         CONDENV="$2"
         shift
+        ;;
+        -g|--gcc)
+        WITH_GCC=1
         ;;
         -h|--help)
         display_usage
@@ -81,45 +96,6 @@ then
     fi
 fi
 
-case ${PYVER} in
-    2)
-    PYVER=2.7
-    ;;
-    3)
-    PYVER=3.4
-    # PYVER=3.5
-    # echo "Info: using Python 3 - we will have to compile PySide from source (this will take a while)"
-    ;;
-    *)
-    echo "Error: Python version must be '2' or '3' ('2' is default)"
-    display_usage
-    exit 5
-    ;;
-esac
-
-case ${VTKVER} in
-    5)
-    VTKVER=5.10.1
-    ;;
-    6)
-    VTKVER=6.3.0
-    ;;
-    7)
-    VTKVER=7.0.0
-    ;;
-    *)
-    echo "Error: VTK version must be '5' or '6' or '7' ('7' is default)"
-    display_usage
-    exit 6
-    ;;
-esac
-
-# echo args
-echo CONDA INSTALL DIR  = "${CONDIR}"
-echo CONDA ENV          = "${CONDENV}"
-echo PYTHON VERSION     = "${PYVER}"
-echo VTK VERSION        = "${VTKVER}"
-
 # machine hardware name
 MACHW=`uname -m`
 echo Installing for machine: "${MACHW}"
@@ -140,11 +116,54 @@ case $ostmp in
 esac
 echo CONDA OS = "${CONDOS}"
 
+case ${PYVER} in
+    2)
+    PYVER=2.7
+    ;;
+    3)
+    PYVER=3.6
+    ;;
+    *)
+    echo "Error: Python version must be '2' or '3' ('2' is default)"
+    display_usage
+    exit 5
+    ;;
+esac
+
+case ${VTKVER} in
+    7)
+    if [[ "${CONDOS}" == "MacOSX" ]]; then
+        echo "Error: must specify VTK 8 or later for MacOSX (conda-forge doesn't have any earlier Mac VTK packages)"
+        display_usage
+        exit 9
+    fi
+    VTKVER=7.1.1
+    ;;
+    8)
+    VTKVER=8.1.1
+    ;;
+    *)
+    echo "Error: VTK version must be '7' or '8' ('8' is default)"
+    display_usage
+    exit 6
+    ;;
+esac
+
+# echo args
+echo CONDA INSTALL DIR  = "${CONDIR}"
+echo CONDA ENV          = "${CONDENV}"
+echo PYTHON VERSION     = "${PYVER}"
+echo VTK VERSION        = "${VTKVER}"
+
 if [ "$NEED_CONDA" = "1" ]; then
     # download and run miniconda (to /tmp for now)
     mincon=/tmp/miniconda.sh
     echo "Downloading miniconda..."
-    wget http://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+    if [ "$PYVER" = "2.7" ]; then
+        curl -L --silent --show-error -o "${mincon}" https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh
+    else
+        curl -L --silent --show-error -o "${mincon}" https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh
+    fi
     chmod +x "${mincon}"
     echo "Installing miniconda..."
     "${mincon}" -b -p ${CONDIR}
@@ -153,83 +172,35 @@ if [ "$NEED_CONDA" = "1" ]; then
     export PATH=${CONDIR}/bin:${PATH}
 fi
 
+# info about conda
+echo "Conda installation info..."
+type conda
+conda info --envs
+
+# enable conda-forge channel
+conda config --add channels conda-forge
+
 # update conda
 echo Updating conda...
-conda update --yes conda
+conda update --yes --quiet conda
 
 # create conda environment
 echo Creating conda environment: \"${CONDENV}\"...
-conda create -y -n ${CONDENV} python=${PYVER}
-echo Installing gcc...
-conda install -y -n ${CONDENV} gcc
-echo Installing numpy...
-conda install -y -n ${CONDENV} numpy
-echo Installing scipy...
-conda install -y -n ${CONDENV} scipy
-echo Installing matplotlib...
-conda install -y -n ${CONDENV} matplotlib
-echo Installing pillow...
-conda install -y -n ${CONDENV} pillow
-echo Installing pip...
-conda install -y -n ${CONDENV} pip
-echo Installing nose...
-conda install -y -n ${CONDENV} nose
-echo Installing setuptools...
-conda install -y -n ${CONDENV} setuptools
-echo Installing sphinx...
-conda install -y -n ${CONDENV} sphinx sphinx_rtd_theme
-echo Installing paramiko
-conda install -y -n ${CONDENV} paramiko
-echo Installing Qt4...
-conda install -y -n ${CONDENV} -c asmeurer qt=4.8.5
+conda create -y -q -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip nose setuptools sphinx \
+        sphinx_rtd_theme paramiko vtk=${VTKVER} pyside qt=${qtver} python.app
 
-# install VTK
-case $VTKVER in
-    7.0.0)
-    echo Installing VTK 7.0.0 ...
-    conda install -y -n ${CONDENV} -c menpo vtk=${VTKVER}
-    ;;
-    *)
-    echo Installing VTK ${VTKVER} ...
-    conda install -y -n ${CONDENV} vtk=${VTKVER}
-    ;;
-esac
+# install GCC if required
+if [ "$WITH_GCC" = "1" ]; then
+    conda install -y -q -n ${CONDENV} gcc
+fi
 
 # activate the environment
 source activate ${CONDENV}
 
 # install additional packages using pip
 echo Installing additional packages using pip...
-pip install pyhull
+pip install pyhull || true
 pip install pyinstaller
-
-# install PySide
-case $PYVER in
-    3.5)
-    # TODO: probably should install other requirements here, like CMake and GCC?
-    echo "Installing pyside from source (this will take a while)..."
-    pysidedir=$(mktemp -d 2>/dev/null || mktemp -d -t 'pysidetmp')
-    cd "${pysidedir}"
-    git clone https://github.com/PySide/pyside-setup.git pyside-setup
-    cd pyside-setup
-    if [ "${CONDOS}" == "MacOSX" ]; then
-        SED="sed -i ''"
-    else
-        SED="sed -i"
-    fi
-    # python 3.5 is disabled in setup.py but it works if you just reenable it
-    ${SED} 's/Programming Language :: Python :: 3.4/Programming Language :: Python :: 3.5/g' setup.py
-    python setup.py bdist_wheel --version=1.2.4
-    fn=$(ls dist)
-    pip install "dist/${fn}"
-    cd
-    rm -rf "${pysidedir}"
-    ;;
-    *)
-    echo "Installing pyside..."
-    conda install -y -n ${CONDENV} -c asmeurer pyside
-    ;;
-esac
 
 echo
 echo ==============================================================================================================
