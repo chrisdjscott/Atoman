@@ -190,7 +190,12 @@ conda update --yes --quiet conda
 # create conda environment
 echo Creating conda environment: \"${CONDENV}\"...
 conda create -y -q -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip nose setuptools sphinx \
-        sphinx_rtd_theme paramiko vtk=${VTKVER} pyside qt=${qtver} python.app
+        sphinx_rtd_theme paramiko vtk=${VTKVER} pyside qt=${qtver}
+
+# install python.app on Mac, required for qt_menu.nib in pyinstaller builds
+if [[ "${CONDOS}" == "MacOSX" ]]; then
+    conda install -y -q -n ${CONDENV} python.app
+fi
 
 # install GCC if required
 if [ "$WITH_GCC" = "1" ]; then
