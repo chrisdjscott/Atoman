@@ -162,7 +162,7 @@ if [ "$NEED_CONDA" = "1" ]; then
     if [ "$PYVER" = "2.7" ]; then
         wget https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
     else
-        wget "${mincon}" https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
     fi
     chmod +x "${mincon}"
     echo "Installing miniconda..."
