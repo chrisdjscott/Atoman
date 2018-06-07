@@ -21,17 +21,24 @@ matrix:
         - os: osx
           env: VTK=7 PYTHON=2
 
+# dependencies
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+        packages:
+            - gcc-7
+            - g++-7
+            - mesa-utils
+
 before_install:
-    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then 
-        export CC=gcc;
-        export CXX=g++;
-      else
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y;
-        sudo apt-get update -q;
-        sudo apt-get install gcc-7 g++-7 mesa-utils -y;
-        export CC=gcc-7;
-        export CXX=g++-7;
-      fi
+    - [[ "${TRAVIS_OS_NAME}" == "osx" ]] && export CC=gcc
+    - [[ "${TRAVIS_OS_NAME}" == "osx" ]] && export CXX=g++
+#    - [[ "${TRAVIS_OS_NAME}" == "linux" ]] && ${RETRY} sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+#    - [[ "${TRAVIS_OS_NAME}" == "linux" ]] && ${RETRY} sudo apt-get update -q
+#    - [[ "${TRAVIS_OS_NAME}" == "linux" ]] && ${RETRY} sudo apt-get install gcc-7 g++-7 mesa-utils -y
+    - [[ "${TRAVIS_OS_NAME}" == "linux" ]] && export CC=gcc-7
+    - [[ "${TRAVIS_OS_NAME}" == "linux" ]] && export CXX=g++-7
     - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate atoman
