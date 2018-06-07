@@ -156,9 +156,11 @@ echo PYTHON VERSION     = "${PYVER}"
 echo VTK VERSION        = "${VTKVER}"
 
 # source travis_retry function
+RETRY=""
 if [[ ! -z "${TRAVIS_OS_NAME}" ]]; then
     SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
     source ${SCRIPT_DIR}/travis_retry.sh
+    RETRY=travis_retry
 fi
 
 # install conda if required
@@ -167,13 +169,13 @@ if [ "$NEED_CONDA" = "1" ]; then
     mincon=/tmp/miniconda.sh
     echo "Downloading miniconda..."
     if [ "$PYVER" = "2.7" ]; then
-        travis_retry wget https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+        ${RETRY} wget https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
     else
-        travis_retry wget https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+        ${RETRY} wget https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
     fi
     chmod +x "${mincon}"
     echo "Installing miniconda..."
-    travis_retry "${mincon}" -b -p ${CONDIR}
+    ${RETRY} "${mincon}" -b -p ${CONDIR}
     rm "${mincon}"
     # set PATH
     export PATH=${CONDIR}/bin:${PATH}
@@ -192,21 +194,27 @@ conda config --add channels conda-forge
 
 # update conda
 echo Updating conda...
-travis_retry conda update --yes --quiet conda
+${RETRY} conda update --yes --quiet conda
 
 # create conda environment
 echo Creating conda environment: \"${CONDENV}\"...
-travis_retry conda create -y -q -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip \
+${RETRY} conda create -y -q -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip \
         nose setuptools sphinx sphinx_rtd_theme paramiko vtk=${VTKVER} pyside=${PYSIDEVER}
 
 # install python.app on Mac, required for qt_menu.nib in pyinstaller builds
 if [[ "${CONDOS}" == "MacOSX" ]]; then
-    travis_retry conda install -y -q -n ${CONDENV} python.app
+    ${RETRY} conda install -y -q -n ${CONDENV} python.app
+fi
+
+# on Linux, seem to need to force jsoncpp to older, conda-forge version
+# https://github.com/conda-forge/vtk-feedstock/issues/46
+if [[ "${CONDOS}" == "Linux" ]]; then
+    ${RETRY} conda install -y -q -n ${CONDENV} jsoncpp=0.10.6
 fi
 
 # install GCC if required
 if [ "$WITH_GCC" = "1" ]; then
-    travis_retry conda install -y -q -n ${CONDENV} gcc
+    ${RETRY} conda install -y -q -n ${CONDENV} gcc
 fi
 
 # activate the environment
