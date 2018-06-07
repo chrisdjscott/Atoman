@@ -160,13 +160,13 @@ if [ "$NEED_CONDA" = "1" ]; then
     mincon=/tmp/miniconda.sh
     echo "Downloading miniconda..."
     if [ "$PYVER" = "2.7" ]; then
-        wget https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+        travis_retry wget https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
     else
-        wget https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+        travis_retry wget https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
     fi
     chmod +x "${mincon}"
     echo "Installing miniconda..."
-    "${mincon}" -b -p ${CONDIR}
+    travis_retry "${mincon}" -b -p ${CONDIR}
     rm "${mincon}"
     # set PATH
     export PATH=${CONDIR}/bin:${PATH}
@@ -185,21 +185,21 @@ conda config --add channels conda-forge
 
 # update conda
 echo Updating conda...
-conda update --yes --quiet conda
+travis_retry conda update --yes --quiet conda
 
 # create conda environment
 echo Creating conda environment: \"${CONDENV}\"...
-conda create -y -q -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip nose setuptools sphinx \
-        sphinx_rtd_theme paramiko vtk=${VTKVER} pyside=${PYSIDEVER}
+travis_retry conda create -y -q -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip \
+        nose setuptools sphinx sphinx_rtd_theme paramiko vtk=${VTKVER} pyside=${PYSIDEVER}
 
 # install python.app on Mac, required for qt_menu.nib in pyinstaller builds
 if [[ "${CONDOS}" == "MacOSX" ]]; then
-    conda install -y -q -n ${CONDENV} python.app
+    travis_retry conda install -y -q -n ${CONDENV} python.app
 fi
 
 # install GCC if required
 if [ "$WITH_GCC" = "1" ]; then
-    conda install -y -q -n ${CONDENV} gcc
+    travis_retry conda install -y -q -n ${CONDENV} gcc
 fi
 
 # activate the environment
