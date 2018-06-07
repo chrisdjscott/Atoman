@@ -177,6 +177,10 @@ echo "Conda installation info..."
 type conda
 conda info -a
 
+# fix SSL error??
+conda -y -q remove certifi
+conda -y -q install certifi
+
 # enable conda-forge channel
 conda config --add channels conda-forge
 
