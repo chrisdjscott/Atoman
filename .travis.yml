@@ -44,7 +44,7 @@ before_install:
 
 install:
     - cp setup.cfg.example setup.cfg
-#    - if [ "${TRAVIS_OS_NAME}" == "linux" ] && [ "$VTK" == "7" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
 #    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then sed -i '' 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
     - python setup.py --version
     - python setup.py build_clib
