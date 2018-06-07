@@ -155,6 +155,13 @@ echo CONDA ENV          = "${CONDENV}"
 echo PYTHON VERSION     = "${PYVER}"
 echo VTK VERSION        = "${VTKVER}"
 
+# source travis_retry function
+if [[ ! -z "${TRAVIS_OS_NAME}" ]]; then
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    source ${SCRIPT_DIR}/travis_retry.sh
+fi
+
+# install conda if required
 if [ "$NEED_CONDA" = "1" ]; then
     # download and run miniconda (to /tmp for now)
     mincon=/tmp/miniconda.sh
