@@ -160,9 +160,9 @@ if [ "$NEED_CONDA" = "1" ]; then
     mincon=/tmp/miniconda.sh
     echo "Downloading miniconda..."
     if [ "$PYVER" = "2.7" ]; then
-        curl -L --silent --show-error -o "${mincon}" https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh
+        wget https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
     else
-        curl -L --silent --show-error -o "${mincon}" https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh
+        wget "${mincon}" https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
     fi
     chmod +x "${mincon}"
     echo "Installing miniconda..."
@@ -175,7 +175,7 @@ fi
 # info about conda
 echo "Conda installation info..."
 type conda
-conda info --envs
+conda info -a
 
 # enable conda-forge channel
 conda config --add channels conda-forge
