@@ -25,7 +25,7 @@ before_install:
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CC=gcc; fi
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CXX=g++; fi
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y; fi
-    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo add-apt-repository ppa:oibaf/graphics-drivers -y; fi
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo add-apt-repository ppa:oibaf/xorg-edgers -y; fi
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo apt-get update -q; fi
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo apt-get install gcc-7 g++-7 mesa -y; fi
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export CC=gcc-7; fi
