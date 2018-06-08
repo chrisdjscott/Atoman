@@ -29,7 +29,6 @@ PYVER=3
 VTKVER=8
 CONDENV=atoman
 WITH_GCC=0
-PYSIDEVER=1.2.4
 
 # parse args
 while [[ $# -gt 0 ]]
@@ -199,7 +198,7 @@ ${RETRY} conda update --yes --quiet conda
 # create conda environment
 echo Creating conda environment: \"${CONDENV}\"...
 ${RETRY} conda create -y -q -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip \
-        nose setuptools sphinx sphinx_rtd_theme paramiko vtk=${VTKVER} pyside=${PYSIDEVER}
+        nose setuptools sphinx sphinx_rtd_theme paramiko vtk=${VTKVER} pyside=1.2.4
 
 # install python.app on Mac, required for qt_menu.nib in pyinstaller builds
 if [[ "${CONDOS}" == "MacOSX" ]]; then
