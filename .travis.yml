@@ -32,13 +32,13 @@ addons:
             - mesa-utils
 
 before_install:
-    - [[ "${TRAVIS_OS_NAME}" == "osx" ]] && export CC=gcc
-    - [[ "${TRAVIS_OS_NAME}" == "osx" ]] && export CXX=g++
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CC=gcc; fi
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CXX=g++; fi
 #    - [[ "${TRAVIS_OS_NAME}" == "linux" ]] && ${RETRY} sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
 #    - [[ "${TRAVIS_OS_NAME}" == "linux" ]] && ${RETRY} sudo apt-get update -q
 #    - [[ "${TRAVIS_OS_NAME}" == "linux" ]] && ${RETRY} sudo apt-get install gcc-7 g++-7 mesa-utils -y
-    - [[ "${TRAVIS_OS_NAME}" == "linux" ]] && export CC=gcc-7
-    - [[ "${TRAVIS_OS_NAME}" == "linux" ]] && export CXX=g++-7
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export CC=gcc-7; fi
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export CXX=g++-7; fi
     - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate atoman
