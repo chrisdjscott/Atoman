@@ -9,21 +9,26 @@ os:
 
 # different builds
 env:
-    - VTK=6 PYTHON=2
+    - VTK=8 PYTHON=3
+    - VTK=8 PYTHON=2
+    - VTK=7 PYTHON=3
     - VTK=7 PYTHON=2
-    # - VTK=7 PYTHON=3
+
+matrix:
+    exclude:
+        - os: osx
+          env: VTK=7 PYTHON=3
+        - os: osx
+          env: VTK=7 PYTHON=2
 
 before_install:
-    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then 
-        export CC=gcc;
-        export CXX=g++;
-      else
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y;
-        sudo apt-get update -q;
-        sudo apt-get install gcc-6 g++-6 mesa-utils -y;
-        export CC=gcc-6;
-        export CXX=g++-6;
-      fi
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CC=gcc; fi
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CXX=g++; fi
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y; fi
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo apt-get update -q; fi
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo apt-get install gcc-7 g++-7 -y; fi
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export CC=gcc-7; fi
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export CXX=g++-7; fi
     - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
     - export PATH=$HOME/miniconda/bin:$PATH
     - source activate atoman
@@ -36,8 +41,8 @@ before_install:
 
 install:
     - cp setup.cfg.example setup.cfg
-    - if [ "${TRAVIS_OS_NAME}" == "linux" ] && [ "$VTK" == "7" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
-    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then sed -i '' 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
+#    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then sed -i '' 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
     - python setup.py --version
     - python setup.py build_clib
     - python setup.py build_ext --inplace

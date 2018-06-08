@@ -14,8 +14,8 @@ display_usage() {
     echo
     echo "    [-d conda_dir] The location to install conda. If conda already exists at that"
     echo "                   location we use it. (default is '$HOME/miniconda')"
-    echo "    [-p python_version] The version of python to use (either 2 or 3, default is 2)"
-    echo "    [-V vtk_version] The version of VTK to use (5, 6, or 7, default is 7)"
+    echo "    [-p python_version] The version of python to use (either 2 or 3, default is 3)"
+    echo "    [-V vtk_version] The version of VTK to use (7 or 8, default is 8)"
     echo "    [-e conda_env] The name of the conda environment to create (default is 'atoman')"
     echo "    [-g] Install gcc from conda"
     echo "    [-h] Display help"
@@ -25,8 +25,8 @@ display_usage() {
 # default args
 # NOTE: Python 3 will be much slower as it has to install PySide from source
 CONDIR=${HOME}/miniconda
-PYVER=2
-VTKVER=7
+PYVER=3
+VTKVER=8
 CONDENV=atoman
 WITH_GCC=0
 
@@ -95,43 +95,6 @@ then
     fi
 fi
 
-case ${PYVER} in
-    2)
-    PYVER=2.7
-    ;;
-    3)
-    PYVER=3.5
-    ;;
-    *)
-    echo "Error: Python version must be '2' or '3' ('2' is default)"
-    display_usage
-    exit 5
-    ;;
-esac
-
-case ${VTKVER} in
-    5)
-    VTKVER=5.10.1
-    ;;
-    6)
-    VTKVER=6.3.0
-    ;;
-    7)
-    VTKVER=7.0.0
-    ;;
-    *)
-    echo "Error: VTK version must be '5' or '6' or '7' ('7' is default)"
-    display_usage
-    exit 6
-    ;;
-esac
-
-# echo args
-echo CONDA INSTALL DIR  = "${CONDIR}"
-echo CONDA ENV          = "${CONDENV}"
-echo PYTHON VERSION     = "${PYVER}"
-echo VTK VERSION        = "${VTKVER}"
-
 # machine hardware name
 MACHW=`uname -m`
 echo Installing for machine: "${MACHW}"
@@ -152,48 +115,106 @@ case $ostmp in
 esac
 echo CONDA OS = "${CONDOS}"
 
+case ${PYVER} in
+    2)
+    PYVER=2.7
+    ;;
+    3)
+    PYVER=3.6
+    ;;
+    *)
+    echo "Error: Python version must be '2' or '3' ('2' is default)"
+    display_usage
+    exit 5
+    ;;
+esac
+
+case ${VTKVER} in
+    7)
+    if [[ "${CONDOS}" == "MacOSX" ]]; then
+        echo "Error: must specify VTK 8 or later for MacOSX (conda-forge doesn't have any earlier Mac VTK packages)"
+        display_usage
+        exit 9
+    fi
+    VTKVER=7.1.1
+    ;;
+    8)
+    VTKVER=8.1.0
+    ;;
+    *)
+    echo "Error: VTK version must be '7' or '8' ('8' is default)"
+    display_usage
+    exit 6
+    ;;
+esac
+
+# echo args
+echo CONDA INSTALL DIR  = "${CONDIR}"
+echo CONDA ENV          = "${CONDENV}"
+echo PYTHON VERSION     = "${PYVER}"
+echo VTK VERSION        = "${VTKVER}"
+
+# source travis_retry function
+RETRY=""
+if [[ ! -z "${TRAVIS_OS_NAME}" ]]; then
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+    source ${SCRIPT_DIR}/travis_retry.sh
+    RETRY=travis_retry
+fi
+
+# install conda if required
 if [ "$NEED_CONDA" = "1" ]; then
     # download and run miniconda (to /tmp for now)
     mincon=/tmp/miniconda.sh
     echo "Downloading miniconda..."
     if [ "$PYVER" = "2.7" ]; then
-        wget http://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+        ${RETRY} wget https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
     else
-        wget http://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
+        ${RETRY} wget https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
     fi
     chmod +x "${mincon}"
     echo "Installing miniconda..."
-    "${mincon}" -b -p ${CONDIR}
+    ${RETRY} "${mincon}" -b -p ${CONDIR}
     rm "${mincon}"
     # set PATH
     export PATH=${CONDIR}/bin:${PATH}
 fi
 
+# fix SSL issue on travis??
+[[ -z "${TRAVIS_OS_NAME}" ]] || conda config --set ssl_verify false
+
+# info about conda
+echo "Conda installation info..."
+type conda
+conda info -a
+
+# enable conda-forge channel
+conda config --add channels conda-forge
+
 # update conda
 echo Updating conda...
-conda update --yes --quiet conda
+${RETRY} conda update --yes --quiet conda
 
 # create conda environment
 echo Creating conda environment: \"${CONDENV}\"...
-conda create -y -q -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip nose setuptools sphinx \
-        sphinx_rtd_theme paramiko pyqt
+${RETRY} conda create -y -q -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip \
+        nose setuptools sphinx sphinx_rtd_theme paramiko vtk=${VTKVER} pyqt
+
+# install python.app on Mac, required for qt_menu.nib in pyinstaller builds
+if [[ "${CONDOS}" == "MacOSX" ]]; then
+    ${RETRY} conda install -y -q -n ${CONDENV} python.app
+fi
+
+# on Linux, seem to need to force jsoncpp to older, conda-forge version
+# https://github.com/conda-forge/vtk-feedstock/issues/46
+#if [[ "${CONDOS}" == "Linux" ]]; then
+#    ${RETRY} conda install -y -q -n ${CONDENV} jsoncpp=0.10.6
+#fi
 
 # install GCC if required
 if [ "$WITH_GCC" = "1" ]; then
-    conda install -y -q -n ${CONDENV} gcc
+    ${RETRY} conda install -y -q -n ${CONDENV} gcc
 fi
-
-# install VTK
-case $VTKVER in
-    7.0.0)
-    echo Installing VTK 7.0.0 ...
-    conda install -y -q -n ${CONDENV} -c menpo vtk=${VTKVER}
-    ;;
-    *)
-    echo Installing VTK ${VTKVER} ...
-    conda install -y -q -n ${CONDENV} vtk=${VTKVER}
-    ;;
-esac
 
 # activate the environment
 source activate ${CONDENV}
