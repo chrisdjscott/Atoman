@@ -2,24 +2,13 @@ sudo: required
 dist: trusty
 language: generic
 
-# run on linux and mac
 os:
     - linux
     - osx
 
-# different builds
 env:
-    - VTK=8 PYTHON=3
-    - VTK=8 PYTHON=2
-    - VTK=7 PYTHON=3
-    - VTK=7 PYTHON=2
-
-matrix:
-    exclude:
-        - os: osx
-          env: VTK=7 PYTHON=3
-        - os: osx
-          env: VTK=7 PYTHON=2
+    - PYTHON=2
+    - PYTHON=3
 
 before_install:
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CC=gcc; fi
@@ -29,9 +18,9 @@ before_install:
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo apt-get install gcc-7 g++-7 -y; fi
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export CC=gcc-7; fi
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export CXX=g++-7; fi
-    - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
-    - export PATH=$HOME/miniconda/bin:$PATH
-    - source activate atoman
+    - scripts/install_conda.sh -e atoman -p $PYTHON -d $HOME/miniconda
+    - source $HOME/miniconda/etc/profile.d/conda.sh
+    - conda activate atoman
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then conda install -q -y gcc; fi
     - echo $CC
     - echo $CXX
