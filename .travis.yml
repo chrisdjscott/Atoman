@@ -1,15 +1,13 @@
 sudo: required
 dist: trusty
-language: python
+language: generic
 
-os:
-    - linux
-    - osx
+matrix:
+    include:
+        - os: osx
+          osx_image: xcode8
 
-osx_image: xcode8
-
-python:
-    - 3.6
+        - os: linux
 
 before_install:
     - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then travis_retry brew install gcc; fi
@@ -17,11 +15,11 @@ before_install:
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo apt-get update -q; fi
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo apt-get install gcc-7 g++-7 -y; fi
     - export CC=gcc-7 && export CXX=g++-7
-    - echo $CC
-    - echo $CXX
-    - $CC --version
-    - $CXX --version
-    - python --version
+    - travis_retry curl -L -o /tmp/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh
+    - bash /tmp/miniconda.sh -b -p ${HOME}/miniconda
+    - source ${HOME}/miniconda/etc/profile.d/conda.sh
+    - travis_retry conda create -y -q -n atoman python=3.6 pip
+    - conda activate atoman
     - travis_retry pip install -r requirements.txt
 
 install:
