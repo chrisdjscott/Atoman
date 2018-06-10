@@ -180,7 +180,8 @@ class RendererWindow(QtWidgets.QWidget):
 
         self.vtkRenWin.AddRenderer(self.vtkRen)
 
-        self.vtkRenWin.SetAAFrames(self.currentAAFrames)
+        self.logger.warning("Need to reimplement SetAAFrames")
+        #self.vtkRenWin.SetAAFrames(self.currentAAFrames)
 
         self.vtkRenWinInteract.Initialize()
 
@@ -266,7 +267,8 @@ class RendererWindow(QtWidgets.QWidget):
         """
         self.currentAAFrames += 1
         self.logger.debug("Set AA Frames: %d", self.currentAAFrames)
-        self.vtkRenWin.SetAAFrames(self.currentAAFrames)
+        self.logger.warning("Need to reimplement SetAAFrames")
+        #self.vtkRenWin.SetAAFrames(self.currentAAFrames)
         self.vtkRenWinInteract.ReInitialize()
 
     def decreaseAA(self):
@@ -278,7 +280,8 @@ class RendererWindow(QtWidgets.QWidget):
             return
         self.currentAAFrames -= 1
         self.logger.debug("Set AA Frames: %d", self.currentAAFrames)
-        self.vtkRenWin.SetAAFrames(self.currentAAFrames)
+        self.logger.warning("Need to reimplement SetAAFrames")
+        #self.vtkRenWin.SetAAFrames(self.currentAAFrames)
         self.vtkRenWinInteract.ReInitialize()
 
     def toggleBackgroundColour(self):
