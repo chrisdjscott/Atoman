@@ -2,57 +2,49 @@ sudo: required
 dist: trusty
 language: generic
 
-# run on linux and mac
-os:
-    - linux
-    - osx
-
-# different builds
-env:
-    - VTK=8 PYTHON=3
-    - VTK=8 PYTHON=2
-    - VTK=7 PYTHON=3
-    - VTK=7 PYTHON=2
-
 matrix:
-    exclude:
+    include:
         - os: osx
-          env: VTK=7 PYTHON=3
+          osx_image: xcode9.3
+          env: PYTHON_VERSION=2.7
         - os: osx
-          env: VTK=7 PYTHON=2
+          osx_image: xcode9.3
+          env: PYTHON_VERSION=3.6
+        - os: linux
+          env: PYTHON_VERSION=2.7
+        - os: linux
+          env: PYTHON_VERSION=3.6
 
 before_install:
-    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CC=gcc; fi
-    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CXX=g++; fi
+    - export OMP_NUM_THREADS=4
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y; fi
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo apt-get update -q; fi
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then travis_retry sudo apt-get install gcc-7 g++-7 -y; fi
-    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export CC=gcc-7; fi
-    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export CXX=g++-7; fi
-    - scripts/install_conda.sh -e atoman -p $PYTHON -V $VTK -d $HOME/miniconda
-    - export PATH=$HOME/miniconda/bin:$PATH
-    - source activate atoman
-    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then conda install -q -y gcc; fi
-    - echo $CC
-    - echo $CXX
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export CC=gcc-7 && export CXX=g++-7; fi
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CONDA_OS=MacOSX; fi
+    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export CONDA_OS=Linux; fi
+    - travis_retry curl -L -o /tmp/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDA_OS}-x86_64.sh
+    - bash /tmp/miniconda.sh -b -p ${HOME}/miniconda
+    - source ${HOME}/miniconda/etc/profile.d/conda.sh
+    - travis_retry conda create -y -q -n atoman python=${PYTHON_VERSION} pip
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then conda install -y -q -n atoman gcc; fi
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CC=gcc && export CXX=g++; fi
+    - conda activate atoman
     - $CC --version
     - $CXX --version
     - python --version
+    - if [ "${PYTHON_VERSION}" == "2.7" ]; then pip install numpy scipy matplotlib vtk pillow nose setuptools sphinx sphinx_rtd_theme paramiko pyhull pyinstaller; fi
+    - if [ "${PYTHON_VERSION}" == "2.7" ]; then conda install -y -q -n atoman pyqt; fi
+    - if [ "${PYTHON_VERSION}" != "2.7" ]; then pip install -r requirements.txt; fi
 
 install:
     - cp setup.cfg.example setup.cfg
     - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then sed -i 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
-#    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then sed -i '' 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
+    - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then sed -i '' 's/#exclude = slowtests/exclude = slowtests/' setup.cfg; fi
     - python setup.py --version
     - python setup.py build_clib
     - python setup.py build_ext --inplace
     - python setup.py build_sphinx
-
-before_script:
-    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export DISPLAY=:99.0; fi
-    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then sh -e /etc/init.d/xvfb start; fi
-    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then sleep 3; fi # give xvfb some time to start
-    - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then glxinfo || true; fi
 
 script:
     - python setup.py test
