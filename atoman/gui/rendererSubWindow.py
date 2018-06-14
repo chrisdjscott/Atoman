@@ -138,16 +138,6 @@ class RendererWindow(QtWidgets.QWidget):
         iren.SetRenderWindow(self.vtkRenWin)
         self.vtkRenWinInteract = vtkWindow.VTKWindow(self, rw=self.vtkRenWin, iren=iren)
 
-        # handle retina "bug" with VTK7 and Qt5 on OS X
-        if platform.system() == "Darwin":
-            try:
-                osx_helper = ctypes.CDLL("libatoman_osx_helper.dylib")
-            except OSError:
-                self.logger.warning("If you have problems with the VTK window not displaying properly try installing https://github.com/AtomanVis/atoman-osx-helper")
-            else:
-                self.logger.info("Applying OS X retina fix")
-                osx_helper.osx_retina_hack(ctypes.c_long(self.vtkRenWinInteract.qvtkWinId))
-
         # interactor style
         self.vtkRenWinInteract._Iren.SetInteractorStyle(vtk.vtkInteractorStyleTrackballCamera())
 
@@ -177,14 +167,10 @@ class RendererWindow(QtWidgets.QWidget):
         # vtk renderer
         self.vtkRen = vtk.vtkRenderer()
         self.vtkRen.SetBackground(1, 1, 1)
-
         self.vtkRenWin.AddRenderer(self.vtkRen)
 
-        self.logger.warning("Need to reimplement SetAAFrames")
-        #self.vtkRenWin.SetAAFrames(self.currentAAFrames)
-
+        # initialise vtk widget
         self.vtkRenWinInteract.Initialize()
-
         layout.addWidget(self.vtkRenWinInteract)
 
         # renderer
