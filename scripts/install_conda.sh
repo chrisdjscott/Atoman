@@ -191,11 +191,7 @@ pip install paramiko
 pip install vtk
 pip install pyhull || true
 pip install pyinstaller
-if [[ "${PYVER}" == "2.7" ]]; then
-    conda install -y -q -n ${CONDENV} pyqt
-else
-    pip install PyQt5
-fi
+pip install --index-url=http://download.qt.io/snapshots/ci/pyside/5.11/latest/ pyside2 --trusted-host download.qt.io
 
 echo
 echo ==============================================================================================================

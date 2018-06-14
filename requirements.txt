@@ -2,7 +2,6 @@ numpy
 scipy
 matplotlib
 vtk
-pyqt5
 pillow
 nose
 setuptools
