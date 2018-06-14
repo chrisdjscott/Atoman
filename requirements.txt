@@ -10,3 +10,5 @@ sphinx_rtd_theme
 paramiko
 pyhull
 pyinstaller
+--extra-index-url=http://download.qt.io/snapshots/ci/pyside/5.11/latest/
+pyside2

@@ -33,8 +33,7 @@ before_install:
     - $CC --version
     - $CXX --version
     - python --version
-    - pip install -r requirements.txt
-    - pip install --index-url=http://download.qt.io/snapshots/ci/pyside/5.11/latest/ pyside2 --trusted-host download.qt.io
+    - pip install -r requirements.txt --trusted-host download.qt.io
 
 install:
     - cp setup.cfg.example setup.cfg
