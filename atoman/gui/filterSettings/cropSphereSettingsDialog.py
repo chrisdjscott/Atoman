@@ -23,7 +23,7 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
     """
     def __init__(self, mainWindow, title, parent=None):
         super(CropSphereSettingsDialog, self).__init__(title, parent, "Crop sphere")
-        
+        self.setMinimumWidth(300)
         self._settings = cropSphereFilter.CropSphereFilterSettings()
         
         self.xCentreSpinBox = QtWidgets.QDoubleSpinBox()
@@ -67,7 +67,7 @@ class CropSphereSettingsDialog(base.GenericSettingsDialog):
         # invert selection
         self.invertCheckBox = QtWidgets.QCheckBox()
         self.invertCheckBox.setChecked(self._settings.getSetting("invertSelection"))
-        self.invertCheckBox.setToolTip("Invert selection")
+        self.invertCheckBox.setToolTip("Invert selection: Select to view atoms within the sphere")
         self.invertCheckBox.stateChanged.connect(self.invertChanged)
         self.contentLayout.addRow("Invert selection", self.invertCheckBox)
         

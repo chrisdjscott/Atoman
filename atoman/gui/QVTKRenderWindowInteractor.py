@@ -280,6 +280,9 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
 
         self._RenderWindow.SetWindowInfo(str(int(WId)))
 
+        # store the window ID for fixing the OSX bug
+        self.qvtkWinId = WId
+
         if stereo: # stereo mode
             self._RenderWindow.StereoCapableWindowOn()
             self._RenderWindow.SetStereoTypeToCrystalEyes()

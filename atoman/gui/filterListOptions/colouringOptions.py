@@ -48,7 +48,7 @@ class ColouringOptionsWindow(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
         super(ColouringOptionsWindow, self).__init__(parent)
-
+        self.setMinimumWidth(300)
         self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
 
         self.parent = parent

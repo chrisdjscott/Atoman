@@ -29,10 +29,10 @@ from ..visutils.utilities import iconPath, resourcePath, dataPath
 from ..system import atoms
 from ..system.atoms import elements
 from . import toolbar as toolbarModule
-from . import helpForm
 from . import preferences
 from . import rendererSubWindow
 from . import systemsDialog
+from . import viewPorts
 from .dialogs import simpleDialogs
 from .dialogs import bondEditor
 from .dialogs import elementEditor
@@ -47,17 +47,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     """
     configDir = os.path.join(os.environ["HOME"], ".atoman")
-    Instances = set()
 
     def __init__(self, desktop, parent=None, testing=False):
         super(MainWindow, self).__init__(parent)
 
         # logger
         self.logger = logging.getLogger(__name__)
-
-        # multiple instances
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        MainWindow.Instances.add(self)
 
         # first time show called
         self.testingFlag = testing
@@ -136,9 +131,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # console window for logging output to
         self.console = consoleWindow.ConsoleWindow(self)
 
-        # help window for displaying help
-        self.helpWindow = helpForm.HelpFormSphinx(parent=self)
-
         # image viewer
         self.imageViewer = simpleDialogs.ImageViewer(self, parent=self)
 
@@ -150,10 +142,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # add file actions
         exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "oxygen/application-exit.png", "Exit application")
-        newWindowAction = self.createAction("&New app window", slot=self.openNewWindow, shortcut="Ctrl-N",
-                                            icon="atoman.png", tip="Open new application window")
-        newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow, shortcut="Ctrl-O",
-                                               icon="oxygen/window-new.png", tip="Open new render sub window")
         openFileAction = self.createAction("Open file", slot=self.showOpenFileDialog, icon="oxygen/document-open.png",
                                            tip="Open file")
         openRemoteFileAction = self.createAction("Open remote file", slot=self.showOpenRemoteFileDialog,
@@ -181,7 +169,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, openFileAction, openRemoteFileAction,
+        self.addActions(fileMenu, (openFileAction, openRemoteFileAction,
                                    openCWDAction, changeCWDAction, None, exitAction))
 
         # settings menu
@@ -217,8 +205,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # add file toolbar
         fileToolbar = self.addToolBar("File")
         fileToolbar.addAction(exitAction)
-        fileToolbar.addAction(newWindowAction)
-        fileToolbar.addAction(newRenWindowAction)
         fileToolbar.addSeparator()
         fileToolbar.addAction(openFileAction)
         fileToolbar.addAction(openRemoteFileAction)
@@ -235,12 +221,23 @@ class MainWindow(QtWidgets.QMainWindow):
         viewToolbar.addAction(showPreferencesAction)
         viewToolbar.addSeparator()
 
+        # vis tool bar
+        visToolbar = self.addToolBar("Visualisation")
+        numViewPortsCombo = QtWidgets.QComboBox()
+        numViewPortsCombo.addItem("1")
+        numViewPortsCombo.addItem("2")
+        numViewPortsCombo.addItem("4")
+        numViewPortsCombo.currentIndexChanged[str].connect(self.numViewPortsChanged)
+        visToolbar.addWidget(QtWidgets.QLabel("View ports:"))
+        visToolbar.addWidget(numViewPortsCombo)
+        visToolbar.addSeparator()
+
         # add about action
         aboutAction = self.createAction("About Atoman", slot=self.aboutMe, icon="oxygen/help-about.png",
                                         tip="About Atoman")
 
         helpAction = self.createAction("Atoman Help", slot=self.showHelp, icon="oxygen/help-browser.png",
-                                       tip="Show help window")
+                                       tip="Show help window (opens in external browser)")
 
         # add help toolbar
         helpToolbar = self.addToolBar("Help")
@@ -269,24 +266,15 @@ class MainWindow(QtWidgets.QMainWindow):
         # element editor
         self.elementEditor = elementEditor.ElementEditor(parent=self)
 
-        # load input dialog
-#         self.loadInputDialog = inputDialog.InputDialog(self, self, None)
-
-        self.mdiArea = QtWidgets.QMdiArea()
-        self.mdiArea.subWindowActivated.connect(self.rendererWindowActivated)
-        self.setCentralWidget(self.mdiArea)
-        self.rendererWindows = []
-        self.rendererWindowsSubWin = []
-        self.subWinCount = 0
-        self.addRendererWindow(ask=False)
-        self.mdiArea.tileSubWindows()
+        # view ports / renderer windows
+        self.rendererWindows = []  # TODO: remove
+        self.viewPorts = viewPorts.ViewPortsWidget(parent=self)
+        self.numViewPortsChanged(int(numViewPortsCombo.currentText()))
+        self.setCentralWidget(self.viewPorts)
 
         # add the main tool bar
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
-
-        # connect window destroyed to updateInstances
-        self.destroyed.connect(MainWindow.updateInstances)
 
         self.setStatus('Ready')
 
@@ -331,26 +319,11 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         pass
 
-    def addRendererWindow(self, ask=True):
-        """
-        Add renderer window to mdi area.
+    def numViewPortsChanged(self, num_str):
+        """Update the number of view ports."""
+        self.viewPorts.numViewPortsChanged(int(num_str))
 
-        """
-        rendererWindow = rendererSubWindow.RendererWindow(self, self.subWinCount, parent=self)
-        rendererWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-
-        subwin = self.mdiArea.addSubWindow(rendererWindow)
-        subwin.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        subwin.show()
-        subwin.activateWindow()
-
-        self.rendererWindows.append(rendererWindow)
-        self.rendererWindowsSubWin.append(subwin)
-
-        self.subWinCount += 1
-
-        self.mdiArea.tileSubWindows()
-
+        self.rendererWindows = self.viewPorts.getViewPorts()
         for rw in self.rendererWindows:
             rw.outputDialog.imageTab.imageSequenceTab.refreshLinkedRenderers()
 
@@ -435,7 +408,8 @@ class MainWindow(QtWidgets.QMainWindow):
         msg = "This will overwrite the current element properties file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
         reply = QtWidgets.QMessageBox.question(self, "Message", msg,
-                                           QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
 
         if reply == QtWidgets.QMessageBox.Yes:
             atoms.resetAtoms()
@@ -445,7 +419,8 @@ class MainWindow(QtWidgets.QMainWindow):
         msg = "This will overwrite the current bonds file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
         reply = QtWidgets.QMessageBox.question(self, "Message", msg,
-                                           QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
 
         if reply == QtWidgets.QMessageBox.Yes:
             atoms.resetBonds()
@@ -510,15 +485,6 @@ class MainWindow(QtWidgets.QMainWindow):
         elif osname == "Windows":
             os.startfile(dirname)
 
-    def openNewWindow(self):
-        """
-        Open a new instance of the main window
-
-        """
-        mw = MainWindow(self.desktop)
-        mw.setWindowIcon(QtGui.QIcon(iconPath("atoman.png")))
-        mw.show()
-
     def centre(self):
         """
         Centre the window.
@@ -536,12 +502,18 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         self.console.show()
 
-    def showHelp(self):
+    def showHelp(self, relativeUrl=None):
         """
         Show the help window.
 
         """
-        self.helpWindow.show()
+        baseUrl = 'https://chrisdjscott.github.io/Atoman/'
+        if relativeUrl is not None and relativeUrl:
+            url = QtCore.QUrl(os.path.join(baseUrl, relativeUrl))
+        else:
+            url = QtCore.QUrl(baseUrl)
+        self.logger.debug("Opening help url: {0}".format(url.toString()))
+        QtGui.QDesktopServices.openUrl(url)
 
     def renderWindowClosed(self):
         """
@@ -792,7 +764,7 @@ class MainWindow(QtWidgets.QMainWindow):
             action.setShortcut(shortcut)
 
         if tip is not None:
-            action.setToolTip(tip)
+            action.setToolTip("<p>{0}</p>".format(tip))
             action.setStatusTip(tip)
 
         if callable(slot):
@@ -814,27 +786,3 @@ class MainWindow(QtWidgets.QMainWindow):
 
             else:
                 target.addAction(action)
-
-    @staticmethod
-    def updateInstances():
-        """
-        Make sure only alive windows appear in the set
-
-        """
-        MainWindow.Instances = set([window for window in MainWindow.Instances if isAlive(window)])
-
-
-################################################################################
-def isAlive(qobj):
-    """
-    Check a window is alive
-
-    """
-    return True
-
-    import sip
-    try:
-        sip.unwrapinstance(qobj)
-    except RuntimeError:
-        return False
-    return True

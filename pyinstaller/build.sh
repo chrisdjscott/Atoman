@@ -14,6 +14,15 @@ rm -rf build/ dist/ *.log
 
 cd ..
 
+# ox retina display fix
+cd extra/osx_helper
+rm -rf build
+mkdir build && cd build
+cmake ..
+make
+export DYLD_LIBRARY_PATH=$(pwd):$DYLD_LIBRARY_PATH
+cd ../../..
+
 # get version
 VERSION=$(python setup.py --version)
 echo "BUILDING: Atoman $VERSION"
@@ -42,5 +51,3 @@ fi
 
 echo zip -r Atoman-${ZIP_VER}.zip Atoman.app
 zip -r Atoman-${ZIP_VER}.zip Atoman.app
-
-exit 0

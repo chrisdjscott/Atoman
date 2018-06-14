@@ -85,6 +85,8 @@ class PointDefectsFilterSettings(base.BaseSettings):
         self.registerSetting("bondThicknessPOV", default=0.4)
         self.registerSetting("bondNumSides", default=5)
         self.registerSetting("drawSpaghetti", default=False)
+        self.registerSetting("writeDefectsFile", default=False)
+        self.registerSetting("defectsFile", default="defects.dat")
         
         # old methods for calculating certain things
         self.registerSetting("splitIntsOld", default=False)
@@ -356,6 +358,69 @@ class PointDefectsFilter(base.BaseFilter):
         if settings.getSetting("drawSpaghetti"):
             spaghettiAtoms = self.getSpaghettiAtoms(filterInput, vacancyRadius)
             result.setSpaghettiAtoms(spaghettiAtoms)
+        
+        # write a file containing the defects
+        if settings.getSetting("writeDefectsFile"):
+            filename = settings.getSetting("defectsFile")
+            self.logger.info("Writing file containing defects: %s" % filename)
+            with open(filename, "w") as fout:
+                # total number of defects
+                fout.write("%d total defects\n" % NDef)
+                
+                # vacancies
+                fout.write("%d vacancies\n" % NVac)
+                for i, sym in enumerate(refLattice.specieList):
+                    fout.write("%d %s " % (vacSpecCount[i], sym))
+                fout.write("\n")
+                for index in vacancies:
+                    pos = refLattice.atomPos(index)
+                    fout.write("%s %f %f %f\n" % (refLattice.atomSym(index), pos[0], pos[1], pos[2]))
+                
+                # interstitials
+                fout.write("%d interstitials\n" % NInt)
+                for i, sym in enumerate(inputLattice.specieList):
+                    fout.write("%d %s " % (intSpecCount[i], sym))
+                fout.write("\n")
+                for index in interstitials:
+                    pos = inputLattice.atomPos(index)
+                    fout.write("%s %f %f %f\n" % (inputLattice.atomSym(index), pos[0], pos[1], pos[2]))
+                
+                # split interstitials
+                fout.write("%d split interstitials\n" % NSplit)
+                for i in range(len(inputLattice.specieList)):
+                    for j in range(i, len(inputLattice.specieList)):
+                        if j == i:
+                            N = splitIntSpecCount[i][j]
+                        else:
+                            N = splitIntSpecCount[i][j] + splitIntSpecCount[j][i]
+                        fout.write("%d %s %s " % (N, inputLattice.specieList[i], inputLattice.specieList[j]))
+                fout.write("\n")
+                for i in range(NSplit):
+                    ind1 = splitInterstitials[3 * i + 1]
+                    ind2 = splitInterstitials[3 * i + 2]
+                    
+                    pos1 = inputLattice.pos[3 * ind1:3 * ind1 + 3]
+                    pos2 = inputLattice.pos[3 * ind2:3 * ind2 + 3]
+                    
+                    sym1 = inputLattice.atomSym(ind1)
+                    sym2 = inputLattice.atomSym(ind2)
+                    
+                    fout.write("%s %f %f %f %s %f %f %f\n" % (sym1, pos1[0], pos1[1], pos1[2], sym2, pos2[0], pos2[1],
+                                                              pos2[2]))
+                
+                # antisites
+                fout.write("%d antisites\n" % NAnt)
+                for i, symref in enumerate(refLattice.specieList):
+                    for j, syminp in enumerate(inputLattice.specieList):
+                        if symref != syminp:
+                            fout.write("%d %s %s " % (onAntSpecCount[i][j], syminp, symref))
+                fout.write("\n")
+                for index, refIndex in zip(onAntisites, antisites):
+                    pos = inputLattice.atomPos(index)
+                    refPos = refLattice.atomPos(refIndex)
+                    fout.write("%s %f %f %f %s %f %f %f\n" % (inputLattice.atomSym(index), pos[0], pos[1], pos[2],
+                                                              refLattice.atomSym(index), refPos[0], refPos[1],
+                                                              refPos[2]))
         
         return result
     
