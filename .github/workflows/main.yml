@@ -24,7 +24,7 @@ jobs:
         cp setup.cfg.example setup.cfg
         python setup.py build_clib
         python setup.py build_ext --inplace
-		python setup.py build_sphinx
+        python setup.py build_sphinx
     - name: Run tests
       run: |
         python setup.py test
