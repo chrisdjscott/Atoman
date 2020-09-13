@@ -20,9 +20,9 @@ jobs:
         pip install -r requirements.txt
     - name: Prepare to build
       run: |
-        cp setup.cfg.example setup.cfg
+        #cp setup.cfg.example setup.cfg
         # disable GUI tests
-        sed -i ".bak" 's/#exclude = slowtests/exclude = slowtests/' setup.cfg
+        sed 's/#exclude = slowtests/exclude = slowtests/' setup.cfg.example > setup.cfg
     - name: Build C libraries
       run: |
         python setup.py build_clib
