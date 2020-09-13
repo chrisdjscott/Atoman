@@ -8,6 +8,9 @@ jobs:
       matrix:
         platform: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.platform }}
+    env:
+      CC: gcc-9
+      CXX: g++-9
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8
@@ -25,8 +28,8 @@ jobs:
         sed 's/#exclude = slowtests/exclude = slowtests/' setup.cfg.example > setup.cfg
         echo "CC = ${CC}"
         echo "CXX = ${CXX}"
-        type gcc || true
-        type gcc-9 || true
+        $CC --version
+        $CXX --version
     - name: Build C libraries
       run: |
         python setup.py build_clib
