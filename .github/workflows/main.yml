@@ -23,6 +23,10 @@ jobs:
         #cp setup.cfg.example setup.cfg
         # disable GUI tests
         sed 's/#exclude = slowtests/exclude = slowtests/' setup.cfg.example > setup.cfg
+        echo "CC = ${CC}"
+        echo "CXX = ${CXX}"
+        type gcc || true
+        type gcc-9 || true
     - name: Build C libraries
       run: |
         python setup.py build_clib
