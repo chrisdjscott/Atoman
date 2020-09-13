@@ -8,8 +8,8 @@ Released under the MIT license, see "LICENSE.md" for details.
 
 ## Dependencies
 
-This code requires [Python](http://www.python.org) 2.7 or 3.5+. Atoman depends on a number of
-Python libraries, a C and C++ compiler that supports OpenMP (tested with gcc and g++) and also
+This code requires [Python 3](http://www.python.org) and depends on a number of
+Python libraries, a C and C++ compiler (ideally one that supports OpenMP - tested with gcc and g++) and also
 some other optional software.
 
 ### Python modules
@@ -18,7 +18,7 @@ This list of required modules can be found in "requirements.txt" and installed, 
 using pip:
 
 ```
-pip install -r requirements.txt --trusted-host download.qt.io
+pip install -r requirements.txt
 ```
 
 ### Other software

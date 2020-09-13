@@ -14,34 +14,63 @@ import sys
 import subprocess
 import shutil
 import platform
-import distutils.sysconfig
+import tempfile
 
 # setuptools is required for entry point
 import setuptools
+import distutils.sysconfig
 
 import versioneer
 
 
-# if on Mac we have to force gcc (for openmp...)
-if platform.system() == "Darwin":
-    try:
-        os.environ["CC"]
-    except KeyError:
-        os.environ["CC"] = "gcc"
-    try:
-        os.environ["CXX"]
-    except KeyError:
-        os.environ["CXX"] = "g++"
+# check for openmp following
+# http://stackoverflow.com/questions/16549893/programatically-testing-for-openmp-support-from-a-python-setup-script
+# see http://openmp.org/wp/openmp-compilers/
+omp_test = \
+br"""
+#include <omp.h>
+#include <stdio.h>
+int main() {
+#pragma omp parallel
+printf("Hello from thread %d, nthreads %d\n", omp_get_thread_num(), omp_get_num_threads());
+}
+"""
 
-# flags for different compilers (specify openmp...)
-copt = {
-    'unix': ['-fopenmp'],
-    'intelem': ['-openmp'],
-}
-lopt = {
-    'unix': ["-fopenmp"],
-    "intelem": ["-openmp", "-lpython2.7"],  # for some reason we have to link to python2.7
-}
+TEST_OMP_FLAGS = [
+    "-fopenmp",
+    "-qopenmp",
+]
+
+def check_for_openmp():
+    try:
+        cc = os.environ['CC']
+    except KeyError:
+        cc = 'gcc'
+    curdir = os.getcwd()
+    for omp_flag in TEST_OMP_FLAGS:
+        tmpdir = tempfile.mkdtemp()
+        os.chdir(tmpdir)
+        try:
+            filename = r'test.c'
+            with open(filename, 'wb', 0) as file:
+                file.write(omp_test)
+            with open(os.devnull, 'wb') as fnull:
+                result = subprocess.call([cc, omp_flag, filename],
+                                         stdout=fnull, stderr=fnull)
+            print('check_for_openmp() result for {}: '.format(omp_flag), result)
+            if result == 0:
+                break
+        finally:
+            #clean up
+            shutil.rmtree(tmpdir)
+            os.chdir(curdir)
+
+    return result==0, omp_flag
+
+HAVE_OMP, OMP_FLAG = check_for_openmp()
+print("Have OpenMP: ", HAVE_OMP)
+if HAVE_OMP:
+    print("OpenMP flag: ", OMP_FLAG)
 
 # sphinx build
 try:
@@ -199,10 +228,9 @@ def setup_package():
             def build_extensions(self, *args, **kwargs):
                 c = self.compiler.compiler_type
                 for e in self.extensions:
-                    if c in copt:
-                        e.extra_compile_args.extend(copt[c])
-                    if c in lopt:
-                        e.extra_link_args.extend(lopt[c])
+                    if HAVE_OMP:
+                        e.extra_compile_args.append(OMP_FLAG)
+                        e.extra_link_args.append(OMP_FLAG)
                     e.include_dirs.append(distutils.sysconfig.get_python_inc())
 
                 return build_ext.build_extensions(self, *args, **kwargs)
@@ -213,10 +241,10 @@ def setup_package():
                 c = self.compiler.compiler_type
                 for libtup in self.libraries:
                     opts = libtup[1]
-                    if c in copt:
+                    if HAVE_OMP:
                         if "extra_compiler_args" not in opts:
                             opts["extra_compiler_args"] = []
-                        opts["extra_compiler_args"].extend(copt[c])
+                        opts["extra_compiler_args"].append(OMP_FLAG)
                     if "include_dirs" not in opts:
                         opts["include_dirs"] = []
                     opts["include_dirs"].append(distutils.sysconfig.get_python_inc())
@@ -232,3 +260,5 @@ def setup_package():
 
 if __name__ == "__main__":
     setup_package()
+    if not HAVE_OMP:
+        print("Warning: building without OpenMP - it will be slow")
