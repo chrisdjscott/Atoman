@@ -99,13 +99,6 @@ try:
                      name=os.path.join('dist', 'Atoman.app'),
                      version=version)
 
-        osname = platform.system()
-        if osname == "Darwin":
-            # check qtmenu.nib got copied
-            if not os.path.isdir("dist/Atoman.app/Contents/Resources/qt_menu.nib"):
-                print("qt_menu.nib not found -> attempting to fix...")
-                shutil.copytree("/opt/local/libexec/qt4/Library/Frameworks/QtGui.framework/Versions/Current/Resources/qt_menu.nib", "dist/Atoman.app/Contents/Resources/qt_menu.nib")
-
         # copy icns file
         new_icns = os.path.join("dist", "Atoman.app", "Contents", "Resources", "atoman.icns")
         cmd = "cp -f atoman.icns %s" % os.path.join("dist", "Atoman.app", "Contents", "Resources", "atoman.icns")

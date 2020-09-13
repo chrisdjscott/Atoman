@@ -14,7 +14,8 @@ import datetime
 import multiprocessing as mp
 import functools
 
-from PySide import QtGui, QtCore
+from PySide2 import QtGui, QtCore, QtWidgets
+
 import numpy as np
 
 from ..visutils.utilities import iconPath, resourcePath
@@ -25,7 +26,7 @@ from six.moves import range
 
 ################################################################################
 
-class GenericPreferencesSettingsForm(QtGui.QWidget):
+class GenericPreferencesSettingsForm(QtWidgets.QWidget):
     """
     Tab for preference dialog.
 
@@ -34,7 +35,7 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
         super(GenericPreferencesSettingsForm, self).__init__(parent)
 
         # tab layout
-        self.layout = QtGui.QFormLayout()
+        self.layout = QtWidgets.QFormLayout()
 #         self.layout = QtGui.QVBoxLayout()
 #         self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
@@ -48,9 +49,9 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
         Create new row.
 
         """
-        row = QtGui.QWidget()
+        row = QtWidgets.QWidget()
 
-        rowLayout = QtGui.QHBoxLayout(row)
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setAlignment(QtCore.Qt.AlignHCenter)
 
@@ -60,9 +61,9 @@ class GenericPreferencesSettingsForm(QtGui.QWidget):
 
     def addHorizontalDivide(self):
         """Add a horizontal divider to the layout."""
-        line = QtGui.QFrame()
-        line.setFrameShape(QtGui.QFrame.HLine)
-        line.setFrameShadow(QtGui.QFrame.Sunken)
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.layout.addWidget(line)
 
     def init(self):
@@ -101,13 +102,13 @@ class LogFileSettingsForm(GenericPreferencesSettingsForm):
         self.logLevel = int(settings.value("logfile/level", logging.DEBUG))
 
         # create log file
-        createCheck = QtGui.QCheckBox("Create log file")
+        createCheck = QtWidgets.QCheckBox("Create log file")
         createCheck.setChecked(self.createLogFile)
         createCheck.stateChanged.connect(self.createToggled)
         self.layout.addRow("Create log file", createCheck)
 
         # directory button
-        self.logDirButton = QtGui.QPushButton(self.logDirectory)
+        self.logDirButton = QtWidgets.QPushButton(self.logDirectory)
         self.logDirButton.clicked.connect(self.showLogDirectoryDialog)
         self.logDirButton.setAutoDefault(False)
         self.logDirButton.setDefault(False)
@@ -128,7 +129,7 @@ class LogFileSettingsForm(GenericPreferencesSettingsForm):
                                     "DEBUG"]
 
         # log file level
-        levelCombo = QtGui.QComboBox()
+        levelCombo = QtWidgets.QComboBox()
         levelCombo.addItems(self.loggingLevelsSorted)
         levelIndex = self.getLevelIndex(self.logLevel)
         levelCombo.setCurrentIndex(levelIndex)
@@ -195,7 +196,7 @@ class LogFileSettingsForm(GenericPreferencesSettingsForm):
         Show dialog to choose log dir
 
         """
-        new_dir = QtGui.QFileDialog.getExistingDirectory(self, "Log directory", self.logDirectory)
+        new_dir = QtWidgets.QFileDialog.getExistingDirectory(self, "Log directory", self.logDirectory)
 
         if new_dir and os.path.isdir(new_dir):
             self.logDirectory = new_dir
@@ -268,7 +269,7 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
         self.fmtScalarBarLabels = settings.value("rendering/fmtScalarBarLabels", "%+#6.2e")
 
         # max atoms auto run
-        maxAtomsSpin = QtGui.QSpinBox()
+        maxAtomsSpin = QtWidgets.QSpinBox()
         maxAtomsSpin.setMinimum(1)
         maxAtomsSpin.setMaximum(99999)
         maxAtomsSpin.setValue(self.maxAtomsAutoRun)
@@ -279,7 +280,7 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
         self.addHorizontalDivide()
 
         # scalar bar options
-        numScalarBarLabelsSpin = QtGui.QSpinBox()
+        numScalarBarLabelsSpin = QtWidgets.QSpinBox()
         numScalarBarLabelsSpin.setMinimum(2)
         numScalarBarLabelsSpin.setMaximum(9)
         numScalarBarLabelsSpin.setValue(self.numScalarBarLabels)
@@ -287,14 +288,14 @@ class RenderingSettingsForm(GenericPreferencesSettingsForm):
         numScalarBarLabelsSpin.valueChanged.connect(self.numScalarBarLabelsChanged)
         self.layout.addRow("Number of scalar bar labels", numScalarBarLabelsSpin)
 
-        self.fmtScalarBarLabelsEdit = QtGui.QLineEdit(self.fmtScalarBarLabels)
+        self.fmtScalarBarLabelsEdit = QtWidgets.QLineEdit(self.fmtScalarBarLabels)
         self.fmtScalarBarLabelsEdit.setToolTip("<p>Custom format for scalar bar labels</p>")
         self.fmtScalarBarLabelsEdit.editingFinished.connect(self.fmtEdited)
         regexp = QtCore.QRegExp("%[+- 0#]*[0-9]*([.]?[0-9]+)?[adefgADEFG]")
         validator = QtGui.QRegExpValidator(regexp, self)
         self.fmtScalarBarLabelsEdit.setValidator(validator)
 
-        enableFmtCheck = QtGui.QCheckBox()
+        enableFmtCheck = QtWidgets.QCheckBox()
         if self.enableFmtScalarBarLabels:
             enableFmtCheck.setCheckState(QtCore.Qt.Checked)
             self.fmtScalarBarLabelsEdit.setEnabled(True)
@@ -374,13 +375,13 @@ class FfmpegSettingsForm(GenericPreferencesSettingsForm):
             self.pathToFFmpeg = "ffmpeg"
 
         # path to povray
-        pathToFFmpegLineEdit = QtGui.QLineEdit(self.pathToFFmpeg)
+        pathToFFmpegLineEdit = QtWidgets.QLineEdit(self.pathToFFmpeg)
         pathToFFmpegLineEdit.textChanged.connect(self.pathToFFmpegChanged)
         pathToFFmpegLineEdit.editingFinished.connect(self.pathToFFmpegEdited)
         self.layout.addRow("FFmpeg path", pathToFFmpegLineEdit)
 
         # bitrate
-        bitrateSpin = QtGui.QSpinBox()
+        bitrateSpin = QtWidgets.QSpinBox()
         bitrateSpin.setMinimum(1)
         bitrateSpin.setMaximum(1e8)
         bitrateSpin.setValue(self.bitrate)
@@ -465,43 +466,43 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
             self.pathToPovray = "povray"
 
         # path to povray
-        pathToPovrayLineEdit = QtGui.QLineEdit(self.pathToPovray)
+        pathToPovrayLineEdit = QtWidgets.QLineEdit(self.pathToPovray)
         pathToPovrayLineEdit.textChanged.connect(self.pathToPovrayChanged)
         pathToPovrayLineEdit.editingFinished.connect(self.pathToPovrayEdited)
         self.layout.addRow("POV-Ray path", pathToPovrayLineEdit)
 
         # overlay check box
-        self.overlayImageCheck = QtGui.QCheckBox()
+        self.overlayImageCheck = QtWidgets.QCheckBox()
         self.overlayImageCheck.setChecked(1)
         self.overlayImageCheck.stateChanged.connect(self.overlayImageChanged)
         self.layout.addRow("Overlay image", self.overlayImageCheck)
 
         # shadowless check box
-        self.shadowlessCheck = QtGui.QCheckBox()
+        self.shadowlessCheck = QtWidgets.QCheckBox()
         self.shadowlessCheck.stateChanged.connect(self.shadowlessChanged)
         self.layout.addRow("Shadowless", self.shadowlessCheck)
 
         # dimensions
-        HResSpinBox = QtGui.QSpinBox()
+        HResSpinBox = QtWidgets.QSpinBox()
         HResSpinBox.setMinimum(1)
         HResSpinBox.setMaximum(10000)
         HResSpinBox.setValue(self.HRes)
         HResSpinBox.valueChanged.connect(self.HResChanged)
 
-        VResSpinBox = QtGui.QSpinBox()
+        VResSpinBox = QtWidgets.QSpinBox()
         VResSpinBox.setMinimum(1)
         VResSpinBox.setMaximum(10000)
         VResSpinBox.setValue(self.VRes)
         VResSpinBox.valueChanged.connect(self.VResChanged)
 
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(HResSpinBox)
-        hbox.addWidget(QtGui.QLabel("x"))
+        hbox.addWidget(QtWidgets.QLabel("x"))
         hbox.addWidget(VResSpinBox)
         self.layout.addRow("Dimensions", hbox)
 
         # view angle
-        angleSpinBox = QtGui.QDoubleSpinBox()
+        angleSpinBox = QtWidgets.QDoubleSpinBox()
         angleSpinBox.setSingleStep(0.1)
         angleSpinBox.setMinimum(0.1)
         angleSpinBox.setMaximum(360.0)
@@ -510,7 +511,7 @@ class PovraySettingsForm(GenericPreferencesSettingsForm):
         self.layout.addRow("View angle (degrees)", angleSpinBox)
 
         # cell frame radius
-        cellFrameSpinBox = QtGui.QDoubleSpinBox()
+        cellFrameSpinBox = QtWidgets.QDoubleSpinBox()
         cellFrameSpinBox.setSingleStep(0.01)
         cellFrameSpinBox.setMinimum(0.01)
         cellFrameSpinBox.setMaximum(5.0)
@@ -621,28 +622,28 @@ class MatplotlibSettingsForm(GenericPreferencesSettingsForm):
         self.legendFontsize = 16
 
         # dimensions
-        widthSpinBox = QtGui.QDoubleSpinBox()
+        widthSpinBox = QtWidgets.QDoubleSpinBox()
         widthSpinBox.setMinimum(1)
         widthSpinBox.setMaximum(50)
         widthSpinBox.setSingleStep(0.1)
         widthSpinBox.setValue(self.figWidth)
         widthSpinBox.valueChanged.connect(self.widthChanged)
 
-        heightSpinBox = QtGui.QDoubleSpinBox()
+        heightSpinBox = QtWidgets.QDoubleSpinBox()
         heightSpinBox.setMinimum(1)
         heightSpinBox.setMaximum(50)
         heightSpinBox.setSingleStep(0.1)
         heightSpinBox.setValue(self.figHeight)
         heightSpinBox.valueChanged.connect(self.heightChanged)
 
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addWidget(widthSpinBox)
-        hbox.addWidget(QtGui.QLabel("x"))
+        hbox.addWidget(QtWidgets.QLabel("x"))
         hbox.addWidget(heightSpinBox)
         self.layout.addRow("Fig size (inches)", hbox)
 
         # dpi
-        dpiSpinBox = QtGui.QSpinBox()
+        dpiSpinBox = QtWidgets.QSpinBox()
         dpiSpinBox.setMinimum(1)
         dpiSpinBox.setMaximum(1000)
         dpiSpinBox.setValue(self.figDpi)
@@ -650,13 +651,13 @@ class MatplotlibSettingsForm(GenericPreferencesSettingsForm):
         self.layout.addRow("Dpi", dpiSpinBox)
 
         # show grid
-        self.showGridCheck = QtGui.QCheckBox()
+        self.showGridCheck = QtWidgets.QCheckBox()
         self.showGridCheck.setChecked(self.showGrid)
         self.showGridCheck.stateChanged.connect(self.showGridChanged)
         self.layout.addRow("Show grid", self.showGridCheck)
 
         # general font size
-        generalFontSizeSpin = QtGui.QSpinBox()
+        generalFontSizeSpin = QtWidgets.QSpinBox()
         generalFontSizeSpin.setMinimum(1)
         generalFontSizeSpin.setMaximum(100)
         generalFontSizeSpin.setValue(self.fontsize)
@@ -664,7 +665,7 @@ class MatplotlibSettingsForm(GenericPreferencesSettingsForm):
         self.layout.addRow("Font size (general)", generalFontSizeSpin)
 
         # ticks
-        legendFontSizeSpin = QtGui.QSpinBox()
+        legendFontSizeSpin = QtWidgets.QSpinBox()
         legendFontSizeSpin.setMinimum(1)
         legendFontSizeSpin.setMaximum(100)
         legendFontSizeSpin.setValue(self.legendFontsize)
@@ -672,7 +673,7 @@ class MatplotlibSettingsForm(GenericPreferencesSettingsForm):
         self.layout.addRow("Font size (legend)", legendFontSizeSpin)
 
         # ticks
-        tickFontSizeSpin = QtGui.QSpinBox()
+        tickFontSizeSpin = QtWidgets.QSpinBox()
         tickFontSizeSpin.setMinimum(1)
         tickFontSizeSpin.setMaximum(100)
         tickFontSizeSpin.setValue(self.tickFontsize)
@@ -778,21 +779,21 @@ class ForcesSettingsForm(GenericPreferencesSettingsForm):
 
         # path to povray
         self.pathToMDDir = "<not implemented>"
-        pathToMDDirLineEdit = QtGui.QLineEdit(self.pathToMDDir)
+        pathToMDDirLineEdit = QtWidgets.QLineEdit(self.pathToMDDir)
 #         pathToMDDirLineEdit.textChanged.connect(self.pathToMDDirChanged)
 #         pathToMDDirLineEdit.editingFinished.connect(self.pathToMDDirEdited)
 
         rowLayout = self.newRow()
-        rowLayout.addWidget(QtGui.QLabel("Path to MD dir:"))
+        rowLayout.addWidget(QtWidgets.QLabel("Path to MD dir:"))
         rowLayout.addWidget(pathToMDDirLineEdit)
 
         # file suffix
         rowLayout = self.newRow()
 
-        label = QtGui.QLabel("Interface:")
+        label = QtWidgets.QLabel("Interface:")
         rowLayout.addWidget(label)
 
-        interfaceCombo = QtGui.QComboBox()
+        interfaceCombo = QtWidgets.QComboBox()
         interfaceCombo.addItem("LBOMD")
 #         interfaceCombo.currentIndexChanged[str].connect(self.interfaceChanged)
         rowLayout.addWidget(interfaceCombo)
@@ -879,7 +880,7 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         self.logger.debug("Initial value of OMP_NUM_THREADS = %d", self.openmpNumThreads)
 
         # omp number of threads to use
-        ompNumThreadsSpin = QtGui.QSpinBox()
+        ompNumThreadsSpin = QtWidgets.QSpinBox()
         ompNumThreadsSpin.setMinimum(0)
         ompNumThreadsSpin.setMaximum(maxthread)
         ompNumThreadsSpin.setValue(ini)
@@ -891,7 +892,7 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         disableMouseWheel = int(self.settings.value("mouse/disableWheel", 0))
         self.disableMouseWheel = bool(disableMouseWheel)
         self.logger.debug("Disable mouse wheel (initial value): %s", self.disableMouseWheel)
-        disableMouseWheelCheck = QtGui.QCheckBox()
+        disableMouseWheelCheck = QtWidgets.QCheckBox()
         tip = "<p>Disables the mouse wheel in the VTK window. The "
         tip += "mouse wheel can be used to zoom in and out. This is "
         tip += "most useful with the wireless Apple Magic mouse.</p>"
@@ -909,10 +910,10 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
         zpbc = int(self.settings.value("defaultPBC/z", 1))
         self.defaultPBC = np.array([xpbc, ypbc, zpbc], dtype=np.int32)
         self.logger.debug("Default PBCs (initial value): %r", list(self.defaultPBC))
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         xyz = ["x", "y", "z"]
         for i in range(3):
-            check = QtGui.QCheckBox(xyz[i])
+            check = QtWidgets.QCheckBox(xyz[i])
             if self.defaultPBC[i]:
                 check.setCheckState(QtCore.Qt.Checked)
             else:
@@ -983,7 +984,7 @@ class GeneralSettingsForm(GenericPreferencesSettingsForm):
 
 ################################################################################
 
-class PreferencesDialog(QtGui.QDialog):
+class PreferencesDialog(QtWidgets.QDialog):
     """
     A number of global application settings can be configured on the Preferences dialog.
 
@@ -995,7 +996,7 @@ class PreferencesDialog(QtGui.QDialog):
 
         self.parent = parent
         self.mainWindow = mainWindow
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
 
         self.setWindowTitle("Preferences")
         self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/configure.png")))
@@ -1004,10 +1005,10 @@ class PreferencesDialog(QtGui.QDialog):
         self.buttonCount = 0
 
         # layout
-        dlgLayout = QtGui.QVBoxLayout(self)
+        dlgLayout = QtWidgets.QVBoxLayout(self)
 
         # toolbox
-        self.toolbox = QtGui.QToolBox()
+        self.toolbox = QtWidgets.QToolBox()
 
         # add toolbox to layout
         dlgLayout.addWidget(self.toolbox)
@@ -1041,14 +1042,14 @@ class PreferencesDialog(QtGui.QDialog):
         self.toolbox.addItem(self.forcesForm, QtGui.QIcon(iconPath("capital_f.gif")), "Forces")
 
         # help button (links to help page on preferences dialog)
-        helpButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/system-help.png")), "Show help")
+        helpButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/system-help.png")), "Show help")
         helpButton.setToolTip("<p>Show help page (opens in browser)</p>")
         helpButton.setFixedWidth(150)
         helpButton.setAutoDefault(0)
         helpButton.clicked.connect(self.loadHelpPage)
         self.helpPage = "usage/preferences.html"
 
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.setAlignment(QtCore.Qt.AlignHCenter)
         row.addWidget(helpButton)
         dlgLayout.addLayout(row)

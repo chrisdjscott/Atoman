@@ -8,7 +8,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PySide import QtGui, QtCore
+from PySide2 import QtGui, QtCore, QtWidgets
+
 
 from ...visutils.utilities import iconPath
 from ...visutils import utilities
@@ -18,7 +19,7 @@ from six.moves import range
 
 ################################################################################
 
-class ConsoleWindow(QtGui.QDialog):
+class ConsoleWindow(QtWidgets.QDialog):
     """
     Console window for displaying output to the user.
     
@@ -37,27 +38,27 @@ class ConsoleWindow(QtGui.QDialog):
         self.setWindowIcon(QtGui.QIcon(iconPath("console-icon.png")))
         self.resize(800,400)
         
-        consoleLayout = QtGui.QVBoxLayout(self)
+        consoleLayout = QtWidgets.QVBoxLayout(self)
         consoleLayout.setAlignment(QtCore.Qt.AlignTop)
         consoleLayout.setContentsMargins(0, 0, 0, 0)
         consoleLayout.setSpacing(0)
         
-        self.textWidget = QtGui.QTextEdit()
+        self.textWidget = QtWidgets.QTextEdit()
         self.textWidget.setReadOnly(1)
         
         consoleLayout.addWidget(self.textWidget)
         
         #TODO: add save text.
         
-        self.clearButton = QtGui.QPushButton("Clear")
+        self.clearButton = QtWidgets.QPushButton("Clear")
         self.clearButton.setAutoDefault(0)
         self.clearButton.clicked.connect(self.clearText)
         
-        self.saveButton = QtGui.QPushButton("Save")
+        self.saveButton = QtWidgets.QPushButton("Save")
         self.saveButton.setAutoDefault(0)
         self.saveButton.clicked.connect(self.saveText)
         
-        self.closeButton = QtGui.QPushButton("Hide")
+        self.closeButton = QtWidgets.QPushButton("Hide")
         self.closeButton.setAutoDefault(1)
         self.closeButton.clicked.connect(self.close)
         
@@ -97,14 +98,14 @@ class ConsoleWindow(QtGui.QDialog):
         consoleLevel = level
         consoleLevelIndex = self.getLevelIndex(consoleLevel)
         
-        self.consoleLevelCombo = QtGui.QComboBox()
+        self.consoleLevelCombo = QtWidgets.QComboBox()
         self.consoleLevelCombo.addItems(self.loggingLevelsSorted)
         self.consoleLevelCombo.currentIndexChanged[str].connect(self.consoleLevelChanged)
         self.consoleLevelCombo.setCurrentIndex(consoleLevelIndex)
-        label = QtGui.QLabel("Level:")
+        label = QtWidgets.QLabel("Level:")
         
-        buttonWidget = QtGui.QWidget()
-        buttonLayout = QtGui.QHBoxLayout(buttonWidget)
+        buttonWidget = QtWidgets.QWidget()
+        buttonLayout = QtWidgets.QHBoxLayout(buttonWidget)
         buttonLayout.addWidget(self.clearButton)
         buttonLayout.addWidget(self.saveButton)
         buttonLayout.addStretch()
@@ -159,7 +160,7 @@ class ConsoleWindow(QtGui.QDialog):
         self.setWindowFlags(self.iniWinFlags)
         
         # get file name
-        filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Console Output', '.', "HTML files (*.html)")[0]
+        filename = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Console Output', '.', "HTML files (*.html)")[0][0]
         
         self.setWindowFlags(self.iniWinFlags | QtCore.Qt.WindowStaysOnTopHint)
         self.show()

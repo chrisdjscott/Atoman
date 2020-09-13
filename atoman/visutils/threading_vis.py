@@ -10,7 +10,7 @@ from __future__ import unicode_literals
 from __future__ import division
 import functools
 
-from PySide import QtCore
+from PySide2 import QtCore
 
 
 ################################################################################

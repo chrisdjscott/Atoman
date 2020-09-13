@@ -16,7 +16,8 @@ import logging
 import functools
 import copy
 
-from PySide import QtGui, QtCore
+from PySide2 import QtGui, QtCore, QtWidgets
+
 import numpy as np
 
 from ..visutils.utilities import iconPath
@@ -44,7 +45,7 @@ class GenerateInputForm(GenericForm):
         self.mainToolbar = mainToolbar
 
         # system type combo
-        self.inputTypeCombo = QtGui.QComboBox()
+        self.inputTypeCombo = QtWidgets.QComboBox()
         self.inputTypeCombo.addItem("FCC")
         self.inputTypeCombo.addItem("Pu-Ga (L12 method)")
         self.inputTypeCombo.addItem("BCC")
@@ -65,7 +66,7 @@ class GenerateInputForm(GenericForm):
         self.show()
 
         # stacked widget
-        self.stackedWidget = QtGui.QStackedWidget()
+        self.stackedWidget = QtWidgets.QStackedWidget()
 
         row = self.newRow()
         row.addWidget(self.stackedWidget)
@@ -162,7 +163,7 @@ class LoadSystemForm(GenericForm):
 
 ################################################################################
 
-class SystemsListWidgetItem(QtGui.QListWidgetItem):
+class SystemsListWidgetItem(QtWidgets.QListWidgetItem):
     """
     Item that goes in the systems list
 
@@ -207,7 +208,7 @@ class SystemsListWidgetItem(QtGui.QListWidgetItem):
 
 ################################################################################
 
-class SystemsDialog(QtGui.QWidget):
+class SystemsDialog(QtWidgets.QWidget):
     """
     Systems dialog
 
@@ -221,14 +222,14 @@ class SystemsDialog(QtGui.QWidget):
         self.logger = logging.getLogger(__name__)
 
         # dialog layout
-        dialog_layout = QtGui.QVBoxLayout()
+        dialog_layout = QtWidgets.QVBoxLayout()
         dialog_layout.setContentsMargins(0,0,0,0)
         self.setLayout(dialog_layout)
 
         # box for list of loaded systems
-        list_holder = QtGui.QGroupBox("Loaded systems")
+        list_holder = QtWidgets.QGroupBox("Loaded systems")
         list_holder.setAlignment(QtCore.Qt.AlignHCenter)
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         vbox.setAlignment(QtCore.Qt.AlignHCenter)
         vbox.setSpacing(0)
         vbox.setContentsMargins(0,0,0,0)
@@ -236,7 +237,7 @@ class SystemsDialog(QtGui.QWidget):
         dialog_layout.addWidget(list_holder)
 
         # add list widget
-        self.systems_list_widget = QtGui.QListWidget(self)
+        self.systems_list_widget = QtWidgets.QListWidget(self)
         self.systems_list_widget.setSelectionMode(self.systems_list_widget.ExtendedSelection)
         self.systems_list_widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.systems_list_widget.customContextMenuRequested.connect(self.showListWidgetContextMenu)
@@ -244,12 +245,12 @@ class SystemsDialog(QtGui.QWidget):
         vbox.addWidget(self.systems_list_widget)
 
         # remove system button
-        removeSystemButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-remove.png")), "")
+        removeSystemButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/list-remove.png")), "")
         removeSystemButton.setAutoDefault(False)
         removeSystemButton.setToolTip("Remove system")
         removeSystemButton.clicked.connect(self.removeSystem)
         removeSystemButton.setFixedWidth(60)
-        hbox = QtGui.QHBoxLayout()
+        hbox = QtWidgets.QHBoxLayout()
         hbox.addStretch(1)
         hbox.addWidget(removeSystemButton)
         hbox.addStretch(1)
@@ -287,47 +288,47 @@ class SystemsDialog(QtGui.QWidget):
             logger.debug("Showing context menu for item at row: %d", index)
 
             # context menu
-            menu = QtGui.QMenu(self)
+            menu = QtWidgets.QMenu(self)
 
             # make actions
 
             # show system info
-            showInfoAction = QtGui.QAction("Show information", self)
+            showInfoAction = QtWidgets.QAction("Show information", self)
             showInfoAction.setToolTip("Show system information")
             showInfoAction.setStatusTip("Show system information")
             showInfoAction.triggered.connect(functools.partial(self.showSystemInformation, index))
 
             # change display name action
-            dnAction = QtGui.QAction("Set display name", self)
+            dnAction = QtWidgets.QAction("Set display name", self)
             dnAction.setToolTip("Change display name")
             dnAction.setStatusTip("Change display name")
             dnAction.triggered.connect(functools.partial(self.changeDisplayName, index))
 
             # duplicate action
-            duplicateAction = QtGui.QAction("Duplicate system", self)
+            duplicateAction = QtWidgets.QAction("Duplicate system", self)
             duplicateAction.setToolTip("Duplicate selected system")
             duplicateAction.setStatusTip("Duplicate selected system")
             duplicateAction.triggered.connect(functools.partial(self.duplicate_system, index))
 
             # remove action
-            removeAction = QtGui.QAction("Remove system(s)", self)
+            removeAction = QtWidgets.QAction("Remove system(s)", self)
             removeAction.setToolTip("Remove selected system(s)")
             removeAction.setStatusTip("Remove selected system(s)")
             removeAction.triggered.connect(self.removeSystem)
 
             # reload action
-            reloadAction = QtGui.QAction("Reload system(s)", self)
+            reloadAction = QtWidgets.QAction("Reload system(s)", self)
             reloadAction.setToolTip("Reload selected system(s)")
             reloadAction.setStatusTip("Reload selected system(s)")
             reloadAction.triggered.connect(self.reload_system)
 
             # load scalar data action
-            loadScalarAction = QtGui.QAction("Load scalar data", self)
+            loadScalarAction = QtWidgets.QAction("Load scalar data", self)
             loadScalarAction.setToolTip("Load scalar data from a file")
             loadScalarAction.triggered.connect(functools.partial(self.loadScalarData, index))
 
             # load vector data action
-            loadVectorAction = QtGui.QAction("Load vector data", self)
+            loadVectorAction = QtWidgets.QAction("Load vector data", self)
             loadVectorAction.setToolTip("Load vector data from a file")
             loadVectorAction.triggered.connect(functools.partial(self.loadVectorData, index))
 
@@ -357,18 +358,18 @@ class SystemsDialog(QtGui.QWidget):
         lattice = item.lattice
 
         # open a dialog to get the name of scalar data and the filename
-        inputdiag = QtGui.QInputDialog(self)
+        inputdiag = QtWidgets.QInputDialog(self)
         inputdiag.setOkButtonText("Select file")
         inputdiag.setLabelText("Name:")
         inputdiag.setWindowTitle("Load scalar data")
-        inputdiag.setInputMode(QtGui.QInputDialog.TextInput)
+        inputdiag.setInputMode(QtWidgets.QInputDialog.TextInput)
 
         scalarName = None
         while scalarName is None:
             # open dialog
             retcode = inputdiag.exec_()
 
-            if retcode == QtGui.QDialog.Rejected:
+            if retcode == QtWidgets.QDialog.Rejected:
                 break
 
             # get text
@@ -395,7 +396,7 @@ class SystemsDialog(QtGui.QWidget):
             self.logger.debug("Got name for scalar data: '%s'", scalarName)
 
             # get filename
-            filename = QtGui.QFileDialog.getOpenFileName(self, "Select file containing scalar data: '{0}'".format(scalarName), os.getcwd())[0]
+            filename = QtWidgets.QFileDialog.getOpenFileName(self, "Select file containing scalar data: '{0}'".format(scalarName), os.getcwd())[0][0]
             filename = str(filename)
 
             if len(filename):
@@ -447,18 +448,18 @@ class SystemsDialog(QtGui.QWidget):
         lattice = item.lattice
 
         # open a dialog to get the name of scalar data and the filename
-        inputdiag = QtGui.QInputDialog(self)
+        inputdiag = QtWidgets.QInputDialog(self)
         inputdiag.setOkButtonText("Select file")
         inputdiag.setLabelText("Name:")
         inputdiag.setWindowTitle("Load vector data")
-        inputdiag.setInputMode(QtGui.QInputDialog.TextInput)
+        inputdiag.setInputMode(QtWidgets.QInputDialog.TextInput)
 
         vectorName = None
         while vectorName is None:
             # open dialog
             retcode = inputdiag.exec_()
 
-            if retcode == QtGui.QDialog.Rejected:
+            if retcode == QtWidgets.QDialog.Rejected:
                 break
 
             # get text
@@ -485,7 +486,7 @@ class SystemsDialog(QtGui.QWidget):
             self.logger.debug("Got name for vector data: '%s'", vectorName)
 
             # get filename
-            filename = QtGui.QFileDialog.getOpenFileName(self, "Select file containing vector data: '{0}'".format(vectorName), os.getcwd())[0]
+            filename = QtWidgets.QFileDialog.getOpenFileName(self, "Select file containing vector data: '{0}'".format(vectorName), os.getcwd())[0][0]
             filename = str(filename)
 
             if len(filename):
@@ -540,7 +541,7 @@ class SystemsDialog(QtGui.QWidget):
         item = self.systems_list_widget.item(index)
 
         # first we get a new display name
-        text, ok = QtGui.QInputDialog.getText(self, 'Display name', "Enter new display name:", text=item.displayName)
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Display name', "Enter new display name:", text=item.displayName)
 
         if ok:
             text = text.strip()
@@ -586,7 +587,7 @@ class SystemsDialog(QtGui.QWidget):
         item = self.systems_list_widget.item(index)
 
         # show dialog
-        text, ok = QtGui.QInputDialog.getText(self, 'Display name', "Enter new display name:", text=item.displayName)
+        text, ok = QtWidgets.QInputDialog.getText(self, 'Display name', "Enter new display name:", text=item.displayName)
 
         if ok and len(text.strip()):
             text = text.strip()

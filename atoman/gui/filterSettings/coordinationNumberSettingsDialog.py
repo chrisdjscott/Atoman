@@ -7,7 +7,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import functools
 
-from PySide import QtGui, QtCore
+from PySide2 import QtCore, QtWidgets
+
 
 from . import base
 from ...filtering.filters import coordinationNumberFilter
@@ -30,13 +31,13 @@ class CoordinationNumberSettingsDialog(base.GenericSettingsDialog):
         self._settings = coordinationNumberFilter.CoordinationNumberFilterSettings()
         
         # filter check
-        filterCheck = QtGui.QCheckBox()
+        filterCheck = QtWidgets.QCheckBox()
         filterCheck.setChecked(self._settings.getSetting("filteringEnabled"))
         filterCheck.setToolTip("Filter by coordination number")
         filterCheck.stateChanged.connect(self.filteringToggled)
         self.contentLayout.addRow("<b>Filter by coordination</b>", filterCheck)
         
-        self.minCoordNumSpinBox = QtGui.QSpinBox()
+        self.minCoordNumSpinBox = QtWidgets.QSpinBox()
         self.minCoordNumSpinBox.setSingleStep(1)
         self.minCoordNumSpinBox.setMinimum(0)
         self.minCoordNumSpinBox.setMaximum(999)
@@ -46,7 +47,7 @@ class CoordinationNumberSettingsDialog(base.GenericSettingsDialog):
         self.minCoordNumSpinBox.setEnabled(self._settings.getSetting("filteringEnabled"))
         self.contentLayout.addRow("Minimum", self.minCoordNumSpinBox)
         
-        self.maxCoordNumSpinBox = QtGui.QSpinBox()
+        self.maxCoordNumSpinBox = QtWidgets.QSpinBox()
         self.maxCoordNumSpinBox.setSingleStep(1)
         self.maxCoordNumSpinBox.setMinimum(0)
         self.maxCoordNumSpinBox.setMaximum(999)

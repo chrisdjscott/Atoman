@@ -15,7 +15,6 @@ display_usage() {
     echo "    [-d conda_dir] The location to install conda. If conda already exists at that"
     echo "                   location we use it. (default is '$HOME/miniconda')"
     echo "    [-p python_version] The version of python to use (either 2 or 3, default is 3)"
-    echo "    [-V vtk_version] The version of VTK to use (7 or 8, default is 8)"
     echo "    [-e conda_env] The name of the conda environment to create (default is 'atoman')"
     echo "    [-g] Install gcc from conda"
     echo "    [-h] Display help"
@@ -26,7 +25,6 @@ display_usage() {
 # NOTE: Python 3 will be much slower as it has to install PySide from source
 CONDIR=${HOME}/miniconda
 PYVER=3
-VTKVER=8
 CONDENV=atoman
 WITH_GCC=0
 
@@ -41,10 +39,6 @@ do
         ;;
         -p|--pyver)
         PYVER="$2"
-        shift
-        ;;
-        -V|--vtkver)
-        VTKVER="$2"
         shift
         ;;
         -e|--cenv)
@@ -129,30 +123,10 @@ case ${PYVER} in
     ;;
 esac
 
-case ${VTKVER} in
-    7)
-    if [[ "${CONDOS}" == "MacOSX" ]]; then
-        echo "Error: must specify VTK 8 or later for MacOSX (conda-forge doesn't have any earlier Mac VTK packages)"
-        display_usage
-        exit 9
-    fi
-    VTKVER=7.1.1
-    ;;
-    8)
-    VTKVER=8.1.0
-    ;;
-    *)
-    echo "Error: VTK version must be '7' or '8' ('8' is default)"
-    display_usage
-    exit 6
-    ;;
-esac
-
 # echo args
 echo CONDA INSTALL DIR  = "${CONDIR}"
 echo CONDA ENV          = "${CONDENV}"
 echo PYTHON VERSION     = "${PYVER}"
-echo VTK VERSION        = "${VTKVER}"
 
 # source travis_retry function
 RETRY=""
@@ -167,11 +141,7 @@ if [ "$NEED_CONDA" = "1" ]; then
     # download and run miniconda (to /tmp for now)
     mincon=/tmp/miniconda.sh
     echo "Downloading miniconda..."
-    if [ "$PYVER" = "2.7" ]; then
-        ${RETRY} wget https://repo.continuum.io/miniconda/Miniconda2-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
-    else
-        ${RETRY} wget https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh -O "${mincon}"
-    fi
+    ${RETRY} curl -L -o "${mincon}" https://repo.continuum.io/miniconda/Miniconda3-latest-${CONDOS}-${MACHW}.sh
     chmod +x "${mincon}"
     echo "Installing miniconda..."
     ${RETRY} "${mincon}" -b -p ${CONDIR}
@@ -197,19 +167,7 @@ ${RETRY} conda update --yes --quiet conda
 
 # create conda environment
 echo Creating conda environment: \"${CONDENV}\"...
-${RETRY} conda create -y -q -n ${CONDENV} python=${PYVER} numpy scipy matplotlib pillow pip \
-        nose setuptools sphinx sphinx_rtd_theme paramiko vtk=${VTKVER} pyside=1.2.4
-
-# install python.app on Mac, required for qt_menu.nib in pyinstaller builds
-if [[ "${CONDOS}" == "MacOSX" ]]; then
-    ${RETRY} conda install -y -q -n ${CONDENV} python.app
-fi
-
-# on Linux, seem to need to force jsoncpp to older, conda-forge version
-# https://github.com/conda-forge/vtk-feedstock/issues/46
-if [[ "${CONDOS}" == "Linux" ]]; then
-    ${RETRY} conda install -y -q -n ${CONDENV} jsoncpp=0.10.6
-fi
+${RETRY} conda create -y -q -n ${CONDENV} python=${PYVER} pip
 
 # install GCC if required
 if [ "$WITH_GCC" = "1" ]; then
@@ -219,15 +177,26 @@ fi
 # activate the environment
 source activate ${CONDENV}
 
-# install additional packages using pip
-echo Installing additional packages using pip...
+# install dependencies from pypi
+pip install --upgrade pip
+pip install numpy
+pip install scipy
+pip install matplotlib
+pip install pillow
+pip install nose
+pip install setuptools
+pip install sphinx
+pip install sphinx_rtd_theme
+pip install paramiko
+pip install vtk
 pip install pyhull || true
 pip install pyinstaller
+pip install --index-url=http://download.qt.io/snapshots/ci/pyside/5.11/latest/ pyside2 --trusted-host download.qt.io
 
 echo
 echo ==============================================================================================================
 echo Install complete.
-echo Add \"export PATH=${CONDIR}/bin:\$\{PATH\}\" to your ~/.bashrc to use conda.
-echo Enable the environment by running \"source activate ${CONDENV}\", or by adding that line to your .bashrc too.
+echo Add \"source ${CONDIR}/etc/profile.d/conda.sh\" to your ~/.bashrc to use conda.
+echo Enable the environment by running \"conda activate ${CONDENV}\".
 echo ==============================================================================================================
 echo

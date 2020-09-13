@@ -28,7 +28,8 @@ import logging
 import re
 import errno
 
-from PySide import QtGui, QtCore
+from PySide2 import QtGui, QtCore, QtWidgets
+
 from six.moves import range
 try:
     import paramiko
@@ -41,7 +42,7 @@ from ..visutils.utilities import iconPath
 
 ################################################################################
 
-class SFTPConnectionDialog(QtGui.QDialog):
+class SFTPConnectionDialog(QtWidgets.QDialog):
     """
     Dialog to get settings for connection
 
@@ -57,31 +58,31 @@ class SFTPConnectionDialog(QtGui.QDialog):
         self.hostname = None
 
         # layout
-        layout = QtGui.QFormLayout(self)
+        layout = QtWidgets.QFormLayout(self)
 
         #TODO: access previous hosts in settings and add those as options
 
         # user name
-        usernameLineEdit = QtGui.QLineEdit(self.username)
+        usernameLineEdit = QtWidgets.QLineEdit(self.username)
         usernameLineEdit.textEdited.connect(self.usernameEdited)
         usernameLineEdit.setToolTip("The user to connect as.")
         layout.addRow("Username", usernameLineEdit)
 
         # host name
-        hostnameLineEdit = QtGui.QLineEdit()
+        hostnameLineEdit = QtWidgets.QLineEdit()
         hostnameLineEdit.textEdited.connect(self.hostnameEdited)
         hostnameLineEdit.setToolTip("The address of the machine to connect to.")
         layout.addRow("Hostname", hostnameLineEdit)
 
         # password
-        passwordLineEdit = QtGui.QLineEdit()
+        passwordLineEdit = QtWidgets.QLineEdit()
         passwordLineEdit.textEdited.connect(self.passwordEdited)
-        passwordLineEdit.setEchoMode(QtGui.QLineEdit.Password)
+        passwordLineEdit.setEchoMode(QtWidgets.QLineEdit.Password)
         passwordLineEdit.setToolTip("Password")
         layout.addRow("Password", passwordLineEdit)
 
         # buttons
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout.addRow(buttonBox)
@@ -120,7 +121,7 @@ class SFTPConnectionDialog(QtGui.QDialog):
 
 ################################################################################
 
-class SFTPBrowserDialog(QtGui.QDialog):
+class SFTPBrowserDialog(QtWidgets.QDialog):
     """
     SFTP browser dialog
 
@@ -137,33 +138,33 @@ class SFTPBrowserDialog(QtGui.QDialog):
         self.resize(800,600)
 
         # layout
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
 
         # add connection
-        self.connectionsCombo = QtGui.QComboBox()
+        self.connectionsCombo = QtWidgets.QComboBox()
         self.connectionsCombo.currentIndexChanged[int].connect(self.connectionChanged)
-        addConnectionButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-add.png")), "")
+        addConnectionButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/list-add.png")), "")
         addConnectionButton.setToolTip("Add new connection")
         addConnectionButton.setFixedWidth(35)
         addConnectionButton.clicked.connect(self.addNewConnection)
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.addWidget(self.connectionsCombo)
         row.addWidget(addConnectionButton)
         layout.addLayout(row)
 
         # stacked widget
-        self.stackedWidget = QtGui.QStackedWidget()
+        self.stackedWidget = QtWidgets.QStackedWidget()
         layout.addWidget(self.stackedWidget)
 
         # list of open connections
         self.connectionsList = []
 
         # buttons
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Open | QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Help)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Open | QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Help)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         buttonBox.helpRequested.connect(self.loadHelpPage)
-        self.openButton = buttonBox.button(QtGui.QDialogButtonBox.Open)
+        self.openButton = buttonBox.button(QtWidgets.QDialogButtonBox.Open)
         self.openButton.setEnabled(False)
         layout.addWidget(buttonBox)
 
@@ -271,7 +272,7 @@ class SFTPBrowserDialog(QtGui.QDialog):
 
 ################################################################################
 
-class SFTPBrowserListWidgetItem(QtGui.QListWidgetItem):
+class SFTPBrowserListWidgetItem(QtWidgets.QListWidgetItem):
     """
     List widget item for SFTP Browser
 
@@ -282,7 +283,7 @@ class SFTPBrowserListWidgetItem(QtGui.QListWidgetItem):
 
 ################################################################################
 
-class SFTPBrowser(QtGui.QGroupBox):
+class SFTPBrowser(QtWidgets.QGroupBox):
     """
     Basic SFTP file browser
 
@@ -315,22 +316,22 @@ class SFTPBrowser(QtGui.QGroupBox):
         self.intRegex = re.compile(r'[0-9]+')
 
         # layout
-        self.layout = QtGui.QFormLayout(self)
+        self.layout = QtWidgets.QFormLayout(self)
         self.setAlignment(QtCore.Qt.AlignHCenter)
 
         # current path label
-        self.currentPathLabel = QtGui.QLabel("CWD: ''")
+        self.currentPathLabel = QtWidgets.QLabel("CWD: ''")
         self.layout.addRow(self.currentPathLabel)
 
         # list widget
-        self.listWidget = QtGui.QListWidget(self)
+        self.listWidget = QtWidgets.QListWidget(self)
         self.listWidget.setFixedHeight(350)
         self.listWidget.itemDoubleClicked.connect(self.itemDoubleClicked)
         self.listWidget.itemSelectionChanged.connect(self.itemSelectionChanged)
         self.layout.addRow(self.listWidget)
 
         # filters
-        filtersCombo = QtGui.QComboBox()
+        filtersCombo = QtWidgets.QComboBox()
         filtersCombo.currentIndexChanged[int].connect(self.filtersComboChanged)
         for tup in self.filters:
             filtersCombo.addItem("%s (%s)" % (tup[0], " ".join(tup[1])))
@@ -493,7 +494,7 @@ class SFTPBrowser(QtGui.QGroupBox):
         """
         self.logger.debug("Listing directory")
 
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
 
         try:
             # first clear the list widget
@@ -531,7 +532,7 @@ class SFTPBrowser(QtGui.QGroupBox):
             self.applyFilterToItems()
 
         finally:
-            QtGui.QApplication.restoreOverrideCursor()
+            QtWidgets.QApplication.restoreOverrideCursor()
 
     def itemDoubleClicked(self):
         """

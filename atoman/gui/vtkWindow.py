@@ -7,13 +7,13 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 import vtk
-from PySide import QtCore
+from PySide2 import QtCore
 
 from .QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 # from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 try:
     import vtk.qt
-    vtk.qt.PyQtImpl = "PySide"
+    vtk.qt.PyQtImpl = "PySide2"
 except:
     pass
 

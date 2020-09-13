@@ -10,7 +10,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PySide import QtGui, QtCore
+from PySide2 import QtGui, QtCore, QtWidgets
+
 
 from ...system.atoms import elements
 from ...visutils.utilities import iconPath, dataPath
@@ -18,7 +19,7 @@ from ...visutils.utilities import iconPath, dataPath
 
 ################################################################################
 
-class BondEditorDialog(QtGui.QDialog):
+class BondEditorDialog(QtWidgets.QDialog):
     """
     Bond editor dialog
     
@@ -36,29 +37,29 @@ class BondEditorDialog(QtGui.QDialog):
         self.setWindowTitle("Bonds editor")
         self.setWindowIcon(QtGui.QIcon(iconPath("other/molecule1.png")))
         
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
         self.dirty = False
         self.modifiedList = set()
         self.bondsSet = set()
         
-        layout = QtGui.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout(self)
         layout.setAlignment(QtCore.Qt.AlignHCenter)
 #        layout.setContentsMargins(0, 0, 0, 0)
 #        layout.setSpacing(0)
         
         # combo box with pairs
-        self.bondsCombo = QtGui.QComboBox()
+        self.bondsCombo = QtWidgets.QComboBox()
         self.bondsCombo.currentIndexChanged.connect(self.setWidgetStack)
         
         # add button
-        addButton = QtGui.QPushButton(QtGui.QIcon(iconPath("oxygen/list-add.png")), "")
+        addButton = QtWidgets.QPushButton(QtGui.QIcon(iconPath("oxygen/list-add.png")), "")
         addButton.setFixedWidth(35)
         addButton.setToolTip("Add new bond pair")
         addButton.setStatusTip("Add new bond pair")
         addButton.clicked.connect(self.addBondClicked)
         
-        row = QtGui.QHBoxLayout()
+        row = QtWidgets.QHBoxLayout()
         row.addStretch(1)
         row.addWidget(self.bondsCombo)
         row.addWidget(addButton)
@@ -66,7 +67,7 @@ class BondEditorDialog(QtGui.QDialog):
         layout.addLayout(row)
         
         # stacked widget
-        self.stackedWidget = QtGui.QStackedWidget()
+        self.stackedWidget = QtWidgets.QStackedWidget()
         layout.addWidget(self.stackedWidget)
         
         # populate combo and stacked widget
@@ -85,8 +86,8 @@ class BondEditorDialog(QtGui.QDialog):
                 self.addBond(keya, keyb, bondMin, bondMax)
         
         # save button
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Save)
-        self.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
+        self.buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Save)
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
         self.buttonBox.accepted.connect(self.saveChanges)
         layout.addWidget(self.buttonBox)
     
@@ -144,7 +145,7 @@ class BondEditorDialog(QtGui.QDialog):
         
         """
         self.dirty = True
-        self.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(True)
+        self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).setEnabled(True)
         self.modifiedList.add(pairString)
     
     def saveChanges(self):
@@ -166,16 +167,16 @@ class BondEditorDialog(QtGui.QDialog):
             for bond in self.modifiedList:
                 text += "\n    %s" % bond
             
-            ret = QtGui.QMessageBox.question(self, "Save bonds settings", text, QtGui.QMessageBox.Ok | QtGui.QMessageBox.Cancel, 
-                                             QtGui.QMessageBox.Cancel)
+            ret = QtWidgets.QMessageBox.question(self, "Save bonds settings", text, QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel, 
+                                             QtWidgets.QMessageBox.Cancel)
             
-            if ret == QtGui.QMessageBox.Ok:
+            if ret == QtWidgets.QMessageBox.Ok:
                 fn = dataPath("bonds.IN")
                 logger.debug("Overwriting bonds file: '%s'", fn)
                 elements.writeBonds(fn)
                 self.dirty = False
                 self.modifiedList.clear()
-                self.buttonBox.button(QtGui.QDialogButtonBox.Save).setEnabled(False)
+                self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).setEnabled(False)
     
     def setWidgetStack(self, index):
         """
@@ -186,7 +187,7 @@ class BondEditorDialog(QtGui.QDialog):
 
 ################################################################################
 
-class BondEditorSettingsForm(QtGui.QGroupBox):
+class BondEditorSettingsForm(QtWidgets.QGroupBox):
     """
     Settings for bond
     
@@ -202,11 +203,11 @@ class BondEditorSettingsForm(QtGui.QGroupBox):
         self.bondMax = bondMax
         
         # form layout
-        layout = QtGui.QFormLayout(self)
+        layout = QtWidgets.QFormLayout(self)
         self.setAlignment(QtCore.Qt.AlignHCenter)
         
         # minimum value for the bond
-        bondMinSpin = QtGui.QDoubleSpinBox()
+        bondMinSpin = QtWidgets.QDoubleSpinBox()
         bondMinSpin.setSingleStep(0.1)
         bondMinSpin.setMinimum(0.0)
         bondMinSpin.setMaximum(99.99)
@@ -215,7 +216,7 @@ class BondEditorSettingsForm(QtGui.QGroupBox):
         layout.addRow("Bond minimum", bondMinSpin)
         
         # maximum value for the bond
-        bondMaxSpin = QtGui.QDoubleSpinBox()
+        bondMaxSpin = QtWidgets.QDoubleSpinBox()
         bondMaxSpin.setSingleStep(0.1)
         bondMaxSpin.setMinimum(0.0)
         bondMaxSpin.setMaximum(99.99)
@@ -254,7 +255,7 @@ class BondEditorSettingsForm(QtGui.QGroupBox):
 
 ################################################################################
 
-class AddBondDialog(QtGui.QDialog):
+class AddBondDialog(QtWidgets.QDialog):
     """
     Add bond dialog
     
@@ -268,32 +269,32 @@ class AddBondDialog(QtGui.QDialog):
         self.setWindowTitle("Add bond")
         self.setWindowIcon(QtGui.QIcon(iconPath("other/molecule1.png")))
         
-        self.setSizePolicy(QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignHCenter)
         
         # list of elements
         elementsList = elements.listElements()
         
         # row
-        row = QtGui.QWidget()
-        rowLayout = QtGui.QHBoxLayout(row)
+        row = QtWidgets.QWidget()
+        rowLayout = QtWidgets.QHBoxLayout(row)
         rowLayout.setContentsMargins(0, 0, 0, 0)
         rowLayout.setSpacing(0)
         
         # first combo
-        self.specieComboA = QtGui.QComboBox()
+        self.specieComboA = QtWidgets.QComboBox()
         self.specieComboA.addItems(elementsList)
         
         # second combo
-        self.specieComboB = QtGui.QComboBox()
+        self.specieComboB = QtWidgets.QComboBox()
         self.specieComboB.addItems(elementsList)
         
         # add to row
         rowLayout.addStretch(1)
         rowLayout.addWidget(self.specieComboA)
-        rowLayout.addWidget(QtGui.QLabel(" - "))
+        rowLayout.addWidget(QtWidgets.QLabel(" - "))
         rowLayout.addWidget(self.specieComboB)
         rowLayout.addStretch(1)
         
@@ -301,7 +302,7 @@ class AddBondDialog(QtGui.QDialog):
         layout.addWidget(row)
         
         # button box
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         layout.addWidget(buttonBox)

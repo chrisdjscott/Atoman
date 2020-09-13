@@ -19,7 +19,8 @@ import tempfile
 import logging
 
 import pkg_resources
-from PySide import QtGui, QtCore
+from PySide2 import QtCore, QtWidgets
+
 
 from .appdirs import appdirs
 from six.moves import range
@@ -226,11 +227,11 @@ def warnExeNotFound(parent, exe):
     
     message = "Could not locate '%s' executable!" % exe
     
-    msgBox = QtGui.QMessageBox(parent)
+    msgBox = QtWidgets.QMessageBox(parent)
     msgBox.setText(message)
     msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-    msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-    msgBox.setIcon(QtGui.QMessageBox.Warning)
+    msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+    msgBox.setIcon(QtWidgets.QMessageBox.Warning)
     msgBox.exec_()
 
 ################################################################################

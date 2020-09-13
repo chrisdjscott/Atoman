@@ -9,7 +9,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import logging
 
-from PySide import QtGui, QtCore
+from PySide2 import QtGui, QtCore, QtWidgets
+
 
 from ...visutils.utilities import iconPath
 import six
@@ -18,7 +19,7 @@ from six.moves import range
 
 ################################################################################
 
-class TextSettingsDialog(QtGui.QDialog):
+class TextSettingsDialog(QtWidgets.QDialog):
     """
     Dialog for setting text options.
     
@@ -36,20 +37,20 @@ class TextSettingsDialog(QtGui.QDialog):
         titleText = "%s settings" % item.title
         self.setWindowTitle(titleText)
         
-        dialogLayout = QtGui.QVBoxLayout(self)
+        dialogLayout = QtWidgets.QVBoxLayout(self)
         
         # defaults
         textPosition = item.position
         
         # location of text
-        form = QtGui.QGroupBox("Text location")
-        formLayout = QtGui.QVBoxLayout()
+        form = QtWidgets.QGroupBox("Text location")
+        formLayout = QtWidgets.QVBoxLayout()
         form.setLayout(formLayout)
         dialogLayout.addWidget(form)
         
         self.positionRadios = {}
-        self.positionRadios["Top left"] = QtGui.QRadioButton("Top &left", parent=form)
-        self.positionRadios["Top right"] = QtGui.QRadioButton("Top &right", parent=form)
+        self.positionRadios["Top left"] = QtWidgets.QRadioButton("Top &left", parent=form)
+        self.positionRadios["Top right"] = QtWidgets.QRadioButton("Top &right", parent=form)
         self.positionRadios[textPosition].setChecked(True)
         self.positionRadios["Top left"].toggled.connect(self.positionChanged)
         
@@ -58,20 +59,20 @@ class TextSettingsDialog(QtGui.QDialog):
         formLayout.addStretch(1)
         
         # text format
-        form = QtGui.QGroupBox("Text format")
-        formLayout = QtGui.QVBoxLayout()
+        form = QtWidgets.QGroupBox("Text format")
+        formLayout = QtWidgets.QVBoxLayout()
         form.setLayout(formLayout)
         dialogLayout.addWidget(form)
         
-        self.textFormatLine = QtGui.QLineEdit(item.format)
+        self.textFormatLine = QtWidgets.QLineEdit(item.format)
         self.textFormatLine.editingFinished.connect(self.textFormatEdited)
         formLayout.addWidget(self.textFormatLine)
         
         for k, v in six.iteritems(item.formatInfo):
-            formLayout.addWidget(QtGui.QLabel("'%s' = %s" % (k, v)))
+            formLayout.addWidget(QtWidgets.QLabel("'%s' = %s" % (k, v)))
         
         # add close button
-        buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Close)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
         
@@ -103,7 +104,7 @@ class TextSettingsDialog(QtGui.QDialog):
 
 ################################################################################
 
-class TextListWidgetItem(QtGui.QListWidgetItem):
+class TextListWidgetItem(QtWidgets.QListWidgetItem):
     """
     Item for going in the list widget
     
@@ -160,7 +161,7 @@ class TextListWidgetItem(QtGui.QListWidgetItem):
 
 ################################################################################
 
-class OnScreenInfoDialog(QtGui.QDialog):
+class OnScreenInfoDialog(QtWidgets.QDialog):
     """
     On screen info selector.
     
@@ -180,23 +181,23 @@ class OnScreenInfoDialog(QtGui.QDialog):
         self.setWindowTitle("On screen info - Render window %d" % index)
         self.setWindowIcon(QtGui.QIcon(iconPath("oxygen/preferences-desktop-font.png")))
         
-        dialogLayout = QtGui.QVBoxLayout()
+        dialogLayout = QtWidgets.QVBoxLayout()
         self.setLayout(dialogLayout)
         
         # list containing selected text
-        self.textList = QtGui.QListWidget()
+        self.textList = QtWidgets.QListWidget()
         self.textList.setDragEnabled(True)
-        self.textList.setDragDropMode(QtGui.QAbstractItemView.InternalMove)
+        self.textList.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         dialogLayout.addWidget(self.textList)
         
         # refresh button
-        refreshButton = QtGui.QPushButton("Refresh")
+        refreshButton = QtWidgets.QPushButton("Refresh")
         refreshButton.setAutoDefault(0)
         refreshButton.setStatusTip("Refresh on-screen information")
         refreshButton.clicked.connect(self.refresh)
         
-        buttonWidget = QtGui.QWidget()
-        buttonLayout = QtGui.QHBoxLayout(buttonWidget)
+        buttonWidget = QtWidgets.QWidget()
+        buttonLayout = QtWidgets.QHBoxLayout(buttonWidget)
         buttonLayout.addStretch()
         buttonLayout.addWidget(refreshButton)
         buttonLayout.addStretch()

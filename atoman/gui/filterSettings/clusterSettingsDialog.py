@@ -5,7 +5,8 @@ Contains GUI forms for the clusters filter.
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from PySide import QtGui, QtCore
+from PySide2 import QtGui, QtWidgets
+
 
 from . import base
 from ...filtering.filters import clusterFilter
@@ -45,11 +46,11 @@ class ClusterSettingsDialog(base.GenericSettingsDialog):
                                          extraSlot=self.calcVolsChanged)
         
         # radio buttons
-        self.convHullVolRadio = QtGui.QRadioButton(parent=calcVolsCheck)
+        self.convHullVolRadio = QtWidgets.QRadioButton(parent=calcVolsCheck)
         self.convHullVolRadio.toggled.connect(self.calcVolsMethodChanged)
         self.convHullVolRadio.setToolTip("<p>Volume is determined from the convex hull of the atom positions.</p>")
         self.convHullVolRadio.setEnabled(self._settings.getSetting("calculateVolumes"))
-        self.voroVolRadio = QtGui.QRadioButton(parent=calcVolsCheck)
+        self.voroVolRadio = QtWidgets.QRadioButton(parent=calcVolsCheck)
         self.voroVolRadio.setToolTip("<p>Volume is determined by summing the Voronoi volumes of the atoms in "
                                      "the cluster.</p>")
         self.voroVolRadio.setChecked(True)
@@ -64,7 +65,7 @@ class ClusterSettingsDialog(base.GenericSettingsDialog):
         # hull colour
         hullCol = self._settings.getSetting("hullCol")
         col = QtGui.QColor(hullCol[0]*255.0, hullCol[1]*255.0, hullCol[2]*255.0)
-        self.hullColourButton = QtGui.QPushButton("")
+        self.hullColourButton = QtWidgets.QPushButton("")
         self.hullColourButton.setFixedWidth(50)
         self.hullColourButton.setFixedHeight(30)
         self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())
@@ -128,7 +129,7 @@ class ClusterSettingsDialog(base.GenericSettingsDialog):
         Show hull colour dialog.
         
         """
-        col = QtGui.QColorDialog.getColor()
+        col = QtWidgets.QColorDialog.getColor()
         
         if col.isValid():
             self.hullColourButton.setStyleSheet("QPushButton { background-color: %s }" % col.name())

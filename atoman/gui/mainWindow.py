@@ -17,8 +17,9 @@ import traceback
 import logging
 import datetime
 
-from PySide import QtGui, QtCore
-import PySide
+import PySide2
+from PySide2 import QtGui, QtCore, QtWidgets
+
 import vtk
 import numpy as np
 import matplotlib
@@ -31,6 +32,7 @@ from . import toolbar as toolbarModule
 from . import preferences
 from . import rendererSubWindow
 from . import systemsDialog
+from . import viewPorts
 from .dialogs import simpleDialogs
 from .dialogs import bondEditor
 from .dialogs import elementEditor
@@ -39,23 +41,18 @@ from .. import _version
 
 
 ################################################################################
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
     """
     The main window.
 
     """
     configDir = os.path.join(os.environ["HOME"], ".atoman")
-    Instances = set()
 
     def __init__(self, desktop, parent=None, testing=False):
         super(MainWindow, self).__init__(parent)
 
         # logger
         self.logger = logging.getLogger(__name__)
-
-        # multiple instances
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        MainWindow.Instances.add(self)
 
         # first time show called
         self.testingFlag = testing
@@ -145,10 +142,6 @@ class MainWindow(QtGui.QMainWindow):
 
         # add file actions
         exitAction = self.createAction("Exit", self.close, "Ctrl-Q", "oxygen/application-exit.png", "Exit application")
-        newWindowAction = self.createAction("&New app window", slot=self.openNewWindow, shortcut="Ctrl-N",
-                                            icon="atoman.png", tip="Open new application window")
-        newRenWindowAction = self.createAction("New sub window", slot=self.addRendererWindow, shortcut="Ctrl-O",
-                                               icon="oxygen/window-new.png", tip="Open new render sub window")
         openFileAction = self.createAction("Open file", slot=self.showOpenFileDialog, icon="oxygen/document-open.png",
                                            tip="Open file")
         openRemoteFileAction = self.createAction("Open remote file", slot=self.showOpenRemoteFileDialog,
@@ -176,7 +169,7 @@ class MainWindow(QtGui.QMainWindow):
 
         # add file menu
         fileMenu = self.menuBar().addMenu("&File")
-        self.addActions(fileMenu, (newWindowAction, newRenWindowAction, openFileAction, openRemoteFileAction,
+        self.addActions(fileMenu, (openFileAction, openRemoteFileAction,
                                    openCWDAction, changeCWDAction, None, exitAction))
 
         # settings menu
@@ -212,8 +205,6 @@ class MainWindow(QtGui.QMainWindow):
         # add file toolbar
         fileToolbar = self.addToolBar("File")
         fileToolbar.addAction(exitAction)
-        fileToolbar.addAction(newWindowAction)
-        fileToolbar.addAction(newRenWindowAction)
         fileToolbar.addSeparator()
         fileToolbar.addAction(openFileAction)
         fileToolbar.addAction(openRemoteFileAction)
@@ -229,6 +220,17 @@ class MainWindow(QtGui.QMainWindow):
         viewToolbar.addAction(openBondsEditorAction)
         viewToolbar.addAction(showPreferencesAction)
         viewToolbar.addSeparator()
+
+        # vis tool bar
+        visToolbar = self.addToolBar("Visualisation")
+        numViewPortsCombo = QtWidgets.QComboBox()
+        numViewPortsCombo.addItem("1")
+        numViewPortsCombo.addItem("2")
+        numViewPortsCombo.addItem("4")
+        numViewPortsCombo.currentIndexChanged[str].connect(self.numViewPortsChanged)
+        visToolbar.addWidget(QtWidgets.QLabel("View ports:"))
+        visToolbar.addWidget(numViewPortsCombo)
+        visToolbar.addSeparator()
 
         # add about action
         aboutAction = self.createAction("About Atoman", slot=self.aboutMe, icon="oxygen/help-about.png",
@@ -246,11 +248,11 @@ class MainWindow(QtGui.QMainWindow):
         self.addActions(helpMenu, (aboutAction, helpAction))
 
         # add cwd to status bar
-        self.currentDirectoryLabel = QtGui.QLabel("")
+        self.currentDirectoryLabel = QtWidgets.QLabel("")
         self.updateCWD()
-        sb = QtGui.QStatusBar()
+        sb = QtWidgets.QStatusBar()
         self.setStatusBar(sb)
-        self.progressBar = QtGui.QProgressBar(self.statusBar())
+        self.progressBar = QtWidgets.QProgressBar(self.statusBar())
         self.statusBar().addPermanentWidget(self.progressBar)
         self.statusBar().addPermanentWidget(self.currentDirectoryLabel)
         self.hideProgressBar()
@@ -264,24 +266,15 @@ class MainWindow(QtGui.QMainWindow):
         # element editor
         self.elementEditor = elementEditor.ElementEditor(parent=self)
 
-        # load input dialog
-#         self.loadInputDialog = inputDialog.InputDialog(self, self, None)
-
-        self.mdiArea = QtGui.QMdiArea()
-        self.mdiArea.subWindowActivated.connect(self.rendererWindowActivated)
-        self.setCentralWidget(self.mdiArea)
-        self.rendererWindows = []
-        self.rendererWindowsSubWin = []
-        self.subWinCount = 0
-        self.addRendererWindow(ask=False)
-        self.mdiArea.tileSubWindows()
+        # view ports / renderer windows
+        self.rendererWindows = []  # TODO: remove
+        self.viewPorts = viewPorts.ViewPortsWidget(parent=self)
+        self.numViewPortsChanged(int(numViewPortsCombo.currentText()))
+        self.setCentralWidget(self.viewPorts)
 
         # add the main tool bar
         self.mainToolbar = toolbarModule.MainToolbar(self, self.mainToolbarWidth, self.mainToolbarHeight)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.mainToolbar)
-
-        # connect window destroyed to updateInstances
-        self.connect(self, QtCore.SIGNAL("destroyed(QObject*)"), MainWindow.updateInstances)
 
         self.setStatus('Ready')
 
@@ -311,7 +304,7 @@ class MainWindow(QtGui.QMainWindow):
         Change current working directory...
 
         """
-        new_dir = QtGui.QFileDialog.getExistingDirectory(self, "New working directory", os.getcwd())
+        new_dir = QtWidgets.QFileDialog.getExistingDirectory(self, "New working directory", os.getcwd())
 
         logging.debug("Changing directory: '%s'", new_dir)
 
@@ -326,26 +319,11 @@ class MainWindow(QtGui.QMainWindow):
         """
         pass
 
-    def addRendererWindow(self, ask=True):
-        """
-        Add renderer window to mdi area.
+    def numViewPortsChanged(self, num_str):
+        """Update the number of view ports."""
+        self.viewPorts.numViewPortsChanged(int(num_str))
 
-        """
-        rendererWindow = rendererSubWindow.RendererWindow(self, self.subWinCount, parent=self)
-        rendererWindow.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-
-        subwin = self.mdiArea.addSubWindow(rendererWindow)
-        subwin.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        subwin.show()
-        subwin.activateWindow()
-
-        self.rendererWindows.append(rendererWindow)
-        self.rendererWindowsSubWin.append(subwin)
-
-        self.subWinCount += 1
-
-        self.mdiArea.tileSubWindows()
-
+        self.rendererWindows = self.viewPorts.getViewPorts()
         for rw in self.rendererWindows:
             rw.outputDialog.imageTab.imageSequenceTab.refreshLinkedRenderers()
 
@@ -386,13 +364,14 @@ class MainWindow(QtGui.QMainWindow):
         """
         msg = "This will overwrite the current element properties file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
-        reply = QtGui.QMessageBox.question(self, "Message", msg,
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        reply = QtWidgets.QMessageBox.question(self, "Message", msg,
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
 
-        if reply == QtGui.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             # open file dialog
             title = "Atoman - Import element properties"
-            fname = QtGui.QFileDialog.getOpenFileName(self, title, ".", "IN files (*.IN)")[0]
+            fname = QtWidgets.QFileDialog.getOpenFileName(self, title, ".", "IN files (*.IN)")[0]
 
             if fname:
                 self.logger.info("Importing elements settings from '%s'", fname)
@@ -413,8 +392,9 @@ class MainWindow(QtGui.QMainWindow):
 
         """
         fname = os.path.join(".", "atoms-exported.IN")
-        fname = QtGui.QFileDialog.getSaveFileName(self, "Atoman - Export element properties", fname,
-                                                  "IN files (*.IN)", options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+        fname = QtWidgets.QFileDialog.getSaveFileName(self, "Atoman - Export element properties", fname,
+                                                      "IN files (*.IN)",
+                                                      options=QtWidgets.QFileDialog.DontUseNativeDialog)[0]
 
         if fname:
             if "." not in fname or fname[-3:] != ".IN":
@@ -427,20 +407,22 @@ class MainWindow(QtGui.QMainWindow):
         """Reset elements settings."""
         msg = "This will overwrite the current element properties file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
-        reply = QtGui.QMessageBox.question(self, "Message", msg,
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        reply = QtWidgets.QMessageBox.question(self, "Message", msg,
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
 
-        if reply == QtGui.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             atoms.resetAtoms()
 
     def resetBonds(self):
         """Reset bonds settings."""
         msg = "This will overwrite the current bonds file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
-        reply = QtGui.QMessageBox.question(self, "Message", msg,
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        reply = QtWidgets.QMessageBox.question(self, "Message", msg,
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
 
-        if reply == QtGui.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             atoms.resetBonds()
 
     def importBonds(self):
@@ -450,13 +432,14 @@ class MainWindow(QtGui.QMainWindow):
         """
         msg = "This will overwrite the current bonds file. You should create a backup first!\n\n"
         msg += "Do you wish to continue?"
-        reply = QtGui.QMessageBox.question(self, "Message", msg,
-                                           QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        reply = QtWidgets.QMessageBox.question(self, "Message", msg,
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                               QtWidgets.QMessageBox.No)
 
-        if reply == QtGui.QMessageBox.Yes:
+        if reply == QtWidgets.QMessageBox.Yes:
             # open file dialog
-            fname = QtGui.QFileDialog.getOpenFileName(self, "Atoman - Import bonds file", ".", "IN files (*.IN)",
-                                                      options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+            fname = QtWidgets.QFileDialog.getOpenFileName(self, "Atoman - Import bonds file", ".", "IN files (*.IN)",
+                                                          options=QtWidgets.QFileDialog.DontUseNativeDialog)[0]
 
             if fname:
                 self.logger.info("Import bonds settings from '%s'", fname)
@@ -476,8 +459,8 @@ class MainWindow(QtGui.QMainWindow):
         """
         fname = os.path.join(".", "bonds-exported.IN")
 
-        fname = QtGui.QFileDialog.getSaveFileName(self, "Atoman - Export bonds file", fname, "IN files (*.IN)",
-                                                  options=QtGui.QFileDialog.DontUseNativeDialog)[0]
+        fname = QtWidgets.QFileDialog.getSaveFileName(self, "Atoman - Export bonds file", fname, "IN files (*.IN)",
+                                                      options=QtWidgets.QFileDialog.DontUseNativeDialog)[0]
 
         if fname:
             if "." not in fname or fname[-3:] != ".IN":
@@ -502,22 +485,13 @@ class MainWindow(QtGui.QMainWindow):
         elif osname == "Windows":
             os.startfile(dirname)
 
-    def openNewWindow(self):
-        """
-        Open a new instance of the main window
-
-        """
-        mw = MainWindow(self.desktop)
-        mw.setWindowIcon(QtGui.QIcon(iconPath("atoman.png")))
-        mw.show()
-
     def centre(self):
         """
         Centre the window.
 
         """
         qr = self.frameGeometry()
-        cp = QtGui.QDesktopWidget().availableGeometry().center()
+        cp = QtWidgets.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
@@ -534,7 +508,7 @@ class MainWindow(QtGui.QMainWindow):
 
         """
         baseUrl = 'https://chrisdjscott.github.io/Atoman/'
-        if relativeUrl is not None:
+        if relativeUrl is not None and relativeUrl:
             url = QtCore.QUrl(os.path.join(baseUrl, relativeUrl))
         else:
             url = QtCore.QUrl(baseUrl)
@@ -656,7 +630,7 @@ class MainWindow(QtGui.QMainWindow):
         self.progressBar.setRange(0, nmax)
         self.progressBar.setValue(n)
         self.setStatus(message)
-        QtGui.QApplication.processEvents()
+        QtWidgets.QApplication.processEvents()
 
     def setStatus(self, message):
         """
@@ -714,11 +688,11 @@ class MainWindow(QtGui.QMainWindow):
         Display warning message.
 
         """
-        msgBox = QtGui.QMessageBox(self)
+        msgBox = QtWidgets.QMessageBox(self)
         msgBox.setText(message)
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-        msgBox.setIcon(QtGui.QMessageBox.Warning)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgBox.setIcon(QtWidgets.QMessageBox.Warning)
         msgBox.exec_()
 
     def displayError(self, message):
@@ -726,11 +700,11 @@ class MainWindow(QtGui.QMainWindow):
         Display error message
 
         """
-        msgBox = QtGui.QMessageBox(self)
+        msgBox = QtWidgets.QMessageBox(self)
         msgBox.setText(message)
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-        msgBox.setIcon(QtGui.QMessageBox.Critical)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgBox.setIcon(QtWidgets.QMessageBox.Critical)
         msgBox.exec_()
 
     def aboutMe(self):
@@ -738,14 +712,14 @@ class MainWindow(QtGui.QMainWindow):
         Display about message.
 
         """
-        msgBox = QtGui.QMessageBox(self)
+        msgBox = QtWidgets.QMessageBox(self)
 
         # get the version right
         version = _version.get_versions()['version']
 
         # construct paragraph with software versions
-        softline = "Python %s - Qt %s - PySide %s - VTK %s" % (platform.python_version(), QtCore.__version__,
-                                                               PySide.__version__, vtk.vtkVersion.GetVTKVersion())
+        softline = "Python %s - Qt %s - PySide2 %s - VTK %s" % (platform.python_version(), QtCore.__version__,
+                                                                PySide2.__version__, vtk.vtkVersion.GetVTKVersion())
         softline += " - NumPy %s - SciPy %s - Matplotlib %s" % (np.__version__, scipy.__version__,
                                                                 matplotlib.__version__)
 
@@ -769,8 +743,8 @@ class MainWindow(QtGui.QMainWindow):
                           <p>%s</p>""" % (version, datetime.date.today().year, softline))
 
         msgBox.setWindowFlags(msgBox.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        msgBox.setStandardButtons(QtGui.QMessageBox.Ok)
-        msgBox.setIcon(QtGui.QMessageBox.Information)
+        msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msgBox.setIcon(QtWidgets.QMessageBox.Information)
         msgBox.exec_()
 
 #         dlg = dialogs.AboutMeDialog(parent=self)
@@ -781,7 +755,7 @@ class MainWindow(QtGui.QMainWindow):
         Create an action
 
         """
-        action = QtGui.QAction(text, self)
+        action = QtWidgets.QAction(text, self)
 
         if icon is not None:
             action.setIcon(QtGui.QIcon(iconPath(icon)))
@@ -812,27 +786,3 @@ class MainWindow(QtGui.QMainWindow):
 
             else:
                 target.addAction(action)
-
-    @staticmethod
-    def updateInstances(qobj):
-        """
-        Make sure only alive windows appear in the set
-
-        """
-        MainWindow.Instances = set([window for window in MainWindow.Instances if isAlive(window)])
-
-
-################################################################################
-def isAlive(qobj):
-    """
-    Check a window is alive
-
-    """
-    return True
-
-    import sip
-    try:
-        sip.unwrapinstance(qobj)
-    except RuntimeError:
-        return False
-    return True

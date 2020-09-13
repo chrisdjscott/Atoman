@@ -1,0 +1,45 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
+    env:
+      CC: gcc-9
+      CXX: g++-9
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Prepare to build
+      run: |
+        #cp setup.cfg.example setup.cfg
+        # disable GUI tests
+        sed 's/#exclude = slowtests/exclude = slowtests/' setup.cfg.example > setup.cfg
+        echo "CC = ${CC}"
+        echo "CXX = ${CXX}"
+        $CC --version
+        $CXX --version
+    - name: Build C libraries
+      run: |
+        python setup.py build_clib
+    - name: Build extensions
+      run: |
+        python setup.py build_ext --inplace
+    - name: Build documentation
+      run: |
+        python setup.py build_sphinx
+    - name: Run tests
+      run: |
+        python setup.py test
+

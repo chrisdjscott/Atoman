@@ -5,7 +5,8 @@ Contains GUI forms for the species filter.
 """
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from PySide import QtGui, QtCore
+from PySide2 import QtCore, QtWidgets
+
 
 from . import base
 from ...system.atoms import elements
@@ -15,7 +16,7 @@ from six.moves import range
 
 ################################################################################
 
-class SpeciesListItem(QtGui.QListWidgetItem):
+class SpeciesListItem(QtWidgets.QListWidgetItem):
     """
     Item in a species list widget.
     
@@ -56,7 +57,7 @@ class SpeciesSettingsDialog(base.GenericSettingsDialog):
         self._settings = speciesFilter.SpeciesFilterSettings()
         
         # species list
-        self.specieList = QtGui.QListWidget(self)
+        self.specieList = QtWidgets.QListWidget(self)
 #         self.specieList.setFixedHeight(100)
         self.specieList.setFixedWidth(200)
         self.specieList.itemChanged.connect(self.speciesListChanged)
