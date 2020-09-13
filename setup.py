@@ -26,8 +26,7 @@ import versioneer
 # check for openmp following
 # http://stackoverflow.com/questions/16549893/programatically-testing-for-openmp-support-from-a-python-setup-script
 # see http://openmp.org/wp/openmp-compilers/
-omp_test = \
-br"""
+omp_test = br"""
 #include <omp.h>
 #include <stdio.h>
 int main() {
@@ -40,6 +39,7 @@ TEST_OMP_FLAGS = [
     "-fopenmp",
     "-qopenmp",
 ]
+
 
 def check_for_openmp():
     try:
@@ -61,11 +61,12 @@ def check_for_openmp():
             if result == 0:
                 break
         finally:
-            #clean up
+            # clean up
             shutil.rmtree(tmpdir)
             os.chdir(curdir)
 
-    return result==0, omp_flag
+    return result == 0, omp_flag
+
 
 HAVE_OMP, OMP_FLAG = check_for_openmp()
 print("Have OpenMP: ", HAVE_OMP)
@@ -76,7 +77,7 @@ if HAVE_OMP:
 try:
     from sphinx.setup_command import BuildDoc
     HAVE_SPHINX = True
-except:
+except ImportError:
     HAVE_SPHINX = False
 
 if HAVE_SPHINX:
@@ -189,11 +190,7 @@ def setup_package():
             "Programming Language :: C",
             "Programming Language :: C++",
             "Programming Language :: Python",
-            "Programming Language :: Python :: 2",
-            "Programming Language :: Python :: 2.7",
             "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.5",
-            "Programming Language :: Python :: 3.6",
             "Topic :: Scientific/Engineering",
             "Topic :: Scientific/Engineering :: Visualization",
         ],
@@ -226,7 +223,6 @@ def setup_package():
         # subclass build_ext to use additional compiler options (eg. for OpenMP)
         class build_ext_subclass(build_ext):
             def build_extensions(self, *args, **kwargs):
-                c = self.compiler.compiler_type
                 for e in self.extensions:
                     if HAVE_OMP:
                         e.extra_compile_args.append(OMP_FLAG)
@@ -238,7 +234,6 @@ def setup_package():
         # subclass build_clib to use additional compiler options (eg. for OpenMP)
         class build_clib_subclass(build_clib):
             def build_libraries(self, *args, **kwargs):
-                c = self.compiler.compiler_type
                 for libtup in self.libraries:
                     opts = libtup[1]
                     if HAVE_OMP:
@@ -257,6 +252,7 @@ def setup_package():
 
     # run setup
     setup(**metadata)
+
 
 if __name__ == "__main__":
     setup_package()
